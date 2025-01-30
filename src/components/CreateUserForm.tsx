@@ -31,17 +31,19 @@ export function CreateUserForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const { data, error } = await supabase.auth.admin.createUser({
+      const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
-        email_confirm: true, // Auto-confirms the email
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth`,
+        },
       })
 
       if (error) throw error
 
       toast({
         title: "Success",
-        description: "User created successfully",
+        description: "User created successfully. They will receive a verification email.",
       })
 
       form.reset()
