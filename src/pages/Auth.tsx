@@ -23,7 +23,14 @@ const Auth = () => {
           email,
           password,
         });
-        if (error) throw error;
+        if (error) {
+          if (error.message === "Invalid login credentials") {
+            throw new Error(
+              "Invalid email or password. Please check your credentials and try again."
+            );
+          }
+          throw error;
+        }
         navigate("/");
       } else {
         const { error } = await supabase.auth.signUp({
@@ -35,6 +42,8 @@ const Auth = () => {
           title: "Success!",
           description: "Please check your email to verify your account.",
         });
+        // Switch to login mode after successful signup
+        setIsLogin(true);
       }
     } catch (error: any) {
       toast({
@@ -70,6 +79,7 @@ const Auth = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              minLength={6}
             />
           </div>
           <Button className="w-full" type="submit" disabled={loading}>
