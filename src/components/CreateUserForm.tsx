@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
+import { useEffect, useState } from "react"
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -21,6 +22,9 @@ const formSchema = z.object({
 
 export function CreateUserForm() {
   const { toast } = useToast()
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [loading, setLoading] = useState(true)
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -28,6 +32,32 @@ export function CreateUserForm() {
       password: "",
     },
   })
+
+  useEffect(() => {
+    checkAdminStatus()
+  }, [])
+
+  const checkAdminStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single()
+
+      if (error) throw error
+      setIsAdmin(!!data)
+    } catch (error) {
+      console.error('Error checking admin status:', error)
+      setIsAdmin(false)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -54,6 +84,14 @@ export function CreateUserForm() {
         variant: "destructive",
       })
     }
+  }
+
+  if (loading) {
+    return <div className="p-4">Loading...</div>
+  }
+
+  if (!isAdmin) {
+    return <div className="p-4">You need admin privileges to create new users.</div>
   }
 
   return (
