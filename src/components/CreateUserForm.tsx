@@ -42,7 +42,7 @@ export function CreateUserForm() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
-      const { data, error } = await supabase
+      const { data: roleData, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
@@ -50,7 +50,7 @@ export function CreateUserForm() {
         .single()
 
       if (error) throw error
-      setIsAdmin(!!data)
+      setIsAdmin(!!roleData)
     } catch (error) {
       console.error('Error checking admin status:', error)
       setIsAdmin(false)
