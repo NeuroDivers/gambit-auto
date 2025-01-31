@@ -36,26 +36,29 @@ export function WorkOrderDisplay({ order, onClick }: WorkOrderDisplayProps) {
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault()
-    e.stopPropagation() // Stop event from bubbling up to parent
+    e.stopPropagation()
     onClick?.(e)
     setIsEditing(true)
   }
 
   return (
-    <>
+    <div className="relative" onClick={handleClick}>
       <HoverCard>
-        <HoverCardTrigger asChild>
+        <HoverCardTrigger>
           <div 
-            onClick={handleClick}
             className={cn(
-              "text-xs p-1 rounded text-left truncate transition-all duration-200 hover:scale-[1.02] hover:border hover:shadow-lg cursor-pointer relative z-50",
+              "text-xs p-1 rounded text-left truncate transition-all duration-200 hover:scale-[1.02] hover:border hover:shadow-lg cursor-pointer",
               serviceColor
             )}
           >
             {format(new Date(order.start_date), "HH:mm")} - {primaryService?.name}
           </div>
         </HoverCardTrigger>
-        <HoverCardContent>
+        <HoverCardContent 
+          className="z-[100] bg-popover/95 backdrop-blur supports-[backdrop-filter]:bg-popover/85"
+          side="right"
+          align="start"
+        >
           <div className="space-y-2">
             <h4 className="text-sm font-semibold">{primaryService?.name}</h4>
             <p className="text-xs text-muted-foreground">
@@ -73,6 +76,6 @@ export function WorkOrderDisplay({ order, onClick }: WorkOrderDisplayProps) {
         onOpenChange={setIsEditing}
         workOrder={order}
       />
-    </>
+    </div>
   )
 }
