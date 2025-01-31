@@ -4,7 +4,6 @@ export interface WorkOrder {
   id: string
   quote_request_id?: string
   assigned_bay_id?: string
-  assigned_sidekick_id?: string
   start_date: string
   end_date: string
   status: string
