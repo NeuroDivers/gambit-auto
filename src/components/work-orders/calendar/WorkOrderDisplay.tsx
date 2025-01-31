@@ -42,9 +42,16 @@ export function WorkOrderDisplay({ order, onClick }: WorkOrderDisplayProps) {
   }
 
   return (
-    <div className="relative" onClick={handleClick}>
+    <div 
+      className="relative z-50" 
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        handleClick(e)
+      }}
+    >
       <HoverCard>
-        <HoverCardTrigger>
+        <HoverCardTrigger asChild>
           <div 
             className={cn(
               "text-xs p-1 rounded text-left truncate transition-all duration-200 hover:scale-[1.02] hover:border hover:shadow-lg cursor-pointer",
