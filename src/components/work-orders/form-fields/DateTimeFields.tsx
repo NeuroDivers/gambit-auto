@@ -2,6 +2,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input"
 import { Control } from "react-hook-form"
 import { WorkOrderFormValues } from "../types"
+import { format } from "date-fns"
 
 type DateTimeFieldsProps = {
   control: Control<WorkOrderFormValues>
@@ -9,15 +10,29 @@ type DateTimeFieldsProps = {
 
 export function DateTimeFields({ control }: DateTimeFieldsProps) {
   return (
-    <>
+    <div className="grid grid-cols-2 gap-4">
       <FormField
         control={control}
         name="start_date"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Start Date & Time</FormLabel>
+            <FormLabel>Start Date</FormLabel>
             <FormControl>
-              <Input type="datetime-local" {...field} />
+              <Input type="date" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={control}
+        name="start_time"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Start Time</FormLabel>
+            <FormControl>
+              <Input type="time" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -29,14 +44,28 @@ export function DateTimeFields({ control }: DateTimeFieldsProps) {
         name="end_date"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>End Date & Time</FormLabel>
+            <FormLabel>End Date</FormLabel>
             <FormControl>
-              <Input type="datetime-local" {...field} />
+              <Input type="date" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
-    </>
+
+      <FormField
+        control={control}
+        name="end_time"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>End Time</FormLabel>
+            <FormControl>
+              <Input type="time" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
   )
 }
