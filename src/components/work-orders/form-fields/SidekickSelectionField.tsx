@@ -35,7 +35,6 @@ export function SidekickSelectionField({ control }: SidekickSelectionFieldProps)
           )
         `)
         .eq("role", "sidekick")
-        .single()
 
       if (error) throw error
       return data as unknown as SidekickQueryResult[]
