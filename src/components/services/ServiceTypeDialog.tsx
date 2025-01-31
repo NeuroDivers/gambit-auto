@@ -5,30 +5,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-const formSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  status: z.enum(["active", "inactive"]),
-  description: z.string().optional(),
-  price: z.string().optional(),
-  duration: z.string().optional(),
-});
+import { ServiceTypeFormFields, formSchema } from "./ServiceTypeFormFields";
+import * as z from "zod";
 
 interface ServiceTypeDialogProps {
   open: boolean;
@@ -115,96 +98,8 @@ export const ServiceTypeDialog = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white/[0.87]">Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} className="bg-[#242424] border-white/10 text-white/[0.87]" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white/[0.87]">Status</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="bg-[#242424] border-white/10 text-white/[0.87]">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-[#242424] border-white/10">
-                      <SelectItem value="active" className="text-white/[0.87]">Active</SelectItem>
-                      <SelectItem value="inactive" className="text-white/[0.87]">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white/[0.87]">Description</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} className="bg-[#242424] border-white/10 text-white/[0.87]" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white/[0.87]">Price (optional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="number"
-                      step="0.01"
-                      className="bg-[#242424] border-white/10 text-white/[0.87]"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="duration"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white/[0.87]">Duration in minutes (optional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="number"
-                      className="bg-[#242424] border-white/10 text-white/[0.87]"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+            <ServiceTypeFormFields form={form} />
+            
             <div className="flex justify-end space-x-2">
               <Button
                 type="button"
