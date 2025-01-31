@@ -69,6 +69,9 @@ export function useQuoteFormSubmission({
           title: "Success",
           description: "Quote request has been updated successfully.",
         })
+
+        // Call onSuccess callback after successful update
+        onSuccess?.()
       } else {
         // Create new quote request
         const { data: newQuote, error: quoteError } = await supabase
@@ -109,9 +112,8 @@ export function useQuoteFormSubmission({
           description: "Your quote request has been submitted successfully.",
         })
 
-        if (onSuccess) {
-          onSuccess()
-        }
+        // Call onSuccess callback after successful creation
+        onSuccess?.()
       }
 
       queryClient.invalidateQueries({ queryKey: ["quoteRequests"] })

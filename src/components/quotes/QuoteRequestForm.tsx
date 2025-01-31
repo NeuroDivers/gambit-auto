@@ -28,7 +28,6 @@ export function QuoteRequestForm({ initialData, onSuccess }: QuoteRequestFormPro
     setMediaUrl
   } = useMediaUpload()
 
-  // Fetch selected services if initialData exists and has an id
   const { data: selectedServices = [] } = useQuery({
     queryKey: ["quoteRequestServices", initialData?.id],
     queryFn: async () => {
@@ -41,7 +40,7 @@ export function QuoteRequestForm({ initialData, onSuccess }: QuoteRequestFormPro
       if (error) throw error
       return data.map(service => service.service_id)
     },
-    enabled: !!initialData?.id // Only run query when we have a valid id
+    enabled: !!initialData?.id
   })
 
   const form = useForm<QuoteRequestFormValues>({
@@ -60,14 +59,14 @@ export function QuoteRequestForm({ initialData, onSuccess }: QuoteRequestFormPro
         vehicle_serial: "",
         additional_notes: "",
         timeframe: "flexible" as const,
+        price: 0,
       }),
       service_ids: selectedServices
     },
   })
 
-  // Update form when selectedServices changes
   React.useEffect(() => {
-    if (selectedServices) {
+    if (selectedServices.length > 0) {
       form.setValue("service_ids", selectedServices)
     }
   }, [selectedServices, form])
@@ -85,7 +84,7 @@ export function QuoteRequestForm({ initialData, onSuccess }: QuoteRequestFormPro
   return (
     <ScrollArea className="h-[calc(100vh-12rem)] pr-6">
       <div className="space-y-6">
-        <QuoteFormHeader initialData={!!initialData} />
+        <QuoteFormHeader isEditing={!!initialData} />
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             <QuoteRequestFormFields 

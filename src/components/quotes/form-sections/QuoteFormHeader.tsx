@@ -1,20 +1,17 @@
-import React from 'react'
+import { DialogDescription } from "@/components/ui/dialog"
 
 type QuoteFormHeaderProps = {
-  initialData?: boolean
+  isEditing: boolean
 }
 
-export function QuoteFormHeader({ initialData }: QuoteFormHeaderProps) {
+export function QuoteFormHeader({ isEditing }: QuoteFormHeaderProps) {
   return (
-    <div>
-      <h3 className="text-xl font-semibold mb-2 text-white/[0.87]">
-        {initialData ? "Edit Quote Request" : "Request a Quote"}
-      </h3>
-      <p className="text-sm text-white/60">
-        {initialData
-          ? "Update the quote request details below"
-          : "Fill out the form below to request a quote for our services"}
-      </p>
+    <div className="space-y-2">
+      <DialogDescription>
+        {isEditing 
+          ? "Update the quote request details below."
+          : "Fill out the form below to request a quote for our services."}
+      </DialogDescription>
     </div>
   )
 }
