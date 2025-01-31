@@ -1,5 +1,4 @@
 import { WelcomeHeader } from "./WelcomeHeader";
-import { ProfileForm } from "../profile/ProfileForm";
 import { UserManagementSection } from "../users/UserManagementSection";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
 
@@ -14,12 +13,6 @@ export const DashboardLayout = () => {
     <div className="container mx-auto px-4 py-8">
       <WelcomeHeader />
       <div className="space-y-12">
-        <div className="max-w-md mx-auto">
-          <div className="bg-[#1E1E1E] rounded-lg shadow-lg p-6 border border-white/10">
-            <h2 className="text-2xl font-semibold mb-6 text-white/[0.87]">Profile Settings</h2>
-            <ProfileForm />
-          </div>
-        </div>
         {isAdmin && (
           <div className="max-w-[1400px] mx-auto">
             <div className="bg-[#1E1E1E] rounded-lg shadow-lg p-6 border border-white/10">
