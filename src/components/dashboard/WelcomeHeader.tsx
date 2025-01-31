@@ -44,5 +44,5 @@ export const WelcomeHeader = () => {
     }
   };
 
-  return <WelcomeCard email={profile?.email} onLogout={handleLogout} />;
+  return <WelcomeCard firstName={profile?.first_name} onLogout={handleLogout} />;
 };
