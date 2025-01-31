@@ -12,6 +12,7 @@ import { Users, ClipboardList } from "lucide-react";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { CreateQuoteDialog } from "@/components/quotes/CreateQuoteDialog";
 import { ServiceBaysList } from "@/components/service-bays/ServiceBaysList";
+import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -37,6 +38,7 @@ export default function Index() {
 
   return (
     <DashboardLayout>
+      <PageBreadcrumbs />
       <div className="flex items-center gap-4 mb-8">
         {isAdmin && (
           <>

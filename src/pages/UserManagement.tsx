@@ -2,8 +2,7 @@ import { UserManagementSection } from "@/components/users/UserManagementSection"
 import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs";
 
 export default function UserManagement() {
   const { isAdmin, loading } = useAdminStatus();
@@ -30,14 +29,7 @@ export default function UserManagement() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
       <div className="container mx-auto px-6 py-12">
-        <Button
-          variant="ghost"
-          className="mb-6"
-          onClick={() => navigate("/")}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
-        </Button>
+        <PageBreadcrumbs />
         <div className="max-w-[1400px] mx-auto">
           <div className="bg-card/50 backdrop-blur-sm rounded-xl shadow-lg border border-white/5 p-8">
             <UserManagementSection />
