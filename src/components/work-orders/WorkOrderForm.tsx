@@ -24,15 +24,23 @@ export function WorkOrderForm({ selectedDate, quoteRequest, workOrder, onSuccess
       start_date: workOrder ? format(new Date(workOrder.start_date), "yyyy-MM-dd") 
         : selectedDate ? format(selectedDate, "yyyy-MM-dd") : "",
       start_time: workOrder ? format(new Date(workOrder.start_date), "HH:mm")
-        : selectedDate ? format(selectedDate, "HH:mm") : "",
+        : selectedDate ? format(selectedDate, "HH:mm") : "09:00", // Default to 9 AM if no time specified
       end_date: workOrder ? format(new Date(workOrder.end_date), "yyyy-MM-dd")
         : selectedDate ? format(selectedDate, "yyyy-MM-dd") : "",
       end_time: workOrder ? format(new Date(workOrder.end_date), "HH:mm")
-        : selectedDate ? format(selectedDate, "HH:mm") : "",
+        : selectedDate ? format(selectedDate, "HH:mm") : "17:00", // Default to 5 PM if no time specified
       status: workOrder?.status as WorkOrderFormValues['status'] || "pending",
       notes: workOrder?.notes || "",
     },
   })
+
+  // Reset form values when selectedDate changes
+  React.useEffect(() => {
+    if (selectedDate) {
+      form.setValue('start_date', format(selectedDate, "yyyy-MM-dd"))
+      form.setValue('end_date', format(selectedDate, "yyyy-MM-dd"))
+    }
+  }, [selectedDate, form])
 
   const onSubmit = async (values: WorkOrderFormValues) => {
     try {
