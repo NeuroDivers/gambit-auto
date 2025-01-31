@@ -35,7 +35,7 @@ export function QuoteRequestForm() {
       last_name: "",
       email: "",
       phone_number: "",
-      contact_preference: "email" as const,
+      contact_preference: "email",
       service_id: "",
       vehicle_make: "",
       vehicle_model: "",
@@ -45,11 +45,23 @@ export function QuoteRequestForm() {
     },
   })
 
-  async function onSubmit(values: QuoteRequestFormValues) {
+  async function onSubmit(data: QuoteRequestFormValues) {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("quote_requests")
-        .insert(values)
+        .insert({
+          first_name: data.first_name,
+          last_name: data.last_name,
+          email: data.email,
+          phone_number: data.phone_number,
+          contact_preference: data.contact_preference,
+          service_id: data.service_id,
+          vehicle_make: data.vehicle_make,
+          vehicle_model: data.vehicle_model,
+          vehicle_year: data.vehicle_year,
+          vehicle_serial: data.vehicle_serial,
+          additional_notes: data.additional_notes,
+        })
         .select()
         .single()
 
