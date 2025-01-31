@@ -3,6 +3,7 @@ import * as SelectPrimitive from "@radix-ui/react-select"
 import { SelectTrigger } from "./select/select-trigger"
 import { SelectContent } from "./select/select-content"
 import { SelectItem } from "./select/select-item"
+import { cn } from "@/lib/utils"
 
 const Select = SelectPrimitive.Root
 const SelectGroup = SelectPrimitive.Group
