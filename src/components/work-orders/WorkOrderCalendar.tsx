@@ -1,11 +1,10 @@
-import { Calendar as CalendarIcon } from "lucide-react"
+import { Calendar as CalendarIcon, Plus } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { CreateWorkOrderDialog } from "./CreateWorkOrderDialog"
 import { format } from "date-fns"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
@@ -38,6 +37,17 @@ export function WorkOrderCalendar() {
             )
           )
         `)
+      if (error) throw error
+      return data
+    },
+  })
+
+  const { data: serviceBays } = useQuery({
+    queryKey: ["serviceBays"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_bays")
+        .select("*")
       if (error) throw error
       return data
     },
@@ -81,6 +91,11 @@ export function WorkOrderCalendar() {
     )
   }
 
+  const timeSlots = Array.from({ length: 10 }, (_, i) => {
+    const hour = 9 + i
+    return `${hour.toString().padStart(2, '0')}:00`
+  })
+
   return (
     <div className="space-y-6 w-full">
       <div className="flex items-center justify-between">
@@ -106,81 +121,89 @@ export function WorkOrderCalendar() {
         </div>
       </div>
 
-      <div className={cn(
-        "rounded-lg border bg-[#1a1a1a] p-4",
-        view === 'month' ? 'w-full' : 'max-w-3xl mx-auto'
-      )}>
-        <Calendar
-          mode="single"
-          selected={selectedDate}
-          onSelect={handleSelect}
-          className="w-full"
-          components={{
-            Day: ({ date, ...props }) => {
-              const dayWorkOrders = getWorkOrdersForDate(date)
-              return (
-                <div className="relative h-full w-full min-h-[100px] p-1">
-                  <button {...props} className="absolute top-2 left-2 text-sm">
-                    {format(date, 'd')}
-                  </button>
-                  <div className="pt-8 space-y-1">
-                    {dayWorkOrders?.map((order) => (
-                      <HoverCard key={order.id}>
-                        <HoverCardTrigger>
-                          <div 
-                            className={cn(
-                              "text-xs p-1 rounded text-left truncate",
-                              order.status === 'completed' ? 'bg-blue-500/20 text-blue-400' :
-                              'bg-green-500/20 text-green-400'
-                            )}
-                          >
-                            {format(new Date(order.start_date), "HH:mm")} - {order.quote_requests?.first_name}
-                          </div>
-                        </HoverCardTrigger>
-                        <HoverCardContent className="w-80">
-                          {renderWorkOrderContent(order)}
-                        </HoverCardContent>
-                      </HoverCard>
-                    ))}
+      {view === 'month' ? (
+        <div className="rounded-lg border bg-[#1a1a1a] p-4">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={handleSelect}
+            className="w-full"
+            components={{
+              Day: ({ date, ...props }) => {
+                const dayWorkOrders = getWorkOrdersForDate(date)
+                return (
+                  <div className="relative h-full w-full min-h-[100px] p-1 group">
+                    <button {...props} className="absolute top-2 left-2 text-sm">
+                      {format(date, 'd')}
+                    </button>
+                    <Plus className="absolute top-2 right-2 h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
+                    <div className="pt-8 space-y-1">
+                      {dayWorkOrders?.map((order) => (
+                        <HoverCard key={order.id}>
+                          <HoverCardTrigger>
+                            <div 
+                              className={cn(
+                                "text-xs p-1 rounded text-left truncate",
+                                order.status === 'completed' ? 'bg-blue-500/20 text-blue-400' :
+                                'bg-green-500/20 text-green-400'
+                              )}
+                            >
+                              {format(new Date(order.start_date), "HH:mm")} - {order.quote_requests?.first_name}
+                            </div>
+                          </HoverCardTrigger>
+                          <HoverCardContent className="w-80">
+                            {renderWorkOrderContent(order)}
+                          </HoverCardContent>
+                        </HoverCard>
+                      ))}
+                    </div>
                   </div>
+                )
+              }
+            }}
+            classNames={{
+              months: "w-full",
+              month: "w-full",
+              table: "w-full border-collapse",
+              head_row: "flex w-full",
+              head_cell: "text-muted-foreground rounded-md w-full font-normal text-[0.9rem] capitalize",
+              row: "flex w-full mt-2",
+              cell: cn(
+                "relative w-full pt-1 px-1 h-full border border-border overflow-hidden transition-colors",
+                "hover:bg-primary/10"
+              ),
+              day: "h-full w-full",
+              day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+              day_today: "bg-accent text-accent-foreground",
+            }}
+          />
+        </div>
+      ) : (
+        <div className="rounded-lg border bg-[#1a1a1a] p-4">
+          <div className="grid grid-cols-[auto,1fr,1fr,1fr] gap-4">
+            <div className="font-medium">Time</div>
+            {serviceBays?.map(bay => (
+              <div key={bay.id} className="font-medium">
+                {bay.name}
+                <div className="text-sm text-muted-foreground">
+                  {format(selectedDate || new Date(), 'EEEE')}
                 </div>
-              )
-            }
-          }}
-          classNames={{
-            months: "w-full",
-            month: "w-full",
-            table: "w-full border-collapse",
-            head_row: "flex w-full",
-            head_cell: "text-muted-foreground rounded-md w-full font-normal text-[0.9rem] capitalize",
-            row: "flex w-full mt-2",
-            cell: "relative w-full pt-1 px-1 h-full border border-border hover:bg-accent/50 overflow-hidden",
-            day: "h-full w-full",
-            day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-            day_today: "bg-accent text-accent-foreground",
-          }}
-        />
-      </div>
-
-      {view === 'day' && selectedDate && (
-        <div className="space-y-4 max-w-3xl mx-auto">
-          <h3 className="text-lg font-semibold">
-            Appointments for {format(selectedDate, 'PPPP')}
-          </h3>
-          {filteredWorkOrders?.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">
-              No work orders scheduled for this day
-            </p>
-          ) : (
-            filteredWorkOrders?.map(order => (
-              <div
-                key={order.id}
-                className="p-4 border rounded-lg space-y-2 bg-card"
-              >
-                {renderWorkOrderContent(order)}
               </div>
-            ))
-          )}
+            ))}
+            {timeSlots.map(time => (
+              <React.Fragment key={time}>
+                <div className="py-4">{time}</div>
+                {serviceBays?.map(bay => (
+                  <div
+                    key={bay.id}
+                    className="border-t border-border py-4 text-muted-foreground"
+                  >
+                    Available
+                  </div>
+                ))}
+              </React.Fragment>
+            ))}
+          </div>
         </div>
       )}
 
