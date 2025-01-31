@@ -10,8 +10,6 @@ import { CreateQuoteDialog } from "../CreateQuoteDialog"
 import type { QuoteRequest } from "../types"
 
 export function QuoteRequestsSection() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-
   const { data: requests, isLoading } = useQuery({
     queryKey: ["quoteRequests"],
     queryFn: async () => {
@@ -48,15 +46,7 @@ export function QuoteRequestsSection() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-semibold">Quote Requests</h3>
-          <Button
-            onClick={() => setIsDialogOpen(true)}
-            variant="outline"
-            size="sm"
-            className="gap-2"
-          >
-            <PlusCircle className="h-4 w-4" />
-            Create Quote
-          </Button>
+          <CreateQuoteDialog />
         </div>
         <StatusLegend statusCounts={statusCounts} />
         {requests?.map((request) => (
@@ -68,11 +58,6 @@ export function QuoteRequestsSection() {
           </div>
         )}
       </div>
-
-      <CreateQuoteDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-      />
     </section>
   )
 }
