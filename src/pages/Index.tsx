@@ -58,8 +58,10 @@ export default function Index() {
           <div className="mt-12">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white/[0.87]">Quote Requests</h2>
-              <Button variant="outline" className="gap-2">
-                <PlusCircle className="h-4 w-4" />
+              <Button 
+                className="bg-[#BB86FC] hover:bg-[#BB86FC]/90 text-white transition-colors duration-200"
+              >
+                <PlusCircle className="h-4 w-4 mr-2" />
                 Create Quote
               </Button>
             </div>
