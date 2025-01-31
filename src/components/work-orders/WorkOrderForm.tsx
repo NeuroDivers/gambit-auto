@@ -117,17 +117,19 @@ export function WorkOrderForm({ selectedDate, quoteRequest, workOrder, onSuccess
             selected={selectedDate}
             className="w-full"
             components={{
-              Day: ({ date, ...props }) => {
+              Day: ({ date, ...dayProps }) => {
                 const workOrders = getWorkOrdersForDate(date)
+                const isSelected = selectedDate?.toDateString() === date.toDateString()
+                
                 return (
                   <div
                     className={cn(
                       "relative w-full p-2 text-center",
-                      props.selected && "text-primary-foreground",
+                      isSelected && "text-primary-foreground",
                       "hover:bg-accent hover:text-accent-foreground",
                       "focus:bg-accent focus:text-accent-foreground focus:outline-none"
                     )}
-                    {...props}
+                    {...dayProps}
                   >
                     <time dateTime={format(date, "yyyy-MM-dd")}>{format(date, "d")}</time>
                     {workOrders.length > 0 && (
