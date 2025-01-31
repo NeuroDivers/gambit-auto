@@ -9,6 +9,77 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      business_profile: {
+        Row: {
+          address: string | null
+          business_hours: Json | null
+          company_name: string
+          created_at: string
+          email: string | null
+          id: string
+          phone_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          business_hours?: Json | null
+          company_name: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          phone_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          business_hours?: Json | null
+          company_name?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          phone_number?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      business_taxes: {
+        Row: {
+          business_id: string | null
+          created_at: string
+          id: string
+          tax_number: string
+          tax_rate: number
+          tax_type: Database["public"]["Enums"]["tax_type"]
+          updated_at: string
+        }
+        Insert: {
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          tax_number: string
+          tax_rate: number
+          tax_type: Database["public"]["Enums"]["tax_type"]
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          tax_number?: string
+          tax_rate?: number
+          tax_type?: Database["public"]["Enums"]["tax_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_taxes_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
@@ -118,6 +189,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "manager" | "sidekick" | "client"
       service_status: "active" | "inactive"
+      tax_type: "GST" | "QST" | "HST" | "PST"
     }
     CompositeTypes: {
       [_ in never]: never

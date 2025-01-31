@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { CreateUserDialog } from "@/components/users/CreateUserDialog";
 import { ProfileDialog } from "@/components/profile/ProfileDialog";
+import { BusinessSettingsDialog } from "@/components/business/BusinessSettingsDialog";
 import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
@@ -49,6 +50,7 @@ export default function Index() {
           )}
           <CreateUserDialog />
           <ProfileDialog />
+          <BusinessSettingsDialog />
         </div>
         <ServiceTypesList />
       </div>
