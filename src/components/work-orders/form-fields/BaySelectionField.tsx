@@ -12,6 +12,7 @@ export function BaySelectionField({ form }: BaySelectionFieldProps) {
         .from("service_bays")
         .select("*")
         .eq("status", "available")
+        .order('name')
       if (error) throw error
       return data
     },
