@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { QuoteRequestFormFields, formSchema } from "./QuoteRequestFormFields"
 import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 type QuoteRequestFormValues = z.infer<typeof formSchema>
 
@@ -176,33 +177,35 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-xl font-semibold mb-2 text-white/[0.87]">
-          {initialData ? "Edit Quote Request" : "Request a Quote"}
-        </h3>
-        <p className="text-sm text-white/60">
-          {initialData
-            ? "Update the quote request details below"
-            : "Fill out the form below to request a quote for our services"}
-        </p>
+    <ScrollArea className="h-[calc(100vh-12rem)] pr-6">
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-xl font-semibold mb-2 text-white/[0.87]">
+            {initialData ? "Edit Quote Request" : "Request a Quote"}
+          </h3>
+          <p className="text-sm text-white/60">
+            {initialData
+              ? "Update the quote request details below"
+              : "Fill out the form below to request a quote for our services"}
+          </p>
+        </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <QuoteRequestFormFields 
+              form={form} 
+              onFileUpload={handleFileUpload}
+              mediaUrl={mediaUrl}
+              uploading={uploading}
+              onMediaRemove={handleMediaRemove}
+            />
+            <div className="pt-6">
+              <Button type="submit" className="w-full" disabled={uploading}>
+                {uploading ? "Uploading..." : initialData ? "Update Request" : "Submit Request"}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </div>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <QuoteRequestFormFields 
-            form={form} 
-            onFileUpload={handleFileUpload}
-            mediaUrl={mediaUrl}
-            uploading={uploading}
-            onMediaRemove={handleMediaRemove}
-          />
-          <div className="pt-6">
-            <Button type="submit" className="w-full" disabled={uploading}>
-              {uploading ? "Uploading..." : initialData ? "Update Request" : "Submit Request"}
-            </Button>
-          </div>
-        </form>
-      </Form>
-    </div>
+    </ScrollArea>
   )
 }
