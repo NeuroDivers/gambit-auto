@@ -21,7 +21,7 @@ export const DashboardLayout = () => {
           </div>
         </div>
         {isAdmin && (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-[1400px] mx-auto">
             <div className="bg-[#1E1E1E] rounded-lg shadow-lg p-6 border border-white/10">
               <UserManagementSection />
             </div>
