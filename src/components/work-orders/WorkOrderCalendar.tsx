@@ -136,6 +136,8 @@ export function WorkOrderCalendar() {
           <CalendarGrid
             selectedDate={selectedDate || new Date()}
             serviceBays={serviceBays}
+            workOrders={workOrders}
+            onSelectDate={handleSelect}
           />
         </div>
       )}
