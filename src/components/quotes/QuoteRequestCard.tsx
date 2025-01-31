@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { EditQuoteDialog } from "./EditQuoteDialog"
+import { useState } from "react"
+import { CreateWorkOrderDialog } from "../work-orders/CreateWorkOrderDialog"
 
 type QuoteRequest = {
   id: string
@@ -51,6 +53,7 @@ const getStatusStyles = (status: string) => {
 export function QuoteRequestCard({ request }: QuoteRequestCardProps) {
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const [isWorkOrderDialogOpen, setIsWorkOrderDialogOpen] = useState(false)
 
   const updateStatus = async (status: string) => {
     try {
@@ -67,7 +70,7 @@ export function QuoteRequestCard({ request }: QuoteRequestCardProps) {
       })
 
       queryClient.invalidateQueries({ queryKey: ["quoteRequests"] })
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
@@ -143,7 +146,24 @@ export function QuoteRequestCard({ request }: QuoteRequestCardProps) {
             </Button>
           </div>
         )}
+
+        {request.status === "approved" && (
+          <div className="flex justify-end">
+            <Button
+              size="sm"
+              onClick={() => setIsWorkOrderDialogOpen(true)}
+            >
+              Convert to Work Order
+            </Button>
+          </div>
+        )}
       </CardContent>
+
+      <CreateWorkOrderDialog
+        open={isWorkOrderDialogOpen}
+        onOpenChange={setIsWorkOrderDialogOpen}
+        quoteRequest={request}
+      />
     </Card>
   )
 }
