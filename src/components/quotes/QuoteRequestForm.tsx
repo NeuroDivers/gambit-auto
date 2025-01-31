@@ -32,6 +32,8 @@ export function QuoteRequestForm({ initialData, onSuccess }: QuoteRequestFormPro
     queryKey: ["quoteRequestServices", initialData?.id],
     enabled: !!initialData?.id,
     queryFn: async () => {
+      if (!initialData?.id) return []
+      
       const { data, error } = await supabase
         .from("quote_request_services")
         .select("service_id")
