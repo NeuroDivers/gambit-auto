@@ -91,7 +91,7 @@ export const QuoteRequestList = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2 items-center mb-4 p-4 bg-card rounded-lg">
+      <div className="flex flex-wrap gap-2 items-center mb-4 p-4 rounded-lg">
         <span className="text-sm font-medium mr-2">Status Legend:</span>
         <Badge className="border text-[rgb(250,204,21)] bg-[rgb(234,179,8,0.2)] border-[rgb(234,179,8,0.3)]">
           pending ({statusCounts.pending})
