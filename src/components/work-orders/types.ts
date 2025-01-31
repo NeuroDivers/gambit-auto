@@ -13,7 +13,9 @@ export type WorkOrderFormValues = z.infer<typeof workOrderFormSchema>
 export interface ServiceBay {
   id: string
   name: string
-  status: 'available' | 'unavailable' | 'maintenance'
+  status: 'available' | 'unavailable' | 'maintenance' | 'in_use'
+  created_at?: string
+  updated_at?: string
 }
 
 export interface WorkOrder {
@@ -24,7 +26,9 @@ export interface WorkOrder {
   end_date: string
   status: string
   notes?: string
-  service_bays?: ServiceBay
+  created_at?: string
+  updated_at?: string
+  service_bays?: Partial<ServiceBay>
   quote_requests?: {
     first_name?: string
     last_name?: string
@@ -34,4 +38,11 @@ export interface WorkOrder {
       }
     }>
   }
+}
+
+export interface WorkOrderFormProps {
+  selectedDate?: Date
+  quoteRequest?: any // We'll type this properly later
+  onSuccess?: () => void
+  workOrder?: WorkOrder
 }
