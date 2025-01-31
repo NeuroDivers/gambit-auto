@@ -4,17 +4,27 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { useQuery } from "@tanstack/react-query"
-import { Json } from "@/integrations/supabase/types/json"
+
+const businessHoursSchema = z.object({
+  monday: z.string().optional(),
+  tuesday: z.string().optional(),
+  wednesday: z.string().optional(),
+  thursday: z.string().optional(),
+  friday: z.string().optional(),
+  saturday: z.string().optional(),
+  sunday: z.string().optional(),
+})
 
 const businessFormSchema = z.object({
   company_name: z.string().min(1, "Company name is required"),
   phone_number: z.string().optional(),
   email: z.string().email().optional().or(z.literal("")),
   address: z.string().optional(),
-  business_hours: z.string().optional(),
+  business_hours: businessHoursSchema,
 })
 
 type BusinessFormValues = z.infer<typeof businessFormSchema>
@@ -36,6 +46,16 @@ export function BusinessProfileForm() {
     },
   })
 
+  const defaultBusinessHours = {
+    monday: "",
+    tuesday: "",
+    wednesday: "",
+    thursday: "",
+    friday: "",
+    saturday: "",
+    sunday: "",
+  }
+
   const form = useForm<BusinessFormValues>({
     resolver: zodResolver(businessFormSchema),
     defaultValues: {
@@ -43,7 +63,9 @@ export function BusinessProfileForm() {
       phone_number: profile?.phone_number || "",
       email: profile?.email || "",
       address: profile?.address || "",
-      business_hours: profile?.business_hours ? JSON.stringify(profile.business_hours) : "",
+      business_hours: profile?.business_hours 
+        ? (profile.business_hours as z.infer<typeof businessHoursSchema>) 
+        : defaultBusinessHours,
     },
   })
 
@@ -57,7 +79,7 @@ export function BusinessProfileForm() {
           phone_number: data.phone_number,
           email: data.email,
           address: data.address,
-          business_hours: data.business_hours ? JSON.parse(data.business_hours) as Json : null,
+          business_hours: data.business_hours,
         })
 
       if (error) throw error
@@ -76,6 +98,16 @@ export function BusinessProfileForm() {
       })
     }
   }
+
+  const days = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+  ] as const
 
   return (
     <Form {...form}>
@@ -129,26 +161,38 @@ export function BusinessProfileForm() {
             <FormItem>
               <FormLabel>Address</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Textarea 
+                  {...field} 
+                  className="min-h-[100px]"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="business_hours"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Business Hours (JSON format)</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder='{"monday": "9:00-17:00"}' />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Business Hours</h3>
+          {days.map((day) => (
+            <FormField
+              key={day}
+              control={form.control}
+              name={`business_hours.${day}`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="capitalize">{day}</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      placeholder="e.g., 9:00-17:00 or Closed"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          ))}
+        </div>
 
         <Button type="submit">Update Business Profile</Button>
       </form>
