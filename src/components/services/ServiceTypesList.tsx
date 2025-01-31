@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ServiceTypeDialog } from "./ServiceTypeDialog";
-import { ServiceTypesTable } from "./ServiceTypesTable";
+import { ServiceTypeCard } from "./ServiceTypeCard";
 import { useState } from "react";
 
 export const ServiceTypesList = () => {
@@ -38,8 +38,17 @@ export const ServiceTypesList = () => {
         </Button>
       </div>
       
-      <div className="bg-[#242424] border border-white/12 rounded-lg transition-all duration-200 hover:border-[#BB86FC]/50">
-        <ServiceTypesTable serviceTypes={serviceTypes || []} onRefetch={refetch} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {serviceTypes?.map((service) => (
+          <ServiceTypeCard 
+            key={service.id} 
+            service={service} 
+            onEdit={() => {
+              setIsDialogOpen(true);
+            }}
+            onRefetch={refetch}
+          />
+        ))}
       </div>
 
       <ServiceTypeDialog 
