@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { ServiceBayCard } from "./ServiceBayCard"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
 import { CreateServiceBayDialog } from "./CreateServiceBayDialog"
 import { useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { BayHeader } from "./BayHeader"
 
 export function ServiceBaysList() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -51,8 +50,7 @@ export function ServiceBaysList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_types")
-        .select("id, name")
-        .eq("status", "active")
+        .select("id, name, status")
         .order("name")
 
       if (error) throw error
@@ -71,19 +69,7 @@ export function ServiceBaysList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-white/[0.87]">Service Bays</h2>
-          <p className="text-white/60">Manage your service bay availability and capabilities</p>
-        </div>
-        <Button
-          onClick={() => setIsDialogOpen(true)}
-          className="bg-[#BB86FC] hover:bg-[#BB86FC]/90 text-white transition-colors duration-200"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Service Bay
-        </Button>
-      </div>
+      <BayHeader onAddBay={() => setIsDialogOpen(true)} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {serviceBays?.map((bay) => (
