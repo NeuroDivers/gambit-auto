@@ -22,11 +22,13 @@ const formSchema = z.object({
   additional_notes: z.string().optional(),
 })
 
+type QuoteRequestFormValues = z.infer<typeof formSchema>
+
 export function QuoteRequestForm() {
   const { toast } = useToast()
   const [uploading, setUploading] = useState(false)
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<QuoteRequestFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       first_name: "",
@@ -43,7 +45,7 @@ export function QuoteRequestForm() {
     },
   })
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: QuoteRequestFormValues) {
     try {
       const { data, error } = await supabase
         .from("quote_requests")
