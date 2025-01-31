@@ -27,7 +27,7 @@ export function CalendarDay({ date, workOrders = [], onSelect }: CalendarDayProp
         {format(date, 'd')}
       </div>
       <Plus className="absolute top-2 right-2 h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
-      <div className="pt-8 space-y-1">
+      <div className="mt-8 space-y-1">
         {workOrders.map((order) => (
           <WorkOrderDisplay 
             key={order.id} 
