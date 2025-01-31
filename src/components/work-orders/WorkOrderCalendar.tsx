@@ -144,9 +144,9 @@ export function WorkOrderCalendar() {
                           <HoverCardTrigger>
                             <div 
                               className={cn(
-                                "text-xs p-1 rounded text-left truncate",
-                                order.status === 'completed' ? 'bg-blue-500/20 text-blue-400' :
-                                'bg-green-500/20 text-green-400'
+                                "text-xs p-1 rounded text-left truncate transition-all duration-200 hover:scale-[1.02] hover:border hover:shadow-lg",
+                                order.status === 'completed' ? 'bg-blue-500/20 text-blue-400 hover:border-blue-400/50' :
+                                'bg-green-500/20 text-green-400 hover:border-green-400/50'
                               )}
                             >
                               {format(new Date(order.start_date), "HH:mm")} - {order.quote_requests?.first_name}
