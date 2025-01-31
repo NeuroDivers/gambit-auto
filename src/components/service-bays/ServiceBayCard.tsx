@@ -1,10 +1,11 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { BayHeader } from "./BayHeader"
-import { BayStatusToggle } from "./BayStatusToggle"
-import { BayServiceToggles } from "./BayServiceToggles"
 
 type ServiceBayCardProps = {
   bay: {
@@ -20,7 +21,6 @@ type ServiceBayCardProps = {
   availableServices: {
     id: string
     name: string
-    status: 'active' | 'inactive'
   }[]
 }
 
@@ -75,6 +75,7 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
         description: `Service ${isActive ? 'added to' : 'removed from'} bay`,
       })
 
+      // Invalidate both queries to ensure data is fresh
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['serviceBays'] }),
         queryClient.invalidateQueries({ queryKey: ['bayServices'] })
@@ -104,22 +105,38 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
   return (
     <Card>
       <CardHeader className="pb-4">
-        <BayHeader 
-          name={bay.name} 
-          status={bay.status} 
-          statusColor={getStatusColor(bay.status)} 
-        />
+        <div className="flex items-start justify-between">
+          <CardTitle className="text-lg">{bay.name}</CardTitle>
+          <Badge className={`border ${getStatusColor(bay.status)}`}>
+            {bay.status}
+          </Badge>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        <BayStatusToggle 
-          status={bay.status} 
-          onStatusChange={updateBayStatus} 
-        />
-        <BayServiceToggles 
-          services={services}
-          availableServices={availableServices}
-          onToggleService={toggleService}
-        />
+        <div>
+          <Label className="mb-2 block">Bay Status</Label>
+          <ToggleGroup type="single" value={bay.status} onValueChange={updateBayStatus}>
+            <ToggleGroupItem value="available">Available</ToggleGroupItem>
+            <ToggleGroupItem value="in_use">In Use</ToggleGroupItem>
+            <ToggleGroupItem value="maintenance">Maintenance</ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+
+        <div className="space-y-4">
+          <Label>Available Services</Label>
+          {availableServices.map((service) => {
+            const isActive = services.some(s => s.id === service.id)
+            return (
+              <div key={service.id} className="flex items-center justify-between">
+                <span className="text-sm">{service.name}</span>
+                <Switch
+                  checked={isActive}
+                  onCheckedChange={(checked) => toggleService(service.id, checked)}
+                />
+              </div>
+            )
+          })}
+        </div>
       </CardContent>
     </Card>
   )

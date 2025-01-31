@@ -15,7 +15,11 @@ export function ServiceBaysList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_bays")
-        .select("id, name, status")
+        .select(`
+          id,
+          name,
+          status
+        `)
         .order("name")
 
       if (error) throw error
@@ -47,7 +51,8 @@ export function ServiceBaysList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_types")
-        .select("id, name, status")
+        .select("id, name")
+        .eq("status", "active")
         .order("name")
 
       if (error) throw error
