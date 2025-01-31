@@ -19,7 +19,7 @@ interface SidekickQueryResult {
 }
 
 export function SidekickSelectionField({ control }: SidekickSelectionFieldProps) {
-  const { data: sidekicks, isLoading } = useQuery({
+  const { data: sidekicks } = useQuery({
     queryKey: ["sidekicks"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -27,7 +27,7 @@ export function SidekickSelectionField({ control }: SidekickSelectionFieldProps)
         .select(`
           user_id,
           role,
-          profiles:profiles(
+          profiles!user_roles_user_id_fkey(
             first_name,
             last_name
           )
