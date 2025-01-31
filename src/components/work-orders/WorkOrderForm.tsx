@@ -1,23 +1,15 @@
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
+import { Form } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useQuery } from "@tanstack/react-query"
 import { addHours, format } from "date-fns"
-
-const formSchema = z.object({
-  quote_request_id: z.string().uuid().optional(),
-  assigned_bay_id: z.string().uuid(),
-  start_date: z.string(),
-  end_date: z.string(),
-  notes: z.string().optional(),
-})
+import { BaySelectionField } from "./form-fields/BaySelectionField"
+import { DateTimeFields } from "./form-fields/DateTimeFields"
+import { NotesField } from "./form-fields/NotesField"
+import { workOrderFormSchema, type WorkOrderFormValues } from "./types"
 
 type WorkOrderFormProps = {
   selectedDate?: Date
@@ -29,8 +21,8 @@ export function WorkOrderForm({ selectedDate, quoteRequest, onSuccess }: WorkOrd
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<WorkOrderFormValues>({
+    resolver: zodResolver(workOrderFormSchema),
     defaultValues: {
       quote_request_id: quoteRequest?.id,
       start_date: selectedDate ? format(selectedDate, "yyyy-MM-dd'T'HH:mm") : "",
@@ -39,19 +31,7 @@ export function WorkOrderForm({ selectedDate, quoteRequest, onSuccess }: WorkOrd
     },
   })
 
-  const { data: serviceBays } = useQuery({
-    queryKey: ["serviceBays"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("service_bays")
-        .select("*")
-        .eq("status", "available")
-      if (error) throw error
-      return data
-    },
-  })
-
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: WorkOrderFormValues) => {
     try {
       const { error } = await supabase
         .from("work_orders")
@@ -82,73 +62,10 @@ export function WorkOrderForm({ selectedDate, quoteRequest, onSuccess }: WorkOrd
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="assigned_bay_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Service Bay</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a service bay" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {serviceBays?.map((bay) => (
-                    <SelectItem key={bay.id} value={bay.id}>
-                      {bay.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="start_date"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Start Date & Time</FormLabel>
-              <FormControl>
-                <Input type="datetime-local" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="end_date"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>End Date & Time</FormLabel>
-              <FormControl>
-                <Input type="datetime-local" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Notes</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
+        <BaySelectionField control={form.control} />
+        <DateTimeFields control={form.control} />
+        <NotesField control={form.control} />
+        
         <Button type="submit" className="w-full">
           Create Work Order
         </Button>
