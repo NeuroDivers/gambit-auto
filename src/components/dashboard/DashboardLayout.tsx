@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export const DashboardLayout = () => {
+export const DashboardLayout = ({ children }: { children?: React.ReactNode }) => {
   const { isAdmin, loading } = useAdminStatus();
   const navigate = useNavigate();
 
@@ -20,6 +20,7 @@ export const DashboardLayout = () => {
     <div className="bg-gradient-to-b from-background to-background/95 min-h-screen">
       <div className="container mx-auto px-6 py-8 space-y-8">
         <WelcomeHeader />
+        {children}
       </div>
     </div>
   );

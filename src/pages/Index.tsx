@@ -36,39 +36,36 @@ export default function Index() {
   }
 
   return (
-    <div className="bg-[#121212]">
-      <DashboardLayout />
-      <div className="container mx-auto px-6 py-8">
-        <div className="flex items-center gap-4 mb-8">
-          {isAdmin && (
-            <Button
-              onClick={() => navigate("/user-management")}
-              variant="outline"
-              className="gap-2"
-            >
-              <Users className="h-4 w-4" />
-              Manage Users
-            </Button>
-          )}
-          <CreateUserDialog />
-          <ProfileDialog />
-          <BusinessSettingsDialog />
-        </div>
-        {isAdmin ? (
-          <>
-            <ServiceTypesList />
-            <div className="mt-12">
-              <h2 className="text-2xl font-bold text-white/[0.87] mb-6">Quote Requests</h2>
-              <QuoteRequestList />
-            </div>
-          </>
-        ) : (
-          <div className="mt-8">
-            <h2 className="text-2xl font-bold text-white/[0.87] mb-6">Request a Quote</h2>
-            <QuoteRequestForm />
-          </div>
+    <DashboardLayout>
+      <div className="flex items-center gap-4 mb-8">
+        {isAdmin && (
+          <Button
+            onClick={() => navigate("/user-management")}
+            variant="outline"
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Manage Users
+          </Button>
         )}
+        <CreateUserDialog />
+        <ProfileDialog />
+        <BusinessSettingsDialog />
       </div>
-    </div>
+      {isAdmin ? (
+        <>
+          <ServiceTypesList />
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold text-white/[0.87] mb-6">Quote Requests</h2>
+            <QuoteRequestList />
+          </div>
+        </>
+      ) : (
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold text-white/[0.87] mb-6">Request a Quote</h2>
+          <QuoteRequestForm />
+        </div>
+      )}
+    </DashboardLayout>
   );
 }
