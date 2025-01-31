@@ -25,6 +25,8 @@ const formSchema = z.object({
   price: z.number().min(0, "Price must be a positive number").default(0),
 })
 
+export type QuoteRequestFormValues = z.infer<typeof formSchema>
+
 type QuoteRequestFormFieldsProps = {
   form: UseFormReturn<z.infer<typeof formSchema>>
   onFileUpload: (file: File) => Promise<void>
