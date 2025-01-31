@@ -38,9 +38,7 @@ const Auth = () => {
           email,
           password,
           options: {
-            data: {
-              role: 'client' // Default role for new signups
-            }
+            emailRedirectTo: `${window.location.origin}/auth`,
           }
         });
         if (error) throw error;
