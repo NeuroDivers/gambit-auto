@@ -16,7 +16,7 @@ type WorkOrderFormProps = {
   onSuccess?: () => void
 }
 
-const formSchema = z.object({
+export const formSchema = z.object({
   service_ids: z.array(z.string().uuid()).min(1, "Please select at least one service"),
   assigned_bay_id: z.string().uuid("Please select a service bay"),
   start_date: z.string().min(1, "Please select a start date"),

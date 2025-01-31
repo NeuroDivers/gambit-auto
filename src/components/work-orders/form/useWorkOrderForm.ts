@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
 import type { WorkOrderFormValues } from "../WorkOrderForm"
+import { formSchema } from "../WorkOrderForm"
 import type { WorkOrder } from "../types/work-order"
 import type { QuoteRequest } from "../../quotes/types"
 
