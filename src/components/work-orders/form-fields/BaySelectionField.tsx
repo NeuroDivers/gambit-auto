@@ -2,14 +2,9 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { Control } from "react-hook-form"
-import { WorkOrderFormValues } from "../types"
+import type { BaySelectionFieldProps } from "../types/form"
 
-type BaySelectionFieldProps = {
-  control: Control<WorkOrderFormValues>
-}
-
-export function BaySelectionField({ control }: BaySelectionFieldProps) {
+export function BaySelectionField({ form }: BaySelectionFieldProps) {
   const { data: serviceBays } = useQuery({
     queryKey: ["serviceBays"],
     queryFn: async () => {
@@ -24,7 +19,7 @@ export function BaySelectionField({ control }: BaySelectionFieldProps) {
 
   return (
     <FormField
-      control={control}
+      control={form.control}
       name="assigned_bay_id"
       render={({ field }) => (
         <FormItem>

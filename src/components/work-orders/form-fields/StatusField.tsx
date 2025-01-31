@@ -1,16 +1,11 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Control } from "react-hook-form"
-import { WorkOrderFormValues } from "../types"
+import type { StatusFieldProps } from "../types/form"
 
-type StatusFieldProps = {
-  control: Control<WorkOrderFormValues>
-}
-
-export function StatusField({ control }: StatusFieldProps) {
+export function StatusField({ form }: StatusFieldProps) {
   return (
     <FormField
-      control={control}
+      control={form.control}
       name="status"
       render={({ field }) => (
         <FormItem>

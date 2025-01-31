@@ -14,9 +14,9 @@ export function WorkOrderForm({
   onSuccess,
   workOrder 
 }: WorkOrderFormProps) {
-  // Fetch selected services if workOrder exists
+  // Fetch selected services if workOrder exists and has a quote request
   const { data: selectedServices } = useQuery({
-    queryKey: ["workOrderServices", workOrder?.id],
+    queryKey: ["workOrderServices", workOrder?.quote_request_id],
     queryFn: async () => {
       if (!workOrder?.quote_request_id) return []
       const { data, error } = await supabase
