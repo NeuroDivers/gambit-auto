@@ -59,7 +59,7 @@ export function CreateWorkOrderDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-7xl">
         <DialogHeader>
           <DialogTitle>Create Work Order</DialogTitle>
         </DialogHeader>
