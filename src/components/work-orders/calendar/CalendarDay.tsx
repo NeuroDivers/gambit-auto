@@ -29,9 +29,6 @@ export function CalendarDay({ date, workOrders = [], onSelect }: CalendarDayProp
           <WorkOrderDisplay 
             key={order.id} 
             order={order}
-            onClick={(e) => {
-              e.stopPropagation()
-            }}
           />
         ))}
       </div>
