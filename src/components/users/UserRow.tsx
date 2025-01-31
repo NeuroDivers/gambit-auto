@@ -53,7 +53,7 @@ export const UserRow = ({ user }: UserRowProps) => {
           <div>
             <p className="font-medium">{displayName}</p>
             <p className="text-sm text-muted-foreground">
-              {user.email}
+              {user.first_name && user.last_name ? user.email : ''}
               {user.user_roles?.role && ` • ${user.user_roles.role}`}
             </p>
           </div>
