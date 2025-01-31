@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { CreateUserDialog } from "@/components/users/CreateUserDialog";
 import { ProfileDialog } from "@/components/profile/ProfileDialog";
 import { BusinessSettingsDialog } from "@/components/business/BusinessSettingsDialog";
 import { Button } from "@/components/ui/button";
@@ -50,7 +49,6 @@ export default function Index() {
             Manage Users
           </Button>
         )}
-        <CreateUserDialog />
         <ProfileDialog />
         <BusinessSettingsDialog />
       </div>

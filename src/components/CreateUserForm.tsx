@@ -17,12 +17,13 @@ export function CreateUserForm() {
     defaultValues: {
       email: "",
       password: "",
+      role: "client",
     },
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
@@ -30,7 +31,16 @@ export function CreateUserForm() {
         },
       })
 
-      if (error) throw error
+      if (authError) throw authError
+
+      // Create user role
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert([
+          { user_id: authData.user!.id, role: values.role }
+        ])
+
+      if (roleError) throw roleError
 
       toast({
         title: "Success",
