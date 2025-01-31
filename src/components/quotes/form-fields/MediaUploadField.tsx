@@ -53,7 +53,7 @@ export function MediaUploadField({
           disabled={uploading}
         />
       </div>
-      <p className="text-sm text-muted-foreground text-center">
+      <p className="text-sm text-muted-foreground mt-2">
         Upload images or videos of the damage (max 10MB per file)
       </p>
       {mediaUrl && (
