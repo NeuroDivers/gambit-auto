@@ -21,8 +21,15 @@ export function WorkOrderCalendar() {
         .from("work_orders")
         .select(`
           *,
-          quote_request:quote_requests (
-            status
+          quote_requests (
+            first_name,
+            last_name,
+            status,
+            quote_request_services (
+              service_types (
+                name
+              )
+            )
           )
         `)
         .gte("start_date", format(startDate, "yyyy-MM-dd"))
@@ -32,14 +39,14 @@ export function WorkOrderCalendar() {
 
       // Only return work orders where the associated quote is approved
       return (data as any[]).filter(order => 
-        order.quote_request?.status === 'approved'
+        order.quote_requests?.status === 'approved'
       ) as WorkOrder[]
     },
   })
 
   useEffect(() => {
     const channel = supabase
-      .channel("work_orders_changes")
+      .channel("quote_requests_changes")
       .on(
         "postgres_changes",
         {
@@ -48,7 +55,6 @@ export function WorkOrderCalendar() {
           table: "quote_requests",
         },
         () => {
-          // Invalidate the work orders query when quote status changes
           queryClient.invalidateQueries({ queryKey: ["workOrders"] })
         }
       )
