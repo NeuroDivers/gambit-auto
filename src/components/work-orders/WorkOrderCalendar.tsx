@@ -1,14 +1,15 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { format, startOfMonth, endOfMonth } from "date-fns"
 import { CalendarGrid } from "./calendar/CalendarGrid"
 import { CreateWorkOrderDialog } from "./CreateWorkOrderDialog"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import type { WorkOrder } from "./types"
 
 export function WorkOrderCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const queryClient = useQueryClient()
 
   const { data: workOrders } = useQuery({
     queryKey: ["workOrders"],
@@ -62,6 +63,7 @@ export function WorkOrderCalendar() {
     <div className="space-y-4">
       <CalendarGrid
         workOrders={workOrders || []}
+        selectedDate={selectedDate || new Date()}
         onSelectDate={(date) => {
           setSelectedDate(date)
           setIsDialogOpen(true)

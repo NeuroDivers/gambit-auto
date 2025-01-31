@@ -1,14 +1,16 @@
 import * as React from "react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
-import type { ServiceBay } from "../types"
+import type { ServiceBay, WorkOrder } from "../types"
 
 interface CalendarGridProps {
   selectedDate: Date
   serviceBays?: ServiceBay[]
+  workOrders: WorkOrder[]
+  onSelectDate: (date: Date) => void
 }
 
-export function CalendarGrid({ selectedDate, serviceBays = [] }: CalendarGridProps) {
+export function CalendarGrid({ selectedDate, serviceBays = [], workOrders, onSelectDate }: CalendarGridProps) {
   const timeSlots = Array.from({ length: 10 }, (_, i) => {
     const hour = 9 + i
     return `${hour.toString().padStart(2, '0')}:00`
