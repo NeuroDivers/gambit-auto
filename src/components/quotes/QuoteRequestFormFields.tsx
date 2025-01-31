@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
+import { Button } from "@/components/ui/button"
+import { ImageIcon, X } from "lucide-react"
 
 const formSchema = z.object({
   first_name: z.string().min(2, "First name must be at least 2 characters"),
@@ -23,9 +25,12 @@ const formSchema = z.object({
 
 type QuoteRequestFormFieldsProps = {
   form: UseFormReturn<z.infer<typeof formSchema>>
+  onFileUpload: (file: File) => Promise<void>
+  mediaUrl: string | null
+  uploading: boolean
 }
 
-export function QuoteRequestFormFields({ form }: QuoteRequestFormFieldsProps) {
+export function QuoteRequestFormFields({ form, onFileUpload, mediaUrl, uploading }: QuoteRequestFormFieldsProps) {
   const { data: services } = useQuery({
     queryKey: ["services"],
     queryFn: async () => {
@@ -38,6 +43,13 @@ export function QuoteRequestFormFields({ form }: QuoteRequestFormFieldsProps) {
       return data
     },
   })
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      onFileUpload(file)
+    }
+  }
 
   return (
     <>
@@ -225,6 +237,48 @@ export function QuoteRequestFormFields({ form }: QuoteRequestFormFieldsProps) {
           </FormItem>
         )}
       />
+
+      <div className="space-y-4">
+        <FormLabel>Upload Image</FormLabel>
+        <div className="flex items-center gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            disabled={uploading}
+            onClick={() => document.getElementById('file-upload')?.click()}
+          >
+            <ImageIcon className="h-4 w-4 mr-2" />
+            {uploading ? "Uploading..." : "Choose Image"}
+          </Button>
+          <input
+            id="file-upload"
+            type="file"
+            className="hidden"
+            accept="image/*"
+            onChange={handleFileChange}
+            disabled={uploading}
+          />
+        </div>
+        {mediaUrl && (
+          <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-background">
+            <img
+              src={mediaUrl}
+              alt="Uploaded preview"
+              className="w-full h-full object-contain"
+            />
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="absolute top-2 right-2"
+              onClick={() => setMediaUrl(null)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
     </>
   )
 }

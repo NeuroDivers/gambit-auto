@@ -19,6 +19,7 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
   const { toast } = useToast()
   const [uploading, setUploading] = useState(false)
   const queryClient = useQueryClient()
+  const [mediaUrl, setMediaUrl] = useState<string | null>(initialData?.media_url || null)
 
   const form = useForm<QuoteRequestFormValues>({
     resolver: zodResolver(formSchema),
@@ -37,6 +38,38 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
     },
   })
 
+  const handleFileUpload = async (file: File) => {
+    try {
+      setUploading(true)
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/functions/v1/upload-quote-media', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('Upload failed')
+      }
+
+      const { url } = await response.json()
+      setMediaUrl(url)
+      toast({
+        title: "Success",
+        description: "Image uploaded successfully.",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to upload image.",
+        variant: "destructive",
+      })
+    } finally {
+      setUploading(false)
+    }
+  }
+
   async function onSubmit(data: QuoteRequestFormValues) {
     try {
       if (initialData) {
@@ -54,6 +87,7 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
             vehicle_year: data.vehicle_year,
             vehicle_serial: data.vehicle_serial,
             additional_notes: data.additional_notes,
+            media_url: mediaUrl,
           })
           .eq("id", initialData.id)
 
@@ -78,6 +112,7 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
             vehicle_year: data.vehicle_year,
             vehicle_serial: data.vehicle_serial,
             additional_notes: data.additional_notes,
+            media_url: mediaUrl,
           })
 
         if (error) throw error
@@ -88,6 +123,7 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
         })
 
         form.reset()
+        setMediaUrl(null)
       }
 
       queryClient.invalidateQueries({ queryKey: ["quoteRequests"] })
@@ -114,7 +150,12 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <QuoteRequestFormFields form={form} />
+          <QuoteRequestFormFields 
+            form={form} 
+            onFileUpload={handleFileUpload}
+            mediaUrl={mediaUrl}
+            uploading={uploading}
+          />
           <Button type="submit" className="w-full" disabled={uploading}>
             {uploading ? "Uploading..." : initialData ? "Update Request" : "Submit Request"}
           </Button>
