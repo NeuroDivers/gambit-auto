@@ -2,13 +2,16 @@ import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { LoadingState } from "../../quotes/LoadingState"
 import { Button } from "@/components/ui/button"
-import { PlusCircle } from "lucide-react"
+import { PlusCircle, Pencil } from "lucide-react"
 import { useState } from "react"
 import { CreateWorkOrderDialog } from "../CreateWorkOrderDialog"
+import { WorkOrderDialog } from "../WorkOrderDialog"
+import { Badge } from "@/components/ui/badge"
 import type { WorkOrder } from "../types"
 
 export function WorkOrdersSection() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
 
   const { data: workOrders, isLoading } = useQuery({
     queryKey: ["workOrders"],
@@ -37,6 +40,25 @@ export function WorkOrdersSection() {
     },
   })
 
+  const handleEdit = (order: WorkOrder) => {
+    setSelectedWorkOrder(order)
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-500/20 text-yellow-400'
+      case 'in_progress':
+        return 'bg-blue-500/20 text-blue-400'
+      case 'completed':
+        return 'bg-green-500/20 text-green-400'
+      case 'cancelled':
+        return 'bg-red-500/20 text-red-400'
+      default:
+        return 'bg-gray-500/20 text-gray-400'
+    }
+  }
+
   if (isLoading) {
     return <LoadingState />
   }
@@ -58,8 +80,8 @@ export function WorkOrdersSection() {
         </div>
         {workOrders?.map((order) => (
           <div key={order.id} className="p-4 border rounded-lg">
-            <div className="flex justify-between">
-              <div>
+            <div className="flex justify-between items-start">
+              <div className="space-y-2">
                 <h4 className="font-medium">
                   {order.quote_requests?.first_name} {order.quote_requests?.last_name}
                 </h4>
@@ -70,8 +92,18 @@ export function WorkOrdersSection() {
                   Services: {order.quote_requests?.quote_request_services?.map(s => s.service_types.name).join(", ")}
                 </p>
               </div>
-              <div className="text-sm">
-                Status: {order.status}
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className={getStatusColor(order.status)}>
+                  {order.status}
+                </Badge>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleEdit(order)}
+                  className="h-8 w-8"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           </div>
@@ -87,6 +119,14 @@ export function WorkOrdersSection() {
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
       />
+
+      {selectedWorkOrder && (
+        <WorkOrderDialog
+          open={!!selectedWorkOrder}
+          onOpenChange={(open) => !open && setSelectedWorkOrder(null)}
+          workOrder={selectedWorkOrder}
+        />
+      )}
     </section>
   )
 }
