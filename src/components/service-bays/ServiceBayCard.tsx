@@ -75,7 +75,11 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
         description: `Service ${isActive ? 'added to' : 'removed from'} bay`,
       })
 
-      queryClient.invalidateQueries({ queryKey: ['serviceBays'] })
+      // Invalidate both queries to ensure data is fresh
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['serviceBays'] }),
+        queryClient.invalidateQueries({ queryKey: ['bayServices'] })
+      ])
     } catch (error) {
       toast({
         title: "Error",
