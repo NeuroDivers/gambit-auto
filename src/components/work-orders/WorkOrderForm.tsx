@@ -9,6 +9,7 @@ import { addHours, format } from "date-fns"
 import { BaySelectionField } from "./form-fields/BaySelectionField"
 import { DateTimeFields } from "./form-fields/DateTimeFields"
 import { NotesField } from "./form-fields/NotesField"
+import { SidekickSelectionField } from "./form-fields/SidekickSelectionField"
 import { workOrderFormSchema, type WorkOrderFormValues, type WorkOrderFormProps } from "./types"
 import { Calendar } from "@/components/ui/calendar"
 import { useQuery } from "@tanstack/react-query"
@@ -23,6 +24,7 @@ export function WorkOrderForm({ selectedDate, quoteRequest, workOrder, onSuccess
     defaultValues: {
       quote_request_id: workOrder?.quote_request_id || quoteRequest?.id,
       assigned_bay_id: workOrder?.assigned_bay_id || "",
+      assigned_sidekick_id: workOrder?.assigned_sidekick_id || "",
       start_date: workOrder ? format(new Date(workOrder.start_date), "yyyy-MM-dd'T'HH:mm") 
         : selectedDate ? format(selectedDate, "yyyy-MM-dd'T'HH:mm") : "",
       end_date: workOrder ? format(new Date(workOrder.end_date), "yyyy-MM-dd'T'HH:mm")
@@ -169,6 +171,7 @@ export function WorkOrderForm({ selectedDate, quoteRequest, workOrder, onSuccess
         </div>
 
         <BaySelectionField control={form.control} />
+        <SidekickSelectionField control={form.control} />
         <DateTimeFields control={form.control} />
         <NotesField control={form.control} />
         

@@ -337,6 +337,7 @@ export type Database = {
       work_orders: {
         Row: {
           assigned_bay_id: string | null
+          assigned_sidekick_id: string | null
           created_at: string
           end_date: string
           id: string
@@ -348,6 +349,7 @@ export type Database = {
         }
         Insert: {
           assigned_bay_id?: string | null
+          assigned_sidekick_id?: string | null
           created_at?: string
           end_date: string
           id?: string
@@ -359,6 +361,7 @@ export type Database = {
         }
         Update: {
           assigned_bay_id?: string | null
+          assigned_sidekick_id?: string | null
           created_at?: string
           end_date?: string
           id?: string
