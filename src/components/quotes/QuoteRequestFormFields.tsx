@@ -249,18 +249,15 @@ export function QuoteRequestFormFields({ form, onFileUpload, mediaUrl, uploading
             rounded-lg p-8
             flex flex-col items-center justify-center
             transition-colors
-            hover:bg-accent/50
+            hover:border-[#9b87f5]
             ${uploading ? 'opacity-50 cursor-not-allowed' : ''}
           `}
         >
-          <ImageIcon className="h-10 w-10 mb-4 text-muted-foreground" />
+          <ImageIcon className="h-10 w-10 mb-4 text-[#9b87f5]" />
           <div className="text-center space-y-2">
             <h3 className="font-semibold">Click or drag files to upload</h3>
             <p className="text-sm text-muted-foreground">
               Supported formats: JPG, PNG, MP4, MOV
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Upload images or videos of the damage (max 10MB per file)
             </p>
           </div>
           <input
@@ -272,6 +269,9 @@ export function QuoteRequestFormFields({ form, onFileUpload, mediaUrl, uploading
             disabled={uploading}
           />
         </div>
+        <p className="text-sm text-muted-foreground text-center">
+          Upload images or videos of the damage (max 10MB per file)
+        </p>
         {mediaUrl && (
           <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-background">
             <img
