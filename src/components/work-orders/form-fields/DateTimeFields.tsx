@@ -1,3 +1,4 @@
+import React from 'react'
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Control } from "react-hook-form"
@@ -31,7 +32,7 @@ export function DateTimeFields({ control }: DateTimeFieldsProps) {
           <FormItem>
             <FormLabel>Start Time</FormLabel>
             <FormControl>
-              <Input type="time" {...field} />
+              <Input type="time" defaultValue="08:00" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -59,7 +60,7 @@ export function DateTimeFields({ control }: DateTimeFieldsProps) {
           <FormItem>
             <FormLabel>End Time</FormLabel>
             <FormControl>
-              <Input type="time" {...field} />
+              <Input type="time" defaultValue="18:00" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
