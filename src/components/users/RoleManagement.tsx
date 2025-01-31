@@ -4,6 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Shield } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 export const RoleManagement = () => {
   const { toast } = useToast();
@@ -51,6 +55,11 @@ export const RoleManagement = () => {
     };
   }, [queryClient]);
 
+  const chartData = roleStats ? [
+    { name: 'Administrators', value: roleStats.admin || 0 },
+    { name: 'Regular Users', value: roleStats.user || 0 },
+  ] : [];
+
   return (
     <div className="space-y-6">
       <div>
@@ -59,6 +68,47 @@ export const RoleManagement = () => {
           Current distribution of user roles
         </p>
       </div>
+      
+      <div className="h-[300px] w-full">
+        <ChartContainer
+          className="w-full"
+          config={{
+            administrators: {
+              label: "Administrators",
+              theme: {
+                light: "#0088FE",
+                dark: "#0088FE"
+              }
+            },
+            users: {
+              label: "Regular Users",
+              theme: {
+                light: "#00C49F",
+                dark: "#00C49F"
+              }
+            }
+          }}
+        >
+          <PieChart>
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              outerRadius={80}
+              fill="#8884d8"
+              dataKey="value"
+            >
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip />
+            <Legend />
+          </PieChart>
+        </ChartContainer>
+      </div>
+
       <div className="grid gap-4">
         <div className="p-4 border rounded-lg bg-card">
           <div className="flex items-center gap-3">
