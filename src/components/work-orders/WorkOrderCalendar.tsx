@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { CreateWorkOrderDialog } from "./CreateWorkOrderDialog"
 import { format } from "date-fns"
+import { Badge } from "@/components/ui/badge"
 
 export function WorkOrderCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())

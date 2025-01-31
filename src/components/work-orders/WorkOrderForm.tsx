@@ -55,7 +55,11 @@ export function WorkOrderForm({ selectedDate, quoteRequest, onSuccess }: WorkOrd
     try {
       const { error } = await supabase
         .from("work_orders")
-        .insert(values)
+        .insert({
+          ...values,
+          start_date: new Date(values.start_date).toISOString(),
+          end_date: new Date(values.end_date).toISOString(),
+        })
 
       if (error) throw error
 
