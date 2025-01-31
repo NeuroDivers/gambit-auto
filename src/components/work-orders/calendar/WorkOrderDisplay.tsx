@@ -3,6 +3,8 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { WorkOrderDialog } from "../WorkOrderDialog"
+import { Button } from "@/components/ui/button"
+import { Pencil } from "lucide-react"
 import type { WorkOrder } from "../types"
 
 interface WorkOrderDisplayProps {
@@ -26,12 +28,21 @@ export function WorkOrderDisplay({ order }: WorkOrderDisplayProps) {
         <HoverCardTrigger asChild>
           <div 
             className={cn(
-              "text-xs p-1 rounded text-left truncate transition-all duration-200 hover:scale-[1.02] hover:border hover:shadow-lg cursor-pointer",
+              "text-xs p-1 rounded text-left truncate transition-all duration-200 hover:scale-[1.02] hover:border hover:shadow-lg cursor-pointer group",
               serviceColor
             )}
-            onClick={handleClick}
           >
-            {format(new Date(order.start_date), "HH:mm")} - {primaryService?.name}
+            <div className="flex items-center justify-between">
+              <span>{format(new Date(order.start_date), "HH:mm")} - {primaryService?.name}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={handleClick}
+              >
+                <Pencil className="h-3 w-3" />
+              </Button>
+            </div>
           </div>
         </HoverCardTrigger>
         <HoverCardContent 

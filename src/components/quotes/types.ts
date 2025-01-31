@@ -13,7 +13,7 @@ export type QuoteRequest = {
   media_url?: string | null
   status: string
   created_at: string
-  price: number | null
+  price?: number | null
   quote_request_services: {
     service_types: {
       name: string
