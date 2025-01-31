@@ -6,25 +6,14 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
+import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { UserEditFormFields, formSchema } from "./UserEditFormFields";
+import * as z from "zod";
 
 type UserEditDialogProps = {
   user: {
@@ -45,7 +34,9 @@ export const UserEditDialog = ({
 }: UserEditDialogProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const form = useForm({
+  
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       role: user.user_roles?.role || "client",
       first_name: user.first_name || "",
@@ -53,9 +44,8 @@ export const UserEditDialog = ({
     },
   });
 
-  const onSubmit = async (values) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // Update profile information first
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
@@ -66,7 +56,6 @@ export const UserEditDialog = ({
 
       if (profileError) throw profileError;
 
-      // Then update user role
       const { error: roleError } = await supabase
         .from("user_roles")
         .upsert(
@@ -84,7 +73,7 @@ export const UserEditDialog = ({
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["roleStats"] });
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
@@ -95,65 +84,20 @@ export const UserEditDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="bg-[#1E1E1E] border-white/10">
         <DialogHeader>
-          <DialogTitle>Edit User: {user.email}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-white/[0.87]">Edit User: {user.email}</DialogTitle>
+          <DialogDescription className="text-white/60">
             Make changes to user profile and role
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="first_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>First Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="John" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="last_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Last Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Doe" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role</FormLabel>
-                  <FormControl>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="sidekick">Sidekick</SelectItem>
-                        <SelectItem value="client">Client</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <Button type="submit" className="w-full">
+            <UserEditFormFields form={form} />
+            <Button 
+              type="submit" 
+              className="w-full bg-[#BB86FC] hover:bg-[#BB86FC]/90 text-white"
+            >
               Save Changes
             </Button>
           </form>
