@@ -8,8 +8,10 @@ import { Shield } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const Auth = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+    password: ""
+  });
   const [loading, setLoading] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,6 +36,14 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
@@ -42,8 +52,8 @@ const Auth = () => {
     try {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+          email: formData.email,
+          password: formData.password,
         });
         if (error) {
           if (error.message === "Invalid login credentials") {
@@ -55,8 +65,8 @@ const Auth = () => {
         }
       } else {
         const { error } = await supabase.auth.signUp({
-          email,
-          password,
+          email: formData.email,
+          password: formData.password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth`,
           }
@@ -80,14 +90,22 @@ const Auth = () => {
     }
   };
 
+  const resetForm = () => {
+    setFormData({
+      email: "",
+      password: ""
+    });
+  };
+
   const AuthForm = () => (
     <form onSubmit={handleAuth} className="space-y-4">
       <div className="space-y-2">
         <Input
           type="email"
+          name="email"
           placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={formData.email}
+          onChange={handleInputChange}
           required
           disabled={loading}
           autoComplete="email"
@@ -96,9 +114,10 @@ const Auth = () => {
       <div className="space-y-2">
         <Input
           type="password"
+          name="password"
           placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={formData.password}
+          onChange={handleInputChange}
           required
           minLength={6}
           disabled={loading}
@@ -132,8 +151,7 @@ const Auth = () => {
                     className="text-primary hover:underline"
                     onClick={() => {
                       setIsLogin(false);
-                      setEmail("");
-                      setPassword("");
+                      resetForm();
                     }}
                   >
                     Don't have an account? Sign up
@@ -160,8 +178,7 @@ const Auth = () => {
                 className="text-primary hover:underline"
                 onClick={() => {
                   setIsLogin(true);
-                  setEmail("");
-                  setPassword("");
+                  resetForm();
                   setIsModalOpen(false);
                 }}
               >
