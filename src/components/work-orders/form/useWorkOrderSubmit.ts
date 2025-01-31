@@ -2,14 +2,20 @@ import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import type { WorkOrderFormValues } from "../types/form"
+import type { QuoteRequest } from "../../quotes/types"
+import type { WorkOrder } from "../types/work-order"
+
+type UseWorkOrderSubmitProps = {
+  workOrder?: WorkOrder
+  quoteRequest?: QuoteRequest
+  onSuccess?: () => void
+}
 
 export function useWorkOrderSubmit({ 
   workOrder,
+  quoteRequest,
   onSuccess
-}: {
-  workOrder?: any
-  onSuccess?: () => void
-}) {
+}: UseWorkOrderSubmitProps) {
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
