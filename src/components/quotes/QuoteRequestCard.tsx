@@ -9,6 +9,7 @@ import { EditQuoteDialog } from "./EditQuoteDialog"
 import { useState } from "react"
 import { CreateWorkOrderDialog } from "../work-orders/CreateWorkOrderDialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { QuoteRequest } from "./types"
 
 const getStatusStyles = (status: string) => {
   switch (status) {
