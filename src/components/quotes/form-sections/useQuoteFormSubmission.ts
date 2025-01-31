@@ -40,6 +40,7 @@ export function useQuoteFormSubmission({
             additional_notes: data.additional_notes,
             media_url: mediaUrl,
             timeframe: data.timeframe,
+            price: data.price,
           })
           .eq("id", initialData.id)
 
@@ -85,6 +86,7 @@ export function useQuoteFormSubmission({
             additional_notes: data.additional_notes,
             media_url: mediaUrl,
             timeframe: data.timeframe,
+            price: data.price,
           })
           .select()
           .single()

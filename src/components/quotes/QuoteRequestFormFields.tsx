@@ -7,6 +7,7 @@ import { VehicleInfoFields } from "./form-fields/VehicleInfoFields"
 import { ServiceSelectionField } from "./form-fields/ServiceSelectionField"
 import { MediaUploadField } from "./form-fields/MediaUploadField"
 import { ContactPreferenceFields } from "./form-fields/ContactPreferenceFields"
+import { Input } from "@/components/ui/input"
 
 const formSchema = z.object({
   first_name: z.string().min(2, "First name must be at least 2 characters"),
@@ -21,6 +22,7 @@ const formSchema = z.object({
   vehicle_serial: z.string().optional(),
   additional_notes: z.string().optional(),
   timeframe: z.enum(["flexible", "asap", "within_week", "within_month"]),
+  price: z.number().min(0, "Price must be a positive number").default(0),
 })
 
 type QuoteRequestFormFieldsProps = {
@@ -49,6 +51,26 @@ export function QuoteRequestFormFields({
         onMediaRemove={onMediaRemove}
       />
       <VehicleInfoFields form={form} />
+      <FormField
+        control={form.control}
+        name="price"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Price</FormLabel>
+            <FormControl>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Enter quote price"
+                {...field}
+                onChange={e => field.onChange(parseFloat(e.target.value))}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       <FormField
         control={form.control}
         name="additional_notes"

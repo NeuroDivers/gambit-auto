@@ -25,15 +25,12 @@ type QuoteRequest = {
   media_url?: string
   status: string
   created_at: string
+  price: number
   quote_request_services: {
     service_types: {
       name: string
     }
   }[]
-}
-
-type QuoteRequestCardProps = {
-  request: QuoteRequest
 }
 
 const getStatusStyles = (status: string) => {
@@ -51,7 +48,7 @@ const getStatusStyles = (status: string) => {
   }
 }
 
-export function QuoteRequestCard({ request }: QuoteRequestCardProps) {
+export function QuoteRequestCard({ request }: { request: QuoteRequest }) {
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const [isWorkOrderDialogOpen, setIsWorkOrderDialogOpen] = useState(false)
@@ -132,6 +129,10 @@ export function QuoteRequestCard({ request }: QuoteRequestCardProps) {
             <span>
               {request.vehicle_year} {request.vehicle_make} {request.vehicle_model}
             </span>
+          </div>
+          <div className="grid grid-cols-2 gap-1">
+            <span className="font-medium">Price:</span>
+            <span>${request.price.toFixed(2)}</span>
           </div>
           {request.additional_notes && (
             <div className="col-span-2 mt-2">
