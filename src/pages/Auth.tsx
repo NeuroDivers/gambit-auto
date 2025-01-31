@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Shield } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -47,6 +49,7 @@ const Auth = () => {
           description: "Please check your email to verify your account.",
         });
         setIsLogin(true);
+        setIsModalOpen(false);
       }
     } catch (error: any) {
       toast({
@@ -59,55 +62,92 @@ const Auth = () => {
     }
   };
 
+  const AuthForm = () => (
+    <form onSubmit={handleAuth} className="space-y-4">
+      <div className="space-y-2">
+        <Input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          minLength={6}
+        />
+      </div>
+      <Button className="w-full" type="submit" disabled={loading}>
+        {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
+      </Button>
+    </form>
+  );
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md p-8 space-y-6 bg-card rounded-lg shadow-lg">
         <div className="text-center space-y-2">
           <Shield className="mx-auto h-12 w-12 text-primary" />
-          <h2 className="text-2xl font-bold">
-            {isLogin ? "Welcome Back" : "Create Account"}
-          </h2>
-          <p className="text-muted-foreground">
-            {isLogin
-              ? "Sign in to access your account"
-              : "Sign up to get started with our service"}
-          </p>
+          <h2 className="text-2xl font-bold">Welcome Back</h2>
+          <p className="text-muted-foreground">Sign in to access your account</p>
         </div>
-        <form onSubmit={handleAuth} className="space-y-4">
-          <div className="space-y-2">
-            <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
-          </div>
-          <Button className="w-full" type="submit" disabled={loading}>
-            {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
-          </Button>
-        </form>
-        <div className="text-center">
-          <button
-            type="button"
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-primary hover:underline"
-          >
-            {isLogin
-              ? "Don't have an account? Sign up"
-              : "Already have an account? Sign in"}
-          </button>
-        </div>
+
+        {isLogin ? (
+          <>
+            <AuthForm />
+            <div className="text-center">
+              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="text-primary hover:underline"
+                    onClick={() => {
+                      setIsLogin(false);
+                      setEmail("");
+                      setPassword("");
+                    }}
+                  >
+                    Don't have an account? Sign up
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Create Account</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <AuthForm />
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </>
+        ) : (
+          <>
+            <AuthForm />
+            <div className="text-center">
+              <Button
+                type="button"
+                variant="link"
+                className="text-primary hover:underline"
+                onClick={() => {
+                  setIsLogin(true);
+                  setEmail("");
+                  setPassword("");
+                  setIsModalOpen(false);
+                }}
+              >
+                Already have an account? Sign in
+              </Button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
