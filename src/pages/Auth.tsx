@@ -2,15 +2,15 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Shield } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { LoginForm } from "@/components/auth/LoginForm";
+import { SignUpDialog } from "@/components/auth/SignUpDialog";
 
 const Auth = () => {
   const [formData, setFormData] = useState({
     email: "",
-    password: ""
+    password: "",
   });
   const [loading, setLoading] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
@@ -19,28 +19,28 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         navigate("/");
       }
     });
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        navigate("/");
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (session) {
+          navigate("/");
+        }
       }
-    });
+    );
 
     return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -69,7 +69,7 @@ const Auth = () => {
           password: formData.password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth`,
-          }
+          },
         });
         if (error) throw error;
         toast({
@@ -93,42 +93,15 @@ const Auth = () => {
   const resetForm = () => {
     setFormData({
       email: "",
-      password: ""
+      password: "",
     });
   };
 
-  const renderForm = () => (
-    <form onSubmit={handleAuth} className="space-y-4">
-      <div className="space-y-2">
-        <Input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleInputChange}
-          required
-          disabled={loading}
-          autoComplete="email"
-        />
-      </div>
-      <div className="space-y-2">
-        <Input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleInputChange}
-          required
-          minLength={6}
-          disabled={loading}
-          autoComplete="current-password"
-        />
-      </div>
-      <Button className="w-full" type="submit" disabled={loading}>
-        {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
-      </Button>
-    </form>
-  );
+  const handleSignInClick = () => {
+    setIsLogin(true);
+    resetForm();
+    setIsModalOpen(false);
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -141,46 +114,38 @@ const Auth = () => {
 
         {isLogin ? (
           <>
-            {renderForm()}
+            <LoginForm
+              formData={formData}
+              loading={loading}
+              onSubmit={handleAuth}
+              onChange={handleInputChange}
+            />
             <div className="text-center">
-              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="text-primary hover:underline"
-                    onClick={() => {
-                      setIsLogin(false);
-                      resetForm();
-                    }}
-                  >
-                    Don't have an account? Sign up
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Create Account</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    {renderForm()}
-                  </div>
-                </DialogContent>
-              </Dialog>
+              <SignUpDialog
+                isOpen={isModalOpen}
+                onOpenChange={setIsModalOpen}
+                formData={formData}
+                loading={loading}
+                onSubmit={handleAuth}
+                onChange={handleInputChange}
+                onSignInClick={handleSignInClick}
+              />
             </div>
           </>
         ) : (
           <>
-            {renderForm()}
+            <LoginForm
+              formData={formData}
+              loading={loading}
+              onSubmit={handleAuth}
+              onChange={handleInputChange}
+            />
             <div className="text-center">
               <Button
                 type="button"
                 variant="link"
                 className="text-primary hover:underline"
-                onClick={() => {
-                  setIsLogin(true);
-                  resetForm();
-                  setIsModalOpen(false);
-                }}
+                onClick={handleSignInClick}
               >
                 Already have an account? Sign in
               </Button>
