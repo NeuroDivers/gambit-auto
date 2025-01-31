@@ -13,7 +13,7 @@ export const UserList = () => {
       // First, get all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, email");
+        .select("id, email, first_name, last_name");
 
       if (profilesError) throw profilesError;
 
@@ -28,6 +28,8 @@ export const UserList = () => {
       return profiles?.map(profile => ({
         id: profile.id,
         email: profile.email,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
         user_roles: roles?.find(role => role.user_id === profile.id)
           ? { role: roles.find(role => role.user_id === profile.id)?.role || 'user' }
           : { role: 'user' }
@@ -42,18 +44,16 @@ export const UserList = () => {
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to all changes (INSERT, UPDATE, DELETE)
+          event: '*',
           schema: 'public',
           table: 'profiles'
         },
         () => {
-          // Invalidate and refetch the users query
           queryClient.invalidateQueries({ queryKey: ["users"] });
         }
       )
       .subscribe();
 
-    // Cleanup subscription on unmount
     return () => {
       supabase.removeChannel(channel);
     };

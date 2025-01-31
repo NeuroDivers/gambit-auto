@@ -9,6 +9,8 @@ type UserRowProps = {
   user: {
     id: string;
     email: string;
+    first_name?: string;
+    last_name?: string;
     user_roles: { role: string } | null;
   };
 };
@@ -39,15 +41,20 @@ export const UserRow = ({ user }: UserRowProps) => {
     }
   };
 
+  const displayName = user.first_name && user.last_name
+    ? `${user.first_name} ${user.last_name}`
+    : user.email;
+
   return (
     <>
       <div className="flex items-center justify-between p-4 border rounded-lg bg-card">
         <div className="flex items-center gap-3">
           <User className="h-5 w-5 text-muted-foreground" />
           <div>
-            <p className="font-medium">{user.email}</p>
+            <p className="font-medium">{displayName}</p>
             <p className="text-sm text-muted-foreground">
-              Role: {user.user_roles?.role || "user"}
+              {user.email}
+              {user.user_roles?.role && ` • ${user.user_roles.role}`}
             </p>
           </div>
         </div>

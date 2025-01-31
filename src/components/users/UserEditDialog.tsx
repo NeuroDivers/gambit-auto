@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +29,8 @@ type UserEditDialogProps = {
   user: {
     id: string;
     email: string;
+    first_name?: string;
+    last_name?: string;
     user_roles: { role: string } | null;
   };
   open: boolean;
@@ -44,23 +47,37 @@ export const UserEditDialog = ({
   const form = useForm({
     defaultValues: {
       role: user.user_roles?.role || "user",
+      first_name: user.first_name || "",
+      last_name: user.last_name || "",
     },
   });
 
   const onSubmit = async (values) => {
     try {
-      const { error } = await supabase
+      // Update user role
+      const { error: roleError } = await supabase
         .from("user_roles")
         .upsert(
           { user_id: user.id, role: values.role },
           { onConflict: "user_id" }
         );
 
-      if (error) throw error;
+      if (roleError) throw roleError;
+
+      // Update profile information
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          first_name: values.first_name,
+          last_name: values.last_name,
+        })
+        .eq("id", user.id);
+
+      if (profileError) throw profileError;
 
       toast({
         title: "Success",
-        description: "User role updated successfully",
+        description: "User information updated successfully",
       });
       
       queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -82,6 +99,30 @@ export const UserEditDialog = ({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="first_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>First Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="John" {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="last_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Last Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Doe" {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="role"
