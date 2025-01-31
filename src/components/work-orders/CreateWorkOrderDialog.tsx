@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { CalendarDay } from "./calendar/CalendarDay"
 import { cn } from "@/lib/utils"
+import { useState } from "react"
 
 type CreateWorkOrderDialogProps = {
   open: boolean
@@ -22,9 +23,11 @@ type CreateWorkOrderDialogProps = {
 export function CreateWorkOrderDialog({
   open,
   onOpenChange,
-  selectedDate,
+  selectedDate: initialSelectedDate,
   quoteRequest
 }: CreateWorkOrderDialogProps) {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(initialSelectedDate)
+
   const { data: workOrders } = useQuery({
     queryKey: ["workOrders"],
     queryFn: async () => {
@@ -57,6 +60,10 @@ export function CreateWorkOrderDialog({
     })
   }
 
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date)
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-7xl">
@@ -68,13 +75,14 @@ export function CreateWorkOrderDialog({
             <Calendar
               mode="single"
               selected={selectedDate}
+              onSelect={handleDateSelect}
               className="w-full"
               components={{
                 Day: ({ date, ...props }) => (
                   <CalendarDay
                     date={date}
                     workOrders={getWorkOrdersForDate(date)}
-                    onSelect={() => {}} // Add empty function as we don't need selection in create dialog
+                    onSelect={handleDateSelect}
                     {...props}
                   />
                 ),
