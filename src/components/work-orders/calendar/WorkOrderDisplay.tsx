@@ -1,7 +1,7 @@
-import * as React from "react"
-import { format } from "date-fns"
+import { useState } from "react"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { cn } from "@/lib/utils"
+import { format } from "date-fns"
 import { WorkOrderDialog } from "../WorkOrderDialog"
 import type { WorkOrder } from "../types"
 
@@ -10,48 +10,7 @@ interface WorkOrderDisplayProps {
   onClick?: (e: React.MouseEvent) => void
 }
 
-export function WorkOrderDisplay({ order, onClick }: WorkOrderDisplayProps) {
-  const [isEditing, setIsEditing] = React.useState(false)
-  
-  // Get the primary service type for color coding
-  const primaryService = order.quote_requests?.quote_request_services?.[0]?.service_types
-  const serviceColor = getServiceColor(primaryService?.name)
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation() // Stop event from bubbling up to parent
-    onClick?.(e)
-    setIsEditing(true)
-  }
-
-  return (
-    <>
-      <HoverCard>
-        <HoverCardTrigger>
-          <div 
-            onClick={handleClick}
-            className={cn(
-              "text-xs p-1 rounded text-left truncate transition-all duration-200 hover:scale-[1.02] hover:border hover:shadow-lg cursor-pointer",
-              serviceColor
-            )}
-          >
-            {format(new Date(order.start_date), "HH:mm")} - {order.quote_requests?.first_name}
-          </div>
-        </HoverCardTrigger>
-        <HoverCardContent className="w-80">
-          {renderWorkOrderContent(order)}
-        </HoverCardContent>
-      </HoverCard>
-
-      <WorkOrderDialog
-        open={isEditing}
-        onOpenChange={setIsEditing}
-        workOrder={order}
-      />
-    </>
-  )
-}
-
-function getServiceColor(serviceName?: string) {
+const getServiceColor = (serviceName?: string) => {
   switch (serviceName?.toLowerCase()) {
     case 'ppf':
       return 'bg-green-500/20 text-green-400 hover:border-green-400/50'
@@ -70,22 +29,49 @@ function getServiceColor(serviceName?: string) {
   }
 }
 
-function renderWorkOrderContent(order: WorkOrder) {
-  const services = order.quote_requests?.quote_request_services?.map(
-    (s) => s.service_types.name
-  ).join(", ")
+export function WorkOrderDisplay({ order, onClick }: WorkOrderDisplayProps) {
+  const [isEditing, setIsEditing] = useState(false)
+  const primaryService = order.quote_requests?.quote_request_services?.[0]?.service_types
+  const serviceColor = getServiceColor(primaryService?.name)
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation() // Stop event from bubbling up to parent
+    onClick?.(e)
+    setIsEditing(true)
+  }
 
   return (
-    <div className="space-y-2">
-      <h4 className="font-semibold">
-        {order.quote_requests?.first_name} {order.quote_requests?.last_name}
-      </h4>
-      <div className="text-sm space-y-1">
-        <p>Time: {format(new Date(order.start_date), "HH:mm")}</p>
-        <p>Services: {services}</p>
-        <p>Status: {order.status}</p>
-        <p>Bay: {order.service_bays?.name}</p>
-      </div>
-    </div>
+    <>
+      <HoverCard>
+        <HoverCardTrigger>
+          <div 
+            onClick={handleClick}
+            className={cn(
+              "text-xs p-1 rounded text-left truncate transition-all duration-200 hover:scale-[1.02] hover:border hover:shadow-lg cursor-pointer relative z-10",
+              serviceColor
+            )}
+          >
+            {format(new Date(order.start_date), "HH:mm")} - {primaryService?.name}
+          </div>
+        </HoverCardTrigger>
+        <HoverCardContent>
+          <div className="space-y-2">
+            <h4 className="text-sm font-semibold">{primaryService?.name}</h4>
+            <p className="text-xs text-muted-foreground">
+              {format(new Date(order.start_date), "PPP HH:mm")} - {format(new Date(order.end_date), "HH:mm")}
+            </p>
+            {order.notes && (
+              <p className="text-xs">{order.notes}</p>
+            )}
+          </div>
+        </HoverCardContent>
+      </HoverCard>
+
+      <WorkOrderDialog
+        open={isEditing}
+        onOpenChange={setIsEditing}
+        workOrder={order}
+      />
+    </>
   )
 }

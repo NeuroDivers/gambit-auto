@@ -85,24 +85,28 @@ export const QuoteRequestList = () => {
   }
 
   return (
-    <div className="space-y-12">
-      <div className="space-y-6">
-        <h3 className="text-xl font-semibold">Work Orders Calendar</h3>
-        <WorkOrderCalendar />
-      </div>
+    <div className="space-y-20">
+      <section className="bg-card/50 backdrop-blur-sm rounded-xl shadow-lg border border-white/5 p-8">
+        <div className="space-y-6">
+          <h3 className="text-xl font-semibold">Work Orders Calendar</h3>
+          <WorkOrderCalendar />
+        </div>
+      </section>
       
-      <div className="space-y-6">
-        <h3 className="text-xl font-semibold">Quote Requests</h3>
-        <StatusLegend statusCounts={statusCounts} />
-        {requests?.map((request) => (
-          <QuoteRequestCard key={request.id} request={request} />
-        ))}
-        {requests?.length === 0 && (
-          <div className="text-center py-8 text-white/60">
-            No quote requests yet
-          </div>
-        )}
-      </div>
+      <section className="bg-card/50 backdrop-blur-sm rounded-xl shadow-lg border border-white/5 p-8">
+        <div className="space-y-6">
+          <h3 className="text-xl font-semibold">Quote Requests</h3>
+          <StatusLegend statusCounts={statusCounts} />
+          {requests?.map((request) => (
+            <QuoteRequestCard key={request.id} request={request} />
+          ))}
+          {requests?.length === 0 && (
+            <div className="text-center py-8 text-white/60">
+              No quote requests yet
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   )
 }
