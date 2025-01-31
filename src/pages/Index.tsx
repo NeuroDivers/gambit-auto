@@ -1,10 +1,11 @@
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { CreateUserForm } from "@/components/CreateUserForm";
 import { ServiceTypesList } from "@/components/services/ServiceTypesList";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { CreateUserDialog } from "@/components/users/CreateUserDialog";
+import { ProfileDialog } from "@/components/profile/ProfileDialog";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -31,8 +32,9 @@ export default function Index() {
     <div className="min-h-screen bg-[#121212]">
       <DashboardLayout />
       <div className="container mx-auto py-8 space-y-8">
-        <div className="max-w-md mx-auto">
-          <CreateUserForm />
+        <div className="flex gap-4">
+          <CreateUserDialog />
+          <ProfileDialog />
         </div>
         <ServiceTypesList />
       </div>
