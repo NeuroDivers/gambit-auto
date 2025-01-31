@@ -1,3 +1,4 @@
+import * as React from "react"
 import { Calendar as CalendarIcon, Plus } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { useState } from "react"
