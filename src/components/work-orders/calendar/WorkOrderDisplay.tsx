@@ -7,9 +7,10 @@ import type { WorkOrder } from "../types"
 
 interface WorkOrderDisplayProps {
   order: WorkOrder
+  onClick?: (e: React.MouseEvent) => void
 }
 
-export function WorkOrderDisplay({ order }: WorkOrderDisplayProps) {
+export function WorkOrderDisplay({ order, onClick }: WorkOrderDisplayProps) {
   const [isEditing, setIsEditing] = React.useState(false)
   
   // Get the primary service type for color coding
@@ -21,7 +22,10 @@ export function WorkOrderDisplay({ order }: WorkOrderDisplayProps) {
       <HoverCard>
         <HoverCardTrigger>
           <div 
-            onClick={() => setIsEditing(true)}
+            onClick={(e) => {
+              onClick?.(e)
+              setIsEditing(true)
+            }}
             className={cn(
               "text-xs p-1 rounded text-left truncate transition-all duration-200 hover:scale-[1.02] hover:border hover:shadow-lg cursor-pointer",
               serviceColor
