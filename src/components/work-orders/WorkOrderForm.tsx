@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Form } from "@/components/ui/form"
@@ -36,7 +36,7 @@ export function WorkOrderForm({ selectedDate, quoteRequest, workOrder, onSuccess
   })
 
   // Reset form values when selectedDate changes
-  useEffect(() => {
+  React.useEffect(() => {
     if (selectedDate) {
       form.setValue('start_date', format(selectedDate, "yyyy-MM-dd"))
       form.setValue('end_date', format(selectedDate, "yyyy-MM-dd"))
