@@ -38,7 +38,7 @@ export const ServiceTypesList = () => {
         </Button>
       </div>
       
-      <div className="rounded-lg border border-white/10 bg-[#1E1E1E]">
+      <div className="rounded-lg border border-white/10 bg-[#1E1E1E] overflow-hidden">
         <ServiceTypesTable serviceTypes={serviceTypes || []} onRefetch={refetch} />
       </div>
 
@@ -52,4 +52,4 @@ export const ServiceTypesList = () => {
       />
     </div>
   );
-};
+}

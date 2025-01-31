@@ -48,25 +48,25 @@ export function CreateUserForm() {
   }
 
   if (loading) {
-    return <div className="p-4">Loading...</div>
+    return <div className="p-4 text-white/60">Loading...</div>
   }
 
   if (!isAdmin) {
-    return <div className="p-4">You need admin privileges to create new users.</div>
+    return <div className="p-4 text-white/60">You need admin privileges to create new users.</div>
   }
 
   return (
-    <div className="space-y-6 p-4 bg-card rounded-lg border">
+    <div className="space-y-6 p-4 bg-[#1E1E1E] rounded-lg border border-white/10">
       <div>
-        <h3 className="text-lg font-medium">Create New User</h3>
-        <p className="text-sm text-muted-foreground">
+        <h3 className="text-lg font-medium text-white/[0.87]">Create New User</h3>
+        <p className="text-sm text-white/60">
           Add a new user to the system
         </p>
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <UserFormFields form={form} />
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full bg-[#BB86FC] hover:bg-[#BB86FC]/90">
             Create User
           </Button>
         </form>
