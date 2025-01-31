@@ -34,6 +34,7 @@ export const UserEditDialog = ({ user, open, onOpenChange }: UserEditDialogProps
       first_name: user.first_name || "",
       last_name: user.last_name || "",
       role: user.user_roles?.role || "client",
+      assigned_work_orders: [],
     },
   });
 
@@ -58,6 +59,16 @@ export const UserEditDialog = ({ user, open, onOpenChange }: UserEditDialogProps
           });
 
         if (roleError) throw roleError;
+      }
+
+      // Update work order assignments if the user is a sidekick
+      if (values.role === "sidekick" && values.assigned_work_orders) {
+        const { error: workOrderError } = await supabase
+          .from("work_orders")
+          .update({ assigned_sidekick_id: user.id })
+          .in("id", values.assigned_work_orders);
+
+        if (workOrderError) throw workOrderError;
       }
 
       toast({

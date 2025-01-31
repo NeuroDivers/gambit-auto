@@ -14,11 +14,14 @@ import {
 } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
 import * as z from "zod";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export const formSchema = z.object({
   role: z.enum(["admin", "manager", "sidekick", "client"]),
   first_name: z.string(),
   last_name: z.string(),
+  assigned_work_orders: z.array(z.string()).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -29,6 +32,19 @@ interface UserEditFormFieldsProps {
 }
 
 export const UserEditFormFields = ({ form }: UserEditFormFieldsProps) => {
+  const { data: workOrders } = useQuery({
+    queryKey: ["work-orders"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("work_orders")
+        .select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const isSidekick = form.watch("role") === "sidekick";
+
   return (
     <div className="space-y-4">
       <FormField
@@ -90,6 +106,43 @@ export const UserEditFormFields = ({ form }: UserEditFormFieldsProps) => {
           </FormItem>
         )}
       />
+
+      {isSidekick && workOrders && (
+        <FormField
+          control={form.control}
+          name="assigned_work_orders"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-white/[0.87]">Assign Work Orders</FormLabel>
+              <FormControl>
+                <Select
+                  onValueChange={(value) => {
+                    const currentValues = field.value || [];
+                    if (!currentValues.includes(value)) {
+                      field.onChange([...currentValues, value]);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="bg-[#242424] border-white/10 text-white/[0.87]">
+                    <SelectValue placeholder="Select work orders" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#242424] border-white/10">
+                    {workOrders.map((order) => (
+                      <SelectItem 
+                        key={order.id} 
+                        value={order.id}
+                        className="text-white/[0.87]"
+                      >
+                        Work Order #{order.id.slice(0, 8)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+            </FormItem>
+          )}
+        />
+      )}
     </div>
   );
 };
