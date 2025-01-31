@@ -6,7 +6,7 @@ import { LoadingState } from "../LoadingState"
 import { Button } from "@/components/ui/button"
 import { PlusCircle } from "lucide-react"
 import { useState } from "react"
-import { CreateWorkOrderDialog } from "@/components/work-orders/CreateWorkOrderDialog"
+import { CreateQuoteDialog } from "../CreateQuoteDialog"
 import type { QuoteRequest } from "../types"
 
 export function QuoteRequestsSection() {
@@ -55,7 +55,7 @@ export function QuoteRequestsSection() {
             className="gap-2"
           >
             <PlusCircle className="h-4 w-4" />
-            Create Work Order
+            Create Quote
           </Button>
         </div>
         <StatusLegend statusCounts={statusCounts} />
@@ -69,7 +69,7 @@ export function QuoteRequestsSection() {
         )}
       </div>
 
-      <CreateWorkOrderDialog
+      <CreateQuoteDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
       />

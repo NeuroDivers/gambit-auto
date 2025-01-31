@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { useEffect } from "react"
 import { WorkOrderCalendarSection } from "./sections/WorkOrderCalendarSection"
 import { QuoteRequestsSection } from "./sections/QuoteRequestsSection"
+import { WorkOrdersSection } from "../work-orders/sections/WorkOrdersSection"
 
 export const QuoteRequestList = () => {
   const queryClient = useQueryClient()
@@ -32,6 +33,7 @@ export const QuoteRequestList = () => {
     <div className="space-y-20">
       <WorkOrderCalendarSection />
       <QuoteRequestsSection />
+      <WorkOrdersSection />
     </div>
   )
 }
