@@ -12,7 +12,7 @@ type SidekickSelectionFieldProps = {
 interface SidekickQueryResult {
   user_id: string
   role: string
-  user: {
+  profiles: {
     first_name: string | null
     last_name: string | null
   }
@@ -27,7 +27,7 @@ export function SidekickSelectionField({ control }: SidekickSelectionFieldProps)
         .select(`
           user_id,
           role,
-          user:profiles!inner(
+          profiles:profiles(
             first_name,
             last_name
           )
@@ -59,7 +59,7 @@ export function SidekickSelectionField({ control }: SidekickSelectionFieldProps)
             <SelectContent>
               {sidekicks?.map((sidekick) => (
                 <SelectItem key={sidekick.user_id} value={sidekick.user_id}>
-                  {sidekick.user.first_name} {sidekick.user.last_name}
+                  {sidekick.profiles.first_name} {sidekick.profiles.last_name}
                 </SelectItem>
               ))}
             </SelectContent>
