@@ -47,7 +47,7 @@ export const UserEditDialog = ({
   const queryClient = useQueryClient();
   const form = useForm({
     defaultValues: {
-      role: user.user_roles?.role || "user",
+      role: user.user_roles?.role || "client",
       first_name: user.first_name || "",
       last_name: user.last_name || "",
     },
@@ -143,8 +143,10 @@ export const UserEditDialog = ({
                         <SelectValue placeholder="Select a role" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="user">User</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="manager">Manager</SelectItem>
+                        <SelectItem value="sidekick">Sidekick</SelectItem>
+                        <SelectItem value="client">Client</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormControl>
