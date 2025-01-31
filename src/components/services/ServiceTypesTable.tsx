@@ -23,55 +23,60 @@ export const ServiceTypesTable = ({ serviceTypes, onRefetch }: ServiceTypesTable
 
   return (
     <>
-      <Table>
-        <TableHeader className="bg-[#242424]">
-          <TableRow>
-            <TableHead className="text-white/60">Name</TableHead>
-            <TableHead className="text-white/60">Status</TableHead>
-            <TableHead className="text-white/60">Description</TableHead>
-            <TableHead className="text-white/60">Price</TableHead>
-            <TableHead className="text-white/60">Duration</TableHead>
-            <TableHead className="text-white/60 text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {serviceTypes.map((service) => (
-            <TableRow key={service.id} className="border-t border-white/10">
-              <TableCell className="text-white/[0.87]">{service.name}</TableCell>
-              <TableCell>
-                {service.status === 'active' ? (
-                  <span className="flex items-center text-[#03DAC5]">
-                    <Check className="w-4 h-4 mr-1" />
-                    Active
-                  </span>
-                ) : (
-                  <span className="flex items-center text-white/40">
-                    <X className="w-4 h-4 mr-1" />
-                    Inactive
-                  </span>
-                )}
-              </TableCell>
-              <TableCell className="text-white/60">{service.description}</TableCell>
-              <TableCell className="text-white/60">
-                {service.price ? `$${service.price.toFixed(2)}` : '-'}
-              </TableCell>
-              <TableCell className="text-white/60">
-                {service.duration ? `${service.duration} min` : '-'}
-              </TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setEditingService(service)}
-                  className="text-white/60 hover:text-white/[0.87] hover:bg-[#242424]"
-                >
-                  <Edit className="w-4 h-4" />
-                </Button>
-              </TableCell>
+      <div className="p-6">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-white/[0.08] hover:bg-transparent">
+              <TableHead className="text-white/60">Name</TableHead>
+              <TableHead className="text-white/60">Status</TableHead>
+              <TableHead className="text-white/60">Description</TableHead>
+              <TableHead className="text-white/60">Price</TableHead>
+              <TableHead className="text-white/60">Duration</TableHead>
+              <TableHead className="text-white/60 text-right">Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {serviceTypes.map((service) => (
+              <TableRow 
+                key={service.id} 
+                className="border-b border-white/[0.08] transition-colors duration-200 hover:bg-white/[0.02]"
+              >
+                <TableCell className="text-white/[0.87] font-medium">{service.name}</TableCell>
+                <TableCell>
+                  {service.status === 'active' ? (
+                    <span className="flex items-center text-[#03DAC5]">
+                      <Check className="w-4 h-4 mr-1" />
+                      Active
+                    </span>
+                  ) : (
+                    <span className="flex items-center text-white/40">
+                      <X className="w-4 h-4 mr-1" />
+                      Inactive
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell className="text-white/60">{service.description || '-'}</TableCell>
+                <TableCell className="text-white/60">
+                  {service.price ? `$${service.price.toFixed(2)}` : '-'}
+                </TableCell>
+                <TableCell className="text-white/60">
+                  {service.duration ? `${service.duration} min` : '-'}
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditingService(service)}
+                    className="text-white/60 hover:text-white/[0.87] hover:bg-white/[0.08] transition-colors duration-200"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       <ServiceTypeDialog
         open={!!editingService}

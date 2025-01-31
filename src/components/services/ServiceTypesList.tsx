@@ -24,21 +24,21 @@ export const ServiceTypesList = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-8">
         <div>
           <h2 className="text-2xl font-bold text-white/[0.87]">Service Types</h2>
           <p className="text-white/60">Manage your service offerings</p>
         </div>
         <Button 
           onClick={() => setIsDialogOpen(true)}
-          className="bg-[#BB86FC] hover:bg-[#BB86FC]/90 text-white"
+          className="bg-[#BB86FC] hover:bg-[#BB86FC]/90 text-white transition-colors duration-200"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Service Type
         </Button>
       </div>
       
-      <div className="rounded-lg border border-white/10 bg-[#1E1E1E] overflow-hidden">
+      <div className="bg-[#242424] border border-white/12 rounded-lg transition-all duration-200 hover:border-[#BB86FC]/50">
         <ServiceTypesTable serviceTypes={serviceTypes || []} onRefetch={refetch} />
       </div>
 
