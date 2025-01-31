@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
+import { EditQuoteDialog } from "./EditQuoteDialog"
 
 type QuoteRequest = {
   id: string
@@ -71,17 +72,20 @@ export function QuoteRequestCard({ request }: QuoteRequestCardProps) {
               Submitted on {format(new Date(request.created_at), "PPP")}
             </CardDescription>
           </div>
-          <Badge
-            variant={
-              request.status === "pending"
-                ? "default"
-                : request.status === "approved"
-                ? "secondary"
-                : "destructive"
-            }
-          >
-            {request.status}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <EditQuoteDialog quote={request} />
+            <Badge
+              variant={
+                request.status === "pending"
+                  ? "default"
+                  : request.status === "approved"
+                  ? "secondary"
+                  : "destructive"
+              }
+            >
+              {request.status}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
