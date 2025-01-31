@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { CreateQuoteDialog } from "@/components/quotes/CreateQuoteDialog";
+import { ServiceBaysList } from "@/components/service-bays/ServiceBaysList";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -56,6 +57,9 @@ export default function Index() {
       {isAdmin ? (
         <>
           <ServiceTypesList />
+          <div className="mt-12">
+            <ServiceBaysList />
+          </div>
           <div className="mt-12">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white/[0.87]">Quote Requests</h2>

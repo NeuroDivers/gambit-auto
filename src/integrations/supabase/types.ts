@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bay_services: {
+        Row: {
+          bay_id: string
+          created_at: string
+          is_active: boolean
+          service_id: string
+        }
+        Insert: {
+          bay_id: string
+          created_at?: string
+          is_active?: boolean
+          service_id: string
+        }
+        Update: {
+          bay_id?: string
+          created_at?: string
+          is_active?: boolean
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bay_services_bay_id_fkey"
+            columns: ["bay_id"]
+            isOneToOne: false
+            referencedRelation: "service_bays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bay_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_profile: {
         Row: {
           address: string | null
@@ -155,6 +191,7 @@ export type Database = {
       quote_requests: {
         Row: {
           additional_notes: string | null
+          assigned_bay_id: string | null
           contact_preference: Database["public"]["Enums"]["contact_preference"]
           created_at: string
           email: string
@@ -172,6 +209,7 @@ export type Database = {
         }
         Insert: {
           additional_notes?: string | null
+          assigned_bay_id?: string | null
           contact_preference: Database["public"]["Enums"]["contact_preference"]
           created_at?: string
           email: string
@@ -189,6 +227,7 @@ export type Database = {
         }
         Update: {
           additional_notes?: string | null
+          assigned_bay_id?: string | null
           contact_preference?: Database["public"]["Enums"]["contact_preference"]
           created_at?: string
           email?: string
@@ -203,6 +242,38 @@ export type Database = {
           vehicle_model?: string
           vehicle_serial?: string
           vehicle_year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_requests_assigned_bay_id_fkey"
+            columns: ["assigned_bay_id"]
+            isOneToOne: false
+            referencedRelation: "service_bays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_bays: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          status: Database["public"]["Enums"]["bay_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          status?: Database["public"]["Enums"]["bay_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["bay_status"]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -275,6 +346,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "manager" | "sidekick" | "client"
+      bay_status: "available" | "in_use" | "maintenance"
       contact_preference: "phone" | "email"
       service_status: "active" | "inactive"
       tax_type: "GST" | "QST" | "HST" | "PST"
