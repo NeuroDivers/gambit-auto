@@ -9,13 +9,15 @@ type SidekickSelectionFieldProps = {
   control: Control<WorkOrderFormValues>
 }
 
+interface SidekickProfile {
+  first_name: string | null
+  last_name: string | null
+}
+
 interface SidekickQueryResult {
   user_id: string
   role: string
-  profiles: {
-    first_name: string | null
-    last_name: string | null
-  }
+  profiles: SidekickProfile
 }
 
 export function SidekickSelectionField({ control }: SidekickSelectionFieldProps) {
@@ -27,15 +29,16 @@ export function SidekickSelectionField({ control }: SidekickSelectionFieldProps)
         .select(`
           user_id,
           role,
-          profiles!user_roles_user_id_fkey(
+          profiles:user_id(
             first_name,
             last_name
           )
         `)
         .eq("role", "sidekick")
+        .single()
 
       if (error) throw error
-      return data as SidekickQueryResult[]
+      return data as unknown as SidekickQueryResult[]
     },
   })
 
