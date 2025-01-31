@@ -1,9 +1,12 @@
 import { WelcomeHeader } from "./WelcomeHeader";
-import { UserManagementSection } from "../users/UserManagementSection";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
+import { Button } from "@/components/ui/button";
+import { Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export const DashboardLayout = () => {
   const { isAdmin, loading } = useAdminStatus();
+  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -19,10 +22,14 @@ export const DashboardLayout = () => {
         <WelcomeHeader />
         <div className="space-y-12 mt-8">
           {isAdmin && (
-            <div className="max-w-[1400px] mx-auto">
-              <div className="bg-card/50 backdrop-blur-sm rounded-xl shadow-lg border border-white/5 p-8">
-                <UserManagementSection />
-              </div>
+            <div className="flex justify-end">
+              <Button
+                onClick={() => navigate("/user-management")}
+                className="bg-[#BB86FC] text-white hover:bg-[#BB86FC]/90"
+              >
+                <Users className="mr-2 h-4 w-4" />
+                Manage Users
+              </Button>
             </div>
           )}
         </div>
