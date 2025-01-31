@@ -7,10 +7,9 @@ import type { WorkOrder } from "../types"
 
 interface WorkOrderDisplayProps {
   order: WorkOrder
-  onClick?: (e: React.MouseEvent) => void
 }
 
-export function WorkOrderDisplay({ order, onClick }: WorkOrderDisplayProps) {
+export function WorkOrderDisplay({ order }: WorkOrderDisplayProps) {
   const [isEditing, setIsEditing] = useState(false)
   const primaryService = order.quote_requests?.quote_request_services?.[0]?.service_types
   const serviceColor = getServiceColor(primaryService?.name)

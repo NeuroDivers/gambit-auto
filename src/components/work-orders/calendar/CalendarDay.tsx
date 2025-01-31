@@ -12,7 +12,10 @@ interface CalendarDayProps {
 
 export function CalendarDay({ date, workOrders = [], onSelect }: CalendarDayProps) {
   const handleDayClick = (e: React.MouseEvent) => {
-    onSelect(date)
+    // Only trigger day selection if clicking directly on the day cell
+    if (e.currentTarget === e.target) {
+      onSelect(date)
+    }
   }
 
   return (
