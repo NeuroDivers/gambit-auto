@@ -16,7 +16,6 @@ type QuoteRequest = {
   email: string
   phone_number: string
   contact_preference: "phone" | "email"
-  service_id: string
   vehicle_make: string
   vehicle_model: string
   vehicle_year: number
@@ -25,9 +24,11 @@ type QuoteRequest = {
   media_url?: string
   status: string
   created_at: string
-  service_types: {
-    name: string
-  }
+  quote_request_services: {
+    service_types: {
+      name: string
+    }
+  }[]
 }
 
 type EditQuoteDialogProps = {

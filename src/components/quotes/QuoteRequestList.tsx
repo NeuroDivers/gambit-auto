@@ -11,7 +11,6 @@ type QuoteRequest = {
   email: string
   phone_number: string
   contact_preference: "phone" | "email"
-  service_id: string
   vehicle_make: string
   vehicle_model: string
   vehicle_year: number
@@ -20,9 +19,11 @@ type QuoteRequest = {
   media_url?: string
   status: string
   created_at: string
-  service_types: {
-    name: string
-  }
+  quote_request_services: {
+    service_types: {
+      name: string
+    }
+  }[]
 }
 
 export const QuoteRequestList = () => {
@@ -35,8 +36,10 @@ export const QuoteRequestList = () => {
         .from("quote_requests")
         .select(`
           *,
-          service_types (
-            name
+          quote_request_services (
+            service_types (
+              name
+            )
           )
         `)
         .order("created_at", { ascending: false })

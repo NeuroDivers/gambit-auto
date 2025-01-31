@@ -78,7 +78,8 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
   async function onSubmit(data: QuoteRequestFormValues) {
     try {
       if (initialData) {
-        const { error } = await supabase
+        // Update existing quote request
+        const { error: quoteError } = await supabase
           .from("quote_requests")
           .update({
             first_name: data.first_name,
@@ -86,7 +87,6 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
             email: data.email,
             phone_number: data.phone_number,
             contact_preference: data.contact_preference,
-            service_ids: data.service_ids,
             vehicle_make: data.vehicle_make,
             vehicle_model: data.vehicle_model,
             vehicle_year: data.vehicle_year,
@@ -97,14 +97,34 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
           })
           .eq("id", initialData.id)
 
-        if (error) throw error
+        if (quoteError) throw quoteError
+
+        // Update services
+        const { error: deleteError } = await supabase
+          .from("quote_request_services")
+          .delete()
+          .eq("quote_request_id", initialData.id)
+
+        if (deleteError) throw deleteError
+
+        const { error: servicesError } = await supabase
+          .from("quote_request_services")
+          .insert(
+            data.service_ids.map(serviceId => ({
+              quote_request_id: initialData.id,
+              service_id: serviceId
+            }))
+          )
+
+        if (servicesError) throw servicesError
 
         toast({
           title: "Success",
           description: "Quote request has been updated successfully.",
         })
       } else {
-        const { error } = await supabase
+        // Create new quote request
+        const { data: newQuote, error: quoteError } = await supabase
           .from("quote_requests")
           .insert({
             first_name: data.first_name,
@@ -112,7 +132,6 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
             email: data.email,
             phone_number: data.phone_number,
             contact_preference: data.contact_preference,
-            service_ids: data.service_ids,
             vehicle_make: data.vehicle_make,
             vehicle_model: data.vehicle_model,
             vehicle_year: data.vehicle_year,
@@ -121,8 +140,21 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
             media_url: mediaUrl,
             timeframe: data.timeframe,
           })
+          .select()
+          .single()
 
-        if (error) throw error
+        if (quoteError) throw quoteError
+
+        const { error: servicesError } = await supabase
+          .from("quote_request_services")
+          .insert(
+            data.service_ids.map(serviceId => ({
+              quote_request_id: newQuote.id,
+              service_id: serviceId
+            }))
+          )
+
+        if (servicesError) throw servicesError
 
         toast({
           title: "Success",

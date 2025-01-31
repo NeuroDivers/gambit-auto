@@ -14,7 +14,6 @@ type QuoteRequest = {
   email: string
   phone_number: string
   contact_preference: "phone" | "email"
-  service_id: string
   vehicle_make: string
   vehicle_model: string
   vehicle_year: number
@@ -23,9 +22,11 @@ type QuoteRequest = {
   media_url?: string
   status: string
   created_at: string
-  service_types: {
-    name: string
-  }
+  quote_request_services: {
+    service_types: {
+      name: string
+    }
+  }[]
 }
 
 type QuoteRequestCardProps = {
@@ -91,8 +92,12 @@ export function QuoteRequestCard({ request }: QuoteRequestCardProps) {
       <CardContent className="space-y-4">
         <div className="grid gap-2 text-sm">
           <div className="grid grid-cols-2 gap-1">
-            <span className="font-medium">Service:</span>
-            <span>{request.service_types.name}</span>
+            <span className="font-medium">Services:</span>
+            <span>
+              {request.quote_request_services
+                .map(service => service.service_types.name)
+                .join(", ")}
+            </span>
           </div>
           <div className="grid grid-cols-2 gap-1">
             <span className="font-medium">Contact:</span>

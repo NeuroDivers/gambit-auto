@@ -119,6 +119,39 @@ export type Database = {
         }
         Relationships: []
       }
+      quote_request_services: {
+        Row: {
+          created_at: string
+          quote_request_id: string
+          service_id: string
+        }
+        Insert: {
+          created_at?: string
+          quote_request_id: string
+          service_id: string
+        }
+        Update: {
+          created_at?: string
+          quote_request_id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_request_services_quote_request_id_fkey"
+            columns: ["quote_request_id"]
+            isOneToOne: false
+            referencedRelation: "quote_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_request_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quote_requests: {
         Row: {
           additional_notes: string | null
@@ -130,7 +163,6 @@ export type Database = {
           last_name: string
           media_url: string | null
           phone_number: string
-          service_id: string
           status: string
           updated_at: string
           vehicle_make: string
@@ -148,7 +180,6 @@ export type Database = {
           last_name: string
           media_url?: string | null
           phone_number: string
-          service_id: string
           status?: string
           updated_at?: string
           vehicle_make: string
@@ -166,7 +197,6 @@ export type Database = {
           last_name?: string
           media_url?: string | null
           phone_number?: string
-          service_id?: string
           status?: string
           updated_at?: string
           vehicle_make?: string
@@ -174,15 +204,7 @@ export type Database = {
           vehicle_serial?: string
           vehicle_year?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "quote_requests_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "service_types"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       service_types: {
         Row: {
