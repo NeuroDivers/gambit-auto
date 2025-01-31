@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { WorkOrder } from "./work-order"
 
 export const workOrderFormSchema = z.object({
   quote_request_id: z.string().uuid().optional(),
