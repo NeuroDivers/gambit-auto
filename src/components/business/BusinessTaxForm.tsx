@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const taxFormSchema = z.object({
   tax_type: z.enum(["GST", "QST", "HST", "PST"]),
   tax_number: z.string().min(1, "Tax number is required"),
-  tax_rate: z.string().transform((val) => parseFloat(val)),
+  tax_rate: z.number().min(0, "Tax rate must be positive"),
 })
 
 type TaxFormValues = z.infer<typeof taxFormSchema>
@@ -55,7 +55,7 @@ export function BusinessTaxForm() {
     defaultValues: {
       tax_type: "GST",
       tax_number: "",
-      tax_rate: "0",
+      tax_rate: 0,
     },
   })
 
@@ -186,7 +186,12 @@ export function BusinessTaxForm() {
               <FormItem>
                 <FormLabel>Tax Rate (%)</FormLabel>
                 <FormControl>
-                  <Input {...field} type="number" step="0.01" />
+                  <Input 
+                    type="number" 
+                    step="0.01" 
+                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                    value={field.value}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

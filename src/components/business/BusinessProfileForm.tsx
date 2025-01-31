@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { useQuery } from "@tanstack/react-query"
+import { Json } from "@/integrations/supabase/types/json"
 
 const businessFormSchema = z.object({
   company_name: z.string().min(1, "Company name is required"),
@@ -51,9 +52,12 @@ export function BusinessProfileForm() {
       const { error } = await supabase
         .from("business_profile")
         .upsert({
-          ...data,
-          business_hours: data.business_hours ? JSON.parse(data.business_hours) : null,
           id: profile?.id,
+          company_name: data.company_name,
+          phone_number: data.phone_number,
+          email: data.email,
+          address: data.address,
+          business_hours: data.business_hours ? JSON.parse(data.business_hours) as Json : null,
         })
 
       if (error) throw error
