@@ -14,10 +14,11 @@ export function CreateQuoteDialog() {
     <Dialog>
       <DialogTrigger asChild>
         <Button 
+          variant="outline"
           size="sm"
-          className="bg-primary hover:bg-primary/90 text-primary-foreground"
+          className="gap-2"
         >
-          <PlusCircle className="h-4 w-4 mr-2" />
+          <PlusCircle className="h-4 w-4" />
           Create Quote
         </Button>
       </DialogTrigger>
