@@ -50,6 +50,9 @@ export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
             Services
             <span className="text-red-500">*</span>
           </FormLabel>
+          <p className="text-sm text-muted-foreground mb-3">
+            Select one or more services that you need assistance with
+          </p>
           <FormControl>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {services?.map((service) => (
