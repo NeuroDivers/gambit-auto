@@ -12,19 +12,18 @@ export const RoleManagement = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("user_roles")
-        .select("role, count")
-        .select("role")
-        .then(({ data }) => {
-          const stats = {
-            admin: 0,
-            user: 0,
-          };
-          data?.forEach((row) => {
-            stats[row.role] = (stats[row.role] || 0) + 1;
-          });
-          return stats;
-        });
-      return data;
+        .select("role");
+      
+      const stats = {
+        admin: 0,
+        user: 0,
+      };
+      
+      data?.forEach((row) => {
+        stats[row.role] = (stats[row.role] || 0) + 1;
+      });
+      
+      return stats;
     },
   });
 

@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { User, Edit2, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { UserEditDialog } from "./UserEditDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 type UserRowProps = {
   user: {

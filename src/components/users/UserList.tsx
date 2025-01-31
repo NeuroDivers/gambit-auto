@@ -7,10 +7,21 @@ export const UserList = () => {
   const { data: users, isLoading } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
-      const { data: profiles } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
-        .select("*, user_roles(role)");
-      return profiles;
+        .select(`
+          id,
+          email,
+          user_roles!inner (
+            role
+          )
+        `);
+
+      if (error) throw error;
+      return data?.map(user => ({
+        ...user,
+        user_roles: user.user_roles[0]
+      }));
     },
   });
 
