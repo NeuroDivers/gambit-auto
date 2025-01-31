@@ -55,7 +55,10 @@ export function EditQuoteDialog({ quote }: EditQuoteDialogProps) {
         <DialogHeader>
           <DialogTitle>Edit Quote Request</DialogTitle>
         </DialogHeader>
-        <QuoteRequestForm initialData={quote} onSuccess={() => closeRef.current?.click()} />
+        <QuoteRequestForm 
+          initialData={quote} 
+          onSuccess={() => closeRef.current?.click()} 
+        />
         <DialogClose ref={closeRef} className="hidden" />
       </DialogContent>
     </Dialog>

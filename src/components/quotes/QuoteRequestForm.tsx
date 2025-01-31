@@ -29,7 +29,7 @@ export function QuoteRequestForm({ initialData, onSuccess }: QuoteRequestFormPro
   } = useMediaUpload()
 
   // Fetch selected services if initialData exists and has an id
-  const { data: selectedServices } = useQuery({
+  const { data: selectedServices = [] } = useQuery({
     queryKey: ["quoteRequestServices", initialData?.id],
     queryFn: async () => {
       if (!initialData?.id) return []
@@ -41,8 +41,7 @@ export function QuoteRequestForm({ initialData, onSuccess }: QuoteRequestFormPro
       if (error) throw error
       return data.map(service => service.service_id)
     },
-    enabled: !!initialData?.id, // Only run query when we have a valid id
-    initialData: [] // Provide initial data to avoid undefined
+    enabled: !!initialData?.id // Only run query when we have a valid id
   })
 
   const form = useForm<QuoteRequestFormValues>({
@@ -62,7 +61,7 @@ export function QuoteRequestForm({ initialData, onSuccess }: QuoteRequestFormPro
         additional_notes: "",
         timeframe: "flexible" as const,
       }),
-      service_ids: selectedServices || []
+      service_ids: selectedServices
     },
   })
 
