@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -16,8 +16,27 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  useEffect(() => {
+    // Check if user is already logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigate("/");
+      }
+    });
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        navigate("/");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return; // Prevent double submission
     setLoading(true);
 
     try {
@@ -34,7 +53,6 @@ const Auth = () => {
           }
           throw error;
         }
-        navigate("/");
       } else {
         const { error } = await supabase.auth.signUp({
           email,
@@ -71,6 +89,7 @@ const Auth = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          disabled={loading}
         />
       </div>
       <div className="space-y-2">
@@ -81,6 +100,7 @@ const Auth = () => {
           onChange={(e) => setPassword(e.target.value)}
           required
           minLength={6}
+          disabled={loading}
         />
       </div>
       <Button className="w-full" type="submit" disabled={loading}>
