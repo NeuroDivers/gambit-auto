@@ -36,7 +36,7 @@ const Auth = () => {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loading) return; // Prevent double submission
+    if (loading) return;
     setLoading(true);
 
     try {
@@ -90,6 +90,7 @@ const Auth = () => {
           onChange={(e) => setEmail(e.target.value)}
           required
           disabled={loading}
+          autoComplete="email"
         />
       </div>
       <div className="space-y-2">
@@ -101,6 +102,7 @@ const Auth = () => {
           required
           minLength={6}
           disabled={loading}
+          autoComplete="current-password"
         />
       </div>
       <Button className="w-full" type="submit" disabled={loading}>
