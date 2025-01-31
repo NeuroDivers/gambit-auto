@@ -14,7 +14,8 @@ export function CreateQuoteDialog() {
     <Dialog>
       <DialogTrigger asChild>
         <Button 
-          className="bg-[#BB86FC] hover:bg-[#BB86FC]/90 text-white transition-colors duration-200"
+          size="sm"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground"
         >
           <PlusCircle className="h-4 w-4 mr-2" />
           Create Quote
