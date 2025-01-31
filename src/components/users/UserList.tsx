@@ -22,7 +22,9 @@ export const UserList = () => {
       return data?.map(user => ({
         id: user.id,
         email: user.email,
-        user_roles: user.user_roles?.[0] || { role: 'user' }
+        user_roles: typeof user.user_roles?.[0] === 'object' 
+          ? user.user_roles[0] 
+          : { role: 'user' }
       }));
     },
   });
