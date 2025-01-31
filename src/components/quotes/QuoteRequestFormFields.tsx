@@ -41,7 +41,6 @@ export function QuoteRequestFormFields({
   return (
     <>
       <PersonalInfoFields form={form} />
-      <VehicleInfoFields form={form} />
       <ServiceSelectionField form={form} />
       <MediaUploadField
         onFileUpload={onFileUpload}
@@ -49,6 +48,7 @@ export function QuoteRequestFormFields({
         uploading={uploading}
         onMediaRemove={onMediaRemove}
       />
+      <VehicleInfoFields form={form} />
       <FormField
         control={form.control}
         name="additional_notes"

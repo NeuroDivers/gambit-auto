@@ -11,7 +11,7 @@ type VehicleInfoFieldsProps = {
 export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-3 gap-6">
         <FormField
           control={form.control}
           name="vehicle_make"
@@ -38,9 +38,6 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
             </FormItem>
           )}
         />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
         <FormField
           control={form.control}
           name="vehicle_year"
@@ -59,20 +56,21 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="vehicle_serial"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Vehicle Serial Number (Optional)</FormLabel>
-              <FormControl>
-                <Input placeholder="VIN or Serial Number" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
       </div>
+
+      <FormField
+        control={form.control}
+        name="vehicle_serial"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Vehicle Serial Number (Optional)</FormLabel>
+            <FormControl>
+              <Input placeholder="VIN or Serial Number" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </>
   )
 }
