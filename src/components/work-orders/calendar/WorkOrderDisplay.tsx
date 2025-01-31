@@ -22,10 +22,7 @@ export function WorkOrderDisplay({ order, onClick }: WorkOrderDisplayProps) {
   }
 
   return (
-    <div 
-      className="relative z-50" 
-      onClick={handleClick}
-    >
+    <div className="relative z-50">
       <HoverCard>
         <HoverCardTrigger asChild>
           <div 
@@ -33,6 +30,7 @@ export function WorkOrderDisplay({ order, onClick }: WorkOrderDisplayProps) {
               "text-xs p-1 rounded text-left truncate transition-all duration-200 hover:scale-[1.02] hover:border hover:shadow-lg cursor-pointer",
               serviceColor
             )}
+            onClick={handleClick}
           >
             {format(new Date(order.start_date), "HH:mm")} - {primaryService?.name}
           </div>
