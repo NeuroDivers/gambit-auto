@@ -33,7 +33,7 @@ export function QuoteRequestForm() {
       last_name: "",
       email: "",
       phone_number: "",
-      contact_preference: "email",
+      contact_preference: "email" as const,
       service_id: "",
       vehicle_make: "",
       vehicle_model: "",
@@ -47,9 +47,7 @@ export function QuoteRequestForm() {
     try {
       const { data, error } = await supabase
         .from("quote_requests")
-        .insert({
-          ...values,
-        })
+        .insert(values)
         .select()
         .single()
 

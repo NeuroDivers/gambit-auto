@@ -76,7 +76,7 @@ export function QuoteRequestCard({ request }: QuoteRequestCardProps) {
               request.status === "pending"
                 ? "default"
                 : request.status === "approved"
-                ? "success"
+                ? "secondary"
                 : "destructive"
             }
           >
