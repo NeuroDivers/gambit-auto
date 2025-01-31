@@ -17,6 +17,10 @@ export type Database = {
           id: string
           last_name: string | null
           updated_at: string
+          avatar_url: string | null
+          phone_number: string | null
+          address: string | null
+          bio: string | null
         }
         Insert: {
           created_at?: string
@@ -25,6 +29,10 @@ export type Database = {
           id: string
           last_name?: string | null
           updated_at?: string
+          avatar_url?: string | null
+          phone_number?: string | null
+          address?: string | null
+          bio?: string | null
         }
         Update: {
           created_at?: string
@@ -33,6 +41,10 @@ export type Database = {
           id?: string
           last_name?: string | null
           updated_at?: string
+          avatar_url?: string | null
+          phone_number?: string | null
+          address?: string | null
+          bio?: string | null
         }
         Relationships: []
       }
@@ -209,3 +221,4 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
     ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
