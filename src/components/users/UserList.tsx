@@ -12,15 +12,17 @@ export const UserList = () => {
         .select(`
           id,
           email,
-          user_roles!inner (
+          user_roles (
             role
           )
         `);
 
       if (error) throw error;
+      
       return data?.map(user => ({
-        ...user,
-        user_roles: user.user_roles[0]
+        id: user.id,
+        email: user.email,
+        user_roles: user.user_roles?.[0] || { role: 'user' }
       }));
     },
   });
