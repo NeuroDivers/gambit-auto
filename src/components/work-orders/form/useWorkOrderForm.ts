@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
-import { workOrderFormSchema, type WorkOrderFormValues } from "../types"
+import { workOrderFormSchema, type WorkOrderFormValues } from "../types/form"
 import { useEffect } from "react"
 
 interface UseWorkOrderFormProps {

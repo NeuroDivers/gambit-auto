@@ -1,7 +1,7 @@
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import type { WorkOrderFormValues } from "../types"
+import type { WorkOrderFormValues } from "../types/form"
 
 export function useWorkOrderSubmit({ 
   workOrder,

@@ -4,12 +4,7 @@ import { DateTimeFields } from "./DateTimeFields"
 import { NotesField } from "./NotesField"
 import { StatusField } from "./StatusField"
 import { ServiceSelectionField } from "../../quotes/form-fields/ServiceSelectionField"
-import type { UseFormReturn } from "react-hook-form"
-import type { WorkOrderFormValues } from "../types/form"
-
-interface FormFieldsProps {
-  form: UseFormReturn<WorkOrderFormValues>
-}
+import type { FormFieldsProps } from "../types/form"
 
 export function FormFields({ form }: FormFieldsProps) {
   return (
