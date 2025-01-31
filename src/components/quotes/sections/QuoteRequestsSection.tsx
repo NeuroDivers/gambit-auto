@@ -3,9 +3,15 @@ import { supabase } from "@/integrations/supabase/client"
 import { QuoteRequestCard } from "../QuoteRequestCard"
 import { StatusLegend } from "../StatusLegend"
 import { LoadingState } from "../LoadingState"
+import { Button } from "@/components/ui/button"
+import { PlusCircle } from "lucide-react"
+import { useState } from "react"
+import { CreateWorkOrderDialog } from "@/components/work-orders/CreateWorkOrderDialog"
 import type { QuoteRequest } from "../types"
 
 export function QuoteRequestsSection() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+
   const { data: requests, isLoading } = useQuery({
     queryKey: ["quoteRequests"],
     queryFn: async () => {
@@ -48,7 +54,18 @@ export function QuoteRequestsSection() {
   return (
     <section className="bg-card/50 backdrop-blur-sm rounded-xl shadow-lg border border-white/5 p-8">
       <div className="space-y-6">
-        <h3 className="text-xl font-semibold">Quote Requests</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-semibold">Quote Requests</h3>
+          <Button
+            onClick={() => setIsDialogOpen(true)}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            <PlusCircle className="h-4 w-4" />
+            Create Work Order
+          </Button>
+        </div>
         <StatusLegend statusCounts={statusCounts} />
         {requests?.map((request) => (
           <QuoteRequestCard key={request.id} request={request} />
@@ -59,6 +76,11 @@ export function QuoteRequestsSection() {
           </div>
         )}
       </div>
+
+      <CreateWorkOrderDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+      />
     </section>
   )
 }
