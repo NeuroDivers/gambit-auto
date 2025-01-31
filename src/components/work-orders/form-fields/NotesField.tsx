@@ -1,5 +1,5 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Control } from "react-hook-form"
 import { WorkOrderFormValues } from "../types"
 
@@ -16,7 +16,11 @@ export function NotesField({ control }: NotesFieldProps) {
         <FormItem>
           <FormLabel>Notes</FormLabel>
           <FormControl>
-            <Input {...field} />
+            <Textarea 
+              {...field} 
+              className="min-h-[120px]"
+              placeholder="Enter any additional notes or instructions..."
+            />
           </FormControl>
           <FormMessage />
         </FormItem>
