@@ -74,6 +74,7 @@ export function CreateWorkOrderDialog({
                   <CalendarDay
                     date={date}
                     workOrders={getWorkOrdersForDate(date)}
+                    onSelect={() => {}} // Add empty function as we don't need selection in create dialog
                     {...props}
                   />
                 ),
