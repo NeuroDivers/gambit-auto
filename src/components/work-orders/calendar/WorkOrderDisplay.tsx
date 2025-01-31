@@ -54,8 +54,12 @@ function getServiceColor(serviceName?: string) {
       return 'bg-red-500/20 text-red-400 hover:border-red-400/50'
     case 'engine repair':
       return 'bg-yellow-500/20 text-yellow-400 hover:border-yellow-400/50'
-    default:
+    case 'transmission':
       return 'bg-purple-500/20 text-purple-400 hover:border-purple-400/50'
+    case 'diagnostic':
+      return 'bg-orange-500/20 text-orange-400 hover:border-orange-400/50'
+    default:
+      return 'bg-gray-500/20 text-gray-400 hover:border-gray-400/50'
   }
 }
 
