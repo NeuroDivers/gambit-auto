@@ -10,7 +10,7 @@ import { CreateUserDialog } from "@/components/users/CreateUserDialog";
 import { ProfileDialog } from "@/components/profile/ProfileDialog";
 import { BusinessSettingsDialog } from "@/components/business/BusinessSettingsDialog";
 import { Button } from "@/components/ui/button";
-import { Users } from "lucide-react";
+import { Users, PlusCircle } from "lucide-react";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
 
 export default function Index() {
@@ -56,7 +56,13 @@ export default function Index() {
         <>
           <ServiceTypesList />
           <div className="mt-12">
-            <h2 className="text-2xl font-bold text-white/[0.87] mb-6">Quote Requests</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white/[0.87]">Quote Requests</h2>
+              <Button variant="outline" className="gap-2">
+                <PlusCircle className="h-4 w-4" />
+                Create Quote
+              </Button>
+            </div>
             <QuoteRequestList />
           </div>
         </>
