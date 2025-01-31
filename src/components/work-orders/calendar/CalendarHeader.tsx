@@ -9,7 +9,7 @@ interface CalendarHeaderProps {
 export function CalendarHeader({ view, setView }: CalendarHeaderProps) {
   return (
     <div className="flex items-center justify-between">
-      <h2 className="text-2xl font-bold">Bay Availability</h2>
+      <h2 className="text-2xl font-bold">Calendar</h2>
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2 bg-card rounded-lg p-1">
           <Button
