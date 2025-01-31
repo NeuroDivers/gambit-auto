@@ -1,27 +1,25 @@
-import React from 'react'
-import { Form } from "@/components/ui/form"
-import { Button } from "@/components/ui/button"
-import { useWorkOrderForm } from "./form/useWorkOrderForm"
-import { useWorkOrderSubmit } from "./form/useWorkOrderSubmit"
-import { FormFields } from "./form-fields/FormFields"
-import type { WorkOrderFormProps } from "./types"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
+import { useWorkOrderForm } from "./form/useWorkOrderForm"
+import { FormFields } from "./form-fields/FormFields"
+import { useWorkOrderSubmit } from "./form/useWorkOrderSubmit"
+import type { WorkOrder } from "./types"
+import type { QuoteRequest } from "../quotes/types"
 
-export function WorkOrderForm({ 
-  selectedDate,
-  quoteRequest,
-  onSuccess,
-  workOrder 
-}: WorkOrderFormProps) {
-  // Fetch selected services if workOrder exists and has a quote request
+type WorkOrderFormProps = {
+  workOrder?: WorkOrder
+  quoteRequest?: QuoteRequest
+  selectedDate?: Date
+  onSuccess?: () => void
+}
+
+export function WorkOrderForm({ workOrder, quoteRequest, selectedDate, onSuccess }: WorkOrderFormProps) {
+  const requestId = workOrder?.quote_request_id || quoteRequest?.id
+
   const { data: selectedServices = [] } = useQuery({
-    queryKey: ["workOrderServices", workOrder?.quote_request_id || quoteRequest?.id],
-    enabled: !!(workOrder?.quote_request_id || quoteRequest?.id),
+    queryKey: ["workOrderServices", requestId],
+    enabled: !!requestId, // Only run query when we have a valid ID
     queryFn: async () => {
-      const requestId = workOrder?.quote_request_id || quoteRequest?.id
-      if (!requestId) return []
-      
       const { data, error } = await supabase
         .from("quote_request_services")
         .select("service_id")
@@ -37,19 +35,18 @@ export function WorkOrderForm({
     selectedDate, 
     workOrder,
     quoteRequest,
-    selectedServices 
+    selectedServices
   })
-  
-  const { handleSubmit } = useWorkOrderSubmit({ workOrder, onSuccess })
+
+  const { handleSubmit } = useWorkOrderSubmit({
+    workOrder,
+    quoteRequest,
+    onSuccess
+  })
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <FormFields form={form} />
-        <Button type="submit" className="w-full">
-          {workOrder ? "Update Work Order" : "Create Work Order"}
-        </Button>
-      </form>
-    </Form>
+    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <FormFields form={form} />
+    </form>
   )
 }
