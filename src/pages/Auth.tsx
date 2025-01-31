@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { Shield } from "lucide-react";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -36,13 +37,17 @@ const Auth = () => {
         const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              role: 'client' // Default role for new signups
+            }
+          }
         });
         if (error) throw error;
         toast({
           title: "Success!",
           description: "Please check your email to verify your account.",
         });
-        // Switch to login mode after successful signup
         setIsLogin(true);
       }
     } catch (error: any) {
@@ -59,9 +64,17 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md p-8 space-y-6 bg-card rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-center">
-          {isLogin ? "Login" : "Sign Up"}
-        </h2>
+        <div className="text-center space-y-2">
+          <Shield className="mx-auto h-12 w-12 text-primary" />
+          <h2 className="text-2xl font-bold">
+            {isLogin ? "Welcome Back" : "Create Account"}
+          </h2>
+          <p className="text-muted-foreground">
+            {isLogin
+              ? "Sign in to access your account"
+              : "Sign up to get started with our service"}
+          </p>
+        </div>
         <form onSubmit={handleAuth} className="space-y-4">
           <div className="space-y-2">
             <Input
@@ -83,7 +96,7 @@ const Auth = () => {
             />
           </div>
           <Button className="w-full" type="submit" disabled={loading}>
-            {loading ? "Loading..." : isLogin ? "Login" : "Sign Up"}
+            {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
           </Button>
         </form>
         <div className="text-center">
@@ -94,7 +107,7 @@ const Auth = () => {
           >
             {isLogin
               ? "Don't have an account? Sign up"
-              : "Already have an account? Login"}
+              : "Already have an account? Sign in"}
           </button>
         </div>
       </div>
