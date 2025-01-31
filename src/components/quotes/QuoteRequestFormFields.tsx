@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
 import { ImageIcon, X } from "lucide-react"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 
 const formSchema = z.object({
   first_name: z.string().min(2, "First name must be at least 2 characters"),
@@ -19,8 +20,9 @@ const formSchema = z.object({
   vehicle_make: z.string().min(2, "Vehicle make must be at least 2 characters"),
   vehicle_model: z.string().min(2, "Vehicle model must be at least 2 characters"),
   vehicle_year: z.number().min(1900).max(new Date().getFullYear() + 1),
-  vehicle_serial: z.string().min(2, "Vehicle serial must be at least 2 characters"),
+  vehicle_serial: z.string().optional(),
   additional_notes: z.string().optional(),
+  timeframe: z.enum(["flexible", "asap", "within_week", "within_month"]),
 })
 
 type QuoteRequestFormFieldsProps = {
@@ -114,46 +116,28 @@ export function QuoteRequestFormFields({ form, onFileUpload, mediaUrl, uploading
 
       <FormField
         control={form.control}
-        name="contact_preference"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Preferred Contact Method</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select preferred contact method" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="phone">Phone</SelectItem>
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
         name="service_id"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Service</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a service" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
+            <FormControl>
+              <ToggleGroup 
+                type="single" 
+                value={field.value} 
+                onValueChange={field.onChange}
+                className="flex flex-wrap gap-2"
+              >
                 {services?.map((service) => (
-                  <SelectItem key={service.id} value={service.id}>
+                  <ToggleGroupItem 
+                    key={service.id} 
+                    value={service.id}
+                    className="px-4 py-2 rounded-md data-[state=on]:bg-[#9b87f5] data-[state=on]:text-white"
+                  >
                     {service.name}
-                  </SelectItem>
+                  </ToggleGroupItem>
                 ))}
-              </SelectContent>
-            </Select>
+              </ToggleGroup>
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}
@@ -212,7 +196,7 @@ export function QuoteRequestFormFields({ form, onFileUpload, mediaUrl, uploading
           name="vehicle_serial"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vehicle Serial Number</FormLabel>
+              <FormLabel>Vehicle Serial Number (Optional)</FormLabel>
               <FormControl>
                 <Input placeholder="VIN or Serial Number" {...field} />
               </FormControl>
@@ -290,6 +274,54 @@ export function QuoteRequestFormFields({ form, onFileUpload, mediaUrl, uploading
             </Button>
           </div>
         )}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 mt-8">
+        <FormField
+          control={form.control}
+          name="contact_preference"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Preferred Contact Method</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select preferred contact method" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="email">Email</SelectItem>
+                  <SelectItem value="phone">Phone</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="timeframe"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Timeframe</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your preferred timeframe" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="flexible">Flexible</SelectItem>
+                  <SelectItem value="asap">As Soon As Possible</SelectItem>
+                  <SelectItem value="within_week">Within a Week</SelectItem>
+                  <SelectItem value="within_month">Within a Month</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
     </>
   )

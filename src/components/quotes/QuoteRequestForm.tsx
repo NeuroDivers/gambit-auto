@@ -35,6 +35,7 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
       vehicle_year: new Date().getFullYear(),
       vehicle_serial: "",
       additional_notes: "",
+      timeframe: "flexible" as const,
     },
   })
 
@@ -92,6 +93,7 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
             vehicle_serial: data.vehicle_serial,
             additional_notes: data.additional_notes,
             media_url: mediaUrl,
+            timeframe: data.timeframe,
           })
           .eq("id", initialData.id)
 
@@ -117,6 +119,7 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
             vehicle_serial: data.vehicle_serial,
             additional_notes: data.additional_notes,
             media_url: mediaUrl,
+            timeframe: data.timeframe,
           })
 
         if (error) throw error
@@ -153,7 +156,7 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
         </p>
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <QuoteRequestFormFields 
             form={form} 
             onFileUpload={handleFileUpload}
@@ -161,9 +164,11 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
             uploading={uploading}
             onMediaRemove={handleMediaRemove}
           />
-          <Button type="submit" className="w-full" disabled={uploading}>
-            {uploading ? "Uploading..." : initialData ? "Update Request" : "Submit Request"}
-          </Button>
+          <div className="pt-6">
+            <Button type="submit" className="w-full" disabled={uploading}>
+              {uploading ? "Uploading..." : initialData ? "Update Request" : "Submit Request"}
+            </Button>
+          </div>
         </form>
       </Form>
     </div>
