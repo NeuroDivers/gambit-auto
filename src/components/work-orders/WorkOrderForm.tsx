@@ -12,6 +12,7 @@ import type { QuoteRequest } from "../quotes/types"
 type WorkOrderFormProps = {
   workOrder?: WorkOrder
   quoteRequest?: QuoteRequest
+  selectedDate?: Date
   onSuccess?: () => void
 }
 
@@ -19,21 +20,20 @@ const formSchema = z.object({
   service_ids: z.array(z.string().uuid()).min(1, "Please select at least one service"),
   assigned_bay_id: z.string().uuid("Please select a service bay"),
   start_date: z.string().min(1, "Please select a start date"),
-  start_time: z.string().min(1, "Please select a start time"),
-  end_date: z.string().min(1, "Please select an end date"),
-  end_time: z.string().min(1, "Please select an end time"),
+  start_time: z.string().optional(),
+  end_date: z.string().optional(),
+  end_time: z.string().optional(),
   notes: z.string().optional(),
-  status: z.string().min(1, "Please select a status")
+  status: z.enum(['pending', 'in_progress', 'completed', 'cancelled']).default('pending')
 })
 
 export type WorkOrderFormValues = z.infer<typeof formSchema>
 
-export function WorkOrderForm({ workOrder, quoteRequest, onSuccess }: WorkOrderFormProps) {
-  const { defaultValues } = useWorkOrderForm({ workOrder, quoteRequest })
-  
-  const form = useForm<WorkOrderFormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues
+export function WorkOrderForm({ workOrder, quoteRequest, selectedDate, onSuccess }: WorkOrderFormProps) {
+  const form = useWorkOrderForm({ 
+    workOrder,
+    quoteRequest,
+    selectedDate
   })
 
   const { handleSubmit } = useWorkOrderSubmit({ 
