@@ -8,6 +8,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { EditQuoteDialog } from "./EditQuoteDialog"
 import { useState } from "react"
 import { CreateWorkOrderDialog } from "../work-orders/CreateWorkOrderDialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 type QuoteRequest = {
   id: string
@@ -93,9 +94,20 @@ export function QuoteRequestCard({ request }: QuoteRequestCardProps) {
           </div>
           <div className="flex items-center gap-2">
             <EditQuoteDialog quote={request} />
-            <Badge className={`border ${getStatusStyles(request.status)}`}>
-              {request.status}
-            </Badge>
+            <Select
+              defaultValue={request.status}
+              onValueChange={updateStatus}
+            >
+              <SelectTrigger className={`w-[130px] ${getStatusStyles(request.status)}`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </CardHeader>
