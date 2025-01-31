@@ -15,7 +15,7 @@ import {
 import { UseFormReturn } from "react-hook-form";
 import * as z from "zod";
 
-const formSchema = z.object({
+export const formSchema = z.object({
   role: z.enum(["admin", "manager", "sidekick", "client"]),
   first_name: z.string(),
   last_name: z.string(),
@@ -25,6 +25,7 @@ type FormData = z.infer<typeof formSchema>;
 
 interface UserEditFormFieldsProps {
   form: UseFormReturn<FormData>;
+  defaultValues: FormData;
 }
 
 export const UserEditFormFields = ({ form }: UserEditFormFieldsProps) => {
@@ -92,5 +93,3 @@ export const UserEditFormFields = ({ form }: UserEditFormFieldsProps) => {
     </div>
   );
 };
-
-export { formSchema };

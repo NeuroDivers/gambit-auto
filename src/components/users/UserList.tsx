@@ -4,6 +4,18 @@ import { UserCard } from "./UserCard";
 import { useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+type UserRole = "admin" | "manager" | "sidekick" | "client";
+
+type User = {
+  id: string;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  user_roles: {
+    role: UserRole;
+  } | null;
+};
+
 export const UserList = () => {
   const queryClient = useQueryClient();
   
@@ -28,9 +40,9 @@ export const UserList = () => {
         first_name: profile.first_name,
         last_name: profile.last_name,
         user_roles: roles?.find(role => role.user_id === profile.id)
-          ? { role: roles.find(role => role.user_id === profile.id)?.role }
-          : { role: 'client' }
-      }));
+          ? { role: roles.find(role => role.user_id === profile.id)?.role as UserRole }
+          : { role: 'client' as UserRole }
+      })) as User[];
     },
   });
 

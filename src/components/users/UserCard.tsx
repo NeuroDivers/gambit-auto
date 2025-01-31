@@ -5,13 +5,17 @@ import { useState } from "react";
 import { UserEditDialog } from "./UserEditDialog";
 import { supabase } from "@/integrations/supabase/client";
 
+type UserRole = "admin" | "manager" | "sidekick" | "client";
+
 type UserCardProps = {
   user: {
     id: string;
     email: string;
     first_name?: string;
     last_name?: string;
-    user_roles: { role: string } | null;
+    user_roles: {
+      role: UserRole;
+    } | null;
   };
 };
 
