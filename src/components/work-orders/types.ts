@@ -9,3 +9,29 @@ export const workOrderFormSchema = z.object({
 })
 
 export type WorkOrderFormValues = z.infer<typeof workOrderFormSchema>
+
+export interface ServiceBay {
+  id: string
+  name: string
+  status: 'available' | 'unavailable' | 'maintenance'
+}
+
+export interface WorkOrder {
+  id: string
+  quote_request_id?: string
+  assigned_bay_id?: string
+  start_date: string
+  end_date: string
+  status: string
+  notes?: string
+  service_bays?: ServiceBay
+  quote_requests?: {
+    first_name?: string
+    last_name?: string
+    quote_request_services?: Array<{
+      service_types: {
+        name: string
+      }
+    }>
+  }
+}
