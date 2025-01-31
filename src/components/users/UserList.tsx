@@ -1,9 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { UserRow } from "./UserRow";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect } from "react";
 
 export const UserList = () => {
+  const queryClient = useQueryClient();
+  
   const { data: users, isLoading } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
@@ -31,6 +34,30 @@ export const UserList = () => {
       }));
     },
   });
+
+  useEffect(() => {
+    // Subscribe to changes in the profiles table
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all changes (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'profiles'
+        },
+        () => {
+          // Invalidate and refetch the users query
+          queryClient.invalidateQueries({ queryKey: ["users"] });
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   if (isLoading) {
     return (
