@@ -46,18 +46,18 @@ export function WorkOrderDisplay({ order }: WorkOrderDisplayProps) {
 
 function getServiceColor(serviceName?: string) {
   switch (serviceName?.toLowerCase()) {
-    case 'oil change':
-      return 'bg-blue-500/20 text-blue-400 hover:border-blue-400/50'
-    case 'tire rotation':
+    case 'ppf':
       return 'bg-green-500/20 text-green-400 hover:border-green-400/50'
-    case 'brake service':
-      return 'bg-red-500/20 text-red-400 hover:border-red-400/50'
-    case 'engine repair':
+    case 'wrap':
       return 'bg-yellow-500/20 text-yellow-400 hover:border-yellow-400/50'
-    case 'transmission':
+    case 'ceramic coating':
+      return 'bg-blue-500/20 text-blue-400 hover:border-blue-400/50'
+    case 'tint':
       return 'bg-purple-500/20 text-purple-400 hover:border-purple-400/50'
-    case 'diagnostic':
+    case 'detailing':
       return 'bg-orange-500/20 text-orange-400 hover:border-orange-400/50'
+    case 'paint correction':
+      return 'bg-red-500/20 text-red-400 hover:border-red-400/50'
     default:
       return 'bg-gray-500/20 text-gray-400 hover:border-gray-400/50'
   }
