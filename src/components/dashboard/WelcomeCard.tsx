@@ -20,7 +20,10 @@ export const WelcomeCard = ({ firstName, role, onLogout }: WelcomeCardProps) => 
               Manage your profile and settings below
             </p>
             {role && (
-              <span className="text-sm text-white/40 capitalize">
+              <span className="text-sm rounded-md px-3 capitalize" style={{
+                color: 'rgb(187 134 252 / var(--tw-text-opacity))',
+                background: 'rgb(187 134 252 / 0.1)',
+              }}>
                 {role} account
               </span>
             )}
