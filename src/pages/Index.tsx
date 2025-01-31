@@ -1,5 +1,7 @@
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { ServiceTypesList } from "@/components/services/ServiceTypesList";
+import { QuoteRequestForm } from "@/components/quotes/QuoteRequestForm";
+import { QuoteRequestList } from "@/components/quotes/QuoteRequestList";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -52,7 +54,20 @@ export default function Index() {
           <ProfileDialog />
           <BusinessSettingsDialog />
         </div>
-        <ServiceTypesList />
+        {isAdmin ? (
+          <>
+            <ServiceTypesList />
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold text-white/[0.87] mb-6">Quote Requests</h2>
+              <QuoteRequestList />
+            </div>
+          </>
+        ) : (
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold text-white/[0.87] mb-6">Request a Quote</h2>
+            <QuoteRequestForm />
+          </div>
+        )}
       </div>
     </div>
   );

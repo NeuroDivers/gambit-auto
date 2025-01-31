@@ -119,6 +119,71 @@ export type Database = {
         }
         Relationships: []
       }
+      quote_requests: {
+        Row: {
+          additional_notes: string | null
+          contact_preference: Database["public"]["Enums"]["contact_preference"]
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          media_url: string | null
+          phone_number: string
+          service_id: string
+          status: string
+          updated_at: string
+          vehicle_make: string
+          vehicle_model: string
+          vehicle_serial: string
+          vehicle_year: number
+        }
+        Insert: {
+          additional_notes?: string | null
+          contact_preference: Database["public"]["Enums"]["contact_preference"]
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          media_url?: string | null
+          phone_number: string
+          service_id: string
+          status?: string
+          updated_at?: string
+          vehicle_make: string
+          vehicle_model: string
+          vehicle_serial: string
+          vehicle_year: number
+        }
+        Update: {
+          additional_notes?: string | null
+          contact_preference?: Database["public"]["Enums"]["contact_preference"]
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          media_url?: string | null
+          phone_number?: string
+          service_id?: string
+          status?: string
+          updated_at?: string
+          vehicle_make?: string
+          vehicle_model?: string
+          vehicle_serial?: string
+          vehicle_year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_requests_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_types: {
         Row: {
           created_at: string
@@ -188,6 +253,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "manager" | "sidekick" | "client"
+      contact_preference: "phone" | "email"
       service_status: "active" | "inactive"
       tax_type: "GST" | "QST" | "HST" | "PST"
     }
