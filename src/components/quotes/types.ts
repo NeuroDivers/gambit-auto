@@ -10,7 +10,7 @@ export type QuoteRequest = {
   vehicle_year: number
   vehicle_serial: string
   additional_notes?: string
-  media_url?: string
+  media_url?: string | null
   status: string
   created_at: string
   price: number | null
