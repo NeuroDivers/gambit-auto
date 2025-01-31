@@ -15,7 +15,7 @@ export function useWorkOrderForm({
   selectedDate, 
   workOrder,
   quoteRequest,
-  selectedServices
+  selectedServices = []
 }: UseWorkOrderFormProps) {
   const form = useForm<WorkOrderFormValues>({
     resolver: zodResolver(workOrderFormSchema),
@@ -32,13 +32,13 @@ export function useWorkOrderForm({
         : "18:00",
       status: workOrder?.status || "pending",
       notes: workOrder?.notes || "",
-      service_ids: selectedServices || [],
+      service_ids: selectedServices,
     },
   })
 
   // Update form when selectedServices changes
   useEffect(() => {
-    if (selectedServices) {
+    if (selectedServices?.length > 0) {
       form.setValue("service_ids", selectedServices)
     }
   }, [selectedServices, form])

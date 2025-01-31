@@ -20,6 +20,8 @@ export function WorkOrderForm({
     enabled: !!(workOrder?.quote_request_id || quoteRequest?.id),
     queryFn: async () => {
       const requestId = workOrder?.quote_request_id || quoteRequest?.id
+      if (!requestId) return []
+      
       const { data, error } = await supabase
         .from("quote_request_services")
         .select("service_id")
@@ -27,7 +29,8 @@ export function WorkOrderForm({
       
       if (error) throw error
       return data?.map(service => service.service_id) ?? []
-    }
+    },
+    initialData: []
   })
   
   const form = useWorkOrderForm({ 
