@@ -16,17 +16,23 @@ export const RoleManagement = () => {
   const { data: roleStats } = useQuery({
     queryKey: ["roleStats"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("user_roles")
-        .select("role");
+        .select("*");
       
+      if (error) throw error;
+
       const stats = {
         admin: 0,
-        user: 0,
+        manager: 0,
+        sidekick: 0,
+        client: 0
       };
       
       data?.forEach((row) => {
-        stats[row.role] = (stats[row.role] || 0) + 1;
+        if (row.role) {
+          stats[row.role] = (stats[row.role] || 0) + 1;
+        }
       });
       
       return stats;
@@ -34,7 +40,6 @@ export const RoleManagement = () => {
   });
 
   useEffect(() => {
-    // Subscribe to changes in the user_roles table
     const channel = supabase
       .channel('schema-db-changes')
       .on(
@@ -57,7 +62,9 @@ export const RoleManagement = () => {
 
   const chartData = roleStats ? [
     { name: 'Administrators', value: roleStats.admin || 0 },
-    { name: 'Regular Users', value: roleStats.user || 0 },
+    { name: 'Managers', value: roleStats.manager || 0 },
+    { name: 'Sidekicks', value: roleStats.sidekick || 0 },
+    { name: 'Clients', value: roleStats.client || 0 }
   ] : [];
 
   return (
@@ -80,11 +87,25 @@ export const RoleManagement = () => {
                 dark: "#0088FE"
               }
             },
-            users: {
-              label: "Regular Users",
+            managers: {
+              label: "Managers",
               theme: {
                 light: "#00C49F",
                 dark: "#00C49F"
+              }
+            },
+            sidekicks: {
+              label: "Sidekicks",
+              theme: {
+                light: "#FFBB28",
+                dark: "#FFBB28"
+              }
+            },
+            clients: {
+              label: "Clients",
+              theme: {
+                light: "#FF8042",
+                dark: "#FF8042"
               }
             }
           }}
@@ -110,28 +131,19 @@ export const RoleManagement = () => {
       </div>
 
       <div className="grid gap-4">
-        <div className="p-4 border rounded-lg bg-card">
-          <div className="flex items-center gap-3">
-            <Shield className="h-5 w-5 text-muted-foreground" />
-            <div>
-              <p className="font-medium">Administrators</p>
-              <p className="text-sm text-muted-foreground">
-                Count: {roleStats?.admin || 0}
-              </p>
+        {Object.entries(roleStats || {}).map(([role, count]) => (
+          <div key={role} className="p-4 border rounded-lg bg-card">
+            <div className="flex items-center gap-3">
+              <Shield className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium capitalize">{role}s</p>
+                <p className="text-sm text-muted-foreground">
+                  Count: {count}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="p-4 border rounded-lg bg-card">
-          <div className="flex items-center gap-3">
-            <Shield className="h-5 w-5 text-muted-foreground" />
-            <div>
-              <p className="font-medium">Regular Users</p>
-              <p className="text-sm text-muted-foreground">
-                Count: {roleStats?.user || 0}
-              </p>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );

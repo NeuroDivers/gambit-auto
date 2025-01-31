@@ -20,7 +20,7 @@ export const UserList = () => {
       // Then, get all user roles
       const { data: roles, error: rolesError } = await supabase
         .from("user_roles")
-        .select("user_id, role");
+        .select("*");
 
       if (rolesError) throw rolesError;
 
@@ -31,14 +31,13 @@ export const UserList = () => {
         first_name: profile.first_name,
         last_name: profile.last_name,
         user_roles: roles?.find(role => role.user_id === profile.id)
-          ? { role: roles.find(role => role.user_id === profile.id)?.role || 'user' }
-          : { role: 'user' }
+          ? { role: roles.find(role => role.user_id === profile.id)?.role || 'client' }
+          : { role: 'client' }
       }));
     },
   });
 
   useEffect(() => {
-    // Subscribe to changes in the profiles table
     const channel = supabase
       .channel('schema-db-changes')
       .on(
