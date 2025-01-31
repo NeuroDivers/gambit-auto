@@ -25,28 +25,46 @@ export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
     },
   })
 
+  const selectedServices = form.watch("service_ids") || []
+
+  const toggleService = (serviceId: string) => {
+    const currentServices = [...selectedServices]
+    const index = currentServices.indexOf(serviceId)
+    
+    if (index === -1) {
+      currentServices.push(serviceId)
+    } else {
+      currentServices.splice(index, 1)
+    }
+    
+    form.setValue("service_ids", currentServices)
+  }
+
   return (
     <FormField
       control={form.control}
-      name="service_id"
+      name="service_ids"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Service</FormLabel>
+          <FormLabel className="flex items-center gap-1">
+            Services
+            <span className="text-red-500">*</span>
+          </FormLabel>
           <FormControl>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {services?.map((service) => (
                 <div
                   key={service.id}
-                  onClick={() => field.onChange(service.id)}
+                  onClick={() => toggleService(service.id)}
                   className={cn(
                     "relative p-4 rounded-lg border-2 cursor-pointer transition-all",
                     "hover:border-[#9b87f5] hover:shadow-md",
-                    field.value === service.id
+                    selectedServices.includes(service.id)
                       ? "border-[#9b87f5] bg-[#9b87f5]/10"
                       : "border-border"
                   )}
                 >
-                  {field.value === service.id && (
+                  {selectedServices.includes(service.id) && (
                     <div className="absolute top-2 right-2">
                       <Check className="h-4 w-4 text-[#9b87f5]" />
                     </div>
@@ -54,11 +72,6 @@ export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
                   <h3 className="font-medium mb-1">{service.name}</h3>
                   {service.description && (
                     <p className="text-sm text-muted-foreground">{service.description}</p>
-                  )}
-                  {service.price && (
-                    <p className="text-sm font-medium mt-2">
-                      Starting from ${service.price}
-                    </p>
                   )}
                 </div>
               ))}

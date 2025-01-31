@@ -17,7 +17,10 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
           name="vehicle_make"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vehicle Make</FormLabel>
+              <FormLabel className="flex items-center gap-1">
+                Vehicle Make
+                <span className="text-red-500">*</span>
+              </FormLabel>
               <FormControl>
                 <Input placeholder="Toyota" {...field} />
               </FormControl>
@@ -30,7 +33,10 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
           name="vehicle_model"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vehicle Model</FormLabel>
+              <FormLabel className="flex items-center gap-1">
+                Vehicle Model
+                <span className="text-red-500">*</span>
+              </FormLabel>
               <FormControl>
                 <Input placeholder="Camry" {...field} />
               </FormControl>
@@ -43,7 +49,10 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
           name="vehicle_year"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vehicle Year</FormLabel>
+              <FormLabel className="flex items-center gap-1">
+                Vehicle Year
+                <span className="text-red-500">*</span>
+              </FormLabel>
               <FormControl>
                 <Input
                   type="number"

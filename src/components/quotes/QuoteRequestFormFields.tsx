@@ -14,7 +14,7 @@ const formSchema = z.object({
   email: z.string().email("Invalid email address"),
   phone_number: z.string().min(10, "Phone number must be at least 10 characters"),
   contact_preference: z.enum(["phone", "email"]),
-  service_id: z.string().uuid("Please select a service"),
+  service_ids: z.array(z.string().uuid("Please select at least one service")).min(1, "Please select at least one service"),
   vehicle_make: z.string().min(2, "Vehicle make must be at least 2 characters"),
   vehicle_model: z.string().min(2, "Vehicle model must be at least 2 characters"),
   vehicle_year: z.number().min(1900).max(new Date().getFullYear() + 1),
