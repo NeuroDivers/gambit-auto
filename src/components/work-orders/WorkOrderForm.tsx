@@ -15,21 +15,19 @@ export function WorkOrderForm({
   workOrder 
 }: WorkOrderFormProps) {
   // Fetch selected services if workOrder exists and has a quote request
-  const { data: selectedServices } = useQuery({
+  const { data: selectedServices = [] } = useQuery({
     queryKey: ["workOrderServices", workOrder?.quote_request_id || quoteRequest?.id],
+    enabled: !!(workOrder?.quote_request_id || quoteRequest?.id),
     queryFn: async () => {
       const requestId = workOrder?.quote_request_id || quoteRequest?.id
-      if (!requestId) return []
-      
       const { data, error } = await supabase
         .from("quote_request_services")
         .select("service_id")
         .eq("quote_request_id", requestId)
       
       if (error) throw error
-      return data.map(service => service.service_id)
-    },
-    enabled: !!(workOrder?.quote_request_id || quoteRequest?.id) // Only run query when we have a valid quote_request_id
+      return data?.map(service => service.service_id) ?? []
+    }
   })
   
   const form = useWorkOrderForm({ 
