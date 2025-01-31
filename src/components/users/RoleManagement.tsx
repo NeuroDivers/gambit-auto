@@ -18,7 +18,7 @@ export const RoleManagement = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_roles")
-        .select("*");
+        .select("role");
       
       if (error) throw error;
 

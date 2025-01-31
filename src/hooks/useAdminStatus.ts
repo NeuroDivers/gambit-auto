@@ -14,14 +14,13 @@ export const useAdminStatus = () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('user_roles')
-        .select('*')
+        .select('role')
         .eq('user_id', user.id)
         .eq('role', 'admin')
-        .maybeSingle()
+        .single()
 
-      if (error) throw error
       setIsAdmin(!!data)
     } catch (error) {
       console.error('Error checking admin status:', error)
