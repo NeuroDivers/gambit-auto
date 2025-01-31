@@ -7,15 +7,15 @@ import { useState, useEffect } from "react"
 import type { WorkOrder } from "./types"
 
 export function WorkOrderCalendar() {
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date())
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const queryClient = useQueryClient()
 
   const { data: workOrders } = useQuery({
     queryKey: ["workOrders"],
     queryFn: async () => {
-      const startDate = startOfMonth(new Date())
-      const endDate = endOfMonth(new Date())
+      const startDate = startOfMonth(selectedDate || new Date())
+      const endDate = endOfMonth(selectedDate || new Date())
 
       const { data, error } = await supabase
         .from("work_orders")

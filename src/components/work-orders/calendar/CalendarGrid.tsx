@@ -1,5 +1,5 @@
 import * as React from "react"
-import { format } from "date-fns"
+import { format, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns"
 import { cn } from "@/lib/utils"
 import type { ServiceBay, WorkOrder } from "../types"
 
@@ -25,52 +25,47 @@ export function CalendarGrid({ selectedDate, serviceBays = [], workOrders, onSel
     return `${hour.toString().padStart(2, '0')}:00`
   })
 
-  return (
-    <div className="grid grid-cols-[auto,1fr,1fr,1fr] gap-4">
-      <div className="font-medium">Time</div>
-      {bays.map(bay => (
-        <div key={bay.id} className="font-medium">
-          {bay.name}
-          <div className="text-sm text-muted-foreground">
-            {format(selectedDate, 'EEEE')}
-          </div>
-        </div>
-      ))}
-      {timeSlots.map(time => (
-        <React.Fragment key={time}>
-          <div className="py-4">{time}</div>
-          {bays.map(bay => {
-            const workOrder = workOrders.find(
-              wo => wo.assigned_bay_id === bay.id && 
-                   format(new Date(wo.start_date), 'HH:00') === time
-            )
+  // Get all days in the current month
+  const daysInMonth = eachDayOfInterval({
+    start: startOfMonth(selectedDate),
+    end: endOfMonth(selectedDate)
+  })
 
-            return (
-              <button
-                key={bay.id}
-                onClick={() => onSelectDate(selectedDate)}
-                className={cn(
-                  "border-t border-border py-4 text-muted-foreground hover:bg-accent/50 transition-colors",
-                  workOrder && "bg-primary/20 hover:bg-primary/30"
-                )}
-              >
-                {workOrder ? (
-                  <div className="text-sm">
-                    <div className="font-medium text-primary">
-                      {workOrder.quote_requests?.first_name} {workOrder.quote_requests?.last_name}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {workOrder.quote_requests?.quote_request_services?.[0]?.service_types.name}
-                    </div>
-                  </div>
-                ) : (
-                  "Available"
-                )}
-              </button>
-            )
-          })}
-        </React.Fragment>
-      ))}
+  return (
+    <div className="space-y-4">
+      <div className="text-xl font-semibold mb-4">
+        {format(selectedDate, 'MMMM yyyy')}
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+          <div key={day} className="font-medium text-center py-2">
+            {day}
+          </div>
+        ))}
+        {daysInMonth.map((date) => {
+          const dayWorkOrders = workOrders.filter(
+            wo => format(new Date(wo.start_date), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
+          )
+
+          return (
+            <button
+              key={date.toString()}
+              onClick={() => onSelectDate(date)}
+              className={cn(
+                "p-2 text-center hover:bg-accent/50 transition-colors min-h-[80px] border rounded-md",
+                dayWorkOrders.length > 0 && "bg-primary/20 hover:bg-primary/30"
+              )}
+            >
+              <div className="font-medium">{format(date, 'd')}</div>
+              {dayWorkOrders.length > 0 && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  {dayWorkOrders.length} work order{dayWorkOrders.length !== 1 ? 's' : ''}
+                </div>
+              )}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
