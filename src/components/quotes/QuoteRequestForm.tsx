@@ -14,11 +14,12 @@ import { supabase } from "@/integrations/supabase/client"
 
 type QuoteRequestFormProps = {
   initialData?: QuoteRequestFormValues & { id: string; media_url?: string | null }
+  onSuccess?: () => void
 }
 
 type QuoteRequestFormValues = z.infer<typeof formSchema>
 
-export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
+export function QuoteRequestForm({ initialData, onSuccess }: QuoteRequestFormProps) {
   const {
     uploading,
     mediaUrl,
@@ -77,6 +78,7 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
     onSuccess: () => {
       form.reset()
       setMediaUrl(null)
+      onSuccess?.()
     }
   })
 

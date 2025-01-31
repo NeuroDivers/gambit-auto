@@ -5,9 +5,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog"
 import { Pencil } from "lucide-react"
 import { QuoteRequestForm } from "./QuoteRequestForm"
+import { useRef } from "react"
 
 type QuoteRequest = {
   id: string
@@ -36,6 +38,8 @@ type EditQuoteDialogProps = {
 }
 
 export function EditQuoteDialog({ quote }: EditQuoteDialogProps) {
+  const closeRef = useRef<HTMLButtonElement>(null)
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -51,7 +55,8 @@ export function EditQuoteDialog({ quote }: EditQuoteDialogProps) {
         <DialogHeader>
           <DialogTitle>Edit Quote Request</DialogTitle>
         </DialogHeader>
-        <QuoteRequestForm initialData={quote} />
+        <QuoteRequestForm initialData={quote} onSuccess={() => closeRef.current?.click()} />
+        <DialogClose ref={closeRef} className="hidden" />
       </DialogContent>
     </Dialog>
   )

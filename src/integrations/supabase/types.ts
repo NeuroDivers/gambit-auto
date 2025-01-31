@@ -200,6 +200,7 @@ export type Database = {
           last_name: string
           media_url: string | null
           phone_number: string
+          price: number | null
           status: string
           timeframe: string
           updated_at: string
@@ -219,6 +220,7 @@ export type Database = {
           last_name: string
           media_url?: string | null
           phone_number: string
+          price?: number | null
           status?: string
           timeframe?: string
           updated_at?: string
@@ -238,6 +240,7 @@ export type Database = {
           last_name?: string
           media_url?: string | null
           phone_number?: string
+          price?: number | null
           status?: string
           timeframe?: string
           updated_at?: string
