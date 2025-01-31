@@ -10,25 +10,6 @@ interface WorkOrderDisplayProps {
   onClick?: (e: React.MouseEvent) => void
 }
 
-const getServiceColor = (serviceName?: string) => {
-  switch (serviceName?.toLowerCase()) {
-    case 'ppf':
-      return 'bg-green-500/20 text-green-400 hover:border-green-400/50'
-    case 'wrap':
-      return 'bg-yellow-500/20 text-yellow-400 hover:border-yellow-400/50'
-    case 'ceramic coating':
-      return 'bg-blue-500/20 text-blue-400 hover:border-blue-400/50'
-    case 'tint':
-      return 'bg-purple-500/20 text-purple-400 hover:border-purple-400/50'
-    case 'detailing':
-      return 'bg-orange-500/20 text-orange-400 hover:border-orange-400/50'
-    case 'paint correction':
-      return 'bg-red-500/20 text-red-400 hover:border-red-400/50'
-    default:
-      return 'bg-gray-500/20 text-gray-400 hover:border-gray-400/50'
-  }
-}
-
 export function WorkOrderDisplay({ order, onClick }: WorkOrderDisplayProps) {
   const [isEditing, setIsEditing] = useState(false)
   const primaryService = order.quote_requests?.quote_request_services?.[0]?.service_types
@@ -37,18 +18,13 @@ export function WorkOrderDisplay({ order, onClick }: WorkOrderDisplayProps) {
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    onClick?.(e)
     setIsEditing(true)
   }
 
   return (
     <div 
       className="relative z-50" 
-      onClick={(e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        handleClick(e)
-      }}
+      onClick={handleClick}
     >
       <HoverCard>
         <HoverCardTrigger asChild>
@@ -85,4 +61,23 @@ export function WorkOrderDisplay({ order, onClick }: WorkOrderDisplayProps) {
       />
     </div>
   )
+}
+
+const getServiceColor = (serviceName?: string) => {
+  switch (serviceName?.toLowerCase()) {
+    case 'ppf':
+      return 'bg-green-500/20 text-green-400 hover:border-green-400/50'
+    case 'wrap':
+      return 'bg-yellow-500/20 text-yellow-400 hover:border-yellow-400/50'
+    case 'ceramic coating':
+      return 'bg-blue-500/20 text-blue-400 hover:border-blue-400/50'
+    case 'tint':
+      return 'bg-purple-500/20 text-purple-400 hover:border-purple-400/50'
+    case 'detailing':
+      return 'bg-orange-500/20 text-orange-400 hover:border-orange-400/50'
+    case 'paint correction':
+      return 'bg-red-500/20 text-red-400 hover:border-red-400/50'
+    default:
+      return 'bg-gray-500/20 text-gray-400 hover:border-gray-400/50'
+  }
 }
