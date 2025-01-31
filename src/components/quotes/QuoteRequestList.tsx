@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { QuoteRequestCard } from "./QuoteRequestCard"
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 
@@ -50,6 +50,14 @@ export const QuoteRequestList = () => {
     },
   })
 
+  const statusCounts = useMemo(() => {
+    if (!requests) return { pending: 0, approved: 0, rejected: 0, completed: 0 }
+    return requests.reduce((acc, request) => {
+      acc[request.status as keyof typeof acc] = (acc[request.status as keyof typeof acc] || 0) + 1
+      return acc
+    }, { pending: 0, approved: 0, rejected: 0, completed: 0 })
+  }, [requests])
+
   useEffect(() => {
     const channel = supabase
       .channel("quote_requests_changes")
@@ -86,19 +94,19 @@ export const QuoteRequestList = () => {
       <div className="flex flex-wrap gap-2 items-center mb-4 p-4 bg-card rounded-lg">
         <span className="text-sm font-medium mr-2">Status Legend:</span>
         <Badge className="border text-[rgb(250,204,21)] bg-[rgb(234,179,8,0.2)] border-[rgb(234,179,8,0.3)]">
-          pending
+          pending ({statusCounts.pending})
         </Badge>
         <span className="text-sm text-muted-foreground">awaiting review</span>
         <Badge className="border text-[#0EA5E9] bg-[rgb(14,165,233,0.2)] border-[rgb(14,165,233,0.3)]">
-          approved
+          approved ({statusCounts.approved})
         </Badge>
         <span className="text-sm text-muted-foreground">quote accepted</span>
         <Badge className="border text-[#ea384c] bg-[rgb(234,56,76,0.2)] border-[rgb(234,56,76,0.3)]">
-          rejected
+          rejected ({statusCounts.rejected})
         </Badge>
         <span className="text-sm text-muted-foreground">quote declined</span>
         <Badge className="border text-[#9b87f5] bg-[rgb(155,135,245,0.2)] border-[rgb(155,135,245,0.3)]">
-          completed
+          completed ({statusCounts.completed})
         </Badge>
         <span className="text-sm text-muted-foreground">service finished</span>
       </div>
