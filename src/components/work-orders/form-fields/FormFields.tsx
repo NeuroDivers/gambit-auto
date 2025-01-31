@@ -1,22 +1,24 @@
-import React from 'react'
-import { UseFormReturn } from "react-hook-form"
-import { WorkOrderFormValues } from "../types"
-import { DateTimeFields } from "./DateTimeFields"
+import { FormField } from "@/components/ui/form"
 import { BaySelectionField } from "./BaySelectionField"
-import { StatusField } from "./StatusField"
+import { DateTimeFields } from "./DateTimeFields"
 import { NotesField } from "./NotesField"
+import { StatusField } from "./StatusField"
+import { ServiceSelectionField } from "../../quotes/form-fields/ServiceSelectionField"
+import type { UseFormReturn } from "react-hook-form"
+import type { WorkOrderFormValues } from "../types/form"
 
-type FormFieldsProps = {
+interface FormFieldsProps {
   form: UseFormReturn<WorkOrderFormValues>
 }
 
 export function FormFields({ form }: FormFieldsProps) {
   return (
-    <div className="space-y-6">
-      <DateTimeFields control={form.control} />
-      <BaySelectionField control={form.control} />
-      <StatusField control={form.control} />
-      <NotesField control={form.control} />
+    <div className="space-y-4">
+      <ServiceSelectionField form={form} />
+      <BaySelectionField form={form} />
+      <DateTimeFields form={form} />
+      <StatusField form={form} />
+      <NotesField form={form} />
     </div>
   )
 }

@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { WorkOrder } from "./work-order"
 
 export const workOrderFormSchema = z.object({
   quote_request_id: z.string().uuid().optional(),
@@ -10,13 +9,7 @@ export const workOrderFormSchema = z.object({
   end_time: z.string(),
   status: z.enum(['pending', 'in_progress', 'completed', 'cancelled']).default('pending'),
   notes: z.string().optional(),
-}).refine((data) => {
-  const startDateTime = new Date(`${data.start_date}T${data.start_time}`)
-  const endDateTime = new Date(`${data.end_date}T${data.end_time}`)
-  return endDateTime > startDateTime
-}, {
-  message: "End date and time must be after start date and time",
-  path: ["end_date"]
+  service_ids: z.array(z.string().uuid("Please select at least one service")).min(1, "Please select at least one service"),
 })
 
 export type WorkOrderFormValues = z.infer<typeof workOrderFormSchema>

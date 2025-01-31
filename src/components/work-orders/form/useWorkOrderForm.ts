@@ -4,15 +4,19 @@ import { format } from "date-fns"
 import { workOrderFormSchema, type WorkOrderFormValues } from "../types"
 import { useEffect } from "react"
 
-export function useWorkOrderForm({ 
-  selectedDate, 
-  workOrder, 
-  quoteRequest 
-}: { 
+interface UseWorkOrderFormProps {
   selectedDate?: Date
   workOrder?: any
   quoteRequest?: any
-}) {
+  selectedServices?: string[]
+}
+
+export function useWorkOrderForm({ 
+  selectedDate, 
+  workOrder,
+  quoteRequest,
+  selectedServices
+}: UseWorkOrderFormProps) {
   const form = useForm<WorkOrderFormValues>({
     resolver: zodResolver(workOrderFormSchema),
     defaultValues: {
@@ -26,17 +30,18 @@ export function useWorkOrderForm({
         : selectedDate ? format(selectedDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
       end_time: workOrder ? format(new Date(workOrder.end_date), "HH:mm")
         : "18:00",
-      status: workOrder?.status as WorkOrderFormValues['status'] || "pending",
+      status: workOrder?.status || "pending",
       notes: workOrder?.notes || "",
+      service_ids: selectedServices || [],
     },
   })
 
+  // Update form when selectedServices changes
   useEffect(() => {
-    if (selectedDate) {
-      form.setValue('start_date', format(selectedDate, "yyyy-MM-dd"))
-      form.setValue('end_date', format(selectedDate, "yyyy-MM-dd"))
+    if (selectedServices) {
+      form.setValue("service_ids", selectedServices)
     }
-  }, [selectedDate, form])
+  }, [selectedServices, form])
 
   return form
 }

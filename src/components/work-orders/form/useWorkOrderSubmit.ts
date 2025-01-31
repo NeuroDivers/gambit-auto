@@ -28,18 +28,54 @@ export function useWorkOrderSubmit({
       }
 
       if (workOrder) {
+        // Update existing work order
         const { error } = await supabase
           .from("work_orders")
           .update(workOrderData)
           .eq('id', workOrder.id)
 
         if (error) throw error
+
+        // Update services
+        const { error: deleteError } = await supabase
+          .from("quote_request_services")
+          .delete()
+          .eq("quote_request_id", workOrder.quote_request_id)
+
+        if (deleteError) throw deleteError
+
+        const { error: servicesError } = await supabase
+          .from("quote_request_services")
+          .insert(
+            values.service_ids.map(serviceId => ({
+              quote_request_id: workOrder.quote_request_id,
+              service_id: serviceId
+            }))
+          )
+
+        if (servicesError) throw servicesError
+
       } else {
-        const { error } = await supabase
+        // Create new work order
+        const { data: newWorkOrder, error } = await supabase
           .from("work_orders")
           .insert([workOrderData])
+          .select()
+          .single()
 
         if (error) throw error
+
+        // Insert services
+        const { error: servicesError } = await supabase
+          .from("quote_request_services")
+          .insert(
+            values.service_ids.map(serviceId => ({
+              quote_request_id: newWorkOrder.quote_request_id,
+              service_id: serviceId
+            }))
+          )
+
+        if (servicesError) throw servicesError
       }
 
       toast({
