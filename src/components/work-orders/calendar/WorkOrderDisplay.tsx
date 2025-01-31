@@ -17,15 +17,18 @@ export function WorkOrderDisplay({ order, onClick }: WorkOrderDisplayProps) {
   const primaryService = order.quote_requests?.quote_request_services?.[0]?.service_types
   const serviceColor = getServiceColor(primaryService?.name)
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation() // Stop event from bubbling up to parent
+    onClick?.(e)
+    setIsEditing(true)
+  }
+
   return (
     <>
       <HoverCard>
         <HoverCardTrigger>
           <div 
-            onClick={(e) => {
-              onClick?.(e)
-              setIsEditing(true)
-            }}
+            onClick={handleClick}
             className={cn(
               "text-xs p-1 rounded text-left truncate transition-all duration-200 hover:scale-[1.02] hover:border hover:shadow-lg cursor-pointer",
               serviceColor

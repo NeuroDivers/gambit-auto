@@ -118,12 +118,16 @@ export function WorkOrderCalendar() {
               head_cell: "text-muted-foreground rounded-md w-full font-normal text-[0.9rem] capitalize",
               row: "flex w-full mt-2",
               cell: cn(
-                "relative w-full pt-1 px-1 h-full border border-border overflow-hidden transition-colors",
-                "hover:bg-primary/10"
+                "relative w-full p-2 h-full border border-border rounded-lg overflow-hidden transition-colors",
+                "hover:bg-primary/10",
+                "first:[&:has([aria-selected])]:rounded-l-lg last:[&:has([aria-selected])]:rounded-r-lg",
+                "[&:has([aria-selected])]:bg-primary/50 [&:has([aria-selected])]:text-primary-foreground",
+                "[&:has([data-outside-month])]:opacity-50 [&:has([data-outside-month])]:pointer-events-none"
               ),
               day: "h-full w-full",
               day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
               day_today: "bg-accent text-accent-foreground",
+              day_outside: "text-muted-foreground opacity-50",
             }}
           />
         </div>
