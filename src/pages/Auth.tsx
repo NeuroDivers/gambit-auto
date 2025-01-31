@@ -97,7 +97,7 @@ const Auth = () => {
     });
   };
 
-  const AuthForm = () => (
+  const renderForm = () => (
     <form onSubmit={handleAuth} className="space-y-4">
       <div className="space-y-2">
         <Input
@@ -141,7 +141,7 @@ const Auth = () => {
 
         {isLogin ? (
           <>
-            <AuthForm />
+            {renderForm()}
             <div className="text-center">
               <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogTrigger asChild>
@@ -162,7 +162,7 @@ const Auth = () => {
                     <DialogTitle>Create Account</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
-                    <AuthForm />
+                    {renderForm()}
                   </div>
                 </DialogContent>
               </Dialog>
@@ -170,7 +170,7 @@ const Auth = () => {
           </>
         ) : (
           <>
-            <AuthForm />
+            {renderForm()}
             <div className="text-center">
               <Button
                 type="button"
