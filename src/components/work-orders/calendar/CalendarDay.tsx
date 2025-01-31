@@ -1,8 +1,6 @@
 import * as React from "react"
 import { format } from "date-fns"
 import { Plus } from "lucide-react"
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
-import { cn } from "@/lib/utils"
 import { WorkOrderDisplay } from "./WorkOrderDisplay"
 import type { WorkOrder } from "../types"
 
@@ -14,8 +12,6 @@ interface CalendarDayProps {
 
 export function CalendarDay({ date, workOrders = [], onSelect }: CalendarDayProps) {
   const handleDayClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
     onSelect(date)
   }
 
@@ -34,7 +30,7 @@ export function CalendarDay({ date, workOrders = [], onSelect }: CalendarDayProp
             key={order.id} 
             order={order}
             onClick={(e) => {
-              e.stopPropagation() // Prevent day click when clicking on a work order
+              e.stopPropagation()
             }}
           />
         ))}

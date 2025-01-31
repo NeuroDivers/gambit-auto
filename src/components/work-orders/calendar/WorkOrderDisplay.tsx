@@ -19,6 +19,7 @@ export function WorkOrderDisplay({ order, onClick }: WorkOrderDisplayProps) {
     e.preventDefault()
     e.stopPropagation()
     setIsEditing(true)
+    onClick?.(e)
   }
 
   return (
