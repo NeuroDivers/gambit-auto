@@ -3,30 +3,32 @@ import { Button } from "@/components/ui/button";
 
 interface WelcomeCardProps {
   firstName?: string | null;
+  role?: string | null;
   onLogout: () => void;
 }
 
-export const WelcomeCard = ({ firstName, onLogout }: WelcomeCardProps) => {
+export const WelcomeCard = ({ firstName, role, onLogout }: WelcomeCardProps) => {
   return (
-    <div className="relative w-full max-w-4xl mx-auto">
-      {/* Gradient background effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/20 to-primary/20 rounded-3xl blur-2xl opacity-40" />
-      
-      {/* Main card content */}
-      <div className="relative bg-black/20 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl p-10">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="space-y-3">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
-              Welcome{firstName ? `, ${firstName}` : ""}!
+    <div className="w-full max-w-4xl mx-auto px-4">
+      <div className="flex flex-col space-y-4">
+        <div className="flex justify-between items-start">
+          <div className="space-y-1">
+            <h1 className="text-4xl font-medium text-white/90">
+              Welcome, {firstName || 'Guest'}!
             </h1>
-            <p className="text-muted-foreground/80 text-lg font-light">
+            <p className="text-base text-white/60">
               Manage your profile and settings below
             </p>
+            {role && (
+              <span className="text-sm text-white/40 capitalize">
+                {role} account
+              </span>
+            )}
           </div>
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={onLogout}
-            className="gap-2.5 bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+            className="gap-2 text-white/60 hover:text-white hover:bg-white/5"
           >
             <LogOut className="h-4 w-4" />
             Logout
