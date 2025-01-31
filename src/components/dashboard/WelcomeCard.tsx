@@ -9,7 +9,7 @@ interface WelcomeCardProps {
 
 export const WelcomeCard = ({ firstName, role, onLogout }: WelcomeCardProps) => {
   return (
-    <div className="w-full max-w-4xl mx-auto px-4">
+    <div className="w-full px-4">
       <div className="flex flex-col space-y-4">
         <div className="flex justify-between items-start">
           <div className="space-y-1">
