@@ -17,22 +17,9 @@ export const DashboardLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
+    <div className="bg-gradient-to-b from-background to-background/95">
       <div className="container mx-auto px-6 py-12">
         <WelcomeHeader />
-        <div className="space-y-12 mt-8">
-          {isAdmin && (
-            <div className="flex justify-end">
-              <Button
-                onClick={() => navigate("/user-management")}
-                className="bg-[#BB86FC] text-white hover:bg-[#BB86FC]/90"
-              >
-                <Users className="mr-2 h-4 w-4" />
-                Manage Users
-              </Button>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

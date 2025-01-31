@@ -6,9 +6,13 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { CreateUserDialog } from "@/components/users/CreateUserDialog";
 import { ProfileDialog } from "@/components/profile/ProfileDialog";
+import { Button } from "@/components/ui/button";
+import { Users } from "lucide-react";
+import { useAdminStatus } from "@/hooks/useAdminStatus";
 
 export default function Index() {
   const navigate = useNavigate();
+  const { isAdmin } = useAdminStatus();
   
   const { data: session } = useQuery({
     queryKey: ["session"],
@@ -29,10 +33,19 @@ export default function Index() {
   }
 
   return (
-    <div className="min-h-screen bg-[#121212]">
+    <div className="bg-[#121212]">
       <DashboardLayout />
       <div className="container mx-auto py-8 space-y-8">
-        <div className="flex gap-4">
+        <div className="flex items-center gap-4">
+          {isAdmin && (
+            <Button
+              onClick={() => navigate("/user-management")}
+              className="bg-[#BB86FC] text-white hover:bg-[#BB86FC]/90"
+            >
+              <Users className="mr-2 h-4 w-4" />
+              Manage Users
+            </Button>
+          )}
           <CreateUserDialog />
           <ProfileDialog />
         </div>
