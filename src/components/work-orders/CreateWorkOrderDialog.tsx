@@ -60,8 +60,10 @@ export function CreateWorkOrderDialog({
     })
   }
 
-  const handleDateSelect = (date: Date) => {
-    setSelectedDate(date)
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDate(date)
+    }
   }
 
   return (
