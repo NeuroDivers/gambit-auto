@@ -38,8 +38,8 @@ export default function Index() {
   return (
     <div className="bg-[#121212]">
       <DashboardLayout />
-      <div className="container mx-auto py-8 space-y-8">
-        <div className="flex items-center gap-4">
+      <div className="container mx-auto px-6 py-8">
+        <div className="flex items-center gap-4 mb-8">
           {isAdmin && (
             <Button
               onClick={() => navigate("/user-management")}
@@ -57,7 +57,7 @@ export default function Index() {
         {isAdmin ? (
           <>
             <ServiceTypesList />
-            <div className="mt-8">
+            <div className="mt-12">
               <h2 className="text-2xl font-bold text-white/[0.87] mb-6">Quote Requests</h2>
               <QuoteRequestList />
             </div>
