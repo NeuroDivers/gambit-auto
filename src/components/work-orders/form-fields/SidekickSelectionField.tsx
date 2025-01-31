@@ -29,10 +29,7 @@ export function SidekickSelectionField({ control }: SidekickSelectionFieldProps)
         .select(`
           user_id,
           role,
-          profiles:profiles!user_roles_user_id_fkey(
-            first_name,
-            last_name
-          )
+          profiles:profiles(first_name, last_name)
         `)
         .eq("role", "sidekick")
 
