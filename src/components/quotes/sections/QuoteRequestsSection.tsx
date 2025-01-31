@@ -19,9 +19,9 @@ export function QuoteRequestsSection() {
         .from("work_orders")
         .select("quote_request_id")
 
-      const convertedQuoteIds = workOrders?.map(wo => wo.quote_request_id) || []
+      const convertedQuoteIds = workOrders?.map(wo => wo.quote_request_id).filter(Boolean) || []
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("quote_requests")
         .select(`
           *,
@@ -31,9 +31,14 @@ export function QuoteRequestsSection() {
             )
           )
         `)
-        .not('id', 'in', `(${convertedQuoteIds.join(',')})`)
         .neq('status', 'completed')
         .order("created_at", { ascending: false })
+
+      if (convertedQuoteIds.length > 0) {
+        query = query.not('id', 'in', `(${convertedQuoteIds.join(',')})`)
+      }
+
+      const { data, error } = await query
 
       if (error) throw error
       return data as QuoteRequest[]

@@ -29,7 +29,7 @@ export function WorkOrderForm({ selectedDate, quoteRequest, workOrder, onSuccess
         : selectedDate ? format(selectedDate, "yyyy-MM-dd") : "",
       end_time: workOrder ? format(new Date(workOrder.end_date), "HH:mm")
         : selectedDate ? format(selectedDate, "HH:mm") : "",
-      status: workOrder?.status || "pending",
+      status: workOrder?.status as WorkOrderFormValues['status'] || "pending",
       notes: workOrder?.notes || "",
     },
   })
