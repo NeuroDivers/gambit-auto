@@ -10,8 +10,9 @@ import { CreateUserDialog } from "@/components/users/CreateUserDialog";
 import { ProfileDialog } from "@/components/profile/ProfileDialog";
 import { BusinessSettingsDialog } from "@/components/business/BusinessSettingsDialog";
 import { Button } from "@/components/ui/button";
-import { Users, PlusCircle } from "lucide-react";
+import { Users } from "lucide-react";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
+import { CreateQuoteDialog } from "@/components/quotes/CreateQuoteDialog";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -58,12 +59,7 @@ export default function Index() {
           <div className="mt-12">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white/[0.87]">Quote Requests</h2>
-              <Button 
-                className="bg-[#BB86FC] hover:bg-[#BB86FC]/90 text-white transition-colors duration-200"
-              >
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Create Quote
-              </Button>
+              <CreateQuoteDialog />
             </div>
             <QuoteRequestList />
           </div>
