@@ -40,9 +40,10 @@ export default function Index() {
           {isAdmin && (
             <Button
               onClick={() => navigate("/user-management")}
-              className="bg-[#BB86FC] text-white hover:bg-[#BB86FC]/90"
+              variant="outline"
+              className="gap-2"
             >
-              <Users className="mr-2 h-4 w-4" />
+              <Users className="h-4 w-4" />
               Manage Users
             </Button>
           )}
