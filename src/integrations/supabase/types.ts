@@ -36,6 +36,39 @@ export type Database = {
         }
         Relationships: []
       }
+      service_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration: number | null
+          id: string
+          name: string
+          price: number | null
+          status: Database["public"]["Enums"]["service_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration?: number | null
+          id?: string
+          name: string
+          price?: number | null
+          status?: Database["public"]["Enums"]["service_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration?: number | null
+          id?: string
+          name?: string
+          price?: number | null
+          status?: Database["public"]["Enums"]["service_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -72,6 +105,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "manager" | "sidekick" | "client"
+      service_status: "active" | "inactive"
     }
     CompositeTypes: {
       [_ in never]: never

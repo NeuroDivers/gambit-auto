@@ -1,5 +1,6 @@
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { CreateUserForm } from "@/components/CreateUserForm";
+import { ServiceTypesList } from "@/components/services/ServiceTypesList";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -27,12 +28,13 @@ export default function Index() {
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-[#121212]">
       <DashboardLayout />
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto py-8 space-y-8">
         <div className="max-w-md mx-auto">
           <CreateUserForm />
         </div>
+        <ServiceTypesList />
       </div>
     </div>
   );
