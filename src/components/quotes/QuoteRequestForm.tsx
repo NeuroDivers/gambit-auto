@@ -8,6 +8,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { QuoteFormHeader } from "./form-sections/QuoteFormHeader"
 import { useQuoteFormSubmission } from "./form-sections/useQuoteFormSubmission"
 import { useMediaUpload } from "./form-sections/useMediaUpload"
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
 
 type QuoteRequestFormProps = {
   initialData?: QuoteRequestFormValues & { id: string; media_url?: string | null }
@@ -24,23 +26,49 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
     setMediaUrl
   } = useMediaUpload()
 
+  // Fetch selected services if initialData exists
+  const { data: selectedServices } = useQuery({
+    queryKey: ["quoteRequestServices", initialData?.id],
+    queryFn: async () => {
+      if (!initialData?.id) return []
+      const { data, error } = await supabase
+        .from("quote_request_services")
+        .select("service_id")
+        .eq("quote_request_id", initialData.id)
+      
+      if (error) throw error
+      return data.map(service => service.service_id)
+    },
+    enabled: !!initialData?.id
+  })
+
   const form = useForm<QuoteRequestFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData || {
-      first_name: "",
-      last_name: "",
-      email: "",
-      phone_number: "",
-      contact_preference: "email" as const,
-      service_ids: [],
-      vehicle_make: "",
-      vehicle_model: "",
-      vehicle_year: new Date().getFullYear(),
-      vehicle_serial: "",
-      additional_notes: "",
-      timeframe: "flexible" as const,
+    defaultValues: {
+      ...(initialData || {
+        first_name: "",
+        last_name: "",
+        email: "",
+        phone_number: "",
+        contact_preference: "email" as const,
+        service_ids: [],
+        vehicle_make: "",
+        vehicle_model: "",
+        vehicle_year: new Date().getFullYear(),
+        vehicle_serial: "",
+        additional_notes: "",
+        timeframe: "flexible" as const,
+      }),
+      service_ids: selectedServices || []
     },
   })
+
+  // Update form when selectedServices changes
+  React.useEffect(() => {
+    if (selectedServices) {
+      form.setValue("service_ids", selectedServices)
+    }
+  }, [selectedServices, form])
 
   const { handleSubmit } = useQuoteFormSubmission({
     initialData,

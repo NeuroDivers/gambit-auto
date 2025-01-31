@@ -201,6 +201,7 @@ export type Database = {
           media_url: string | null
           phone_number: string
           status: string
+          timeframe: string
           updated_at: string
           vehicle_make: string
           vehicle_model: string
@@ -219,6 +220,7 @@ export type Database = {
           media_url?: string | null
           phone_number: string
           status?: string
+          timeframe?: string
           updated_at?: string
           vehicle_make: string
           vehicle_model: string
@@ -237,6 +239,7 @@ export type Database = {
           media_url?: string | null
           phone_number?: string
           status?: string
+          timeframe?: string
           updated_at?: string
           vehicle_make?: string
           vehicle_model?: string
