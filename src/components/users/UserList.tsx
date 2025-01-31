@@ -7,23 +7,26 @@ export const UserList = () => {
   const { data: users, isLoading } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First, get all profiles
+      const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select(`
-          id,
-          email,
-          user_roles (
-            role
-          )
-        `);
+        .select("id, email");
 
-      if (error) throw error;
-      
-      return data?.map(user => ({
-        id: user.id,
-        email: user.email,
-        user_roles: typeof user.user_roles?.[0] === 'object' 
-          ? user.user_roles[0] 
+      if (profilesError) throw profilesError;
+
+      // Then, get all user roles
+      const { data: roles, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("user_id, role");
+
+      if (rolesError) throw rolesError;
+
+      // Combine the data
+      return profiles?.map(profile => ({
+        id: profile.id,
+        email: profile.email,
+        user_roles: roles?.find(role => role.user_id === profile.id)
+          ? { role: roles.find(role => role.user_id === profile.id)?.role || 'user' }
           : { role: 'user' }
       }));
     },
