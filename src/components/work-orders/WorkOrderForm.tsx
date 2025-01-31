@@ -27,9 +27,9 @@ export function WorkOrderForm({
       if (error) throw error
       return data.map(service => service.service_id)
     },
-    enabled: !!workOrder?.quote_request_id
+    enabled: !!workOrder?.quote_request_id // Only run query when we have a valid quote_request_id
   })
-
+  
   const form = useWorkOrderForm({ 
     selectedDate, 
     workOrder, 
