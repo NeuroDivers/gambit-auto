@@ -10,29 +10,6 @@ import { useState } from "react"
 import { CreateWorkOrderDialog } from "../work-orders/CreateWorkOrderDialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-type QuoteRequest = {
-  id: string
-  first_name: string
-  last_name: string
-  email: string
-  phone_number: string
-  contact_preference: "phone" | "email"
-  vehicle_make: string
-  vehicle_model: string
-  vehicle_year: number
-  vehicle_serial: string
-  additional_notes?: string
-  media_url?: string
-  status: string
-  created_at: string
-  price: number
-  quote_request_services: {
-    service_types: {
-      name: string
-    }
-  }[]
-}
-
 const getStatusStyles = (status: string) => {
   switch (status) {
     case "pending":
@@ -132,7 +109,7 @@ export function QuoteRequestCard({ request }: { request: QuoteRequest }) {
           </div>
           <div className="grid grid-cols-2 gap-1">
             <span className="font-medium">Price:</span>
-            <span>${request.price.toFixed(2)}</span>
+            <span>${request.price?.toFixed(2) ?? '0.00'}</span>
           </div>
           {request.additional_notes && (
             <div className="col-span-2 mt-2">
