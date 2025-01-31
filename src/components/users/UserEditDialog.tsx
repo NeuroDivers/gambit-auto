@@ -34,6 +34,7 @@ export const UserEditDialog = ({ user, open, onOpenChange }: UserEditDialogProps
       first_name: user.first_name || "",
       last_name: user.last_name || "",
       role: user.user_roles?.role || "client",
+      assigned_work_orders: [],
     },
   });
 
@@ -60,12 +61,32 @@ export const UserEditDialog = ({ user, open, onOpenChange }: UserEditDialogProps
         if (roleError) throw roleError;
       }
 
+      // Update work order assignments if role is sidekick
+      if (values.role === "sidekick" && values.assigned_work_orders) {
+        const { error: workOrderError } = await supabase
+          .from("work_orders")
+          .update({ assigned_sidekick_id: null })
+          .eq("assigned_sidekick_id", user.id);
+
+        if (workOrderError) throw workOrderError;
+
+        for (const workOrderId of values.assigned_work_orders) {
+          const { error: assignError } = await supabase
+            .from("work_orders")
+            .update({ assigned_sidekick_id: user.id })
+            .eq("id", workOrderId);
+
+          if (assignError) throw assignError;
+        }
+      }
+
       toast({
         title: "Success",
         description: "User updated successfully",
       });
 
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["workOrders"] });
       onOpenChange(false);
     } catch (error) {
       toast({
