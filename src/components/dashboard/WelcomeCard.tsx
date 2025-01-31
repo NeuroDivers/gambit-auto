@@ -9,10 +9,10 @@ interface WelcomeCardProps {
 
 export const WelcomeCard = ({ firstName, role, onLogout }: WelcomeCardProps) => {
   return (
-    <div className="w-full px-4">
-      <div className="flex flex-col space-y-4">
-        <div className="flex justify-between items-start">
-          <div className="space-y-1">
+    <div className="w-full">
+      <div className="flex flex-col space-y-6">
+        <div className="flex justify-between items-start gap-4">
+          <div className="space-y-3">
             <h1 className="text-4xl font-medium text-white/90">
               Welcome, {firstName || 'Guest'}!
             </h1>
@@ -20,7 +20,7 @@ export const WelcomeCard = ({ firstName, role, onLogout }: WelcomeCardProps) => 
               Manage your profile and settings below
             </p>
             {role && (
-              <span className="text-sm rounded-md px-3 py-1 capitalize" style={{
+              <span className="text-sm rounded-md px-3 py-1 capitalize inline-block mt-2" style={{
                 color: '#bb86fc',
                 background: 'rgb(187 134 252 / 0.1)',
               }}>

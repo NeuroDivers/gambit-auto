@@ -17,8 +17,8 @@ export const DashboardLayout = () => {
   }
 
   return (
-    <div className="bg-gradient-to-b from-background to-background/95">
-      <div className="container mx-auto px-6 py-12">
+    <div className="bg-gradient-to-b from-background to-background/95 min-h-screen">
+      <div className="container mx-auto px-6 py-8 space-y-8">
         <WelcomeHeader />
       </div>
     </div>
