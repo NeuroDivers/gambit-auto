@@ -29,14 +29,20 @@ export function SidekickSelectionField({ control }: SidekickSelectionFieldProps)
         .select(`
           user_id,
           role,
-          profiles:profiles!user_id(first_name, last_name)
+          user:profiles!user_id(first_name, last_name)
         `)
-        .eq("role", "sidekick")
+        .eq("role", "sidekick");
 
-      if (error) throw error
-      return data as SidekickQueryResult[]
+      if (error) throw error;
+      
+      // Transform the data to match our expected type
+      return data.map(sidekick => ({
+        user_id: sidekick.user_id,
+        role: sidekick.role,
+        profiles: sidekick.user
+      })) as SidekickQueryResult[];
     },
-  })
+  });
 
   return (
     <FormField
