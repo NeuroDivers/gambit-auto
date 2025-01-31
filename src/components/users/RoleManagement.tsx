@@ -70,13 +70,13 @@ export const RoleManagement = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-xl font-semibold mb-2">Role Overview</h3>
-        <p className="text-sm text-muted-foreground">
+        <h3 className="text-xl font-semibold mb-2 text-white/[0.87]">Role Overview</h3>
+        <p className="text-sm text-white/60">
           Current distribution of user roles
         </p>
       </div>
       
-      <div className="h-[300px] w-full">
+      <div className="h-[300px] w-full bg-[#242424] border border-white/12 rounded-lg p-4">
         <ChartContainer
           className="w-full"
           config={{
@@ -132,12 +132,14 @@ export const RoleManagement = () => {
 
       <div className="grid gap-4">
         {Object.entries(roleStats || {}).map(([role, count]) => (
-          <div key={role} className="p-4 border rounded-lg bg-card">
+          <div key={role} className="bg-[#242424] border border-white/12 rounded-lg p-4 transition-all duration-200 hover:border-[#BB86FC]/50">
             <div className="flex items-center gap-3">
-              <Shield className="h-5 w-5 text-muted-foreground" />
+              <div className="h-8 w-8 rounded-full bg-[#BB86FC]/10 flex items-center justify-center">
+                <Shield className="h-4 w-4 text-[#BB86FC]" />
+              </div>
               <div>
-                <p className="font-medium capitalize">{role}s</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="font-medium capitalize text-white/[0.87]">{role}s</p>
+                <p className="text-sm text-white/60">
                   Count: {count}
                 </p>
               </div>
