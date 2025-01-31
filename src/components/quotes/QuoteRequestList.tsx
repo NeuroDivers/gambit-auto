@@ -5,7 +5,6 @@ import { useEffect, useMemo } from "react"
 import { StatusLegend } from "./StatusLegend"
 import { LoadingState } from "./LoadingState"
 import { WorkOrderCalendar } from "../work-orders/WorkOrderCalendar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 type QuoteRequest = {
   id: string
@@ -86,27 +85,24 @@ export const QuoteRequestList = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <Tabs defaultValue="quotes" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="quotes">Quote Requests</TabsTrigger>
-          <TabsTrigger value="calendar">Work Orders Calendar</TabsTrigger>
-        </TabsList>
-        <TabsContent value="quotes" className="space-y-4">
-          <StatusLegend statusCounts={statusCounts} />
-          {requests?.map((request) => (
-            <QuoteRequestCard key={request.id} request={request} />
-          ))}
-          {requests?.length === 0 && (
-            <div className="text-center py-8 text-white/60">
-              No quote requests yet
-            </div>
-          )}
-        </TabsContent>
-        <TabsContent value="calendar">
-          <WorkOrderCalendar />
-        </TabsContent>
-      </Tabs>
+    <div className="space-y-12">
+      <div className="space-y-6">
+        <h3 className="text-xl font-semibold">Work Orders Calendar</h3>
+        <WorkOrderCalendar />
+      </div>
+      
+      <div className="space-y-6">
+        <h3 className="text-xl font-semibold">Quote Requests</h3>
+        <StatusLegend statusCounts={statusCounts} />
+        {requests?.map((request) => (
+          <QuoteRequestCard key={request.id} request={request} />
+        ))}
+        {requests?.length === 0 && (
+          <div className="text-center py-8 text-white/60">
+            No quote requests yet
+          </div>
+        )}
+      </div>
     </div>
   )
 }
