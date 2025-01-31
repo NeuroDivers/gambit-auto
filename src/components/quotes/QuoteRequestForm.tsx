@@ -12,7 +12,7 @@ import { useQueryClient } from "@tanstack/react-query"
 type QuoteRequestFormValues = z.infer<typeof formSchema>
 
 type QuoteRequestFormProps = {
-  initialData?: QuoteRequestFormValues & { id: string }
+  initialData?: QuoteRequestFormValues & { id: string; media_url?: string | null }
 }
 
 export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
@@ -57,17 +57,21 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
       setMediaUrl(url)
       toast({
         title: "Success",
-        description: "Image uploaded successfully.",
+        description: "Media uploaded successfully.",
       })
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to upload image.",
+        description: "Failed to upload media.",
         variant: "destructive",
       })
     } finally {
       setUploading(false)
     }
+  }
+
+  const handleMediaRemove = () => {
+    setMediaUrl(null)
   }
 
   async function onSubmit(data: QuoteRequestFormValues) {
@@ -155,6 +159,7 @@ export function QuoteRequestForm({ initialData }: QuoteRequestFormProps) {
             onFileUpload={handleFileUpload}
             mediaUrl={mediaUrl}
             uploading={uploading}
+            onMediaRemove={handleMediaRemove}
           />
           <Button type="submit" className="w-full" disabled={uploading}>
             {uploading ? "Uploading..." : initialData ? "Update Request" : "Submit Request"}

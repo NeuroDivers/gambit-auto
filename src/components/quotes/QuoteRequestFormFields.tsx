@@ -28,9 +28,10 @@ type QuoteRequestFormFieldsProps = {
   onFileUpload: (file: File) => Promise<void>
   mediaUrl: string | null
   uploading: boolean
+  onMediaRemove: () => void
 }
 
-export function QuoteRequestFormFields({ form, onFileUpload, mediaUrl, uploading }: QuoteRequestFormFieldsProps) {
+export function QuoteRequestFormFields({ form, onFileUpload, mediaUrl, uploading, onMediaRemove }: QuoteRequestFormFieldsProps) {
   const { data: services } = useQuery({
     queryKey: ["services"],
     queryFn: async () => {
@@ -239,23 +240,34 @@ export function QuoteRequestFormFields({ form, onFileUpload, mediaUrl, uploading
       />
 
       <div className="space-y-4">
-        <FormLabel>Upload Image</FormLabel>
-        <div className="flex items-center gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            disabled={uploading}
-            onClick={() => document.getElementById('file-upload')?.click()}
-          >
-            <ImageIcon className="h-4 w-4 mr-2" />
-            {uploading ? "Uploading..." : "Choose Image"}
-          </Button>
+        <FormLabel>Media Upload</FormLabel>
+        <div 
+          onClick={() => document.getElementById('file-upload')?.click()}
+          className={`
+            relative cursor-pointer
+            border-2 border-dashed border-border
+            rounded-lg p-8
+            flex flex-col items-center justify-center
+            transition-colors
+            hover:bg-accent/50
+            ${uploading ? 'opacity-50 cursor-not-allowed' : ''}
+          `}
+        >
+          <ImageIcon className="h-10 w-10 mb-4 text-muted-foreground" />
+          <div className="text-center space-y-2">
+            <h3 className="font-semibold">Click or drag files to upload</h3>
+            <p className="text-sm text-muted-foreground">
+              Supported formats: JPG, PNG, MP4, MOV
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Upload images or videos of the damage (max 10MB per file)
+            </p>
+          </div>
           <input
             id="file-upload"
             type="file"
             className="hidden"
-            accept="image/*"
+            accept="image/*,video/mp4,video/quicktime"
             onChange={handleFileChange}
             disabled={uploading}
           />
@@ -272,7 +284,7 @@ export function QuoteRequestFormFields({ form, onFileUpload, mediaUrl, uploading
               variant="destructive"
               size="icon"
               className="absolute top-2 right-2"
-              onClick={() => setMediaUrl(null)}
+              onClick={onMediaRemove}
             >
               <X className="h-4 w-4" />
             </Button>
