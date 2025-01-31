@@ -3,6 +3,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,17 +55,7 @@ export const UserEditDialog = ({
 
   const onSubmit = async (values) => {
     try {
-      // Update user role
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .upsert(
-          { user_id: user.id, role: values.role },
-          { onConflict: "user_id" }
-        );
-
-      if (roleError) throw roleError;
-
-      // Update profile information
+      // Update profile information first
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
@@ -75,12 +66,23 @@ export const UserEditDialog = ({
 
       if (profileError) throw profileError;
 
+      // Then update user role
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .upsert(
+          { user_id: user.id, role: values.role },
+          { onConflict: "user_id" }
+        );
+
+      if (roleError) throw roleError;
+
       toast({
         title: "Success",
         description: "User information updated successfully",
       });
       
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["roleStats"] });
       onOpenChange(false);
     } catch (error) {
       toast({
@@ -96,6 +98,9 @@ export const UserEditDialog = ({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit User: {user.email}</DialogTitle>
+          <DialogDescription>
+            Make changes to user profile and role
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

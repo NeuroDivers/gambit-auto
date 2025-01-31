@@ -2,10 +2,12 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 export const RoleManagement = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const { data: roleStats } = useQuery({
     queryKey: ["roleStats"],
@@ -26,6 +28,28 @@ export const RoleManagement = () => {
       return stats;
     },
   });
+
+  useEffect(() => {
+    // Subscribe to changes in the user_roles table
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_roles'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["roleStats"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   return (
     <div className="space-y-6">
