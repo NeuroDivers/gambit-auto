@@ -9,11 +9,19 @@ type SidekickSelectionFieldProps = {
   control: Control<WorkOrderFormValues>
 }
 
+interface SidekickQueryResult {
+  user_id: string
+  profiles: {
+    first_name: string | null
+    last_name: string | null
+  }
+}
+
 export function SidekickSelectionField({ control }: SidekickSelectionFieldProps) {
   const { data: sidekicks, isLoading } = useQuery({
     queryKey: ["sidekicks"],
     queryFn: async () => {
-      const { data: userRoles, error: rolesError } = await supabase
+      const { data, error } = await supabase
         .from("user_roles")
         .select(`
           user_id,
@@ -24,8 +32,8 @@ export function SidekickSelectionField({ control }: SidekickSelectionFieldProps)
         `)
         .eq("role", "sidekick")
 
-      if (rolesError) throw rolesError
-      return userRoles
+      if (error) throw error
+      return data as SidekickQueryResult[]
     },
   })
 
