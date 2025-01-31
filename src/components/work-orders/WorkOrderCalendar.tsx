@@ -1,60 +1,17 @@
-import * as React from "react"
-import { Calendar as CalendarIcon } from "lucide-react"
-import { Calendar } from "@/components/ui/calendar"
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
+import { Calendar } from "@/components/ui/calendar"
 import { CreateWorkOrderDialog } from "./CreateWorkOrderDialog"
-import { format } from "date-fns"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
 import { CalendarDay } from "./calendar/CalendarDay"
 import { CalendarGrid } from "./calendar/CalendarGrid"
-import type { WorkOrder } from "./types"
+import { CalendarHeader } from "./calendar/CalendarHeader"
+import { useWorkOrderData } from "./calendar/useWorkOrderData"
+import { cn } from "@/lib/utils"
 
 export function WorkOrderCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [view, setView] = useState<'month' | 'day'>('month')
-
-  const { data: workOrders } = useQuery({
-    queryKey: ["workOrders"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("work_orders")
-        .select(`
-          *,
-          service_bays (
-            name
-          ),
-          quote_requests (
-            first_name,
-            last_name,
-            vehicle_make,
-            vehicle_model,
-            vehicle_year,
-            quote_request_services (
-              service_types (
-                name
-              )
-            )
-          )
-        `)
-      if (error) throw error
-      return data as WorkOrder[]
-    },
-  })
-
-  const { data: serviceBays } = useQuery({
-    queryKey: ["serviceBays"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("service_bays")
-        .select("*")
-      if (error) throw error
-      return data
-    },
-  })
+  const { workOrders, serviceBays } = useWorkOrderData()
 
   const handleSelect = (date: Date | undefined) => {
     setSelectedDate(date)
@@ -70,28 +27,7 @@ export function WorkOrderCalendar() {
 
   return (
     <div className="space-y-6 w-full">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Bay Availability</h2>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-card rounded-lg p-1">
-            <Button
-              variant={view === 'month' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setView('month')}
-            >
-              Month
-            </Button>
-            <Button
-              variant={view === 'day' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setView('day')}
-            >
-              Day
-            </Button>
-          </div>
-          <CalendarIcon className="h-5 w-5 text-muted-foreground" />
-        </div>
-      </div>
+      <CalendarHeader view={view} setView={setView} />
 
       {view === 'month' ? (
         <div className="rounded-lg border bg-[#1a1a1a] p-4">
