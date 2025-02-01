@@ -1,7 +1,7 @@
-import { UseFormReturn } from "react-hook-form"
-import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Plus, Trash2 } from "lucide-react"
 
 type InvoiceItem = {
@@ -11,22 +11,15 @@ type InvoiceItem = {
   unit_price: number
 }
 
-type FormValues = {
-  notes: string
-  status: string
-  invoice_items: InvoiceItem[]
-}
-
 type InvoiceServiceItemsProps = {
-  form: UseFormReturn<FormValues>
-  invoiceItems: InvoiceItem[]
+  items: InvoiceItem[]
+  setItems: (items: InvoiceItem[]) => void
 }
 
-export function InvoiceServiceItems({ form, invoiceItems }: InvoiceServiceItemsProps) {
+export function InvoiceServiceItems({ items = [], setItems }: InvoiceServiceItemsProps) {
   const addItem = () => {
-    const currentItems = form.getValues("invoice_items") || []
-    form.setValue("invoice_items", [
-      ...currentItems,
+    setItems([
+      ...items,
       {
         service_name: "",
         description: "",
@@ -37,17 +30,22 @@ export function InvoiceServiceItems({ form, invoiceItems }: InvoiceServiceItemsP
   }
 
   const removeItem = (index: number) => {
-    const currentItems = form.getValues("invoice_items") || []
-    form.setValue(
-      "invoice_items",
-      currentItems.filter((_, i) => i !== index)
-    )
+    setItems(items.filter((_, i) => i !== index))
+  }
+
+  const updateItem = (index: number, field: keyof InvoiceItem, value: string | number) => {
+    const newItems = [...items]
+    newItems[index] = {
+      ...newItems[index],
+      [field]: value,
+    }
+    setItems(newItems)
   }
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <FormLabel className="text-lg">Invoice Items</FormLabel>
+        <Label className="text-lg">Invoice Items</Label>
         <Button
           type="button"
           variant="outline"
@@ -61,7 +59,7 @@ export function InvoiceServiceItems({ form, invoiceItems }: InvoiceServiceItemsP
       </div>
 
       <div className="space-y-6">
-        {form.watch("invoice_items")?.map((_, index) => (
+        {items.map((item, index) => (
           <div key={index} className="space-y-4 p-4 border rounded-lg relative">
             <Button
               type="button"
@@ -74,69 +72,48 @@ export function InvoiceServiceItems({ form, invoiceItems }: InvoiceServiceItemsP
             </Button>
 
             <div className="grid gap-4">
-              <FormField
-                control={form.control}
-                name={`invoice_items.${index}.service_name`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Service Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter service name" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+              <div>
+                <Label htmlFor={`service-name-${index}`}>Service Name</Label>
+                <Input
+                  id={`service-name-${index}`}
+                  value={item.service_name}
+                  onChange={(e) => updateItem(index, "service_name", e.target.value)}
+                  placeholder="Enter service name"
+                />
+              </div>
 
-              <FormField
-                control={form.control}
-                name={`invoice_items.${index}.description`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter description" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+              <div>
+                <Label htmlFor={`description-${index}`}>Description</Label>
+                <Textarea
+                  id={`description-${index}`}
+                  value={item.description}
+                  onChange={(e) => updateItem(index, "description", e.target.value)}
+                  placeholder="Enter description"
+                />
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name={`invoice_items.${index}.quantity`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Quantity</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          min="1" 
-                          {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value))}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name={`invoice_items.${index}.unit_price`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Unit Price</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                <div>
+                  <Label htmlFor={`quantity-${index}`}>Quantity</Label>
+                  <Input
+                    id={`quantity-${index}`}
+                    type="number"
+                    min="1"
+                    value={item.quantity}
+                    onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor={`unit-price-${index}`}>Unit Price</Label>
+                  <Input
+                    id={`unit-price-${index}`}
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={item.unit_price}
+                    onChange={(e) => updateItem(index, "unit_price", parseFloat(e.target.value))}
+                  />
+                </div>
               </div>
             </div>
           </div>

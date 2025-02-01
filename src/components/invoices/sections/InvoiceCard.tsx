@@ -1,10 +1,10 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { InvoiceHeader } from "./InvoiceHeader"
+import { Card } from "@/components/ui/card"
 import { CustomerInfo } from "./CustomerInfo"
 import { VehicleInfo } from "./VehicleInfo"
 import { ServicesList } from "./ServicesList"
 import { InvoiceTotals } from "./InvoiceTotals"
 import { InvoiceFooter } from "./InvoiceFooter"
+import { InvoiceHeader } from "./InvoiceHeader"
 
 type InvoiceCardProps = {
   invoice: any // Using any temporarily, should be properly typed
@@ -24,21 +24,21 @@ export function InvoiceCard({ invoice }: InvoiceCardProps) {
 
       <div className="grid grid-cols-2 gap-8">
         <CustomerInfo
-          firstName={invoice.work_order.first_name}
-          lastName={invoice.work_order.last_name}
-          email={invoice.work_order.email}
-          phoneNumber={invoice.work_order.phone_number}
+          firstName={invoice.customer_name}
+          lastName=""
+          email={invoice.customer_email}
+          phoneNumber=""
         />
 
         <VehicleInfo
-          year={invoice.work_order.vehicle_year}
-          make={invoice.work_order.vehicle_make}
-          model={invoice.work_order.vehicle_model}
-          serial={invoice.work_order.vehicle_serial}
+          year={invoice.vehicle_year}
+          make={invoice.vehicle_make}
+          model={invoice.vehicle_model}
+          serial={invoice.vehicle_vin}
         />
       </div>
 
-      <ServicesList services={invoice.work_order.services || []} />
+      <ServicesList services={invoice.invoice_items || []} />
 
       <div>
         <InvoiceTotals

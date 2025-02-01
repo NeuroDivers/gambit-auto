@@ -1,8 +1,8 @@
 import { useReactToPrint } from 'react-to-print'
 import { useRef } from 'react'
 import { Button } from '@/components/ui/button'
-import { InvoiceCard } from '../InvoiceCard'
 import { Printer } from 'lucide-react'
+import { InvoiceCard } from './InvoiceCard'
 
 type InvoicePrintPreviewProps = {
   invoice: any // Using any temporarily, should be properly typed
@@ -11,16 +11,17 @@ type InvoicePrintPreviewProps = {
 export function InvoicePrintPreview({ invoice }: InvoicePrintPreviewProps) {
   const componentRef = useRef(null)
   const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
     documentTitle: `Invoice-${invoice?.invoice_number}`,
     onAfterPrint: () => console.log('Printed successfully'),
-    pageStyle: '@page { size: auto; margin: 20mm; }',
+    pageStyle: '@page { size: auto; margin: 20mm; }'
   })
 
   return (
     <div>
       <div className="mb-6 flex justify-end">
         <Button
-          onClick={handlePrint}
+          onClick={() => handlePrint()}
           className="flex items-center gap-2"
         >
           <Printer className="w-4 h-4" />

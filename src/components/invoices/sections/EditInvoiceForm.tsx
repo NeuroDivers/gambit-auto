@@ -22,16 +22,34 @@ export function EditInvoiceForm({ form, onSubmit, isPending, invoiceId }: EditIn
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-6">
             <InvoiceStatusField form={form} />
-            <CustomerInfoFields form={form} />
+            <CustomerInfoFields 
+              customerName={form.watch('customer_name')}
+              setCustomerName={(value) => form.setValue('customer_name', value)}
+              customerEmail={form.watch('customer_email')}
+              setCustomerEmail={(value) => form.setValue('customer_email', value)}
+              customerPhone=""
+              setCustomerPhone={() => {}}
+              customerAddress={form.watch('customer_address')}
+              setCustomerAddress={(value) => form.setValue('customer_address', value)}
+            />
           </div>
           <div className="space-y-6">
-            <VehicleInfoFields form={form} />
+            <VehicleInfoFields 
+              vehicleMake={form.watch('vehicle_make')}
+              setVehicleMake={(value) => form.setValue('vehicle_make', value)}
+              vehicleModel={form.watch('vehicle_model')}
+              setVehicleModel={(value) => form.setValue('vehicle_model', value)}
+              vehicleYear={form.watch('vehicle_year')}
+              setVehicleYear={(value) => form.setValue('vehicle_year', value)}
+              vehicleVin={form.watch('vehicle_vin')}
+              setVehicleVin={(value) => form.setValue('vehicle_vin', value)}
+            />
           </div>
         </div>
         
         <InvoiceServiceItems 
-          form={form}
-          invoiceId={invoiceId}
+          items={form.watch('invoice_items')}
+          setItems={(items) => form.setValue('invoice_items', items)}
         />
 
         <InvoiceNotesField form={form} />
