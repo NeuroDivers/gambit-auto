@@ -68,8 +68,16 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
   if (!invoice) return null;
 
   return (
-    <div className="w-full">
-      <Card ref={printRef} className="w-full">
+    <div className="w-full relative">
+      <Button 
+        onClick={() => handlePrint()} 
+        className="absolute right-0 top-0 gap-2 z-10"
+      >
+        <Printer className="h-4 w-4" />
+        Print Invoice
+      </Button>
+
+      <Card ref={printRef} className="w-full mt-12">
         <CardContent className="space-y-6 p-8">
           <InvoiceHeader
             invoiceNumber={invoice.invoice_number}
@@ -111,13 +119,6 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
           <InvoiceFooter />
         </CardContent>
       </Card>
-
-      <div className="mt-6 text-center">
-        <Button onClick={() => handlePrint()} className="gap-2">
-          <Printer className="h-4 w-4" />
-          Print Invoice
-        </Button>
-      </div>
     </div>
   );
 }
