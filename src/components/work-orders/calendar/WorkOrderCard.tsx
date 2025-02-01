@@ -12,7 +12,7 @@ export function WorkOrderCard({ workOrder, onClick }: WorkOrderCardProps) {
     <HoverCard>
       <HoverCardTrigger asChild>
         <div 
-          className="text-xs bg-primary/10 p-1 rounded truncate"
+          className="text-xs bg-primary/10 p-1 rounded truncate cursor-pointer"
           onClick={onClick}
         >
           <div className="truncate">
@@ -23,10 +23,7 @@ export function WorkOrderCard({ workOrder, onClick }: WorkOrderCardProps) {
           </div>
         </div>
       </HoverCardTrigger>
-      <HoverCardContent 
-        className="w-80 p-4 z-[9999] bg-[#121212]"
-        onClick={onClick}
-      >
+      <HoverCardContent className="w-80 p-4">
         <WorkOrderPreview workOrder={workOrder} />
       </HoverCardContent>
     </HoverCard>
