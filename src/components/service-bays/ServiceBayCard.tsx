@@ -5,12 +5,14 @@ import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { BayStatusToggle } from "./BayStatusToggle"
 import { BayServiceToggles } from "./BayServiceToggles"
+import { SidekickAssignment } from "./SidekickAssignment"
 
 type ServiceBayCardProps = {
   bay: {
     id: string
     name: string
     status: 'available' | 'in_use' | 'maintenance'
+    assigned_sidekick_id?: string | null
   }
   services: {
     id: string
@@ -115,6 +117,10 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
         <BayStatusToggle 
           status={bay.status} 
           onStatusChange={updateBayStatus} 
+        />
+        <SidekickAssignment 
+          bayId={bay.id}
+          currentSidekickId={bay.assigned_sidekick_id}
         />
         <BayServiceToggles
           availableServices={availableServices}

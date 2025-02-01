@@ -17,7 +17,8 @@ export function ServiceBaysList() {
         .select(`
           id,
           name,
-          status
+          status,
+          assigned_sidekick_id
         `)
         .order("name")
 

@@ -261,6 +261,7 @@ export type Database = {
       }
       service_bays: {
         Row: {
+          assigned_sidekick_id: string | null
           created_at: string
           id: string
           name: string
@@ -268,6 +269,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_sidekick_id?: string | null
           created_at?: string
           id?: string
           name: string
@@ -275,6 +277,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_sidekick_id?: string | null
           created_at?: string
           id?: string
           name?: string
