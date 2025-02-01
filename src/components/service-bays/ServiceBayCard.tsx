@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client"
 import { BayStatusToggle } from "./BayStatusToggle"
 import { BayServiceToggles } from "./BayServiceToggles"
 import { SidekickAssignment } from "./SidekickAssignment"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
 
 type ServiceBayCardProps = {
   bay: {
@@ -13,6 +15,7 @@ type ServiceBayCardProps = {
     name: string
     status: 'available' | 'in_use' | 'maintenance'
     assigned_sidekick_id?: string | null
+    notes?: string | null
   }
   services: {
     id: string
@@ -42,6 +45,30 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
       toast({
         title: "Success",
         description: `Bay status updated to ${status}`,
+      })
+
+      queryClient.invalidateQueries({ queryKey: ['serviceBays'] })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      })
+    }
+  }
+
+  const updateBayNotes = async (notes: string) => {
+    try {
+      const { error } = await supabase
+        .from('service_bays')
+        .update({ notes })
+        .eq('id', bay.id)
+
+      if (error) throw error
+
+      toast({
+        title: "Success",
+        description: "Bay notes updated successfully",
       })
 
       queryClient.invalidateQueries({ queryKey: ['serviceBays'] })
@@ -122,6 +149,16 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
           bayId={bay.id}
           currentSidekickId={bay.assigned_sidekick_id}
         />
+        <div className="space-y-2">
+          <Label htmlFor={`notes-${bay.id}`}>Notes</Label>
+          <Textarea
+            id={`notes-${bay.id}`}
+            placeholder="Add notes about this bay..."
+            value={bay.notes || ''}
+            onChange={(e) => updateBayNotes(e.target.value)}
+            className="min-h-[100px]"
+          />
+        </div>
         <BayServiceToggles
           availableServices={availableServices}
           activeServices={services}

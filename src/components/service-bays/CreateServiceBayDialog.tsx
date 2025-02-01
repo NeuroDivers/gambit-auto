@@ -6,6 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
@@ -19,6 +20,7 @@ type CreateServiceBayDialogProps = {
 
 export function CreateServiceBayDialog({ open, onOpenChange }: CreateServiceBayDialogProps) {
   const [name, setName] = useState("")
+  const [notes, setNotes] = useState("")
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
@@ -28,7 +30,7 @@ export function CreateServiceBayDialog({ open, onOpenChange }: CreateServiceBayD
     try {
       const { error } = await supabase
         .from("service_bays")
-        .insert({ name })
+        .insert({ name, notes })
 
       if (error) throw error
 
@@ -40,6 +42,7 @@ export function CreateServiceBayDialog({ open, onOpenChange }: CreateServiceBayD
       queryClient.invalidateQueries({ queryKey: ["serviceBays"] })
       onOpenChange(false)
       setName("")
+      setNotes("")
     } catch (error) {
       toast({
         title: "Error",
@@ -64,6 +67,16 @@ export function CreateServiceBayDialog({ open, onOpenChange }: CreateServiceBayD
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter bay name..."
               required
+            />
+          </div>
+          <div>
+            <Label htmlFor="notes">Notes</Label>
+            <Textarea
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Add any additional notes..."
+              className="min-h-[100px]"
             />
           </div>
           <Button type="submit" className="w-full">

@@ -3,22 +3,36 @@ import { supabase } from "@/integrations/supabase/client"
 import { BayHeader } from "./BayHeader"
 import { useState } from "react"
 import { CreateServiceBayDialog } from "./CreateServiceBayDialog"
+import { ServiceBayCard } from "./ServiceBayCard"
 
 interface ServiceBay {
   id: string
   name: string
-  status: 'available' | 'occupied' | 'maintenance'
+  status: 'available' | 'in_use' | 'maintenance'
   assigned_sidekick_id: string | null
+  notes: string | null
 }
 
 export function ServiceBaysList() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  const { data: serviceBays, isLoading } = useQuery<ServiceBay[]>({
+  const { data: serviceBays, isLoading } = useQuery({
     queryKey: ["service-bays"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_bays")
+        .select("*, bay_services(service_id, is_active)")
+
+      if (error) throw error
+      return data || []
+    },
+  })
+
+  const { data: availableServices } = useQuery({
+    queryKey: ["service-types"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_types")
         .select("*")
 
       if (error) throw error
@@ -36,32 +50,12 @@ export function ServiceBaysList() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {serviceBays?.map((bay) => (
-          <div 
-            key={bay.id} 
-            className="bg-[#242424] border border-white/12 rounded-lg p-6 transition-all duration-200 hover:border-[#BB86FC]/50"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg font-semibold text-white/[0.87]">{bay.name}</h3>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center text-sm">
-                {bay.status === 'available' ? (
-                  <span className="flex items-center text-[#03DAC5]">
-                    Available
-                  </span>
-                ) : bay.status === 'occupied' ? (
-                  <span className="flex items-center text-yellow-500">
-                    Occupied
-                  </span>
-                ) : (
-                  <span className="flex items-center text-red-500">
-                    Maintenance
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
+          <ServiceBayCard
+            key={bay.id}
+            bay={bay}
+            services={bay.bay_services || []}
+            availableServices={availableServices || []}
+          />
         ))}
       </div>
 
