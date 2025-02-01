@@ -1,15 +1,17 @@
-import * as React from 'react'
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
-import { UseFormReturn } from "react-hook-form"
 import * as z from "zod"
-import { Textarea } from "@/components/ui/textarea"
+import { UseFormReturn } from "react-hook-form"
 import { PersonalInfoFields } from "./form-fields/PersonalInfoFields"
 import { VehicleInfoFields } from "./form-fields/VehicleInfoFields"
 import { ServiceItemsField } from "./form-fields/ServiceItemsField"
 import { MediaUploadField } from "./form-fields/MediaUploadField"
 import { ContactPreferenceFields } from "./form-fields/ContactPreferenceFields"
+import { AddressField } from "./form-fields/AddressField"
+import { TimeframeField } from "./form-fields/TimeframeField"
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { formatCurrency } from "@/lib/utils"
+import { useEffect } from "react"
 
 const serviceItemSchema = z.object({
   service_id: z.string().uuid(),
@@ -31,7 +33,8 @@ export const formSchema = z.object({
   vehicle_serial: z.string().optional(),
   additional_notes: z.string().optional(),
   timeframe: z.enum(["flexible", "asap", "within_week", "within_month"]),
-  price: z.number().min(0, "Price must be a positive number").default(0)
+  price: z.number().min(0, "Price must be a positive number").default(0),
+  address: z.string().optional()
 })
 
 export type WorkOrderFormValues = z.infer<typeof formSchema>
@@ -51,20 +54,19 @@ export function WorkOrderFormFields({
   uploading, 
   onMediaRemove 
 }: WorkOrderFormFieldsProps) {
-  // Calculate total price from service items
   const serviceItems = form.watch("service_items") || []
   const totalPrice = serviceItems.reduce((sum, item) => {
     return sum + (item.quantity * item.unit_price)
   }, 0)
 
-  // Update price field when service items change
-  React.useEffect(() => {
+  useEffect(() => {
     form.setValue("price", totalPrice)
   }, [totalPrice, form])
 
   return (
     <>
       <PersonalInfoFields form={form} />
+      <AddressField form={form} />
       <ServiceItemsField form={form} />
       <MediaUploadField
         onFileUpload={onFileUpload}
@@ -107,6 +109,7 @@ export function WorkOrderFormFields({
           </FormItem>
         )}
       />
+      <TimeframeField form={form} />
       <ContactPreferenceFields form={form} />
     </>
   )

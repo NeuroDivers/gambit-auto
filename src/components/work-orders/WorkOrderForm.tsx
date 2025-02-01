@@ -75,6 +75,7 @@ export function WorkOrderForm({ initialData, onSuccess }: WorkOrderFormProps) {
         additional_notes: "",
         timeframe: "flexible" as const,
         price: 0,
+        address: "",
       }),
       service_items: serviceItems
     },

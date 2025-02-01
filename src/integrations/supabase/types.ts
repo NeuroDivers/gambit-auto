@@ -414,6 +414,7 @@ export type Database = {
       work_orders: {
         Row: {
           additional_notes: string | null
+          address: string | null
           assigned_bay_id: string | null
           contact_preference: Database["public"]["Enums"]["contact_preference"]
           created_at: string
@@ -434,6 +435,7 @@ export type Database = {
         }
         Insert: {
           additional_notes?: string | null
+          address?: string | null
           assigned_bay_id?: string | null
           contact_preference: Database["public"]["Enums"]["contact_preference"]
           created_at?: string
@@ -454,6 +456,7 @@ export type Database = {
         }
         Update: {
           additional_notes?: string | null
+          address?: string | null
           assigned_bay_id?: string | null
           contact_preference?: Database["public"]["Enums"]["contact_preference"]
           created_at?: string
