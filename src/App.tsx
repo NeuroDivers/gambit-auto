@@ -6,6 +6,8 @@ import Auth from "./pages/Auth"
 import UserManagement from "./pages/UserManagement"
 import WorkOrders from "./pages/WorkOrders"
 import NotFound from "./pages/NotFound"
+import Invoices from "./pages/Invoices"
+import InvoiceDetails from "./pages/InvoiceDetails"
 
 const queryClient = new QueryClient()
 
@@ -25,6 +27,14 @@ const router = createBrowserRouter([
   {
     path: "/work-orders",
     element: <WorkOrders />,
+  },
+  {
+    path: "/invoices",
+    element: <Invoices />,
+  },
+  {
+    path: "/invoices/:id",
+    element: <InvoiceDetails />,
   },
   {
     path: "*",

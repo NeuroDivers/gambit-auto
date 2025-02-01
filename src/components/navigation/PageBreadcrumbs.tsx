@@ -14,6 +14,7 @@ const routeNames: Record<string, string> = {
   "user-management": "User Management",
   "work-orders": "Work Orders",
   "auth": "Authentication",
+  "invoices": "Invoices",
 };
 
 export function PageBreadcrumbs() {
