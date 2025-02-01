@@ -25,8 +25,10 @@ export const formSchema = z.object({
   price: z.number().min(0, "Price must be a positive number").default(0),
 })
 
+export type WorkOrderFormValues = z.infer<typeof formSchema>
+
 type WorkOrderFormFieldsProps = {
-  form: UseFormReturn<z.infer<typeof formSchema>>
+  form: UseFormReturn<WorkOrderFormValues>
   onFileUpload: (file: File) => Promise<void>
   mediaUrl: string | null
   uploading: boolean
