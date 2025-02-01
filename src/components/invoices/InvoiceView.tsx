@@ -10,13 +10,14 @@ import { VehicleInfo } from "./sections/VehicleInfo";
 import { ServicesList } from "./sections/ServicesList";
 import { InvoiceTotals } from "./sections/InvoiceTotals";
 import { InvoiceFooter } from "./sections/InvoiceFooter";
+import { Printer } from "lucide-react";
 
 type InvoiceViewProps = {
   invoiceId?: string;
 }
 
 export function InvoiceView({ invoiceId }: InvoiceViewProps) {
-  const componentRef = useRef<HTMLDivElement>(null);
+  const printRef = useRef<HTMLDivElement>(null);
 
   const { data: invoice, isLoading } = useQuery({
     queryKey: ["invoice", invoiceId],
@@ -43,14 +44,9 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
   });
 
   const handlePrint = useReactToPrint({
-    documentTitle: 'Invoice',
+    content: () => printRef.current,
+    documentTitle: `Invoice-${invoice?.invoice_number}`,
     onAfterPrint: () => console.log('Printed successfully'),
-    print: () => {
-      if (componentRef.current) {
-        return Promise.resolve(componentRef.current);
-      }
-      return Promise.reject('No content to print');
-    }
   });
 
   if (isLoading) {
@@ -68,7 +64,7 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
 
   return (
     <div className="max-w-3xl mx-auto p-6">
-      <Card ref={componentRef} className="p-6">
+      <Card ref={printRef} className="p-6">
         <CardContent className="space-y-6">
           <InvoiceHeader
             invoiceNumber={invoice.invoice_number}
@@ -112,7 +108,10 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
       </Card>
 
       <div className="mt-6 text-center">
-        <Button onClick={() => handlePrint()}>Print Invoice</Button>
+        <Button onClick={handlePrint} className="gap-2">
+          <Printer className="h-4 w-4" />
+          Print Invoice
+        </Button>
       </div>
     </div>
   );

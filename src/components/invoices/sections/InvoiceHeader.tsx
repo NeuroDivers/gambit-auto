@@ -33,6 +33,10 @@ export function InvoiceHeader({ invoiceNumber, createdAt, dueDate }: InvoiceHead
               src={businessProfile.logo_url} 
               alt="Business Logo" 
               className="h-16 w-16 object-contain"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+              }}
             />
           )}
           <div>
