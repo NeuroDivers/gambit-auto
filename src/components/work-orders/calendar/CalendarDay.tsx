@@ -25,7 +25,7 @@ export function CalendarDay({ date, workOrders, isCurrentMonth }: CalendarDayPro
     <>
       <div 
         className={cn(
-          "relative min-h-[120px] p-2 border border-border/20 rounded-md cursor-pointer transition-all duration-200 day-container",
+          "relative min-h-[120px] p-2 border border-[#e5e7eb]/20 rounded-md cursor-pointer transition-all duration-200 day-container",
           !isCurrentMonth && "opacity-50 bg-background/50",
           "hover:border-dashed hover:border-primary/50"
         )}
