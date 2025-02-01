@@ -68,7 +68,7 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
   if (!invoice) return null;
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full max-w-[1400px] mx-auto space-y-6">
       <div className="flex justify-end">
         <Button onClick={() => handlePrint()} className="gap-2">
           <Printer className="h-4 w-4" />
@@ -76,15 +76,28 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
         </Button>
       </div>
 
-      <Card ref={printRef} className="w-full">
-        <CardContent className="space-y-6 p-8">
-          <InvoiceHeader
-            invoiceNumber={invoice.invoice_number}
-            createdAt={invoice.created_at}
-            dueDate={invoice.due_date}
-          />
+      <Card ref={printRef} className="w-full bg-white shadow-lg">
+        <CardContent className="p-8 space-y-8">
+          <div className="relative">
+            <div className="absolute right-0 top-0">
+              <div className={`px-4 py-2 rounded-full text-sm font-medium ${
+                invoice.status === 'paid' 
+                  ? 'bg-[#F2FCE2] text-green-700'
+                  : invoice.status === 'overdue'
+                  ? 'bg-red-50 text-red-700'
+                  : 'bg-[#FEF7CD] text-yellow-700'
+              }`}>
+                {invoice.status.toUpperCase()}
+              </div>
+            </div>
+            <InvoiceHeader
+              invoiceNumber={invoice.invoice_number}
+              createdAt={invoice.created_at}
+              dueDate={invoice.due_date}
+            />
+          </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-8 bg-[#F1F0FB] p-6 rounded-lg">
             <CustomerInfo
               firstName={invoice.work_order.first_name}
               lastName={invoice.work_order.last_name}
@@ -102,16 +115,18 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
 
           <ServicesList services={invoice.work_order.services || []} />
 
-          <InvoiceTotals
-            subtotal={invoice.subtotal}
-            taxAmount={invoice.tax_amount}
-            total={invoice.total}
-          />
+          <div className="bg-[#F1F0FB] p-6 rounded-lg">
+            <InvoiceTotals
+              subtotal={invoice.subtotal}
+              taxAmount={invoice.tax_amount}
+              total={invoice.total}
+            />
+          </div>
 
           {invoice.notes && (
-            <div className="border-t pt-4">
-              <h2 className="font-semibold mb-2">Notes</h2>
-              <p className="text-muted-foreground">{invoice.notes}</p>
+            <div className="border-t border-gray-200 pt-6">
+              <h2 className="font-semibold mb-2 text-gray-700">Notes</h2>
+              <p className="text-gray-600">{invoice.notes}</p>
             </div>
           )}
 
