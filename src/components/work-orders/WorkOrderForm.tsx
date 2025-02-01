@@ -32,14 +32,14 @@ export function WorkOrderForm({ workOrder, onSuccess }: WorkOrderFormProps) {
     }
   })
 
-  const { onSubmit, isPending } = useWorkOrderFormSubmission({
+  const { handleSubmit, isPending } = useWorkOrderFormSubmission({
     workOrderId: workOrder?.id,
     onSuccess
   })
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         <WorkOrderFormFields form={form} />
         <div className="flex justify-end gap-4">
           <Button type="submit" disabled={isPending}>

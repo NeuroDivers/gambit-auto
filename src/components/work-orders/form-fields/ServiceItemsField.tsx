@@ -4,7 +4,13 @@ import { Label } from "@/components/ui/label"
 import { Plus } from "lucide-react"
 import { ServiceItem } from "./service-items/ServiceItem"
 import { ServiceList } from "./service-items/ServiceList"
-import { ServiceItemType } from "./service-items/types"
+
+export type ServiceItemType = {
+  service_id: string
+  service_name: string
+  quantity: number
+  unit_price: number
+}
 
 type ServiceItemsFieldProps = {
   items: ServiceItemType[]
@@ -16,7 +22,7 @@ export function ServiceItemsField({ items, setItems }: ServiceItemsFieldProps) {
     setItems([
       ...items,
       {
-        service_id: '',  // Provide a default value
+        service_id: '',
         service_name: '',
         quantity: 1,
         unit_price: 0,

@@ -53,7 +53,6 @@ export function WorkOrderCardActions({ workOrder, onDelete }: WorkOrderCardActio
     }
   }
 
-  // Ensure workOrderServices is properly typed
   const services = workOrder.work_order_services?.map(service => ({
     name: service.service_types?.name || 'Unknown Service'
   })) || []
