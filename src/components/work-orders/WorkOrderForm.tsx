@@ -50,7 +50,7 @@ export function WorkOrderForm({ initialData, onSuccess }: WorkOrderFormProps) {
       
       return data?.map(service => ({
         service_id: service.service_id,
-        service_name: service.service_types.name,
+        service_name: service.service_types?.name || '',
         quantity: service.quantity,
         unit_price: service.unit_price
       })) ?? []

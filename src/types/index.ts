@@ -14,6 +14,7 @@ export type WorkOrder = {
   status: string
   created_at: string
   price?: number | null
+  address?: string | null
   work_order_services: Array<{
     service_id: string
     quantity: number

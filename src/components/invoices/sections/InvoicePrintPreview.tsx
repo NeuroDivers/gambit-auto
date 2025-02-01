@@ -20,7 +20,7 @@ export function InvoicePrintPreview({ invoice }: InvoicePrintPreviewProps) {
         margin: 20mm;
       }
     `,
-    content: () => componentRef.current,
+    contentRef: () => componentRef.current,
   })
 
   if (!invoice) {
