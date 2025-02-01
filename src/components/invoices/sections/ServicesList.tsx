@@ -15,33 +15,33 @@ type ServicesListProps = {
 export function ServicesList({ services = [] }: ServicesListProps) {
   if (!services || services.length === 0) {
     return (
-      <div className="border-t pt-4">
-        <h2 className="font-semibold mb-4 text-[#222222]">Services / Services</h2>
-        <p className="text-[#555555]">No services added</p>
+      <div className="pt-4">
+        <h2 className="font-semibold mb-4 text-[#1A1F2C]">Services / Services</h2>
+        <p className="text-[#8E9196]">No services added</p>
       </div>
     );
   }
 
   return (
-    <div className="border-t pt-4">
+    <div className="pt-4">
       <table className="w-full">
         <thead>
-          <tr className="text-left text-[#222222]">
-            <th className="py-2">Service / Service</th>
-            <th className="py-2">Description / Description</th>
-            <th className="py-2 text-right">Quantité / Quantity</th>
-            <th className="py-2 text-right">Prix unitaire / Unit Price</th>
-            <th className="py-2 text-right">Montant / Amount</th>
+          <tr className="border-b border-[#F1F0FB]">
+            <th className="py-2 text-left text-[#8E9196] font-medium">Service / Service</th>
+            <th className="py-2 text-left text-[#8E9196] font-medium">Description / Description</th>
+            <th className="py-2 text-right text-[#8E9196] font-medium">Quantité / Quantity</th>
+            <th className="py-2 text-right text-[#8E9196] font-medium">Prix unitaire / Unit Price</th>
+            <th className="py-2 text-right text-[#8E9196] font-medium">Montant / Amount</th>
           </tr>
         </thead>
-        <tbody className="text-[#333333]">
+        <tbody>
           {services.map((service) => (
-            <tr key={service.id} className="border-t">
-              <td className="py-2">{service.service.name}</td>
-              <td className="py-2">{service.service.name}</td>
-              <td className="py-2 text-right">1</td>
-              <td className="py-2 text-right">{formatCurrency(service.service.price || 0)}</td>
-              <td className="py-2 text-right">{formatCurrency(service.service.price || 0)}</td>
+            <tr key={service.id} className="border-b border-[#F1F0FB]">
+              <td className="py-3 text-[#1A1F2C]">{service.service.name}</td>
+              <td className="py-3 text-[#1A1F2C]">{service.service.name}</td>
+              <td className="py-3 text-right text-[#1A1F2C]">1</td>
+              <td className="py-3 text-right text-[#1A1F2C]">{formatCurrency(service.service.price || 0)}</td>
+              <td className="py-3 text-right text-[#1A1F2C]">{formatCurrency(service.service.price || 0)}</td>
             </tr>
           ))}
         </tbody>

@@ -7,11 +7,13 @@ type CustomerInfoProps = {
 
 export function CustomerInfo({ firstName, lastName, email, phoneNumber }: CustomerInfoProps) {
   return (
-    <div className="border-t pt-4">
-      <h2 className="font-semibold mb-2 text-[#222222]">Customer Information</h2>
-      <p className="text-[#333333]">{firstName} {lastName}</p>
-      <p className="text-[#333333]">{email}</p>
-      <p className="text-[#333333]">{phoneNumber}</p>
+    <div>
+      <h2 className="font-semibold mb-2 text-[#1A1F2C]">Facturer à / Bill To:</h2>
+      <div className="space-y-1">
+        <p className="text-[#1A1F2C]">{firstName} {lastName}</p>
+        <p className="text-[#8E9196]">{email}</p>
+        <p className="text-[#8E9196]">{phoneNumber}</p>
+      </div>
     </div>
   );
 }

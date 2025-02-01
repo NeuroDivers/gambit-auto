@@ -40,11 +40,12 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
     documentTitle: `Invoice-${invoice?.invoice_number}`,
     onAfterPrint: () => console.log('Printed successfully'),
     pageStyle: "@page { size: auto; margin: 0mm; }",
-    onBeforePrint: () => {
+    onBeforePrint: async () => {
       if (componentRef.current) {
         const element = componentRef.current
         element.style.background = 'white'
       }
+      return Promise.resolve()
     }
   })
 
@@ -58,9 +59,9 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
   }
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto space-y-6">
+    <div className="w-full max-w-[1000px] mx-auto space-y-6 p-6">
       <PrintButton onPrint={handlePrint} />
-      <div ref={componentRef}>
+      <div ref={componentRef} className="bg-white rounded-lg shadow-lg p-8">
         <InvoiceCard invoice={invoice} />
       </div>
     </div>

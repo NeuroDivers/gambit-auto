@@ -1,7 +1,6 @@
 import { formatDate } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Badge } from "@/components/ui/badge";
 
 type InvoiceHeaderProps = {
   invoiceNumber: string;
@@ -25,8 +24,8 @@ export function InvoiceHeader({ invoiceNumber, createdAt, dueDate }: InvoiceHead
   });
 
   return (
-    <div className="flex justify-between">
-      <div className="space-y-1">
+    <div className="flex justify-between items-start">
+      <div className="space-y-2">
         <div className="flex items-center gap-4">
           {businessProfile?.logo_url && (
             <img 
@@ -39,20 +38,17 @@ export function InvoiceHeader({ invoiceNumber, createdAt, dueDate }: InvoiceHead
               }}
             />
           )}
-          <div>
-            <h1 className="text-2xl font-bold">{businessProfile?.company_name}</h1>
-            <p className="text-sm text-muted-foreground">{businessProfile?.address}</p>
-            <p className="text-sm text-muted-foreground">{businessProfile?.phone_number}</p>
-            <p className="text-sm text-muted-foreground">{businessProfile?.email}</p>
+          <div className="space-y-1">
+            <h1 className="text-xl font-bold text-[#1A1F2C]">{businessProfile?.company_name}</h1>
+            <p className="text-sm text-[#8E9196]">{businessProfile?.address}</p>
+            <p className="text-sm text-[#8E9196]">{businessProfile?.phone_number}</p>
+            <p className="text-sm text-[#8E9196]">{businessProfile?.email}</p>
           </div>
         </div>
       </div>
       <div className="text-right space-y-2">
-        <div className="flex flex-col items-end gap-2">
-          <h2 className="text-xl font-semibold text-primary">FACTURE / INVOICE</h2>
-          <Badge variant="outline">PENDING</Badge>
-        </div>
-        <div className="text-sm text-muted-foreground space-y-1">
+        <h2 className="text-2xl font-bold text-[#9b87f5]">FACTURE / INVOICE</h2>
+        <div className="text-sm text-[#8E9196] space-y-1">
           <p>No. de facture / Invoice #: {invoiceNumber}</p>
           <p>Date d'émission / Issue Date: {formatDate(createdAt)}</p>
           {dueDate && (
