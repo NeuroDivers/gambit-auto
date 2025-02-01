@@ -1,8 +1,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { UserCard } from "./UserCard";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { UserFilters } from "./UserFilters";
 
 type UserRole = "admin" | "manager" | "sidekick" | "client";
 
@@ -18,6 +19,8 @@ type User = {
 
 export const UserList = () => {
   const queryClient = useQueryClient();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
   
   const { data: users, isLoading } = useQuery({
     queryKey: ["users"],
@@ -67,6 +70,16 @@ export const UserList = () => {
     };
   }, [queryClient]);
 
+  const filteredUsers = users?.filter(user => {
+    const matchesSearch = searchQuery.toLowerCase() === "" || 
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesRole = roleFilter === "all" || user.user_roles?.role === roleFilter;
+    
+    return matchesSearch && matchesRole;
+  });
+
   if (isLoading) {
     return (
       <div className="grid gap-4">
@@ -78,10 +91,23 @@ export const UserList = () => {
   }
 
   return (
-    <div className="grid gap-4">
-      {users?.map((user) => (
-        <UserCard key={user.id} user={user} />
-      ))}
+    <div>
+      <UserFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        roleFilter={roleFilter}
+        onRoleFilterChange={setRoleFilter}
+      />
+      <div className="grid gap-4">
+        {filteredUsers?.map((user) => (
+          <UserCard key={user.id} user={user} />
+        ))}
+        {filteredUsers?.length === 0 && (
+          <div className="text-center py-8 text-white/60">
+            No users found matching your filters.
+          </div>
+        )}
+      </div>
     </div>
   );
 };
