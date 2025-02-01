@@ -1,6 +1,4 @@
 import { Button } from "@/components/ui/button"
-import { CreateWorkOrderDialog } from "../../work-orders/CreateWorkOrderDialog"
-import { useState } from "react"
 import { QuoteRequest } from "../types"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
@@ -11,7 +9,6 @@ type QuoteCardActionsProps = {
 }
 
 export function QuoteCardActions({ request }: QuoteCardActionsProps) {
-  const [isWorkOrderDialogOpen, setIsWorkOrderDialogOpen] = useState(false)
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
@@ -57,25 +54,6 @@ export function QuoteCardActions({ request }: QuoteCardActionsProps) {
         >
           Approve
         </Button>
-      </div>
-    )
-  }
-
-  if (request.status === "approved") {
-    return (
-      <div className="flex justify-end pt-3 border-t border-border/20">
-        <Button
-          size="sm"
-          onClick={() => setIsWorkOrderDialogOpen(true)}
-          className="hover:bg-primary/20"
-        >
-          Convert to Work Order
-        </Button>
-        <CreateWorkOrderDialog
-          open={isWorkOrderDialogOpen}
-          onOpenChange={setIsWorkOrderDialogOpen}
-          quoteRequest={request}
-        />
       </div>
     )
   }

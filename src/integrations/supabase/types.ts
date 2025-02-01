@@ -340,60 +340,6 @@ export type Database = {
         }
         Relationships: []
       }
-      work_orders: {
-        Row: {
-          assigned_bay_id: string | null
-          assigned_sidekick_id: string | null
-          created_at: string
-          end_date: string
-          id: string
-          notes: string | null
-          quote_request_id: string | null
-          start_date: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          assigned_bay_id?: string | null
-          assigned_sidekick_id?: string | null
-          created_at?: string
-          end_date: string
-          id?: string
-          notes?: string | null
-          quote_request_id?: string | null
-          start_date: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          assigned_bay_id?: string | null
-          assigned_sidekick_id?: string | null
-          created_at?: string
-          end_date?: string
-          id?: string
-          notes?: string | null
-          quote_request_id?: string | null
-          start_date?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "work_orders_assigned_bay_id_fkey"
-            columns: ["assigned_bay_id"]
-            isOneToOne: false
-            referencedRelation: "service_bays"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "work_orders_quote_request_id_fkey"
-            columns: ["quote_request_id"]
-            isOneToOne: false
-            referencedRelation: "quote_requests"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
