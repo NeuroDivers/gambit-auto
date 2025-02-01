@@ -2,11 +2,10 @@ import { useForm } from "react-hook-form"
 import { Form } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { WorkOrderFormFields } from "./WorkOrderFormFields"
-import { WorkOrder } from "@/types"
-import { useWorkOrderFormSubmission } from "./form-sections/useWorkOrderFormSubmission"
 import { WorkOrderFormValues, WorkOrderFormProps } from "./types"
+import { useWorkOrderFormSubmission } from "./form-sections/useWorkOrderFormSubmission"
 
-export function WorkOrderForm({ workOrder, initialData, onSuccess }: WorkOrderFormProps) {
+export function WorkOrderForm({ workOrder, onSuccess }: WorkOrderFormProps) {
   const form = useForm<WorkOrderFormValues>({
     defaultValues: {
       first_name: workOrder?.first_name || "",
@@ -31,11 +30,13 @@ export function WorkOrderForm({ workOrder, initialData, onSuccess }: WorkOrderFo
     }
   })
 
-  const { handleSubmit, formState: { isSubmitting } } = useWorkOrderFormSubmission({
+  const { handleSubmit } = useWorkOrderFormSubmission({
     initialData: workOrder,
     mediaUrl: workOrder?.media_url || null,
     onSuccess
   })
+
+  const { isSubmitting } = form.formState
 
   return (
     <Form {...form}>

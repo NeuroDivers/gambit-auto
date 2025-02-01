@@ -1,5 +1,5 @@
 import { useToast } from "@/hooks/use-toast"
-import type { WorkOrderFormValues } from "../WorkOrderFormFields"
+import type { WorkOrderFormValues } from "../types"
 import { useWorkOrderCreate } from "./useWorkOrderCreate"
 import { useWorkOrderUpdate } from "./useWorkOrderUpdate"
 
