@@ -1,13 +1,14 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { InvoiceView } from "./InvoiceView"
 import { InvoiceListItem } from "./sections/InvoiceListItem"
 
 export function InvoiceList() {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const queryClient = useQueryClient()
 
   const { data: invoices, isLoading } = useQuery({
     queryKey: ["invoices"],
@@ -27,6 +28,30 @@ export function InvoiceList() {
       return data
     },
   })
+
+  useEffect(() => {
+    // Subscribe to changes
+    const channel = supabase
+      .channel('invoice-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all changes (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'invoices'
+        },
+        () => {
+          // Invalidate and refetch invoices
+          queryClient.invalidateQueries({ queryKey: ['invoices'] })
+        }
+      )
+      .subscribe()
+
+    // Cleanup subscription
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [queryClient])
 
   const updateInvoiceStatus = async (invoiceId: string, status: string) => {
     const { error } = await supabase
