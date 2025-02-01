@@ -32,7 +32,7 @@ export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
           invoice_items (*)
         `)
         .eq('id', invoiceId)
-        .single()
+        .maybeSingle()
 
       if (error) throw error
       return data
