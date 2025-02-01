@@ -1,11 +1,12 @@
-import { InvoiceItem } from '../types'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency } from "@/lib/utils"
+import { InvoiceItem } from "../types"
 
 type InvoiceServiceItemsProps = {
   items: InvoiceItem[]
+  setItems?: (items: InvoiceItem[]) => void
 }
 
-export function InvoiceServiceItems({ items }: InvoiceServiceItemsProps) {
+export function InvoiceServiceItems({ items, setItems }: InvoiceServiceItemsProps) {
   // Only show "No services added" if items is undefined or empty
   if (!items || items.length === 0) {
     return (
