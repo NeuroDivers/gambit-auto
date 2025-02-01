@@ -27,8 +27,8 @@ export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
   return (
     <FormField
       control={form.control}
-      name="service_ids"
-      render={() => (
+      name="service_items"
+      render={({ field }) => (
         <FormItem>
           <Card className="border-border/5 bg-[#221F26]/30">
             <CardContent className="p-4">
@@ -38,32 +38,47 @@ export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
                   <FormField
                     key={service.id}
                     control={form.control}
-                    name="service_ids"
-                    render={({ field }) => (
-                      <FormItem
-                        key={service.id}
-                        className="flex flex-row items-center space-x-3 space-y-0 rounded-md border border-border/5 p-3 bg-[#221F26]/20 hover:bg-[#2A2732]/20 transition-colors"
-                      >
-                        <Checkbox
-                          checked={field.value?.includes(service.id)}
-                          onCheckedChange={(checked) => {
-                            return checked
-                              ? field.onChange([...field.value, service.id])
-                              : field.onChange(
-                                  field.value?.filter(
-                                    (value: string) => value !== service.id
-                                  )
+                    name="service_items"
+                    render={({ field: serviceField }) => {
+                      const isSelected = serviceField.value?.some(
+                        (item: { service_id: string }) => item.service_id === service.id
+                      )
+                      return (
+                        <FormItem
+                          key={service.id}
+                          className="flex flex-row items-center space-x-3 space-y-0 rounded-md border border-border/5 p-3 bg-[#221F26]/20 hover:bg-[#2A2732]/20 transition-colors"
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                serviceField.onChange([
+                                  ...(serviceField.value || []),
+                                  {
+                                    service_id: service.id,
+                                    service_name: service.name,
+                                    quantity: 1,
+                                    unit_price: 0
+                                  }
+                                ])
+                              } else {
+                                serviceField.onChange(
+                                  serviceField.value?.filter(
+                                    (item: { service_id: string }) => item.service_id !== service.id
+                                  ) || []
                                 )
-                          }}
-                          className="border-primary/30 data-[state=checked]:bg-primary/50 data-[state=checked]:text-primary-foreground"
-                        />
-                        <div className="space-y-1 leading-none">
-                          <FormLabel className="text-white/80">
-                            {service.name}
-                          </FormLabel>
-                        </div>
-                      </FormItem>
-                    )}
+                              }
+                            }}
+                            className="border-primary/30 data-[state=checked]:bg-primary/50 data-[state=checked]:text-primary-foreground"
+                          />
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="text-white/80">
+                              {service.name}
+                            </FormLabel>
+                          </div>
+                        </FormItem>
+                      )
+                    }}
                   />
                 ))}
               </div>

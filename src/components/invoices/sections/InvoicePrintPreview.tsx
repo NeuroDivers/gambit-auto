@@ -13,7 +13,7 @@ export function InvoicePrintPreview({ invoice }: InvoicePrintPreviewProps) {
   const handlePrint = useReactToPrint({
     documentTitle: `Invoice-${invoice?.invoice_number}`,
     onAfterPrint: () => console.log('Printed successfully'),
-    removeAfterPrint: true,
+    content: () => componentRef.current,
     pageStyle: "@page { size: auto; margin: 20mm; }",
   })
 
