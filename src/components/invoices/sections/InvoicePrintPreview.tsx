@@ -1,7 +1,3 @@
-import { useRef } from 'react'
-import { useReactToPrint } from 'react-to-print'
-import { Button } from '@/components/ui/button'
-import { PrinterIcon } from 'lucide-react'
 import { Invoice } from '../types'
 import { InvoiceHeader } from './InvoiceHeader'
 import { CustomerInfo } from './CustomerInfo'
@@ -17,27 +13,13 @@ type InvoicePrintPreviewProps = {
 }
 
 export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPreviewProps) {
-  const componentRef = useRef<HTMLDivElement>(null)
-
-  const handlePrint = useReactToPrint({
-    documentTitle: `Invoice-${invoice?.invoice_number || 'preview'}`,
-    contentRef: componentRef,
-  })
-
   if (!invoice || !businessProfile) {
     return <div>No invoice data available</div>
   }
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-end">
-        <Button onClick={handlePrint} className="gap-2">
-          <PrinterIcon className="w-4 h-4" />
-          Print Invoice
-        </Button>
-      </div>
-
-      <div ref={componentRef} className="bg-white p-8 rounded-lg shadow-sm">
+      <div className="bg-white p-8 rounded-lg shadow-sm">
         <div className="max-w-4xl mx-auto space-y-8">
           <InvoiceHeader 
             invoiceNumber={invoice.invoice_number}
