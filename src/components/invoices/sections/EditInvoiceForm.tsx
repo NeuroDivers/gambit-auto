@@ -18,7 +18,7 @@ type EditInvoiceFormProps = {
 export function EditInvoiceForm({ form, onSubmit, isPending, invoiceId }: EditInvoiceFormProps) {
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[calc(100vh-8rem)] overflow-y-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-6">
             <InvoiceStatusField form={form} />
@@ -54,7 +54,7 @@ export function EditInvoiceForm({ form, onSubmit, isPending, invoiceId }: EditIn
 
         <InvoiceNotesField form={form} />
 
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end gap-4 sticky bottom-0 bg-background py-4 border-t">
           <Button variant="outline" type="button" onClick={() => form.reset()}>
             Reset
           </Button>
