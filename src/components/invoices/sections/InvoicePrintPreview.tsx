@@ -13,29 +13,24 @@ export function InvoicePrintPreview({ invoice }: InvoicePrintPreviewProps) {
   const componentRef = useRef<HTMLDivElement>(null)
 
   const handlePrint = useReactToPrint({
-    documentTitle: `Invoice-${invoice.invoice_number}`,
-    onBeforeGetContent: () => {
-      return new Promise((resolve) => {
-        resolve()
-      })
-    },
-    onAfterPrint: () => {
-      console.log("Printed successfully")
-    },
-    removeAfterPrint: true,
+    content: () => componentRef.current,
+    documentTitle: `Invoice-${invoice?.invoice_number}`,
     pageStyle: `
       @page {
         size: auto;
         margin: 20mm;
       }
     `,
-    content: () => componentRef.current,
   })
+
+  if (!invoice) {
+    return <div>No invoice data available</div>
+  }
 
   return (
     <div>
       <div className="flex justify-end mb-4">
-        <Button onClick={() => handlePrint()} className="gap-2">
+        <Button onClick={handlePrint} className="gap-2">
           <Printer className="w-4 h-4" />
           Print Invoice
         </Button>
@@ -104,7 +99,7 @@ export function InvoicePrintPreview({ invoice }: InvoicePrintPreviewProps) {
                 </tr>
               </thead>
               <tbody>
-                {invoice.invoice_items.map((item, index) => (
+                {invoice.invoice_items?.map((item, index) => (
                   <tr key={index} className="border-b">
                     <td className="py-2">{item.service_name}</td>
                     <td className="py-2">{item.description}</td>
