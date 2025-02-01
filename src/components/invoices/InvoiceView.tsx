@@ -4,21 +4,11 @@ import { toast } from "sonner"
 import { EditInvoiceForm } from './sections/EditInvoiceForm'
 import { InvoicePrintPreview } from './sections/InvoicePrintPreview'
 import { useForm } from "react-hook-form"
+import { InvoiceFormValues } from "./types"
 
 type InvoiceViewProps = {
   invoiceId?: string
   isEditing?: boolean
-}
-
-type FormValues = {
-  notes: string
-  status: string
-  invoice_items: Array<{
-    service_name: string
-    description: string
-    quantity: number
-    unit_price: number
-  }>
 }
 
 export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
@@ -49,28 +39,40 @@ export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
     enabled: !!invoiceId
   })
 
-  const form = useForm<FormValues>({
+  const form = useForm<InvoiceFormValues>({
     defaultValues: {
       notes: invoice?.notes || '',
       status: invoice?.status || 'draft',
-      invoice_items: invoice?.invoice_items || []
+      invoice_items: invoice?.invoice_items || [],
+      customer_name: invoice?.customer_name || '',
+      customer_email: invoice?.customer_email || '',
+      customer_address: invoice?.customer_address || '',
+      vehicle_make: invoice?.vehicle_make || '',
+      vehicle_model: invoice?.vehicle_model || '',
+      vehicle_year: invoice?.vehicle_year || 0,
+      vehicle_vin: invoice?.vehicle_vin || ''
     }
   })
 
   const updateInvoiceMutation = useMutation({
-    mutationFn: async (values: FormValues) => {
-      // Update invoice
+    mutationFn: async (values: InvoiceFormValues) => {
       const { error: invoiceError } = await supabase
         .from('invoices')
         .update({
           notes: values.notes,
-          status: values.status
+          status: values.status,
+          customer_name: values.customer_name,
+          customer_email: values.customer_email,
+          customer_address: values.customer_address,
+          vehicle_make: values.vehicle_make,
+          vehicle_model: values.vehicle_model,
+          vehicle_year: values.vehicle_year,
+          vehicle_vin: values.vehicle_vin
         })
         .eq('id', invoiceId)
 
       if (invoiceError) throw invoiceError
 
-      // Update invoice items
       const { error: itemsError } = await supabase
         .from('invoice_items')
         .upsert(
