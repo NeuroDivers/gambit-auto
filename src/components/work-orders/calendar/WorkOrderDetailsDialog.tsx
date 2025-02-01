@@ -25,7 +25,7 @@ export function WorkOrderDetailsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pr-12">
             <DialogTitle className="text-xl">Work Order Details</DialogTitle>
             <EditWorkOrderDialog quote={workOrder} />
           </div>
