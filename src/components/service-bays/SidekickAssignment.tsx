@@ -64,14 +64,14 @@ export function SidekickAssignment({ bayId, currentSidekickId }: SidekickAssignm
     <div className="space-y-2">
       <Label>Assigned Sidekick</Label>
       <Select
-        value={currentSidekickId || ""}
-        onValueChange={(value) => handleAssignSidekick(value || null)}
+        value={currentSidekickId || "none"}
+        onValueChange={(value) => handleAssignSidekick(value === "none" ? null : value)}
       >
         <SelectTrigger>
           <SelectValue placeholder="Select a sidekick" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">None</SelectItem>
+          <SelectItem value="none">None</SelectItem>
           {sidekicks?.map((sidekick) => (
             <SelectItem key={sidekick.id} value={sidekick.id}>
               {sidekick.first_name} {sidekick.last_name}
