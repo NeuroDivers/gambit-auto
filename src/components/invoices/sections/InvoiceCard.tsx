@@ -5,9 +5,10 @@ import { ServicesList } from "./ServicesList"
 import { InvoiceTotals } from "./InvoiceTotals"
 import { InvoiceFooter } from "./InvoiceFooter"
 import { InvoiceHeader } from "./InvoiceHeader"
+import { Invoice } from "../types"
 
 type InvoiceCardProps = {
-  invoice: any // Using any temporarily, should be properly typed
+  invoice: Invoice
 }
 
 export function InvoiceCard({ invoice }: InvoiceCardProps) {
@@ -24,17 +25,17 @@ export function InvoiceCard({ invoice }: InvoiceCardProps) {
 
       <div className="grid grid-cols-2 gap-8">
         <CustomerInfo
-          firstName={invoice.customer_name}
-          lastName=""
-          email={invoice.customer_email}
-          phoneNumber=""
+          customerName={invoice.customer_name || ''}
+          customerEmail={invoice.customer_email || ''}
+          customerPhone={invoice.customer_phone || ''}
+          customerAddress={invoice.customer_address || ''}
         />
 
         <VehicleInfo
-          year={invoice.vehicle_year}
-          make={invoice.vehicle_make}
-          model={invoice.vehicle_model}
-          serial={invoice.vehicle_vin}
+          make={invoice.vehicle_make || ''}
+          model={invoice.vehicle_model || ''}
+          year={invoice.vehicle_year || 0}
+          vin={invoice.vehicle_vin || ''}
         />
       </div>
 
