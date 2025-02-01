@@ -14,7 +14,7 @@ export function InvoiceView({ invoice }: { invoice: any }) {
     documentTitle: `Invoice-${invoice.invoice_number}`,
     onAfterPrint: () => console.log('Printed successfully'),
     pageStyle: "@page { size: auto; margin: 20mm; }",
-    content: () => printRef.current,
+    onBeforeGetContent: () => printRef.current,
   })
 
   const { data: business } = useQuery({
