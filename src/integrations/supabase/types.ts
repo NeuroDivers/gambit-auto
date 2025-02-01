@@ -121,42 +121,81 @@ export type Database = {
       }
       invoices: {
         Row: {
+          company_address: string | null
+          company_email: string | null
+          company_name: string | null
+          company_phone: string | null
           created_at: string
+          customer_address: string | null
+          customer_email: string | null
+          customer_name: string | null
           due_date: string | null
+          gst_number: string | null
           id: string
           invoice_number: string
           notes: string | null
+          qst_number: string | null
           status: string
           subtotal: number
           tax_amount: number
           total: number
           updated_at: string
+          vehicle_make: string | null
+          vehicle_model: string | null
+          vehicle_vin: string | null
+          vehicle_year: number | null
           work_order_id: string
         }
         Insert: {
+          company_address?: string | null
+          company_email?: string | null
+          company_name?: string | null
+          company_phone?: string | null
           created_at?: string
+          customer_address?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
           due_date?: string | null
+          gst_number?: string | null
           id?: string
           invoice_number: string
           notes?: string | null
+          qst_number?: string | null
           status?: string
           subtotal: number
           tax_amount: number
           total: number
           updated_at?: string
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_vin?: string | null
+          vehicle_year?: number | null
           work_order_id: string
         }
         Update: {
+          company_address?: string | null
+          company_email?: string | null
+          company_name?: string | null
+          company_phone?: string | null
           created_at?: string
+          customer_address?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
           due_date?: string | null
+          gst_number?: string | null
           id?: string
           invoice_number?: string
           notes?: string | null
+          qst_number?: string | null
           status?: string
           subtotal?: number
           tax_amount?: number
           total?: number
           updated_at?: string
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_vin?: string | null
+          vehicle_year?: number | null
           work_order_id?: string
         }
         Relationships: [
