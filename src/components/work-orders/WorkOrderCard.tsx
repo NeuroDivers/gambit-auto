@@ -19,7 +19,7 @@ export function WorkOrderCard({ request }: { request: WorkOrder }) {
               <p className="text-sm text-white/90">{request.additional_notes}</p>
             </div>
           )}
-          <WorkOrderCardActions request={request} />
+          <WorkOrderCardActions workOrder={request} />
         </div>
       </CardContent>
     </Card>

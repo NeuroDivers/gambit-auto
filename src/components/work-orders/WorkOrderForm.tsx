@@ -26,7 +26,8 @@ export function WorkOrderForm({ workOrder, initialData, onSuccess }: WorkOrderFo
         service_name: service.service_types?.name || 'Unknown Service',
         quantity: service.quantity,
         unit_price: service.unit_price || 0
-      })) || []
+      })) || [],
+      price: workOrder?.price || 0
     }
   })
 

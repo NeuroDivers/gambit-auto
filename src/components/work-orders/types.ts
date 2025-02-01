@@ -12,15 +12,11 @@ export type WorkOrderFormValues = {
   vehicle_model: string
   vehicle_year: number
   vehicle_serial: string
-  additional_notes: string
+  additional_notes?: string
   timeframe: "flexible" | "asap" | "within_week" | "within_month"
-  address: string
-  service_items: Array<{
-    service_id: string
-    service_name: string
-    quantity: number
-    unit_price: number
-  }>
+  address?: string
+  service_items: Array<ServiceItemType>
+  price?: number
 }
 
 export type WorkOrderFormProps = {
@@ -37,10 +33,11 @@ export type ServiceItemType = {
 }
 
 export type ServiceListProps = {
-  items: ServiceItemType[]
-  setItems: (items: ServiceItemType[]) => void
+  workOrderServices: ServiceItemType[]
+  onServicesChange: (services: ServiceItemType[]) => void
 }
 
 export type WorkOrderCardActionsProps = {
-  request: WorkOrder
+  workOrder: WorkOrder
+  onDelete?: () => void
 }

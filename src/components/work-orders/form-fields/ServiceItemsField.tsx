@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label"
 import { Plus } from "lucide-react"
 import { ServiceItem } from "./service-items/ServiceItem"
 import { ServiceList } from "./service-items/ServiceList"
-import { ServiceItemType, ServiceListProps } from "../types"
+import { ServiceItemType } from "../types"
 import { UseFormReturn } from "react-hook-form"
 import { WorkOrderFormValues } from "../types"
 
@@ -13,13 +13,14 @@ type ServiceItemsFieldProps = {
 }
 
 export function ServiceItemsField({ form }: ServiceItemsFieldProps) {
-  const items = form.watch('service_items')
-  const setItems = (newItems: ServiceItemType[]) => {
-    form.setValue('service_items', newItems)
+  const items = form.watch('service_items') || []
+  
+  const handleServicesChange = (newServices: ServiceItemType[]) => {
+    form.setValue('service_items', newServices)
   }
 
   const addItem = () => {
-    setItems([
+    handleServicesChange([
       ...items,
       {
         service_id: '',
@@ -45,7 +46,10 @@ export function ServiceItemsField({ form }: ServiceItemsFieldProps) {
           Add Service
         </Button>
       </div>
-      <ServiceList items={items} setItems={setItems} />
+      <ServiceList 
+        workOrderServices={items} 
+        onServicesChange={handleServicesChange}
+      />
     </div>
   )
 }
