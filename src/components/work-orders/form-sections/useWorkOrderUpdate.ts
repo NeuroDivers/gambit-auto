@@ -29,6 +29,7 @@ export function useWorkOrderUpdate() {
         media_url: mediaUrl,
         timeframe: data.timeframe,
         price: data.price,
+        address: data.address // Add this line to save the address
       })
       .eq("id", workOrderId)
 
@@ -43,18 +44,20 @@ export function useWorkOrderUpdate() {
     if (deleteError) throw deleteError
 
     // Insert new services with quantity and unit price
-    const { error: servicesError } = await supabase
-      .from("work_order_services")
-      .insert(
-        data.service_items.map(item => ({
-          work_order_id: workOrderId,
-          service_id: item.service_id,
-          quantity: item.quantity,
-          unit_price: item.unit_price
-        }))
-      )
+    if (data.service_items.length > 0) {
+      const { error: servicesError } = await supabase
+        .from("work_order_services")
+        .insert(
+          data.service_items.map(item => ({
+            work_order_id: workOrderId,
+            service_id: item.service_id,
+            quantity: item.quantity,
+            unit_price: item.unit_price
+          }))
+        )
 
-    if (servicesError) throw servicesError
+      if (servicesError) throw servicesError
+    }
 
     toast({
       title: "Success",
