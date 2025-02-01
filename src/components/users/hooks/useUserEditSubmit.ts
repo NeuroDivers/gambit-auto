@@ -29,23 +29,32 @@ export const useUserEditSubmit = ({ userId, currentRole, onSuccess }: UseUserEdi
 
       // Update role if changed
       if (values.role !== currentRole) {
-        // First, delete the existing role
-        const { error: deleteError } = await supabase
+        // Check if a role already exists
+        const { data: existingRole } = await supabase
           .from("user_roles")
-          .delete()
-          .eq("user_id", userId);
+          .select()
+          .eq("user_id", userId)
+          .single();
 
-        if (deleteError) throw deleteError;
+        if (existingRole) {
+          // Update existing role
+          const { error: roleError } = await supabase
+            .from("user_roles")
+            .update({ role: values.role })
+            .eq("user_id", userId);
 
-        // Then, insert the new role
-        const { error: roleError } = await supabase
-          .from("user_roles")
-          .insert({
-            user_id: userId,
-            role: values.role,
-          });
+          if (roleError) throw roleError;
+        } else {
+          // Insert new role
+          const { error: roleError } = await supabase
+            .from("user_roles")
+            .insert({
+              user_id: userId,
+              role: values.role,
+            });
 
-        if (roleError) throw roleError;
+          if (roleError) throw roleError;
+        }
       }
 
       // Update work order assignments if role is sidekick
