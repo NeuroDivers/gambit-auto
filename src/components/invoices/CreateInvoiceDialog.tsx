@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -10,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 import { InvoiceFormFields } from "./form-sections/InvoiceFormFields"
+import { useInvoiceFormSubmission } from "./form-sections/useInvoiceFormSubmission"
 
 type CreateInvoiceDialogProps = {
   open: boolean
@@ -28,14 +30,13 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
   const [notes, setNotes] = useState("")
   const [selectedWorkOrderId, setSelectedWorkOrderId] = useState<string>("")
   const [invoiceItems, setInvoiceItems] = useState<any[]>([])
-  const { toast } = useToast()
   
   const { data: workOrders } = useQuery({
     queryKey: ["work-orders"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("work_orders")
-        .select("*")
+        .select("*, work_order_services(service_id, quantity, unit_price, service_types(name))")
         .order("created_at", { ascending: false })
       
       if (error) throw error
@@ -82,89 +83,20 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
       setVehicleYear(workOrder.vehicle_year)
       setVehicleVin(workOrder.vehicle_serial)
       setNotes(workOrder.additional_notes || "")
+      
+      // Convert work order services to invoice items
+      const items = workOrder.work_order_services.map((service: any) => ({
+        service_name: service.service_types.name,
+        description: service.service_types.name,
+        quantity: service.quantity,
+        unit_price: service.unit_price,
+      }))
+      setInvoiceItems(items)
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    try {
-      let workOrderId = selectedWorkOrderId
-      
-      if (!workOrderId) {
-        const { data: workOrder, error: workOrderError } = await supabase
-          .from("work_orders")
-          .insert({
-            first_name: customerName.split(" ")[0] || "",
-            last_name: customerName.split(" ")[1] || "",
-            email: customerEmail,
-            phone_number: customerPhone,
-            contact_preference: "email",
-            vehicle_make: vehicleMake,
-            vehicle_model: vehicleModel,
-            vehicle_year: vehicleYear,
-            vehicle_serial: vehicleVin,
-            additional_notes: notes,
-            status: "completed"
-          })
-          .select()
-          .single()
-
-        if (workOrderError) throw workOrderError
-        workOrderId = workOrder.id
-      }
-
-      const { data: invoice, error: invoiceError } = await supabase
-        .rpc('create_invoice_from_work_order', {
-          work_order_id: workOrderId
-        })
-
-      if (invoiceError) throw invoiceError
-
-      // Update invoice with customer and business information
-      const { error: updateError } = await supabase
-        .from("invoices")
-        .update({
-          customer_name: customerName,
-          customer_email: customerEmail,
-          customer_address: customerAddress,
-          vehicle_make: vehicleMake,
-          vehicle_model: vehicleModel,
-          vehicle_year: vehicleYear,
-          vehicle_vin: vehicleVin,
-          company_name: businessProfile?.company_name || null,
-          company_phone: businessProfile?.phone_number || null,
-          company_email: businessProfile?.email || null,
-          company_address: businessProfile?.address || null,
-          gst_number: businessTaxes?.find(tax => tax.tax_type === 'GST')?.tax_number || null,
-          qst_number: businessTaxes?.find(tax => tax.tax_type === 'QST')?.tax_number || null,
-        })
-        .eq("id", invoice)
-
-      if (updateError) throw updateError
-
-      // Insert invoice items
-      if (invoiceItems.length > 0) {
-        const { error: itemsError } = await supabase
-          .from("invoice_items")
-          .insert(
-            invoiceItems.map(item => ({
-              invoice_id: invoice,
-              service_name: item.service_name,
-              description: item.description,
-              quantity: item.quantity,
-              unit_price: item.unit_price,
-            }))
-          )
-
-        if (itemsError) throw itemsError
-      }
-
-      toast({
-        title: "Success",
-        description: "Invoice created successfully",
-      })
-
+  const { handleSubmit } = useInvoiceFormSubmission({
+    onSuccess: () => {
       onOpenChange(false)
       setCustomerName("")
       setCustomerEmail("")
@@ -177,20 +109,28 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
       setNotes("")
       setSelectedWorkOrderId("")
       setInvoiceItems([])
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
-    }
-  }
+    },
+    selectedWorkOrderId,
+    customerName,
+    customerEmail,
+    customerAddress,
+    vehicleMake,
+    vehicleModel,
+    vehicleYear,
+    vehicleVin,
+    invoiceItems,
+    businessProfile,
+    businessTaxes
+  })
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create Invoice</DialogTitle>
+          <DialogDescription>
+            Create a new invoice from scratch or convert an existing work order.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <InvoiceFormFields
