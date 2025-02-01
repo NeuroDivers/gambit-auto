@@ -9,11 +9,7 @@ import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { CustomerInfoFields } from "./form-sections/CustomerInfoFields"
-import { VehicleInfoFields } from "./form-sections/VehicleInfoFields"
-import { WorkOrderSelect } from "./form-sections/WorkOrderSelect"
+import { InvoiceFormFields } from "./form-sections/InvoiceFormFields"
 
 type CreateInvoiceDialogProps = {
   open: boolean
@@ -31,6 +27,7 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
   const [vehicleVin, setVehicleVin] = useState("")
   const [notes, setNotes] = useState("")
   const [selectedWorkOrderId, setSelectedWorkOrderId] = useState<string>("")
+  const [invoiceItems, setInvoiceItems] = useState<any[]>([])
   const { toast } = useToast()
   
   const { data: workOrders } = useQuery({
@@ -146,6 +143,23 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
 
       if (updateError) throw updateError
 
+      // Insert invoice items
+      if (invoiceItems.length > 0) {
+        const { error: itemsError } = await supabase
+          .from("invoice_items")
+          .insert(
+            invoiceItems.map(item => ({
+              invoice_id: invoice,
+              service_name: item.service_name,
+              description: item.description,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+            }))
+          )
+
+        if (itemsError) throw itemsError
+      }
+
       toast({
         title: "Success",
         description: "Invoice created successfully",
@@ -162,6 +176,7 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
       setVehicleVin("")
       setNotes("")
       setSelectedWorkOrderId("")
+      setInvoiceItems([])
     } catch (error: any) {
       toast({
         title: "Error",
@@ -178,13 +193,7 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
           <DialogTitle>Create Invoice</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <WorkOrderSelect
-            workOrders={workOrders}
-            selectedWorkOrderId={selectedWorkOrderId}
-            onWorkOrderSelect={handleWorkOrderSelect}
-          />
-
-          <CustomerInfoFields
+          <InvoiceFormFields
             customerName={customerName}
             setCustomerName={setCustomerName}
             customerEmail={customerEmail}
@@ -193,9 +202,6 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
             setCustomerPhone={setCustomerPhone}
             customerAddress={customerAddress}
             setCustomerAddress={setCustomerAddress}
-          />
-
-          <VehicleInfoFields
             vehicleMake={vehicleMake}
             setVehicleMake={setVehicleMake}
             vehicleModel={vehicleModel}
@@ -204,18 +210,14 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
             setVehicleYear={setVehicleYear}
             vehicleVin={vehicleVin}
             setVehicleVin={setVehicleVin}
+            notes={notes}
+            setNotes={setNotes}
+            selectedWorkOrderId={selectedWorkOrderId}
+            onWorkOrderSelect={handleWorkOrderSelect}
+            workOrders={workOrders || []}
+            invoiceItems={invoiceItems}
+            setInvoiceItems={setInvoiceItems}
           />
-
-          <div>
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add any notes..."
-              className="min-h-[100px]"
-            />
-          </div>
           <Button type="submit" className="w-full">
             Create Invoice
           </Button>
