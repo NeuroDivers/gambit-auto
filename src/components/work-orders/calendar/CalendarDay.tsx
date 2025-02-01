@@ -1,7 +1,6 @@
 import { format } from "date-fns"
-import { WorkOrder } from "../types"
 import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+import { WorkOrder } from "../types"
 
 type CalendarDayProps = {
   date: Date
@@ -42,11 +41,8 @@ const getServiceColor = (serviceName: string) => {
 
 export function CalendarDay({ date, workOrders, isCurrentMonth }: CalendarDayProps) {
   return (
-    <div className={cn(
-      "min-h-[120px] p-2 border border-border/20 rounded-md",
-      !isCurrentMonth && "opacity-50 bg-background/50"
-    )}>
-      <div className="font-medium text-sm mb-2">
+    <div className={`p-2 border border-border/40 min-h-[120px] ${!isCurrentMonth && 'opacity-40'}`}>
+      <div className="font-medium text-sm mb-1">
         {format(date, 'd')}
       </div>
       <div className="space-y-1">
