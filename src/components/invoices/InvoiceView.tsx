@@ -1,12 +1,9 @@
-import { useReactToPrint } from 'react-to-print'
-import { useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { InvoiceCard } from "./sections/InvoiceCard"
-import { useForm } from "react-hook-form"
 import { toast } from "sonner"
-import { InvoiceActions } from './sections/InvoiceActions'
 import { InvoiceEditForm } from './sections/InvoiceEditForm'
+import { InvoicePrintPreview } from './sections/InvoicePrintPreview'
+import { useForm } from "react-hook-form"
 
 type InvoiceViewProps = {
   invoiceId?: string
@@ -19,7 +16,6 @@ type FormValues = {
 }
 
 export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
-  const componentRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
 
   const { data: invoice, isLoading } = useQuery({
@@ -72,13 +68,6 @@ export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
     }
   })
 
-  const handlePrint = useReactToPrint({
-    documentTitle: `Invoice-${invoice?.invoice_number}`,
-    onAfterPrint: () => console.log('Printed successfully'),
-    pageStyle: "@page { size: auto; margin: 0mm; }",
-    content: () => componentRef.current,
-  })
-
   if (isLoading) {
     return (
       <div className="animate-pulse space-y-4">
@@ -98,15 +87,5 @@ export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
     )
   }
 
-  return (
-    <div className="w-full max-w-[1000px] mx-auto space-y-6 p-6">
-      <InvoiceActions 
-        invoiceId={invoiceId} 
-        onPrint={handlePrint}
-      />
-      <div ref={componentRef} className="bg-white rounded-lg shadow-lg p-8">
-        <InvoiceCard invoice={invoice} />
-      </div>
-    </div>
-  )
+  return <InvoicePrintPreview invoice={invoice} invoiceId={invoiceId} />
 }
