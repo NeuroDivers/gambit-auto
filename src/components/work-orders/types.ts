@@ -1,3 +1,7 @@
+import { WorkOrder as BaseWorkOrder } from "@/types"
+
+export type WorkOrder = BaseWorkOrder
+
 export type WorkOrderFormValues = {
   first_name: string
   last_name: string
@@ -9,7 +13,7 @@ export type WorkOrderFormValues = {
   vehicle_year: number
   vehicle_serial: string
   additional_notes: string
-  timeframe: string
+  timeframe: "flexible" | "asap" | "within_week" | "within_month"
   address: string
   services: Array<{
     id: string
@@ -20,4 +24,16 @@ export type WorkOrderFormValues = {
 export type WorkOrderFormProps = {
   workOrder?: WorkOrder
   onSuccess?: () => void
+}
+
+export type ServiceItemType = {
+  service_id: string
+  service_name: string
+  quantity: number
+  unit_price: number
+}
+
+export type ServiceListProps = {
+  items: ServiceItemType[]
+  setItems: (items: ServiceItemType[]) => void
 }
