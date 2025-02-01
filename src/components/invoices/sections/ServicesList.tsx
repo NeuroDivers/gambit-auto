@@ -16,7 +16,7 @@ export function ServicesList({ services = [] }: ServicesListProps) {
   if (!services || services.length === 0) {
     return (
       <div className="border-t pt-4">
-        <h2 className="font-semibold mb-4">Services</h2>
+        <h2 className="font-semibold mb-4">Services / Services</h2>
         <p className="text-muted-foreground">No services added</p>
       </div>
     );
@@ -24,15 +24,28 @@ export function ServicesList({ services = [] }: ServicesListProps) {
 
   return (
     <div className="border-t pt-4">
-      <h2 className="font-semibold mb-4">Services</h2>
-      <div className="space-y-2">
-        {services.map((service) => (
-          <div key={service.id} className="flex justify-between">
-            <span>{service.service.name}</span>
-            <span>{formatCurrency(service.service.price || 0)}</span>
-          </div>
-        ))}
-      </div>
+      <table className="w-full">
+        <thead>
+          <tr className="text-left">
+            <th className="py-2">Service / Service</th>
+            <th className="py-2">Description / Description</th>
+            <th className="py-2 text-right">Quantité / Quantity</th>
+            <th className="py-2 text-right">Prix unitaire / Unit Price</th>
+            <th className="py-2 text-right">Montant / Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {services.map((service) => (
+            <tr key={service.id} className="border-t">
+              <td className="py-2">{service.service.name}</td>
+              <td className="py-2">{service.service.name}</td>
+              <td className="py-2 text-right">1</td>
+              <td className="py-2 text-right">{formatCurrency(service.service.price || 0)}</td>
+              <td className="py-2 text-right">{formatCurrency(service.service.price || 0)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { CustomerInfo } from "./sections/CustomerInfo";
 import { VehicleInfo } from "./sections/VehicleInfo";
 import { ServicesList } from "./sections/ServicesList";
 import { InvoiceTotals } from "./sections/InvoiceTotals";
+import { InvoiceFooter } from "./sections/InvoiceFooter";
 
 type InvoiceViewProps = {
   invoiceId?: string;
@@ -75,19 +76,21 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
             dueDate={invoice.due_date}
           />
 
-          <CustomerInfo
-            firstName={invoice.work_order.first_name}
-            lastName={invoice.work_order.last_name}
-            email={invoice.work_order.email}
-            phoneNumber={invoice.work_order.phone_number}
-          />
+          <div className="grid grid-cols-2 gap-6">
+            <CustomerInfo
+              firstName={invoice.work_order.first_name}
+              lastName={invoice.work_order.last_name}
+              email={invoice.work_order.email}
+              phoneNumber={invoice.work_order.phone_number}
+            />
 
-          <VehicleInfo
-            year={invoice.work_order.vehicle_year}
-            make={invoice.work_order.vehicle_make}
-            model={invoice.work_order.vehicle_model}
-            serial={invoice.work_order.vehicle_serial}
-          />
+            <VehicleInfo
+              year={invoice.work_order.vehicle_year}
+              make={invoice.work_order.vehicle_make}
+              model={invoice.work_order.vehicle_model}
+              serial={invoice.work_order.vehicle_serial}
+            />
+          </div>
 
           <ServicesList services={invoice.work_order.services || []} />
 
@@ -103,6 +106,8 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
               <p className="text-muted-foreground">{invoice.notes}</p>
             </div>
           )}
+
+          <InvoiceFooter />
         </CardContent>
       </Card>
 
