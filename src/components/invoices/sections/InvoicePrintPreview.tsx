@@ -1,29 +1,31 @@
 import { useReactToPrint } from 'react-to-print'
 import { useRef } from 'react'
-import { InvoiceCard } from "./InvoiceCard"
-import { InvoiceActions } from './InvoiceActions'
+import { InvoiceCard } from './InvoiceCard'
+import { Button } from '@/components/ui/button'
+import { Printer } from 'lucide-react'
 
 type InvoicePrintPreviewProps = {
   invoice: any
-  invoiceId?: string
 }
 
-export function InvoicePrintPreview({ invoice, invoiceId }: InvoicePrintPreviewProps) {
+export function InvoicePrintPreview({ invoice }: InvoicePrintPreviewProps) {
   const componentRef = useRef<HTMLDivElement>(null)
-
   const handlePrint = useReactToPrint({
     documentTitle: `Invoice-${invoice?.invoice_number}`,
     onAfterPrint: () => console.log('Printed successfully'),
-    content: () => componentRef.current,
+    removeAfterPrint: true,
+    pageStyle: "@page { size: auto; margin: 20mm; }",
   })
 
   return (
-    <div className="w-full max-w-[1000px] mx-auto space-y-6 p-6">
-      <InvoiceActions 
-        invoiceId={invoiceId} 
-        onPrint={handlePrint}
-      />
-      <div ref={componentRef} className="bg-white rounded-lg shadow-lg p-8">
+    <div>
+      <div className="flex justify-end mb-4">
+        <Button onClick={() => handlePrint && handlePrint()} className="gap-2">
+          <Printer className="w-4 h-4" />
+          Print Invoice
+        </Button>
+      </div>
+      <div ref={componentRef}>
         <InvoiceCard invoice={invoice} />
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
-import { InvoiceEditForm } from './sections/InvoiceEditForm'
+import { EditInvoiceForm } from './sections/EditInvoiceForm'
 import { InvoicePrintPreview } from './sections/InvoicePrintPreview'
 import { useForm } from "react-hook-form"
 
@@ -13,6 +13,12 @@ type InvoiceViewProps = {
 type FormValues = {
   notes: string
   status: string
+  invoice_items: Array<{
+    service_name: string
+    description: string
+    quantity: number
+    unit_price: number
+  }>
 }
 
 export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
@@ -31,7 +37,8 @@ export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
               *,
               service:service_types (*)
             )
-          )
+          ),
+          invoice_items (*)
         `)
         .eq('id', invoiceId)
         .single()
@@ -45,18 +52,35 @@ export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
   const form = useForm<FormValues>({
     defaultValues: {
       notes: invoice?.notes || '',
-      status: invoice?.status || 'draft'
+      status: invoice?.status || 'draft',
+      invoice_items: invoice?.invoice_items || []
     }
   })
 
   const updateInvoiceMutation = useMutation({
     mutationFn: async (values: FormValues) => {
-      const { error } = await supabase
+      // Update invoice
+      const { error: invoiceError } = await supabase
         .from('invoices')
-        .update(values)
+        .update({
+          notes: values.notes,
+          status: values.status
+        })
         .eq('id', invoiceId)
 
-      if (error) throw error
+      if (invoiceError) throw invoiceError
+
+      // Update invoice items
+      const { error: itemsError } = await supabase
+        .from('invoice_items')
+        .upsert(
+          values.invoice_items.map(item => ({
+            invoice_id: invoiceId,
+            ...item
+          }))
+        )
+
+      if (itemsError) throw itemsError
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] })
@@ -79,13 +103,14 @@ export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
 
   if (isEditing) {
     return (
-      <InvoiceEditForm 
+      <EditInvoiceForm 
         form={form} 
         onSubmit={(values) => updateInvoiceMutation.mutate(values)}
         isPending={updateInvoiceMutation.isPending}
+        invoiceId={invoiceId || ''}
       />
     )
   }
 
-  return <InvoicePrintPreview invoice={invoice} invoiceId={invoiceId} />
+  return <InvoicePrintPreview invoice={invoice} />
 }
