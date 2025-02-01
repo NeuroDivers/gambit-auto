@@ -23,16 +23,20 @@ export function useQuoteFormSubmission({
 
   const handleSubmit = async (data: QuoteRequestFormValues) => {
     try {
-      if (initialData) {
+      if (initialData?.id) {
         await updateQuote(initialData.id, data, mediaUrl)
       } else {
-        await createQuote(data, mediaUrl)
+        const newQuote = await createQuote(data, mediaUrl)
+        if (!newQuote?.id) {
+          throw new Error("Failed to create quote request")
+        }
       }
       onSuccess?.()
     } catch (error: any) {
+      console.error("Error submitting quote request:", error)
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to submit quote request",
         variant: "destructive",
       })
     }

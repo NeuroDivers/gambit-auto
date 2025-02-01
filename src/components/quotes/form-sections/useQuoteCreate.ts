@@ -31,17 +31,19 @@ export function useQuoteCreate() {
 
     if (quoteError) throw quoteError
 
-    // Insert services
-    const { error: servicesError } = await supabase
-      .from("quote_request_services")
-      .insert(
-        data.service_ids.map(serviceId => ({
-          quote_request_id: newQuote.id,
-          service_id: serviceId
-        }))
-      )
+    // Insert services only if we have a valid quote request ID
+    if (newQuote?.id) {
+      const { error: servicesError } = await supabase
+        .from("quote_request_services")
+        .insert(
+          data.service_ids.map(serviceId => ({
+            quote_request_id: newQuote.id,
+            service_id: serviceId
+          }))
+        )
 
-    if (servicesError) throw servicesError
+      if (servicesError) throw servicesError
+    }
 
     toast({
       title: "Success",
