@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { useQuery } from "@tanstack/react-query"
@@ -125,43 +126,45 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Create Invoice</DialogTitle>
           <DialogDescription>
             Create a new invoice from scratch or convert an existing work order.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <InvoiceFormFields
-            customerName={customerName}
-            setCustomerName={setCustomerName}
-            customerEmail={customerEmail}
-            setCustomerEmail={setCustomerEmail}
-            customerPhone={customerPhone}
-            setCustomerPhone={setCustomerPhone}
-            customerAddress={customerAddress}
-            setCustomerAddress={setCustomerAddress}
-            vehicleMake={vehicleMake}
-            setVehicleMake={setVehicleMake}
-            vehicleModel={vehicleModel}
-            setVehicleModel={setVehicleModel}
-            vehicleYear={vehicleYear}
-            setVehicleYear={setVehicleYear}
-            vehicleVin={vehicleVin}
-            setVehicleVin={setVehicleVin}
-            notes={notes}
-            setNotes={setNotes}
-            selectedWorkOrderId={selectedWorkOrderId}
-            onWorkOrderSelect={handleWorkOrderSelect}
-            workOrders={workOrders || []}
-            invoiceItems={invoiceItems}
-            setInvoiceItems={setInvoiceItems}
-          />
-          <Button type="submit" className="w-full">
-            Create Invoice
-          </Button>
-        </form>
+        <ScrollArea className="h-[calc(90vh-8rem)] pr-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <InvoiceFormFields
+              customerName={customerName}
+              setCustomerName={setCustomerName}
+              customerEmail={customerEmail}
+              setCustomerEmail={setCustomerEmail}
+              customerPhone={customerPhone}
+              setCustomerPhone={setCustomerPhone}
+              customerAddress={customerAddress}
+              setCustomerAddress={setCustomerAddress}
+              vehicleMake={vehicleMake}
+              setVehicleMake={setVehicleMake}
+              vehicleModel={vehicleModel}
+              setVehicleModel={setVehicleModel}
+              vehicleYear={vehicleYear}
+              setVehicleYear={setVehicleYear}
+              vehicleVin={vehicleVin}
+              setVehicleVin={setVehicleVin}
+              notes={notes}
+              setNotes={setNotes}
+              selectedWorkOrderId={selectedWorkOrderId}
+              onWorkOrderSelect={handleWorkOrderSelect}
+              workOrders={workOrders || []}
+              invoiceItems={invoiceItems}
+              setInvoiceItems={setInvoiceItems}
+            />
+            <Button type="submit" className="w-full">
+              Create Invoice
+            </Button>
+          </form>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   )
