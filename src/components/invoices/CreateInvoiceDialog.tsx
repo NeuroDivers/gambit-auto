@@ -79,6 +79,7 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
       setCustomerName(`${workOrder.first_name} ${workOrder.last_name}`)
       setCustomerEmail(workOrder.email)
       setCustomerPhone(workOrder.phone_number)
+      setCustomerAddress(workOrder.address || "") // Add this line to set the address
       setVehicleMake(workOrder.vehicle_make)
       setVehicleModel(workOrder.vehicle_model)
       setVehicleYear(workOrder.vehicle_year)
