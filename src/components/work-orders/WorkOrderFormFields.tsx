@@ -8,6 +8,7 @@ import { ServiceItemsField } from "./form-fields/ServiceItemsField"
 import { MediaUploadField } from "./form-fields/MediaUploadField"
 import { ContactPreferenceFields } from "./form-fields/ContactPreferenceFields"
 import { Input } from "@/components/ui/input"
+import { formatCurrency } from "@/lib/utils"
 
 const serviceItemSchema = z.object({
   service_id: z.string().uuid(),
@@ -49,6 +50,17 @@ export function WorkOrderFormFields({
   uploading, 
   onMediaRemove 
 }: WorkOrderFormFieldsProps) {
+  // Calculate total price from service items
+  const serviceItems = form.watch("service_items") || []
+  const totalPrice = serviceItems.reduce((sum, item) => {
+    return sum + (item.quantity * item.unit_price)
+  }, 0)
+
+  // Update price field when service items change
+  React.useEffect(() => {
+    form.setValue("price", totalPrice)
+  }, [totalPrice, form])
+
   return (
     <>
       <PersonalInfoFields form={form} />
@@ -65,15 +77,13 @@ export function WorkOrderFormFields({
         name="price"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Price</FormLabel>
+            <FormLabel>Total Price</FormLabel>
             <FormControl>
               <Input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="Enter work order price"
-                {...field}
-                onChange={e => field.onChange(parseFloat(e.target.value))}
+                type="text"
+                value={formatCurrency(field.value)}
+                readOnly
+                className="bg-muted"
               />
             </FormControl>
             <FormMessage />

@@ -1,7 +1,6 @@
 import React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { WorkOrderFormFields, formSchema } from "./WorkOrderFormFields"
@@ -11,13 +10,12 @@ import { useWorkOrderFormSubmission } from "./form-sections/useWorkOrderFormSubm
 import { useMediaUpload } from "./hooks/useMediaUpload"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
+import type { WorkOrderFormValues } from "./WorkOrderFormFields"
 
 type WorkOrderFormProps = {
   initialData?: WorkOrderFormValues & { id: string; media_url?: string | null }
   onSuccess?: () => void
 }
-
-type WorkOrderFormValues = z.infer<typeof formSchema>
 
 export function WorkOrderForm({ initialData, onSuccess }: WorkOrderFormProps) {
   const {

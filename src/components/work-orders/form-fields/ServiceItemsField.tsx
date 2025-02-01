@@ -3,9 +3,9 @@ import { UseFormReturn } from "react-hook-form"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Minus, Plus } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Plus, Minus } from "lucide-react"
 import type { WorkOrderFormValues } from "../WorkOrderFormFields"
 
 type ServiceItemsFieldProps = {
