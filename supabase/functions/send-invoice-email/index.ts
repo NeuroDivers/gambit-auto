@@ -1,5 +1,5 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts"
 
 const corsHeaders = {
@@ -56,7 +56,7 @@ serve(async (req) => {
       throw profileError
     }
 
-    // Create SMTP client for Zoho
+    // Create SMTP client
     const client = new SMTPClient({
       connection: {
         hostname: "smtp.zoho.com",
@@ -69,7 +69,7 @@ serve(async (req) => {
       },
     })
 
-    // Format email content with HTML
+    // Format email content
     const emailContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>Invoice #${invoice.invoice_number}</h2>
@@ -95,12 +95,11 @@ serve(async (req) => {
       </div>
     `
 
-    // Send email using SMTP
+    // Send email
     await client.send({
       from: Deno.env.get('SMTP_USER') ?? '',
       to: invoice.work_order.email,
       subject: `Invoice #${invoice.invoice_number} from ${businessProfile.company_name}`,
-      content: emailContent,
       html: emailContent,
     })
 
