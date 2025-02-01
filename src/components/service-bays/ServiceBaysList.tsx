@@ -21,11 +21,30 @@ export function ServiceBaysList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_bays")
-        .select("*, bay_services(service_id, name, is_active)")
+        .select(`
+          *,
+          bay_services!inner (
+            service_id,
+            is_active,
+            service_types (
+              id,
+              name
+            )
+          )
+        `)
         .order('created_at', { ascending: true })
 
       if (error) throw error
-      return data || []
+      
+      // Transform the data to match the expected format
+      return data?.map(bay => ({
+        ...bay,
+        bay_services: bay.bay_services.map(service => ({
+          service_id: service.service_id,
+          name: service.service_types.name,
+          is_active: service.is_active
+        }))
+      })) || []
     },
   })
 
