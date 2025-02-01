@@ -9,8 +9,13 @@ type SidekickAssignmentFieldProps = {
   serviceId: string
 }
 
+type Sidekick = {
+  id: string
+  name: string
+}
+
 export function SidekickAssignmentField({ form, serviceId }: SidekickAssignmentFieldProps) {
-  const { data: sidekicks = [] } = useQuery({
+  const { data: sidekicks = [] } = useQuery<Sidekick[]>({
     queryKey: ["sidekicks"],
     queryFn: async () => {
       const { data: userRoles, error } = await supabase
@@ -31,7 +36,7 @@ export function SidekickAssignmentField({ form, serviceId }: SidekickAssignmentF
 
       return userRoles.map(role => ({
         id: role.user_id,
-        name: `${role.profiles.first_name} ${role.profiles.last_name}`
+        name: `${role.profiles?.first_name || ''} ${role.profiles?.last_name || ''}`
       }))
     }
   })

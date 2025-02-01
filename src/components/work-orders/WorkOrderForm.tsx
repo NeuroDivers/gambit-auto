@@ -8,7 +8,7 @@ import { WorkOrderFormFields, formSchema } from "./WorkOrderFormFields"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { WorkOrderFormHeader } from "./form-sections/WorkOrderFormHeader"
 import { useWorkOrderFormSubmission } from "./form-sections/useWorkOrderFormSubmission"
-import { useMediaUpload } from "../quotes/form-sections/useMediaUpload"
+import { useMediaUpload } from "./hooks/useMediaUpload"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 
