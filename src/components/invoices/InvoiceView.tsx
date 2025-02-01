@@ -44,9 +44,14 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
   });
 
   const handlePrint = useReactToPrint({
-    content: () => printRef.current,
     documentTitle: `Invoice-${invoice?.invoice_number}`,
     onAfterPrint: () => console.log('Printed successfully'),
+    print: async () => {
+      if (printRef.current) {
+        return Promise.resolve(printRef.current);
+      }
+      return Promise.reject('No content to print');
+    }
   });
 
   if (isLoading) {
@@ -108,7 +113,7 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
       </Card>
 
       <div className="mt-6 text-center">
-        <Button onClick={handlePrint} className="gap-2">
+        <Button onClick={() => handlePrint()} className="gap-2">
           <Printer className="h-4 w-4" />
           Print Invoice
         </Button>
