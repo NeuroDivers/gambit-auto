@@ -24,7 +24,7 @@ export const formSchema = z.object({
   additional_notes: z.string().optional(),
   timeframe: z.enum(["flexible", "asap", "within_week", "within_month"]),
   price: z.number().min(0, "Price must be a positive number").default(0),
-  sidekick_assignments: z.record(z.string().uuid(), z.string().uuid()).optional(),
+  sidekick_assignments: z.record(z.string().uuid(), z.string().uuid()).optional()
 })
 
 export type WorkOrderFormValues = z.infer<typeof formSchema>

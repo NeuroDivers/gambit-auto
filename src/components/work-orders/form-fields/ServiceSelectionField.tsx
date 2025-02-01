@@ -48,7 +48,9 @@ export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
                           return checked
                             ? field.onChange([...field.value, service.id])
                             : field.onChange(
-                                field.value?.filter((value) => value !== service.id)
+                                field.value?.filter(
+                                  (value: string) => value !== service.id
+                                )
                               )
                         }}
                       />
