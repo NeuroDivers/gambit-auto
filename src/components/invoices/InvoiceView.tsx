@@ -5,18 +5,18 @@ import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Printer } from "lucide-react"
 import { useReactToPrint } from "react-to-print"
-import { useRef, useCallback } from "react"
+import { useRef } from "react"
 
 export function InvoiceView({ invoice }: { invoice: any }) {
   const printRef = useRef<HTMLDivElement>(null)
   
-  const handlePrint = useCallback(() => {
-    if (printRef.current) {
-      useReactToPrint({
-        content: () => printRef.current,
-      })()
-    }
-  }, [])
+  const handlePrint = useReactToPrint({
+    documentTitle: `Invoice-${invoice.invoice_number}`,
+    onAfterPrint: () => console.log('Printed successfully'),
+    removeAfterPrint: true,
+    pageStyle: "@page { size: auto; margin: 20mm; }",
+    content: () => printRef.current,
+  })
 
   const { data: business } = useQuery({
     queryKey: ["business-profile"],
