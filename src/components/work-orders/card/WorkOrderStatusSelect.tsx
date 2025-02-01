@@ -6,13 +6,13 @@ import { supabase } from "@/integrations/supabase/client"
 const getStatusStyles = (status: string) => {
   switch (status) {
     case "pending":
-      return "text-[rgb(250,204,21)] bg-[rgb(234,179,8,0.2)] border-[rgb(234,179,8,0.3)]"
+      return "text-muted-foreground bg-muted/40 border-muted/40"
     case "approved":
-      return "text-[#0EA5E9] bg-[rgb(14,165,233,0.2)] border-[rgb(14,165,233,0.3)]"
+      return "text-blue-400 bg-[rgb(59,130,246,0.2)] border-[rgb(59,130,246,0.3)]"
     case "rejected":
       return "text-[#ea384c] bg-[rgb(234,56,76,0.2)] border-[rgb(234,56,76,0.3)]"
     case "completed":
-      return "text-[#9b87f5] bg-[rgb(155,135,245,0.2)] border-[rgb(155,135,245,0.3)]"
+      return "text-green-400 bg-[rgb(34,197,94,0.2)] border-[rgb(34,197,94,0.3)]"
     default:
       return ""
   }
