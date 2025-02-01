@@ -39,7 +39,7 @@ export function WorkOrdersSection() {
   }
 
   return (
-    <section className="bg-card/50 backdrop-blur-sm rounded-xl shadow-lg border border-white/5 p-8">
+    <section className="bg-card/50 backdrop-blur-sm rounded-xl shadow-lg border border-white/5 p-8 relative" style={{ zIndex: 0 }}>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-semibold">Work Orders</h3>
