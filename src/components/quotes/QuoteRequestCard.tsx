@@ -56,15 +56,18 @@ export function QuoteRequestCard({ request }: { request: QuoteRequest }) {
   }
 
   return (
-    <Card>
+    <Card className="transition-all duration-200 hover:shadow-lg hover:border-primary/20">
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-lg">
+          <div className="space-y-1">
+            <CardTitle className="text-lg flex items-center gap-2">
               {request.first_name} {request.last_name}
+              <Badge variant="outline" className="text-xs font-normal">
+                {format(new Date(request.created_at), "MMM d, yyyy")}
+              </Badge>
             </CardTitle>
-            <CardDescription>
-              Submitted on {format(new Date(request.created_at), "PPP")}
+            <CardDescription className="text-sm">
+              {request.vehicle_year} {request.vehicle_make} {request.vehicle_model}
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -86,68 +89,73 @@ export function QuoteRequestCard({ request }: { request: QuoteRequest }) {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-2 text-sm">
-          <div className="grid grid-cols-2 gap-1">
-            <span className="font-medium">Services:</span>
-            <span>
-              {request.quote_request_services
-                .map(service => service.service_types.name)
-                .join(", ")}
-            </span>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="space-y-2">
+              <div>
+                <span className="text-muted-foreground">Services:</span>
+                <p className="font-medium">
+                  {request.quote_request_services
+                    .map(service => service.service_types.name)
+                    .join(", ")}
+                </p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Contact:</span>
+                <p className="font-medium">
+                  {request.contact_preference === "email" ? request.email : request.phone_number}
+                </p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div>
+                <span className="text-muted-foreground">Serial Number:</span>
+                <p className="font-medium">{request.vehicle_serial}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Price:</span>
+                <p className="font-medium">${request.price?.toFixed(2) ?? '0.00'}</p>
+              </div>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-1">
-            <span className="font-medium">Contact:</span>
-            <span>
-              {request.contact_preference === "email" ? request.email : request.phone_number}
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-1">
-            <span className="font-medium">Vehicle:</span>
-            <span>
-              {request.vehicle_year} {request.vehicle_make} {request.vehicle_model}
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-1">
-            <span className="font-medium">Price:</span>
-            <span>${request.price?.toFixed(2) ?? '0.00'}</span>
-          </div>
+
           {request.additional_notes && (
-            <div className="col-span-2 mt-2">
-              <span className="font-medium">Notes:</span>
-              <p className="mt-1 text-white/60">{request.additional_notes}</p>
+            <div className="pt-2 border-t border-border/40">
+              <span className="text-sm text-muted-foreground">Notes:</span>
+              <p className="mt-1 text-sm">{request.additional_notes}</p>
+            </div>
+          )}
+
+          {request.status === "pending" && (
+            <div className="flex gap-2 justify-end pt-2 border-t border-border/40">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => updateStatus("rejected")}
+              >
+                Reject
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => updateStatus("approved")}
+              >
+                Approve
+              </Button>
+            </div>
+          )}
+
+          {request.status === "approved" && (
+            <div className="flex justify-end pt-2 border-t border-border/40">
+              <Button
+                size="sm"
+                onClick={() => setIsWorkOrderDialogOpen(true)}
+              >
+                Convert to Work Order
+              </Button>
             </div>
           )}
         </div>
-
-        {request.status === "pending" && (
-          <div className="flex gap-2 justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => updateStatus("rejected")}
-            >
-              Reject
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => updateStatus("approved")}
-            >
-              Approve
-            </Button>
-          </div>
-        )}
-
-        {request.status === "approved" && (
-          <div className="flex justify-end">
-            <Button
-              size="sm"
-              onClick={() => setIsWorkOrderDialogOpen(true)}
-            >
-              Convert to Work Order
-            </Button>
-          </div>
-        )}
       </CardContent>
 
       <CreateWorkOrderDialog
