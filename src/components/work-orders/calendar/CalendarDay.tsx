@@ -22,13 +22,12 @@ export function CalendarDay({ date, workOrders, isCurrentMonth }: CalendarDayPro
           !isCurrentMonth && "opacity-50 bg-background/50",
           "hover:border-dashed hover:border-primary/50"
         )}
-        style={{ isolation: 'isolate' }}
         onClick={() => setIsCreateDialogOpen(true)}
       >
-        <div className="font-medium text-sm mb-2 relative" style={{ zIndex: 1 }}>
+        <div className="font-medium text-sm mb-2 relative z-[1]">
           {format(date, 'd')}
         </div>
-        <div className="space-y-1 relative" style={{ zIndex: 50 }}>
+        <div className="space-y-1 relative z-[2]">
           {workOrders?.map((workOrder) => (
             <WorkOrderCard
               key={workOrder.id}
