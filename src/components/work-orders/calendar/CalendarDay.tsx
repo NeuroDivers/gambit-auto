@@ -20,9 +20,9 @@ export function CalendarDay({ date, workOrders, isCurrentMonth }: CalendarDayPro
     <>
       <div 
         className={cn(
-          "min-h-[120px] p-2 border border-border/20 rounded-md cursor-pointer transition-colors",
+          "min-h-[120px] p-2 border border-border/20 rounded-md cursor-pointer transition-all duration-200",
           !isCurrentMonth && "opacity-50 bg-background/50",
-          "hover:bg-accent/50"
+          "hover:border-dashed hover:border-primary/50"
         )}
         onClick={() => setIsCreateDialogOpen(true)}
       >
