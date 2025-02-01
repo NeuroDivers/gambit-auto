@@ -5,11 +5,18 @@ import { CalendarDay } from "./calendar/CalendarDay"
 import { CalendarGrid } from "./calendar/CalendarGrid"
 import { CalendarHeader } from "./calendar/CalendarHeader"
 import { useWorkOrderData } from "./calendar/useWorkOrderData"
-import { ServiceLegend } from "./calendar/ServiceLegend"
+import { StatusLegend } from "./StatusLegend"
 
 export function WorkOrderCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const { data: workOrders = [], isLoading } = useWorkOrderData()
+
+  const statusCounts = {
+    pending: workOrders.filter(wo => wo.status === 'pending').length,
+    approved: workOrders.filter(wo => wo.status === 'approved').length,
+    rejected: workOrders.filter(wo => wo.status === 'rejected').length,
+    completed: workOrders.filter(wo => wo.status === 'completed').length
+  }
 
   const handlePrevMonth = () => {
     setCurrentDate(prev => subMonths(prev, 1))
@@ -37,7 +44,7 @@ export function WorkOrderCalendar() {
           <h3 className="text-xl font-semibold">Work Order Calendar</h3>
           <CreateWorkOrderDialog />
         </div>
-        <ServiceLegend />
+        <StatusLegend statusCounts={statusCounts} />
         <div className="space-y-4">
           <CalendarHeader
             currentDate={currentDate}
