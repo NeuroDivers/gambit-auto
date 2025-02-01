@@ -8,8 +8,16 @@ import WorkOrders from "./pages/WorkOrders"
 import NotFound from "./pages/NotFound"
 import Invoices from "./pages/Invoices"
 import InvoiceDetails from "./pages/InvoiceDetails"
+import React from 'react'
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+})
 
 const router = createBrowserRouter([
   {
@@ -44,10 +52,12 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-      <Toaster />
-    </QueryClientProvider>
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+        <Toaster />
+      </QueryClientProvider>
+    </React.StrictMode>
   )
 }
 
