@@ -59,7 +59,6 @@ export function ServiceBaysList() {
 
       if (error) throw error
       
-      // Transform the data to match the BayService type
       return data.map(service => ({
         bay_id: service.bay_id,
         service_id: service.service_id,
