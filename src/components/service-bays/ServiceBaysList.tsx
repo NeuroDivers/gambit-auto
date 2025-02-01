@@ -62,7 +62,10 @@ export function ServiceBaysList() {
       return data.map(service => ({
         bay_id: service.bay_id,
         service_id: service.service_id,
-        service_types: service.service_types
+        service_types: {
+          id: service.service_types.id,
+          name: service.service_types.name
+        }
       })) as BayService[]
     },
   })
