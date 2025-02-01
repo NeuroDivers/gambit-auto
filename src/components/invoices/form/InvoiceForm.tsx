@@ -1,7 +1,6 @@
 import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
-import { InvoiceBasicInfo } from "./InvoiceBasicInfo"
 import { InvoiceAmounts } from "./InvoiceAmounts"
 import { InvoiceStatus } from "./InvoiceStatus"
 import { InvoiceNotes } from "./InvoiceNotes"
@@ -9,7 +8,6 @@ import { InvoiceNotes } from "./InvoiceNotes"
 type FormValues = {
   notes: string
   status: string
-  invoice_number: string
   due_date: string
   subtotal: number
   tax_amount: number
@@ -28,7 +26,6 @@ export function InvoiceForm({ defaultValues, onSubmit, isSubmitting }: InvoiceFo
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <InvoiceBasicInfo control={form.control} />
         <InvoiceAmounts control={form.control} />
         <InvoiceStatus control={form.control} />
         <InvoiceNotes control={form.control} />
