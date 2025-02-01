@@ -15,14 +15,16 @@ export function InvoiceCard({ invoice }: InvoiceCardProps) {
 
   return (
     <div className="space-y-8 text-[#1A1F2C]">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex justify-between items-start gap-4">
         <InvoiceHeader
           invoiceNumber={invoice.invoice_number}
           createdAt={invoice.created_at}
           dueDate={invoice.due_date}
         />
-        <div className="px-4 py-1 rounded-full text-sm font-medium bg-[#FEF7CD] text-[#B99F24] shrink-0">
-          {invoice.status.toUpperCase()}
+        <div className="shrink-0">
+          <div className="px-4 py-1 rounded-full text-sm font-medium bg-[#FEF7CD] text-[#B99F24]">
+            {invoice.status.toUpperCase()}
+          </div>
         </div>
       </div>
 
