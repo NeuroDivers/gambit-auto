@@ -29,9 +29,18 @@ export const useUserEditSubmit = ({ userId, currentRole, onSuccess }: UseUserEdi
 
       // Update role if changed
       if (values.role !== currentRole) {
+        // First, delete the existing role
+        const { error: deleteError } = await supabase
+          .from("user_roles")
+          .delete()
+          .eq("user_id", userId);
+
+        if (deleteError) throw deleteError;
+
+        // Then, insert the new role
         const { error: roleError } = await supabase
           .from("user_roles")
-          .upsert({
+          .insert({
             user_id: userId,
             role: values.role,
           });
