@@ -28,7 +28,10 @@ export function WorkOrderCalendar() {
   }
 
   return (
-    <section className="bg-card/50 backdrop-blur-sm rounded-xl shadow-lg border border-white/5 p-8 relative" style={{ isolation: 'isolate' }}>
+    <section 
+      className="bg-card/50 backdrop-blur-sm rounded-xl shadow-lg border border-white/5 p-8 relative" 
+      style={{ isolation: 'isolate', zIndex: 1 }}
+    >
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-semibold">Work Order Calendar</h3>
