@@ -9,7 +9,25 @@ import {
 import { PlusCircle } from "lucide-react"
 import { WorkOrderForm } from "./WorkOrderForm"
 
-export function CreateWorkOrderDialog() {
+type CreateWorkOrderDialogProps = {
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}
+
+export function CreateWorkOrderDialog({ open, onOpenChange }: CreateWorkOrderDialogProps) {
+  if (open !== undefined && onOpenChange) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create Work Order</DialogTitle>
+          </DialogHeader>
+          <WorkOrderForm onSuccess={() => onOpenChange(false)} />
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
   return (
     <Dialog>
       <DialogTrigger asChild>

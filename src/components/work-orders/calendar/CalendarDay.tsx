@@ -1,12 +1,15 @@
 import { format } from "date-fns"
+import { QuoteRequest } from "../types"
 import { Badge } from "@/components/ui/badge"
-import { WorkOrder } from "../types"
+import { cn } from "@/lib/utils"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { EditWorkOrderDialog } from "../EditWorkOrderDialog"
+import { CreateWorkOrderDialog } from "../CreateWorkOrderDialog"
+import { useState } from "react"
 
 type CalendarDayProps = {
   date: Date
-  workOrders: WorkOrder[]
+  quotes: QuoteRequest[]
   isCurrentMonth: boolean
 }
 
@@ -51,48 +54,49 @@ const getServiceColor = (serviceName: string, index: number) => {
   }
 }
 
-export function CalendarDay({ date, workOrders, isCurrentMonth }: CalendarDayProps) {
+export function CalendarDay({ date, quotes, isCurrentMonth }: CalendarDayProps) {
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+
   return (
-    <div className={`p-2 border border-border/40 min-h-[120px] ${!isCurrentMonth && 'opacity-40'}`}>
-      <div className="font-medium text-sm mb-1">
-        {format(date, 'd')}
-      </div>
-      <div className="space-y-1">
-        {workOrders.map((workOrder) => {
-          const mainService = workOrder.work_order_services[0]?.service_types.name || 'Other'
-          const serviceIndex = 0
-          const colors = getServiceColor(mainService, serviceIndex)
-          
-          return (
-            <HoverCard key={workOrder.id}>
+    <>
+      <div 
+        className={cn(
+          "min-h-[120px] p-2 border border-border/20 rounded-md cursor-pointer transition-colors",
+          !isCurrentMonth && "opacity-50 bg-background/50",
+          "hover:bg-accent/50"
+        )}
+        onClick={() => setIsCreateDialogOpen(true)}
+      >
+        <div className="font-medium text-sm mb-2">
+          {format(date, 'd')}
+        </div>
+        <div className="space-y-1">
+          {quotes.map((quote) => (
+            <HoverCard key={quote.id}>
               <HoverCardTrigger asChild>
                 <div 
-                  className="text-xs bg-primary/10 p-1 rounded truncate cursor-pointer"
+                  className="text-xs bg-primary/10 p-1 rounded truncate"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <Badge 
-                    variant="outline" 
-                    className="text-[10px] mb-1"
-                    style={{
-                      backgroundColor: colors.bg,
-                      color: colors.text,
-                      borderColor: colors.border
-                    }}
-                  >
-                    {workOrder.status}
+                  <Badge variant="outline" className="text-[10px] mb-1">
+                    {quote.status}
                   </Badge>
                   <div className="truncate">
-                    {workOrder.first_name} {workOrder.last_name}
+                    {quote.first_name} {quote.last_name}
                   </div>
                   <div className="text-muted-foreground truncate">
-                    {workOrder.vehicle_make} {workOrder.vehicle_model}
+                    {quote.vehicle_make} {quote.vehicle_model}
                   </div>
                 </div>
               </HoverCardTrigger>
-              <HoverCardContent className="w-80 p-4">
+              <HoverCardContent 
+                className="w-80 p-4"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div 
                   className="space-y-2 cursor-pointer hover:bg-accent/50 p-2 rounded-lg transition-colors"
                   onClick={() => {
-                    const dialogElement = document.getElementById(`edit-work-order-${workOrder.id}`)
+                    const dialogElement = document.getElementById(`edit-work-order-${quote.id}`)
                     if (dialogElement) {
                       ;(dialogElement as HTMLDialogElement).showModal()
                     }
@@ -100,42 +104,46 @@ export function CalendarDay({ date, workOrders, isCurrentMonth }: CalendarDayPro
                 >
                   <div className="space-y-1">
                     <div className="flex justify-between">
-                      <h4 className="text-sm font-semibold">{workOrder.first_name} {workOrder.last_name}</h4>
+                      <h4 className="text-sm font-semibold">{quote.first_name} {quote.last_name}</h4>
                       <Badge variant="outline" className="text-xs">
-                        {workOrder.status}
+                        {quote.status}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {workOrder.contact_preference === 'email' ? workOrder.email : workOrder.phone_number}
+                      {quote.contact_preference === 'email' ? quote.email : quote.phone_number}
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
                       <p className="text-muted-foreground">Vehicle</p>
-                      <p>{workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}</p>
+                      <p>{quote.vehicle_year} {quote.vehicle_make} {quote.vehicle_model}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Serial</p>
-                      <p>{workOrder.vehicle_serial}</p>
+                      <p>{quote.vehicle_serial}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Services</p>
-                      <p>{workOrder.work_order_services.map(s => s.service_types.name).join(', ')}</p>
+                      <p>{quote.work_order_services.map(s => s.service_types.name).join(', ')}</p>
                     </div>
                   </div>
-                  {workOrder.additional_notes && (
+                  {quote.additional_notes && (
                     <div>
                       <p className="text-muted-foreground text-sm">Notes</p>
-                      <p className="text-sm">{workOrder.additional_notes}</p>
+                      <p className="text-sm">{quote.additional_notes}</p>
                     </div>
                   )}
                 </div>
-                <EditWorkOrderDialog id={`edit-work-order-${workOrder.id}`} quote={workOrder} />
+                <EditWorkOrderDialog quote={quote} />
               </HoverCardContent>
             </HoverCard>
-          )
-        })}
+          ))}
+        </div>
       </div>
-    </div>
+      <CreateWorkOrderDialog 
+        open={isCreateDialogOpen} 
+        onOpenChange={setIsCreateDialogOpen}
+      />
+    </>
   )
 }
