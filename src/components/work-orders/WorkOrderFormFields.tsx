@@ -8,6 +8,7 @@ import { ServiceSelectionField } from "../quotes/form-fields/ServiceSelectionFie
 import { MediaUploadField } from "../quotes/form-fields/MediaUploadField"
 import { ContactPreferenceFields } from "../quotes/form-fields/ContactPreferenceFields"
 import { Input } from "@/components/ui/input"
+import { SidekickAssignmentField } from "./form-fields/SidekickAssignmentField"
 
 export const formSchema = z.object({
   first_name: z.string().min(2, "First name must be at least 2 characters"),
@@ -23,6 +24,7 @@ export const formSchema = z.object({
   additional_notes: z.string().optional(),
   timeframe: z.enum(["flexible", "asap", "within_week", "within_month"]),
   price: z.number().min(0, "Price must be a positive number").default(0),
+  sidekick_assignments: z.record(z.string().uuid(), z.string().uuid()).optional(),
 })
 
 export type WorkOrderFormValues = z.infer<typeof formSchema>
@@ -46,6 +48,13 @@ export function WorkOrderFormFields({
     <>
       <PersonalInfoFields form={form} />
       <ServiceSelectionField form={form} />
+      {form.watch("service_ids").map((serviceId) => (
+        <SidekickAssignmentField 
+          key={serviceId} 
+          form={form} 
+          serviceId={serviceId} 
+        />
+      ))}
       <MediaUploadField
         onFileUpload={onFileUpload}
         mediaUrl={mediaUrl}
