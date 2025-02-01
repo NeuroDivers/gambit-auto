@@ -29,7 +29,6 @@ export const UserEditDialog = ({ user, open, onOpenChange }: UserEditDialogProps
       first_name: user.first_name || "",
       last_name: user.last_name || "",
       role: user.user_roles?.role || "client",
-      assigned_work_orders: [],
     },
   });
 
