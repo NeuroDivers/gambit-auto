@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import { ProfileDialog } from "@/components/profile/ProfileDialog";
 import { BusinessSettingsDialog } from "@/components/business/BusinessSettingsDialog";
 import { Button } from "@/components/ui/button";
-import { Users, ClipboardList } from "lucide-react";
+import { Users, ClipboardList, Wrench } from "lucide-react";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { CreateQuoteDialog } from "@/components/quotes/CreateQuoteDialog";
 import { ServiceBaysList } from "@/components/service-bays/ServiceBaysList";
@@ -49,6 +49,14 @@ export default function Index() {
             >
               <Users className="h-4 w-4" />
               Manage Users
+            </Button>
+            <Button
+              onClick={() => navigate("/work-orders")}
+              variant="outline"
+              className="gap-2"
+            >
+              <Wrench className="h-4 w-4" />
+              Work Orders
             </Button>
             <Button
               onClick={() => navigate("/quote-requests")}
