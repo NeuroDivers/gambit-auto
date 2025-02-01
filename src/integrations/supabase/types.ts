@@ -155,110 +155,6 @@ export type Database = {
         }
         Relationships: []
       }
-      quote_request_services: {
-        Row: {
-          created_at: string
-          quote_request_id: string
-          service_id: string
-        }
-        Insert: {
-          created_at?: string
-          quote_request_id: string
-          service_id: string
-        }
-        Update: {
-          created_at?: string
-          quote_request_id?: string
-          service_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "quote_request_services_quote_request_id_fkey"
-            columns: ["quote_request_id"]
-            isOneToOne: false
-            referencedRelation: "quote_requests"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quote_request_services_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "service_types"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      quote_requests: {
-        Row: {
-          additional_notes: string | null
-          assigned_bay_id: string | null
-          contact_preference: Database["public"]["Enums"]["contact_preference"]
-          created_at: string
-          email: string
-          first_name: string
-          id: string
-          last_name: string
-          media_url: string | null
-          phone_number: string
-          price: number | null
-          status: string
-          timeframe: string
-          updated_at: string
-          vehicle_make: string
-          vehicle_model: string
-          vehicle_serial: string
-          vehicle_year: number
-        }
-        Insert: {
-          additional_notes?: string | null
-          assigned_bay_id?: string | null
-          contact_preference: Database["public"]["Enums"]["contact_preference"]
-          created_at?: string
-          email: string
-          first_name: string
-          id?: string
-          last_name: string
-          media_url?: string | null
-          phone_number: string
-          price?: number | null
-          status?: string
-          timeframe?: string
-          updated_at?: string
-          vehicle_make: string
-          vehicle_model: string
-          vehicle_serial: string
-          vehicle_year: number
-        }
-        Update: {
-          additional_notes?: string | null
-          assigned_bay_id?: string | null
-          contact_preference?: Database["public"]["Enums"]["contact_preference"]
-          created_at?: string
-          email?: string
-          first_name?: string
-          id?: string
-          last_name?: string
-          media_url?: string | null
-          phone_number?: string
-          price?: number | null
-          status?: string
-          timeframe?: string
-          updated_at?: string
-          vehicle_make?: string
-          vehicle_model?: string
-          vehicle_serial?: string
-          vehicle_year?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "quote_requests_assigned_bay_id_fkey"
-            columns: ["assigned_bay_id"]
-            isOneToOne: false
-            referencedRelation: "service_bays"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       service_bays: {
         Row: {
           assigned_sidekick_id: string | null
@@ -339,6 +235,110 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      work_order_services: {
+        Row: {
+          created_at: string
+          service_id: string
+          work_order_id: string
+        }
+        Insert: {
+          created_at?: string
+          service_id: string
+          work_order_id: string
+        }
+        Update: {
+          created_at?: string
+          service_id?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_request_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_services_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_orders: {
+        Row: {
+          additional_notes: string | null
+          assigned_bay_id: string | null
+          contact_preference: Database["public"]["Enums"]["contact_preference"]
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          media_url: string | null
+          phone_number: string
+          price: number | null
+          status: string
+          timeframe: string
+          updated_at: string
+          vehicle_make: string
+          vehicle_model: string
+          vehicle_serial: string
+          vehicle_year: number
+        }
+        Insert: {
+          additional_notes?: string | null
+          assigned_bay_id?: string | null
+          contact_preference: Database["public"]["Enums"]["contact_preference"]
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          media_url?: string | null
+          phone_number: string
+          price?: number | null
+          status?: string
+          timeframe?: string
+          updated_at?: string
+          vehicle_make: string
+          vehicle_model: string
+          vehicle_serial: string
+          vehicle_year: number
+        }
+        Update: {
+          additional_notes?: string | null
+          assigned_bay_id?: string | null
+          contact_preference?: Database["public"]["Enums"]["contact_preference"]
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          media_url?: string | null
+          phone_number?: string
+          price?: number | null
+          status?: string
+          timeframe?: string
+          updated_at?: string
+          vehicle_make?: string
+          vehicle_model?: string
+          vehicle_serial?: string
+          vehicle_year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_requests_assigned_bay_id_fkey"
+            columns: ["assigned_bay_id"]
+            isOneToOne: false
+            referencedRelation: "service_bays"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

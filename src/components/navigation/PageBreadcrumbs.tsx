@@ -12,7 +12,7 @@ import { Link } from "react-router-dom";
 
 const routeNames: Record<string, string> = {
   "user-management": "User Management",
-  "quote-requests": "Quote Requests",
+  "work-orders": "Work Orders",
   "auth": "Authentication",
 };
 
