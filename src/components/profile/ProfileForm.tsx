@@ -11,6 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -222,7 +223,11 @@ export const ProfileForm = () => {
             <FormItem>
               <FormLabel>Bio</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Textarea 
+                  {...field} 
+                  className="min-h-[120px] resize-y"
+                  placeholder="Tell us about yourself..."
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
