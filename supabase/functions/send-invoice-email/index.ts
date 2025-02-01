@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { serve } from 'https://deno.fresh.run/std@v9.6.1/http/server.ts'
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -68,7 +68,7 @@ serve(async (req) => {
           password: Deno.env.get('SMTP_PASSWORD') ?? '',
         },
       },
-    });
+    })
 
     // Format email content with HTML
     const emailContent = `
@@ -102,9 +102,9 @@ serve(async (req) => {
       to: invoice.work_order.email,
       subject: `Invoice #${invoice.invoice_number} from ${businessProfile.company_name}`,
       html: emailContent,
-    });
+    })
 
-    await client.close();
+    await client.close()
     console.log('Email sent successfully to:', invoice.work_order.email)
 
     return new Response(
