@@ -38,7 +38,7 @@ export function InvoiceTotals({ subtotal, taxAmount, total }: InvoiceTotalsProps
 
   return (
     <div className="border-t pt-4">
-      <div className="space-y-2">
+      <div className="space-y-2 text-[#222222]">
         <div className="flex justify-between">
           <span>Sous-total / Subtotal</span>
           <span>{formatCurrency(subtotal)}</span>
@@ -59,7 +59,7 @@ export function InvoiceTotals({ subtotal, taxAmount, total }: InvoiceTotalsProps
           <span>Total / Total</span>
           <span>{formatCurrency(total)}</span>
         </div>
-        <div className="text-sm text-muted-foreground mt-2">
+        <div className="text-sm text-[#555555] mt-2">
           {gstTax && <div>TPS/GST No: {gstTax.tax_number}</div>}
           {qstTax && <div>TVQ/QST No: {qstTax.tax_number}</div>}
         </div>

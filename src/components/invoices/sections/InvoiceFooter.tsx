@@ -17,7 +17,7 @@ export function InvoiceFooter() {
   });
 
   return (
-    <div className="text-center text-sm text-muted-foreground space-y-2 mt-8 border-t pt-4">
+    <div className="text-center text-sm text-[#555555] space-y-2 mt-8 border-t pt-4">
       <p>Merci d'avoir choisi {businessProfile?.company_name}</p>
       <p>Thank you for choosing {businessProfile?.company_name}</p>
       <p>

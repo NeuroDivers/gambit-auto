@@ -77,7 +77,7 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
       </div>
 
       <Card ref={printRef} className="w-full bg-white shadow-lg">
-        <CardContent className="p-8 space-y-8">
+        <CardContent className="p-8 space-y-8 text-[#222222]">
           <div className="relative">
             <div className="absolute right-0 top-0">
               <div className={`px-4 py-2 rounded-full text-sm font-medium ${
@@ -125,8 +125,8 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
 
           {invoice.notes && (
             <div className="border-t border-gray-200 pt-6">
-              <h2 className="font-semibold mb-2 text-gray-700">Notes</h2>
-              <p className="text-gray-600">{invoice.notes}</p>
+              <h2 className="font-semibold mb-2 text-[#222222]">Notes</h2>
+              <p className="text-[#333333]">{invoice.notes}</p>
             </div>
           )}
 
