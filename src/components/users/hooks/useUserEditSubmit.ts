@@ -16,14 +16,18 @@ export const useUserEditSubmit = ({ userId, currentRole, onSuccess }: UseUserEdi
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      console.log("Updating profile for user:", userId, "with values:", values);
+      
       // Update profile information (first_name and last_name)
-      const { error: profileError } = await supabase
+      const { error: profileError, data: profileData } = await supabase
         .from("profiles")
         .update({
           first_name: values.first_name,
           last_name: values.last_name,
         })
         .eq("id", userId);
+
+      console.log("Profile update result:", { profileError, profileData });
 
       if (profileError) throw profileError;
 
@@ -85,6 +89,7 @@ export const useUserEditSubmit = ({ userId, currentRole, onSuccess }: UseUserEdi
       queryClient.invalidateQueries({ queryKey: ["workOrders"] });
       onSuccess();
     } catch (error) {
+      console.error("Error updating user:", error);
       toast({
         title: "Error",
         description: error.message,
