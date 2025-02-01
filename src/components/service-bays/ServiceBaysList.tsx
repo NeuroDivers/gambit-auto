@@ -9,7 +9,7 @@ import { BayHeader } from "./BayHeader"
 type ServiceBay = {
   id: string
   name: string
-  status: string
+  status: 'available' | 'in_use' | 'maintenance'
   assigned_sidekick_id: string | null
 }
 
@@ -39,7 +39,7 @@ export function ServiceBaysList() {
         .order("name")
 
       if (error) throw error
-      return data
+      return data as ServiceBay[]
     },
   })
 
@@ -58,7 +58,7 @@ export function ServiceBaysList() {
         `)
 
       if (error) throw error
-      return data
+      return data as BayService[]
     },
   })
 
