@@ -31,7 +31,7 @@ export function WorkOrderForm({ workOrder, onSuccess }: WorkOrderFormProps) {
   })
 
   const { handleSubmit } = useWorkOrderFormSubmission({
-    initialData: workOrder,
+    workOrder,
     mediaUrl: workOrder?.media_url || null,
     onSuccess
   })

@@ -35,7 +35,7 @@ export function EditWorkOrderDialog({ quote }: EditWorkOrderDialogProps) {
           <DialogTitle>Edit Work Order</DialogTitle>
         </DialogHeader>
         <WorkOrderForm 
-          initialData={quote} 
+          workOrder={quote} 
           onSuccess={() => closeRef.current?.click()} 
         />
         <DialogClose ref={closeRef} className="hidden" />
