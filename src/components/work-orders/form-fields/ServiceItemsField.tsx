@@ -4,20 +4,20 @@ import { Label } from "@/components/ui/label"
 import { Plus } from "lucide-react"
 import { ServiceItem } from "./service-items/ServiceItem"
 import { ServiceList } from "./service-items/ServiceList"
+import { ServiceItemType, ServiceListProps } from "../types"
+import { UseFormReturn } from "react-hook-form"
+import { WorkOrderFormValues } from "../types"
 
-export type ServiceItemType = {
-  service_id: string
-  service_name: string
-  quantity: number
-  unit_price: number
+type ServiceItemsFieldProps = {
+  form: UseFormReturn<WorkOrderFormValues>
 }
 
-type ServiceListProps = {
-  items: ServiceItemType[]
-  setItems: (items: ServiceItemType[]) => void
-}
+export function ServiceItemsField({ form }: ServiceItemsFieldProps) {
+  const items = form.watch('service_items')
+  const setItems = (newItems: ServiceItemType[]) => {
+    form.setValue('service_items', newItems)
+  }
 
-export function ServiceItemsField({ items, setItems }: ServiceListProps) {
   const addItem = () => {
     setItems([
       ...items,

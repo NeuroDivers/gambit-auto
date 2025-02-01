@@ -6,7 +6,7 @@ import { WorkOrder } from "@/types"
 import { useWorkOrderFormSubmission } from "./form-sections/useWorkOrderFormSubmission"
 import { WorkOrderFormValues, WorkOrderFormProps } from "./types"
 
-export function WorkOrderForm({ workOrder, onSuccess }: WorkOrderFormProps) {
+export function WorkOrderForm({ workOrder, initialData, onSuccess }: WorkOrderFormProps) {
   const form = useForm<WorkOrderFormValues>({
     defaultValues: {
       first_name: workOrder?.first_name || "",
@@ -21,15 +21,18 @@ export function WorkOrderForm({ workOrder, onSuccess }: WorkOrderFormProps) {
       additional_notes: workOrder?.additional_notes || "",
       timeframe: workOrder?.timeframe || "flexible",
       address: workOrder?.address || "",
-      services: workOrder?.work_order_services?.map(service => ({
-        name: service.service_types?.name || 'Unknown Service',
-        id: service.service_id
+      service_items: workOrder?.work_order_services?.map(service => ({
+        service_id: service.service_id,
+        service_name: service.service_types?.name || 'Unknown Service',
+        quantity: service.quantity,
+        unit_price: service.unit_price || 0
       })) || []
     }
   })
 
-  const { handleSubmit, isPending } = useWorkOrderFormSubmission({
+  const { handleSubmit, isSubmitting } = useWorkOrderFormSubmission({
     initialData: workOrder,
+    mediaUrl: workOrder?.media_url || null,
     onSuccess
   })
 
@@ -38,8 +41,8 @@ export function WorkOrderForm({ workOrder, onSuccess }: WorkOrderFormProps) {
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         <WorkOrderFormFields form={form} />
         <div className="flex justify-end gap-4">
-          <Button type="submit" disabled={isPending}>
-            {isPending ? "Saving..." : "Save Work Order"}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : "Save Work Order"}
           </Button>
         </div>
       </form>

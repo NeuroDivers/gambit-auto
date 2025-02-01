@@ -21,7 +21,7 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
 
   const handlePrint = useReactToPrint({
     documentTitle: `Invoice-${invoice?.invoice_number || 'preview'}`,
-    content: () => componentRef.current,
+    contentRef: componentRef,
   })
 
   if (!invoice || !businessProfile) {
@@ -31,7 +31,7 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
   return (
     <div className="space-y-8">
       <div className="flex justify-end">
-        <Button onClick={() => handlePrint()} className="gap-2">
+        <Button onClick={handlePrint} className="gap-2">
           <PrinterIcon className="w-4 h-4" />
           Print Invoice
         </Button>

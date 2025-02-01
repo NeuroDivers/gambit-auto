@@ -15,14 +15,17 @@ export type WorkOrderFormValues = {
   additional_notes: string
   timeframe: "flexible" | "asap" | "within_week" | "within_month"
   address: string
-  services: Array<{
-    id: string
-    name: string
+  service_items: Array<{
+    service_id: string
+    service_name: string
+    quantity: number
+    unit_price: number
   }>
 }
 
 export type WorkOrderFormProps = {
   workOrder?: WorkOrder
+  initialData?: WorkOrder
   onSuccess?: () => void
 }
 
@@ -36,4 +39,8 @@ export type ServiceItemType = {
 export type ServiceListProps = {
   items: ServiceItemType[]
   setItems: (items: ServiceItemType[]) => void
+}
+
+export type WorkOrderCardActionsProps = {
+  request: WorkOrder
 }
