@@ -40,6 +40,7 @@ export const UserEditDialog = ({ user, open, onOpenChange }: UserEditDialogProps
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      // Update profile information (first_name and last_name)
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
@@ -50,6 +51,7 @@ export const UserEditDialog = ({ user, open, onOpenChange }: UserEditDialogProps
 
       if (profileError) throw profileError;
 
+      // Update role if changed
       if (values.role !== user.user_roles?.role) {
         const { error: roleError } = await supabase
           .from("user_roles")
