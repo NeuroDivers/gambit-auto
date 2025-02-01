@@ -1,4 +1,4 @@
-import { clsx, type ClassValue } from "clsx"
+import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
@@ -10,4 +10,8 @@ export const formatCurrency = (amount: number): string => {
     style: 'currency',
     currency: 'USD'
   }).format(amount)
+}
+
+export const formatDate = (date: string): string => {
+  return new Date(date).toLocaleDateString()
 }

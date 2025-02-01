@@ -4,7 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { formatCurrency } from "@/lib/utils";
+import { InvoiceHeader } from "./sections/InvoiceHeader";
+import { CustomerInfo } from "./sections/CustomerInfo";
+import { VehicleInfo } from "./sections/VehicleInfo";
+import { ServicesList } from "./sections/ServicesList";
+import { InvoiceTotals } from "./sections/InvoiceTotals";
 
 type InvoiceViewProps = {
   invoiceId?: string;
@@ -38,9 +42,14 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
   });
 
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
     documentTitle: 'Invoice',
     onAfterPrint: () => console.log('Printed successfully'),
+    print: () => {
+      if (componentRef.current) {
+        return Promise.resolve(componentRef.current);
+      }
+      return Promise.reject('No content to print');
+    }
   });
 
   if (!invoice) return null;
@@ -49,58 +58,33 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
     <div className="max-w-3xl mx-auto p-6">
       <Card ref={componentRef} className="p-6">
         <CardContent className="space-y-6">
-          <div className="flex justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">Invoice #{invoice.invoice_number}</h1>
-              <p className="text-muted-foreground">Date: {new Date(invoice.created_at).toLocaleDateString()}</p>
-            </div>
-            <div className="text-right">
-              <p className="font-semibold">Due Date</p>
-              <p>{invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'N/A'}</p>
-            </div>
-          </div>
+          <InvoiceHeader
+            invoiceNumber={invoice.invoice_number}
+            createdAt={invoice.created_at}
+            dueDate={invoice.due_date}
+          />
 
-          <div className="border-t pt-4">
-            <h2 className="font-semibold mb-2">Customer Information</h2>
-            <p>{invoice.work_order.first_name} {invoice.work_order.last_name}</p>
-            <p>{invoice.work_order.email}</p>
-            <p>{invoice.work_order.phone_number}</p>
-          </div>
+          <CustomerInfo
+            firstName={invoice.work_order.first_name}
+            lastName={invoice.work_order.last_name}
+            email={invoice.work_order.email}
+            phoneNumber={invoice.work_order.phone_number}
+          />
 
-          <div className="border-t pt-4">
-            <h2 className="font-semibold mb-2">Vehicle Information</h2>
-            <p>{invoice.work_order.vehicle_year} {invoice.work_order.vehicle_make} {invoice.work_order.vehicle_model}</p>
-            <p>Serial: {invoice.work_order.vehicle_serial}</p>
-          </div>
+          <VehicleInfo
+            year={invoice.work_order.vehicle_year}
+            make={invoice.work_order.vehicle_make}
+            model={invoice.work_order.vehicle_model}
+            serial={invoice.work_order.vehicle_serial}
+          />
 
-          <div className="border-t pt-4">
-            <h2 className="font-semibold mb-4">Services</h2>
-            <div className="space-y-2">
-              {invoice.work_order.services.map((service) => (
-                <div key={service.id} className="flex justify-between">
-                  <span>{service.service.name}</span>
-                  <span>{formatCurrency(service.service.price || 0)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ServicesList services={invoice.work_order.services} />
 
-          <div className="border-t pt-4">
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>{formatCurrency(invoice.subtotal)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Tax</span>
-                <span>{formatCurrency(invoice.tax_amount)}</span>
-              </div>
-              <div className="flex justify-between font-bold">
-                <span>Total</span>
-                <span>{formatCurrency(invoice.total)}</span>
-              </div>
-            </div>
-          </div>
+          <InvoiceTotals
+            subtotal={invoice.subtotal}
+            taxAmount={invoice.tax_amount}
+            total={invoice.total}
+          />
 
           {invoice.notes && (
             <div className="border-t pt-4">
