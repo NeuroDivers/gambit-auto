@@ -1,6 +1,5 @@
-import { useState } from "react"
+import { FormField, FormItem, FormLabel } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import { Plus } from "lucide-react"
 import { ServiceItem } from "./service-items/ServiceItem"
 import { ServiceList } from "./service-items/ServiceList"
@@ -26,15 +25,15 @@ export function ServiceItemsField({ form }: ServiceItemsFieldProps) {
         service_id: '',
         service_name: '',
         quantity: 1,
-        unit_price: 0,
-      },
+        unit_price: 0
+      }
     ])
   }
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <Label className="text-lg">Services</Label>
+        <FormLabel className="text-lg">Services</FormLabel>
         <Button
           type="button"
           variant="outline"
