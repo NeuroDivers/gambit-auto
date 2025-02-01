@@ -16,7 +16,7 @@ export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_types")
-        .select("id, name, price")
+        .select("id, name")
         .eq("status", "active")
       
       if (error) throw error
@@ -30,9 +30,9 @@ export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
       name="service_ids"
       render={() => (
         <FormItem>
-          <Card className="border-border/10 bg-[#1A1F2C]">
+          <Card className="border-border/5 bg-[#221F26]/30">
             <CardContent className="p-4">
-              <FormLabel className="text-lg font-semibold mb-4 block text-white">Services</FormLabel>
+              <FormLabel className="text-lg font-semibold mb-4 block text-white/90">Services</FormLabel>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {services.map((service) => (
                   <FormField
@@ -42,7 +42,7 @@ export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
                     render={({ field }) => (
                       <FormItem
                         key={service.id}
-                        className="flex flex-row items-center space-x-3 space-y-0 rounded-md border border-border/10 p-3 bg-[#221F26] hover:bg-[#2A2732] transition-colors"
+                        className="flex flex-row items-center space-x-3 space-y-0 rounded-md border border-border/5 p-3 bg-[#221F26]/20 hover:bg-[#2A2732]/20 transition-colors"
                       >
                         <Checkbox
                           checked={field.value?.includes(service.id)}
@@ -55,16 +55,11 @@ export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
                                   )
                                 )
                           }}
-                          className="border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                          className="border-primary/30 data-[state=checked]:bg-primary/50 data-[state=checked]:text-primary-foreground"
                         />
                         <div className="space-y-1 leading-none">
-                          <FormLabel className="text-white">
+                          <FormLabel className="text-white/80">
                             {service.name}
-                            {service.price && (
-                              <span className="text-primary ml-2">
-                                ${service.price}
-                              </span>
-                            )}
                           </FormLabel>
                         </div>
                       </FormItem>
