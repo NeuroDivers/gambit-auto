@@ -32,7 +32,7 @@ type BusinessFormValues = z.infer<typeof businessFormSchema>
 export function BusinessProfileForm() {
   const { toast } = useToast()
 
-  const { data: profile, refetch } = useQuery({
+  const { data: profile, refetch, isLoading } = useQuery({
     queryKey: ["business-profile"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -59,15 +59,28 @@ export function BusinessProfileForm() {
   const form = useForm<BusinessFormValues>({
     resolver: zodResolver(businessFormSchema),
     defaultValues: {
-      company_name: profile?.company_name || "",
-      phone_number: profile?.phone_number || "",
-      email: profile?.email || "",
-      address: profile?.address || "",
-      business_hours: profile?.business_hours 
-        ? (profile.business_hours as z.infer<typeof businessHoursSchema>) 
-        : defaultBusinessHours,
+      company_name: "",
+      phone_number: "",
+      email: "",
+      address: "",
+      business_hours: defaultBusinessHours,
     },
   })
+
+  // Update form values when profile data is loaded
+  React.useEffect(() => {
+    if (profile) {
+      form.reset({
+        company_name: profile.company_name || "",
+        phone_number: profile.phone_number || "",
+        email: profile.email || "",
+        address: profile.address || "",
+        business_hours: profile.business_hours 
+          ? (profile.business_hours as z.infer<typeof businessHoursSchema>) 
+          : defaultBusinessHours,
+      })
+    }
+  }, [profile, form])
 
   async function onSubmit(data: BusinessFormValues) {
     try {
@@ -108,6 +121,24 @@ export function BusinessProfileForm() {
     "saturday",
     "sunday",
   ] as const
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="grid grid-cols-2 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-10 bg-muted rounded-md" />
+          ))}
+        </div>
+        <div className="h-20 bg-muted rounded-md" />
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+            <div key={i} className="h-10 bg-muted rounded-md" />
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <Form {...form}>
