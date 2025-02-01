@@ -14,15 +14,15 @@ export function WorkOrderCard({ workOrder, onClick }: WorkOrderCardProps) {
   const getStatusStyle = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-muted/30 text-muted-foreground/70 hover:bg-muted/40'
+        return 'bg-muted/40 text-muted-foreground hover:bg-muted/50'
       case 'approved':
-        return 'bg-[#0EA5E9]/20 text-[#0EA5E9] hover:bg-[#0EA5E9]/30 font-medium'
+        return 'bg-[#0EA5E9]/30 text-[#0EA5E9] hover:bg-[#0EA5E9]/40 font-semibold'
       case 'rejected':
-        return 'bg-[#ea384c]/20 text-[#ea384c] hover:bg-[#ea384c]/30 font-medium'
+        return 'bg-[#ea384c]/30 text-[#ea384c] hover:bg-[#ea384c]/40 font-semibold'
       case 'completed':
-        return 'bg-[#9b87f5]/20 text-[#9b87f5] hover:bg-[#9b87f5]/30 font-medium'
+        return 'bg-[#9b87f5]/30 text-[#9b87f5] hover:bg-[#9b87f5]/40 font-semibold'
       default:
-        return 'bg-muted/30 text-muted-foreground/70 hover:bg-muted/40'
+        return 'bg-muted/40 text-muted-foreground hover:bg-muted/50'
     }
   }
 
@@ -30,7 +30,7 @@ export function WorkOrderCard({ workOrder, onClick }: WorkOrderCardProps) {
     <>
       <div 
         className={cn(
-          "relative text-xs p-1.5 rounded truncate cursor-pointer transition-colors",
+          "relative text-sm p-2 rounded truncate cursor-pointer transition-colors shadow-sm",
           getStatusStyle(workOrder.status)
         )}
         onClick={(e) => {
@@ -38,10 +38,10 @@ export function WorkOrderCard({ workOrder, onClick }: WorkOrderCardProps) {
           setIsDetailsOpen(true)
         }}
       >
-        <div className="truncate font-medium">
+        <div className="truncate font-semibold">
           {workOrder.first_name} {workOrder.last_name}
         </div>
-        <div className="text-inherit opacity-90 truncate">
+        <div className="text-inherit opacity-100 truncate">
           {workOrder.vehicle_make} {workOrder.vehicle_model}
         </div>
       </div>
