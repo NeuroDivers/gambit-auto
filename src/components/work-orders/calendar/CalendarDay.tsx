@@ -2,6 +2,7 @@ import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { WorkOrder } from "../types"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
+import { EditWorkOrderDialog } from "../EditWorkOrderDialog"
 
 type CalendarDayProps = {
   date: Date
@@ -61,8 +62,7 @@ export function CalendarDay({ date, workOrders, isCurrentMonth }: CalendarDayPro
       <div className="space-y-1">
         {workOrders.map((workOrder) => {
           const mainService = workOrder.work_order_services[0]?.service_types.name || 'Other'
-          const serviceIndex = workOrder.work_order_services[0]?.service_types?.id ? 
-            parseInt(workOrder.work_order_services[0].service_types.id.slice(-1), 16) : 0
+          const serviceIndex = 0
           const colors = getServiceColor(mainService, serviceIndex)
           
           return (
@@ -91,38 +91,40 @@ export function CalendarDay({ date, workOrders, isCurrentMonth }: CalendarDayPro
                 </div>
               </HoverCardTrigger>
               <HoverCardContent className="w-80 p-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <h4 className="text-sm font-semibold">{workOrder.first_name} {workOrder.last_name}</h4>
-                    <Badge variant="outline" className="text-xs">
-                      {workOrder.status}
-                    </Badge>
+                <EditWorkOrderDialog quote={workOrder}>
+                  <div className="space-y-2 cursor-pointer hover:bg-accent/50 p-2 rounded-lg transition-colors">
+                    <div className="flex justify-between">
+                      <h4 className="text-sm font-semibold">{workOrder.first_name} {workOrder.last_name}</h4>
+                      <Badge variant="outline" className="text-xs">
+                        {workOrder.status}
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Vehicle</p>
+                        <p>{workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Serial</p>
+                        <p>{workOrder.vehicle_serial}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Contact</p>
+                        <p>{workOrder.contact_preference === 'email' ? workOrder.email : workOrder.phone_number}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Services</p>
+                        <p>{workOrder.work_order_services.map(s => s.service_types.name).join(', ')}</p>
+                      </div>
+                    </div>
+                    {workOrder.additional_notes && (
+                      <div>
+                        <p className="text-muted-foreground text-sm">Notes</p>
+                        <p className="text-sm">{workOrder.additional_notes}</p>
+                      </div>
+                    )}
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Vehicle</p>
-                      <p>{workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Serial</p>
-                      <p>{workOrder.vehicle_serial}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Contact</p>
-                      <p>{workOrder.contact_preference === 'email' ? workOrder.email : workOrder.phone_number}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Services</p>
-                      <p>{workOrder.work_order_services.map(s => s.service_types.name).join(', ')}</p>
-                    </div>
-                  </div>
-                  {workOrder.additional_notes && (
-                    <div>
-                      <p className="text-muted-foreground text-sm">Notes</p>
-                      <p className="text-sm">{workOrder.additional_notes}</p>
-                    </div>
-                  )}
-                </div>
+                </EditWorkOrderDialog>
               </HoverCardContent>
             </HoverCard>
           )
