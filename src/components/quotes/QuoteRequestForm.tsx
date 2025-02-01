@@ -28,15 +28,21 @@ export function QuoteRequestForm({ initialData, onSuccess }: QuoteRequestFormPro
     setMediaUrl
   } = useMediaUpload()
 
-  const { data: selectedServices = [] } = useQuery({
+  const { data: selectedServices = [], error: servicesError } = useQuery({
     queryKey: ["quoteRequestServices", initialData?.id],
     queryFn: async () => {
+      if (!initialData?.id) return []
+      
       const { data, error } = await supabase
         .from("quote_request_services")
         .select("service_id")
-        .eq("quote_request_id", initialData?.id)
+        .eq("quote_request_id", initialData.id)
       
-      if (error) throw error
+      if (error) {
+        console.error("Error fetching quote request services:", error)
+        return []
+      }
+      
       return data?.map(service => service.service_id) ?? []
     },
     enabled: !!initialData?.id,
@@ -80,6 +86,10 @@ export function QuoteRequestForm({ initialData, onSuccess }: QuoteRequestFormPro
       onSuccess?.()
     }
   })
+
+  if (servicesError) {
+    console.error("Error loading services:", servicesError)
+  }
 
   return (
     <ScrollArea className="h-[calc(100vh-12rem)] pr-6">
