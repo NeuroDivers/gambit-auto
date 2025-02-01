@@ -12,11 +12,11 @@ import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { ServiceBaysList } from "@/components/service-bays/ServiceBaysList";
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs";
 
-export default function Index() {
+export default function Dashboard() {
   const navigate = useNavigate();
   const { isAdmin } = useAdminStatus();
   
-  const { data: session } = useQuery({
+  const { data: session, isLoading: sessionLoading } = useQuery({
     queryKey: ["session"],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -25,10 +25,18 @@ export default function Index() {
   });
 
   useEffect(() => {
-    if (!session) {
+    if (!sessionLoading && !session) {
       navigate("/auth");
     }
-  }, [session, navigate]);
+  }, [session, navigate, sessionLoading]);
+
+  if (sessionLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-pulse text-primary/60 text-lg">Loading...</div>
+      </div>
+    );
+  }
 
   if (!session) {
     return null;
