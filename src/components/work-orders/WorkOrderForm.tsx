@@ -28,14 +28,21 @@ export function WorkOrderForm({ initialData, onSuccess }: WorkOrderFormProps) {
     setMediaUrl
   } = useMediaUpload()
 
-  const { data: selectedServices = [], error: servicesError } = useQuery({
+  const { data: serviceItems = [], isLoading: isLoadingServices } = useQuery({
     queryKey: ["workOrderServices", initialData?.id],
     queryFn: async () => {
       if (!initialData?.id) return []
       
       const { data, error } = await supabase
         .from("work_order_services")
-        .select("service_id")
+        .select(`
+          service_id,
+          quantity,
+          unit_price,
+          service_types (
+            name
+          )
+        `)
         .eq("work_order_id", initialData.id)
       
       if (error) {
@@ -43,10 +50,14 @@ export function WorkOrderForm({ initialData, onSuccess }: WorkOrderFormProps) {
         return []
       }
       
-      return data?.map(service => service.service_id) ?? []
+      return data?.map(service => ({
+        service_id: service.service_id,
+        service_name: service.service_types.name,
+        quantity: service.quantity,
+        unit_price: service.unit_price
+      })) ?? []
     },
-    enabled: !!initialData?.id,
-    initialData: []
+    enabled: !!initialData?.id
   })
 
   const form = useForm<WorkOrderFormValues>({
@@ -58,7 +69,7 @@ export function WorkOrderForm({ initialData, onSuccess }: WorkOrderFormProps) {
         email: "",
         phone_number: "",
         contact_preference: "email" as const,
-        service_ids: [],
+        service_items: [],
         vehicle_make: "",
         vehicle_model: "",
         vehicle_year: new Date().getFullYear(),
@@ -67,15 +78,15 @@ export function WorkOrderForm({ initialData, onSuccess }: WorkOrderFormProps) {
         timeframe: "flexible" as const,
         price: 0,
       }),
-      service_ids: selectedServices
+      service_items: serviceItems
     },
   })
 
   React.useEffect(() => {
-    if (selectedServices.length > 0) {
-      form.setValue("service_ids", selectedServices)
+    if (serviceItems.length > 0) {
+      form.setValue("service_items", serviceItems)
     }
-  }, [selectedServices, form])
+  }, [serviceItems, form])
 
   const { handleSubmit } = useWorkOrderFormSubmission({
     initialData,
@@ -87,8 +98,8 @@ export function WorkOrderForm({ initialData, onSuccess }: WorkOrderFormProps) {
     }
   })
 
-  if (servicesError) {
-    console.error("Error loading services:", servicesError)
+  if (isLoadingServices && initialData?.id) {
+    return <div>Loading services...</div>
   }
 
   return (

@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Minus, Plus } from "lucide-react"
-import { WorkOrderFormValues } from "../WorkOrderFormFields"
+import type { WorkOrderFormValues } from "../WorkOrderFormFields"
 
 type ServiceItemsFieldProps = {
   form: UseFormReturn<WorkOrderFormValues>
