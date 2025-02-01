@@ -46,21 +46,14 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
   const handlePrint = useReactToPrint({
     documentTitle: `Invoice-${invoice?.invoice_number}`,
     onAfterPrint: () => console.log('Printed successfully'),
-    print: async () => {
-      if (printRef.current) {
-        return Promise.resolve(printRef.current);
-      }
-      return Promise.reject('No content to print');
-    }
+    content: () => printRef.current,
   });
 
   if (isLoading) {
     return (
-      <div className="max-w-3xl mx-auto p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-muted rounded w-1/3" />
-          <div className="h-32 bg-muted rounded" />
-        </div>
+      <div className="animate-pulse space-y-4">
+        <div className="h-8 bg-muted rounded w-1/3" />
+        <div className="h-32 bg-muted rounded" />
       </div>
     );
   }
@@ -68,16 +61,16 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
   if (!invoice) return null;
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
-      <Card ref={printRef} className="p-6">
-        <CardContent className="space-y-6">
+    <div className="w-full">
+      <Card ref={printRef} className="bg-white shadow-sm border rounded-lg">
+        <CardContent className="p-8 space-y-8">
           <InvoiceHeader
             invoiceNumber={invoice.invoice_number}
             createdAt={invoice.created_at}
             dueDate={invoice.due_date}
           />
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-8">
             <CustomerInfo
               firstName={invoice.work_order.first_name}
               lastName={invoice.work_order.last_name}
@@ -113,7 +106,13 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
       </Card>
 
       <div className="mt-6 text-center">
-        <Button onClick={() => handlePrint()} className="gap-2">
+        <Button 
+          onClick={(e) => {
+            e.preventDefault();
+            handlePrint();
+          }} 
+          className="gap-2"
+        >
           <Printer className="h-4 w-4" />
           Print Invoice
         </Button>
