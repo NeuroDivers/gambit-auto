@@ -1,8 +1,8 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { useToast } from "@/hooks/use-toast"
+import { Card, CardContent } from "@/components/ui/card"
 
 type SidekickAssignmentFieldProps = {
   form: any
@@ -18,6 +18,20 @@ type Sidekick = {
 }
 
 export function SidekickAssignmentField({ form, serviceId }: SidekickAssignmentFieldProps) {
+  const { data: service } = useQuery({
+    queryKey: ["service", serviceId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_types")
+        .select("name")
+        .eq("id", serviceId)
+        .single()
+      
+      if (error) throw error
+      return data
+    }
+  })
+
   const { data: sidekicks = [] } = useQuery<Sidekick[]>({
     queryKey: ["sidekicks"],
     queryFn: async () => {
@@ -48,23 +62,31 @@ export function SidekickAssignmentField({ form, serviceId }: SidekickAssignmentF
   })
 
   return (
-    <div className="space-y-2">
-      <Label>Assign Sidekick</Label>
-      <Select
-        value={form.watch(`sidekick_assignments.${serviceId}`) || ""}
-        onValueChange={(value) => form.setValue(`sidekick_assignments.${serviceId}`, value)}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Select a sidekick" />
-        </SelectTrigger>
-        <SelectContent>
-          {sidekicks.map((sidekick) => (
-            <SelectItem key={sidekick.id} value={sidekick.id}>
-              {`${sidekick.profiles.first_name || ''} ${sidekick.profiles.last_name || ''}`}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <Card className="border-border/10 bg-[#1A1F2C] mt-4">
+      <CardContent className="p-4">
+        <Label className="text-white mb-2 block">
+          Assign Sidekick for {service?.name}
+        </Label>
+        <Select
+          value={form.watch(`sidekick_assignments.${serviceId}`) || ""}
+          onValueChange={(value) => form.setValue(`sidekick_assignments.${serviceId}`, value)}
+        >
+          <SelectTrigger className="w-full bg-[#221F26] border-border/10">
+            <SelectValue placeholder="Select a sidekick" />
+          </SelectTrigger>
+          <SelectContent>
+            {sidekicks.map((sidekick) => (
+              <SelectItem 
+                key={sidekick.id} 
+                value={sidekick.id}
+                className="hover:bg-primary/10"
+              >
+                {`${sidekick.profiles.first_name || ''} ${sidekick.profiles.last_name || ''}`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </CardContent>
+    </Card>
   )
 }
