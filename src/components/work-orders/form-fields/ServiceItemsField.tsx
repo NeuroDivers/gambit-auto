@@ -1,7 +1,6 @@
 import { FormField, FormItem, FormLabel } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import { ServiceItem } from "./service-items/ServiceItem"
 import { ServiceList } from "./service-items/ServiceList"
 import { UseFormReturn } from "react-hook-form"
 import { ServiceItemType, WorkOrderFormValues } from "../types"
