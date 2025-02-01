@@ -13,7 +13,6 @@ export function InvoiceView({ invoice }: { invoice: any }) {
   const handlePrint = useReactToPrint({
     documentTitle: `Invoice-${invoice.invoice_number}`,
     onAfterPrint: () => console.log('Printed successfully'),
-    removeAfterPrint: true,
     pageStyle: "@page { size: auto; margin: 20mm; }",
     content: () => printRef.current,
   })
@@ -35,7 +34,7 @@ export function InvoiceView({ invoice }: { invoice: any }) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Invoice {invoice.invoice_number}</h1>
-        <Button onClick={handlePrint} className="gap-2">
+        <Button onClick={() => handlePrint()} className="gap-2">
           <Printer className="h-4 w-4" />
           Print Invoice
         </Button>
