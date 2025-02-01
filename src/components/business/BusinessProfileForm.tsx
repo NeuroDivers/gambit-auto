@@ -3,12 +3,12 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { Form } from "@/components/ui/form"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { useQuery } from "@tanstack/react-query"
+import { ContactInfoSection } from "./form-sections/ContactInfoSection"
+import { BusinessHoursSection } from "./form-sections/BusinessHoursSection"
 
 const businessHoursSchema = z.object({
   monday: z.string().optional(),
@@ -28,7 +28,7 @@ const businessFormSchema = z.object({
   business_hours: businessHoursSchema,
 })
 
-type BusinessFormValues = z.infer<typeof businessFormSchema>
+export type BusinessFormValues = z.infer<typeof businessFormSchema>
 
 export function BusinessProfileForm() {
   const { toast } = useToast()
@@ -68,7 +68,6 @@ export function BusinessProfileForm() {
     },
   })
 
-  // Update form values when profile data is loaded
   React.useEffect(() => {
     if (profile) {
       form.reset({
@@ -113,16 +112,6 @@ export function BusinessProfileForm() {
     }
   }
 
-  const days = [
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-    "saturday",
-    "sunday",
-  ] as const
-
   if (isLoading) {
     return (
       <div className="space-y-6 animate-pulse">
@@ -144,92 +133,8 @@ export function BusinessProfileForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="company_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Company Name</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="phone_number"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone Number</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input {...field} type="email" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Address</FormLabel>
-              <FormControl>
-                <Textarea 
-                  {...field} 
-                  className="min-h-[80px]"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Business Hours</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {days.map((day) => (
-              <FormField
-                key={day}
-                control={form.control}
-                name={`business_hours.${day}`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="capitalize">{day}</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        placeholder="e.g., 9:00-17:00"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ))}
-          </div>
-        </div>
-
+        <ContactInfoSection form={form} />
+        <BusinessHoursSection form={form} />
         <Button type="submit">Update Business Profile</Button>
       </form>
     </Form>
