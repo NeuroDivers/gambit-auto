@@ -67,7 +67,10 @@ export function InvoiceList() {
             <DialogTitle>Edit Invoice</DialogTitle>
           </DialogHeader>
           {selectedInvoiceId && (
-            <InvoiceView invoiceId={selectedInvoiceId} />
+            <InvoiceView 
+              invoiceId={selectedInvoiceId} 
+              isEditing={true}
+            />
           )}
         </DialogContent>
       </Dialog>
