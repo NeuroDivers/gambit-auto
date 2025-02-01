@@ -1,4 +1,4 @@
-import { format } from "date-fns"
+import { format, isToday } from "date-fns"
 import { WorkOrder } from "../types"
 import { cn } from "@/lib/utils"
 import { CreateWorkOrderDialog } from "../CreateWorkOrderDialog"
@@ -27,11 +27,15 @@ export function CalendarDay({ date, workOrders, isCurrentMonth }: CalendarDayPro
         className={cn(
           "relative min-h-[120px] p-2 border border-[#e5e7eb]/20 rounded-md cursor-pointer transition-all duration-200 day-container",
           !isCurrentMonth && "opacity-50 bg-background/50",
+          isToday(date) && "ring-2 ring-primary/30 bg-primary/5",
           "hover:border-dashed hover:border-primary/50"
         )}
         onClick={handleDayClick}
       >
-        <div className="font-medium text-sm mb-2 day-container">
+        <div className={cn(
+          "font-medium text-sm mb-2 day-container",
+          isToday(date) && "text-primary font-semibold text-base"
+        )}>
           {format(date, 'd')}
         </div>
         <div className="space-y-1">
