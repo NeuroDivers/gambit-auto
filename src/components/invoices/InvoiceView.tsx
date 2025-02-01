@@ -37,13 +37,13 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
   })
 
   const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
     documentTitle: `Invoice-${invoice?.invoice_number}`,
     onAfterPrint: () => console.log('Printed successfully'),
     pageStyle: "@page { size: auto; margin: 0mm; }",
-    onBeforePrint: async () => {
+    onBeforePrint: () => {
       if (componentRef.current) {
-        const element = componentRef.current
-        element.style.background = 'white'
+        componentRef.current.style.background = 'white'
       }
       return Promise.resolve()
     }
