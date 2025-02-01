@@ -19,6 +19,7 @@ export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
         .from("service_types")
         .select("*")
         .eq("status", "active")
+        .order("name")
       
       if (error) throw error
       return data
@@ -37,7 +38,11 @@ export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
       currentServices.splice(index, 1)
     }
     
-    form.setValue("service_ids", currentServices)
+    form.setValue("service_ids", currentServices, {
+      shouldValidate: true,
+      shouldDirty: true,
+      shouldTouch: true
+    })
   }
 
   return (
