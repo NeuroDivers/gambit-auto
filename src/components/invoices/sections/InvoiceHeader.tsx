@@ -48,6 +48,9 @@ export function InvoiceHeader({ invoiceNumber, createdAt, dueDate }: InvoiceHead
       </div>
       <div className="text-right space-y-2">
         <h2 className="text-2xl font-bold text-[#9b87f5]">FACTURE / INVOICE</h2>
+        <div className="px-4 py-1 rounded-full text-sm font-medium bg-[#FEF7CD] text-[#B99F24] inline-block">
+          {status?.toUpperCase()}
+        </div>
         <div className="text-sm text-[#8E9196] space-y-1">
           <p>No. de facture / Invoice #: {invoiceNumber}</p>
           <p>Date d'émission / Issue Date: {formatDate(createdAt)}</p>
