@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge"
 import { WorkOrder } from "../types"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { WorkOrderPreview } from "./WorkOrderPreview"
@@ -16,9 +15,6 @@ export function WorkOrderCard({ workOrder, onClick }: WorkOrderCardProps) {
           className="text-xs bg-primary/10 p-1 rounded truncate"
           onClick={onClick}
         >
-          <Badge variant="outline" className="text-[10px] mb-1">
-            {workOrder.status}
-          </Badge>
           <div className="truncate">
             {workOrder.first_name} {workOrder.last_name}
           </div>
