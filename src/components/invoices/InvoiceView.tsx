@@ -8,11 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { Mail, Printer } from "lucide-react"
-import { format } from 'date-fns'
 
 type InvoiceViewProps = {
   invoiceId?: string
@@ -22,11 +20,6 @@ type InvoiceViewProps = {
 type FormValues = {
   notes: string
   status: string
-  invoice_number: string
-  due_date: string
-  subtotal: number
-  tax_amount: number
-  total: number
 }
 
 export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
@@ -61,12 +54,7 @@ export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
   const form = useForm<FormValues>({
     defaultValues: {
       notes: invoice?.notes || '',
-      status: invoice?.status || 'draft',
-      invoice_number: invoice?.invoice_number || '',
-      due_date: invoice?.due_date ? format(new Date(invoice.due_date), 'yyyy-MM-dd') : '',
-      subtotal: invoice?.subtotal || 0,
-      tax_amount: invoice?.tax_amount || 0,
-      total: invoice?.total || 0
+      status: invoice?.status || 'draft'
     }
   })
 
@@ -90,7 +78,6 @@ export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
   })
 
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
     documentTitle: `Invoice-${invoice?.invoice_number}`,
     onAfterPrint: () => console.log('Printed successfully'),
     pageStyle: "@page { size: auto; margin: 0mm; }",
@@ -133,75 +120,6 @@ export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
     return (
       <Form {...form}>
         <form onSubmit={form.handleSubmit((values) => updateInvoiceMutation.mutate(values))} className="space-y-6">
-          <div className="grid grid-cols-2 gap-6">
-            <FormField
-              control={form.control}
-              name="invoice_number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Invoice Number</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="due_date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Due Date</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-3 gap-6">
-            <FormField
-              control={form.control}
-              name="subtotal"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Subtotal</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="tax_amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tax Amount</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="total"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Total</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
-
           <FormField
             control={form.control}
             name="status"
@@ -270,7 +188,7 @@ export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
           {isSending ? 'Sending...' : 'Send Email'}
         </Button>
         <Button 
-          onClick={() => handlePrint()}
+          onClick={handlePrint}
           className="gap-2"
         >
           <Printer className="h-4 w-4" />
