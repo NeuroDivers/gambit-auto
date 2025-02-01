@@ -1,4 +1,4 @@
-import { useReactToPrint } from 'react-to-print'
+import { useReactToPrint, PrintContextConsumer } from 'react-to-print'
 import { useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
