@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client"
 import { useQuery } from "@tanstack/react-query"
 import { ContactInfoSection } from "./form-sections/ContactInfoSection"
 import { BusinessHoursSection } from "./form-sections/BusinessHoursSection"
+import { MediaUploadField } from "../work-orders/form-fields/MediaUploadField"
+import { useMediaUpload } from "../work-orders/hooks/useMediaUpload"
 
 const businessHoursSchema = z.object({
   monday: z.string().optional(),
@@ -26,12 +28,14 @@ const businessFormSchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
   address: z.string().optional(),
   business_hours: businessHoursSchema,
+  logo_url: z.string().optional(),
 })
 
 export type BusinessFormValues = z.infer<typeof businessFormSchema>
 
 export function BusinessProfileForm() {
   const { toast } = useToast()
+  const { uploading, mediaUrl, handleFileUpload, handleMediaRemove, setMediaUrl } = useMediaUpload()
 
   const { data: profile, refetch, isLoading } = useQuery({
     queryKey: ["business-profile"],
@@ -65,6 +69,7 @@ export function BusinessProfileForm() {
       email: "",
       address: "",
       business_hours: defaultBusinessHours,
+      logo_url: "",
     },
   })
 
@@ -78,9 +83,11 @@ export function BusinessProfileForm() {
         business_hours: profile.business_hours 
           ? (profile.business_hours as z.infer<typeof businessHoursSchema>) 
           : defaultBusinessHours,
+        logo_url: profile.logo_url || "",
       })
+      setMediaUrl(profile.logo_url)
     }
-  }, [profile, form])
+  }, [profile, form, setMediaUrl])
 
   async function onSubmit(data: BusinessFormValues) {
     try {
@@ -93,6 +100,7 @@ export function BusinessProfileForm() {
           email: data.email,
           address: data.address,
           business_hours: data.business_hours,
+          logo_url: mediaUrl,
         })
 
       if (error) throw error
@@ -133,6 +141,12 @@ export function BusinessProfileForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <MediaUploadField
+          onFileUpload={handleFileUpload}
+          mediaUrl={mediaUrl}
+          uploading={uploading}
+          onMediaRemove={handleMediaRemove}
+        />
         <ContactInfoSection form={form} />
         <BusinessHoursSection form={form} />
         <Button type="submit">Update Business Profile</Button>
