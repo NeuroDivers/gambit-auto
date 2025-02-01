@@ -21,7 +21,6 @@ export type WorkOrderFormValues = {
 
 export type WorkOrderFormProps = {
   workOrder?: WorkOrder
-  initialData?: WorkOrder
   onSuccess?: () => void
 }
 

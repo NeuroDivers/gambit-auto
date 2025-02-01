@@ -36,7 +36,7 @@ export function WorkOrderForm({ workOrder, onSuccess }: WorkOrderFormProps) {
     onSuccess
   })
 
-  const { isSubmitting } = form.formState
+  const { isSubmitting } = form.formState ?? {}
 
   return (
     <Form {...form}>

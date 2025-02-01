@@ -1,24 +1,14 @@
 import * as z from "zod"
 import { UseFormReturn } from "react-hook-form"
-import { PersonalInfoFields } from "./form-fields/PersonalInfoFields"
-import { VehicleInfoFields } from "./form-fields/VehicleInfoFields"
-import { ServiceItemsField } from "./form-fields/ServiceItemsField"
-import { MediaUploadField } from "./form-fields/MediaUploadField"
-import { ContactPreferenceFields } from "./form-fields/ContactPreferenceFields"
-import { AddressField } from "./form-fields/AddressField"
-import { TimeframeField } from "./form-fields/TimeframeField"
+import { PersonalInfoFields } from "../shared/form-fields/PersonalInfoFields"
+import { VehicleInfoFields } from "../shared/form-fields/VehicleInfoFields"
+import { ServiceSelectionField } from "../shared/form-fields/ServiceSelectionField"
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { formatCurrency } from "@/lib/utils"
 import { useEffect } from "react"
-
-const serviceItemSchema = z.object({
-  service_id: z.string().uuid(),
-  service_name: z.string(),
-  quantity: z.number().min(1),
-  unit_price: z.number().min(0)
-})
+import { WorkOrderFormValues } from "./types"
 
 export const formSchema = z.object({
   first_name: z.string().min(2, "First name must be at least 2 characters"),
@@ -26,34 +16,27 @@ export const formSchema = z.object({
   email: z.string().email("Invalid email address"),
   phone_number: z.string().min(10, "Phone number must be at least 10 characters"),
   contact_preference: z.enum(["phone", "email"]),
-  service_items: z.array(serviceItemSchema).min(1, "Please select at least one service"),
+  service_items: z.array(z.object({
+    service_id: z.string(),
+    service_name: z.string(),
+    quantity: z.number().min(1),
+    unit_price: z.number().min(0)
+  })).min(1, "Please select at least one service"),
   vehicle_make: z.string().min(2, "Vehicle make must be at least 2 characters"),
   vehicle_model: z.string().min(2, "Vehicle model must be at least 2 characters"),
   vehicle_year: z.number().min(1900).max(new Date().getFullYear() + 1),
   vehicle_serial: z.string().optional(),
   additional_notes: z.string().optional(),
   timeframe: z.enum(["flexible", "asap", "within_week", "within_month"]),
-  price: z.number().min(0, "Price must be a positive number").default(0),
+  price: z.number().min(0, "Price must be a positive number"),
   address: z.string().optional()
 })
 
-export type WorkOrderFormValues = z.infer<typeof formSchema>
-
 type WorkOrderFormFieldsProps = {
   form: UseFormReturn<WorkOrderFormValues>
-  onFileUpload: (file: File) => Promise<void>
-  mediaUrl: string | null
-  uploading: boolean
-  onMediaRemove: () => void
 }
 
-export function WorkOrderFormFields({ 
-  form, 
-  onFileUpload, 
-  mediaUrl, 
-  uploading, 
-  onMediaRemove 
-}: WorkOrderFormFieldsProps) {
+export function WorkOrderFormFields({ form }: WorkOrderFormFieldsProps) {
   const serviceItems = form.watch("service_items") || []
   const totalPrice = serviceItems.reduce((sum, item) => {
     return sum + (item.quantity * item.unit_price)
@@ -66,14 +49,7 @@ export function WorkOrderFormFields({
   return (
     <>
       <PersonalInfoFields form={form} />
-      <AddressField form={form} />
-      <ServiceItemsField form={form} />
-      <MediaUploadField
-        onFileUpload={onFileUpload}
-        mediaUrl={mediaUrl}
-        uploading={uploading}
-        onMediaRemove={onMediaRemove}
-      />
+      <ServiceSelectionField form={form} />
       <VehicleInfoFields form={form} />
       <FormField
         control={form.control}
@@ -109,8 +85,6 @@ export function WorkOrderFormFields({
           </FormItem>
         )}
       />
-      <TimeframeField form={form} />
-      <ContactPreferenceFields form={form} />
     </>
   )
 }
