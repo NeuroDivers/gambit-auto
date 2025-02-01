@@ -1,12 +1,10 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
 import { UserEditFormFields, formSchema } from "./UserEditFormFields";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
+import { useUserEditSubmit } from "./hooks/useUserEditSubmit";
 
 type UserRole = "admin" | "manager" | "sidekick" | "client";
 
@@ -25,9 +23,6 @@ type UserEditDialogProps = {
 };
 
 export const UserEditDialog = ({ user, open, onOpenChange }: UserEditDialogProps) => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,66 +33,11 @@ export const UserEditDialog = ({ user, open, onOpenChange }: UserEditDialogProps
     },
   });
 
-  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
-    try {
-      // Update profile information (first_name and last_name)
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({
-          first_name: values.first_name,
-          last_name: values.last_name,
-        })
-        .eq("id", user.id);
-
-      if (profileError) throw profileError;
-
-      // Update role if changed
-      if (values.role !== user.user_roles?.role) {
-        const { error: roleError } = await supabase
-          .from("user_roles")
-          .upsert({
-            user_id: user.id,
-            role: values.role,
-          });
-
-        if (roleError) throw roleError;
-      }
-
-      // Update work order assignments if role is sidekick
-      if (values.role === "sidekick" && values.assigned_work_orders) {
-        const { error: workOrderError } = await supabase
-          .from("work_orders")
-          .update({ assigned_sidekick_id: null })
-          .eq("assigned_sidekick_id", user.id);
-
-        if (workOrderError) throw workOrderError;
-
-        for (const workOrderId of values.assigned_work_orders) {
-          const { error: assignError } = await supabase
-            .from("work_orders")
-            .update({ assigned_sidekick_id: user.id })
-            .eq("id", workOrderId);
-
-          if (assignError) throw assignError;
-        }
-      }
-
-      toast({
-        title: "Success",
-        description: "User updated successfully",
-      });
-
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["workOrders"] });
-      onOpenChange(false);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
+  const { handleSubmit } = useUserEditSubmit({
+    userId: user.id,
+    currentRole: user.user_roles?.role,
+    onSuccess: () => onOpenChange(false),
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
