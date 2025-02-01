@@ -42,36 +42,12 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
 
       if (error) throw error
 
+      await queryClient.invalidateQueries({ queryKey: ['serviceBays'] })
+
       toast({
         title: "Success",
         description: `Bay status updated to ${status}`,
       })
-
-      queryClient.invalidateQueries({ queryKey: ['serviceBays'] })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
-    }
-  }
-
-  const updateBayNotes = async (notes: string) => {
-    try {
-      const { error } = await supabase
-        .from('service_bays')
-        .update({ notes })
-        .eq('id', bay.id)
-
-      if (error) throw error
-
-      toast({
-        title: "Success",
-        description: "Bay notes updated successfully",
-      })
-
-      queryClient.invalidateQueries({ queryKey: ['serviceBays'] })
     } catch (error) {
       toast({
         title: "Error",
@@ -86,7 +62,11 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
       if (isActive) {
         const { error } = await supabase
           .from('bay_services')
-          .insert({ bay_id: bay.id, service_id: serviceId })
+          .insert({ 
+            bay_id: bay.id, 
+            service_id: serviceId,
+            is_active: true 
+          })
 
         if (error) throw error
       } else {
@@ -99,15 +79,12 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
         if (error) throw error
       }
 
+      await queryClient.invalidateQueries({ queryKey: ['serviceBays'] })
+
       toast({
         title: "Success",
         description: `Service ${isActive ? 'added to' : 'removed from'} bay`,
       })
-
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['serviceBays'] }),
-        queryClient.invalidateQueries({ queryKey: ['bayServices'] })
-      ])
     } catch (error) {
       toast({
         title: "Error",

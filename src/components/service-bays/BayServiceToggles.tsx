@@ -25,7 +25,7 @@ export function BayServiceToggles({ availableServices, activeServices, onToggleS
     <div className="space-y-4">
       <Label>Available Services</Label>
       {activeAvailableServices.map((service) => {
-        const isActive = activeServices.some(s => s.id === service.id)
+        const isActive = activeServices.some(s => s.service_id === service.id)
         return (
           <div key={service.id} className="flex items-center justify-between">
             <span className="text-sm">{service.name}</span>

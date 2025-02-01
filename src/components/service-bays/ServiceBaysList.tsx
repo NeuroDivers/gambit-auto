@@ -17,11 +17,11 @@ export function ServiceBaysList() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   const { data: serviceBays, isLoading } = useQuery({
-    queryKey: ["service-bays"],
+    queryKey: ["serviceBays"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_bays")
-        .select("*, bay_services(service_id, is_active)")
+        .select("*, bay_services(service_id)")
 
       if (error) throw error
       return data || []
