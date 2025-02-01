@@ -37,9 +37,9 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
   })
 
   const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
     documentTitle: `Invoice-${invoice?.invoice_number}`,
     onAfterPrint: () => console.log('Printed successfully'),
-    removeAfterPrint: true,
     pageStyle: "@page { size: auto; margin: 0mm; }",
     copyStyles: true,
   })
