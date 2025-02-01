@@ -1,11 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import { ServiceType, ServiceItemType } from "../types"
-
-export type ServiceListProps = {
-  workOrderServices: ServiceItemType[]
-  onServicesChange: (newServices: ServiceItemType[]) => void
-}
+import { ServiceItemType, ServiceListProps } from "../../types"
 
 export function ServiceList({ workOrderServices, onServicesChange }: ServiceListProps) {
   return (

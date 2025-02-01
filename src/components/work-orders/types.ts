@@ -16,7 +16,7 @@ export type WorkOrderFormValues = {
   timeframe: "flexible" | "asap" | "within_week" | "within_month"
   address?: string
   service_items: Array<ServiceItemType>
-  price?: number
+  price: number
 }
 
 export type WorkOrderFormProps = {
@@ -35,9 +35,4 @@ export type ServiceItemType = {
 export type ServiceListProps = {
   workOrderServices: ServiceItemType[]
   onServicesChange: (services: ServiceItemType[]) => void
-}
-
-export type WorkOrderCardActionsProps = {
-  workOrder: WorkOrder
-  onDelete?: () => void
 }
