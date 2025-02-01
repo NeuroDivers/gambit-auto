@@ -102,7 +102,7 @@ export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
     <div className="w-full max-w-[1000px] mx-auto space-y-6 p-6">
       <InvoiceActions 
         invoiceId={invoiceId} 
-        onPrint={() => handlePrint()}
+        onPrint={handlePrint}
       />
       <div ref={componentRef} className="bg-white rounded-lg shadow-lg p-8">
         <InvoiceCard invoice={invoice} />
