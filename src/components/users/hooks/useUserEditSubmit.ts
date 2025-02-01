@@ -19,15 +19,13 @@ export const useUserEditSubmit = ({ userId, currentRole, onSuccess }: UseUserEdi
       console.log("Updating profile for user:", userId, "with values:", values);
       
       // Update profile information (first_name and last_name)
-      const { error: profileError, data: profileData } = await supabase
+      const { error: profileError } = await supabase
         .from("profiles")
         .update({
           first_name: values.first_name,
           last_name: values.last_name,
         })
         .eq("id", userId);
-
-      console.log("Profile update result:", { profileError, profileData });
 
       if (profileError) throw profileError;
 
@@ -61,32 +59,12 @@ export const useUserEditSubmit = ({ userId, currentRole, onSuccess }: UseUserEdi
         }
       }
 
-      // Update work order assignments if role is sidekick
-      if (values.role === "sidekick" && values.assigned_work_orders) {
-        const { error: workOrderError } = await supabase
-          .from("work_orders")
-          .update({ assigned_sidekick_id: null })
-          .eq("assigned_sidekick_id", userId);
-
-        if (workOrderError) throw workOrderError;
-
-        for (const workOrderId of values.assigned_work_orders) {
-          const { error: assignError } = await supabase
-            .from("work_orders")
-            .update({ assigned_sidekick_id: userId })
-            .eq("id", workOrderId);
-
-          if (assignError) throw assignError;
-        }
-      }
-
       toast({
         title: "Success",
         description: "User updated successfully",
       });
 
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["workOrders"] });
       onSuccess();
     } catch (error) {
       console.error("Error updating user:", error);
