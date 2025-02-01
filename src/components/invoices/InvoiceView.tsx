@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
+import { Mail, Printer } from "lucide-react"
 
 type InvoiceViewProps = {
   invoiceId?: string
@@ -24,6 +25,7 @@ type FormValues = {
 export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
   const componentRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
+  const [isSending, setIsSending] = useState(false)
 
   const { data: invoice, isLoading } = useQuery({
     queryKey: ["invoice", invoiceId],
@@ -86,6 +88,24 @@ export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
       return Promise.resolve()
     }
   })
+
+  const handleSendEmail = async () => {
+    try {
+      setIsSending(true)
+      const { error } = await supabase.functions.invoke('send-invoice-email', {
+        body: { invoiceId }
+      })
+      
+      if (error) throw error
+      
+      toast.success('Invoice sent successfully')
+    } catch (error) {
+      console.error('Error sending invoice:', error)
+      toast.error('Failed to send invoice')
+    } finally {
+      setIsSending(false)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -157,7 +177,24 @@ export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
 
   return (
     <div className="w-full max-w-[1000px] mx-auto space-y-6 p-6">
-      <PrintButton onPrint={handlePrint} />
+      <div className="flex justify-end gap-4">
+        <Button
+          variant="outline"
+          onClick={handleSendEmail}
+          disabled={isSending}
+          className="gap-2"
+        >
+          <Mail className="h-4 w-4" />
+          {isSending ? 'Sending...' : 'Send Email'}
+        </Button>
+        <Button 
+          onClick={handlePrint}
+          className="gap-2"
+        >
+          <Printer className="h-4 w-4" />
+          Print Invoice
+        </Button>
+      </div>
       <div ref={componentRef} className="bg-white rounded-lg shadow-lg p-8">
         <InvoiceCard invoice={invoice} />
       </div>
