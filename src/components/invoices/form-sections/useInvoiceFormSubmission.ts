@@ -6,6 +6,7 @@ type UseInvoiceFormSubmissionProps = {
   selectedWorkOrderId: string
   customerName: string
   customerEmail: string
+  customerPhone: string
   customerAddress: string
   vehicleMake: string
   vehicleModel: string
@@ -21,6 +22,7 @@ export function useInvoiceFormSubmission({
   selectedWorkOrderId,
   customerName,
   customerEmail,
+  customerPhone,
   customerAddress,
   vehicleMake,
   vehicleModel,
@@ -45,6 +47,7 @@ export function useInvoiceFormSubmission({
             first_name: customerName.split(" ")[0] || "",
             last_name: customerName.split(" ")[1] || "",
             email: customerEmail,
+            phone_number: customerPhone,
             contact_preference: "email",
             vehicle_make: vehicleMake,
             vehicle_model: vehicleModel,
@@ -66,7 +69,7 @@ export function useInvoiceFormSubmission({
 
       if (invoiceError) throw invoiceError
 
-      // Update invoice with customer and business information
+      // Update invoice with customer, vehicle and business information
       const { error: updateError } = await supabase
         .from("invoices")
         .update({
