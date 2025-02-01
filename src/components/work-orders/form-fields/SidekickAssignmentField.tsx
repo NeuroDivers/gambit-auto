@@ -11,10 +11,8 @@ type SidekickAssignmentFieldProps = {
 
 type Sidekick = {
   id: string
-  profiles: {
-    first_name: string | null
-    last_name: string | null
-  }
+  first_name: string | null
+  last_name: string | null
 }
 
 export function SidekickAssignmentField({ form, serviceId }: SidekickAssignmentFieldProps) {
@@ -32,7 +30,7 @@ export function SidekickAssignmentField({ form, serviceId }: SidekickAssignmentF
     }
   })
 
-  const { data: sidekicks = [], isLoading: isSidekicksLoading, error: sidekicksError } = useQuery<Sidekick[]>({
+  const { data: sidekicks = [], isLoading: isSidekicksLoading, error: sidekicksError } = useQuery({
     queryKey: ["sidekicks"],
     queryFn: async () => {
       const { data: userRoles, error: rolesError } = await supabase
@@ -51,13 +49,7 @@ export function SidekickAssignmentField({ form, serviceId }: SidekickAssignmentF
 
       if (profilesError) throw profilesError
 
-      return profiles.map(profile => ({
-        id: profile.id,
-        profiles: {
-          first_name: profile.first_name,
-          last_name: profile.last_name
-        }
-      }))
+      return profiles
     }
   })
 
@@ -101,7 +93,7 @@ export function SidekickAssignmentField({ form, serviceId }: SidekickAssignmentF
                 value={sidekick.id}
                 className="hover:bg-primary/10 text-white/80"
               >
-                {`${sidekick.profiles.first_name || ''} ${sidekick.profiles.last_name || ''}`}
+                {`${sidekick.first_name || ''} ${sidekick.last_name || ''}`}
               </SelectItem>
             ))}
           </SelectContent>
