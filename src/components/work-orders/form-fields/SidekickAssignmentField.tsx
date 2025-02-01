@@ -62,24 +62,24 @@ export function SidekickAssignmentField({ form, serviceId }: SidekickAssignmentF
   })
 
   return (
-    <Card className="border-border/10 bg-[#1A1F2C] mt-4">
+    <Card className="border-border/5 bg-[#1A1F2C]/80 mt-4">
       <CardContent className="p-4">
-        <Label className="text-white mb-2 block">
+        <Label className="text-white/90 mb-2 block">
           Assign Sidekick for {service?.name}
         </Label>
         <Select
           value={form.watch(`sidekick_assignments.${serviceId}`) || ""}
           onValueChange={(value) => form.setValue(`sidekick_assignments.${serviceId}`, value)}
         >
-          <SelectTrigger className="w-full bg-[#221F26] border-border/10">
+          <SelectTrigger className="w-full bg-[#221F26]/60 border-border/5 text-white/80">
             <SelectValue placeholder="Select a sidekick" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-[#1A1F2C] border-border/5">
             {sidekicks.map((sidekick) => (
               <SelectItem 
                 key={sidekick.id} 
                 value={sidekick.id}
-                className="hover:bg-primary/10"
+                className="hover:bg-primary/10 text-white/80"
               >
                 {`${sidekick.profiles.first_name || ''} ${sidekick.profiles.last_name || ''}`}
               </SelectItem>
