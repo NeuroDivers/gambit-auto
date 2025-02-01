@@ -14,17 +14,24 @@ type CalendarDayProps = {
 export function CalendarDay({ date, workOrders, isCurrentMonth }: CalendarDayProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
+  const handleDayClick = (e: React.MouseEvent) => {
+    // Only open create dialog if clicking directly on the day container
+    if (e.currentTarget === e.target || (e.target as HTMLElement).classList.contains('day-container')) {
+      setIsCreateDialogOpen(true)
+    }
+  }
+
   return (
     <>
       <div 
         className={cn(
-          "relative min-h-[120px] p-2 border border-border/20 rounded-md cursor-pointer transition-all duration-200",
+          "relative min-h-[120px] p-2 border border-border/20 rounded-md cursor-pointer transition-all duration-200 day-container",
           !isCurrentMonth && "opacity-50 bg-background/50",
           "hover:border-dashed hover:border-primary/50"
         )}
-        onClick={() => setIsCreateDialogOpen(true)}
+        onClick={handleDayClick}
       >
-        <div className="font-medium text-sm mb-2">
+        <div className="font-medium text-sm mb-2 day-container">
           {format(date, 'd')}
         </div>
         <div className="space-y-1">
@@ -32,7 +39,9 @@ export function CalendarDay({ date, workOrders, isCurrentMonth }: CalendarDayPro
             <WorkOrderCard
               key={workOrder.id}
               workOrder={workOrder}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
             />
           ))}
         </div>
