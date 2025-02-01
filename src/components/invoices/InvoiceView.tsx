@@ -6,11 +6,15 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/utils";
 
-export function InvoiceView() {
-  const componentRef = useRef();
+type InvoiceViewProps = {
+  invoiceId?: string;
+}
+
+export function InvoiceView({ invoiceId }: InvoiceViewProps) {
+  const componentRef = useRef<HTMLDivElement>(null);
 
   const { data: invoice } = useQuery({
-    queryKey: ["invoice"],
+    queryKey: ["invoice", invoiceId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("invoices")
@@ -24,18 +28,19 @@ export function InvoiceView() {
             )
           )
         `)
+        .eq('id', invoiceId)
         .single();
 
       if (error) throw error;
       return data;
     },
+    enabled: !!invoiceId
   });
 
   const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
     documentTitle: 'Invoice',
     onAfterPrint: () => console.log('Printed successfully'),
-    removeAfterPrint: true,
-    content: () => componentRef.current,
   });
 
   if (!invoice) return null;
@@ -107,7 +112,7 @@ export function InvoiceView() {
       </Card>
 
       <div className="mt-6 text-center">
-        <Button onClick={handlePrint}>Print Invoice</Button>
+        <Button onClick={() => handlePrint()}>Print Invoice</Button>
       </div>
     </div>
   );

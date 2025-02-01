@@ -7,7 +7,7 @@ import { useParams } from "react-router-dom"
 export default function InvoiceDetails() {
   const { id } = useParams()
 
-  const { data: invoice, isLoading } = useQuery({
+  const { isLoading } = useQuery({
     queryKey: ["invoice", id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -47,7 +47,7 @@ export default function InvoiceDetails() {
           <PageBreadcrumbs />
         </div>
         <div className="max-w-[1000px] mx-auto">
-          {invoice && <InvoiceView invoice={invoice} />}
+          <InvoiceView invoiceId={id} />
         </div>
       </div>
     </div>
