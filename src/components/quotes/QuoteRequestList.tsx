@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useEffect } from "react"
 import { QuoteRequestsSection } from "./sections/QuoteRequestsSection"
+import { QuoteCalendar } from "./QuoteCalendar"
 
 export const QuoteRequestList = () => {
   const queryClient = useQueryClient()
@@ -29,6 +30,7 @@ export const QuoteRequestList = () => {
 
   return (
     <div className="space-y-20">
+      <QuoteCalendar />
       <QuoteRequestsSection />
     </div>
   )
