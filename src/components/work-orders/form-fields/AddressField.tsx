@@ -1,5 +1,5 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { UseFormReturn } from "react-hook-form"
 import type { WorkOrderFormValues } from "../WorkOrderFormFields"
 
@@ -16,7 +16,11 @@ export function AddressField({ form }: AddressFieldProps) {
         <FormItem>
           <FormLabel>Address</FormLabel>
           <FormControl>
-            <Input placeholder="Enter address" {...field} />
+            <Textarea 
+              placeholder="Enter address" 
+              className="min-h-[100px]"
+              {...field} 
+            />
           </FormControl>
           <FormMessage />
         </FormItem>
