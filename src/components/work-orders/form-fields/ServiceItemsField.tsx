@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import type { WorkOrderFormValues } from "../WorkOrderFormFields"
 import { ServiceList } from "./service-items/ServiceList"
 import { ServiceItem } from "./service-items/ServiceItem"
-import type { ServiceType } from "./service-items/types"
+import type { ServiceType, ServiceItemType } from "./service-items/types"
 
 type ServiceItemsFieldProps = {
   form: UseFormReturn<WorkOrderFormValues>
@@ -31,15 +31,13 @@ export function ServiceItemsField({ form }: ServiceItemsFieldProps) {
   const handleAddService = (service: ServiceType) => {
     const currentServices = form.getValues("service_items") || []
     if (!currentServices.find(s => s.service_id === service.id)) {
-      form.setValue("service_items", [
-        ...currentServices,
-        {
-          service_id: service.id,
-          service_name: service.name,
-          quantity: 1,
-          unit_price: service.price || 0
-        }
-      ])
+      const newService: ServiceItemType = {
+        service_id: service.id,
+        service_name: service.name,
+        quantity: 1,
+        unit_price: service.price || 0
+      }
+      form.setValue("service_items", [...currentServices, newService])
     }
   }
 
