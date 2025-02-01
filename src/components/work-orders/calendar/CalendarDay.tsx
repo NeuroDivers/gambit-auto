@@ -49,7 +49,7 @@ export function CalendarDay({ date, workOrders, isCurrentMonth }: CalendarDayPro
                 </div>
               </HoverCardTrigger>
               <HoverCardContent 
-                className="w-80 p-4"
+                className="w-80 p-4 z-[9999]"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="space-y-2">
