@@ -5,6 +5,7 @@ import { EditInvoiceForm } from './sections/EditInvoiceForm'
 import { InvoicePrintPreview } from './sections/InvoicePrintPreview'
 import { useForm } from "react-hook-form"
 import { InvoiceFormValues } from "./types"
+import { useEffect } from "react"
 
 type InvoiceViewProps = {
   invoiceId?: string
@@ -41,18 +42,36 @@ export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
 
   const form = useForm<InvoiceFormValues>({
     defaultValues: {
-      notes: invoice?.notes || '',
-      status: invoice?.status || 'draft',
-      invoice_items: invoice?.invoice_items || [],
-      customer_name: invoice?.customer_name || '',
-      customer_email: invoice?.customer_email || '',
-      customer_address: invoice?.customer_address || '',
-      vehicle_make: invoice?.vehicle_make || '',
-      vehicle_model: invoice?.vehicle_model || '',
-      vehicle_year: invoice?.vehicle_year || 0,
-      vehicle_vin: invoice?.vehicle_vin || ''
+      notes: '',
+      status: 'draft',
+      invoice_items: [],
+      customer_name: '',
+      customer_email: '',
+      customer_address: '',
+      vehicle_make: '',
+      vehicle_model: '',
+      vehicle_year: 0,
+      vehicle_vin: ''
     }
   })
+
+  // Update form when invoice data is loaded
+  useEffect(() => {
+    if (invoice) {
+      form.reset({
+        notes: invoice.notes || '',
+        status: invoice.status || 'draft',
+        invoice_items: invoice.invoice_items || [],
+        customer_name: invoice.customer_name || '',
+        customer_email: invoice.customer_email || '',
+        customer_address: invoice.customer_address || '',
+        vehicle_make: invoice.vehicle_make || '',
+        vehicle_model: invoice.vehicle_model || '',
+        vehicle_year: invoice.vehicle_year || 0,
+        vehicle_vin: invoice.vehicle_vin || ''
+      })
+    }
+  }, [invoice, form])
 
   const updateInvoiceMutation = useMutation({
     mutationFn: async (values: InvoiceFormValues) => {
