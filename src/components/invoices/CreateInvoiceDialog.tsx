@@ -84,7 +84,6 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
       setVehicleVin(workOrder.vehicle_serial)
       setNotes(workOrder.additional_notes || "")
       
-      // Convert work order services to invoice items
       const items = workOrder.work_order_services.map((service: any) => ({
         service_name: service.service_types.name,
         description: service.service_types.name,
@@ -113,6 +112,7 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
     selectedWorkOrderId,
     customerName,
     customerEmail,
+    customerPhone,
     customerAddress,
     vehicleMake,
     vehicleModel,

@@ -69,7 +69,6 @@ export function useInvoiceFormSubmission({
 
       if (invoiceError) throw invoiceError
 
-      // Update invoice with customer, vehicle and business information
       const { error: updateError } = await supabase
         .from("invoices")
         .update({
@@ -91,7 +90,6 @@ export function useInvoiceFormSubmission({
 
       if (updateError) throw updateError
 
-      // Insert invoice items
       if (invoiceItems.length > 0) {
         const { error: itemsError } = await supabase
           .from("invoice_items")
