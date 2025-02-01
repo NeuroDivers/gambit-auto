@@ -10,7 +10,7 @@ type ServiceType = {
 type BayServiceTogglesProps = {
   availableServices: ServiceType[]
   activeServices: {
-    id: string
+    service_id: string
     name: string
     is_active: boolean
   }[]

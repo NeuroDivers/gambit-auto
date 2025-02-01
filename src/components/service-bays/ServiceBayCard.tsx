@@ -18,7 +18,7 @@ type ServiceBayCardProps = {
     notes?: string | null
   }
   services: {
-    id: string
+    service_id: string
     name: string
     is_active: boolean
   }[]
@@ -47,6 +47,30 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
       toast({
         title: "Success",
         description: `Bay status updated to ${status}`,
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      })
+    }
+  }
+
+  const updateBayNotes = async (notes: string) => {
+    try {
+      const { error } = await supabase
+        .from('service_bays')
+        .update({ notes })
+        .eq('id', bay.id)
+
+      if (error) throw error
+
+      await queryClient.invalidateQueries({ queryKey: ['serviceBays'] })
+
+      toast({
+        title: "Success",
+        description: "Bay notes updated successfully",
       })
     } catch (error) {
       toast({
