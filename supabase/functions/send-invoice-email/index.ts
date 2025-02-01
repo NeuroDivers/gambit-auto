@@ -8,7 +8,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -101,6 +100,7 @@ serve(async (req) => {
       from: Deno.env.get('SMTP_USER') ?? '',
       to: invoice.work_order.email,
       subject: `Invoice #${invoice.invoice_number} from ${businessProfile.company_name}`,
+      content: emailContent,
       html: emailContent,
     })
 
