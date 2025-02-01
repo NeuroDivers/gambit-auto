@@ -40,7 +40,7 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
     documentTitle: `Invoice-${invoice?.invoice_number}`,
     onAfterPrint: () => console.log('Printed successfully'),
     pageStyle: "@page { size: auto; margin: 0mm; }",
-    onBeforeGetContent: () => {
+    onBeforePrint: () => {
       if (componentRef.current) {
         const element = componentRef.current
         element.style.background = 'white'
