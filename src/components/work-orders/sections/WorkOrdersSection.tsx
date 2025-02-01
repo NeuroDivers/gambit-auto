@@ -6,7 +6,7 @@ import { PlusCircle, Pencil } from "lucide-react"
 import { useState } from "react"
 import { CreateWorkOrderDialog } from "../CreateWorkOrderDialog"
 import { WorkOrderDialog } from "../WorkOrderDialog"
-import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { WorkOrder } from "../types"
 
 export function WorkOrdersSection() {
@@ -44,18 +44,31 @@ export function WorkOrdersSection() {
     setSelectedWorkOrder(order)
   }
 
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('work_orders')
+        .update({ status: newStatus })
+        .eq('id', orderId)
+
+      if (error) throw error
+    } catch (error) {
+      console.error('Error updating work order status:', error)
+    }
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-500/20 text-yellow-400'
+        return 'text-yellow-400 bg-yellow-500/20'
       case 'in_progress':
-        return 'bg-blue-500/20 text-blue-400'
+        return 'text-blue-400 bg-blue-500/20'
       case 'completed':
-        return 'bg-green-500/20 text-green-400'
+        return 'text-green-400 bg-green-500/20'
       case 'cancelled':
-        return 'bg-red-500/20 text-red-400'
+        return 'text-red-400 bg-red-500/20'
       default:
-        return 'bg-gray-500/20 text-gray-400'
+        return 'text-gray-400 bg-gray-500/20'
     }
   }
 
@@ -93,9 +106,20 @@ export function WorkOrdersSection() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className={getStatusColor(order.status)}>
-                  {order.status}
-                </Badge>
+                <Select
+                  defaultValue={order.status}
+                  onValueChange={(value) => handleStatusChange(order.id, value)}
+                >
+                  <SelectTrigger className={`w-[130px] ${getStatusColor(order.status)}`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="scheduled">Scheduled</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button
                   variant="ghost"
                   size="icon"
