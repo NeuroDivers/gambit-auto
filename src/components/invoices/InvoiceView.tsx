@@ -17,7 +17,7 @@ type InvoiceViewProps = {
 }
 
 export function InvoiceView({ invoiceId }: InvoiceViewProps) {
-  const printRef = useRef<HTMLDivElement>(null);
+  const componentRef = useRef<HTMLDivElement>(null);
 
   const { data: invoice, isLoading } = useQuery({
     queryKey: ["invoice", invoiceId],
@@ -44,16 +44,10 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
   });
 
   const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
     documentTitle: `Invoice-${invoice?.invoice_number}`,
     onAfterPrint: () => console.log('Printed successfully'),
-    print: async (printIframe: HTMLIFrameElement) => {
-      const document = printIframe.contentDocument;
-      if (document) {
-        const html = document.getElementsByTagName("html")[0];
-        html.style.background = 'none';
-      }
-      return true;
-    }
+    removeAfterPrint: true
   });
 
   if (isLoading) {
@@ -70,13 +64,13 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
   return (
     <div className="w-full max-w-[1400px] mx-auto space-y-6">
       <div className="flex justify-end">
-        <Button onClick={() => handlePrint()} className="gap-2">
+        <Button onClick={handlePrint} className="gap-2">
           <Printer className="h-4 w-4" />
           Print Invoice
         </Button>
       </div>
 
-      <Card ref={printRef} className="w-full bg-white shadow-lg">
+      <Card ref={componentRef} className="w-full bg-white shadow-lg print:shadow-none">
         <CardContent className="p-8 space-y-8 text-[#222222]">
           <div className="relative">
             <div className="absolute right-0 top-0">
