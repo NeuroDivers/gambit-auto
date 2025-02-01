@@ -1,4 +1,4 @@
-import { useReactToPrint, PrintContextConsumer } from 'react-to-print'
+import { useReactToPrint } from 'react-to-print'
 import { useRef } from 'react'
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -40,14 +40,11 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
     documentTitle: `Invoice-${invoice?.invoice_number}`,
     onAfterPrint: () => console.log('Printed successfully'),
     pageStyle: "@page { size: auto; margin: 0mm; }",
-    copyStyles: true,
-    print: async (printIframe) => {
-      const document = printIframe.contentDocument
-      if (document) {
-        const html = document.getElementsByTagName("html")[0]
-        html.style.background = 'none'
+    onBeforeGetContent: () => {
+      if (componentRef.current) {
+        const element = componentRef.current
+        element.style.background = 'white'
       }
-      return window.print()
     }
   })
 
@@ -62,18 +59,10 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
 
   return (
     <div className="w-full max-w-[1400px] mx-auto space-y-6">
-      <PrintContextConsumer>
-        {({ handlePrint: contextHandlePrint }) => (
-          <PrintButton onPrint={() => {
-            if (contextHandlePrint) {
-              contextHandlePrint()
-            } else if (handlePrint) {
-              handlePrint()
-            }
-          }} />
-        )}
-      </PrintContextConsumer>
-      <InvoiceCard ref={componentRef} invoice={invoice} />
+      <PrintButton onPrint={handlePrint} />
+      <div ref={componentRef}>
+        <InvoiceCard invoice={invoice} />
+      </div>
     </div>
   )
 }

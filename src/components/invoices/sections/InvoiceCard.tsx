@@ -5,17 +5,16 @@ import { VehicleInfo } from "./VehicleInfo"
 import { ServicesList } from "./ServicesList"
 import { InvoiceTotals } from "./InvoiceTotals"
 import { InvoiceFooter } from "./InvoiceFooter"
-import { ForwardedRef, forwardRef } from "react"
 
 type InvoiceCardProps = {
   invoice: any // Using any temporarily, should be properly typed
 }
 
-export const InvoiceCard = forwardRef(({ invoice }: InvoiceCardProps, ref: ForwardedRef<HTMLDivElement>) => {
+export function InvoiceCard({ invoice }: InvoiceCardProps) {
   if (!invoice) return null
 
   return (
-    <Card ref={ref} className="w-full bg-white shadow-lg print:shadow-none">
+    <Card className="w-full bg-white shadow-lg print:shadow-none">
       <CardContent className="p-8 space-y-8 text-[#222222]">
         <div className="relative">
           <div className="absolute right-0 top-0">
@@ -73,6 +72,4 @@ export const InvoiceCard = forwardRef(({ invoice }: InvoiceCardProps, ref: Forwa
       </CardContent>
     </Card>
   )
-})
-
-InvoiceCard.displayName = 'InvoiceCard'
+}
