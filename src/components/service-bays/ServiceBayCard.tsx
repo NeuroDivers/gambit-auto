@@ -38,9 +38,12 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
 
       if (error) throw error
 
-      // Only invalidate the specific bay's data
-      await queryClient.invalidateQueries({ 
-        queryKey: ['serviceBays', bay.id]
+      // Update only this specific bay's data in the cache
+      queryClient.setQueryData(['serviceBays'], (oldData: any) => {
+        if (!oldData) return oldData
+        return oldData.map((oldBay: any) => 
+          oldBay.id === bay.id ? { ...oldBay, status } : oldBay
+        )
       })
 
       toast({
@@ -65,9 +68,12 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
 
       if (error) throw error
 
-      // Only invalidate the specific bay's data
-      await queryClient.invalidateQueries({ 
-        queryKey: ['serviceBays', bay.id]
+      // Update only this specific bay's data in the cache
+      queryClient.setQueryData(['serviceBays'], (oldData: any) => {
+        if (!oldData) return oldData
+        return oldData.map((oldBay: any) => 
+          oldBay.id === bay.id ? { ...oldBay, notes } : oldBay
+        )
       })
 
       toast({
@@ -105,9 +111,18 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
         if (error) throw error
       }
 
-      // Only invalidate the specific bay's data
-      await queryClient.invalidateQueries({ 
-        queryKey: ['serviceBays', bay.id]
+      // Update only this specific bay's services in the cache
+      queryClient.setQueryData(['serviceBays'], (oldData: any) => {
+        if (!oldData) return oldData
+        return oldData.map((oldBay: any) => {
+          if (oldBay.id !== bay.id) return oldBay
+          
+          const updatedServices = isActive
+            ? [...(oldBay.bay_services || []), { service_id: serviceId, is_active: true }]
+            : (oldBay.bay_services || []).filter((s: any) => s.service_id !== serviceId)
+          
+          return { ...oldBay, bay_services: updatedServices }
+        })
       })
 
       toast({

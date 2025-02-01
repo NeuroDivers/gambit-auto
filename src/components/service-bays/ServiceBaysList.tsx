@@ -22,6 +22,7 @@ export function ServiceBaysList() {
       const { data, error } = await supabase
         .from("service_bays")
         .select("*, bay_services(service_id, name, is_active)")
+        .order('created_at', { ascending: true })
 
       if (error) throw error
       return data || []
@@ -34,6 +35,7 @@ export function ServiceBaysList() {
       const { data, error } = await supabase
         .from("service_types")
         .select("*")
+        .order('name', { ascending: true })
 
       if (error) throw error
       return data || []
