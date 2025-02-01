@@ -18,7 +18,7 @@ type Sidekick = {
 }
 
 export function SidekickAssignmentField({ form, serviceId }: SidekickAssignmentFieldProps) {
-  const { data: service } = useQuery({
+  const { data: service, isLoading: isServiceLoading } = useQuery({
     queryKey: ["service", serviceId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -32,7 +32,7 @@ export function SidekickAssignmentField({ form, serviceId }: SidekickAssignmentF
     }
   })
 
-  const { data: sidekicks = [] } = useQuery<Sidekick[]>({
+  const { data: sidekicks = [], isLoading: isSidekicksLoading, error: sidekicksError } = useQuery<Sidekick[]>({
     queryKey: ["sidekicks"],
     queryFn: async () => {
       const { data: userRoles, error: rolesError } = await supabase
@@ -60,6 +60,26 @@ export function SidekickAssignmentField({ form, serviceId }: SidekickAssignmentF
       }))
     }
   })
+
+  if (isServiceLoading || isSidekicksLoading) {
+    return (
+      <Card className="border-border/5 bg-[#1A1F2C]/80 mt-4">
+        <CardContent className="p-4">
+          <div className="animate-pulse text-white/60">Loading sidekicks...</div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (sidekicksError) {
+    return (
+      <Card className="border-border/5 bg-[#1A1F2C]/80 mt-4">
+        <CardContent className="p-4">
+          <div className="text-red-400">Error loading sidekicks</div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card className="border-border/5 bg-[#1A1F2C]/80 mt-4">
