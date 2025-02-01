@@ -4,14 +4,10 @@ import { Button } from "@/components/ui/button"
 import { WorkOrderFormFields } from "./WorkOrderFormFields"
 import { WorkOrder } from "@/types"
 import { useWorkOrderFormSubmission } from "./form-sections/useWorkOrderFormSubmission"
-
-type WorkOrderFormProps = {
-  workOrder?: WorkOrder
-  onSuccess?: () => void
-}
+import { WorkOrderFormValues, WorkOrderFormProps } from "./types"
 
 export function WorkOrderForm({ workOrder, onSuccess }: WorkOrderFormProps) {
-  const form = useForm({
+  const form = useForm<WorkOrderFormValues>({
     defaultValues: {
       first_name: workOrder?.first_name || "",
       last_name: workOrder?.last_name || "",
@@ -33,7 +29,7 @@ export function WorkOrderForm({ workOrder, onSuccess }: WorkOrderFormProps) {
   })
 
   const { handleSubmit, isPending } = useWorkOrderFormSubmission({
-    workOrderId: workOrder?.id,
+    initialData: workOrder,
     onSuccess
   })
 

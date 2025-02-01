@@ -12,12 +12,12 @@ export type ServiceItemType = {
   unit_price: number
 }
 
-type ServiceItemsFieldProps = {
+type ServiceListProps = {
   items: ServiceItemType[]
   setItems: (items: ServiceItemType[]) => void
 }
 
-export function ServiceItemsField({ items, setItems }: ServiceItemsFieldProps) {
+export function ServiceItemsField({ items, setItems }: ServiceListProps) {
   const addItem = () => {
     setItems([
       ...items,

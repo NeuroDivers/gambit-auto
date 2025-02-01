@@ -1,5 +1,4 @@
-export type WorkOrder = {
-  id: string
+export type WorkOrderFormValues = {
   first_name: string
   last_name: string
   email: string
@@ -9,18 +8,16 @@ export type WorkOrder = {
   vehicle_model: string
   vehicle_year: number
   vehicle_serial: string
-  additional_notes?: string
-  media_url?: string | null
-  status: string
-  created_at: string
-  price?: number | null
-  address: string | null
-  work_order_services: Array<{
-    service_id: string
-    quantity: number
-    unit_price: number
-    service_types: {
-      name: string
-    }
+  additional_notes: string
+  timeframe: string
+  address: string
+  services: Array<{
+    id: string
+    name: string
   }>
+}
+
+export type WorkOrderFormProps = {
+  workOrder?: WorkOrder
+  onSuccess?: () => void
 }
