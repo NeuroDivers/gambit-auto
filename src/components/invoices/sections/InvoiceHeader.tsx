@@ -6,9 +6,10 @@ type InvoiceHeaderProps = {
   invoiceNumber: string;
   createdAt: string;
   dueDate: string | null;
+  status?: string; // Add status prop
 }
 
-export function InvoiceHeader({ invoiceNumber, createdAt, dueDate }: InvoiceHeaderProps) {
+export function InvoiceHeader({ invoiceNumber, createdAt, dueDate, status }: InvoiceHeaderProps) {
   const { data: businessProfile } = useQuery({
     queryKey: ["business-profile"],
     queryFn: async () => {
@@ -48,9 +49,11 @@ export function InvoiceHeader({ invoiceNumber, createdAt, dueDate }: InvoiceHead
       </div>
       <div className="text-right space-y-2">
         <h2 className="text-2xl font-bold text-[#9b87f5]">FACTURE / INVOICE</h2>
-        <div className="px-6 py-2 rounded-full text-lg font-semibold bg-[#FEF7CD] text-[#B99F24] inline-block">
-          {status?.toUpperCase()}
-        </div>
+        {status && (
+          <div className="px-6 py-2 rounded-full text-lg font-semibold bg-[#FEF7CD] text-[#B99F24] inline-block">
+            {status.toUpperCase()}
+          </div>
+        )}
         <div className="text-sm text-[#8E9196] space-y-1">
           <p>No. de facture / Invoice #: {invoiceNumber}</p>
           <p>Date d'émission / Issue Date: {formatDate(createdAt)}</p>

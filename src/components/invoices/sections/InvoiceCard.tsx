@@ -19,6 +19,7 @@ export function InvoiceCard({ invoice }: InvoiceCardProps) {
         invoiceNumber={invoice.invoice_number}
         createdAt={invoice.created_at}
         dueDate={invoice.due_date}
+        status={invoice.status}
       />
 
       <div className="grid grid-cols-2 gap-8">
