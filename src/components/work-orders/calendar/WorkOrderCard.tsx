@@ -16,13 +16,13 @@ export function WorkOrderCard({ workOrder, onClick }: WorkOrderCardProps) {
       case 'pending':
         return 'bg-muted/30 text-muted-foreground/70 hover:bg-muted/40'
       case 'approved':
-        return 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
+        return 'bg-[#0EA5E9]/10 text-[#0EA5E9] hover:bg-[#0EA5E9]/20'
       case 'rejected':
-        return 'bg-destructive/10 text-destructive hover:bg-destructive/20'
+        return 'bg-[#ea384c]/10 text-[#ea384c] hover:bg-[#ea384c]/20'
       case 'completed':
-        return 'bg-primary/10 text-primary hover:bg-primary/20'
+        return 'bg-[#9b87f5]/10 text-[#9b87f5] hover:bg-[#9b87f5]/20'
       default:
-        return 'bg-primary/10 hover:bg-primary/20'
+        return 'bg-muted/30 text-muted-foreground/70 hover:bg-muted/40'
     }
   }
 
