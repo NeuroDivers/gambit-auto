@@ -6,7 +6,7 @@ type InvoiceHeaderProps = {
   invoiceNumber: string;
   createdAt: string;
   dueDate: string | null;
-  status?: string; // Add status prop
+  status?: string;
 }
 
 export function InvoiceHeader({ invoiceNumber, createdAt, dueDate, status }: InvoiceHeaderProps) {
@@ -41,7 +41,7 @@ export function InvoiceHeader({ invoiceNumber, createdAt, dueDate, status }: Inv
           )}
           <div className="space-y-1">
             <h1 className="text-xl font-bold text-[#1A1F2C]">{businessProfile?.company_name}</h1>
-            <p className="text-sm text-[#8E9196]">{businessProfile?.address}</p>
+            <p className="text-sm text-[#8E9196] break-words whitespace-pre-wrap max-w-[300px]">{businessProfile?.address}</p>
             <p className="text-sm text-[#8E9196]">{businessProfile?.phone_number}</p>
             <p className="text-sm text-[#8E9196]">{businessProfile?.email}</p>
           </div>
