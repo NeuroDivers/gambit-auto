@@ -1,13 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { BayStatusToggle } from "./BayStatusToggle"
-import { BayServiceToggles } from "./BayServiceToggles"
-import { SidekickAssignment } from "./SidekickAssignment"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
+import { BayCardHeader } from "./card/BayCardHeader"
+import { BayCardContent } from "./card/BayCardContent"
 
 type ServiceBayCardProps = {
   bay: {
@@ -42,7 +38,10 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
 
       if (error) throw error
 
-      await queryClient.invalidateQueries({ queryKey: ['serviceBays'] })
+      // Only invalidate the specific bay's data
+      await queryClient.invalidateQueries({ 
+        queryKey: ['serviceBays', bay.id]
+      })
 
       toast({
         title: "Success",
@@ -66,7 +65,10 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
 
       if (error) throw error
 
-      await queryClient.invalidateQueries({ queryKey: ['serviceBays'] })
+      // Only invalidate the specific bay's data
+      await queryClient.invalidateQueries({ 
+        queryKey: ['serviceBays', bay.id]
+      })
 
       toast({
         title: "Success",
@@ -103,7 +105,10 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
         if (error) throw error
       }
 
-      await queryClient.invalidateQueries({ queryKey: ['serviceBays'] })
+      // Only invalidate the specific bay's data
+      await queryClient.invalidateQueries({ 
+        queryKey: ['serviceBays', bay.id]
+      })
 
       toast({
         title: "Success",
@@ -118,54 +123,23 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'available':
-        return 'bg-green-500/10 text-green-500 border-green-500/20'
-      case 'in_use':
-        return 'bg-blue-500/10 text-blue-500 border-blue-500/20'
-      case 'maintenance':
-        return 'bg-orange-500/10 text-orange-500 border-orange-500/20'
-      default:
-        return ''
-    }
-  }
-
   return (
     <Card>
-      <CardHeader className="pb-4">
-        <div className="flex items-start justify-between">
-          <CardTitle className="text-lg">{bay.name}</CardTitle>
-          <Badge className={`border ${getStatusColor(bay.status)}`}>
-            {bay.status}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <BayStatusToggle 
-          status={bay.status} 
-          onStatusChange={updateBayStatus} 
-        />
-        <SidekickAssignment 
-          bayId={bay.id}
-          currentSidekickId={bay.assigned_sidekick_id}
-        />
-        <div className="space-y-2">
-          <Label htmlFor={`notes-${bay.id}`}>Notes</Label>
-          <Textarea
-            id={`notes-${bay.id}`}
-            placeholder="Add notes about this bay..."
-            value={bay.notes || ''}
-            onChange={(e) => updateBayNotes(e.target.value)}
-            className="min-h-[100px]"
-          />
-        </div>
-        <BayServiceToggles
-          availableServices={availableServices}
-          activeServices={services}
-          onToggleService={toggleService}
-        />
-      </CardContent>
+      <BayCardHeader 
+        name={bay.name} 
+        status={bay.status} 
+      />
+      <BayCardContent
+        bayId={bay.id}
+        status={bay.status}
+        assignedSidekickId={bay.assigned_sidekick_id}
+        notes={bay.notes}
+        services={services}
+        availableServices={availableServices}
+        onStatusChange={updateBayStatus}
+        onNotesChange={updateBayNotes}
+        onToggleService={toggleService}
+      />
     </Card>
   )
 }

@@ -21,7 +21,7 @@ export function ServiceBaysList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_bays")
-        .select("*, bay_services(service_id)")
+        .select("*, bay_services(service_id, name, is_active)")
 
       if (error) throw error
       return data || []
