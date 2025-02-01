@@ -1,4 +1,4 @@
-import { DialogDescription } from "@/components/ui/dialog"
+import { cn } from "@/lib/utils"
 
 type QuoteFormHeaderProps = {
   isEditing: boolean
@@ -7,11 +7,13 @@ type QuoteFormHeaderProps = {
 export function QuoteFormHeader({ isEditing }: QuoteFormHeaderProps) {
   return (
     <div className="space-y-2">
-      <DialogDescription>
+      <p className={cn(
+        "text-sm text-muted-foreground"
+      )}>
         {isEditing 
           ? "Update the quote request details below."
           : "Fill out the form below to request a quote for our services."}
-      </DialogDescription>
+      </p>
     </div>
   )
 }
