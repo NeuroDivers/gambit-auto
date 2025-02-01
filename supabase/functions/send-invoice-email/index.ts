@@ -1,8 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { serve } from "https://deno.fresh.run/std@v9.6.1/http/server.ts"
-import { Resend } from "npm:resend@2.0.0"
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"))
+import { serve } from 'https://deno.fresh.run/std@v9.6.1/http/server.ts'
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,7 +22,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Fetch invoice data with related information
+    // Fetch invoice with work order details
     const { data: invoice, error: invoiceError } = await supabaseClient
       .from('invoices')
       .select(`
@@ -33,7 +31,10 @@ serve(async (req) => {
           *,
           services:work_order_services (
             *,
-            service:service_types (*)
+            service:service_types (
+              name,
+              price
+            )
           )
         )
       `)
@@ -56,7 +57,20 @@ serve(async (req) => {
       throw profileError
     }
 
-    // Format email content
+    // Create SMTP client for Zoho
+    const client = new SMTPClient({
+      connection: {
+        hostname: "smtp.zoho.com",
+        port: 587,
+        tls: true,
+        auth: {
+          username: Deno.env.get('SMTP_USER') ?? '',
+          password: Deno.env.get('SMTP_PASSWORD') ?? '',
+        },
+      },
+    });
+
+    // Format email content with HTML
     const emailContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>Invoice #${invoice.invoice_number}</h2>
@@ -82,21 +96,24 @@ serve(async (req) => {
       </div>
     `
 
-    // Send email using Resend
-    const emailResponse = await resend.emails.send({
-      from: `${businessProfile.company_name} <onboarding@resend.dev>`,
+    // Send email using SMTP
+    await client.send({
+      from: Deno.env.get('SMTP_USER') ?? '',
       to: invoice.work_order.email,
       subject: `Invoice #${invoice.invoice_number} from ${businessProfile.company_name}`,
       html: emailContent,
-    })
+    });
 
-    console.log('Email sent successfully:', emailResponse)
+    await client.close();
+    console.log('Email sent successfully to:', invoice.work_order.email)
 
     return new Response(
       JSON.stringify({ message: 'Email sent successfully' }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
       }
     )
   } catch (error) {
@@ -104,7 +121,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        },
         status: 500
       }
     )
