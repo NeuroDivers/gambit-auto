@@ -14,6 +14,7 @@ export function WorkOrderCard({ workOrder, onClick }: WorkOrderCardProps) {
         <div 
           className="relative text-xs bg-primary/10 p-1 rounded truncate cursor-pointer z-[3]"
           onClick={onClick}
+          style={{ isolation: 'isolate' }}
         >
           <div className="truncate">
             {workOrder.first_name} {workOrder.last_name}
@@ -23,7 +24,7 @@ export function WorkOrderCard({ workOrder, onClick }: WorkOrderCardProps) {
           </div>
         </div>
       </HoverCardTrigger>
-      <HoverCardContent className="w-80 p-4 z-[99]">
+      <HoverCardContent className="w-80 p-4" style={{ zIndex: 9999 }}>
         <WorkOrderPreview workOrder={workOrder} />
       </HoverCardContent>
     </HoverCard>
