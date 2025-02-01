@@ -6,7 +6,16 @@ type InvoiceServiceItemsProps = {
   setItems?: (items: InvoiceItem[]) => void
 }
 
-export function InvoiceServiceItems({ items = [], setItems }: InvoiceServiceItemsProps) {
+export function InvoiceServiceItems({ items = [] }: InvoiceServiceItemsProps) {
+  if (!items || items.length === 0) {
+    return (
+      <div className="pt-4">
+        <h2 className="font-semibold mb-4 text-[#1A1F2C]">Services / Services</h2>
+        <p className="text-[#8E9196]">No services added</p>
+      </div>
+    )
+  }
+
   return (
     <div className="pt-4">
       <table className="w-full">
@@ -20,7 +29,7 @@ export function InvoiceServiceItems({ items = [], setItems }: InvoiceServiceItem
           </tr>
         </thead>
         <tbody>
-          {items?.map((item, index) => (
+          {items.map((item, index) => (
             <tr key={index} className="border-b border-[#F1F0FB]">
               <td className="py-3 text-[#1A1F2C]">{item.service_name}</td>
               <td className="py-3 text-[#1A1F2C]">{item.description}</td>
