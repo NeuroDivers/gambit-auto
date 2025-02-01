@@ -3,6 +3,16 @@ import { supabase } from "@/integrations/supabase/client"
 import { Card, CardContent } from "@/components/ui/card"
 import { Link } from "react-router-dom"
 import { format } from "date-fns"
+import { MoreHorizontal, Pencil } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
 
 export function InvoiceList() {
   const { data: invoices, isLoading } = useQuery({
@@ -24,6 +34,17 @@ export function InvoiceList() {
     },
   })
 
+  const updateInvoiceStatus = async (invoiceId: string, status: string) => {
+    const { error } = await supabase
+      .from("invoices")
+      .update({ status })
+      .eq("id", invoiceId)
+
+    if (error) {
+      console.error("Error updating invoice status:", error)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="animate-pulse text-primary/60 text-lg">Loading...</div>
@@ -33,26 +54,51 @@ export function InvoiceList() {
   return (
     <div className="space-y-4">
       {invoices?.map((invoice) => (
-        <Link key={invoice.id} to={`/invoices/${invoice.id}`}>
-          <Card className="hover:bg-muted/50 transition-colors">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="font-semibold">{invoice.invoice_number}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {invoice.work_order.first_name} {invoice.work_order.last_name}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold">${invoice.total}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {format(new Date(invoice.created_at), "MMM d, yyyy")}
-                  </p>
-                </div>
+        <Card key={invoice.id} className="hover:bg-muted/50 transition-colors">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-center">
+              <div className="flex-1">
+                <h3 className="font-semibold">{invoice.invoice_number}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {invoice.work_order.first_name} {invoice.work_order.last_name}
+                </p>
               </div>
-            </CardContent>
-          </Card>
-        </Link>
+              <div className="text-right flex-1">
+                <p className="font-semibold">${invoice.total}</p>
+                <p className="text-sm text-muted-foreground">
+                  {format(new Date(invoice.created_at), "MMM d, yyyy")}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 ml-4">
+                <Link to={`/invoices/${invoice.id}`}>
+                  <Button variant="ghost" size="icon">
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => updateInvoiceStatus(invoice.id, "draft")}>
+                      Set as Draft
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => updateInvoiceStatus(invoice.id, "pending")}>
+                      Set as Pending
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => updateInvoiceStatus(invoice.id, "paid")}>
+                      Set as Paid
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       ))}
     </div>
   )
