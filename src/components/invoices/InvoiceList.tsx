@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Card, CardContent } from "@/components/ui/card"
-import { Link } from "react-router-dom"
 import { format } from "date-fns"
 import { MoreHorizontal, Pencil } from "lucide-react"
 import {
@@ -13,8 +12,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useState } from "react"
+import { InvoiceView } from "./InvoiceView"
 
 export function InvoiceList() {
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+
   const { data: invoices, isLoading } = useQuery({
     queryKey: ["invoices"],
     queryFn: async () => {
@@ -70,11 +75,16 @@ export function InvoiceList() {
                 </p>
               </div>
               <div className="flex items-center gap-2 ml-4">
-                <Link to={`/invoices/${invoice.id}`}>
-                  <Button variant="ghost" size="icon">
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                </Link>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => {
+                    setSelectedInvoiceId(invoice.id)
+                    setEditDialogOpen(true)
+                  }}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
@@ -100,6 +110,17 @@ export function InvoiceList() {
           </CardContent>
         </Card>
       ))}
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Edit Invoice</DialogTitle>
+          </DialogHeader>
+          {selectedInvoiceId && (
+            <InvoiceView invoiceId={selectedInvoiceId} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
