@@ -81,6 +81,7 @@ export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
     documentTitle: `Invoice-${invoice?.invoice_number}`,
     onAfterPrint: () => console.log('Printed successfully'),
     pageStyle: "@page { size: auto; margin: 0mm; }",
+    content: () => componentRef.current,
     onBeforePrint: () => {
       if (componentRef.current) {
         componentRef.current.style.background = 'white'
@@ -188,7 +189,7 @@ export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
           {isSending ? 'Sending...' : 'Send Email'}
         </Button>
         <Button 
-          onClick={handlePrint}
+          onClick={() => handlePrint()}
           className="gap-2"
         >
           <Printer className="h-4 w-4" />
