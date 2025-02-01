@@ -1,15 +1,8 @@
-import { formatCurrency } from "@/lib/utils";
-
-type Service = {
-  id: string;
-  service: {
-    name: string;
-    price: number | null;
-  };
-}
+import { formatCurrency } from "@/lib/utils"
+import { InvoiceItem } from "../types"
 
 type ServicesListProps = {
-  services: Service[];
+  services: InvoiceItem[]
 }
 
 export function ServicesList({ services = [] }: ServicesListProps) {
@@ -19,7 +12,7 @@ export function ServicesList({ services = [] }: ServicesListProps) {
         <h2 className="font-semibold mb-4 text-[#1A1F2C]">Services / Services</h2>
         <p className="text-[#8E9196]">No services added</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -35,17 +28,17 @@ export function ServicesList({ services = [] }: ServicesListProps) {
           </tr>
         </thead>
         <tbody>
-          {services.map((service) => (
-            <tr key={service.id} className="border-b border-[#F1F0FB]">
-              <td className="py-3 text-[#1A1F2C]">{service.service.name}</td>
-              <td className="py-3 text-[#1A1F2C]">{service.service.name}</td>
-              <td className="py-3 text-right text-[#1A1F2C]">1</td>
-              <td className="py-3 text-right text-[#1A1F2C]">{formatCurrency(service.service.price || 0)}</td>
-              <td className="py-3 text-right text-[#1A1F2C]">{formatCurrency(service.service.price || 0)}</td>
+          {services.map((item, index) => (
+            <tr key={index} className="border-b border-[#F1F0FB]">
+              <td className="py-3 text-[#1A1F2C]">{item.service_name}</td>
+              <td className="py-3 text-[#1A1F2C]">{item.description}</td>
+              <td className="py-3 text-right text-[#1A1F2C]">{item.quantity}</td>
+              <td className="py-3 text-right text-[#1A1F2C]">{formatCurrency(item.unit_price)}</td>
+              <td className="py-3 text-right text-[#1A1F2C]">{formatCurrency(item.quantity * item.unit_price)}</td>
             </tr>
           ))}
         </tbody>
       </table>
     </div>
-  );
+  )
 }

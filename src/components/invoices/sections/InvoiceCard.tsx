@@ -1,4 +1,3 @@
-import { Card } from "@/components/ui/card"
 import { CustomerInfo } from "./CustomerInfo"
 import { VehicleInfo } from "./VehicleInfo"
 import { ServicesList } from "./ServicesList"
