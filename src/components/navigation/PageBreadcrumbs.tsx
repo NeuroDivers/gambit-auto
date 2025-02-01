@@ -38,18 +38,16 @@ export function PageBreadcrumbs() {
           const isLast = index === pathSegments.length - 1;
 
           return (
-            <>
+            <BreadcrumbItem key={path}>
               <BreadcrumbSeparator />
-              <BreadcrumbItem key={path}>
-                {isLast ? (
-                  <BreadcrumbPage>{routeNames[segment] || segment}</BreadcrumbPage>
-                ) : (
-                  <BreadcrumbLink asChild>
-                    <Link to={path}>{routeNames[segment] || segment}</Link>
-                  </BreadcrumbLink>
-                )}
-              </BreadcrumbItem>
-            </>
+              {isLast ? (
+                <BreadcrumbPage>{routeNames[segment] || segment}</BreadcrumbPage>
+              ) : (
+                <BreadcrumbLink asChild>
+                  <Link to={path}>{routeNames[segment] || segment}</Link>
+                </BreadcrumbLink>
+              )}
+            </BreadcrumbItem>
           );
         })}
       </BreadcrumbList>

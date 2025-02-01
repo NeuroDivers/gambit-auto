@@ -1,10 +1,10 @@
-import { QuoteRequestList } from "@/components/quotes/QuoteRequestList"
+import { WorkOrderList } from "@/components/work-orders/WorkOrderList"
 import { useAdminStatus } from "@/hooks/useAdminStatus"
 import { useNavigate } from "react-router-dom"
 import { useEffect } from "react"
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 
-export default function QuoteRequests() {
+export default function WorkOrders() {
   const { isAdmin, loading } = useAdminStatus()
   const navigate = useNavigate()
 
@@ -33,7 +33,7 @@ export default function QuoteRequests() {
           <PageBreadcrumbs />
         </div>
         <div className="max-w-[1600px] mx-auto">
-          <QuoteRequestList />
+          <WorkOrderList />
         </div>
       </div>
     </div>
