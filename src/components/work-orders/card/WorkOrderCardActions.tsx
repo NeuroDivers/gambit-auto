@@ -64,6 +64,37 @@ export function WorkOrderCardActions({ request }: WorkOrderCardActionsProps) {
 
       if (invoiceError) throw invoiceError
 
+      // Get work order services
+      const { data: workOrderServices, error: servicesError } = await supabase
+        .from("work_order_services")
+        .select(`
+          quantity,
+          unit_price,
+          service_types (
+            name
+          )
+        `)
+        .eq("work_order_id", request.id)
+
+      if (servicesError) throw servicesError
+
+      // Create invoice items from work order services
+      if (workOrderServices && workOrderServices.length > 0) {
+        const invoiceItems = workOrderServices.map(service => ({
+          invoice_id: invoice,
+          service_name: service.service_types?.name || '',
+          description: service.service_types?.name || '',
+          quantity: service.quantity,
+          unit_price: service.unit_price
+        }))
+
+        const { error: itemsError } = await supabase
+          .from("invoice_items")
+          .insert(invoiceItems)
+
+        if (itemsError) throw itemsError
+      }
+
       // Update invoice with business and customer information
       const { error: updateError } = await supabase
         .from("invoices")
