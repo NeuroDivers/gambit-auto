@@ -17,7 +17,7 @@ type InvoiceViewProps = {
 export function InvoiceView({ invoiceId }: InvoiceViewProps) {
   const componentRef = useRef<HTMLDivElement>(null);
 
-  const { data: invoice } = useQuery({
+  const { data: invoice, isLoading } = useQuery({
     queryKey: ["invoice", invoiceId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -52,6 +52,17 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
     }
   });
 
+  if (isLoading) {
+    return (
+      <div className="max-w-3xl mx-auto p-6">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-muted rounded w-1/3" />
+          <div className="h-32 bg-muted rounded" />
+        </div>
+      </div>
+    );
+  }
+
   if (!invoice) return null;
 
   return (
@@ -78,7 +89,7 @@ export function InvoiceView({ invoiceId }: InvoiceViewProps) {
             serial={invoice.work_order.vehicle_serial}
           />
 
-          <ServicesList services={invoice.work_order.services} />
+          <ServicesList services={invoice.work_order.services || []} />
 
           <InvoiceTotals
             subtotal={invoice.subtotal}
