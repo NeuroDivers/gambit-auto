@@ -87,7 +87,7 @@ export function BusinessProfileForm() {
       const { error } = await supabase
         .from("business_profile")
         .upsert({
-          id: profile?.id,
+          id: profile?.id || undefined,
           company_name: data.company_name,
           phone_number: data.phone_number,
           email: data.email,
