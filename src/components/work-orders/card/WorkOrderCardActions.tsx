@@ -70,6 +70,8 @@ export function WorkOrderCardActions({ request }: WorkOrderCardActionsProps) {
         .update({
           customer_name: `${request.first_name} ${request.last_name}`,
           customer_email: request.email,
+          customer_phone: request.phone_number,
+          customer_address: request.address,
           vehicle_make: request.vehicle_make,
           vehicle_model: request.vehicle_model,
           vehicle_year: request.vehicle_year,

@@ -37,6 +37,7 @@ export type Invoice = {
   customer_name: string | null
   customer_email: string | null
   customer_address: string | null
+  customer_phone: string | null
   vehicle_make: string | null
   vehicle_model: string | null
   vehicle_year: number | null

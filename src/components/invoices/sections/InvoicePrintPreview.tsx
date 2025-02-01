@@ -13,7 +13,6 @@ export function InvoicePrintPreview({ invoice }: InvoicePrintPreviewProps) {
   const componentRef = useRef<HTMLDivElement>(null)
 
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
     documentTitle: `Invoice-${invoice?.invoice_number}`,
     pageStyle: `
       @page {
@@ -21,6 +20,7 @@ export function InvoicePrintPreview({ invoice }: InvoicePrintPreviewProps) {
         margin: 20mm;
       }
     `,
+    content: () => componentRef.current,
   })
 
   if (!invoice) {
@@ -30,7 +30,7 @@ export function InvoicePrintPreview({ invoice }: InvoicePrintPreviewProps) {
   return (
     <div>
       <div className="flex justify-end mb-4">
-        <Button onClick={handlePrint} className="gap-2">
+        <Button onClick={() => handlePrint()} className="gap-2">
           <Printer className="w-4 h-4" />
           Print Invoice
         </Button>
@@ -53,8 +53,9 @@ export function InvoicePrintPreview({ invoice }: InvoicePrintPreviewProps) {
             <div>
               <h3 className="font-semibold">Bill To:</h3>
               <p>{invoice.customer_name}</p>
-              <p>{invoice.customer_address}</p>
+              {invoice.customer_address && <p>{invoice.customer_address}</p>}
               <p>{invoice.customer_email}</p>
+              {invoice.customer_phone && <p>Phone: {invoice.customer_phone}</p>}
             </div>
             <div className="text-right">
               <p><span className="font-semibold">Invoice #:</span> {invoice.invoice_number}</p>
