@@ -46,6 +46,32 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
     },
   })
 
+  const { data: businessProfile } = useQuery({
+    queryKey: ["business-profile"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("business_profile")
+        .select("*")
+        .limit(1)
+        .maybeSingle()
+
+      if (error) throw error
+      return data
+    },
+  })
+
+  const { data: businessTaxes } = useQuery({
+    queryKey: ["business-taxes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("business_taxes")
+        .select("*")
+
+      if (error) throw error
+      return data
+    },
+  })
+
   const handleWorkOrderSelect = async (workOrderId: string) => {
     setSelectedWorkOrderId(workOrderId)
     const workOrder = workOrders?.find(wo => wo.id === workOrderId)
@@ -98,6 +124,7 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
 
       if (invoiceError) throw invoiceError
 
+      // Update invoice with customer and business information
       const { error: updateError } = await supabase
         .from("invoices")
         .update({
@@ -108,6 +135,12 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
           vehicle_model: vehicleModel,
           vehicle_year: vehicleYear,
           vehicle_vin: vehicleVin,
+          company_name: businessProfile?.company_name || null,
+          company_phone: businessProfile?.phone_number || null,
+          company_email: businessProfile?.email || null,
+          company_address: businessProfile?.address || null,
+          gst_number: businessTaxes?.find(tax => tax.tax_type === 'GST')?.tax_number || null,
+          qst_number: businessTaxes?.find(tax => tax.tax_type === 'QST')?.tax_number || null,
         })
         .eq("id", invoice)
 
