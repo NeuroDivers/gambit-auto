@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
 
 export function InvoiceFooter() {
   const { data: businessProfile } = useQuery({
@@ -9,12 +9,12 @@ export function InvoiceFooter() {
         .from("business_profile")
         .select("*")
         .limit(1)
-        .maybeSingle();
+        .maybeSingle()
 
-      if (error) throw error;
-      return data;
+      if (error) throw error
+      return data
     },
-  });
+  })
 
   return (
     <div className="text-center text-sm text-[#8E9196] space-y-2 mt-8 pt-8 border-t border-[#F1F0FB]">
@@ -26,5 +26,5 @@ export function InvoiceFooter() {
         For questions about this invoice, please contact us at {businessProfile?.email}
       </p>
     </div>
-  );
+  )
 }

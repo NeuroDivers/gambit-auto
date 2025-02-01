@@ -29,7 +29,7 @@ export function InvoicePrintPreview({ invoice }: InvoicePrintPreviewProps) {
   return (
     <div className="space-y-8">
       <div className="flex justify-end">
-        <Button onClick={handlePrint} className="gap-2">
+        <Button onClick={() => handlePrint()} className="gap-2">
           <PrinterIcon className="w-4 h-4" />
           Print Invoice
         </Button>
@@ -37,14 +37,33 @@ export function InvoicePrintPreview({ invoice }: InvoicePrintPreviewProps) {
 
       <div ref={componentRef} className="bg-white p-8 rounded-lg shadow-sm">
         <div className="max-w-4xl mx-auto space-y-8">
-          <InvoiceHeader invoice={invoice} />
+          <InvoiceHeader 
+            invoiceNumber={invoice.invoice_number}
+            createdAt={invoice.created_at}
+            dueDate={invoice.due_date}
+            status={invoice.status}
+          />
           <div className="grid md:grid-cols-2 gap-8">
-            <CustomerInfo invoice={invoice} />
-            <VehicleInfo invoice={invoice} />
+            <CustomerInfo 
+              customerName={invoice.customer_name || ''}
+              customerEmail={invoice.customer_email || ''}
+              customerPhone={invoice.customer_phone || ''}
+              customerAddress={invoice.customer_address || ''}
+            />
+            <VehicleInfo 
+              make={invoice.vehicle_make || ''}
+              model={invoice.vehicle_model || ''}
+              year={invoice.vehicle_year || 0}
+              vin={invoice.vehicle_vin || ''}
+            />
           </div>
-          <InvoiceServiceItems invoice={invoice} />
-          <InvoiceTotals invoice={invoice} />
-          <InvoiceFooter invoice={invoice} />
+          <InvoiceServiceItems items={invoice.invoice_items} />
+          <InvoiceTotals 
+            subtotal={invoice.subtotal}
+            taxAmount={invoice.tax_amount}
+            total={invoice.total}
+          />
+          <InvoiceFooter />
         </div>
       </div>
     </div>
