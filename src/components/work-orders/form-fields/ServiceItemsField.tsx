@@ -3,24 +3,24 @@ import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { ServiceItem } from "./service-items/ServiceItem"
 import { ServiceList } from "./service-items/ServiceList"
-import { ServiceItemType } from "../types"
 import { UseFormReturn } from "react-hook-form"
-import { WorkOrderFormValues } from "../types"
+import { ServiceItemType, WorkOrderFormValues } from "../types"
 
 type ServiceItemsFieldProps = {
   form: UseFormReturn<WorkOrderFormValues>
 }
 
 export function ServiceItemsField({ form }: ServiceItemsFieldProps) {
-  const items = form.watch('service_items') || []
-  
+  const services = form.watch("service_items") || []
+
   const handleServicesChange = (newServices: ServiceItemType[]) => {
-    form.setValue('service_items', newServices)
+    form.setValue("service_items", newServices)
   }
 
-  const addItem = () => {
-    handleServicesChange([
-      ...items,
+  const handleAddService = () => {
+    const currentServices = form.getValues("service_items") || []
+    form.setValue("service_items", [
+      ...currentServices,
       {
         service_id: '',
         service_name: '',
@@ -38,15 +38,14 @@ export function ServiceItemsField({ form }: ServiceItemsFieldProps) {
           type="button"
           variant="outline"
           size="sm"
-          onClick={addItem}
-          className="flex items-center gap-2"
+          onClick={handleAddService}
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="h-4 w-4 mr-2" />
           Add Service
         </Button>
       </div>
-      <ServiceList 
-        workOrderServices={items} 
+      <ServiceList
+        workOrderServices={services}
         onServicesChange={handleServicesChange}
       />
     </div>
