@@ -11,7 +11,10 @@ type SidekickAssignmentFieldProps = {
 
 type Sidekick = {
   id: string
-  name: string
+  profiles: {
+    first_name: string | null
+    last_name: string | null
+  }
 }
 
 export function SidekickAssignmentField({ form, serviceId }: SidekickAssignmentFieldProps) {
@@ -36,7 +39,7 @@ export function SidekickAssignmentField({ form, serviceId }: SidekickAssignmentF
 
       return userRoles.map(role => ({
         id: role.user_id,
-        name: `${role.profiles?.first_name || ''} ${role.profiles?.last_name || ''}`
+        profiles: role.profiles || { first_name: null, last_name: null }
       }))
     }
   })
@@ -57,7 +60,7 @@ export function SidekickAssignmentField({ form, serviceId }: SidekickAssignmentF
             <SelectContent>
               {sidekicks.map((sidekick) => (
                 <SelectItem key={sidekick.id} value={sidekick.id}>
-                  {sidekick.name}
+                  {`${sidekick.profiles.first_name || ''} ${sidekick.profiles.last_name || ''}`}
                 </SelectItem>
               ))}
             </SelectContent>

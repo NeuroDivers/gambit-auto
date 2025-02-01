@@ -6,10 +6,26 @@ import { useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { BayHeader } from "./BayHeader"
 
+type ServiceBay = {
+  id: string
+  name: string
+  status: string
+  assigned_sidekick_id: string | null
+}
+
+type BayService = {
+  bay_id: string
+  service_id: string
+  service_types: {
+    id: string
+    name: string
+  }
+}
+
 export function ServiceBaysList() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  const { data: serviceBays, isLoading: baysLoading } = useQuery({
+  const { data: serviceBays, isLoading: baysLoading } = useQuery<ServiceBay[]>({
     queryKey: ["serviceBays"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -27,7 +43,7 @@ export function ServiceBaysList() {
     },
   })
 
-  const { data: bayServices, isLoading: servicesLoading } = useQuery({
+  const { data: bayServices, isLoading: servicesLoading } = useQuery<BayService[]>({
     queryKey: ["bayServices"],
     queryFn: async () => {
       const { data, error } = await supabase
