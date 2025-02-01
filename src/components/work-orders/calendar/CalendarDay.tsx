@@ -11,7 +11,6 @@ type CalendarDayProps = {
 }
 
 const getServiceColor = (serviceName: string, index: number) => {
-  // Define a set of distinct colors for different service types
   const colorSchemes = [
     {
       bg: 'rgb(14,165,233,0.2)',
@@ -99,11 +98,16 @@ export function CalendarDay({ date, workOrders, isCurrentMonth }: CalendarDayPro
                     }
                   }}
                 >
-                  <div className="flex justify-between">
-                    <h4 className="text-sm font-semibold">{workOrder.first_name} {workOrder.last_name}</h4>
-                    <Badge variant="outline" className="text-xs">
-                      {workOrder.status}
-                    </Badge>
+                  <div className="space-y-1">
+                    <div className="flex justify-between">
+                      <h4 className="text-sm font-semibold">{workOrder.first_name} {workOrder.last_name}</h4>
+                      <Badge variant="outline" className="text-xs">
+                        {workOrder.status}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {workOrder.contact_preference === 'email' ? workOrder.email : workOrder.phone_number}
+                    </p>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
@@ -113,10 +117,6 @@ export function CalendarDay({ date, workOrders, isCurrentMonth }: CalendarDayPro
                     <div>
                       <p className="text-muted-foreground">Serial</p>
                       <p>{workOrder.vehicle_serial}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Contact</p>
-                      <p>{workOrder.contact_preference === 'email' ? workOrder.email : workOrder.phone_number}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Services</p>
