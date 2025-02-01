@@ -40,7 +40,6 @@ export function WorkOrderCardActions({ request }: WorkOrderCardActionsProps) {
 
   const createInvoice = async () => {
     try {
-      // First get the business profile
       const { data: businessProfile, error: businessError } = await supabase
         .from("business_profile")
         .select("*")
@@ -49,14 +48,12 @@ export function WorkOrderCardActions({ request }: WorkOrderCardActionsProps) {
 
       if (businessError) throw businessError
 
-      // Get business taxes
       const { data: businessTaxes, error: taxesError } = await supabase
         .from("business_taxes")
         .select("*")
 
       if (taxesError) throw taxesError
 
-      // Create invoice with work order data
       const { data: invoice, error: invoiceError } = await supabase
         .rpc('create_invoice_from_work_order', {
           work_order_id: request.id
@@ -64,7 +61,6 @@ export function WorkOrderCardActions({ request }: WorkOrderCardActionsProps) {
 
       if (invoiceError) throw invoiceError
 
-      // Get work order services
       const { data: workOrderServices, error: servicesError } = await supabase
         .from("work_order_services")
         .select(`
@@ -78,7 +74,6 @@ export function WorkOrderCardActions({ request }: WorkOrderCardActionsProps) {
 
       if (servicesError) throw servicesError
 
-      // Create invoice items from work order services
       if (workOrderServices && workOrderServices.length > 0) {
         const invoiceItems = workOrderServices.map(service => ({
           invoice_id: invoice,
@@ -95,7 +90,6 @@ export function WorkOrderCardActions({ request }: WorkOrderCardActionsProps) {
         if (itemsError) throw itemsError
       }
 
-      // Update invoice with business and customer information
       const { error: updateError } = await supabase
         .from("invoices")
         .update({
