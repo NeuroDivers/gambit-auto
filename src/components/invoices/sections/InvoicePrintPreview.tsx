@@ -9,27 +9,29 @@ import { VehicleInfo } from './VehicleInfo'
 import { InvoiceServiceItems } from './InvoiceServiceItems'
 import { InvoiceTotals } from './InvoiceTotals'
 import { InvoiceFooter } from './InvoiceFooter'
+import { Tables } from '@/integrations/supabase/types'
 
 type InvoicePrintPreviewProps = {
   invoice: Invoice | null
+  businessProfile: Tables<'business_profile'> | null
 }
 
-export function InvoicePrintPreview({ invoice }: InvoicePrintPreviewProps) {
+export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPreviewProps) {
   const componentRef = useRef<HTMLDivElement>(null)
 
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
+    contentRef: componentRef,
     documentTitle: `Invoice-${invoice?.invoice_number || 'preview'}`,
   })
 
-  if (!invoice) {
+  if (!invoice || !businessProfile) {
     return <div>No invoice data available</div>
   }
 
   return (
     <div className="space-y-8">
       <div className="flex justify-end">
-        <Button onClick={handlePrint} className="gap-2">
+        <Button onClick={() => handlePrint()} className="gap-2">
           <PrinterIcon className="w-4 h-4" />
           Print Invoice
         </Button>
