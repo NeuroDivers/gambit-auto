@@ -56,18 +56,22 @@ export function QuoteRequestCard({ request }: { request: QuoteRequest }) {
   }
 
   return (
-    <Card className="transition-all duration-200 hover:shadow-lg hover:border-primary/20">
+    <Card className="group transition-all duration-200 hover:shadow-xl bg-gradient-to-br from-card to-card/95 border-border/50 hover:border-primary/30">
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-lg flex items-center gap-2">
-              {request.first_name} {request.last_name}
-              <Badge variant="outline" className="text-xs font-normal">
+          <div className="space-y-1.5">
+            <CardTitle className="text-lg flex items-center gap-3">
+              <span className="text-white/90 group-hover:text-white transition-colors">
+                {request.first_name} {request.last_name}
+              </span>
+              <Badge variant="outline" className="text-xs font-normal bg-background/50">
                 {format(new Date(request.created_at), "MMM d, yyyy")}
               </Badge>
             </CardTitle>
-            <CardDescription className="text-sm">
-              {request.vehicle_year} {request.vehicle_make} {request.vehicle_model}
+            <CardDescription className="text-sm flex items-center gap-2">
+              <span className="text-primary/80">{request.vehicle_year}</span>
+              <span className="text-white/40">•</span>
+              <span className="text-white/80">{request.vehicle_make} {request.vehicle_model}</span>
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -91,54 +95,56 @@ export function QuoteRequestCard({ request }: { request: QuoteRequest }) {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="space-y-2">
-              <div>
-                <span className="text-muted-foreground">Services:</span>
-                <p className="font-medium">
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <div className="bg-background/40 rounded-lg p-3">
+                <span className="text-sm text-white/50 block mb-1">Services</span>
+                <p className="text-sm text-white/90">
                   {request.quote_request_services
                     .map(service => service.service_types.name)
                     .join(", ")}
                 </p>
               </div>
-              <div>
-                <span className="text-muted-foreground">Contact:</span>
-                <p className="font-medium">
+              <div className="bg-background/40 rounded-lg p-3">
+                <span className="text-sm text-white/50 block mb-1">Contact</span>
+                <p className="text-sm text-white/90">
                   {request.contact_preference === "email" ? request.email : request.phone_number}
                 </p>
               </div>
             </div>
-            <div className="space-y-2">
-              <div>
-                <span className="text-muted-foreground">Serial Number:</span>
-                <p className="font-medium">{request.vehicle_serial}</p>
+            <div className="space-y-3">
+              <div className="bg-background/40 rounded-lg p-3">
+                <span className="text-sm text-white/50 block mb-1">Serial Number</span>
+                <p className="text-sm text-white/90">{request.vehicle_serial}</p>
               </div>
-              <div>
-                <span className="text-muted-foreground">Price:</span>
-                <p className="font-medium">${request.price?.toFixed(2) ?? '0.00'}</p>
+              <div className="bg-background/40 rounded-lg p-3">
+                <span className="text-sm text-white/50 block mb-1">Price</span>
+                <p className="text-sm text-white/90">${request.price?.toFixed(2) ?? '0.00'}</p>
               </div>
             </div>
           </div>
 
           {request.additional_notes && (
-            <div className="pt-2 border-t border-border/40">
-              <span className="text-sm text-muted-foreground">Notes:</span>
-              <p className="mt-1 text-sm">{request.additional_notes}</p>
+            <div className="bg-background/40 rounded-lg p-3 mt-3">
+              <span className="text-sm text-white/50 block mb-1">Notes</span>
+              <p className="text-sm text-white/90">{request.additional_notes}</p>
             </div>
           )}
 
           {request.status === "pending" && (
-            <div className="flex gap-2 justify-end pt-2 border-t border-border/40">
+            <div className="flex gap-2 justify-end pt-3 border-t border-border/20">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => updateStatus("rejected")}
+                className="hover:bg-destructive/20"
               >
                 Reject
               </Button>
               <Button
                 size="sm"
                 onClick={() => updateStatus("approved")}
+                className="hover:bg-primary/20"
               >
                 Approve
               </Button>
@@ -146,10 +152,11 @@ export function QuoteRequestCard({ request }: { request: QuoteRequest }) {
           )}
 
           {request.status === "approved" && (
-            <div className="flex justify-end pt-2 border-t border-border/40">
+            <div className="flex justify-end pt-3 border-t border-border/20">
               <Button
                 size="sm"
                 onClick={() => setIsWorkOrderDialogOpen(true)}
+                className="hover:bg-primary/20"
               >
                 Convert to Work Order
               </Button>
