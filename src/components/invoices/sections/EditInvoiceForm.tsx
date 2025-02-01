@@ -27,8 +27,8 @@ export function EditInvoiceForm({ form, onSubmit, isPending, invoiceId }: EditIn
               setCustomerName={(value) => form.setValue('customer_name', value)}
               customerEmail={form.watch('customer_email')}
               setCustomerEmail={(value) => form.setValue('customer_email', value)}
-              customerPhone=""
-              setCustomerPhone={() => {}}
+              customerPhone={form.watch('customer_phone')}
+              setCustomerPhone={(value) => form.setValue('customer_phone', value)}
               customerAddress={form.watch('customer_address')}
               setCustomerAddress={(value) => form.setValue('customer_address', value)}
             />

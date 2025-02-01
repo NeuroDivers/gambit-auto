@@ -11,6 +11,7 @@ export type InvoiceFormValues = {
   invoice_items: InvoiceItem[]
   customer_name: string
   customer_email: string
+  customer_phone: string
   customer_address: string
   vehicle_make: string
   vehicle_model: string

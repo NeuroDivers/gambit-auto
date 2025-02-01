@@ -51,10 +51,9 @@ export function CustomerInfoFields({
         <Input
           id="customerPhone"
           type="tel"
-          value={customerPhone}
+          value={customerPhone || ''}
           onChange={(e) => setCustomerPhone(e.target.value)}
           placeholder="Enter customer phone..."
-          required
         />
       </div>
       <div>
