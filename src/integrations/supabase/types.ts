@@ -375,17 +375,23 @@ export type Database = {
       work_order_services: {
         Row: {
           created_at: string
+          quantity: number
           service_id: string
+          unit_price: number
           work_order_id: string
         }
         Insert: {
           created_at?: string
+          quantity?: number
           service_id: string
+          unit_price: number
           work_order_id: string
         }
         Update: {
           created_at?: string
+          quantity?: number
           service_id?: string
+          unit_price?: number
           work_order_id?: string
         }
         Relationships: [

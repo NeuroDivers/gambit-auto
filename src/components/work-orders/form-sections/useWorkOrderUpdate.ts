@@ -34,7 +34,7 @@ export function useWorkOrderUpdate() {
 
     if (workOrderError) throw workOrderError
 
-    // Update services
+    // Update services - first delete existing ones
     const { error: deleteError } = await supabase
       .from("work_order_services")
       .delete()
@@ -42,12 +42,15 @@ export function useWorkOrderUpdate() {
 
     if (deleteError) throw deleteError
 
+    // Insert new services with quantity and unit price
     const { error: servicesError } = await supabase
       .from("work_order_services")
       .insert(
-        data.service_ids.map(serviceId => ({
+        data.service_items.map(item => ({
           work_order_id: workOrderId,
-          service_id: serviceId
+          service_id: item.service_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price
         }))
       )
 

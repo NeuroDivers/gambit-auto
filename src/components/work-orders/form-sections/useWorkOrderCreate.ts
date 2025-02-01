@@ -31,38 +31,20 @@ export function useWorkOrderCreate() {
 
     if (workOrderError) throw workOrderError
 
-    // Insert services and their assignments
+    // Insert work order services with quantity and unit price
     if (newWorkOrder?.id) {
-      // First insert work order services
-      const { data: workOrderServices, error: servicesError } = await supabase
+      const { error: servicesError } = await supabase
         .from("work_order_services")
         .insert(
-          data.service_ids.map(serviceId => ({
+          data.service_items.map(item => ({
             work_order_id: newWorkOrder.id,
-            service_id: serviceId
+            service_id: item.service_id,
+            quantity: item.quantity,
+            unit_price: item.unit_price
           }))
         )
-        .select('id, service_id')
 
       if (servicesError) throw servicesError
-
-      // Then insert sidekick assignments if any
-      if (data.sidekick_assignments && workOrderServices) {
-        const assignments = workOrderServices
-          .filter(service => data.sidekick_assignments?.[service.service_id])
-          .map(service => ({
-            work_order_service_id: service.id,
-            sidekick_id: data.sidekick_assignments![service.service_id]
-          }))
-
-        if (assignments.length > 0) {
-          const { error: assignmentError } = await supabase
-            .from("work_order_service_assignments")
-            .insert(assignments)
-
-          if (assignmentError) throw assignmentError
-        }
-      }
     }
 
     toast({

@@ -4,11 +4,17 @@ import * as z from "zod"
 import { Textarea } from "@/components/ui/textarea"
 import { PersonalInfoFields } from "./form-fields/PersonalInfoFields"
 import { VehicleInfoFields } from "./form-fields/VehicleInfoFields"
-import { ServiceSelectionField } from "./form-fields/ServiceSelectionField"
+import { ServiceItemsField } from "./form-fields/ServiceItemsField"
 import { MediaUploadField } from "./form-fields/MediaUploadField"
 import { ContactPreferenceFields } from "./form-fields/ContactPreferenceFields"
 import { Input } from "@/components/ui/input"
-import { SidekickAssignmentField } from "./form-fields/SidekickAssignmentField"
+
+const serviceItemSchema = z.object({
+  service_id: z.string().uuid(),
+  service_name: z.string(),
+  quantity: z.number().min(1),
+  unit_price: z.number().min(0)
+})
 
 export const formSchema = z.object({
   first_name: z.string().min(2, "First name must be at least 2 characters"),
@@ -16,15 +22,14 @@ export const formSchema = z.object({
   email: z.string().email("Invalid email address"),
   phone_number: z.string().min(10, "Phone number must be at least 10 characters"),
   contact_preference: z.enum(["phone", "email"]),
-  service_ids: z.array(z.string().uuid("Please select at least one service")).min(1, "Please select at least one service"),
+  service_items: z.array(serviceItemSchema).min(1, "Please select at least one service"),
   vehicle_make: z.string().min(2, "Vehicle make must be at least 2 characters"),
   vehicle_model: z.string().min(2, "Vehicle model must be at least 2 characters"),
   vehicle_year: z.number().min(1900).max(new Date().getFullYear() + 1),
   vehicle_serial: z.string().optional(),
   additional_notes: z.string().optional(),
   timeframe: z.enum(["flexible", "asap", "within_week", "within_month"]),
-  price: z.number().min(0, "Price must be a positive number").default(0),
-  sidekick_assignments: z.record(z.string().uuid(), z.string().uuid()).optional()
+  price: z.number().min(0, "Price must be a positive number").default(0)
 })
 
 export type WorkOrderFormValues = z.infer<typeof formSchema>
@@ -47,14 +52,7 @@ export function WorkOrderFormFields({
   return (
     <>
       <PersonalInfoFields form={form} />
-      <ServiceSelectionField form={form} />
-      {form.watch("service_ids").map((serviceId) => (
-        <SidekickAssignmentField 
-          key={serviceId} 
-          form={form} 
-          serviceId={serviceId} 
-        />
-      ))}
+      <ServiceItemsField form={form} />
       <MediaUploadField
         onFileUpload={onFileUpload}
         mediaUrl={mediaUrl}

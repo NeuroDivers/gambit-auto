@@ -26,10 +26,7 @@ export function useWorkOrderFormSubmission({
       if (initialData?.id) {
         await updateWorkOrder(initialData.id, data, mediaUrl)
       } else {
-        const newWorkOrder = await createWorkOrder(data, mediaUrl)
-        if (!newWorkOrder?.id) {
-          throw new Error("Failed to create work order")
-        }
+        await createWorkOrder(data, mediaUrl)
       }
       onSuccess?.()
     } catch (error: any) {
