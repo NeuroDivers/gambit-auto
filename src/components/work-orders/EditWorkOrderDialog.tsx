@@ -5,11 +5,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogClose,
 } from "@/components/ui/dialog"
 import { Pencil } from "lucide-react"
-import { WorkOrderForm } from "./WorkOrderForm"
-import { useRef } from "react"
 import { WorkOrder } from "./types"
 
 type EditWorkOrderDialogProps = {
@@ -17,8 +14,6 @@ type EditWorkOrderDialogProps = {
 }
 
 export function EditWorkOrderDialog({ quote }: EditWorkOrderDialogProps) {
-  const closeRef = useRef<HTMLButtonElement>(null)
-
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -34,11 +29,9 @@ export function EditWorkOrderDialog({ quote }: EditWorkOrderDialogProps) {
         <DialogHeader>
           <DialogTitle>Edit Work Order</DialogTitle>
         </DialogHeader>
-        <WorkOrderForm 
-          workOrder={quote} 
-          onSuccess={() => closeRef.current?.click()} 
-        />
-        <DialogClose ref={closeRef} className="hidden" />
+        <div className="text-center py-8 text-white/60">
+          Work order form has been removed
+        </div>
       </DialogContent>
     </Dialog>
   )

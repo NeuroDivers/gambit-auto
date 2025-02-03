@@ -7,7 +7,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { PlusCircle } from "lucide-react"
-import { WorkOrderForm } from "./WorkOrderForm"
 
 type CreateWorkOrderDialogProps = {
   open?: boolean
@@ -22,7 +21,9 @@ export function CreateWorkOrderDialog({ open, onOpenChange }: CreateWorkOrderDia
           <DialogHeader>
             <DialogTitle>Create Work Order</DialogTitle>
           </DialogHeader>
-          <WorkOrderForm onSuccess={() => onOpenChange(false)} />
+          <div className="text-center py-8 text-white/60">
+            Work order form has been removed
+          </div>
         </DialogContent>
       </Dialog>
     )
@@ -44,7 +45,9 @@ export function CreateWorkOrderDialog({ open, onOpenChange }: CreateWorkOrderDia
         <DialogHeader>
           <DialogTitle>Create Work Order</DialogTitle>
         </DialogHeader>
-        <WorkOrderForm />
+        <div className="text-center py-8 text-white/60">
+          Work order form has been removed
+        </div>
       </DialogContent>
     </Dialog>
   )
