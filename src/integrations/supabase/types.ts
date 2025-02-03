@@ -377,6 +377,7 @@ export type Database = {
       }
       work_order_services: {
         Row: {
+          assigned_sidekick_id: string | null
           created_at: string
           quantity: number
           service_id: string
@@ -384,6 +385,7 @@ export type Database = {
           work_order_id: string
         }
         Insert: {
+          assigned_sidekick_id?: string | null
           created_at?: string
           quantity?: number
           service_id: string
@@ -391,6 +393,7 @@ export type Database = {
           work_order_id: string
         }
         Update: {
+          assigned_sidekick_id?: string | null
           created_at?: string
           quantity?: number
           service_id?: string

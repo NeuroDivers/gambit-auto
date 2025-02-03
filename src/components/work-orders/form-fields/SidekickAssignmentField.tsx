@@ -9,12 +9,6 @@ type SidekickAssignmentFieldProps = {
   serviceId: string
 }
 
-type Sidekick = {
-  id: string
-  first_name: string | null
-  last_name: string | null
-}
-
 export function SidekickAssignmentField({ form, serviceId }: SidekickAssignmentFieldProps) {
   const { data: service, isLoading: isServiceLoading } = useQuery({
     queryKey: ["service", serviceId],
