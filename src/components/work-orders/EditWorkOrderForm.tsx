@@ -8,7 +8,7 @@ import { VehicleInfoFields } from "./form-sections/VehicleInfoFields"
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
-import { ServiceItemType } from "./types"
+import { ServiceItemType, WorkOrder } from "./types"
 
 const workOrderFormSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
@@ -33,27 +33,38 @@ const workOrderFormSchema = z.object({
 
 type WorkOrderFormValues = z.infer<typeof workOrderFormSchema>
 
-type CreateWorkOrderFormProps = {
+type EditWorkOrderFormProps = {
+  workOrder: WorkOrder
   onSuccess?: () => void
 }
 
-export function CreateWorkOrderForm({ onSuccess }: CreateWorkOrderFormProps) {
+export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormProps) {
   const { toast } = useToast()
   const form = useForm<WorkOrderFormValues>({
     resolver: zodResolver(workOrderFormSchema),
     defaultValues: {
+      first_name: workOrder.first_name,
+      last_name: workOrder.last_name,
+      email: workOrder.email,
+      phone_number: workOrder.phone_number,
+      contact_preference: workOrder.contact_preference,
+      address: workOrder.address || "",
+      vehicle_make: workOrder.vehicle_make,
+      vehicle_model: workOrder.vehicle_model,
+      vehicle_year: workOrder.vehicle_year,
+      vehicle_serial: workOrder.vehicle_serial,
+      additional_notes: workOrder.additional_notes || "",
       service_items: [],
       sidekick_assignments: {},
-      contact_preference: "email",
     },
   })
 
   const onSubmit = async (data: WorkOrderFormValues) => {
     try {
-      // Insert work order
-      const { data: workOrder, error: workOrderError } = await supabase
+      // Update work order
+      const { error: workOrderError } = await supabase
         .from("work_orders")
-        .insert({
+        .update({
           first_name: data.first_name,
           last_name: data.last_name,
           email: data.email,
@@ -66,12 +77,19 @@ export function CreateWorkOrderForm({ onSuccess }: CreateWorkOrderFormProps) {
           vehicle_serial: data.vehicle_serial,
           additional_notes: data.additional_notes,
         })
-        .select()
-        .single()
+        .eq('id', workOrder.id)
 
       if (workOrderError) throw workOrderError
 
-      // Insert work order services with sidekick assignments
+      // Delete existing services
+      const { error: deleteError } = await supabase
+        .from("work_order_services")
+        .delete()
+        .eq('work_order_id', workOrder.id)
+
+      if (deleteError) throw deleteError
+
+      // Insert updated services with sidekick assignments
       const { error: servicesError } = await supabase
         .from("work_order_services")
         .insert(
@@ -87,17 +105,16 @@ export function CreateWorkOrderForm({ onSuccess }: CreateWorkOrderFormProps) {
       if (servicesError) throw servicesError
 
       toast({
-        title: "Work order created",
-        description: "Your work order has been submitted successfully.",
+        title: "Work order updated",
+        description: "Your work order has been updated successfully.",
       })
 
-      form.reset()
       onSuccess?.()
     } catch (error) {
-      console.error("Error creating work order:", error)
+      console.error("Error updating work order:", error)
       toast({
         title: "Error",
-        description: "There was an error creating your work order. Please try again.",
+        description: "There was an error updating your work order. Please try again.",
         variant: "destructive",
       })
     }
@@ -124,7 +141,7 @@ export function CreateWorkOrderForm({ onSuccess }: CreateWorkOrderFormProps) {
         </div>
 
         <Button type="submit" className="w-full">
-          Submit Work Order
+          Update Work Order
         </Button>
       </form>
     </Form>

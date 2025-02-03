@@ -8,12 +8,28 @@ import {
 } from "@/components/ui/dialog"
 import { Pencil } from "lucide-react"
 import { WorkOrder } from "./types"
+import { EditWorkOrderForm } from "./EditWorkOrderForm"
 
 type EditWorkOrderDialogProps = {
-  quote: WorkOrder
+  workOrder: WorkOrder
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export function EditWorkOrderDialog({ quote }: EditWorkOrderDialogProps) {
+export function EditWorkOrderDialog({ workOrder, open, onOpenChange }: EditWorkOrderDialogProps) {
+  if (open !== undefined && onOpenChange) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Edit Work Order</DialogTitle>
+          </DialogHeader>
+          <EditWorkOrderForm workOrder={workOrder} onSuccess={() => onOpenChange(false)} />
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -25,13 +41,11 @@ export function EditWorkOrderDialog({ quote }: EditWorkOrderDialogProps) {
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Edit Work Order</DialogTitle>
         </DialogHeader>
-        <div className="text-center py-8 text-white/60">
-          Work order form has been removed
-        </div>
+        <EditWorkOrderForm workOrder={workOrder} />
       </DialogContent>
     </Dialog>
   )

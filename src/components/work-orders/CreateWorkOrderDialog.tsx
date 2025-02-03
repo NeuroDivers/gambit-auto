@@ -22,7 +22,7 @@ export function CreateWorkOrderDialog({ open, onOpenChange }: CreateWorkOrderDia
           <DialogHeader>
             <DialogTitle>Create Work Order</DialogTitle>
           </DialogHeader>
-          <CreateWorkOrderForm />
+          <CreateWorkOrderForm onSuccess={() => onOpenChange(false)} />
         </DialogContent>
       </Dialog>
     )
