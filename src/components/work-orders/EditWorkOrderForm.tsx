@@ -9,6 +9,7 @@ import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSe
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { ServiceItemType, WorkOrder } from "./types"
+import { useQuery } from "@tanstack/react-query"
 
 const workOrderFormSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
@@ -40,6 +41,29 @@ type EditWorkOrderFormProps = {
 
 export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormProps) {
   const { toast } = useToast()
+
+  // Fetch work order services and sidekick assignments
+  const { data: workOrderServices } = useQuery({
+    queryKey: ["workOrderServices", workOrder.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("work_order_services")
+        .select(`
+          service_id,
+          quantity,
+          unit_price,
+          assigned_sidekick_id,
+          service_types (
+            name
+          )
+        `)
+        .eq("work_order_id", workOrder.id)
+
+      if (error) throw error
+      return data
+    }
+  })
+
   const form = useForm<WorkOrderFormValues>({
     resolver: zodResolver(workOrderFormSchema),
     defaultValues: {
@@ -54,8 +78,18 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
       vehicle_year: workOrder.vehicle_year,
       vehicle_serial: workOrder.vehicle_serial,
       additional_notes: workOrder.additional_notes || "",
-      service_items: [],
-      sidekick_assignments: {},
+      service_items: workOrderServices?.map(service => ({
+        service_id: service.service_id,
+        service_name: service.service_types.name,
+        quantity: service.quantity,
+        unit_price: service.unit_price
+      })) || [],
+      sidekick_assignments: workOrderServices?.reduce((acc, service) => {
+        if (service.assigned_sidekick_id) {
+          acc[service.service_id] = service.assigned_sidekick_id
+        }
+        return acc
+      }, {} as Record<string, string>) || {},
     },
   })
 
