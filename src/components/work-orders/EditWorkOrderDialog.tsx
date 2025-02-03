@@ -17,6 +17,8 @@ type EditWorkOrderDialogProps = {
 }
 
 export function EditWorkOrderDialog({ workOrder, open, onOpenChange }: EditWorkOrderDialogProps) {
+  if (!workOrder) return null
+
   if (open !== undefined && onOpenChange) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>

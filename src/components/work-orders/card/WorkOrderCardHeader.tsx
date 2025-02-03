@@ -28,7 +28,7 @@ export function WorkOrderCardHeader({ request }: WorkOrderCardHeaderProps) {
         </CardDescription>
       </div>
       <div className="flex items-center gap-2">
-        <EditWorkOrderDialog quote={request} />
+        <EditWorkOrderDialog workOrder={request} />
         <WorkOrderStatusSelect status={request.status} quoteId={request.id} />
       </div>
     </div>

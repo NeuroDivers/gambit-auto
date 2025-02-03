@@ -6,8 +6,6 @@ import {
 } from "@/components/ui/dialog"
 import { WorkOrder } from "../types"
 import { format } from "date-fns"
-import { Button } from "@/components/ui/button"
-import { Pencil } from "lucide-react"
 import { EditWorkOrderDialog } from "../EditWorkOrderDialog"
 
 type WorkOrderDetailsDialogProps = {
@@ -27,7 +25,7 @@ export function WorkOrderDetailsDialog({
         <DialogHeader>
           <div className="flex items-center justify-between pr-12">
             <DialogTitle className="text-xl">Work Order Details</DialogTitle>
-            <EditWorkOrderDialog quote={workOrder} />
+            <EditWorkOrderDialog workOrder={workOrder} />
           </div>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-6">
