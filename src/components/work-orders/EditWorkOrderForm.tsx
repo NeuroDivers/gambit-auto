@@ -88,7 +88,7 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
           quantity,
           unit_price,
           assigned_sidekick_id,
-          service_types (
+          service_types:service_id (
             name
           )
         `)
@@ -101,10 +101,8 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
         quantity: service.quantity,
         unit_price: service.unit_price,
         assigned_sidekick_id: service.assigned_sidekick_id,
-        service_types: service.service_types.map((type: { name: string }) => ({
-          name: type.name
-        }))
-      })) as WorkOrderService[]
+        service_types: [{ name: service.service_types.name }]
+      }))
     }
   })
 
