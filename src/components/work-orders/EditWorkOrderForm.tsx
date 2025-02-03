@@ -96,7 +96,15 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
       
       if (error) throw error
       
-      return data as WorkOrderService[]
+      return data.map(service => ({
+        service_id: service.service_id,
+        quantity: service.quantity,
+        unit_price: service.unit_price,
+        assigned_sidekick_id: service.assigned_sidekick_id,
+        service_types: {
+          name: service.service_types[0]?.name || ''
+        }
+      })) as WorkOrderService[]
     }
   })
 
@@ -114,18 +122,18 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
       vehicle_year: workOrder.vehicle_year,
       vehicle_serial: workOrder.vehicle_serial,
       additional_notes: workOrder.additional_notes || "",
-      service_items: workOrderServices.map(service => ({
+      service_items: workOrderServices?.map(service => ({
         service_id: service.service_id,
         service_name: service.service_types.name,
         quantity: service.quantity,
         unit_price: service.unit_price
-      })),
-      sidekick_assignments: workOrderServices.reduce((acc, service) => {
+      })) || [],
+      sidekick_assignments: workOrderServices?.reduce((acc, service) => {
         if (service.assigned_sidekick_id) {
           acc[service.service_id] = service.assigned_sidekick_id
         }
         return acc
-      }, {} as Record<string, string>),
+      }, {} as Record<string, string>) || {},
     },
   })
 
