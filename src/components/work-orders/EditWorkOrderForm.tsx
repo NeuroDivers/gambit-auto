@@ -9,7 +9,8 @@ import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSe
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { ServiceItemType, WorkOrder } from "./types"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useEffect } from "react"
 
 const workOrderFormSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
@@ -51,6 +52,30 @@ interface WorkOrderService {
 
 export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormProps) {
   const { toast } = useToast()
+  const queryClient = useQueryClient()
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('work_orders_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'work_orders',
+          filter: `id=eq.${workOrder.id}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["workOrderServices", workOrder.id] })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [workOrder.id, queryClient])
 
   // Fetch work order services and sidekick assignments
   const { data: workOrderServices = [] } = useQuery<WorkOrderService[]>({
@@ -71,8 +96,7 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
       
       if (error) throw error
       
-      // Transform the data to match the WorkOrderService interface
-      return (data || []).map(service => ({
+      return data.map(service => ({
         service_id: service.service_id,
         quantity: service.quantity,
         unit_price: service.unit_price,
@@ -159,8 +183,8 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
       if (servicesError) throw servicesError
 
       toast({
-        title: "Work order updated",
-        description: "Your work order has been updated successfully.",
+        title: "Success",
+        description: "Work order has been updated successfully.",
       })
 
       onSuccess?.()
