@@ -47,7 +47,7 @@ interface WorkOrderService {
   assigned_sidekick_id: string | null
   service_types: {
     name: string
-  }[]
+  }
 }
 
 export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormProps) {
@@ -101,7 +101,7 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
         quantity: service.quantity,
         unit_price: service.unit_price,
         assigned_sidekick_id: service.assigned_sidekick_id,
-        service_types: [{ name: service.service_types.name }]
+        service_types: service.service_types
       }))
     }
   })
@@ -122,7 +122,7 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
       additional_notes: workOrder.additional_notes || "",
       service_items: workOrderServices.map(service => ({
         service_id: service.service_id,
-        service_name: service.service_types.map(type => type.name).join(', '),
+        service_name: service.service_types.name,
         quantity: service.quantity,
         unit_price: service.unit_price
       })),
