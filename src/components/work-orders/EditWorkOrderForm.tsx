@@ -39,7 +39,7 @@ type EditWorkOrderFormProps = {
   onSuccess?: () => void
 }
 
-type WorkOrderService = {
+interface WorkOrderService {
   service_id: string
   quantity: number
   unit_price: number
@@ -53,7 +53,7 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
   const { toast } = useToast()
 
   // Fetch work order services and sidekick assignments
-  const { data: workOrderServices } = useQuery<WorkOrderService[]>({
+  const { data: workOrderServices = [] } = useQuery<WorkOrderService[]>({
     queryKey: ["workOrderServices", workOrder.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -70,7 +70,7 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
         .eq("work_order_id", workOrder.id)
       
       if (error) throw error
-      return data
+      return data as WorkOrderService[]
     }
   })
 
@@ -88,18 +88,18 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
       vehicle_year: workOrder.vehicle_year,
       vehicle_serial: workOrder.vehicle_serial,
       additional_notes: workOrder.additional_notes || "",
-      service_items: workOrderServices?.map(service => ({
+      service_items: workOrderServices.map(service => ({
         service_id: service.service_id,
         service_name: service.service_types.name,
         quantity: service.quantity,
         unit_price: service.unit_price
-      })) || [],
-      sidekick_assignments: workOrderServices?.reduce((acc, service) => {
+      })),
+      sidekick_assignments: workOrderServices.reduce((acc, service) => {
         if (service.assigned_sidekick_id) {
           acc[service.service_id] = service.assigned_sidekick_id
         }
         return acc
-      }, {} as Record<string, string>) || {},
+      }, {} as Record<string, string>),
     },
   })
 
