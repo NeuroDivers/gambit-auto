@@ -39,11 +39,21 @@ type EditWorkOrderFormProps = {
   onSuccess?: () => void
 }
 
+type WorkOrderService = {
+  service_id: string
+  quantity: number
+  unit_price: number
+  assigned_sidekick_id: string | null
+  service_types: {
+    name: string
+  }
+}
+
 export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormProps) {
   const { toast } = useToast()
 
   // Fetch work order services and sidekick assignments
-  const { data: workOrderServices } = useQuery({
+  const { data: workOrderServices } = useQuery<WorkOrderService[]>({
     queryKey: ["workOrderServices", workOrder.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -58,7 +68,7 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
           )
         `)
         .eq("work_order_id", workOrder.id)
-
+      
       if (error) throw error
       return data
     }
