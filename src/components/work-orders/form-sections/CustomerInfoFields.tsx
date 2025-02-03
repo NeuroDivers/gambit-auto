@@ -1,6 +1,8 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { UseFormReturn } from "react-hook-form"
+import { Label } from "@/components/ui/label"
 
 type CustomerInfoFieldsProps = {
   form: UseFormReturn<any>
@@ -8,7 +10,7 @@ type CustomerInfoFieldsProps = {
 
 export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
   return (
-    <div className="space-y-4">
+    <div className="grid gap-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
@@ -17,12 +19,13 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
             <FormItem>
               <FormLabel>First Name</FormLabel>
               <FormControl>
-                <Input placeholder="Enter first name" {...field} />
+                <Input placeholder="John" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="last_name"
@@ -30,7 +33,7 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
             <FormItem>
               <FormLabel>Last Name</FormLabel>
               <FormControl>
-                <Input placeholder="Enter last name" {...field} />
+                <Input placeholder="Doe" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -46,12 +49,13 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="Enter email" {...field} />
+                <Input type="email" placeholder="john@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="phone_number"
@@ -59,7 +63,7 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
             <FormItem>
               <FormLabel>Phone Number</FormLabel>
               <FormControl>
-                <Input type="tel" placeholder="Enter phone number" {...field} />
+                <Input placeholder="(555) 555-5555" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -69,12 +73,39 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
 
       <FormField
         control={form.control}
+        name="contact_preference"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Preferred Contact Method</FormLabel>
+            <FormControl>
+              <RadioGroup
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                className="flex space-x-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="email" id="email" />
+                  <Label htmlFor="email">Email</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="phone" id="phone" />
+                  <Label htmlFor="phone">Phone</Label>
+                </div>
+              </RadioGroup>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
         name="address"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Address</FormLabel>
+            <FormLabel>Address (Optional)</FormLabel>
             <FormControl>
-              <Input placeholder="Enter address" {...field} />
+              <Input placeholder="123 Main St" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

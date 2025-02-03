@@ -15,6 +15,7 @@ const workOrderFormSchema = z.object({
   last_name: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email address"),
   phone_number: z.string().min(1, "Phone number is required"),
+  contact_preference: z.enum(["phone", "email"]),
   address: z.string().optional(),
   vehicle_make: z.string().min(1, "Vehicle make is required"),
   vehicle_model: z.string().min(1, "Vehicle model is required"),
@@ -39,6 +40,7 @@ export function CreateWorkOrderForm() {
     defaultValues: {
       service_items: [],
       sidekick_assignments: {},
+      contact_preference: "email",
     },
   })
 
@@ -52,6 +54,7 @@ export function CreateWorkOrderForm() {
           last_name: data.last_name,
           email: data.email,
           phone_number: data.phone_number,
+          contact_preference: data.contact_preference,
           address: data.address,
           vehicle_make: data.vehicle_make,
           vehicle_model: data.vehicle_model,
