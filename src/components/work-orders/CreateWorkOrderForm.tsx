@@ -7,7 +7,7 @@ import { CustomerInfoFields } from "./form-sections/CustomerInfoFields"
 import { VehicleInfoFields } from "./form-sections/VehicleInfoFields"
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 import { supabase } from "@/integrations/supabase/client"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { ServiceItemType } from "./types"
 
 const workOrderFormSchema = z.object({
@@ -26,6 +26,7 @@ const workOrderFormSchema = z.object({
     quantity: z.number().min(1),
     unit_price: z.number().min(0)
   })).min(1, "At least one service is required"),
+  sidekick_assignments: z.record(z.string(), z.string().optional()).optional(),
   additional_notes: z.string().optional(),
 })
 
@@ -37,6 +38,7 @@ export function CreateWorkOrderForm() {
     resolver: zodResolver(workOrderFormSchema),
     defaultValues: {
       service_items: [],
+      sidekick_assignments: {},
     },
   })
 
@@ -62,7 +64,7 @@ export function CreateWorkOrderForm() {
 
       if (workOrderError) throw workOrderError
 
-      // Insert work order services
+      // Insert work order services with sidekick assignments
       const { error: servicesError } = await supabase
         .from("work_order_services")
         .insert(
@@ -71,6 +73,7 @@ export function CreateWorkOrderForm() {
             service_id: item.service_id,
             quantity: item.quantity,
             unit_price: item.unit_price,
+            assigned_sidekick_id: data.sidekick_assignments?.[item.service_id],
           }))
         )
 
