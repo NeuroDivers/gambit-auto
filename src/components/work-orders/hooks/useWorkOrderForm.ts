@@ -76,7 +76,10 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
           })
           .eq("id", workOrder.id)
 
-        if (workOrderError) throw workOrderError
+        if (workOrderError) {
+          console.error("Error updating work order:", workOrderError)
+          throw workOrderError
+        }
 
         toast({
           title: "Success",
