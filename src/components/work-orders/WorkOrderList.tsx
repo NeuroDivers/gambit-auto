@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useEffect } from "react"
 import { WorkOrdersSection } from "./sections/WorkOrdersSection"
+import { WorkOrderCalendar } from "./WorkOrderCalendar"
 import { toast } from "sonner"
 import { CreateWorkOrderDialog } from "./CreateWorkOrderDialog"
 
@@ -55,7 +56,10 @@ export const WorkOrderList = () => {
       <div className="flex justify-end px-6">
         <CreateWorkOrderDialog />
       </div>
-      <WorkOrdersSection />
+      <div className="space-y-20">
+        <WorkOrderCalendar />
+        <WorkOrdersSection />
+      </div>
     </div>
   )
 }
