@@ -15,7 +15,8 @@ export const RoleManagement = () => {
       console.log("Fetching role stats...");
       const { data, error } = await supabase
         .from("user_roles")
-        .select("role");
+        .select("role")
+        .maybeSingle();
       
       if (error) {
         console.error("Error fetching role stats:", error);
@@ -30,16 +31,14 @@ export const RoleManagement = () => {
       };
       
       // If no roles are found, return default stats
-      if (!data || data.length === 0) {
+      if (!data) {
         console.log("No roles found, returning default stats");
         return stats;
       }
       
-      data.forEach((row) => {
-        if (row.role) {
-          stats[row.role] = (stats[row.role] || 0) + 1;
-        }
-      });
+      if (data.role) {
+        stats[data.role] = (stats[data.role] || 0) + 1;
+      }
       
       return stats;
     },
