@@ -4,6 +4,7 @@ import { User, Edit2, Trash2, Shield } from "lucide-react";
 import { useState } from "react";
 import { UserEditDialog } from "./UserEditDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 type UserRole = "admin" | "manager" | "sidekick" | "client";
 
@@ -22,6 +23,7 @@ type UserCardProps = {
 export const UserCard = ({ user }: UserCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleDelete = async () => {
     try {
@@ -30,6 +32,12 @@ export const UserCard = ({ user }: UserCardProps) => {
       });
 
       if (error) throw error;
+
+      // Invalidate both users and role stats queries
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["users"] }),
+        queryClient.invalidateQueries({ queryKey: ["roleStats"] })
+      ]);
 
       toast({
         title: "Success",
