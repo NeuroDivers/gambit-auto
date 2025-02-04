@@ -8,30 +8,33 @@ import NotFound from "./pages/NotFound";
 import Invoices from "./pages/Invoices";
 import InvoiceDetails from "./pages/InvoiceDetails";
 import { supabase } from "@/integrations/supabase/client";
+import { Session } from "@supabase/supabase-js";
 
 // Protected route wrapper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSession] = useState<boolean | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(!!session);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      setLoading(false);
     });
 
-    // Set up auth state listener
+    // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(!!session);
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+      setLoading(false);
     });
 
-    // Cleanup subscription
     return () => subscription.unsubscribe();
   }, []);
 
-  // Show loading state while checking authentication
-  if (session === null) {
+  // Show loading state
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-pulse text-primary/60 text-lg">Loading...</div>
