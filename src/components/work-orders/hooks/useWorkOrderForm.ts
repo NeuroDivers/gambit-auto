@@ -83,13 +83,6 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
           throw workOrderError
         }
 
-        console.log("Work order updated successfully")
-        // Show success message
-        toast({
-          title: "Success",
-          description: "Work order updated successfully",
-        })
-
         // Refresh work orders list and call success callback
         await queryClient.invalidateQueries({ queryKey: ["workOrder", workOrder.id] })
         await queryClient.invalidateQueries({ queryKey: ["workOrders"] })
@@ -134,14 +127,13 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
           if (servicesError) throw servicesError
         }
 
-        toast({
-          title: "Success",
-          description: "Work order created successfully",
-        })
-
-        // Reset form
-        form.reset()
+        // Refresh work orders list and call success callback
+        await queryClient.invalidateQueries({ queryKey: ["workOrders"] })
+        onSuccess?.()
       }
+
+      // Reset form
+      form.reset()
     } catch (error: any) {
       console.error("Error saving work order:", error)
       toast({

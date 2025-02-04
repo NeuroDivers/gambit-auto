@@ -3,9 +3,13 @@ import { WorkOrderFormProps } from "./types"
 import { useWorkOrderForm } from "./hooks/useWorkOrderForm"
 import { FormSections } from "./form-sections/FormSections"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 
 export function WorkOrderForm({ workOrder, onSuccess }: WorkOrderFormProps) {
-  const { form, onSubmit } = useWorkOrderForm(workOrder, onSuccess)
+  const { form, onSubmit } = useWorkOrderForm(workOrder, () => {
+    toast.success(workOrder ? "Work order updated successfully" : "Work order created successfully")
+    onSuccess?.()
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
