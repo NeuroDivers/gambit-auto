@@ -8,7 +8,11 @@ import { UserFormFields, formSchema } from "./UserFormFields"
 import { useAdminStatus } from "@/hooks/useAdminStatus"
 import * as z from "zod"
 
-export function CreateUserForm() {
+interface CreateUserFormProps {
+  onSuccess?: () => void;
+}
+
+export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
   const { toast } = useToast()
   const { isAdmin, loading } = useAdminStatus()
 
@@ -84,6 +88,7 @@ export function CreateUserForm() {
       })
 
       form.reset()
+      onSuccess?.()
     } catch (error: any) {
       console.error('Error creating user:', error)
       toast({

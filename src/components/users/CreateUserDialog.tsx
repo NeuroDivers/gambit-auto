@@ -9,9 +9,11 @@ import { Button } from "@/components/ui/button";
 import { CreateUserForm } from "../CreateUserForm";
 import { Plus } from "lucide-react";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
+import { useState } from "react";
 
 export const CreateUserDialog = () => {
   const { isAdmin, loading } = useAdminStatus();
+  const [open, setOpen] = useState(false);
 
   if (loading) {
     return null;
@@ -22,7 +24,7 @@ export const CreateUserDialog = () => {
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button 
           className="bg-[#BB86FC] hover:bg-[#BB86FC]/90 text-white transition-colors duration-200"
@@ -35,7 +37,7 @@ export const CreateUserDialog = () => {
         <DialogHeader>
           <DialogTitle>Create New User</DialogTitle>
         </DialogHeader>
-        <CreateUserForm />
+        <CreateUserForm onSuccess={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   );
