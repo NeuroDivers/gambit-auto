@@ -25,14 +25,13 @@ export function CreateUserForm() {
     try {
       console.log("Creating user with values:", values)
       
-      // Create a new Supabase client with the service role key
-      const adminAuthClient = supabase.auth.admin
-
-      // Create user with admin API
-      const { data: authData, error: authError } = await adminAuthClient.createUser({
+      // Create user directly with Supabase auth API
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
-        email_confirm: true,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
       })
 
       if (authError) throw authError
