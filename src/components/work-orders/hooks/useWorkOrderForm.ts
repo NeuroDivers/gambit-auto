@@ -78,31 +78,6 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
 
         if (workOrderError) throw workOrderError
 
-        // Update service items
-        if (values.service_items.length > 0) {
-          // Delete existing services
-          const { error: deleteError } = await supabase
-            .from("work_order_services")
-            .delete()
-            .eq("work_order_id", workOrder.id)
-
-          if (deleteError) throw deleteError
-
-          // Insert new services
-          const { error: servicesError } = await supabase
-            .from("work_order_services")
-            .insert(
-              values.service_items.map(item => ({
-                work_order_id: workOrder.id,
-                service_id: item.service_id,
-                quantity: item.quantity,
-                unit_price: item.unit_price
-              }))
-            )
-
-          if (servicesError) throw servicesError
-        }
-
         toast({
           title: "Success",
           description: "Work order updated successfully",
@@ -131,7 +106,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
 
         if (workOrderError) throw workOrderError
 
-        // Insert service items
+        // Insert service items only for new work orders
         if (values.service_items.length > 0) {
           const { error: servicesError } = await supabase
             .from("work_order_services")
