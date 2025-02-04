@@ -208,7 +208,9 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
         description: "Work order has been updated successfully.",
       })
 
-      onSuccess?.()
+      if (onSuccess) {
+        onSuccess()
+      }
     } catch (error) {
       console.error("Error updating work order:", error)
       toast({
