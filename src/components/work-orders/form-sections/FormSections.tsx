@@ -2,7 +2,7 @@ import { UseFormReturn } from "react-hook-form"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PersonalInfoFields } from "@/components/shared/form-fields/PersonalInfoFields"
 import { VehicleInfoFields } from "@/components/shared/form-fields/VehicleInfoFields"
-import { ServiceItemsField } from "../form-fields/ServiceItemsField"
+import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 import { WorkOrderFormValues } from "../types"
 
 type FormSectionsProps = {
@@ -32,16 +32,14 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
         </CardContent>
       </Card>
 
-      {!isEditing && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Services</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ServiceItemsField form={form} />
-          </CardContent>
-        </Card>
-      )}
+      <Card>
+        <CardHeader>
+          <CardTitle>Services</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ServiceSelectionField form={form} />
+        </CardContent>
+      </Card>
     </>
   )
 }
