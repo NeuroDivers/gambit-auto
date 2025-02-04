@@ -42,37 +42,40 @@ export function CreateUserForm() {
 
       console.log("User created successfully:", authData.user.id)
 
-      // Wait for the user creation to propagate
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Wait longer for the user creation to propagate
+      await new Promise(resolve => setTimeout(resolve, 2000))
 
-      // Create user role using RPC function
-      const { error: roleError } = await supabase.rpc('create_user_role', {
+      // Create user role using RPC function with explicit error handling
+      const { data: rpcData, error: roleError } = await supabase.rpc('create_user_role', {
         user_id: authData.user.id,
         role_name: values.role
       })
 
       if (roleError) {
         console.error('Role creation error:', roleError)
-        throw new Error('Failed to assign role to user')
+        throw new Error(`Failed to assign role to user: ${roleError.message}`)
       }
 
-      // Verify role was created
-      const { data: roleData, error: verifyError } = await supabase
+      // Wait for role creation to propagate
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      // Verify role was created with proper error handling
+      const { data: roles, error: verifyError } = await supabase
         .from('user_roles')
-        .select('role')
+        .select('*')
         .eq('user_id', authData.user.id)
-        .maybeSingle()
 
       if (verifyError) {
         console.error('Role verification error:', verifyError)
-        throw new Error('Failed to verify role assignment')
+        throw new Error(`Failed to verify role assignment: ${verifyError.message}`)
       }
 
-      if (!roleData) {
-        throw new Error('Role assignment verification failed')
+      if (!roles || roles.length === 0) {
+        console.error('No roles found for user')
+        throw new Error('Role assignment failed - no roles found')
       }
 
-      console.log("Role assigned and verified successfully:", roleData.role)
+      console.log("Role assigned and verified successfully:", roles[0].role)
 
       toast({
         title: "Success",
