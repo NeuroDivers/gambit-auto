@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import { WorkOrdersSection } from "./sections/WorkOrdersSection"
 import { WorkOrderCalendar } from "./WorkOrderCalendar"
 import { toast } from "sonner"
+import { CreateWorkOrderDialog } from "./CreateWorkOrderDialog"
 
 export const WorkOrderList = () => {
   const queryClient = useQueryClient()
@@ -51,9 +52,14 @@ export const WorkOrderList = () => {
   }, [queryClient])
 
   return (
-    <div className="space-y-20">
-      <WorkOrderCalendar />
-      <WorkOrdersSection />
+    <div className="space-y-8">
+      <div className="flex justify-end px-6">
+        <CreateWorkOrderDialog />
+      </div>
+      <div className="space-y-20">
+        <WorkOrderCalendar />
+        <WorkOrdersSection />
+      </div>
     </div>
   )
 }
