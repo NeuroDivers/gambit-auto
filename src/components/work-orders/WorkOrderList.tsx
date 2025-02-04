@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { useEffect } from "react"
 import { WorkOrdersSection } from "./sections/WorkOrdersSection"
 import { WorkOrderCalendar } from "./WorkOrderCalendar"
+import { toast } from "sonner"
 
 export const WorkOrderList = () => {
   const queryClient = useQueryClient()
@@ -13,19 +14,28 @@ export const WorkOrderList = () => {
       .on(
         "postgres_changes",
         {
-          event: "*", // Listen to all changes (INSERT, UPDATE, DELETE)
+          event: "*",
           schema: "public",
           table: "work_orders",
         },
         (payload) => {
           console.log("Work order change detected:", payload)
+          
+          // Show toast notification based on the event type
+          if (payload.eventType === 'DELETE') {
+            toast.info("Work order deleted")
+          }
+          
           // Invalidate and refetch work orders
           queryClient.invalidateQueries({ queryKey: ["workOrders"] })
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log("Subscription status:", status)
+      })
 
     return () => {
+      console.log("Cleaning up subscription")
       supabase.removeChannel(channel)
     }
   }, [queryClient])
