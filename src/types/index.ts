@@ -15,4 +15,5 @@ export type WorkOrder = {
   created_at: string
   price?: number | null
   address: string | null
+  timeframe: "flexible" | "asap" | "within_week" | "within_month"
 }
