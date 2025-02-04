@@ -1,6 +1,5 @@
 import { Badge } from "@/components/ui/badge"
 import { CardDescription, CardTitle } from "@/components/ui/card"
-import { EditWorkOrderDialog } from "../EditWorkOrderDialog"
 import { WorkOrderStatusSelect } from "./WorkOrderStatusSelect"
 import { format } from "date-fns"
 import { WorkOrder } from "../types"
@@ -28,7 +27,6 @@ export function WorkOrderCardHeader({ request }: WorkOrderCardHeaderProps) {
         </CardDescription>
       </div>
       <div className="flex items-center gap-2">
-        <EditWorkOrderDialog workOrder={request} />
         <WorkOrderStatusSelect status={request.status} quoteId={request.id} />
       </div>
     </div>

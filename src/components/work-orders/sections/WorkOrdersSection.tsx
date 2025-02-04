@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client"
 import { WorkOrderCard } from "../WorkOrderCard"
 import { StatusLegend } from "../StatusLegend"
 import { LoadingState } from "../LoadingState"
-import { CreateWorkOrderDialog } from "../CreateWorkOrderDialog"
 import type { WorkOrder } from "../types"
 
 export function WorkOrdersSection() {
@@ -12,14 +11,7 @@ export function WorkOrdersSection() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("work_orders")
-        .select(`
-          *,
-          work_order_services (
-            service_types (
-              name
-            )
-          )
-        `)
+        .select(`*`)
         .order("created_at", { ascending: false })
 
       if (error) throw error
@@ -46,7 +38,6 @@ export function WorkOrdersSection() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-semibold">Work Orders</h3>
-          <CreateWorkOrderDialog />
         </div>
         <StatusLegend statusCounts={statusCounts} />
         {requests?.map((request) => (

@@ -6,7 +6,6 @@ import {
 } from "@/components/ui/dialog"
 import { WorkOrder } from "../types"
 import { format } from "date-fns"
-import { EditWorkOrderDialog } from "../EditWorkOrderDialog"
 
 type WorkOrderDetailsDialogProps = {
   workOrder: WorkOrder
@@ -23,10 +22,7 @@ export function WorkOrderDetailsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <div className="flex items-center justify-between pr-12">
-            <DialogTitle className="text-xl">Work Order Details</DialogTitle>
-            <EditWorkOrderDialog workOrder={workOrder} />
-          </div>
+          <DialogTitle className="text-xl">Work Order Details</DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-6">
           <div className="space-y-4">
@@ -49,16 +45,6 @@ export function WorkOrderDetailsDialog({
             </div>
           </div>
           <div className="space-y-4">
-            <div className="bg-background/40 rounded-lg p-3">
-              <span className="text-sm text-white/50 block mb-1">Services</span>
-              <div className="text-sm text-white/90">
-                {workOrder.work_order_services.map(service => (
-                  <div key={service.service_types.name}>
-                    {service.service_types.name}
-                  </div>
-                ))}
-              </div>
-            </div>
             {workOrder.additional_notes && (
               <div className="bg-background/40 rounded-lg p-3">
                 <span className="text-sm text-white/50 block mb-1">Notes</span>
