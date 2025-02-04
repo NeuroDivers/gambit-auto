@@ -1,23 +1,11 @@
-import { useQuery } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
 import { WorkOrderCard } from "../WorkOrderCard"
 import { StatusLegend } from "../StatusLegend"
 import { LoadingState } from "../LoadingState"
+import { useWorkOrderData } from "../calendar/useWorkOrderData"
 import type { WorkOrder } from "../types"
 
 export function WorkOrdersSection() {
-  const { data: requests, isLoading } = useQuery({
-    queryKey: ["workOrders"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("work_orders")
-        .select("*")
-        .order("created_at", { ascending: false })
-
-      if (error) throw error
-      return data as WorkOrder[]
-    },
-  })
+  const { data: requests, isLoading } = useWorkOrderData()
 
   const statusCounts = {
     pending: requests?.filter(r => r.status === 'pending').length || 0,
