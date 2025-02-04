@@ -1,10 +1,11 @@
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { User, Edit2, Trash2, Shield } from "lucide-react";
+import { Shield } from "lucide-react";
 import { useState } from "react";
 import { UserEditDialog } from "./UserEditDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { UserAvatar } from "./card/UserAvatar";
+import { UserActions } from "./card/UserActions";
 
 type UserRole = "admin" | "manager" | "sidekick" | "client";
 
@@ -61,43 +62,16 @@ export const UserCard = ({ user }: UserCardProps) => {
     <>
       <div className="bg-[#242424] border border-white/12 rounded-lg p-6 transition-all duration-200 hover:border-[#BB86FC]/50">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-[#BB86FC]/10 flex items-center justify-center">
-              <User className="h-5 w-5 text-[#BB86FC]" />
-            </div>
-            <div className="space-y-1">
-              <p className="font-medium text-white/[0.87]">{displayName}</p>
-              <div className="flex items-center gap-2">
-                {user.first_name && user.last_name && (
-                  <p className="text-sm text-white/60">{user.email}</p>
-                )}
-                {user.user_roles?.role && (
-                  <div className="flex items-center gap-1 text-sm text-[#BB86FC]">
-                    <Shield className="h-3 w-3" />
-                    <span className="capitalize">{user.user_roles.role}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsEditing(true)}
-              className="text-white/60 hover:text-white/[0.87] hover:bg-white/[0.08]"
-            >
-              <Edit2 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleDelete}
-              className="text-white/60 hover:text-red-500 hover:bg-white/[0.08]"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
+          <UserAvatar
+            displayName={displayName}
+            email={user.email}
+            showEmail={!!(user.first_name && user.last_name)}
+            userRole={user.user_roles?.role}
+          />
+          <UserActions
+            onEdit={() => setIsEditing(true)}
+            onDelete={handleDelete}
+          />
         </div>
       </div>
       <UserEditDialog
