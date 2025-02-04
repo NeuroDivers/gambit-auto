@@ -12,6 +12,16 @@ import { ServiceItemType, WorkOrder } from "./types"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
 
+interface WorkOrderService {
+  service_id: string
+  quantity: number
+  unit_price: number
+  assigned_sidekick_id: string | null
+  service_types: {
+    name: string
+  }
+}
+
 const workOrderFormSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().min(1, "Last name is required"),
@@ -34,16 +44,6 @@ const workOrderFormSchema = z.object({
 })
 
 type WorkOrderFormValues = z.infer<typeof workOrderFormSchema>
-
-interface WorkOrderService {
-  service_id: string
-  quantity: number
-  unit_price: number
-  assigned_sidekick_id: string | null
-  service_types: {
-    name: string
-  }
-}
 
 type EditWorkOrderFormProps = {
   workOrder: WorkOrder
@@ -96,7 +96,7 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
       
       if (error) throw error
       
-      return data
+      return data as WorkOrderService[]
     }
   })
 
