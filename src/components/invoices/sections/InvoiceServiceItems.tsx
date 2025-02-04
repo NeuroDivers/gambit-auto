@@ -32,11 +32,11 @@ export function InvoiceServiceItems({ items, setItems }: InvoiceServiceItemsProp
         <tbody>
           {items.map((item, index) => (
             <tr key={index} className="border-b border-[#F1F0FB]">
-              <td className="py-3 text-[#1A1F2C]">{item.service_name}</td>
-              <td className="py-3 text-[#1A1F2C]">{item.description}</td>
-              <td className="py-3 text-right text-[#1A1F2C]">{item.quantity}</td>
-              <td className="py-3 text-right text-[#1A1F2C]">{formatCurrency(item.unit_price)}</td>
-              <td className="py-3 text-right text-[#1A1F2C]">{formatCurrency(item.quantity * item.unit_price)}</td>
+              <td className="py-3 text-white/90">{item.service_name}</td>
+              <td className="py-3 text-white/90">{item.description}</td>
+              <td className="py-3 text-right text-white/90">{item.quantity}</td>
+              <td className="py-3 text-right text-white/90">{formatCurrency(item.unit_price)}</td>
+              <td className="py-3 text-right text-white/90">{formatCurrency(item.quantity * item.unit_price)}</td>
             </tr>
           ))}
         </tbody>
