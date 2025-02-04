@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import UserManagement from "./pages/UserManagement";
@@ -6,11 +6,27 @@ import WorkOrders from "./pages/WorkOrders";
 import NotFound from "./pages/NotFound";
 import Invoices from "./pages/Invoices";
 import InvoiceDetails from "./pages/InvoiceDetails";
+import { supabase } from "@/integrations/supabase/client";
+
+// Protected route wrapper component
+const ProtectedRoute = async ({ children }: { children: React.ReactNode }) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return children;
+};
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Dashboard />,
+    element: (
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/auth",
@@ -18,19 +34,35 @@ export const router = createBrowserRouter([
   },
   {
     path: "/user-management",
-    element: <UserManagement />,
+    element: (
+      <ProtectedRoute>
+        <UserManagement />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/work-orders",
-    element: <WorkOrders />,
+    element: (
+      <ProtectedRoute>
+        <WorkOrders />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/invoices",
-    element: <Invoices />,
+    element: (
+      <ProtectedRoute>
+        <Invoices />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/invoices/:id",
-    element: <InvoiceDetails />,
+    element: (
+      <ProtectedRoute>
+        <InvoiceDetails />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "*",
