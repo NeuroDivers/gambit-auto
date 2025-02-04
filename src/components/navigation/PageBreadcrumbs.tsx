@@ -15,6 +15,7 @@ const routeNames: Record<string, string> = {
   "work-orders": "Work Orders",
   "auth": "Authentication",
   "invoices": "Invoices",
+  "edit": "Edit Work Order",
 };
 
 export function PageBreadcrumbs() {
@@ -35,8 +36,12 @@ export function PageBreadcrumbs() {
           </BreadcrumbLink>
         </BreadcrumbItem>
         {pathSegments.map((segment, index) => {
+          // Skip ID segments in the breadcrumb
+          if (segment.match(/^[0-9a-fA-F-]{36}$/)) return null;
+          
           const path = `/${pathSegments.slice(0, index + 1).join("/")}`;
-          const isLast = index === pathSegments.length - 1;
+          const isLast = index === pathSegments.length - 1 || 
+            (index === pathSegments.length - 2 && pathSegments[index + 1] === "edit");
 
           return (
             <BreadcrumbItem key={path}>

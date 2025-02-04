@@ -7,6 +7,7 @@ import WorkOrders from "./pages/WorkOrders";
 import NotFound from "./pages/NotFound";
 import Invoices from "./pages/Invoices";
 import InvoiceDetails from "./pages/InvoiceDetails";
+import EditWorkOrder from "./pages/EditWorkOrder";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -108,6 +109,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <WorkOrders />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/work-orders/:id/edit",
+    element: (
+      <ProtectedRoute>
+        <EditWorkOrder />
       </ProtectedRoute>
     ),
   },
