@@ -25,11 +25,15 @@ export function CreateUserForm() {
     try {
       console.log("Creating user with values:", values)
       
-      // Use admin API to create user without signing in
+      // Use admin API to create user with service role
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: values.email,
         password: values.password,
-        email_confirm: true
+        email_confirm: true,
+      }, {
+        headers: {
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+        }
       })
 
       if (authError) throw authError
@@ -62,18 +66,19 @@ export function CreateUserForm() {
         .from('user_roles')
         .select('*')
         .eq('user_id', authData.user.id)
+        .single()
 
       if (verifyError) {
         console.error('Role verification error:', verifyError)
         throw new Error(`Failed to verify role assignment: ${verifyError.message}`)
       }
 
-      if (!roles || roles.length === 0) {
+      if (!roles) {
         console.error('No roles found for user')
         throw new Error('Role assignment failed - no roles found')
       }
 
-      console.log("Role assigned and verified successfully:", roles[0].role)
+      console.log("Role assigned and verified successfully:", roles.role)
 
       toast({
         title: "Success",
