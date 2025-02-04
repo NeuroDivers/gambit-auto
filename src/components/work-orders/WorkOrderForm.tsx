@@ -7,9 +7,15 @@ import { Button } from "@/components/ui/button"
 export function WorkOrderForm({ workOrder, onSuccess }: WorkOrderFormProps) {
   const { form, onSubmit } = useWorkOrderForm(workOrder, onSuccess)
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    await form.handleSubmit(onSubmit)(e)
+  }
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <FormSections 
           form={form}
           isSubmitting={form.formState.isSubmitting}
@@ -19,6 +25,7 @@ export function WorkOrderForm({ workOrder, onSuccess }: WorkOrderFormProps) {
           <Button 
             type="submit" 
             disabled={form.formState.isSubmitting}
+            onClick={(e) => e.stopPropagation()}
           >
             {form.formState.isSubmitting ? 
               (workOrder ? "Updating..." : "Creating...") : 

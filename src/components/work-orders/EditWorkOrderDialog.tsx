@@ -10,8 +10,16 @@ type EditWorkOrderDialogProps = {
 
 export function EditWorkOrderDialog({ workOrder, open, onOpenChange }: EditWorkOrderDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl" onClick={(e) => e.stopPropagation()}>
+    <Dialog 
+      open={open} 
+      onOpenChange={onOpenChange} 
+      modal={true}
+    >
+      <DialogContent 
+        className="max-w-3xl"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onClick={(e) => e.stopPropagation()}
+      >
         <DialogHeader>
           <DialogTitle>Edit Work Order</DialogTitle>
           <DialogDescription>
