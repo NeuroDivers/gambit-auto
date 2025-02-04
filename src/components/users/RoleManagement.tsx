@@ -29,13 +29,11 @@ export const RoleManagement = () => {
         client: 0
       };
       
-      // If no roles are found, return default stats
       if (!data || data.length === 0) {
         console.log("No roles found, returning default stats");
         return stats;
       }
       
-      // Count occurrences of each role
       data.forEach((row) => {
         if (row.role) {
           stats[row.role] = (stats[row.role] || 0) + 1;
@@ -50,7 +48,6 @@ export const RoleManagement = () => {
   useEffect(() => {
     console.log("Setting up realtime subscription for user roles and profiles");
     
-    // Subscribe to user_roles changes for ALL events
     const rolesChannel = supabase
       .channel('roles-changes')
       .on(
@@ -84,7 +81,6 @@ export const RoleManagement = () => {
       )
       .subscribe();
 
-    // Subscribe to profiles changes
     const profilesChannel = supabase
       .channel('profiles-changes')
       .on(

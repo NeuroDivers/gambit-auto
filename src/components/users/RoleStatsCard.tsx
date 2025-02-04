@@ -1,4 +1,5 @@
 import { Shield } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 interface RoleStatsCardProps {
   role: string;
@@ -7,18 +8,20 @@ interface RoleStatsCardProps {
 
 export const RoleStatsCard = ({ role, count }: RoleStatsCardProps) => {
   return (
-    <div className="bg-[#242424] border border-white/12 rounded-lg p-4 transition-all duration-200 hover:border-[#BB86FC]/50">
-      <div className="flex items-center gap-3">
-        <div className="h-8 w-8 rounded-full bg-[#BB86FC]/10 flex items-center justify-center">
-          <Shield className="h-4 w-4 text-[#BB86FC]" />
-        </div>
-        <div>
-          <p className="font-medium capitalize text-white/[0.87]">{role}s</p>
-          <p className="text-sm text-white/60">
-            Count: {count}
-          </p>
+    <Card className="bg-card/50 backdrop-blur-sm border-white/[0.08] hover:border-primary/50 transition-all duration-200">
+      <div className="p-6">
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Shield className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <p className="text-lg font-semibold capitalize text-white/[0.87]">{role}s</p>
+            <p className="text-sm text-white/60">
+              {count} {count === 1 ? 'user' : 'users'}
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 };
