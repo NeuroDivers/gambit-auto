@@ -1,9 +1,8 @@
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { UseFormReturn } from "react-hook-form"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PersonalInfoFields } from "@/components/shared/form-fields/PersonalInfoFields"
 import { VehicleInfoFields } from "@/components/shared/form-fields/VehicleInfoFields"
-import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
-import { UseFormReturn } from "react-hook-form"
+import { ServiceItemsField } from "../form-fields/ServiceItemsField"
 import { WorkOrderFormValues } from "../types"
 
 type FormSectionsProps = {
@@ -33,19 +32,16 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
         </CardContent>
       </Card>
 
-      {!isEditing && <ServiceSelectionField form={form} />}
-
-      <CardFooter className="flex justify-end space-x-4">
-        <Button 
-          type="submit" 
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 
-            (isEditing ? "Updating..." : "Creating...") : 
-            (isEditing ? "Update Work Order" : "Create Work Order")
-          }
-        </Button>
-      </CardFooter>
+      {!isEditing && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Services</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ServiceItemsField form={form} />
+          </CardContent>
+        </Card>
+      )}
     </>
   )
 }
