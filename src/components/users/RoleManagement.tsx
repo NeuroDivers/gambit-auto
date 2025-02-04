@@ -17,7 +17,10 @@ export const RoleManagement = () => {
         .from("user_roles")
         .select("role");
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching role stats:", error);
+        throw error;
+      }
 
       const stats = {
         admin: 0,
@@ -26,7 +29,13 @@ export const RoleManagement = () => {
         client: 0
       };
       
-      data?.forEach((row) => {
+      // If no roles are found, return default stats
+      if (!data || data.length === 0) {
+        console.log("No roles found, returning default stats");
+        return stats;
+      }
+      
+      data.forEach((row) => {
         if (row.role) {
           stats[row.role] = (stats[row.role] || 0) + 1;
         }
