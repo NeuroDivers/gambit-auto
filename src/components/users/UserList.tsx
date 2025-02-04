@@ -23,6 +23,10 @@ export const UserList = () => {
     return matchesSearch && matchesRole;
   });
 
+  const handleRefresh = async () => {
+    await refetch();
+  };
+
   if (isLoading) {
     return (
       <div className="grid gap-4">
@@ -40,7 +44,7 @@ export const UserList = () => {
         onSearchChange={setSearchQuery}
         roleFilter={roleFilter}
         onRoleFilterChange={setRoleFilter}
-        onRefresh={refetch}
+        onRefresh={handleRefresh}
       />
       <div className="grid gap-4">
         {filteredUsers?.map((user) => (
