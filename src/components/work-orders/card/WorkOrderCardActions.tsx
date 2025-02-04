@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { FileText, Trash2, MoreVertical } from "lucide-react"
+import { FileText, Trash2, MoreVertical, Edit2 } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +10,8 @@ import { WorkOrder } from "@/types"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
+import { useState } from "react"
+import { EditWorkOrderDialog } from "../EditWorkOrderDialog"
 
 type WorkOrderCardActionsProps = {
   workOrder: WorkOrder
@@ -18,6 +20,7 @@ type WorkOrderCardActionsProps = {
 
 export function WorkOrderCardActions({ workOrder, onDelete }: WorkOrderCardActionsProps) {
   const navigate = useNavigate()
+  const [isEditOpen, setIsEditOpen] = useState(false)
 
   const handleCreateInvoice = async () => {
     try {
@@ -54,28 +57,43 @@ export function WorkOrderCardActions({ workOrder, onDelete }: WorkOrderCardActio
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
-          <MoreVertical className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          onClick={handleCreateInvoice}
-          className="cursor-pointer"
-        >
-          <FileText className="mr-2 h-4 w-4" />
-          Create Invoice
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={handleDelete}
-          className="cursor-pointer text-destructive"
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onClick={() => setIsEditOpen(true)}
+            className="cursor-pointer"
+          >
+            <Edit2 className="mr-2 h-4 w-4" />
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={handleCreateInvoice}
+            className="cursor-pointer"
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Create Invoice
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={handleDelete}
+            className="cursor-pointer text-destructive"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <EditWorkOrderDialog 
+        workOrder={workOrder}
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+      />
+    </>
   )
 }
