@@ -33,7 +33,7 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
         </CardContent>
       </Card>
 
-      <ServiceSelectionField form={form} />
+      {!isEditing && <ServiceSelectionField form={form} />}
 
       <CardFooter className="flex justify-end space-x-4">
         <Button 
