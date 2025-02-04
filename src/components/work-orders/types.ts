@@ -17,7 +17,7 @@ export type WorkOrderFormValues = {
   address?: string
   service_items: Array<ServiceItemType>
   price: number
-  scheduled_date?: Date | undefined
+  scheduled_date?: Date | null
 }
 
 export type WorkOrderFormProps = {
