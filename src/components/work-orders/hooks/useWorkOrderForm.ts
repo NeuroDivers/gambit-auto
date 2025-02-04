@@ -19,6 +19,7 @@ const formSchema = z.object({
   additional_notes: z.string().optional(),
   timeframe: z.enum(["flexible", "asap", "within_week", "within_month"]),
   address: z.string().optional(),
+  scheduled_date: z.date().optional(),
   service_items: z.array(z.object({
     service_id: z.string(),
     service_name: z.string(),
@@ -46,6 +47,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
       additional_notes: workOrder.additional_notes,
       timeframe: workOrder.timeframe || "flexible",
       address: workOrder.address,
+      scheduled_date: workOrder.scheduled_date ? new Date(workOrder.scheduled_date) : undefined,
       service_items: []
     } : {
       contact_preference: "phone",

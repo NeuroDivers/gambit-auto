@@ -5,6 +5,13 @@ import { VehicleInfoFields } from "@/components/shared/form-fields/VehicleInfoFi
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 import { UseFormReturn } from "react-hook-form"
 import { WorkOrderFormValues } from "../types"
+import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Button as ShadcnButton } from "@/components/ui/button"
+import { CalendarIcon } from "lucide-react"
+import { format } from "date-fns"
+import { cn } from "@/lib/utils"
 
 type FormSectionsProps = {
   form: UseFormReturn<WorkOrderFormValues>
@@ -30,6 +37,54 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
         </CardHeader>
         <CardContent>
           <VehicleInfoFields form={form} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Schedule</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <FormField
+            control={form.control}
+            name="scheduled_date"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Date</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <ShadcnButton
+                        variant={"outline"}
+                        className={cn(
+                          "w-[240px] pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </ShadcnButton>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) =>
+                        date < new Date()
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </FormItem>
+            )}
+          />
         </CardContent>
       </Card>
 
