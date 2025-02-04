@@ -39,13 +39,13 @@ export const RoleManagement = () => {
   useEffect(() => {
     console.log("Setting up realtime subscription for user roles and profiles");
     
-    // Subscribe to user_roles changes
+    // Subscribe to user_roles changes for ALL events
     const rolesChannel = supabase
       .channel('roles-changes')
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: '*', // Listen to all events
           schema: 'public',
           table: 'user_roles'
         },
@@ -57,6 +57,16 @@ export const RoleManagement = () => {
             toast({
               title: "Role removed",
               description: "User role has been removed",
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            toast({
+              title: "Role updated",
+              description: "User role has been updated",
+            });
+          } else if (payload.eventType === 'INSERT') {
+            toast({
+              title: "Role added",
+              description: "New user role has been added",
             });
           }
         }
