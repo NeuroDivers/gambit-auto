@@ -69,6 +69,11 @@ export function InvoiceList() {
     setEditDialogOpen(true)
   }
 
+  const handleClose = () => {
+    setEditDialogOpen(false)
+    setSelectedInvoiceId(null)
+  }
+
   if (isLoading) {
     return (
       <div className="animate-pulse text-primary/60 text-lg">Loading...</div>
@@ -95,6 +100,7 @@ export function InvoiceList() {
             <InvoiceView 
               invoiceId={selectedInvoiceId} 
               isEditing={true}
+              onClose={handleClose}
             />
           )}
         </DialogContent>

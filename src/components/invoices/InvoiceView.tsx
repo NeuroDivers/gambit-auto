@@ -7,13 +7,15 @@ import { useInvoiceMutation } from "./hooks/useInvoiceMutation"
 import { useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
+import { toast } from "sonner"
 
 type InvoiceViewProps = {
   invoiceId?: string
   isEditing?: boolean
+  onClose?: () => void
 }
 
-export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
+export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps) {
   const { data: invoice, isLoading: isInvoiceLoading } = useInvoiceData(invoiceId)
   const updateInvoiceMutation = useInvoiceMutation(invoiceId)
 
@@ -68,6 +70,16 @@ export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
     }
   }, [invoice, form])
 
+  const handleSubmit = async (values: InvoiceFormValues) => {
+    try {
+      await updateInvoiceMutation.mutateAsync(values)
+      toast.success("Invoice updated successfully")
+      onClose?.()
+    } catch (error) {
+      toast.error("Failed to update invoice")
+    }
+  }
+
   // Show loading state while either invoice or business profile data is loading
   if (isInvoiceLoading || isBusinessLoading) {
     return (
@@ -94,7 +106,7 @@ export function InvoiceView({ invoiceId, isEditing }: InvoiceViewProps) {
     return (
       <EditInvoiceForm 
         form={form} 
-        onSubmit={(values) => updateInvoiceMutation.mutate(values)}
+        onSubmit={handleSubmit}
         isPending={updateInvoiceMutation.isPending}
         invoiceId={invoiceId || ''}
       />
