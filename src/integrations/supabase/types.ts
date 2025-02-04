@@ -294,6 +294,110 @@ export type Database = {
         }
         Relationships: []
       }
+      quote_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          quantity: number
+          quote_id: string
+          service_name: string
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          quantity?: number
+          quote_id: string
+          service_name: string
+          unit_price: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          quantity?: number
+          quote_id?: string
+          service_name?: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          created_at: string
+          customer_address: string | null
+          customer_email: string | null
+          customer_first_name: string | null
+          customer_last_name: string | null
+          customer_phone: string | null
+          id: string
+          notes: string | null
+          quote_number: string
+          status: string
+          subtotal: number
+          tax_amount: number
+          total: number
+          updated_at: string
+          vehicle_make: string | null
+          vehicle_model: string | null
+          vehicle_vin: string | null
+          vehicle_year: number | null
+        }
+        Insert: {
+          created_at?: string
+          customer_address?: string | null
+          customer_email?: string | null
+          customer_first_name?: string | null
+          customer_last_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          quote_number: string
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          total?: number
+          updated_at?: string
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_vin?: string | null
+          vehicle_year?: number | null
+        }
+        Update: {
+          created_at?: string
+          customer_address?: string | null
+          customer_email?: string | null
+          customer_first_name?: string | null
+          customer_last_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          quote_number?: string
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          total?: number
+          updated_at?: string
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_vin?: string | null
+          vehicle_year?: number | null
+        }
+        Relationships: []
+      }
       service_bays: {
         Row: {
           assigned_sidekick_id: string | null
@@ -499,6 +603,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      convert_quote_to_work_order: {
+        Args: {
+          quote_id: string
+        }
+        Returns: string
+      }
       create_invoice_from_work_order: {
         Args: {
           work_order_id: string
@@ -513,6 +623,10 @@ export type Database = {
         Returns: undefined
       }
       generate_invoice_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_quote_number: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
