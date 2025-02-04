@@ -16,7 +16,6 @@ interface WorkOrderService {
   service_id: string
   quantity: number
   unit_price: number
-  assigned_sidekick_id: string | null
   service_types: {
     name: string
   }
@@ -39,7 +38,6 @@ const workOrderFormSchema = z.object({
     quantity: z.number().min(1),
     unit_price: z.number().min(0)
   })).min(1, "At least one service is required"),
-  sidekick_assignments: z.record(z.string(), z.string().optional()).optional(),
   additional_notes: z.string().optional(),
 })
 
@@ -77,8 +75,8 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
     }
   }, [workOrder.id, queryClient])
 
-  // Fetch work order services and sidekick assignments
-  const { data: workOrderServices = [] } = useQuery<WorkOrderService[]>({
+  // Fetch work order services
+  const { data: workOrderServices = [] } = useQuery({
     queryKey: ["workOrderServices", workOrder.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -87,7 +85,6 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
           service_id,
           quantity,
           unit_price,
-          assigned_sidekick_id,
           service_types (
             name
           )
@@ -101,7 +98,6 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
         service_id: service.service_id,
         quantity: service.quantity,
         unit_price: service.unit_price,
-        assigned_sidekick_id: service.assigned_sidekick_id,
         service_types: {
           name: service.service_types.name
         }
@@ -129,12 +125,6 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
         quantity: service.quantity,
         unit_price: service.unit_price
       })) || [],
-      sidekick_assignments: workOrderServices?.reduce((acc, service) => {
-        if (service.assigned_sidekick_id) {
-          acc[service.service_id] = service.assigned_sidekick_id
-        }
-        return acc
-      }, {} as Record<string, string>) || {},
     },
   })
 
@@ -147,15 +137,6 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
         quantity: service.quantity,
         unit_price: service.unit_price
       })))
-
-      const sidekickAssignments = workOrderServices.reduce((acc, service) => {
-        if (service.assigned_sidekick_id) {
-          acc[service.service_id] = service.assigned_sidekick_id
-        }
-        return acc
-      }, {} as Record<string, string>)
-      
-      form.setValue('sidekick_assignments', sidekickAssignments)
     }
   }, [workOrderServices, form])
 
@@ -189,7 +170,7 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
 
       if (deleteError) throw deleteError
 
-      // Insert updated services with sidekick assignments
+      // Insert updated services without sidekick assignments
       const { error: servicesError } = await supabase
         .from("work_order_services")
         .insert(
@@ -198,7 +179,6 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
             service_id: item.service_id,
             quantity: item.quantity,
             unit_price: item.unit_price,
-            assigned_sidekick_id: data.sidekick_assignments?.[item.service_id],
           }))
         )
 
