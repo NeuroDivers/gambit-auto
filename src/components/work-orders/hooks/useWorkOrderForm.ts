@@ -34,60 +34,56 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
 
   const form = useForm<WorkOrderFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: workOrder ? {
-      first_name: workOrder.first_name,
-      last_name: workOrder.last_name,
-      email: workOrder.email,
-      phone_number: workOrder.phone_number,
-      contact_preference: workOrder.contact_preference,
-      vehicle_make: workOrder.vehicle_make,
-      vehicle_model: workOrder.vehicle_model,
-      vehicle_year: workOrder.vehicle_year,
-      vehicle_serial: workOrder.vehicle_serial,
-      additional_notes: workOrder.additional_notes,
-      address: workOrder.address,
-      scheduled_date: workOrder.scheduled_date ? new Date(workOrder.scheduled_date) : null,
-      service_items: []
-    } : {
-      contact_preference: "phone",
+    defaultValues: {
+      first_name: workOrder?.first_name || "",
+      last_name: workOrder?.last_name || "",
+      email: workOrder?.email || "",
+      phone_number: workOrder?.phone_number || "",
+      contact_preference: workOrder?.contact_preference || "phone",
+      vehicle_make: workOrder?.vehicle_make || "",
+      vehicle_model: workOrder?.vehicle_model || "",
+      vehicle_year: workOrder?.vehicle_year || new Date().getFullYear(),
+      vehicle_serial: workOrder?.vehicle_serial || "",
+      additional_notes: workOrder?.additional_notes || "",
+      address: workOrder?.address || "",
+      scheduled_date: workOrder?.scheduled_date ? new Date(workOrder.scheduled_date) : null,
       service_items: []
     }
   })
 
-  // Fetch work order services when editing
   useEffect(() => {
-    const fetchWorkOrderServices = async () => {
-      if (workOrder) {
-        const { data: services, error } = await supabase
-          .from('work_order_services')
-          .select(`
-            *,
-            service:service_types(
-              id,
-              name
-            )
-          `)
-          .eq('work_order_id', workOrder.id)
+    async function fetchWorkOrderServices() {
+      if (!workOrder?.id) return
 
-        if (error) {
-          console.error('Error fetching work order services:', error)
-          return
-        }
+      const { data: services, error } = await supabase
+        .from('work_order_services')
+        .select(`
+          *,
+          service:service_types(
+            id,
+            name
+          )
+        `)
+        .eq('work_order_id', workOrder.id)
 
-        if (services) {
-          const formattedServices = services.map(service => ({
-            service_id: service.service_id,
-            service_name: service.service.name,
-            quantity: service.quantity,
-            unit_price: service.unit_price
-          }))
-          form.setValue('service_items', formattedServices)
-        }
+      if (error) {
+        console.error('Error fetching work order services:', error)
+        return
+      }
+
+      if (services) {
+        const formattedServices = services.map(service => ({
+          service_id: service.service_id,
+          service_name: service.service.name,
+          quantity: service.quantity,
+          unit_price: service.unit_price
+        }))
+        form.setValue('service_items', formattedServices)
       }
     }
 
     fetchWorkOrderServices()
-  }, [workOrder, form])
+  }, [workOrder?.id, form])
 
   const onSubmit = async (values: WorkOrderFormValues) => {
     console.log("Form values being submitted:", values)
