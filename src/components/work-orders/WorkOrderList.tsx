@@ -13,11 +13,13 @@ export const WorkOrderList = () => {
       .on(
         "postgres_changes",
         {
-          event: "*",
+          event: "*", // Listen to all changes (INSERT, UPDATE, DELETE)
           schema: "public",
           table: "work_orders",
         },
-        () => {
+        (payload) => {
+          console.log("Work order change detected:", payload)
+          // Invalidate and refetch work orders
           queryClient.invalidateQueries({ queryKey: ["workOrders"] })
         }
       )
