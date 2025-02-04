@@ -35,11 +35,6 @@ const workOrderFormSchema = z.object({
 
 type WorkOrderFormValues = z.infer<typeof workOrderFormSchema>
 
-type EditWorkOrderFormProps = {
-  workOrder: WorkOrder
-  onSuccess?: () => void
-}
-
 interface WorkOrderService {
   service_id: string
   quantity: number
@@ -48,6 +43,11 @@ interface WorkOrderService {
   service_types: {
     name: string
   }
+}
+
+type EditWorkOrderFormProps = {
+  workOrder: WorkOrder
+  onSuccess?: () => void
 }
 
 export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormProps) {
@@ -88,7 +88,7 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
           quantity,
           unit_price,
           assigned_sidekick_id,
-          service_types:service_id (
+          service_types (
             name
           )
         `)
@@ -102,9 +102,9 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
         unit_price: service.unit_price,
         assigned_sidekick_id: service.assigned_sidekick_id,
         service_types: {
-          name: service.service_types[0]?.name || ''
+          name: service.service_types.name
         }
-      })) as WorkOrderService[]
+      }))
     }
   })
 
@@ -136,6 +136,27 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
       }, {} as Record<string, string>) || {},
     },
   })
+
+  // Update form values when workOrderServices changes
+  useEffect(() => {
+    if (workOrderServices) {
+      form.setValue('service_items', workOrderServices.map(service => ({
+        service_id: service.service_id,
+        service_name: service.service_types.name,
+        quantity: service.quantity,
+        unit_price: service.unit_price
+      })))
+
+      const sidekickAssignments = workOrderServices.reduce((acc, service) => {
+        if (service.assigned_sidekick_id) {
+          acc[service.service_id] = service.assigned_sidekick_id
+        }
+        return acc
+      }, {} as Record<string, string>)
+      
+      form.setValue('sidekick_assignments', sidekickAssignments)
+    }
+  }, [workOrderServices, form])
 
   const onSubmit = async (data: WorkOrderFormValues) => {
     try {
