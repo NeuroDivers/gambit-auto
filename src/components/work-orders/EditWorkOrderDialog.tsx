@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { WorkOrder } from "./types"
 import { WorkOrderForm } from "./WorkOrderForm"
 
@@ -14,6 +14,9 @@ export function EditWorkOrderDialog({ workOrder, open, onOpenChange }: EditWorkO
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Edit Work Order</DialogTitle>
+          <DialogDescription>
+            Make changes to the work order details below.
+          </DialogDescription>
         </DialogHeader>
         <WorkOrderForm 
           workOrder={workOrder} 

@@ -3,6 +3,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog"
 import { WorkOrder } from "../types"
 import { format } from "date-fns"
@@ -23,6 +24,9 @@ export function WorkOrderDetailsDialog({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-xl">Work Order Details</DialogTitle>
+          <DialogDescription>
+            View the complete details of this work order.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-6">
           <div className="space-y-4">
