@@ -15,8 +15,7 @@ export const RoleManagement = () => {
       console.log("Fetching role stats...");
       const { data, error } = await supabase
         .from("user_roles")
-        .select("role")
-        .maybeSingle();
+        .select("role");
       
       if (error) {
         console.error("Error fetching role stats:", error);
@@ -31,15 +30,19 @@ export const RoleManagement = () => {
       };
       
       // If no roles are found, return default stats
-      if (!data) {
+      if (!data || data.length === 0) {
         console.log("No roles found, returning default stats");
         return stats;
       }
       
-      if (data.role) {
-        stats[data.role] = (stats[data.role] || 0) + 1;
-      }
+      // Count occurrences of each role
+      data.forEach((row) => {
+        if (row.role) {
+          stats[row.role] = (stats[row.role] || 0) + 1;
+        }
+      });
       
+      console.log("Role stats calculated:", stats);
       return stats;
     },
   });
@@ -53,7 +56,7 @@ export const RoleManagement = () => {
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to all events
+          event: '*',
           schema: 'public',
           table: 'user_roles'
         },
