@@ -23,6 +23,7 @@ export function CreateUserForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      // First, create the user account
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
@@ -33,14 +34,23 @@ export function CreateUserForm() {
 
       if (authError) throw authError
 
-      // Create user role
+      // Wait a short moment for the user creation to propagate
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      // Create user role using the user's own auth context
       const { error: roleError } = await supabase
         .from('user_roles')
         .insert([
-          { user_id: authData.user!.id, role: values.role }
+          { 
+            user_id: authData.user!.id, 
+            role: values.role,
+          }
         ])
 
-      if (roleError) throw roleError
+      if (roleError) {
+        console.error('Role creation error:', roleError)
+        throw new Error('Failed to assign role to user')
+      }
 
       toast({
         title: "Success",
@@ -49,6 +59,7 @@ export function CreateUserForm() {
 
       form.reset()
     } catch (error) {
+      console.error('Error creating user:', error)
       toast({
         title: "Error",
         description: error.message,
