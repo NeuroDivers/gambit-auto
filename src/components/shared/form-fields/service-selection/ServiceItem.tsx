@@ -2,7 +2,6 @@ import { FormField, FormItem, FormControl, FormLabel } from "@/components/ui/for
 import { Checkbox } from "@/components/ui/checkbox"
 import { ServiceItemType } from "@/components/work-orders/types"
 import { UseFormReturn } from "react-hook-form"
-import { SidekickAssignmentField } from "@/components/work-orders/form-fields/SidekickAssignmentField"
 
 type ServiceItemProps = {
   form: UseFormReturn<any>
@@ -50,8 +49,6 @@ export function ServiceItem({ form, service, field }: ServiceItemProps) {
                         (item: ServiceItemType) => item.service_id !== service.id
                       )
                     )
-                    // Clear sidekick assignment when service is unselected
-                    form.setValue(`sidekick_assignments.${service.id}`, undefined)
                   }
                 }}
                 className="border-primary/50 data-[state=checked]:bg-primary/70 data-[state=checked]:text-primary-foreground"
@@ -70,12 +67,6 @@ export function ServiceItem({ form, service, field }: ServiceItemProps) {
           </FormItem>
         )}
       />
-      {isSelected && (
-        <SidekickAssignmentField 
-          form={form}
-          serviceId={service.id}
-        />
-      )}
     </div>
   )
 }
