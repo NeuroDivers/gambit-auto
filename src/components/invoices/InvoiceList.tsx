@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useState, useEffect } from "react"
 import { InvoiceView } from "./InvoiceView"
 import { InvoiceListItem } from "./sections/InvoiceListItem"
+import { Toaster } from "sonner"
 
 export function InvoiceList() {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null)
@@ -82,6 +83,7 @@ export function InvoiceList() {
 
   return (
     <div className="space-y-4">
+      <Toaster />
       {invoices?.map((invoice) => (
         <InvoiceListItem
           key={invoice.id}
