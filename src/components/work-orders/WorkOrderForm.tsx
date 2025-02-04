@@ -10,6 +10,7 @@ export function WorkOrderForm({ workOrder, onSuccess }: WorkOrderFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    console.log("Form submission started")
     await form.handleSubmit(onSubmit)(e)
   }
 

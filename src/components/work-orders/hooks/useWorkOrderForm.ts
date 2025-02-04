@@ -54,9 +54,10 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
   })
 
   const onSubmit = async (values: WorkOrderFormValues) => {
-    console.log("Submitting form with values:", values)
+    console.log("Form values being submitted:", values)
     try {
       if (workOrder) {
+        console.log("Updating work order:", workOrder.id)
         // Update work order
         const { error: workOrderError } = await supabase
           .from("work_orders")
@@ -72,7 +73,8 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
             vehicle_serial: values.vehicle_serial,
             additional_notes: values.additional_notes,
             address: values.address,
-            scheduled_date: values.scheduled_date?.toISOString()
+            scheduled_date: values.scheduled_date?.toISOString(),
+            updated_at: new Date().toISOString()
           })
           .eq("id", workOrder.id)
 
@@ -81,6 +83,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
           throw workOrderError
         }
 
+        console.log("Work order updated successfully")
         // Show success message
         toast({
           title: "Success",
