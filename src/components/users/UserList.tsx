@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserFilters } from "./UserFilters";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 type UserRole = "admin" | "manager" | "sidekick" | "client";
 
@@ -24,9 +26,10 @@ export const UserList = () => {
   const [roleFilter, setRoleFilter] = useState("all");
   const { toast } = useToast();
   
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isLoading, refetch } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
+      console.log("Fetching users...");
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("id, email, first_name, last_name");
@@ -88,6 +91,15 @@ export const UserList = () => {
     };
   }, [queryClient, toast]);
 
+  const handleRefresh = async () => {
+    console.log("Manually refreshing users list...");
+    await refetch();
+    toast({
+      title: "Refreshed",
+      description: "User list has been updated",
+    });
+  };
+
   const filteredUsers = users?.filter(user => {
     const matchesSearch = searchQuery.toLowerCase() === "" || 
       user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -110,12 +122,23 @@ export const UserList = () => {
 
   return (
     <div>
-      <UserFilters
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        roleFilter={roleFilter}
-        onRoleFilterChange={setRoleFilter}
-      />
+      <div className="flex items-center justify-between mb-4">
+        <UserFilters
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          roleFilter={roleFilter}
+          onRoleFilterChange={setRoleFilter}
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          className="ml-2"
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
+      </div>
       <div className="grid gap-4">
         {filteredUsers?.map((user) => (
           <UserCard key={user.id} user={user} />
