@@ -23,12 +23,32 @@ export function WorkOrderCardActions({ workOrder, onDelete }: WorkOrderCardActio
     e.preventDefault()
     e.stopPropagation()
     try {
+      // First, ensure we have the work order services
+      const { data: services, error: servicesError } = await supabase
+        .from('work_order_services')
+        .select('*')
+        .eq('work_order_id', workOrder.id)
+
+      if (servicesError) {
+        console.error('Error fetching services:', servicesError)
+        throw servicesError
+      }
+
+      if (!services || services.length === 0) {
+        toast.error('No services found for this work order')
+        return
+      }
+
+      // Create invoice using the RPC function
       const { data, error } = await supabase
         .rpc('create_invoice_from_work_order', {
           work_order_id: workOrder.id
         })
 
-      if (error) throw error
+      if (error) {
+        console.error('Error creating invoice:', error)
+        throw error
+      }
 
       toast.success('Invoice created successfully')
       navigate(`/invoices/${data}`)
