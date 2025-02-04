@@ -1,8 +1,7 @@
-import { FormField, FormItem, FormControl } from "@/components/ui/form"
+import { FormField, FormItem, FormControl, FormLabel } from "@/components/ui/form"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ServiceItemType } from "@/components/work-orders/types"
 import { UseFormReturn } from "react-hook-form"
-import { FormLabel } from "@/components/ui/label"
 import { SidekickAssignmentField } from "@/components/work-orders/form-fields/SidekickAssignmentField"
 
 type ServiceItemProps = {
