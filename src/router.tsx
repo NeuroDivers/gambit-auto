@@ -23,9 +23,18 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       try {
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         if (error) throw error;
+        
+        if (!currentSession) {
+          throw new Error("No session found");
+        }
+        
         setSession(currentSession);
       } catch (error: any) {
         console.error("Session error:", error.message);
+        // Clear the session on error
+        await supabase.auth.signOut();
+        setSession(null);
+        
         toast({
           variant: "destructive",
           title: "Authentication Error",
@@ -43,6 +52,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      if (!newSession) {
+        // Clear session and redirect if session is lost
+        setSession(null);
+        window.location.href = "/auth";
+        return;
+      }
       setSession(newSession);
       setLoading(false);
     });
