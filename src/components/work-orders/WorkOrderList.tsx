@@ -21,17 +21,22 @@ export const WorkOrderList = () => {
         (payload) => {
           console.log("Work order change detected:", payload)
           
-          // Show toast notification based on the event type
-          if (payload.eventType === 'DELETE') {
-            toast.info("Work order deleted")
-            // For DELETE events, we need to update the cache directly
-            queryClient.setQueryData(["workOrders"], (oldData: any) => {
-              if (!oldData) return oldData
-              return oldData.filter((workOrder: any) => workOrder.id !== payload.old.id)
-            })
-          } else {
-            // For INSERT and UPDATE events, we can just invalidate the query
-            queryClient.invalidateQueries({ queryKey: ["workOrders"] })
+          switch (payload.eventType) {
+            case "DELETE":
+              toast.info("Work order deleted")
+              queryClient.setQueryData(["workOrders"], (oldData: any) => {
+                if (!oldData) return oldData
+                return oldData.filter((workOrder: any) => workOrder.id !== payload.old.id)
+              })
+              break
+            case "INSERT":
+              toast.success("New work order created")
+              queryClient.invalidateQueries({ queryKey: ["workOrders"] })
+              break
+            case "UPDATE":
+              toast.success("Work order updated")
+              queryClient.invalidateQueries({ queryKey: ["workOrders"] })
+              break
           }
         }
       )
