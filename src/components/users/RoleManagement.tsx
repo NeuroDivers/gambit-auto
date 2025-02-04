@@ -3,13 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { RoleStatsCard } from "./RoleStatsCard";
 import { RoleDistributionChart } from "./RoleDistributionChart";
+import { useToast } from "@/hooks/use-toast";
 
 export const RoleManagement = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   const { data: roleStats } = useQuery({
     queryKey: ["roleStats"],
     queryFn: async () => {
+      console.log("Fetching role stats...");
       const { data, error } = await supabase
         .from("user_roles")
         .select("role");
@@ -34,6 +37,7 @@ export const RoleManagement = () => {
   });
 
   useEffect(() => {
+    console.log("Setting up realtime subscription for user roles");
     const channel = supabase
       .channel('schema-db-changes')
       .on(
@@ -43,16 +47,25 @@ export const RoleManagement = () => {
           schema: 'public',
           table: 'user_roles'
         },
-        () => {
+        (payload) => {
+          console.log("Received realtime update for user roles:", payload);
           queryClient.invalidateQueries({ queryKey: ["roleStats"] });
+          
+          if (payload.eventType === 'DELETE') {
+            toast({
+              title: "Role removed",
+              description: "User role has been removed",
+            });
+          }
         }
       )
       .subscribe();
 
     return () => {
+      console.log("Cleaning up realtime subscription for user roles");
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [queryClient, toast]);
 
   return (
     <div className="space-y-6">
