@@ -25,14 +25,14 @@ export function CreateUserForm() {
     try {
       console.log("Creating user with values:", values)
       
-      // Create a new Supabase client with the service role key
-      const adminAuthClient = supabase.auth.admin
-      adminAuthClient.setAuthConfig({ Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` })
-      
-      const { data: authData, error: authError } = await adminAuthClient.createUser({
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: values.email,
         password: values.password,
         email_confirm: true,
+      }, {
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY}`
+        }
       })
 
       if (authError) throw authError
