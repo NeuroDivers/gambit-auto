@@ -1,69 +1,17 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useState, useEffect } from "react"
-import { InvoiceView } from "./InvoiceView"
 import { InvoiceListItem } from "./sections/InvoiceListItem"
+import { InvoiceDialog } from "./sections/InvoiceDialog"
+import { useInvoiceList } from "./hooks/useInvoiceList"
 import { Toaster } from "sonner"
 
 export function InvoiceList() {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
-  const queryClient = useQueryClient()
-
-  const { data: invoices, isLoading } = useQuery({
-    queryKey: ["invoices"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("invoices")
-        .select(`
-          *,
-          work_order:work_orders (
-            first_name,
-            last_name
-          )
-        `)
-        .order("created_at", { ascending: false })
-
-      if (error) throw error
-      return data
-    },
-  })
+  const { invoices, isLoading, setupRealtimeSubscription, updateInvoiceStatus } = useInvoiceList()
 
   useEffect(() => {
-    // Subscribe to changes
-    const channel = supabase
-      .channel('invoice-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen to all changes (INSERT, UPDATE, DELETE)
-          schema: 'public',
-          table: 'invoices'
-        },
-        () => {
-          // Invalidate and refetch invoices
-          queryClient.invalidateQueries({ queryKey: ['invoices'] })
-        }
-      )
-      .subscribe()
-
-    // Cleanup subscription
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [queryClient])
-
-  const updateInvoiceStatus = async (invoiceId: string, status: string) => {
-    const { error } = await supabase
-      .from("invoices")
-      .update({ status })
-      .eq("id", invoiceId)
-
-    if (error) {
-      console.error("Error updating invoice status:", error)
-    }
-  }
+    return setupRealtimeSubscription()
+  }, [])
 
   const handleEdit = (invoiceId: string) => {
     setSelectedInvoiceId(invoiceId)
@@ -93,20 +41,12 @@ export function InvoiceList() {
         />
       ))}
 
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Edit Invoice</DialogTitle>
-          </DialogHeader>
-          {selectedInvoiceId && (
-            <InvoiceView 
-              invoiceId={selectedInvoiceId} 
-              isEditing={true}
-              onClose={handleClose}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      <InvoiceDialog 
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        invoiceId={selectedInvoiceId}
+        onClose={handleClose}
+      />
     </div>
   )
 }

@@ -7,12 +7,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useToast } from "@/hooks/use-toast"
-import { supabase } from "@/integrations/supabase/client"
-import { useQuery } from "@tanstack/react-query"
-import { useState } from "react"
 import { InvoiceFormFields } from "./form-sections/InvoiceFormFields"
 import { useInvoiceFormSubmission } from "./form-sections/useInvoiceFormSubmission"
+import { useCreateInvoice } from "./hooks/useCreateInvoice"
 
 type CreateInvoiceDialogProps = {
   open: boolean
@@ -20,111 +17,22 @@ type CreateInvoiceDialogProps = {
 }
 
 export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogProps) {
-  const [customerFirstName, setCustomerFirstName] = useState("")
-  const [customerLastName, setCustomerLastName] = useState("")
-  const [customerEmail, setCustomerEmail] = useState("")
-  const [customerPhone, setCustomerPhone] = useState("")
-  const [customerAddress, setCustomerAddress] = useState("")
-  const [vehicleMake, setVehicleMake] = useState("")
-  const [vehicleModel, setVehicleModel] = useState("")
-  const [vehicleYear, setVehicleYear] = useState<number>(new Date().getFullYear())
-  const [vehicleVin, setVehicleVin] = useState("")
-  const [notes, setNotes] = useState("")
-  const [selectedWorkOrderId, setSelectedWorkOrderId] = useState<string>("")
-  const [invoiceItems, setInvoiceItems] = useState<any[]>([])
-  
-  const { data: workOrders } = useQuery({
-    queryKey: ["work-orders"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("work_orders")
-        .select("*, work_order_services(service_id, quantity, unit_price, service_types(name))")
-        .order("created_at", { ascending: false })
-      
-      if (error) throw error
-      return data
-    },
-  })
-
-  const { data: businessProfile } = useQuery({
-    queryKey: ["business-profile"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("business_profile")
-        .select("*")
-        .limit(1)
-        .maybeSingle()
-
-      if (error) throw error
-      return data
-    },
-  })
-
-  const { data: businessTaxes } = useQuery({
-    queryKey: ["business-taxes"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("business_taxes")
-        .select("*")
-
-      if (error) throw error
-      return data
-    },
-  })
-
-  const handleWorkOrderSelect = async (workOrderId: string) => {
-    setSelectedWorkOrderId(workOrderId)
-    const workOrder = workOrders?.find(wo => wo.id === workOrderId)
-    
-    if (workOrder) {
-      setCustomerFirstName(workOrder.first_name)
-      setCustomerLastName(workOrder.last_name)
-      setCustomerEmail(workOrder.email)
-      setCustomerPhone(workOrder.phone_number)
-      setCustomerAddress(workOrder.address || "")
-      setVehicleMake(workOrder.vehicle_make)
-      setVehicleModel(workOrder.vehicle_model)
-      setVehicleYear(workOrder.vehicle_year)
-      setVehicleVin(workOrder.vehicle_serial)
-      setNotes(workOrder.additional_notes || "")
-      
-      const items = workOrder.work_order_services.map((service: any) => ({
-        service_name: service.service_types.name,
-        description: service.service_types.name,
-        quantity: service.quantity,
-        unit_price: service.unit_price,
-      }))
-      setInvoiceItems(items)
-    }
-  }
+  const {
+    formData,
+    setters,
+    workOrders,
+    businessProfile,
+    businessTaxes,
+    handleWorkOrderSelect,
+    resetForm
+  } = useCreateInvoice()
 
   const { handleSubmit } = useInvoiceFormSubmission({
     onSuccess: () => {
       onOpenChange(false)
-      setCustomerFirstName("")
-      setCustomerLastName("")
-      setCustomerEmail("")
-      setCustomerPhone("")
-      setCustomerAddress("")
-      setVehicleMake("")
-      setVehicleModel("")
-      setVehicleYear(new Date().getFullYear())
-      setVehicleVin("")
-      setNotes("")
-      setSelectedWorkOrderId("")
-      setInvoiceItems([])
+      resetForm()
     },
-    selectedWorkOrderId,
-    customerFirstName,
-    customerLastName,
-    customerEmail,
-    customerPhone,
-    customerAddress,
-    vehicleMake,
-    vehicleModel,
-    vehicleYear,
-    vehicleVin,
-    invoiceItems,
+    ...formData,
     businessProfile,
     businessTaxes
   })
@@ -141,31 +49,13 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
         <ScrollArea className="h-[calc(90vh-8rem)] pr-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             <InvoiceFormFields
-              customerFirstName={customerFirstName}
-              setCustomerFirstName={setCustomerFirstName}
-              customerLastName={customerLastName}
-              setCustomerLastName={setCustomerLastName}
-              customerEmail={customerEmail}
-              setCustomerEmail={setCustomerEmail}
-              customerPhone={customerPhone}
-              setCustomerPhone={setCustomerPhone}
-              customerAddress={customerAddress}
-              setCustomerAddress={setCustomerAddress}
-              vehicleMake={vehicleMake}
-              setVehicleMake={setVehicleMake}
-              vehicleModel={vehicleModel}
-              setVehicleModel={setVehicleModel}
-              vehicleYear={vehicleYear}
-              setVehicleYear={setVehicleYear}
-              vehicleVin={vehicleVin}
-              setVehicleVin={setVehicleVin}
-              notes={notes}
-              setNotes={setNotes}
-              selectedWorkOrderId={selectedWorkOrderId}
+              {...formData}
+              {...setters}
+              selectedWorkOrderId={formData.selectedWorkOrderId}
               onWorkOrderSelect={handleWorkOrderSelect}
               workOrders={workOrders || []}
-              invoiceItems={invoiceItems}
-              setInvoiceItems={setInvoiceItems}
+              invoiceItems={formData.invoiceItems}
+              setInvoiceItems={setters.setInvoiceItems}
             />
             <Button type="submit" className="w-full">
               Create Invoice
