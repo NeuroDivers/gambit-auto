@@ -9,7 +9,8 @@ export type InvoiceFormValues = {
   notes: string
   status: string
   invoice_items: InvoiceItem[]
-  customer_name: string
+  customer_first_name: string
+  customer_last_name: string
   customer_email: string
   customer_phone: string
   customer_address: string
@@ -35,7 +36,8 @@ export type Invoice = {
   company_address: string | null
   gst_number: string | null
   qst_number: string | null
-  customer_name: string | null
+  customer_first_name: string | null
+  customer_last_name: string | null
   customer_email: string | null
   customer_address: string | null
   customer_phone: string | null

@@ -20,7 +20,8 @@ type CreateInvoiceDialogProps = {
 }
 
 export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogProps) {
-  const [customerName, setCustomerName] = useState("")
+  const [customerFirstName, setCustomerFirstName] = useState("")
+  const [customerLastName, setCustomerLastName] = useState("")
   const [customerEmail, setCustomerEmail] = useState("")
   const [customerPhone, setCustomerPhone] = useState("")
   const [customerAddress, setCustomerAddress] = useState("")
@@ -76,10 +77,11 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
     const workOrder = workOrders?.find(wo => wo.id === workOrderId)
     
     if (workOrder) {
-      setCustomerName(`${workOrder.first_name} ${workOrder.last_name}`)
+      setCustomerFirstName(workOrder.first_name)
+      setCustomerLastName(workOrder.last_name)
       setCustomerEmail(workOrder.email)
       setCustomerPhone(workOrder.phone_number)
-      setCustomerAddress(workOrder.address || "") // Add this line to set the address
+      setCustomerAddress(workOrder.address || "")
       setVehicleMake(workOrder.vehicle_make)
       setVehicleModel(workOrder.vehicle_model)
       setVehicleYear(workOrder.vehicle_year)
@@ -99,7 +101,8 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
   const { handleSubmit } = useInvoiceFormSubmission({
     onSuccess: () => {
       onOpenChange(false)
-      setCustomerName("")
+      setCustomerFirstName("")
+      setCustomerLastName("")
       setCustomerEmail("")
       setCustomerPhone("")
       setCustomerAddress("")
@@ -112,7 +115,8 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
       setInvoiceItems([])
     },
     selectedWorkOrderId,
-    customerName,
+    customerFirstName,
+    customerLastName,
     customerEmail,
     customerPhone,
     customerAddress,
@@ -137,8 +141,10 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
         <ScrollArea className="h-[calc(90vh-8rem)] pr-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             <InvoiceFormFields
-              customerName={customerName}
-              setCustomerName={setCustomerName}
+              customerFirstName={customerFirstName}
+              setCustomerFirstName={setCustomerFirstName}
+              customerLastName={customerLastName}
+              setCustomerLastName={setCustomerLastName}
               customerEmail={customerEmail}
               setCustomerEmail={setCustomerEmail}
               customerPhone={customerPhone}
