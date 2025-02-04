@@ -25,10 +25,9 @@ export const UserCard = ({ user }: UserCardProps) => {
 
   const handleDelete = async () => {
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("id", user.id);
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId: user.id }
+      });
 
       if (error) throw error;
 
@@ -36,7 +35,8 @@ export const UserCard = ({ user }: UserCardProps) => {
         title: "Success",
         description: "User deleted successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Delete user error:", error);
       toast({
         title: "Error",
         description: error.message,
