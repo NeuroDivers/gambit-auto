@@ -4,6 +4,7 @@ import { UserCard } from "./UserCard";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserFilters } from "./UserFilters";
+import { useToast } from "@/hooks/use-toast";
 
 type UserRole = "admin" | "manager" | "sidekick" | "client";
 
@@ -21,6 +22,7 @@ export const UserList = () => {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const { toast } = useToast();
   
   const { data: users, isLoading } = useQuery({
     queryKey: ["users"],
@@ -50,6 +52,7 @@ export const UserList = () => {
   });
 
   useEffect(() => {
+    console.log("Setting up realtime subscription for profiles");
     const channel = supabase
       .channel('schema-db-changes')
       .on(
@@ -59,16 +62,31 @@ export const UserList = () => {
           schema: 'public',
           table: 'profiles'
         },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["users"] });
+        (payload) => {
+          console.log("Received realtime update:", payload);
+          if (payload.eventType === 'DELETE') {
+            console.log("Processing DELETE event");
+            queryClient.setQueryData(["users"], (oldData: User[] | undefined) => {
+              if (!oldData) return oldData;
+              return oldData.filter(user => user.id !== payload.old.id);
+            });
+            toast({
+              title: "User deleted",
+              description: "User has been removed successfully",
+            });
+          } else {
+            // For INSERT and UPDATE events, invalidate the query to refetch
+            queryClient.invalidateQueries({ queryKey: ["users"] });
+          }
         }
       )
       .subscribe();
 
     return () => {
+      console.log("Cleaning up realtime subscription");
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [queryClient, toast]);
 
   const filteredUsers = users?.filter(user => {
     const matchesSearch = searchQuery.toLowerCase() === "" || 
