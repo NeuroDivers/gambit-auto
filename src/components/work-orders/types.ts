@@ -13,7 +13,6 @@ export type WorkOrderFormValues = {
   vehicle_year: number
   vehicle_serial: string
   additional_notes?: string
-  timeframe: "flexible" | "asap" | "within_week" | "within_month"
   address?: string
   service_items: Array<ServiceItemType>
   price: number

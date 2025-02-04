@@ -17,7 +17,6 @@ const formSchema = z.object({
   vehicle_year: z.number().min(1900).max(new Date().getFullYear() + 1),
   vehicle_serial: z.string().min(1, "Vehicle serial number is required"),
   additional_notes: z.string().optional(),
-  timeframe: z.enum(["flexible", "asap", "within_week", "within_month"]),
   address: z.string().optional(),
   scheduled_date: z.date().nullable().optional(),
   service_items: z.array(z.object({
@@ -45,13 +44,11 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
       vehicle_year: workOrder.vehicle_year,
       vehicle_serial: workOrder.vehicle_serial,
       additional_notes: workOrder.additional_notes,
-      timeframe: workOrder.timeframe || "flexible",
       address: workOrder.address,
       scheduled_date: workOrder.scheduled_date ? new Date(workOrder.scheduled_date) : null,
       service_items: []
     } : {
       contact_preference: "phone",
-      timeframe: "flexible",
       service_items: []
     }
   })
@@ -74,7 +71,6 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
             vehicle_year: values.vehicle_year,
             vehicle_serial: values.vehicle_serial,
             additional_notes: values.additional_notes,
-            timeframe: values.timeframe,
             address: values.address,
             scheduled_date: values.scheduled_date?.toISOString()
           })
@@ -126,7 +122,6 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
             vehicle_year: values.vehicle_year,
             vehicle_serial: values.vehicle_serial,
             additional_notes: values.additional_notes,
-            timeframe: values.timeframe,
             address: values.address,
             scheduled_date: values.scheduled_date?.toISOString(),
             status: "pending"

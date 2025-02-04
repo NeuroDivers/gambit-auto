@@ -435,7 +435,6 @@ export type Database = {
           phone_number: string
           scheduled_date: string | null
           status: string
-          timeframe: string
           updated_at: string
           vehicle_make: string
           vehicle_model: string
@@ -456,7 +455,6 @@ export type Database = {
           phone_number: string
           scheduled_date?: string | null
           status?: string
-          timeframe?: string
           updated_at?: string
           vehicle_make: string
           vehicle_model: string
@@ -477,7 +475,6 @@ export type Database = {
           phone_number?: string
           scheduled_date?: string | null
           status?: string
-          timeframe?: string
           updated_at?: string
           vehicle_make?: string
           vehicle_model?: string
