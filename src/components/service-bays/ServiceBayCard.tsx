@@ -142,7 +142,8 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
     <Card>
       <BayCardHeader 
         name={bay.name} 
-        status={bay.status} 
+        status={bay.status}
+        bayId={bay.id}
       />
       <BayCardContent
         bayId={bay.id}

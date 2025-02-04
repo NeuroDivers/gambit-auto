@@ -1,86 +1,88 @@
-import { Edit, Check, X, Clock, DollarSign } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { ServiceTypeDialog } from "./ServiceTypeDialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Pencil, Trash2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { supabase } from "@/integrations/supabase/client"
 
-interface ServiceType {
-  id: string;
-  name: string;
-  status: 'active' | 'inactive';
-  description: string | null;
-  price: number | null;
-  duration: number | null;
+type ServiceTypeCardProps = {
+  service: {
+    id: string
+    name: string
+    description?: string | null
+    price?: number | null
+    duration?: number | null
+    status: 'active' | 'inactive'
+  }
+  onEdit: () => void
+  onRefetch: () => void
 }
 
-interface ServiceTypeCardProps {
-  service: ServiceType;
-  onRefetch: () => void;
-  onEdit: () => void;
-}
+export function ServiceTypeCard({ service, onEdit, onRefetch }: ServiceTypeCardProps) {
+  const { toast } = useToast()
 
-export const ServiceTypeCard = ({ service, onRefetch }: ServiceTypeCardProps) => {
-  const [isEditing, setIsEditing] = useState(false);
+  const handleDelete = async () => {
+    try {
+      const { error } = await supabase
+        .from('service_types')
+        .delete()
+        .eq('id', service.id)
+
+      if (error) throw error
+
+      toast({
+        title: "Success",
+        description: "Service type deleted successfully",
+      })
+
+      onRefetch()
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      })
+    }
+  }
 
   return (
-    <>
-      <div className="bg-[#242424] border border-white/12 rounded-lg p-6 transition-all duration-200 hover:border-[#BB86FC]/50">
-        <div className="flex justify-between items-start mb-4">
-          <h3 className="text-lg font-semibold text-white/[0.87]">{service.name}</h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsEditing(true)}
-            className="text-white/60 hover:text-white/[0.87] hover:bg-white/[0.08] transition-colors duration-200"
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
-        </div>
-
-        <div className="space-y-4">
-          <div className="flex items-center text-sm">
-            {service.status === 'active' ? (
-              <span className="flex items-center text-[#03DAC5]">
-                <Check className="w-4 h-4 mr-1" />
-                Active
-              </span>
-            ) : (
-              <span className="flex items-center text-white/40">
-                <X className="w-4 h-4 mr-1" />
-                Inactive
-              </span>
-            )}
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <CardTitle className="text-lg">{service.name}</CardTitle>
+          <div className="flex items-center gap-2">
+            <Badge variant={service.status === 'active' ? 'default' : 'secondary'}>
+              {service.status}
+            </Badge>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 text-destructive hover:text-destructive/90"
+              onClick={handleDelete}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
-
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
           {service.description && (
-            <p className="text-sm text-white/60">{service.description}</p>
+            <p className="text-sm text-muted-foreground">{service.description}</p>
           )}
-
-          <div className="flex flex-wrap gap-4">
+          <div className="flex items-center gap-4">
             {service.price && (
-              <div className="flex items-center text-sm text-white/[0.87]">
-                <DollarSign className="w-4 h-4 mr-1 text-[#BB86FC]" />
-                {service.price.toFixed(2)}
-              </div>
+              <span className="text-sm">Price: ${service.price}</span>
             )}
             {service.duration && (
-              <div className="flex items-center text-sm text-white/[0.87]">
-                <Clock className="w-4 h-4 mr-1 text-[#BB86FC]" />
-                {service.duration} min
-              </div>
+              <span className="text-sm">Duration: {service.duration} min</span>
             )}
           </div>
         </div>
-      </div>
-
-      <ServiceTypeDialog
-        open={isEditing}
-        onOpenChange={setIsEditing}
-        serviceType={service}
-        onSuccess={() => {
-          setIsEditing(false);
-          onRefetch();
-        }}
-      />
-    </>
-  );
-};
+      </CardContent>
+    </Card>
+  )
+}
