@@ -1,4 +1,4 @@
-import { User } from "lucide-react";
+import { User, Shield } from "lucide-react";
 
 type UserAvatarProps = {
   displayName: string;
