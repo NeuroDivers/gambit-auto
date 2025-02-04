@@ -5,6 +5,7 @@ import { WorkOrder, WorkOrderFormValues } from "../types"
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
+import { useEffect } from "react"
 
 const formSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
@@ -53,6 +54,41 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
     }
   })
 
+  // Fetch work order services when editing
+  useEffect(() => {
+    const fetchWorkOrderServices = async () => {
+      if (workOrder) {
+        const { data: services, error } = await supabase
+          .from('work_order_services')
+          .select(`
+            *,
+            service:service_types(
+              id,
+              name
+            )
+          `)
+          .eq('work_order_id', workOrder.id)
+
+        if (error) {
+          console.error('Error fetching work order services:', error)
+          return
+        }
+
+        if (services) {
+          const formattedServices = services.map(service => ({
+            service_id: service.service_id,
+            service_name: service.service.name,
+            quantity: service.quantity,
+            unit_price: service.unit_price
+          }))
+          form.setValue('service_items', formattedServices)
+        }
+      }
+    }
+
+    fetchWorkOrderServices()
+  }, [workOrder, form])
+
   const onSubmit = async (values: WorkOrderFormValues) => {
     console.log("Form values being submitted:", values)
     try {
@@ -81,6 +117,31 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
         if (workOrderError) {
           console.error("Error updating work order:", workOrderError)
           throw workOrderError
+        }
+
+        // Update work order services
+        // First, delete existing services
+        const { error: deleteError } = await supabase
+          .from('work_order_services')
+          .delete()
+          .eq('work_order_id', workOrder.id)
+
+        if (deleteError) throw deleteError
+
+        // Then insert new services
+        if (values.service_items.length > 0) {
+          const { error: servicesError } = await supabase
+            .from('work_order_services')
+            .insert(
+              values.service_items.map(item => ({
+                work_order_id: workOrder.id,
+                service_id: item.service_id,
+                quantity: item.quantity,
+                unit_price: item.unit_price
+              }))
+            )
+
+          if (servicesError) throw servicesError
         }
 
         // Refresh work orders list and call success callback
