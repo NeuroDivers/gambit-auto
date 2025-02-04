@@ -1,13 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
-import { InvoiceFormValues } from "../types"
+import { InvoiceFormValues, InvoiceItem } from "../types"
 
 export function useInvoiceMutation(invoiceId?: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (values: InvoiceFormValues) => {
+      // First update the invoice details
       const { error: invoiceError } = await supabase
         .from('invoices')
         .update({
@@ -27,16 +28,38 @@ export function useInvoiceMutation(invoiceId?: string) {
 
       if (invoiceError) throw invoiceError
 
-      const { error: itemsError } = await supabase
+      // Get existing invoice items to compare
+      const { data: existingItems, error: fetchError } = await supabase
         .from('invoice_items')
-        .upsert(
-          values.invoice_items.map(item => ({
-            invoice_id: invoiceId,
-            ...item
-          }))
-        )
+        .select('id')
+        .eq('invoice_id', invoiceId)
 
-      if (itemsError) throw itemsError
+      if (fetchError) throw fetchError
+
+      // Delete all existing items first
+      const { error: deleteError } = await supabase
+        .from('invoice_items')
+        .delete()
+        .eq('invoice_id', invoiceId)
+
+      if (deleteError) throw deleteError
+
+      // Then insert all items as new
+      if (values.invoice_items.length > 0) {
+        const { error: itemsError } = await supabase
+          .from('invoice_items')
+          .insert(
+            values.invoice_items.map((item: InvoiceItem) => ({
+              invoice_id: invoiceId,
+              service_name: item.service_name,
+              description: item.description,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+            }))
+          )
+
+        if (itemsError) throw itemsError
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] })
