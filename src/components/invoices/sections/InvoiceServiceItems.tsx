@@ -1,5 +1,7 @@
 import { formatCurrency } from "@/lib/utils"
 import { InvoiceItem } from "../types"
+import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
 
 type InvoiceServiceItemsProps = {
   items: InvoiceItem[]
@@ -7,11 +9,39 @@ type InvoiceServiceItemsProps = {
 }
 
 export function InvoiceServiceItems({ items, setItems }: InvoiceServiceItemsProps) {
+  const handleAddItem = () => {
+    if (setItems) {
+      setItems([
+        ...items,
+        {
+          service_name: "",
+          description: "",
+          quantity: 1,
+          unit_price: 0
+        }
+      ])
+    }
+  }
+
   // Only show "No services added" if items is undefined or empty
   if (!items || items.length === 0) {
     return (
       <div className="pt-4">
-        <h2 className="font-semibold mb-4 text-[#1A1F2C]">Services / Services</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="font-semibold text-[#1A1F2C]">Services / Services</h2>
+          {setItems && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddItem}
+              className="flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add Item
+            </Button>
+          )}
+        </div>
         <p className="text-[#8E9196]">No services added</p>
       </div>
     )
@@ -19,6 +49,21 @@ export function InvoiceServiceItems({ items, setItems }: InvoiceServiceItemsProp
 
   return (
     <div className="pt-4">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="font-semibold text-[#1A1F2C]">Services / Services</h2>
+        {setItems && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleAddItem}
+            className="flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Item
+          </Button>
+        )}
+      </div>
       <table className="w-full">
         <thead>
           <tr className="border-b border-[#F1F0FB]">
