@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, useNavigate } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
@@ -16,7 +16,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   useEffect(() => {
     // Get initial session
@@ -32,7 +31,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
           title: "Authentication Error",
           description: "Please try logging in again.",
         });
-        navigate("/auth");
+        window.location.href = "/auth";
       } finally {
         setLoading(false);
       }
@@ -49,7 +48,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     });
 
     return () => subscription.unsubscribe();
-  }, [toast, navigate]);
+  }, [toast]);
 
   // Show loading state
   if (loading) {
