@@ -25,14 +25,11 @@ export function CreateUserForm() {
     try {
       console.log("Creating user with values:", values)
       
+      // Create user with admin API
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: values.email,
         password: values.password,
         email_confirm: true,
-      }, {
-        headers: {
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY}`
-        }
       })
 
       if (authError) throw authError
