@@ -29,7 +29,8 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
           />
           <div className="grid md:grid-cols-2 gap-8">
             <CustomerInfo 
-              customerName={invoice.customer_name || ''}
+              customerFirstName={invoice.customer_first_name || ''}
+              customerLastName={invoice.customer_last_name || ''}
               customerEmail={invoice.customer_email || ''}
               customerPhone={invoice.customer_phone || ''}
               customerAddress={invoice.customer_address || ''}

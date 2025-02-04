@@ -13,7 +13,8 @@ export function useInvoiceMutation(invoiceId?: string) {
         .update({
           notes: values.notes,
           status: values.status,
-          customer_name: values.customer_name,
+          customer_first_name: values.customer_first_name,
+          customer_last_name: values.customer_last_name,
           customer_email: values.customer_email,
           customer_phone: values.customer_phone,
           customer_address: values.customer_address,

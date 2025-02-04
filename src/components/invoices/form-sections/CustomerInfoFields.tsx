@@ -3,8 +3,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 
 type CustomerInfoFieldsProps = {
-  customerName: string
-  setCustomerName: (value: string) => void
+  customerFirstName: string
+  setCustomerFirstName: (value: string) => void
+  customerLastName: string
+  setCustomerLastName: (value: string) => void
   customerEmail: string
   setCustomerEmail: (value: string) => void
   customerPhone: string
@@ -14,8 +16,10 @@ type CustomerInfoFieldsProps = {
 }
 
 export function CustomerInfoFields({
-  customerName,
-  setCustomerName,
+  customerFirstName,
+  setCustomerFirstName,
+  customerLastName,
+  setCustomerLastName,
   customerEmail,
   setCustomerEmail,
   customerPhone,
@@ -25,15 +29,27 @@ export function CustomerInfoFields({
 }: CustomerInfoFieldsProps) {
   return (
     <div className="space-y-4">
-      <div>
-        <Label htmlFor="customerName">Customer Name</Label>
-        <Input
-          id="customerName"
-          value={customerName}
-          onChange={(e) => setCustomerName(e.target.value)}
-          placeholder="Enter customer name..."
-          required
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="customerFirstName">First Name</Label>
+          <Input
+            id="customerFirstName"
+            value={customerFirstName}
+            onChange={(e) => setCustomerFirstName(e.target.value)}
+            placeholder="Enter first name..."
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="customerLastName">Last Name</Label>
+          <Input
+            id="customerLastName"
+            value={customerLastName}
+            onChange={(e) => setCustomerLastName(e.target.value)}
+            placeholder="Enter last name..."
+            required
+          />
+        </div>
       </div>
       <div>
         <Label htmlFor="customerEmail">Customer Email</Label>
