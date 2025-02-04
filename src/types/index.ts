@@ -15,12 +15,4 @@ export type WorkOrder = {
   created_at: string
   price?: number | null
   address: string | null
-  work_order_services: Array<{
-    service_id: string
-    quantity: number
-    unit_price: number
-    service_types: {
-      name: string
-    }
-  }>
 }

@@ -5,10 +5,9 @@ import { cn } from "@/lib/utils"
 
 type WorkOrderCardProps = {
   workOrder: WorkOrder
-  onClick: (e: React.MouseEvent) => void
 }
 
-export function WorkOrderCard({ workOrder, onClick }: WorkOrderCardProps) {
+export function WorkOrderCard({ workOrder }: WorkOrderCardProps) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
 
   const getStatusStyle = (status: string) => {
@@ -33,10 +32,7 @@ export function WorkOrderCard({ workOrder, onClick }: WorkOrderCardProps) {
           "relative text-sm p-2 rounded truncate cursor-pointer transition-colors shadow-sm",
           getStatusStyle(workOrder.status)
         )}
-        onClick={(e) => {
-          e.stopPropagation()
-          setIsDetailsOpen(true)
-        }}
+        onClick={() => setIsDetailsOpen(true)}
       >
         <div className="truncate font-semibold">
           {workOrder.first_name} {workOrder.last_name}

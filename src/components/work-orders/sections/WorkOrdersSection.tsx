@@ -11,7 +11,7 @@ export function WorkOrdersSection() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("work_orders")
-        .select(`*`)
+        .select("*")
         .order("created_at", { ascending: false })
 
       if (error) throw error
