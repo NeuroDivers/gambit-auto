@@ -14,16 +14,19 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<boolean | null>(null);
 
   useEffect(() => {
+    // Check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(!!session);
     });
 
+    // Set up auth state listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(!!session);
     });
 
+    // Cleanup subscription
     return () => subscription.unsubscribe();
   }, []);
 
@@ -36,6 +39,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
+  // Redirect to auth page if not authenticated
   if (!session) {
     return <Navigate to="/auth" replace />;
   }
