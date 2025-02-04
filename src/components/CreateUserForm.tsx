@@ -45,7 +45,7 @@ export function CreateUserForm() {
       // Wait for the user creation to propagate
       await new Promise(resolve => setTimeout(resolve, 1000))
 
-      // Use RPC function to create role (this bypasses RLS)
+      // Create user role using RPC function
       const { error: roleError } = await supabase.rpc('create_user_role', {
         user_id: authData.user.id,
         role_name: values.role
@@ -56,7 +56,23 @@ export function CreateUserForm() {
         throw new Error('Failed to assign role to user')
       }
 
-      console.log("Role assigned successfully:", values.role)
+      // Verify role was created
+      const { data: roleData, error: verifyError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', authData.user.id)
+        .maybeSingle()
+
+      if (verifyError) {
+        console.error('Role verification error:', verifyError)
+        throw new Error('Failed to verify role assignment')
+      }
+
+      if (!roleData) {
+        throw new Error('Role assignment verification failed')
+      }
+
+      console.log("Role assigned and verified successfully:", roleData.role)
 
       toast({
         title: "Success",
