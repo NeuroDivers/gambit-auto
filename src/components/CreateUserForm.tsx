@@ -25,8 +25,11 @@ export function CreateUserForm() {
     try {
       console.log("Creating user with values:", values)
       
+      // Create a new Supabase client with the service role key
+      const adminAuthClient = supabase.auth.admin
+
       // Create user with admin API
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      const { data: authData, error: authError } = await adminAuthClient.createUser({
         email: values.email,
         password: values.password,
         email_confirm: true,
