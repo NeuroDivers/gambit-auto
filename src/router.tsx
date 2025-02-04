@@ -23,7 +23,7 @@ export const router = createBrowserRouter([
     element: <WorkOrders />,
   },
   {
-    path: "/work-orders/:id",
+    path: "/work-orders/:id/edit",
     element: <EditWorkOrder />,
   },
   {
