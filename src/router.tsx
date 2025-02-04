@@ -9,29 +9,47 @@ import Invoices from "./pages/Invoices";
 import InvoiceDetails from "./pages/InvoiceDetails";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
+import { useToast } from "@/hooks/use-toast";
 
 // Protected route wrapper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setLoading(false);
-    });
+    const initSession = async () => {
+      try {
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        setSession(currentSession);
+      } catch (error: any) {
+        console.error("Session error:", error.message);
+        toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: "Please try logging in again.",
+        });
+        navigate("/auth");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initSession();
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       setSession(newSession);
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [toast, navigate]);
 
   // Show loading state
   if (loading) {
