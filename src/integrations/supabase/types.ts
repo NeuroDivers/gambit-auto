@@ -375,48 +375,6 @@ export type Database = {
         }
         Relationships: []
       }
-      work_order_services: {
-        Row: {
-          assigned_sidekick_id: string | null
-          created_at: string
-          quantity: number
-          service_id: string
-          unit_price: number
-          work_order_id: string
-        }
-        Insert: {
-          assigned_sidekick_id?: string | null
-          created_at?: string
-          quantity?: number
-          service_id: string
-          unit_price: number
-          work_order_id: string
-        }
-        Update: {
-          assigned_sidekick_id?: string | null
-          created_at?: string
-          quantity?: number
-          service_id?: string
-          unit_price?: number
-          work_order_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "quote_request_services_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "service_types"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "work_order_services_work_order_id_fkey"
-            columns: ["work_order_id"]
-            isOneToOne: false
-            referencedRelation: "work_orders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       work_orders: {
         Row: {
           additional_notes: string | null
@@ -430,7 +388,6 @@ export type Database = {
           last_name: string
           media_url: string | null
           phone_number: string
-          price: number | null
           status: string
           timeframe: string
           updated_at: string
@@ -451,7 +408,6 @@ export type Database = {
           last_name: string
           media_url?: string | null
           phone_number: string
-          price?: number | null
           status?: string
           timeframe?: string
           updated_at?: string
@@ -472,7 +428,6 @@ export type Database = {
           last_name?: string
           media_url?: string | null
           phone_number?: string
-          price?: number | null
           status?: string
           timeframe?: string
           updated_at?: string

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { MoreVertical, FileText, Trash2 } from "lucide-react"
+import { FileText, Trash2, MoreVertical } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,10 +52,6 @@ export function WorkOrderCardActions({ workOrder, onDelete }: WorkOrderCardActio
       toast.error('Failed to delete work order')
     }
   }
-
-  const services = workOrder.work_order_services?.map(service => ({
-    name: service.service_types?.name || 'Unknown Service'
-  })) || []
 
   return (
     <DropdownMenu>

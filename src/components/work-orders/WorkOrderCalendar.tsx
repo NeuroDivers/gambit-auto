@@ -1,6 +1,5 @@
 import { useState } from "react"
 import { addMonths, subMonths } from "date-fns"
-import { CreateWorkOrderDialog } from "./CreateWorkOrderDialog"
 import { CalendarDay } from "./calendar/CalendarDay"
 import { CalendarGrid } from "./calendar/CalendarGrid"
 import { CalendarHeader } from "./calendar/CalendarHeader"
@@ -42,7 +41,6 @@ export function WorkOrderCalendar() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-semibold">Work Order Calendar</h3>
-          <CreateWorkOrderDialog />
         </div>
         <StatusLegend statusCounts={statusCounts} />
         <div className="space-y-4">
