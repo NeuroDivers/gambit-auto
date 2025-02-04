@@ -23,6 +23,8 @@ export function CreateUserForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      console.log("Creating user with values:", values)
+      
       // First create the user account
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
@@ -34,12 +36,18 @@ export function CreateUserForm() {
 
       if (authError) throw authError
 
+      if (!authData.user) {
+        throw new Error('User creation failed')
+      }
+
+      console.log("User created successfully:", authData.user.id)
+
       // Wait for the user creation to propagate
       await new Promise(resolve => setTimeout(resolve, 1000))
 
       // Use RPC function to create role (this bypasses RLS)
       const { error: roleError } = await supabase.rpc('create_user_role', {
-        user_id: authData.user!.id,
+        user_id: authData.user.id,
         role_name: values.role
       })
 
@@ -48,13 +56,15 @@ export function CreateUserForm() {
         throw new Error('Failed to assign role to user')
       }
 
+      console.log("Role assigned successfully:", values.role)
+
       toast({
         title: "Success",
         description: "User created successfully. They will receive a verification email.",
       })
 
       form.reset()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating user:', error)
       toast({
         title: "Error",

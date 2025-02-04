@@ -502,6 +502,13 @@ export type Database = {
         }
         Returns: string
       }
+      create_user_role: {
+        Args: {
+          user_id: string
+          role_name: string
+        }
+        Returns: undefined
+      }
       generate_invoice_number: {
         Args: Record<PropertyKey, never>
         Returns: string
