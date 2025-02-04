@@ -81,10 +81,16 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
           throw workOrderError
         }
 
+        // Show success message
         toast({
           title: "Success",
           description: "Work order updated successfully",
         })
+
+        // Refresh work orders list and call success callback
+        await queryClient.invalidateQueries({ queryKey: ["workOrder", workOrder.id] })
+        await queryClient.invalidateQueries({ queryKey: ["workOrders"] })
+        onSuccess?.()
       } else {
         // Insert new work order
         const { data: workOrder, error: workOrderError } = await supabase
@@ -133,12 +139,6 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
         // Reset form
         form.reset()
       }
-      
-      // Refresh work orders list
-      queryClient.invalidateQueries({ queryKey: ["workOrders"] })
-      
-      // Call success callback
-      onSuccess?.()
     } catch (error: any) {
       console.error("Error saving work order:", error)
       toast({
