@@ -29,58 +29,26 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
     try {
       console.log("Creating user with values:", values)
       
-      // Create user directly with Supabase auth API
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: values.email,
-        password: values.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
-        }
-      })
+      // Create user using the Edge Function instead of direct signup
+      const { data: userData, error: createError } = await fetch('/api/create-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: values.email,
+          password: values.password,
+          role: values.role,
+        }),
+      }).then(res => res.json())
 
-      if (authError) throw authError
+      if (createError) throw createError
 
-      if (!authData.user) {
+      if (!userData?.user?.id) {
         throw new Error('User creation failed')
       }
 
-      console.log("User created successfully:", authData.user.id)
-
-      // Wait longer for the user creation to propagate
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
-      // Create user role using RPC function with explicit error handling
-      const { data: rpcData, error: roleError } = await supabase.rpc('create_user_role', {
-        user_id: authData.user.id,
-        role_name: values.role
-      })
-
-      if (roleError) {
-        console.error('Role creation error:', roleError)
-        throw new Error(`Failed to assign role to user: ${roleError.message}`)
-      }
-
-      // Wait for role creation to propagate
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      // Verify role was created with proper error handling
-      const { data: roles, error: verifyError } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', authData.user.id)
-        .single()
-
-      if (verifyError) {
-        console.error('Role verification error:', verifyError)
-        throw new Error(`Failed to verify role assignment: ${verifyError.message}`)
-      }
-
-      if (!roles) {
-        console.error('No roles found for user')
-        throw new Error('Role assignment failed - no roles found')
-      }
-
-      console.log("Role assigned and verified successfully:", roles.role)
+      console.log("User created successfully:", userData.user.id)
 
       toast({
         title: "Success",
