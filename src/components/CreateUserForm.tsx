@@ -25,17 +25,16 @@ export function CreateUserForm() {
     try {
       console.log("Creating user with values:", values)
       
-      // Create user with Supabase auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      // Create user directly with Supabase auth API
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
-        email_confirm: true
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
       })
 
-      if (authError) {
-        console.error('Auth error:', authError)
-        throw authError
-      }
+      if (authError) throw authError
 
       if (!authData.user) {
         throw new Error('User creation failed')
@@ -43,8 +42,11 @@ export function CreateUserForm() {
 
       console.log("User created successfully:", authData.user.id)
 
-      // Create user role using RPC function
-      const { error: roleError } = await supabase.rpc('create_user_role', {
+      // Wait longer for the user creation to propagate
+      await new Promise(resolve => setTimeout(resolve, 2000))
+
+      // Create user role using RPC function with explicit error handling
+      const { data: rpcData, error: roleError } = await supabase.rpc('create_user_role', {
         user_id: authData.user.id,
         role_name: values.role
       })
@@ -54,11 +56,31 @@ export function CreateUserForm() {
         throw new Error(`Failed to assign role to user: ${roleError.message}`)
       }
 
-      console.log("Role assigned successfully")
+      // Wait for role creation to propagate
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      // Verify role was created with proper error handling
+      const { data: roles, error: verifyError } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', authData.user.id)
+        .single()
+
+      if (verifyError) {
+        console.error('Role verification error:', verifyError)
+        throw new Error(`Failed to verify role assignment: ${verifyError.message}`)
+      }
+
+      if (!roles) {
+        console.error('No roles found for user')
+        throw new Error('Role assignment failed - no roles found')
+      }
+
+      console.log("Role assigned and verified successfully:", roles.role)
 
       toast({
         title: "Success",
-        description: "User created successfully",
+        description: "User created successfully. They will receive a verification email.",
       })
 
       form.reset()
