@@ -55,9 +55,11 @@ export const UserList = () => {
   });
 
   useEffect(() => {
-    console.log("Setting up realtime subscription for profiles");
-    const channel = supabase
-      .channel('schema-db-changes')
+    console.log("Setting up realtime subscription for profiles and user_roles");
+    
+    // Subscribe to profiles changes
+    const profilesChannel = supabase
+      .channel('profiles-changes')
       .on(
         'postgres_changes',
         {
@@ -66,28 +68,57 @@ export const UserList = () => {
           table: 'profiles'
         },
         (payload) => {
-          console.log("Received realtime update:", payload);
+          console.log("Received realtime update for profiles:", payload);
+          queryClient.invalidateQueries({ queryKey: ["users"] });
+          
           if (payload.eventType === 'DELETE') {
-            console.log("Processing DELETE event");
-            queryClient.setQueryData(["users"], (oldData: User[] | undefined) => {
-              if (!oldData) return oldData;
-              return oldData.filter(user => user.id !== payload.old.id);
-            });
             toast({
               title: "User deleted",
               description: "User has been removed successfully",
             });
-          } else {
-            // For INSERT and UPDATE events, invalidate the query to refetch
-            queryClient.invalidateQueries({ queryKey: ["users"] });
+          } else if (payload.eventType === 'UPDATE') {
+            toast({
+              title: "User updated",
+              description: "User information has been updated",
+            });
+          } else if (payload.eventType === 'INSERT') {
+            toast({
+              title: "User added",
+              description: "New user has been added",
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    // Subscribe to user_roles changes
+    const rolesChannel = supabase
+      .channel('roles-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_roles'
+        },
+        (payload) => {
+          console.log("Received realtime update for user roles:", payload);
+          queryClient.invalidateQueries({ queryKey: ["users"] });
+          
+          if (payload.eventType === 'UPDATE') {
+            toast({
+              title: "Role updated",
+              description: "User role has been updated",
+            });
           }
         }
       )
       .subscribe();
 
     return () => {
-      console.log("Cleaning up realtime subscription");
-      supabase.removeChannel(channel);
+      console.log("Cleaning up realtime subscriptions");
+      supabase.removeChannel(profilesChannel);
+      supabase.removeChannel(rolesChannel);
     };
   }, [queryClient, toast]);
 
