@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import UserManagement from "./pages/UserManagement";
@@ -9,9 +10,32 @@ import InvoiceDetails from "./pages/InvoiceDetails";
 import { supabase } from "@/integrations/supabase/client";
 
 // Protected route wrapper component
-const ProtectedRoute = async ({ children }: { children: React.ReactNode }) => {
-  const { data: { session } } = await supabase.auth.getSession();
-  
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const [session, setSession] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(!!session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Show loading state while checking authentication
+  if (session === null) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-pulse text-primary/60 text-lg">Loading...</div>
+      </div>
+    );
+  }
+
   if (!session) {
     return <Navigate to="/auth" replace />;
   }
