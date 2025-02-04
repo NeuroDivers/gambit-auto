@@ -99,7 +99,7 @@ export function EditWorkOrderForm({ workOrder, onSuccess }: EditWorkOrderFormPro
         quantity: service.quantity,
         unit_price: service.unit_price,
         service_types: {
-          name: service.service_types.name
+          name: service.service_types[0]?.name || ''
         }
       })) as WorkOrderService[]
     }
