@@ -375,6 +375,51 @@ export type Database = {
         }
         Relationships: []
       }
+      work_order_services: {
+        Row: {
+          created_at: string
+          id: string
+          quantity: number
+          service_id: string
+          unit_price: number
+          updated_at: string
+          work_order_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          quantity?: number
+          service_id: string
+          unit_price: number
+          updated_at?: string
+          work_order_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          quantity?: number
+          service_id?: string
+          unit_price?: number
+          updated_at?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_services_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_orders: {
         Row: {
           additional_notes: string | null
