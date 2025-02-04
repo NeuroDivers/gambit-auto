@@ -23,7 +23,8 @@ export function WorkOrderCardActions({ workOrder, onDelete }: WorkOrderCardActio
   const [isEditOpen, setIsEditOpen] = useState(false)
 
   const handleCreateInvoice = async (e: React.MouseEvent) => {
-    e.stopPropagation() // Prevent event bubbling
+    e.preventDefault()
+    e.stopPropagation()
     try {
       const { data, error } = await supabase
         .rpc('create_invoice_from_work_order', {
@@ -41,7 +42,8 @@ export function WorkOrderCardActions({ workOrder, onDelete }: WorkOrderCardActio
   }
 
   const handleDelete = async (e: React.MouseEvent) => {
-    e.stopPropagation() // Prevent event bubbling
+    e.preventDefault()
+    e.stopPropagation()
     try {
       const { error } = await supabase
         .from('work_orders')
@@ -59,19 +61,25 @@ export function WorkOrderCardActions({ workOrder, onDelete }: WorkOrderCardActio
   }
 
   const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation() // Prevent event bubbling
+    e.preventDefault()
+    e.stopPropagation()
     setIsEditOpen(true)
+  }
+
+  const handleDropdownClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
   }
 
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+        <DropdownMenuTrigger asChild onClick={handleDropdownClick}>
           <Button variant="ghost" className="h-8 w-8 p-0">
             <MoreVertical className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+        <DropdownMenuContent align="end" onClick={handleDropdownClick}>
           <DropdownMenuItem
             onClick={handleEdit}
             className="cursor-pointer"
