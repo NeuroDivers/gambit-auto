@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client"
 type UseInvoiceFormSubmissionProps = {
   onSuccess?: () => void
   selectedWorkOrderId: string
-  customerName: string
+  customerFirstName: string
+  customerLastName: string
   customerEmail: string
   customerPhone: string
   customerAddress: string
@@ -20,7 +21,8 @@ type UseInvoiceFormSubmissionProps = {
 export function useInvoiceFormSubmission({
   onSuccess,
   selectedWorkOrderId,
-  customerName,
+  customerFirstName,
+  customerLastName,
   customerEmail,
   customerPhone,
   customerAddress,
@@ -44,8 +46,8 @@ export function useInvoiceFormSubmission({
         const { data: workOrder, error: workOrderError } = await supabase
           .from("work_orders")
           .insert({
-            first_name: customerName.split(" ")[0] || "",
-            last_name: customerName.split(" ")[1] || "",
+            first_name: customerFirstName,
+            last_name: customerLastName,
             email: customerEmail,
             phone_number: customerPhone,
             contact_preference: "email",
@@ -72,7 +74,8 @@ export function useInvoiceFormSubmission({
       const { error: updateError } = await supabase
         .from("invoices")
         .update({
-          customer_name: customerName,
+          customer_first_name: customerFirstName,
+          customer_last_name: customerLastName,
           customer_email: customerEmail,
           customer_address: customerAddress,
           vehicle_make: vehicleMake,
