@@ -18,10 +18,13 @@ export const useCreateUser = (onSuccess?: () => void) => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to create user');
+      }
 
       if (!data?.user?.id) {
-        throw new Error('User creation failed');
+        throw new Error('User creation failed - no user ID returned');
       }
 
       console.log("User created successfully:", data.user.id);
@@ -37,7 +40,7 @@ export const useCreateUser = (onSuccess?: () => void) => {
       console.error('Error creating user:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || 'Failed to create user',
         variant: "destructive",
       });
       return false;
