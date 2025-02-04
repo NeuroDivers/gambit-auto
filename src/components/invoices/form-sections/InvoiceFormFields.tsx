@@ -6,8 +6,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 
 type InvoiceFormFieldsProps = {
-  customerName: string
-  setCustomerName: (value: string) => void
+  customerFirstName: string
+  setCustomerFirstName: (value: string) => void
+  customerLastName: string
+  setCustomerLastName: (value: string) => void
   customerEmail: string
   setCustomerEmail: (value: string) => void
   customerPhone: string
@@ -32,8 +34,10 @@ type InvoiceFormFieldsProps = {
 }
 
 export function InvoiceFormFields({
-  customerName,
-  setCustomerName,
+  customerFirstName,
+  setCustomerFirstName,
+  customerLastName,
+  setCustomerLastName,
   customerEmail,
   setCustomerEmail,
   customerPhone,
@@ -65,8 +69,10 @@ export function InvoiceFormFields({
       />
 
       <CustomerInfoFields
-        customerName={customerName}
-        setCustomerName={setCustomerName}
+        customerFirstName={customerFirstName}
+        setCustomerFirstName={setCustomerFirstName}
+        customerLastName={customerLastName}
+        setCustomerLastName={setCustomerLastName}
         customerEmail={customerEmail}
         setCustomerEmail={setCustomerEmail}
         customerPhone={customerPhone}
