@@ -74,7 +74,8 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
             vehicle_serial: values.vehicle_serial,
             additional_notes: values.additional_notes,
             timeframe: values.timeframe,
-            address: values.address
+            address: values.address,
+            scheduled_date: values.scheduled_date
           })
           .eq("id", workOrder.id)
 
@@ -126,6 +127,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
             additional_notes: values.additional_notes,
             timeframe: values.timeframe,
             address: values.address,
+            scheduled_date: values.scheduled_date,
             status: "pending"
           })
           .select()
