@@ -8,7 +8,11 @@ export function WorkOrderForm({ workOrder, onSuccess }: WorkOrderFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await form.handleSubmit(onSubmit)(e)
+    try {
+      await form.handleSubmit(onSubmit)(e)
+    } catch (error) {
+      console.error("Form submission error:", error)
+    }
   }
 
   return (

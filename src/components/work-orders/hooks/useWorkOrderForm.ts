@@ -57,9 +57,8 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
   })
 
   const onSubmit = async (values: WorkOrderFormValues) => {
+    console.log("Submitting form with values:", values)
     try {
-      console.log("Submitting form with values:", values)
-
       if (workOrder) {
         // Update work order
         const { error: workOrderError } = await supabase
