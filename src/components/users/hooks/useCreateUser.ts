@@ -2,9 +2,11 @@ import { useToast } from "@/hooks/use-toast";
 import { formSchema } from "../../UserFormFields";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const useCreateUser = (onSuccess?: () => void) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -28,6 +30,9 @@ export const useCreateUser = (onSuccess?: () => void) => {
       }
 
       console.log("User created successfully:", data.user.id);
+
+      // Invalidate users query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["users"] });
 
       toast({
         title: "Success",

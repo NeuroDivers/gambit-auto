@@ -66,7 +66,7 @@ export const useUserEditSubmit = ({ userId, currentRole, onSuccess }: UseUserEdi
 
       queryClient.invalidateQueries({ queryKey: ["users"] });
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating user:", error);
       toast({
         title: "Error",
