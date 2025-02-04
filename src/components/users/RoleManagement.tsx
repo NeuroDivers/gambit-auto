@@ -37,9 +37,11 @@ export const RoleManagement = () => {
   });
 
   useEffect(() => {
-    console.log("Setting up realtime subscription for user roles");
-    const channel = supabase
-      .channel('schema-db-changes')
+    console.log("Setting up realtime subscription for user roles and profiles");
+    
+    // Subscribe to user_roles changes
+    const rolesChannel = supabase
+      .channel('roles-changes')
       .on(
         'postgres_changes',
         {
@@ -61,9 +63,32 @@ export const RoleManagement = () => {
       )
       .subscribe();
 
+    // Subscribe to profiles changes
+    const profilesChannel = supabase
+      .channel('profiles-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'profiles'
+        },
+        (payload) => {
+          console.log("Received realtime update for profiles:", payload);
+          queryClient.invalidateQueries({ queryKey: ["roleStats"] });
+          
+          toast({
+            title: "User deleted",
+            description: "User and associated role have been removed",
+          });
+        }
+      )
+      .subscribe();
+
     return () => {
-      console.log("Cleaning up realtime subscription for user roles");
-      supabase.removeChannel(channel);
+      console.log("Cleaning up realtime subscriptions");
+      supabase.removeChannel(rolesChannel);
+      supabase.removeChannel(profilesChannel);
     };
   }, [queryClient, toast]);
 
