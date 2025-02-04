@@ -31,8 +31,11 @@ export const useCreateUser = (onSuccess?: () => void) => {
 
       console.log("User created successfully:", data.user.id);
 
-      // Invalidate users query to refresh the list
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      // Invalidate both users and role stats queries
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["users"] }),
+        queryClient.invalidateQueries({ queryKey: ["roleStats"] })
+      ]);
 
       toast({
         title: "Success",
