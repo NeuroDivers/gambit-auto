@@ -25,14 +25,14 @@ export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
         quantity: 1,
         unit_price: 0
       }
-    ])
+    ], { shouldValidate: true })
   }
 
   const handleRemoveService = (index: number) => {
     const currentItems = form.getValues("service_items") || []
     const newItems = [...currentItems]
     newItems.splice(index, 1)
-    form.setValue("service_items", newItems)
+    form.setValue("service_items", newItems, { shouldValidate: true })
   }
 
   const handleServiceUpdate = (index: number, field: keyof ServiceItemType, value: any) => {
@@ -56,7 +56,7 @@ export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
       }
     }
     
-    form.setValue("service_items", newItems)
+    form.setValue("service_items", newItems, { shouldValidate: true })
   }
 
   return (
