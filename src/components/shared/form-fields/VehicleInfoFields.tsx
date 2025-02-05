@@ -15,9 +15,13 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
           name="vehicle_make"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vehicle Make</FormLabel>
+              <FormLabel htmlFor="vehicle_make">Vehicle Make</FormLabel>
               <FormControl>
-                <Input placeholder="Enter vehicle make" {...field} />
+                <Input 
+                  id="vehicle_make"
+                  placeholder="Enter vehicle make" 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -28,9 +32,13 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
           name="vehicle_model"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vehicle Model</FormLabel>
+              <FormLabel htmlFor="vehicle_model">Vehicle Model</FormLabel>
               <FormControl>
-                <Input placeholder="Enter vehicle model" {...field} />
+                <Input 
+                  id="vehicle_model"
+                  placeholder="Enter vehicle model" 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -43,9 +51,10 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
           name="vehicle_year"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vehicle Year</FormLabel>
+              <FormLabel htmlFor="vehicle_year">Vehicle Year</FormLabel>
               <FormControl>
                 <Input 
+                  id="vehicle_year"
                   type="number" 
                   placeholder="Enter vehicle year"
                   {...field}
@@ -58,12 +67,16 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
         />
         <FormField
           control={form.control}
-          name="vehicle_serial"
+          name="vehicle_vin"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vehicle Serial Number</FormLabel>
+              <FormLabel htmlFor="vehicle_vin">Vehicle VIN</FormLabel>
               <FormControl>
-                <Input placeholder="Enter vehicle serial number" {...field} />
+                <Input 
+                  id="vehicle_vin"
+                  placeholder="Enter vehicle VIN" 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

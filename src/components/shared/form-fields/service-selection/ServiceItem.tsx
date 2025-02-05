@@ -37,6 +37,7 @@ export function ServiceItem({ form, service, field }: ServiceItemProps) {
             <div className="flex items-center space-x-3">
               <FormControl>
                 <Checkbox
+                  id={`service-${service.id}`}
                   checked={isSelected}
                   onCheckedChange={(checked) => {
                     const currentItems = field.value || []
@@ -61,7 +62,7 @@ export function ServiceItem({ form, service, field }: ServiceItemProps) {
                 />
               </FormControl>
               <div className="space-y-1 leading-none">
-                <FormLabel className="text-white/80">
+                <FormLabel htmlFor={`service-${service.id}`} className="text-white/80">
                   {service.name}
                 </FormLabel>
               </div>
@@ -69,6 +70,7 @@ export function ServiceItem({ form, service, field }: ServiceItemProps) {
             {isSelected && (
               <div className="pl-7 space-y-2">
                 <Input
+                  id={`quantity-${service.id}`}
                   type="number"
                   min="1"
                   value={selectedItem?.quantity || 1}
@@ -86,6 +88,7 @@ export function ServiceItem({ form, service, field }: ServiceItemProps) {
                   placeholder="Quantity"
                 />
                 <Input
+                  id={`price-${service.id}`}
                   type="number"
                   min="0"
                   step="0.01"

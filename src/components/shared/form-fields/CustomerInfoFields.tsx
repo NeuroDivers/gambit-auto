@@ -15,9 +15,13 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
           name="customer_first_name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>First Name</FormLabel>
+              <FormLabel htmlFor="customer_first_name">First Name</FormLabel>
               <FormControl>
-                <Input placeholder="Enter first name" {...field} />
+                <Input 
+                  id="customer_first_name"
+                  placeholder="Enter first name" 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -28,9 +32,13 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
           name="customer_last_name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Last Name</FormLabel>
+              <FormLabel htmlFor="customer_last_name">Last Name</FormLabel>
               <FormControl>
-                <Input placeholder="Enter last name" {...field} />
+                <Input 
+                  id="customer_last_name"
+                  placeholder="Enter last name" 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -43,9 +51,14 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
           name="customer_email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel htmlFor="customer_email">Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="Enter email" {...field} />
+                <Input 
+                  id="customer_email"
+                  type="email" 
+                  placeholder="Enter email" 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -56,9 +69,13 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
           name="customer_phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Phone</FormLabel>
+              <FormLabel htmlFor="customer_phone">Phone</FormLabel>
               <FormControl>
-                <Input placeholder="Enter phone number" {...field} />
+                <Input 
+                  id="customer_phone"
+                  placeholder="Enter phone number" 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -70,9 +87,13 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
         name="customer_address"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Address</FormLabel>
+            <FormLabel htmlFor="customer_address">Address</FormLabel>
             <FormControl>
-              <Input placeholder="Enter address" {...field} />
+              <Input 
+                id="customer_address"
+                placeholder="Enter address" 
+                {...field} 
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
