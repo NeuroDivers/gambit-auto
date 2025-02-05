@@ -3,7 +3,7 @@ import { WorkOrderFormValues } from "../types"
 import { CustomerInfoFields } from "./CustomerInfoFields"
 import { VehicleInfoFields } from "./VehicleInfoFields"
 import { TimeSelectionFields } from "./TimeSelectionFields"
-import { ServiceItemsField } from "../form-fields/ServiceItemsField"
+import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 
 type FormSectionsProps = {
   form: UseFormReturn<WorkOrderFormValues>
@@ -21,11 +21,7 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
         </div>
         <div className="space-y-8">
           <VehicleInfoFields form={form} />
-          <ServiceItemsField
-            services={form.getValues("service_items")}
-            onServicesChange={(services) => form.setValue("service_items", services)}
-            disabled={isSubmitting}
-          />
+          <ServiceSelectionField form={form} />
         </div>
       </div>
     </div>
