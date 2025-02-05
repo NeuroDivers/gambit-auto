@@ -16,13 +16,19 @@ export default function Quotes() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
       
-      const { data } = await supabase
+      const { data: profileData } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
         .single();
+
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .single();
       
-      return data;
+      return { ...profileData, role: roleData?.role };
     },
   });
 

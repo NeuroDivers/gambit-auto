@@ -1,6 +1,6 @@
-import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
-import { UserList } from "@/components/users/UserList"
+import { UserManagementSection } from "@/components/users/UserManagementSection"
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout"
+import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { useNavigate } from "react-router-dom"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
@@ -16,13 +16,19 @@ export default function UserManagement() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
       
-      const { data } = await supabase
+      const { data: profileData } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
         .single();
+
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .single();
       
-      return data;
+      return { ...profileData, role: roleData?.role };
     },
   });
 
@@ -52,18 +58,9 @@ export default function UserManagement() {
       role={profile?.role}
       onLogout={handleLogout}
     >
-      <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
-        <div className="container mx-auto py-12">
-          <div className="px-6">
-            <div className="mb-8">
-              <PageBreadcrumbs />
-              <h1 className="text-3xl font-bold">User Management</h1>
-            </div>
-          </div>
-          <div className="max-w-[1600px] mx-auto">
-            <UserList />
-          </div>
-        </div>
+      <div className="container py-6">
+        <PageBreadcrumbs />
+        <UserManagementSection />
       </div>
     </DashboardLayout>
   )
