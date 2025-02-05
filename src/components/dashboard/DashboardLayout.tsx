@@ -1,11 +1,15 @@
 import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sidebar"
 import { useLocation } from "react-router-dom"
-import { Calendar, FileText, Settings, Users, Wrench } from "lucide-react"
+import { Calendar, FileText, Settings, Users, Wrench, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Link } from "react-router-dom"
+import { BusinessSettingsDialog } from "../business/BusinessSettingsDialog"
+import { ProfileDialog } from "../profile/ProfileDialog"
+import { useAdminStatus } from "@/hooks/useAdminStatus"
 
 function SidebarNav() {
   const location = useLocation()
+  const { isAdmin } = useAdminStatus()
 
   const items = [
     {
@@ -67,6 +71,11 @@ function SidebarNav() {
           <span>{item.title}</span>
         </Link>
       ))}
+      
+      <div className="mt-4 border-t pt-4">
+        <BusinessSettingsDialog />
+        <ProfileDialog />
+      </div>
     </div>
   )
 }
