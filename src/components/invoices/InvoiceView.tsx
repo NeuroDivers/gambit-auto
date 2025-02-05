@@ -10,8 +10,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { useReactToPrint } from 'react-to-print'
 import { Button } from "@/components/ui/button"
-import { Printer, Eye } from "lucide-react"
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import { Printer } from "lucide-react"
 
 type InvoiceViewProps = {
   invoiceId?: string
@@ -23,7 +22,6 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
   const { data: invoice, isLoading: isInvoiceLoading } = useInvoiceData(invoiceId)
   const updateInvoiceMutation = useInvoiceMutation(invoiceId)
   const printRef = useRef<HTMLDivElement>(null)
-  const [previewOpen, setPreviewOpen] = useState(false)
 
   // Also fetch business profile data which is needed for the invoice
   const { data: businessProfile, isLoading: isBusinessLoading } = useQuery({
@@ -62,8 +60,6 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
     onAfterPrint: () => toast.success("Invoice printed successfully"),
     onPrintError: () => toast.error("Failed to print invoice"),
     pageStyle: "@page { size: auto; margin: 20mm; }",
-    removeAfterPrint: true,
-    copyStyles: true,
     contentRef: printRef,
   })
 
@@ -169,15 +165,7 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end gap-2">
-        <Button
-          onClick={() => setPreviewOpen(true)}
-          variant="outline"
-          className="gap-2"
-        >
-          <Eye className="h-4 w-4" />
-          Preview
-        </Button>
+      <div className="flex justify-end">
         <Button
           onClick={onPrintClick}
           className="gap-2"
@@ -189,19 +177,6 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
       <div ref={printRef}>
         <InvoicePrintPreview invoice={invoice} businessProfile={businessProfile} />
       </div>
-
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogTitle>Invoice Preview</DialogTitle>
-          <InvoicePrintPreview invoice={invoice} businessProfile={businessProfile} />
-          <div className="flex justify-end mt-6">
-            <Button onClick={onPrintClick} className="gap-2">
-              <Printer className="h-4 w-4" />
-              Print Invoice
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
