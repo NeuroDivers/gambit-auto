@@ -1,27 +1,59 @@
-import { WelcomeHeader } from "./WelcomeHeader";
-import { useAdminStatus } from "@/hooks/useAdminStatus";
-import { Button } from "@/components/ui/button";
-import { Users } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Sidebar } from "@/components/ui/sidebar"
+import { useLocation } from "react-router-dom"
+import { Calendar, FileText, Settings, Users, Wrench } from "lucide-react"
 
-export const DashboardLayout = ({ children }: { children?: React.ReactNode }) => {
-  const { isAdmin, loading } = useAdminStatus();
-  const navigate = useNavigate();
+export function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const location = useLocation()
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-pulse text-primary/60 text-lg">Loading...</div>
-      </div>
-    );
-  }
+  const items = [
+    {
+      title: "Work Orders",
+      href: "/work-orders",
+      icon: Wrench,
+      active: location.pathname === "/work-orders",
+    },
+    {
+      title: "Service Types",
+      href: "/service-types",
+      icon: Settings,
+      active: location.pathname === "/service-types",
+    },
+    {
+      title: "Service Bays",
+      href: "/service-bays",
+      icon: Calendar,
+      active: location.pathname === "/service-bays",
+    },
+    {
+      title: "Quotes",
+      href: "/quotes",
+      icon: FileText,
+      active: location.pathname === "/quotes",
+    },
+    {
+      title: "Invoices",
+      href: "/invoices",
+      icon: FileText,
+      active: location.pathname === "/invoices",
+    },
+    {
+      title: "Users",
+      href: "/users",
+      icon: Users,
+      active: location.pathname === "/users",
+    },
+    {
+      title: "Clients",
+      href: "/clients",
+      icon: Users,
+      active: location.pathname === "/clients",
+    },
+  ]
 
   return (
-    <div className="bg-gradient-to-b from-background to-background/95 min-h-screen">
-      <div className="container mx-auto px-6 py-8 space-y-8">
-        <WelcomeHeader />
-        {children}
-      </div>
+    <div className="flex min-h-screen">
+      <Sidebar items={items} />
+      <main className="flex-1">{children}</main>
     </div>
-  );
-};
+  )
+}

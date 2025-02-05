@@ -3,13 +3,14 @@ import Auth from "./pages/Auth"
 import Dashboard from "./pages/Dashboard"
 import WorkOrders from "./pages/WorkOrders"
 import EditWorkOrder from "./pages/EditWorkOrder"
+import ServiceTypes from "./pages/ServiceTypes"
+import ServiceBays from "./pages/ServiceBays"
 import UserManagement from "./pages/UserManagement"
+import Quotes from "./pages/Quotes"
 import Invoices from "./pages/Invoices"
 import InvoiceDetails from "./pages/InvoiceDetails"
 import NotFound from "./pages/NotFound"
-import Quotes from "./pages/Quotes"
-import ServiceTypes from "./pages/ServiceTypes"
-import ServiceBays from "./pages/ServiceBays"
+import ClientManagement from "./pages/ClientManagement"
 
 export const router = createBrowserRouter([
   {
@@ -25,12 +26,24 @@ export const router = createBrowserRouter([
     element: <WorkOrders />,
   },
   {
-    path: "/work-orders/:id/edit",
+    path: "/work-orders/:id",
     element: <EditWorkOrder />,
   },
   {
-    path: "/user-management",
+    path: "/service-types",
+    element: <ServiceTypes />,
+  },
+  {
+    path: "/service-bays",
+    element: <ServiceBays />,
+  },
+  {
+    path: "/users",
     element: <UserManagement />,
+  },
+  {
+    path: "/quotes",
+    element: <Quotes />,
   },
   {
     path: "/invoices",
@@ -41,16 +54,8 @@ export const router = createBrowserRouter([
     element: <InvoiceDetails />,
   },
   {
-    path: "/quotes",
-    element: <Quotes />,
-  },
-  {
-    path: "/service-types",
-    element: <ServiceTypes />,
-  },
-  {
-    path: "/service-bays",
-    element: <ServiceBays />,
+    path: "/clients",
+    element: <ClientManagement />,
   },
   {
     path: "*",

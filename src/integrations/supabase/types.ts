@@ -119,6 +119,39 @@ export type Database = {
           },
         ]
       }
+      clients: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          phone_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          phone_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          phone_number?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       invoice_items: {
         Row: {
           created_at: string
@@ -337,6 +370,7 @@ export type Database = {
       }
       quotes: {
         Row: {
+          client_id: string | null
           created_at: string
           customer_address: string | null
           customer_email: string | null
@@ -357,6 +391,7 @@ export type Database = {
           vehicle_year: number | null
         }
         Insert: {
+          client_id?: string | null
           created_at?: string
           customer_address?: string | null
           customer_email?: string | null
@@ -377,6 +412,7 @@ export type Database = {
           vehicle_year?: number | null
         }
         Update: {
+          client_id?: string | null
           created_at?: string
           customer_address?: string | null
           customer_email?: string | null
@@ -396,7 +432,22 @@ export type Database = {
           vehicle_vin?: string | null
           vehicle_year?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "quotes_client_email_fkey"
+            columns: ["customer_email"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["email"]
+          },
+          {
+            foreignKeyName: "quotes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       service_bays: {
         Row: {
@@ -532,6 +583,7 @@ export type Database = {
           additional_notes: string | null
           address: string | null
           assigned_bay_id: string | null
+          client_id: string | null
           contact_preference: Database["public"]["Enums"]["contact_preference"]
           created_at: string
           email: string
@@ -554,6 +606,7 @@ export type Database = {
           additional_notes?: string | null
           address?: string | null
           assigned_bay_id?: string | null
+          client_id?: string | null
           contact_preference: Database["public"]["Enums"]["contact_preference"]
           created_at?: string
           email: string
@@ -576,6 +629,7 @@ export type Database = {
           additional_notes?: string | null
           address?: string | null
           assigned_bay_id?: string | null
+          client_id?: string | null
           contact_preference?: Database["public"]["Enums"]["contact_preference"]
           created_at?: string
           email?: string
@@ -600,6 +654,20 @@ export type Database = {
             columns: ["assigned_bay_id"]
             isOneToOne: false
             referencedRelation: "service_bays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_client_email_fkey"
+            columns: ["email"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["email"]
+          },
+          {
+            foreignKeyName: "work_orders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
@@ -642,6 +710,10 @@ export type Database = {
           role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
+      }
+      migrate_client_data: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {
