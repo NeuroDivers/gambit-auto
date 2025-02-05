@@ -1,3 +1,4 @@
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +21,26 @@ export default function Dashboard() {
     },
   });
 
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account.",
+      });
+      
+      navigate("/auth");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    }
+  };
+
   useEffect(() => {
     if (!sessionLoading && !session) {
       navigate("/auth");
@@ -39,13 +60,15 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-8 space-y-8">
-      <PageBreadcrumbs />
-      <WelcomeHeader />
-      <div className="grid grid-cols-1 gap-8">
-        <WorkOrderCalendar />
-        <WorkOrdersSection />
+    <DashboardLayout onLogout={handleLogout}>
+      <div className="p-8 space-y-8">
+        <PageBreadcrumbs />
+        <WelcomeHeader />
+        <div className="grid grid-cols-1 gap-8">
+          <WorkOrderCalendar />
+          <WorkOrdersSection />
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

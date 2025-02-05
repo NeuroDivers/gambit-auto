@@ -19,7 +19,7 @@ export function DashboardLayout({
 }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full overflow-hidden">
+      <div className="flex min-h-screen w-full">
         <Sidebar>
           <SidebarContent>
             <SidebarHeader 
@@ -30,9 +30,7 @@ export function DashboardLayout({
             <SidebarNav />
           </SidebarContent>
         </Sidebar>
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
+        <main className="flex-1">{children}</main>
       </div>
       <div className="hidden">
         <button id="business-settings-trigger">
