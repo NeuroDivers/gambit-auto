@@ -9,7 +9,7 @@ import { useEffect } from "react"
 
 export function BusinessProfileForm() {
   const { form, profile, isLoading, onSubmit, defaultBusinessHours } = useBusinessProfileForm()
-  const { uploading, mediaUrl, handleFileUpload, handleMediaRemove, setMediaUrl } = useMediaUpload()
+  const { uploading, mediaUrl, handleFileUpload, handleMediaRemove, setMediaUrl } = useMediaUpload('business-logos')
 
   useEffect(() => {
     if (profile) {

@@ -2,7 +2,7 @@ import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 
-export function useMediaUpload() {
+export function useMediaUpload(bucket: string = 'quote-request-media') {
   const [uploading, setUploading] = useState(false)
   const [mediaUrl, setMediaUrl] = useState<string | null>(null)
   const { toast } = useToast()
@@ -15,7 +15,7 @@ export function useMediaUpload() {
       const filePath = `${Math.random()}.${fileExt}`
 
       const { error: uploadError } = await supabase.storage
-        .from('quote-request-media')
+        .from(bucket)
         .upload(filePath, file)
 
       if (uploadError) {
@@ -23,7 +23,7 @@ export function useMediaUpload() {
       }
 
       const { data: { publicUrl } } = supabase.storage
-        .from('quote-request-media')
+        .from(bucket)
         .getPublicUrl(filePath)
 
       setMediaUrl(publicUrl)
