@@ -186,6 +186,7 @@ export function useQuoteForm({ quote, onSuccess }: UseQuoteFormProps = {}) {
 
         // Insert quote items
         if (values.quote_items.length > 0) {
+          console.log('Inserting quote items:', values.quote_items)
           const { error: itemsError } = await supabase
             .from("quote_items")
             .insert(
