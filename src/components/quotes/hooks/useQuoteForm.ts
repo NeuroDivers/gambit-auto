@@ -57,6 +57,15 @@ export function useQuoteForm(onSuccess?: () => void) {
 
       console.log('Creating quote with calculated values:', { subtotal, taxAmount, total })
 
+      // Generate quote number
+      const { data: quoteNumber, error: quoteNumberError } = await supabase
+        .rpc('generate_quote_number')
+
+      if (quoteNumberError) {
+        console.error('Error generating quote number:', quoteNumberError)
+        throw quoteNumberError
+      }
+
       // Insert quote
       const { data: quote, error: quoteError } = await supabase
         .from("quotes")
@@ -74,7 +83,7 @@ export function useQuoteForm(onSuccess?: () => void) {
           subtotal,
           tax_amount: taxAmount,
           total,
-          quote_number: await generateQuoteNumber(),
+          quote_number: quoteNumber,
           status: "draft"
         })
         .select()
@@ -95,6 +104,7 @@ export function useQuoteForm(onSuccess?: () => void) {
             values.quote_items.map(item => ({
               quote_id: quote.id,
               service_name: item.service_name,
+              description: item.description,
               quantity: item.quantity,
               unit_price: item.unit_price
             }))
@@ -126,12 +136,4 @@ export function useQuoteForm(onSuccess?: () => void) {
     form,
     onSubmit
   }
-}
-
-async function generateQuoteNumber() {
-  const { data, error } = await supabase
-    .rpc('generate_quote_number')
-
-  if (error) throw error
-  return data
 }
