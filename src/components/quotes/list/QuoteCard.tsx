@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Pencil, Trash2, ClipboardList } from "lucide-react"
 import { QuoteStatusSelect } from "../QuoteStatusSelect"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 
 type QuoteCardProps = {
   quote: Quote
@@ -17,6 +18,8 @@ export function QuoteCard({
   onDelete, 
   onConvertToWorkOrder 
 }: QuoteCardProps) {
+  const canConvert = quote.status === 'approved'
+
   return (
     <Card>
       <CardHeader>
@@ -27,15 +30,26 @@ export function QuoteCard({
               status={quote.status} 
               quoteId={quote.id}
             />
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => onConvertToWorkOrder(quote.id)}
-              disabled={quote.status === 'converted'}
-              title="Convert to Work Order"
-            >
-              <ClipboardList className="h-4 w-4" />
-            </Button>
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => onConvertToWorkOrder(quote.id)}
+                    disabled={!canConvert || quote.status === 'converted'}
+                    title="Convert to Work Order"
+                  >
+                    <ClipboardList className="h-4 w-4" />
+                  </Button>
+                </div>
+              </HoverCardTrigger>
+              {!canConvert && quote.status !== 'converted' && (
+                <HoverCardContent className="w-80">
+                  <p>This quote must be approved before it can be converted to a work order. Please change the quote status to "Approved" first.</p>
+                </HoverCardContent>
+              )}
+            </HoverCard>
             <Button
               variant="ghost"
               size="icon"
