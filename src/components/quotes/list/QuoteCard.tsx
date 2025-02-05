@@ -45,8 +45,11 @@ export function QuoteCard({
                 </div>
               </HoverCardTrigger>
               {!canConvert && quote.status !== 'converted' && (
-                <HoverCardContent className="w-80">
-                  <p>This quote must be approved before it can be converted to a work order. Please change the quote status to "Approved" first.</p>
+                <HoverCardContent className="w-64">
+                  <h4 className="font-semibold text-destructive mb-1">Warning</h4>
+                  <p className="text-sm text-muted-foreground">
+                    This quote must be approved before converting to a work order.
+                  </p>
                 </HoverCardContent>
               )}
             </HoverCard>
