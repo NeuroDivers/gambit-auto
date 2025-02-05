@@ -36,7 +36,7 @@ export function useQuoteForm(onSuccess?: () => void) {
 
   const onSubmit = async (values: QuoteFormValues) => {
     try {
-      console.log('Submitting form with values:', values)
+      console.log('Starting quote submission with values:', values)
       
       // Calculate totals
       const subtotal = values.quote_items.reduce(
@@ -55,7 +55,7 @@ export function useQuoteForm(onSuccess?: () => void) {
       const taxAmount = subtotal * (taxRate / 100)
       const total = subtotal + taxAmount
 
-      console.log('Creating quote with calculated values:', { subtotal, taxAmount, total })
+      console.log('Calculated values:', { subtotal, taxAmount, total })
 
       // Generate quote number
       const { data: quoteNumber, error: quoteNumberError } = await supabase
@@ -63,13 +63,16 @@ export function useQuoteForm(onSuccess?: () => void) {
 
       if (quoteNumberError) {
         console.error('Error generating quote number:', quoteNumberError)
-        throw quoteNumberError
+        throw new Error('Failed to generate quote number')
       }
+
+      console.log('Generated quote number:', quoteNumber)
 
       // Insert quote
       const { data: quote, error: quoteError } = await supabase
         .from("quotes")
         .insert({
+          quote_number: quoteNumber,
           customer_first_name: values.customer_first_name,
           customer_last_name: values.customer_last_name,
           customer_email: values.customer_email,
@@ -83,7 +86,6 @@ export function useQuoteForm(onSuccess?: () => void) {
           subtotal,
           tax_amount: taxAmount,
           total,
-          quote_number: quoteNumber,
           status: "draft"
         })
         .select()
@@ -91,7 +93,7 @@ export function useQuoteForm(onSuccess?: () => void) {
 
       if (quoteError) {
         console.error('Error creating quote:', quoteError)
-        throw quoteError
+        throw new Error('Failed to create quote')
       }
 
       console.log('Quote created successfully:', quote)
@@ -104,7 +106,7 @@ export function useQuoteForm(onSuccess?: () => void) {
             values.quote_items.map(item => ({
               quote_id: quote.id,
               service_name: item.service_name,
-              description: item.description,
+              description: item.description || '',
               quantity: item.quantity,
               unit_price: item.unit_price
             }))
@@ -112,7 +114,7 @@ export function useQuoteForm(onSuccess?: () => void) {
 
         if (itemsError) {
           console.error('Error creating quote items:', itemsError)
-          throw itemsError
+          throw new Error('Failed to create quote items')
         }
       }
 
@@ -127,7 +129,7 @@ export function useQuoteForm(onSuccess?: () => void) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message
+        description: error.message || 'Failed to create quote'
       })
     }
   }

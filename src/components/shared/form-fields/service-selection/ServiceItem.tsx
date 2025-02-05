@@ -16,20 +16,20 @@ type ServiceItemProps = {
 }
 
 export function ServiceItem({ form, service, field }: ServiceItemProps) {
-  const serviceItems: ServiceItemType[] = field.value || []
+  const serviceItems = field.value || []
   const isSelected = serviceItems.some(
-    item => item.service_id === service.id
+    (item: any) => item.service_name === service.name
   )
 
   const selectedItem = serviceItems.find(
-    item => item.service_id === service.id
+    (item: any) => item.service_name === service.name
   )
 
   return (
     <div className="space-y-2">
       <FormField
         control={form.control}
-        name="service_items"
+        name="quote_items"
         render={() => (
           <FormItem
             className="flex flex-col space-y-3 rounded-md border border-border/5 p-3 bg-[#221F26]/60 hover:bg-[#2A2732]/60 transition-colors"
@@ -44,7 +44,6 @@ export function ServiceItem({ form, service, field }: ServiceItemProps) {
                       field.onChange([
                         ...currentItems,
                         {
-                          service_id: service.id,
                           service_name: service.name,
                           quantity: 1,
                           unit_price: service.price || 0
@@ -53,7 +52,7 @@ export function ServiceItem({ form, service, field }: ServiceItemProps) {
                     } else {
                       field.onChange(
                         currentItems.filter(
-                          (item: ServiceItemType) => item.service_id !== service.id
+                          (item: any) => item.service_name !== service.name
                         )
                       )
                     }
@@ -68,18 +67,35 @@ export function ServiceItem({ form, service, field }: ServiceItemProps) {
               </div>
             </div>
             {isSelected && (
-              <div className="pl-7">
+              <div className="pl-7 space-y-2">
+                <Input
+                  type="number"
+                  min="1"
+                  value={selectedItem?.quantity || 1}
+                  onChange={(e) => {
+                    const quantity = parseInt(e.target.value)
+                    const currentItems = field.value || []
+                    const updatedItems = currentItems.map((item: any) =>
+                      item.service_name === service.name
+                        ? { ...item, quantity }
+                        : item
+                    )
+                    field.onChange(updatedItems)
+                  }}
+                  className="w-32"
+                  placeholder="Quantity"
+                />
                 <Input
                   type="number"
                   min="0"
                   step="0.01"
                   value={selectedItem?.unit_price || service.price || 0}
                   onChange={(e) => {
-                    const newPrice = parseFloat(e.target.value)
+                    const unit_price = parseFloat(e.target.value)
                     const currentItems = field.value || []
-                    const updatedItems = currentItems.map((item: ServiceItemType) =>
-                      item.service_id === service.id
-                        ? { ...item, unit_price: newPrice }
+                    const updatedItems = currentItems.map((item: any) =>
+                      item.service_name === service.name
+                        ? { ...item, unit_price }
                         : item
                     )
                     field.onChange(updatedItems)
