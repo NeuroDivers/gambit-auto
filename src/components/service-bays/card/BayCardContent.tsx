@@ -38,7 +38,7 @@ export function BayCardContent({
 }: BayCardContentProps) {
   return (
     <CardContent className="space-y-6">
-      <div className="grid gap-4">
+      <div className="space-y-6">
         <div className="space-y-4">
           <BayStatusToggle 
             status={status} 
@@ -50,9 +50,8 @@ export function BayCardContent({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`notes-${bayId}`}>Notes</Label>
+          <Label>Notes</Label>
           <Textarea
-            id={`notes-${bayId}`}
             placeholder="Add notes about this bay..."
             value={notes || ''}
             onChange={(e) => onNotesChange(e.target.value)}
