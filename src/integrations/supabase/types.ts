@@ -611,7 +611,7 @@ export type Database = {
     Functions: {
       convert_quote_to_work_order: {
         Args: {
-          quote_id: string
+          input_quote_id: string
         }
         Returns: string
       }

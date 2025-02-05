@@ -43,7 +43,7 @@ export function useQuoteListData() {
   const convertToWorkOrderMutation = useMutation({
     mutationFn: async (quoteId: string) => {
       const { data, error } = await supabase.rpc('convert_quote_to_work_order', {
-        quote_id: quoteId
+        input_quote_id: quoteId  // Changed from quote_id to input_quote_id
       })
 
       if (error) throw error
