@@ -56,6 +56,7 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
       start_time: values.start_time?.toISOString(),
       estimated_duration: values.estimated_duration ? `${values.estimated_duration} hours` : null,
       end_time: values.end_time?.toISOString(),
+      assigned_bay_id: values.assigned_bay_id,
       updated_at: new Date().toISOString()
     })
     .eq("id", workOrderId)
@@ -106,6 +107,7 @@ async function createWorkOrder(values: WorkOrderFormValues) {
       start_time: values.start_time?.toISOString(),
       estimated_duration: values.estimated_duration ? `${values.estimated_duration} hours` : null,
       end_time: values.end_time?.toISOString(),
+      assigned_bay_id: values.assigned_bay_id,
       status: "pending"
     })
     .select()

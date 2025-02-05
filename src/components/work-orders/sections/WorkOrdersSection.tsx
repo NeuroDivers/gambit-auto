@@ -2,10 +2,14 @@ import { WorkOrderCard } from "../WorkOrderCard"
 import { StatusLegend } from "../StatusLegend"
 import { LoadingState } from "../LoadingState"
 import { useWorkOrderData } from "../calendar/useWorkOrderData"
-import type { WorkOrder } from "../types"
+import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
+import { CreateWorkOrderDialog } from "../CreateWorkOrderDialog"
+import { useState } from "react"
 
 export function WorkOrdersSection() {
   const { data: requests, isLoading } = useWorkOrderData()
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
 
   // Sort work orders by start_time, putting null dates at the end
   const sortedRequests = requests?.sort((a, b) => {
@@ -34,6 +38,10 @@ export function WorkOrdersSection() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-semibold">Work Orders</h3>
+          <Button onClick={() => setShowCreateDialog(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Create Work Order
+          </Button>
         </div>
         <StatusLegend statusCounts={statusCounts} />
         {sortedRequests?.map((request) => (
@@ -45,6 +53,10 @@ export function WorkOrdersSection() {
           </div>
         )}
       </div>
+      <CreateWorkOrderDialog 
+        open={showCreateDialog} 
+        onOpenChange={setShowCreateDialog}
+      />
     </section>
   )
 }
