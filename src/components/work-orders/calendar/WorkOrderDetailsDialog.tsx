@@ -92,9 +92,19 @@ export function WorkOrderDetailsDialog({ workOrder, open, onOpenChange }: WorkOr
                 <span className="text-sm">Status:</span>
                 <Badge>{workOrder.status}</Badge>
               </div>
-              {workOrder.scheduled_date && (
+              {workOrder.start_time && (
                 <p className="text-sm">
-                  Scheduled: {format(new Date(workOrder.scheduled_date), "PPP")}
+                  Start Time: {format(new Date(workOrder.start_time), "PPP p")}
+                </p>
+              )}
+              {workOrder.estimated_duration && (
+                <p className="text-sm">
+                  Estimated Duration: {workOrder.estimated_duration}
+                </p>
+              )}
+              {workOrder.end_time && (
+                <p className="text-sm">
+                  End Time: {format(new Date(workOrder.end_time), "PPP p")}
                 </p>
               )}
               {workOrder.additional_notes && (
