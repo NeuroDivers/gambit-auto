@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { ServiceItemType, ServiceListProps } from "../../types"
 
-export function ServiceList({ workOrderServices, onServicesChange }: ServiceListProps) {
+export function ServiceList({ workOrderServices, onServicesChange, disabled }: ServiceListProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {workOrderServices.map((service, index) => (
@@ -11,6 +11,7 @@ export function ServiceList({ workOrderServices, onServicesChange }: ServiceList
           type="button"
           variant="outline"
           className="justify-start h-auto py-3 px-4"
+          disabled={disabled}
           onClick={() => {
             const newServices = [...workOrderServices]
             newServices.splice(index, 1)

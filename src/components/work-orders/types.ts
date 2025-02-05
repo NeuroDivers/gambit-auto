@@ -36,4 +36,5 @@ export type ServiceItemType = {
 export type ServiceListProps = {
   workOrderServices: ServiceItemType[]
   onServicesChange: (services: ServiceItemType[]) => void
+  disabled?: boolean
 }
