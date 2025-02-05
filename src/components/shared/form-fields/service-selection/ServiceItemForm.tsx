@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X } from "lucide-react"
 import { ServiceItemType } from "@/components/work-orders/types"
+import { useEffect } from "react"
 
 interface ServiceItemFormProps {
   index: number
@@ -14,6 +15,16 @@ interface ServiceItemFormProps {
 }
 
 export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: ServiceItemFormProps) {
+  useEffect(() => {
+    // Find the service_id based on service_name when component mounts
+    if (item.service_name && !item.service_id) {
+      const matchingService = services.find(service => service.name === item.service_name)
+      if (matchingService) {
+        onUpdate(index, "service_id", matchingService.id)
+      }
+    }
+  }, [item.service_name, item.service_id, services, index, onUpdate])
+
   const handleServiceSelect = (serviceId: string) => {
     const selectedService = services.find(service => service.id === serviceId)
     if (selectedService) {
@@ -39,7 +50,7 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
         <div className="space-y-2">
           <Label>Service</Label>
           <Select
-            value={item.service_id}
+            value={item.service_id || ''}
             onValueChange={handleServiceSelect}
           >
             <SelectTrigger>
