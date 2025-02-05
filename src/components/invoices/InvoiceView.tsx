@@ -11,7 +11,7 @@ import { toast } from "sonner"
 import { useReactToPrint } from 'react-to-print'
 import { Button } from "@/components/ui/button"
 import { Printer, Eye } from "lucide-react"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 
 type InvoiceViewProps = {
   invoiceId?: string
@@ -40,21 +40,31 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
     },
   })
 
+  // Only fetch taxes if we have a business profile
+  const { data: taxes } = useQuery({
+    queryKey: ["business-taxes", businessProfile?.id],
+    queryFn: async () => {
+      if (!businessProfile?.id) return []
+      
+      const { data, error } = await supabase
+        .from("business_taxes")
+        .select("*")
+        .eq("business_id", businessProfile.id)
+
+      if (error) throw error
+      return data
+    },
+    enabled: !!businessProfile?.id,
+  })
+
   const handlePrint = useReactToPrint({
     documentTitle: `Invoice-${invoice?.invoice_number || 'draft'}`,
     onAfterPrint: () => toast.success("Invoice printed successfully"),
     onPrintError: () => toast.error("Failed to print invoice"),
     pageStyle: "@page { size: auto; margin: 20mm; }",
-    print: async (frame: HTMLIFrameElement | null) => {
-      if (frame) {
-        return new Promise<void>((resolve) => {
-          frame.contentWindow?.print()
-          resolve()
-        })
-      }
-      return Promise.resolve()
-    },
-    content: () => printRef.current,
+    removeAfterPrint: true,
+    copyStyles: true,
+    contentRef: printRef,
   })
 
   const form = useForm<InvoiceFormValues>({
@@ -151,9 +161,10 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
     )
   }
 
-  const onPrintClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-    handlePrint()
+  const onPrintClick = () => {
+    if (handlePrint) {
+      handlePrint()
+    }
   }
 
   return (
@@ -181,6 +192,7 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogTitle>Invoice Preview</DialogTitle>
           <InvoicePrintPreview invoice={invoice} businessProfile={businessProfile} />
           <div className="flex justify-end mt-6">
             <Button onClick={onPrintClick} className="gap-2">
