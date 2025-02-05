@@ -27,7 +27,7 @@ export const router = createBrowserRouter([
     element: <EditWorkOrder />,
   },
   {
-    path: "/users",
+    path: "/user-management",
     element: <UserManagement />,
   },
   {
