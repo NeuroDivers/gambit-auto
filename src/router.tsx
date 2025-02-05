@@ -18,13 +18,13 @@ import { useNavigate } from "react-router-dom"
 import { useToast } from "./hooks/use-toast"
 import { supabase } from "./integrations/supabase/client"
 import { useQuery } from "@tanstack/react-query"
-import { Outlet } from "react-router-dom"
+import { Outlet, Navigate } from "react-router-dom"
 
 const DashboardLayoutWrapper = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const { data: profile } = useQuery({
+  const { data: profile, isLoading } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -65,6 +65,14 @@ const DashboardLayoutWrapper = () => {
       });
     }
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!profile) {
+    return <Navigate to="/auth" replace />;
+  }
 
   return (
     <DashboardLayout
