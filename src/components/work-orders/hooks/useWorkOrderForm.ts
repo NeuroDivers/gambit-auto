@@ -29,7 +29,7 @@ const formSchema = z.object({
   }))
 })
 
-export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) {
+export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, defaultStartTime?: Date) {
   const { submitWorkOrder } = useWorkOrderSubmission()
 
   const form = useForm<WorkOrderFormValues>({
@@ -46,7 +46,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
       vehicle_serial: workOrder?.vehicle_serial || "",
       additional_notes: workOrder?.additional_notes || "",
       address: workOrder?.address || "",
-      start_time: workOrder?.start_time ? new Date(workOrder.start_time) : null,
+      start_time: workOrder?.start_time ? new Date(workOrder.start_time) : defaultStartTime || null,
       estimated_duration: null,
       end_time: workOrder?.end_time ? new Date(workOrder.end_time) : null,
       service_items: []

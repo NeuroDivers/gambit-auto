@@ -11,17 +11,28 @@ import { Plus } from "lucide-react"
 import { WorkOrderForm } from "./WorkOrderForm"
 import { useState } from "react"
 
-export function CreateWorkOrderDialog() {
-  const [open, setOpen] = useState(false)
+type CreateWorkOrderDialogProps = {
+  defaultStartTime?: Date
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}
+
+export function CreateWorkOrderDialog({ defaultStartTime, open: controlledOpen, onOpenChange }: CreateWorkOrderDialogProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  
+  const open = controlledOpen ?? uncontrolledOpen
+  const setOpen = onOpenChange ?? setUncontrolledOpen
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          New Work Order
-        </Button>
-      </DialogTrigger>
+      {!controlledOpen && (
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            New Work Order
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create Work Order</DialogTitle>
@@ -29,7 +40,10 @@ export function CreateWorkOrderDialog() {
             Fill out the form below to create a new work order.
           </DialogDescription>
         </DialogHeader>
-        <WorkOrderForm onSuccess={() => setOpen(false)} />
+        <WorkOrderForm 
+          onSuccess={() => setOpen(false)} 
+          defaultStartTime={defaultStartTime}
+        />
       </DialogContent>
     </Dialog>
   )

@@ -5,11 +5,11 @@ import { FormSections } from "./form-sections/FormSections"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 
-export function WorkOrderForm({ workOrder, onSuccess }: WorkOrderFormProps) {
+export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime }: WorkOrderFormProps) {
   const { form, onSubmit } = useWorkOrderForm(workOrder, () => {
     toast.success(workOrder ? "Work order updated successfully" : "Work order created successfully")
     onSuccess?.()
-  })
+  }, defaultStartTime)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

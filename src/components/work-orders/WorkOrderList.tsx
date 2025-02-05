@@ -5,6 +5,8 @@ import { WorkOrdersSection } from "./sections/WorkOrdersSection"
 import { WorkOrderCalendar } from "./WorkOrderCalendar"
 import { toast } from "sonner"
 import { CreateWorkOrderDialog } from "./CreateWorkOrderDialog"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+import { CalendarClock } from "lucide-react"
 
 export const WorkOrderList = () => {
   const queryClient = useQueryClient()
@@ -58,6 +60,13 @@ export const WorkOrderList = () => {
       </div>
       <div className="space-y-20">
         <WorkOrderCalendar />
+        <Alert>
+          <CalendarClock className="h-4 w-4" />
+          <AlertTitle>Unscheduled Work Orders</AlertTitle>
+          <AlertDescription>
+            Work orders without a start time won't appear on the calendar. They will be listed in the section below.
+          </AlertDescription>
+        </Alert>
         <WorkOrdersSection />
       </div>
     </div>

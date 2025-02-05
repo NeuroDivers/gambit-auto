@@ -24,6 +24,7 @@ export type WorkOrderFormValues = {
 export type WorkOrderFormProps = {
   workOrder?: WorkOrder
   onSuccess?: () => void
+  defaultStartTime?: Date
 }
 
 export type ServiceItemType = {
