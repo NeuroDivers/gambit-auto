@@ -1,7 +1,7 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
+import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
@@ -9,193 +9,150 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User } from "lucide-react";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { useToast } from "@/components/ui/use-toast"
+import { supabase } from "@/integrations/supabase/client"
+import { useEffect } from "react"
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-
-const profileFormSchema = z.object({
-  email: z.string().email(),
-  avatar_url: z.string().optional(),
+const formSchema = z.object({
+  first_name: z.string().min(2, {
+    message: "First name must be at least 2 characters.",
+  }),
+  last_name: z.string().min(2, {
+    message: "Last name must be at least 2 characters.",
+  }),
   phone_number: z.string().optional(),
   address: z.string().optional(),
   bio: z.string().optional(),
-});
+})
 
-type ProfileFormValues = z.infer<typeof profileFormSchema>;
+interface ProfileFormProps {
+  role?: string | null
+}
 
-export const ProfileForm = () => {
-  const { toast } = useToast();
-
-  const { data: profile, refetch } = useQuery({
-    queryKey: ["profile"],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
-      
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-      
-      return data;
-    },
-  });
-
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
+export function ProfileForm({ role }: ProfileFormProps) {
+  const { toast } = useToast()
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      email: profile?.email || "",
-      avatar_url: profile?.avatar_url || "",
-      phone_number: profile?.phone_number || "",
-      address: profile?.address || "",
-      bio: profile?.bio || "",
+      first_name: "",
+      last_name: "",
+      phone_number: "",
+      address: "",
+      bio: "",
     },
-  });
+  })
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      const file = event.target.files?.[0];
-      if (!file) return;
+  useEffect(() => {
+    async function loadProfile() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
 
-      if (file.size > MAX_FILE_SIZE) {
-        toast({
-          title: "Error",
-          description: "File size must be less than 5MB",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-        toast({
-          title: "Error",
-          description: "File type must be JPEG, JPG, PNG, or WEBP",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
-
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${user.id}-${Math.random()}.${fileExt}`;
-
-      const { error: uploadError, data } = await supabase.storage
-        .from('profile-images')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('profile-images')
-        .getPublicUrl(filePath);
-
-      form.setValue('avatar_url', publicUrl);
-      
-      const { error: updateError } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', user.id);
+        .select('*')
+        .eq('id', user.id)
+        .single()
 
-      if (updateError) throw updateError;
-
-      toast({
-        title: "Success",
-        description: "Avatar uploaded successfully",
-      });
-
-      refetch();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      if (profile) {
+        form.reset({
+          first_name: profile.first_name || "",
+          last_name: profile.last_name || "",
+          phone_number: profile.phone_number || "",
+          address: profile.address || "",
+          bio: profile.bio || "",
+        })
+      }
     }
-  };
 
-  async function onSubmit(data: ProfileFormValues) {
+    loadProfile()
+  }, [form])
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error("No user found")
 
       const { error } = await supabase
-        .from("profiles")
+        .from('profiles')
         .update({
-          email: data.email,
-          phone_number: data.phone_number,
-          address: data.address,
-          bio: data.bio,
+          first_name: values.first_name,
+          last_name: values.last_name,
+          phone_number: values.phone_number,
+          address: values.address,
+          bio: values.bio,
         })
-        .eq("id", user.id);
+        .eq('id', user.id)
 
-      if (error) throw error;
+      if (error) throw error
 
       toast({
         title: "Profile updated",
-        description: "Your profile has been updated successfully.",
-      });
-      
-      refetch();
-    } catch (error: any) {
+        description: "Your profile has been successfully updated.",
+      })
+    } catch (error) {
+      console.error('Error updating profile:', error)
       toast({
-        variant: "destructive",
         title: "Error",
-        description: error.message,
-      });
+        description: "There was an error updating your profile.",
+        variant: "destructive",
+      })
     }
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="flex flex-col items-center gap-4 mb-6">
-          <Avatar className="h-24 w-24">
-            <AvatarImage src={form.watch('avatar_url')} />
-            <AvatarFallback>
-              <User className="h-12 w-12" />
-            </AvatarFallback>
-          </Avatar>
-          <Input
-            type="file"
-            accept={ACCEPTED_IMAGE_TYPES.join(',')}
-            onChange={handleAvatarUpload}
-            className="max-w-[200px]"
-          />
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <div className="space-y-2">
+          {role && (
+            <span className="text-sm rounded-md px-2 py-1 capitalize inline-block" style={{
+              color: '#bb86fc',
+              background: 'rgb(187 134 252 / 0.1)',
+            }}>
+              {role} account
+            </span>
+          )}
         </div>
 
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input {...field} type="email" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid gap-4 md:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="first_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First name</FormLabel>
+                <FormControl>
+                  <Input placeholder="John" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="last_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Doe" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}
           name="phone_number"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Phone Number</FormLabel>
+              <FormLabel>Phone number</FormLabel>
               <FormControl>
-                <Input {...field} type="tel" />
+                <Input placeholder="+1 (555) 000-0000" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -209,7 +166,7 @@ export const ProfileForm = () => {
             <FormItem>
               <FormLabel>Address</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input placeholder="123 Main St, City, Country" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -223,10 +180,10 @@ export const ProfileForm = () => {
             <FormItem>
               <FormLabel>Bio</FormLabel>
               <FormControl>
-                <Textarea 
-                  {...field} 
-                  className="min-h-[120px] resize-y"
-                  placeholder="Tell us about yourself..."
+                <Textarea
+                  placeholder="Tell us a little bit about yourself"
+                  className="resize-none"
+                  {...field}
                 />
               </FormControl>
               <FormMessage />
@@ -237,5 +194,5 @@ export const ProfileForm = () => {
         <Button type="submit">Update profile</Button>
       </form>
     </Form>
-  );
-};
+  )
+}
