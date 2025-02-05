@@ -45,10 +45,14 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
     onAfterPrint: () => toast.success("Invoice printed successfully"),
     onPrintError: () => toast.error("Failed to print invoice"),
     pageStyle: "@page { size: auto; margin: 20mm; }",
-    print: (frame: HTMLIFrameElement | null) => {
+    print: async (frame: HTMLIFrameElement | null) => {
       if (frame) {
-        frame.contentWindow?.print();
+        return new Promise<void>((resolve) => {
+          frame.contentWindow?.print()
+          resolve()
+        })
       }
+      return Promise.resolve()
     },
     content: () => printRef.current,
   })
@@ -147,6 +151,11 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
     )
   }
 
+  const onPrintClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    handlePrint()
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-end gap-2">
@@ -159,7 +168,7 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
           Preview
         </Button>
         <Button
-          onClick={handlePrint}
+          onClick={onPrintClick}
           className="gap-2"
         >
           <Printer className="h-4 w-4" />
@@ -174,7 +183,7 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <InvoicePrintPreview invoice={invoice} businessProfile={businessProfile} />
           <div className="flex justify-end mt-6">
-            <Button onClick={handlePrint} className="gap-2">
+            <Button onClick={onPrintClick} className="gap-2">
               <Printer className="h-4 w-4" />
               Print Invoice
             </Button>
