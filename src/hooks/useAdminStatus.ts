@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client"
 
 export const useAdminStatus = () => {
   const [isAdmin, setIsAdmin] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     checkAdminStatus()
@@ -26,9 +26,9 @@ export const useAdminStatus = () => {
       console.error('Error checking admin status:', error)
       setIsAdmin(false)
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
-  return { isAdmin, loading }
+  return { isAdmin, isLoading }
 }
