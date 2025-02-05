@@ -4,13 +4,14 @@ import { InvoicePrintPreview } from './sections/InvoicePrintPreview'
 import { InvoiceFormValues } from "./types"
 import { useInvoiceData } from "./hooks/useInvoiceData"
 import { useInvoiceMutation } from "./hooks/useInvoiceMutation"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { useReactToPrint } from 'react-to-print'
 import { Button } from "@/components/ui/button"
-import { Printer } from "lucide-react"
+import { Printer, Eye } from "lucide-react"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 
 type InvoiceViewProps = {
   invoiceId?: string
@@ -22,6 +23,7 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
   const { data: invoice, isLoading: isInvoiceLoading } = useInvoiceData(invoiceId)
   const updateInvoiceMutation = useInvoiceMutation(invoiceId)
   const printRef = useRef<HTMLDivElement>(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   // Also fetch business profile data which is needed for the invoice
   const { data: businessProfile, isLoading: isBusinessLoading } = useQuery({
@@ -142,9 +144,17 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
         <Button
-          onClick={handlePrint}
+          onClick={() => setPreviewOpen(true)}
+          variant="outline"
+          className="gap-2"
+        >
+          <Eye className="h-4 w-4" />
+          Preview
+        </Button>
+        <Button
+          onClick={() => handlePrint()}
           className="gap-2"
         >
           <Printer className="h-4 w-4" />
@@ -154,6 +164,12 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
       <div ref={printRef}>
         <InvoicePrintPreview invoice={invoice} businessProfile={businessProfile} />
       </div>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <InvoicePrintPreview invoice={invoice} businessProfile={businessProfile} />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
