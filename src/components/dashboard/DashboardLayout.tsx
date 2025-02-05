@@ -1,4 +1,5 @@
 import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sidebar"
+import { cn } from "@/lib/utils"
 import { BusinessSettingsDialog } from "../business/BusinessSettingsDialog"
 import { ProfileDialog } from "../profile/ProfileDialog"
 import { SidebarNav } from "./sidebar/SidebarNav"
@@ -19,7 +20,7 @@ export function DashboardLayout({
 }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
+      <div className={cn("flex h-screen w-full overflow-hidden")}>
         <Sidebar>
           <SidebarContent>
             <SidebarHeader 
@@ -30,7 +31,7 @@ export function DashboardLayout({
             <SidebarNav />
           </SidebarContent>
         </Sidebar>
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 overflow-auto">{children}</main>
       </div>
       <div className="hidden">
         <button id="business-settings-trigger">
