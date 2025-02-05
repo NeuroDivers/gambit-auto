@@ -40,17 +40,18 @@ const items = [
     href: "/clients",
     icon: Users,
   },
+]
+
+const settingsItems = [
   {
     title: "Business Settings",
-    href: "#",
     icon: Settings,
-    onClick: () => document.getElementById("business-settings-trigger")?.click(),
+    dialogId: "business-settings-trigger",
   },
   {
     title: "Profile Settings",
-    href: "#",
     icon: User,
-    onClick: () => document.getElementById("profile-settings-trigger")?.click(),
+    dialogId: "profile-settings-trigger",
   },
 ]
 
@@ -58,13 +59,19 @@ export function SidebarNav() {
   const location = useLocation()
   const { isAdmin } = useAdminStatus()
 
+  const handleDialogClick = (dialogId: string) => {
+    const element = document.getElementById(dialogId)
+    if (element) {
+      element.click()
+    }
+  }
+
   return (
     <div className="flex flex-col gap-0.5 p-1">
       {items.map((item) => (
         <Link
           key={item.href}
           to={item.href}
-          onClick={item.onClick}
           className={cn(
             "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent",
             location.pathname === item.href ? "bg-accent" : "transparent"
@@ -73,6 +80,17 @@ export function SidebarNav() {
           <item.icon className="h-4 w-4" />
           <span>{item.title}</span>
         </Link>
+      ))}
+
+      {settingsItems.map((item) => (
+        <button
+          key={item.dialogId}
+          onClick={() => handleDialogClick(item.dialogId)}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent text-left"
+        >
+          <item.icon className="h-4 w-4" />
+          <span>{item.title}</span>
+        </button>
       ))}
     </div>
   )
