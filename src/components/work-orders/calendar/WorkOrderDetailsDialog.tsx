@@ -1,12 +1,9 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { WorkOrder } from "../types"
 import { format } from "date-fns"
+import { Badge } from "@/components/ui/badge"
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
 
 type WorkOrderDetailsDialogProps = {
   workOrder: WorkOrder
@@ -14,52 +11,97 @@ type WorkOrderDetailsDialogProps = {
   onOpenChange: (open: boolean) => void
 }
 
-export function WorkOrderDetailsDialog({ 
-  workOrder, 
-  open, 
-  onOpenChange 
-}: WorkOrderDetailsDialogProps) {
+export function WorkOrderDetailsDialog({ workOrder, open, onOpenChange }: WorkOrderDetailsDialogProps) {
+  const { data: services } = useQuery({
+    queryKey: ['workOrderServices', workOrder.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('work_order_services')
+        .select(`
+          *,
+          service:service_types(
+            name,
+            price
+          )
+        `)
+        .eq('work_order_id', workOrder.id)
+
+      if (error) throw error
+      return data
+    },
+    enabled: open
+  })
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-xl">Work Order Details</DialogTitle>
-          <DialogDescription>
-            View the complete details of this work order.
-          </DialogDescription>
+          <DialogTitle>Work Order Details</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="bg-background/40 rounded-lg p-3">
-              <span className="text-sm text-white/50 block mb-1">Customer</span>
-              <p className="text-sm text-white/90">
-                {workOrder.first_name} {workOrder.last_name}
-              </p>
-              <p className="text-sm text-white/70 mt-1">{workOrder.email}</p>
-              <p className="text-sm text-white/70">{workOrder.phone_number}</p>
-            </div>
-            <div className="bg-background/40 rounded-lg p-3">
-              <span className="text-sm text-white/50 block mb-1">Vehicle</span>
-              <p className="text-sm text-white/90">
-                {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
-              </p>
-              <p className="text-sm text-white/70 mt-1">
-                Serial: {workOrder.vehicle_serial}
-              </p>
+        <div className="space-y-6">
+          <div>
+            <h3 className="font-semibold mb-2">Customer Information</h3>
+            <div className="space-y-1 text-sm">
+              <p>Name: {workOrder.first_name} {workOrder.last_name}</p>
+              <p>Email: {workOrder.email}</p>
+              <p>Phone: {workOrder.phone_number}</p>
+              <p>Contact Preference: {workOrder.contact_preference}</p>
+              {workOrder.address && <p>Address: {workOrder.address}</p>}
             </div>
           </div>
-          <div className="space-y-4">
-            {workOrder.additional_notes && (
-              <div className="bg-background/40 rounded-lg p-3">
-                <span className="text-sm text-white/50 block mb-1">Notes</span>
-                <p className="text-sm text-white/90">{workOrder.additional_notes}</p>
+
+          <div>
+            <h3 className="font-semibold mb-2">Vehicle Information</h3>
+            <div className="space-y-1 text-sm">
+              <p>Make: {workOrder.vehicle_make}</p>
+              <p>Model: {workOrder.vehicle_model}</p>
+              <p>Year: {workOrder.vehicle_year}</p>
+              <p>Serial: {workOrder.vehicle_serial}</p>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="font-semibold mb-2">Services</h3>
+            <div className="space-y-2">
+              {services?.map((service) => (
+                <div 
+                  key={service.id} 
+                  className="p-3 rounded-lg bg-muted/50 flex justify-between items-center"
+                >
+                  <div>
+                    <p className="font-medium">{service.service.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Quantity: {service.quantity}
+                    </p>
+                  </div>
+                  <p className="font-medium">
+                    ${(service.unit_price * service.quantity).toFixed(2)}
+                  </p>
+                </div>
+              ))}
+              {services?.length === 0 && (
+                <p className="text-sm text-muted-foreground">No services added</p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="font-semibold mb-2">Additional Information</h3>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm">Status:</span>
+                <Badge>{workOrder.status}</Badge>
               </div>
-            )}
-            <div className="bg-background/40 rounded-lg p-3">
-              <span className="text-sm text-white/50 block mb-1">Created</span>
-              <p className="text-sm text-white/90">
-                {format(new Date(workOrder.created_at), "PPP")}
-              </p>
+              {workOrder.scheduled_date && (
+                <p className="text-sm">
+                  Scheduled: {format(new Date(workOrder.scheduled_date), "PPP")}
+                </p>
+              )}
+              {workOrder.additional_notes && (
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <p className="text-sm">{workOrder.additional_notes}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
