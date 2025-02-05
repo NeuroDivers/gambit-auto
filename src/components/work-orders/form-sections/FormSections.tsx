@@ -1,9 +1,9 @@
 import { UseFormReturn } from "react-hook-form"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PersonalInfoFields } from "@/components/shared/form-fields/PersonalInfoFields"
-import { VehicleInfoFields } from "@/components/shared/form-fields/VehicleInfoFields"
-import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 import { WorkOrderFormValues } from "../types"
+import { CustomerInfoFields } from "./CustomerInfoFields"
+import { VehicleInfoFields } from "./VehicleInfoFields"
+import { TimeSelectionFields } from "./TimeSelectionFields"
+import { ServiceItemsField } from "../form-fields/ServiceItemsField"
 
 type FormSectionsProps = {
   form: UseFormReturn<WorkOrderFormValues>
@@ -13,33 +13,21 @@ type FormSectionsProps = {
 
 export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProps) {
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Customer Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <PersonalInfoFields form={form} />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Vehicle Information</CardTitle>
-        </CardHeader>
-        <CardContent>
+    <div className="space-y-8">
+      <div className="grid gap-8 md:grid-cols-2">
+        <div className="space-y-8">
+          <CustomerInfoFields form={form} />
+          <TimeSelectionFields form={form} />
+        </div>
+        <div className="space-y-8">
           <VehicleInfoFields form={form} />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Services</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ServiceSelectionField form={form} />
-        </CardContent>
-      </Card>
-    </>
+          <ServiceItemsField
+            workOrderServices={form.getValues("service_items")}
+            onServicesChange={(services) => form.setValue("service_items", services)}
+            disabled={isSubmitting}
+          />
+        </div>
+      </div>
+    </div>
   )
 }

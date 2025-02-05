@@ -53,7 +53,9 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
       vehicle_serial: values.vehicle_serial,
       additional_notes: values.additional_notes,
       address: values.address,
-      scheduled_date: values.scheduled_date?.toISOString(),
+      start_time: values.start_time?.toISOString(),
+      estimated_duration: values.estimated_duration ? `${values.estimated_duration} hours` : null,
+      end_time: values.end_time?.toISOString(),
       updated_at: new Date().toISOString()
     })
     .eq("id", workOrderId)
@@ -101,7 +103,9 @@ async function createWorkOrder(values: WorkOrderFormValues) {
       vehicle_serial: values.vehicle_serial,
       additional_notes: values.additional_notes,
       address: values.address,
-      scheduled_date: values.scheduled_date?.toISOString(),
+      start_time: values.start_time?.toISOString(),
+      estimated_duration: values.estimated_duration ? `${values.estimated_duration} hours` : null,
+      end_time: values.end_time?.toISOString(),
       status: "pending"
     })
     .select()

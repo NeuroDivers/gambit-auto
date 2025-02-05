@@ -18,7 +18,9 @@ const formSchema = z.object({
   vehicle_serial: z.string().min(1, "Vehicle serial number is required"),
   additional_notes: z.string().optional(),
   address: z.string().optional(),
-  scheduled_date: z.date().nullable().optional(),
+  start_time: z.date().nullable().optional(),
+  estimated_duration: z.number().nullable().optional(),
+  end_time: z.date().nullable().optional(),
   service_items: z.array(z.object({
     service_id: z.string(),
     service_name: z.string(),
@@ -44,7 +46,9 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
       vehicle_serial: workOrder?.vehicle_serial || "",
       additional_notes: workOrder?.additional_notes || "",
       address: workOrder?.address || "",
-      scheduled_date: workOrder?.scheduled_date ? new Date(workOrder.scheduled_date) : null,
+      start_time: workOrder?.start_time ? new Date(workOrder.start_time) : null,
+      estimated_duration: null,
+      end_time: workOrder?.end_time ? new Date(workOrder.end_time) : null,
       service_items: []
     }
   })

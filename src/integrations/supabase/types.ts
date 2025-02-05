@@ -535,12 +535,14 @@ export type Database = {
           contact_preference: Database["public"]["Enums"]["contact_preference"]
           created_at: string
           email: string
+          end_time: string | null
+          estimated_duration: unknown | null
           first_name: string
           id: string
           last_name: string
           media_url: string | null
           phone_number: string
-          scheduled_date: string | null
+          start_time: string | null
           status: string
           updated_at: string
           vehicle_make: string
@@ -555,12 +557,14 @@ export type Database = {
           contact_preference: Database["public"]["Enums"]["contact_preference"]
           created_at?: string
           email: string
+          end_time?: string | null
+          estimated_duration?: unknown | null
           first_name: string
           id?: string
           last_name: string
           media_url?: string | null
           phone_number: string
-          scheduled_date?: string | null
+          start_time?: string | null
           status?: string
           updated_at?: string
           vehicle_make: string
@@ -575,12 +579,14 @@ export type Database = {
           contact_preference?: Database["public"]["Enums"]["contact_preference"]
           created_at?: string
           email?: string
+          end_time?: string | null
+          estimated_duration?: unknown | null
           first_name?: string
           id?: string
           last_name?: string
           media_url?: string | null
           phone_number?: string
-          scheduled_date?: string | null
+          start_time?: string | null
           status?: string
           updated_at?: string
           vehicle_make?: string
