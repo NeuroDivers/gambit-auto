@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
-import { Calendar, FileText, Settings, Users, Wrench } from "lucide-react"
+import { Calendar, FileText, Settings, Users, Wrench, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAdminStatus } from "@/hooks/useAdminStatus"
 
@@ -42,6 +42,21 @@ const items = [
   },
 ]
 
+const settingsItems = [
+  {
+    title: "Business Settings",
+    href: "/business-settings",
+    icon: Settings,
+    adminOnly: true,
+  },
+  {
+    title: "Profile Settings",
+    href: "/profile-settings",
+    icon: User,
+    adminOnly: false,
+  },
+]
+
 export function SidebarNav() {
   const location = useLocation()
   const { isAdmin } = useAdminStatus()
@@ -61,6 +76,24 @@ export function SidebarNav() {
           <span>{item.title}</span>
         </Link>
       ))}
+
+      {settingsItems.map((item) => {
+        if (item.adminOnly && !isAdmin) return null
+        
+        return (
+          <Link
+            key={item.href}
+            to={item.href}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent",
+              location.pathname === item.href ? "bg-accent" : "transparent"
+            )}
+          >
+            <item.icon className="h-4 w-4" />
+            <span>{item.title}</span>
+          </Link>
+        )
+      })}
     </div>
   )
 }
