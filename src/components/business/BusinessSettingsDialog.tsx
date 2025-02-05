@@ -20,7 +20,7 @@ export function BusinessSettingsDialog() {
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
+      <DialogTrigger asChild id="business-settings-trigger">
         <Button variant="outline" className="gap-2">
           <Settings className="h-4 w-4" />
           Business Settings
