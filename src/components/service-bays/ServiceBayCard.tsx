@@ -38,7 +38,6 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
 
       if (error) throw error
 
-      // Update only this specific bay's data in the cache
       queryClient.setQueryData(['serviceBays'], (oldData: any) => {
         if (!oldData) return oldData
         return oldData.map((oldBay: any) => 
@@ -68,7 +67,6 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
 
       if (error) throw error
 
-      // Update only this specific bay's data in the cache
       queryClient.setQueryData(['serviceBays'], (oldData: any) => {
         if (!oldData) return oldData
         return oldData.map((oldBay: any) => 
@@ -111,7 +109,6 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
         if (error) throw error
       }
 
-      // Update only this specific bay's services in the cache
       queryClient.setQueryData(['serviceBays'], (oldData: any) => {
         if (!oldData) return oldData
         return oldData.map((oldBay: any) => {
@@ -139,7 +136,7 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
   }
 
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-lg">
+    <Card className="overflow-hidden border border-border/50 hover:border-border/80 transition-colors">
       <BayCardHeader 
         name={bay.name} 
         bayId={bay.id}

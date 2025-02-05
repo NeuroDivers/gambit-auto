@@ -37,9 +37,9 @@ export function BayCardContent({
   onToggleService,
 }: BayCardContentProps) {
   return (
-    <CardContent className="p-6 space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-6">
+    <CardContent className="space-y-6">
+      <div className="grid gap-4">
+        <div className="space-y-4">
           <BayStatusToggle 
             status={status} 
             onStatusChange={onStatusChange} 
@@ -56,7 +56,7 @@ export function BayCardContent({
             placeholder="Add notes about this bay..."
             value={notes || ''}
             onChange={(e) => onNotesChange(e.target.value)}
-            className="min-h-[120px] resize-none"
+            className="min-h-[100px] resize-none"
           />
         </div>
       </div>

@@ -39,18 +39,16 @@ export function BayCardHeader({ name, bayId }: BayCardHeaderProps) {
   }
 
   return (
-    <CardHeader className="pb-4 border-b">
-      <div className="flex items-center justify-between">
-        <CardTitle className="text-xl font-semibold">{name}</CardTitle>
-        <Button 
-          variant="ghost" 
-          size="icon"
-          className="h-8 w-8 text-destructive hover:text-destructive/90 hover:bg-destructive/10 transition-colors"
-          onClick={handleDelete}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+      <CardTitle className="text-xl font-semibold">{name}</CardTitle>
+      <Button 
+        variant="ghost" 
+        size="icon"
+        className="h-8 w-8 text-destructive hover:text-destructive/90 hover:bg-destructive/10 transition-colors"
+        onClick={handleDelete}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
     </CardHeader>
   )
 }
