@@ -48,6 +48,8 @@ export function BayAssignmentField({ form }: BayAssignmentFieldProps) {
   })
 
   const parseInterval = (intervalString: string): number => {
+    if (!intervalString) return 0
+    
     // Parse PostgreSQL interval string (e.g., "2 hours" or "02:00:00")
     const hourMatch = intervalString.match(/(\d+)\s*hours?/) // matches "2 hours"
     if (hourMatch) return parseInt(hourMatch[1])
@@ -64,12 +66,14 @@ export function BayAssignmentField({ form }: BayAssignmentFieldProps) {
     const proposedEndTime = new Date(startTime)
     proposedEndTime.setHours(proposedEndTime.getHours() + duration)
 
-    const conflictingWorkOrder = existingWorkOrders.find(wo => {
+    return !existingWorkOrders.some(wo => {
       if (wo.assigned_bay_id !== bayId || !wo.start_time || !wo.estimated_duration) return false
 
       const woStartTime = parseISO(wo.start_time)
       const woDuration = parseInterval(wo.estimated_duration.toString())
       
+      if (!woDuration) return false
+
       const woEndTime = new Date(woStartTime)
       woEndTime.setHours(woEndTime.getHours() + woDuration)
 
@@ -79,8 +83,6 @@ export function BayAssignmentField({ form }: BayAssignmentFieldProps) {
         isWithinInterval(woStartTime, { start: startTime, end: proposedEndTime })
       )
     })
-
-    return !conflictingWorkOrder
   }
 
   const handleBaySelection = (value: string) => {
@@ -122,6 +124,7 @@ export function BayAssignmentField({ form }: BayAssignmentFieldProps) {
                 <SelectItem 
                   key={bay.id} 
                   value={bay.id}
+                  disabled={!checkBayAvailability(bay.id)}
                 >
                   {bay.name} ({bay.status})
                   {!checkBayAvailability(bay.id) && " - Unavailable"}
