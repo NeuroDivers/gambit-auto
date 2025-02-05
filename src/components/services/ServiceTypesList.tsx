@@ -8,6 +8,14 @@ import { useState } from "react";
 
 export const ServiceTypesList = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingService, setEditingService] = useState<null | {
+    id: string;
+    name: string;
+    status: 'active' | 'inactive';
+    description: string | null;
+    price: number | null;
+    duration: number | null;
+  }>(null);
 
   const { data: serviceTypes, refetch } = useQuery({
     queryKey: ["serviceTypes"],
@@ -30,7 +38,10 @@ export const ServiceTypesList = () => {
           <p className="text-white/60">Manage your service offerings</p>
         </div>
         <Button 
-          onClick={() => setIsDialogOpen(true)}
+          onClick={() => {
+            setEditingService(null);
+            setIsDialogOpen(true);
+          }}
           className="bg-[#BB86FC] hover:bg-[#BB86FC]/90 text-white transition-colors duration-200"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -44,6 +55,7 @@ export const ServiceTypesList = () => {
             key={service.id} 
             service={service} 
             onEdit={() => {
+              setEditingService(service);
               setIsDialogOpen(true);
             }}
             onRefetch={refetch}
@@ -53,9 +65,14 @@ export const ServiceTypesList = () => {
 
       <ServiceTypeDialog 
         open={isDialogOpen} 
-        onOpenChange={setIsDialogOpen}
+        onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) setEditingService(null);
+        }}
+        serviceType={editingService}
         onSuccess={() => {
           setIsDialogOpen(false);
+          setEditingService(null);
           refetch();
         }}
       />
