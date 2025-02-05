@@ -1,8 +1,11 @@
 import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
 import { Card, CardContent } from "@/components/ui/card"
-import { ServiceItem } from "./service-selection/ServiceItem"
+import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
+import { ServiceItemForm } from "./service-selection/ServiceItemForm"
 import { useServiceData } from "./service-selection/useServiceData"
+import { ServiceItemType } from "@/components/work-orders/types"
 
 type ServiceSelectionFieldProps = {
   form: UseFormReturn<any>
@@ -10,6 +13,51 @@ type ServiceSelectionFieldProps = {
 
 export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
   const { data: services = [] } = useServiceData()
+  const serviceItems = form.watch("service_items") || []
+
+  const handleAddService = () => {
+    const currentItems = form.getValues("service_items") || []
+    form.setValue("service_items", [
+      ...currentItems,
+      {
+        service_id: "",
+        service_name: "",
+        quantity: 1,
+        unit_price: 0
+      }
+    ])
+  }
+
+  const handleRemoveService = (index: number) => {
+    const currentItems = form.getValues("service_items") || []
+    const newItems = [...currentItems]
+    newItems.splice(index, 1)
+    form.setValue("service_items", newItems)
+  }
+
+  const handleServiceUpdate = (index: number, field: keyof ServiceItemType, value: any) => {
+    const currentItems = form.getValues("service_items") || []
+    const newItems = [...currentItems]
+    
+    if (field === "service_id" && value) {
+      const selectedService = services.find(s => s.id === value)
+      if (selectedService) {
+        newItems[index] = {
+          ...newItems[index],
+          service_id: selectedService.id,
+          service_name: selectedService.name,
+          unit_price: selectedService.price || 0
+        }
+      }
+    } else {
+      newItems[index] = {
+        ...newItems[index],
+        [field]: value
+      }
+    }
+    
+    form.setValue("service_items", newItems)
+  }
 
   return (
     <FormField
@@ -19,18 +67,36 @@ export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
         <FormItem>
           <Card className="border-border/5 bg-[#1A1F2C]/80">
             <CardContent className="p-4">
-              <FormLabel className="text-lg font-semibold mb-4 block text-white/90">
-                Services
-              </FormLabel>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {services.map((service) => (
-                  <ServiceItem
-                    key={service.id}
-                    form={form}
-                    service={service}
-                    field={field}
+              <div className="flex justify-between items-center mb-4">
+                <FormLabel className="text-lg font-semibold text-white/90">
+                  Services
+                </FormLabel>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddService}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Service
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                {serviceItems.map((item: ServiceItemType, index: number) => (
+                  <ServiceItemForm
+                    key={index}
+                    index={index}
+                    item={item}
+                    services={services}
+                    onUpdate={handleServiceUpdate}
+                    onRemove={() => handleRemoveService(index)}
                   />
                 ))}
+                {serviceItems.length === 0 && (
+                  <p className="text-muted-foreground">No services added</p>
+                )}
               </div>
               <FormMessage />
             </CardContent>
