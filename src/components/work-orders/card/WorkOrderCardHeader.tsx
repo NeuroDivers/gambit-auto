@@ -26,7 +26,7 @@ export function WorkOrderCardHeader({ request }: WorkOrderCardHeaderProps) {
           {request.email} • {request.phone_number}
         </CardDescription>
       </div>
-      <WorkOrderStatusSelect workOrder={request} />
+      <WorkOrderStatusSelect status={request.status} quoteId={request.id} />
     </div>
   )
 }
