@@ -16,7 +16,7 @@ const formSchema = z.object({
   vehicle_year: z.number().min(1900).max(new Date().getFullYear() + 1),
   vehicle_vin: z.string().min(1, "Vehicle VIN is required"),
   notes: z.string().optional(),
-  quote_items: z.array(z.object({
+  service_items: z.array(z.object({
     service_id: z.string(),
     service_name: z.string(),
     quantity: z.number(),
@@ -30,14 +30,14 @@ export function useQuoteForm(onSuccess?: () => void) {
   const form = useForm<QuoteFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      quote_items: []
+      service_items: []
     }
   })
 
   const onSubmit = async (values: QuoteFormValues) => {
     try {
       // Calculate totals
-      const subtotal = values.quote_items.reduce(
+      const subtotal = values.service_items.reduce(
         (sum, item) => sum + (item.quantity * item.unit_price),
         0
       )
@@ -79,11 +79,11 @@ export function useQuoteForm(onSuccess?: () => void) {
       if (quoteError) throw quoteError
 
       // Insert quote items
-      if (values.quote_items.length > 0) {
+      if (values.service_items.length > 0) {
         const { error: itemsError } = await supabase
           .from("quote_items")
           .insert(
-            values.quote_items.map(item => ({
+            values.service_items.map(item => ({
               quote_id: quote.id,
               service_name: item.service_name,
               quantity: item.quantity,
@@ -93,6 +93,11 @@ export function useQuoteForm(onSuccess?: () => void) {
 
         if (itemsError) throw itemsError
       }
+
+      toast({
+        title: "Success",
+        description: "Quote created successfully",
+      })
 
       onSuccess?.()
     } catch (error: any) {
