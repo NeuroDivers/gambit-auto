@@ -3,8 +3,6 @@ import { useLocation } from "react-router-dom"
 import { Calendar, FileText, Settings, Users, Wrench, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Link } from "react-router-dom"
-import { BusinessSettingsDialog } from "../business/BusinessSettingsDialog"
-import { ProfileDialog } from "../profile/ProfileDialog"
 import { useAdminStatus } from "@/hooks/useAdminStatus"
 
 function SidebarNav() {
@@ -54,6 +52,20 @@ function SidebarNav() {
       icon: Users,
       active: location.pathname === "/clients",
     },
+    {
+      title: "Business Settings",
+      href: "#",
+      icon: Settings,
+      active: false,
+      onClick: () => document.getElementById("business-settings-trigger")?.click(),
+    },
+    {
+      title: "Profile Settings",
+      href: "#",
+      icon: User,
+      active: false,
+      onClick: () => document.getElementById("profile-settings-trigger")?.click(),
+    },
   ]
 
   return (
@@ -62,6 +74,7 @@ function SidebarNav() {
         <Link
           key={item.href}
           to={item.href}
+          onClick={item.onClick}
           className={cn(
             "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent",
             item.active ? "bg-accent" : "transparent"
@@ -71,11 +84,6 @@ function SidebarNav() {
           <span>{item.title}</span>
         </Link>
       ))}
-      
-      <div className="mt-4 border-t pt-4">
-        <BusinessSettingsDialog />
-        <ProfileDialog />
-      </div>
     </div>
   )
 }
@@ -90,6 +98,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </SidebarContent>
         </Sidebar>
         <main className="flex-1">{children}</main>
+      </div>
+      <div className="hidden">
+        <button id="business-settings-trigger">
+          <BusinessSettingsDialog />
+        </button>
+        <button id="profile-settings-trigger">
+          <ProfileDialog />
+        </button>
       </div>
     </SidebarProvider>
   )
