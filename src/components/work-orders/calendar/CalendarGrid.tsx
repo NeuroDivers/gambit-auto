@@ -20,7 +20,8 @@ export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
 
   const getWorkOrdersForDay = (date: Date) => {
     return workOrders.filter(workOrder => {
-      const orderDate = new Date(workOrder.created_at)
+      if (!workOrder.start_time) return false
+      const orderDate = new Date(workOrder.start_time)
       return (
         orderDate.getDate() === date.getDate() &&
         orderDate.getMonth() === date.getMonth() &&
