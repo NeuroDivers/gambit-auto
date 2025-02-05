@@ -10,6 +10,15 @@ interface SidebarHeaderProps {
 }
 
 export function SidebarHeader({ firstName, role, onLogout }: SidebarHeaderProps) {
+  const formatName = (name: string | null | undefined) => {
+    if (!name) return 'Guest';
+    const nameParts = name.split(' ');
+    if (nameParts.length > 1) {
+      return `${nameParts[0]} ${nameParts[1].charAt(0)}.`;
+    }
+    return name;
+  };
+
   return (
     <div className="p-4 space-y-4 border-b">
       <div className="flex items-start gap-3">
@@ -21,7 +30,7 @@ export function SidebarHeader({ firstName, role, onLogout }: SidebarHeaderProps)
         </Avatar>
         <div className="space-y-2">
           <h2 className="text-lg font-medium">
-            Welcome, {firstName || 'Guest'}
+            Welcome, {formatName(firstName)}
           </h2>
           {role && (
             <span className="text-sm rounded-md px-2 py-1 capitalize inline-block" style={{
