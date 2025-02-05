@@ -42,8 +42,8 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
     documentTitle: `Invoice-${invoice?.invoice_number || 'draft'}`,
     onAfterPrint: () => toast.success("Invoice printed successfully"),
     onPrintError: () => toast.error("Failed to print invoice"),
-    removeAfterPrint: true,
     pageStyle: "@page { size: auto; margin: 20mm; }",
+    content: () => printRef.current,
     print: async (printIframe: HTMLIFrameElement) => {
       const document = printIframe.contentDocument
       if (document) {
@@ -153,11 +153,7 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
     <div className="space-y-6">
       <div className="flex justify-end">
         <Button
-          onClick={() => {
-            if (printRef.current) {
-              handlePrint(printRef.current)
-            }
-          }}
+          onClick={handlePrint}
           className="gap-2"
         >
           <Printer className="h-4 w-4" />
