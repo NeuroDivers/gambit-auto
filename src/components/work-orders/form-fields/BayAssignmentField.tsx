@@ -29,14 +29,14 @@ export function BayAssignmentField({ form }: BayAssignmentFieldProps) {
         <FormItem>
           <FormLabel>Assign Service Bay</FormLabel>
           <Select
-            value={field.value || ""}
-            onValueChange={field.onChange}
+            value={field.value || "none"}
+            onValueChange={(value) => field.onChange(value === "none" ? null : value)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select a service bay..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {serviceBays?.map((bay) => (
                 <SelectItem key={bay.id} value={bay.id}>
                   {bay.name} ({bay.status})
