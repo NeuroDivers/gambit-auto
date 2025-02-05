@@ -101,8 +101,9 @@ export function BayAssignmentField({ form }: BayAssignmentFieldProps) {
         <FormItem>
           <FormLabel>Assign Service Bay</FormLabel>
           <Select
-            value={field.value || "none"}
             onValueChange={handleBaySelection}
+            defaultValue={field.value || "none"}
+            value={field.value || "none"}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select a service bay..." />
