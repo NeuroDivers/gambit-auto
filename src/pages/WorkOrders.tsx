@@ -1,5 +1,5 @@
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
-import { WorkOrdersList } from "@/components/work-orders/WorkOrdersList"
+import { WorkOrderList } from "@/components/work-orders/WorkOrderList"
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout"
 import { useNavigate } from "react-router-dom"
 import { useToast } from "@/hooks/use-toast"
@@ -61,7 +61,7 @@ export default function WorkOrders() {
             </div>
           </div>
           <div className="max-w-[1600px] mx-auto">
-            <WorkOrdersList />
+            <WorkOrderList />
           </div>
         </div>
       </div>
