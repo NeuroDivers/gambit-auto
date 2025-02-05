@@ -12,6 +12,7 @@ import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { ServiceTypeFormFields, formSchema } from "./ServiceTypeFormFields";
 import * as z from "zod";
+import { useEffect } from "react";
 
 interface ServiceTypeDialogProps {
   open: boolean;
@@ -39,13 +40,34 @@ export const ServiceTypeDialog = ({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: serviceType?.name || "",
-      status: serviceType?.status || "active",
-      description: serviceType?.description || "",
-      price: serviceType?.price?.toString() || "",
-      duration: serviceType?.duration?.toString() || "",
+      name: "",
+      status: "active",
+      description: "",
+      price: "",
+      duration: "",
     },
   });
+
+  // Reset form with service type data when editing
+  useEffect(() => {
+    if (serviceType) {
+      form.reset({
+        name: serviceType.name,
+        status: serviceType.status,
+        description: serviceType.description || "",
+        price: serviceType.price?.toString() || "",
+        duration: serviceType.duration?.toString() || "",
+      });
+    } else {
+      form.reset({
+        name: "",
+        status: "active",
+        description: "",
+        price: "",
+        duration: "",
+      });
+    }
+  }, [serviceType, form]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
