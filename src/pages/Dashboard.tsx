@@ -20,6 +20,36 @@ export default function Dashboard() {
     },
   });
 
+  const { data: profile } = useQuery({
+    queryKey: ["profile", session?.user?.id],
+    enabled: !!session?.user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session?.user?.id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: userRole } = useQuery({
+    queryKey: ["userRole", session?.user?.id],
+    enabled: !!session?.user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session?.user?.id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data?.role;
+    },
+  });
+
   const handleLogout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -59,7 +89,11 @@ export default function Dashboard() {
   }
 
   return (
-    <DashboardLayout onLogout={handleLogout}>
+    <DashboardLayout 
+      firstName={profile?.first_name}
+      role={userRole}
+      onLogout={handleLogout}
+    >
       <div className="p-8 space-y-8">
         <PageBreadcrumbs />
         <div className="grid grid-cols-1 gap-8">
