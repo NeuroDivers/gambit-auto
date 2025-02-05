@@ -7,6 +7,14 @@ import type { WorkOrder } from "../types"
 export function WorkOrdersSection() {
   const { data: requests, isLoading } = useWorkOrderData()
 
+  // Sort work orders by start_time, putting null dates at the end
+  const sortedRequests = requests?.sort((a, b) => {
+    if (!a.start_time && !b.start_time) return 0;
+    if (!a.start_time) return 1;
+    if (!b.start_time) return -1;
+    return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+  });
+
   const statusCounts = {
     pending: requests?.filter(r => r.status === 'pending').length || 0,
     approved: requests?.filter(r => r.status === 'approved').length || 0,
@@ -28,10 +36,10 @@ export function WorkOrdersSection() {
           <h3 className="text-xl font-semibold">Work Orders</h3>
         </div>
         <StatusLegend statusCounts={statusCounts} />
-        {requests?.map((request) => (
+        {sortedRequests?.map((request) => (
           <WorkOrderCard key={request.id} request={request} />
         ))}
-        {requests?.length === 0 && (
+        {sortedRequests?.length === 0 && (
           <div className="text-center py-8 text-white/60">
             No work orders yet
           </div>
