@@ -53,20 +53,36 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
 
   useEffect(() => {
     if (invoice) {
-      form.reset({
-        notes: invoice.notes || '',
-        status: invoice.status || 'draft',
-        invoice_items: invoice.invoice_items || [],
-        customer_first_name: invoice.customer_first_name || '',
-        customer_last_name: invoice.customer_last_name || '',
-        customer_email: invoice.customer_email || '',
-        customer_phone: invoice.customer_phone || '',
-        customer_address: invoice.customer_address || '',
-        vehicle_make: invoice.vehicle_make || '',
-        vehicle_model: invoice.vehicle_model || '',
-        vehicle_year: invoice.vehicle_year || 0,
-        vehicle_vin: invoice.vehicle_vin || ''
-      })
+      // Fetch invoice items
+      const fetchInvoiceItems = async () => {
+        const { data: items, error } = await supabase
+          .from('invoice_items')
+          .select('*')
+          .eq('invoice_id', invoice.id)
+
+        if (error) {
+          console.error('Error fetching invoice items:', error)
+          return
+        }
+
+        // Reset form with all invoice data including items
+        form.reset({
+          notes: invoice.notes || '',
+          status: invoice.status || 'draft',
+          invoice_items: items || [],
+          customer_first_name: invoice.customer_first_name || '',
+          customer_last_name: invoice.customer_last_name || '',
+          customer_email: invoice.customer_email || '',
+          customer_phone: invoice.customer_phone || '',
+          customer_address: invoice.customer_address || '',
+          vehicle_make: invoice.vehicle_make || '',
+          vehicle_model: invoice.vehicle_model || '',
+          vehicle_year: invoice.vehicle_year || 0,
+          vehicle_vin: invoice.vehicle_vin || ''
+        })
+      }
+
+      fetchInvoiceItems()
     }
   }, [invoice, form])
 
