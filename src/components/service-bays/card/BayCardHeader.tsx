@@ -2,12 +2,11 @@ import { CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { supabase } from "@/integrations/supabase/client"
 import { useQueryClient } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
 
 type BayCardHeaderProps = {
   name: string
-  status: 'available' | 'in_use' | 'maintenance'
   bayId: string
 }
 
@@ -40,13 +39,13 @@ export function BayCardHeader({ name, bayId }: BayCardHeaderProps) {
   }
 
   return (
-    <CardHeader className="pb-4">
-      <div className="flex items-start justify-between">
-        <CardTitle className="text-lg">{name}</CardTitle>
+    <CardHeader className="pb-4 border-b">
+      <div className="flex items-center justify-between">
+        <CardTitle className="text-xl font-semibold">{name}</CardTitle>
         <Button 
           variant="ghost" 
           size="icon"
-          className="h-8 w-8 text-destructive hover:text-destructive/90"
+          className="h-8 w-8 text-destructive hover:text-destructive/90 hover:bg-destructive/10 transition-colors"
           onClick={handleDelete}
         >
           <Trash2 className="h-4 w-4" />

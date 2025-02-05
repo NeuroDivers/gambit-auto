@@ -37,30 +37,36 @@ export function BayCardContent({
   onToggleService,
 }: BayCardContentProps) {
   return (
-    <CardContent className="space-y-6">
-      <BayStatusToggle 
-        status={status} 
-        onStatusChange={onStatusChange} 
-      />
-      <SidekickAssignment 
-        bayId={bayId}
-        currentSidekickId={assignedSidekickId}
-      />
-      <div className="space-y-2">
-        <Label htmlFor={`notes-${bayId}`}>Notes</Label>
-        <Textarea
-          id={`notes-${bayId}`}
-          placeholder="Add notes about this bay..."
-          value={notes || ''}
-          onChange={(e) => onNotesChange(e.target.value)}
-          className="min-h-[100px]"
+    <CardContent className="p-6 space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          <BayStatusToggle 
+            status={status} 
+            onStatusChange={onStatusChange} 
+          />
+          <SidekickAssignment 
+            bayId={bayId}
+            currentSidekickId={assignedSidekickId}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`notes-${bayId}`}>Notes</Label>
+          <Textarea
+            id={`notes-${bayId}`}
+            placeholder="Add notes about this bay..."
+            value={notes || ''}
+            onChange={(e) => onNotesChange(e.target.value)}
+            className="min-h-[120px] resize-none"
+          />
+        </div>
+      </div>
+      <div className="pt-4 border-t">
+        <BayServiceToggles
+          availableServices={availableServices}
+          activeServices={services}
+          onToggleService={onToggleService}
         />
       </div>
-      <BayServiceToggles
-        availableServices={availableServices}
-        activeServices={services}
-        onToggleService={onToggleService}
-      />
     </CardContent>
   )
 }

@@ -139,10 +139,9 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
   }
 
   return (
-    <Card>
+    <Card className="overflow-hidden transition-all hover:shadow-lg">
       <BayCardHeader 
         name={bay.name} 
-        status={bay.status}
         bayId={bay.id}
       />
       <BayCardContent

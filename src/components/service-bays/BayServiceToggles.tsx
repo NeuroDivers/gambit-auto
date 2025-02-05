@@ -18,24 +18,25 @@ type BayServiceTogglesProps = {
 }
 
 export function BayServiceToggles({ availableServices, activeServices, onToggleService }: BayServiceTogglesProps) {
-  // Filter out inactive services
   const activeAvailableServices = availableServices.filter(service => service.status !== 'inactive')
 
   return (
     <div className="space-y-4">
-      <Label>Available Services</Label>
-      {activeAvailableServices.map((service) => {
-        const isActive = activeServices.some(s => s.service_id === service.id)
-        return (
-          <div key={service.id} className="flex items-center justify-between">
-            <span className="text-sm">{service.name}</span>
-            <Switch
-              checked={isActive}
-              onCheckedChange={(checked) => onToggleService(service.id, checked)}
-            />
-          </div>
-        )
-      })}
+      <Label className="text-lg font-medium">Available Services</Label>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {activeAvailableServices.map((service) => {
+          const isActive = activeServices.some(s => s.service_id === service.id)
+          return (
+            <div key={service.id} className="flex items-center justify-between p-3 rounded-lg bg-card hover:bg-accent/50 transition-colors">
+              <span className="text-sm font-medium">{service.name}</span>
+              <Switch
+                checked={isActive}
+                onCheckedChange={(checked) => onToggleService(service.id, checked)}
+              />
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
