@@ -18,6 +18,15 @@ type ServiceItemFormProps = {
 }
 
 export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: ServiceItemFormProps) {
+  const handleServiceSelect = (serviceId: string) => {
+    const selectedService = services.find(service => service.id === serviceId)
+    if (selectedService) {
+      onUpdate(index, "service_id", serviceId)
+      onUpdate(index, "service_name", selectedService.name)
+      onUpdate(index, "unit_price", selectedService.price || 0)
+    }
+  }
+
   return (
     <div className="space-y-4 p-4 border rounded-lg relative">
       <Button
@@ -35,7 +44,7 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
           <Label>Service</Label>
           <Select
             value={item.service_id}
-            onValueChange={(value) => onUpdate(index, "service_id", value)}
+            onValueChange={handleServiceSelect}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select a service" />
