@@ -3,12 +3,16 @@ import { supabase } from "@/integrations/supabase/client"
 import { Quote } from "./types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Pencil, Plus } from "lucide-react"
 import { useState } from "react"
 import { CreateQuoteDialog } from "./CreateQuoteDialog"
+import { EditQuoteDialog } from "./EditQuoteDialog"
+import { QuoteStatusSelect } from "./QuoteStatusSelect"
 
 export function QuoteList() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
   
   const { data: quotes = [], isLoading } = useQuery({
     queryKey: ["quotes"],
@@ -25,6 +29,11 @@ export function QuoteList() {
       return data as Quote[]
     }
   })
+
+  const handleEdit = (quote: Quote) => {
+    setSelectedQuote(quote)
+    setEditDialogOpen(true)
+  }
 
   if (isLoading) {
     return <div>Loading quotes...</div>
@@ -44,11 +53,21 @@ export function QuoteList() {
         {quotes.map((quote) => (
           <Card key={quote.id}>
             <CardHeader>
-              <CardTitle className="flex justify-between">
+              <CardTitle className="flex justify-between items-center">
                 <span>{quote.quote_number}</span>
-                <span className="text-sm font-normal">
-                  Status: {quote.status}
-                </span>
+                <div className="flex items-center gap-4">
+                  <QuoteStatusSelect 
+                    status={quote.status} 
+                    quoteId={quote.id}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleEdit(quote)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -75,6 +94,14 @@ export function QuoteList() {
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
       />
+
+      {selectedQuote && (
+        <EditQuoteDialog
+          quote={selectedQuote}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+        />
+      )}
     </div>
   )
 }

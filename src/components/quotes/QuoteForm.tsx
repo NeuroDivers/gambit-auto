@@ -5,13 +5,15 @@ import { CustomerInfoFields } from "@/components/shared/form-fields/CustomerInfo
 import { VehicleInfoFields } from "@/components/shared/form-fields/VehicleInfoFields"
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Quote } from "./types"
 
 interface QuoteFormProps {
+  quote?: Quote
   onSuccess?: () => void
 }
 
-export function QuoteForm({ onSuccess }: QuoteFormProps) {
-  const { form, onSubmit } = useQuoteForm(onSuccess)
+export function QuoteForm({ quote, onSuccess }: QuoteFormProps) {
+  const { form, onSubmit } = useQuoteForm(onSuccess, quote)
 
   return (
     <Form {...form}>
@@ -48,7 +50,9 @@ export function QuoteForm({ onSuccess }: QuoteFormProps) {
             type="submit" 
             disabled={form.formState.isSubmitting}
           >
-            {form.formState.isSubmitting ? "Creating..." : "Create Quote"}
+            {form.formState.isSubmitting ? 
+              (quote ? "Updating..." : "Creating...") : 
+              (quote ? "Update Quote" : "Create Quote")}
           </Button>
         </div>
       </form>
