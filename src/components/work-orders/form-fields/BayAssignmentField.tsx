@@ -47,6 +47,17 @@ export function BayAssignmentField({ form }: BayAssignmentFieldProps) {
     enabled: !!startTime && !!duration,
   })
 
+  const parseInterval = (intervalString: string): number => {
+    // Parse PostgreSQL interval string (e.g., "2 hours" or "02:00:00")
+    const hourMatch = intervalString.match(/(\d+)\s*hours?/) // matches "2 hours"
+    if (hourMatch) return parseInt(hourMatch[1])
+    
+    const timeMatch = intervalString.match(/(\d{2}):(\d{2}):(\d{2})/) // matches "02:00:00"
+    if (timeMatch) return parseInt(timeMatch[1])
+    
+    return 0
+  }
+
   const checkBayAvailability = (bayId: string) => {
     if (!startTime || !duration || !existingWorkOrders) return true
 
@@ -57,10 +68,10 @@ export function BayAssignmentField({ form }: BayAssignmentFieldProps) {
       if (wo.assigned_bay_id !== bayId || !wo.start_time || !wo.estimated_duration) return false
 
       const woStartTime = parseISO(wo.start_time)
-      const durationHours = parseInt(wo.estimated_duration.toString())
+      const woDuration = parseInterval(wo.estimated_duration.toString())
       
       const woEndTime = new Date(woStartTime)
-      woEndTime.setHours(woEndTime.getHours() + durationHours)
+      woEndTime.setHours(woEndTime.getHours() + woDuration)
 
       return (
         isWithinInterval(startTime, { start: woStartTime, end: woEndTime }) ||
