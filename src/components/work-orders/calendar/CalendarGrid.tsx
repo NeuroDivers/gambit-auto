@@ -31,20 +31,22 @@ export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
   }
 
   return (
-    <div className="grid grid-cols-7 gap-2">
-      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-        <div key={day} className="text-sm font-medium text-center py-2">
-          {day}
-        </div>
-      ))}
-      {days.map((day) => (
-        <CalendarDay
-          key={day.toISOString()}
-          date={day}
-          workOrders={getWorkOrdersForDay(day)}
-          isCurrentMonth={isSameMonth(day, currentDate)}
-        />
-      ))}
+    <div className="rounded-lg bg-card/50 p-4">
+      <div className="grid grid-cols-7 gap-4">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+          <div key={day} className="text-sm font-medium text-muted-foreground text-center py-2">
+            {day}
+          </div>
+        ))}
+        {days.map((day) => (
+          <CalendarDay
+            key={day.toISOString()}
+            date={day}
+            workOrders={getWorkOrdersForDay(day)}
+            isCurrentMonth={isSameMonth(day, currentDate)}
+          />
+        ))}
+      </div>
     </div>
   )
 }

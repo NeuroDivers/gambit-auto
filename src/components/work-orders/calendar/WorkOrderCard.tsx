@@ -13,7 +13,7 @@ export function WorkOrderCard({ workOrder, className }: WorkOrderCardProps) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
 
   const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation() // Prevent the click from reaching the calendar day
+    e.stopPropagation()
     setIsDetailsOpen(true)
   }
 
@@ -22,11 +22,11 @@ export function WorkOrderCard({ workOrder, className }: WorkOrderCardProps) {
       case 'pending':
         return 'bg-muted/40 text-muted-foreground hover:bg-muted/50'
       case 'approved':
-        return 'bg-[rgb(59,130,246,0.2)] text-blue-400 hover:bg-[rgb(59,130,246,0.3)] font-semibold'
+        return 'bg-[rgb(59,130,246,0.2)] text-blue-400 hover:bg-[rgb(59,130,246,0.3)]'
       case 'rejected':
-        return 'bg-[#ea384c]/30 text-[#ea384c] hover:bg-[#ea384c]/40 font-semibold'
+        return 'bg-[rgb(234,56,76,0.2)] text-[#ea384c] hover:bg-[rgb(234,56,76,0.3)]'
       case 'completed':
-        return 'bg-[rgb(34,197,94,0.2)] text-green-400 hover:bg-[rgb(34,197,94,0.3)] font-semibold'
+        return 'bg-[rgb(34,197,94,0.2)] text-green-400 hover:bg-[rgb(34,197,94,0.3)]'
       default:
         return 'bg-muted/40 text-muted-foreground hover:bg-muted/50'
     }
@@ -36,20 +36,21 @@ export function WorkOrderCard({ workOrder, className }: WorkOrderCardProps) {
     <>
       <div 
         className={cn(
-          "relative text-sm p-2 rounded truncate cursor-pointer transition-colors shadow-sm",
+          "relative text-xs p-1.5 rounded-md truncate cursor-pointer transition-colors",
+          "hover:shadow-md",
           getStatusStyle(workOrder.status),
           className
         )}
         onClick={handleClick}
       >
-        <div className="truncate font-semibold">
+        <div className="truncate font-medium">
           {workOrder.first_name} {workOrder.last_name}
         </div>
-        <div className="text-inherit opacity-100 truncate">
+        <div className="text-[10px] opacity-80 truncate">
           {workOrder.vehicle_make} {workOrder.vehicle_model}
         </div>
         {workOrder.start_time && (
-          <div className="text-xs opacity-70">
+          <div className="text-[10px] opacity-70">
             {format(new Date(workOrder.start_time), 'h:mm a')}
           </div>
         )}
