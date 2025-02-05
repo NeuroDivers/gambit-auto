@@ -4,6 +4,8 @@ import { Calendar, FileText, Settings, Users, Wrench, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Link } from "react-router-dom"
 import { useAdminStatus } from "@/hooks/useAdminStatus"
+import { BusinessSettingsDialog } from "../business/BusinessSettingsDialog"
+import { ProfileDialog } from "../profile/ProfileDialog"
 
 function SidebarNav() {
   const location = useLocation()
