@@ -19,4 +19,5 @@ export type WorkOrder = {
   start_time?: string | null
   estimated_duration?: string | null
   end_time?: string | null
+  assigned_bay_id?: string | null
 }
