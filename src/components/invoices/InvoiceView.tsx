@@ -8,7 +8,7 @@ import { useEffect, useRef } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
-import { useReactToPrint } from 'react-to-print'
+import { useReactToPrint, UseReactToPrintOptions } from 'react-to-print'
 import { Button } from "@/components/ui/button"
 import { Printer } from "lucide-react"
 
@@ -43,16 +43,8 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
     onAfterPrint: () => toast.success("Invoice printed successfully"),
     onPrintError: () => toast.error("Failed to print invoice"),
     pageStyle: "@page { size: auto; margin: 20mm; }",
-    content: () => printRef.current,
-    print: async (printIframe) => {
-      const document = printIframe.contentDocument
-      if (document) {
-        const html = document.getElementsByTagName("html")[0]
-        html.style.background = 'none'
-      }
-      return window.print()
-    }
-  })
+    content: (): HTMLDivElement | null => printRef.current,
+  } as UseReactToPrintOptions)
 
   const form = useForm<InvoiceFormValues>({
     defaultValues: {
@@ -116,7 +108,6 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
     }
   }
 
-  // Show loading state while either invoice or business profile data is loading
   if (isInvoiceLoading || isBusinessLoading) {
     return (
       <div className="space-y-8">
