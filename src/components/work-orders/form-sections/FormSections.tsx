@@ -22,7 +22,7 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
         <div className="space-y-8">
           <VehicleInfoFields form={form} />
           <ServiceItemsField
-            workOrderServices={form.getValues("service_items")}
+            services={form.getValues("service_items")}
             onServicesChange={(services) => form.setValue("service_items", services)}
             disabled={isSubmitting}
           />
