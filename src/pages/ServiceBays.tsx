@@ -4,10 +4,27 @@ import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 export default function ServiceBays() {
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+      
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+      
+      return data;
+    },
+  });
 
   const handleLogout = async () => {
     try {
@@ -30,7 +47,11 @@ export default function ServiceBays() {
   };
 
   return (
-    <DashboardLayout onLogout={handleLogout}>
+    <DashboardLayout 
+      firstName={profile?.first_name}
+      role={profile?.role}
+      onLogout={handleLogout}
+    >
       <PageBreadcrumbs />
       <ServiceBaysList />
     </DashboardLayout>

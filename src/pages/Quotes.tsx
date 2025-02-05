@@ -4,10 +4,27 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout"
 import { useNavigate } from "react-router-dom"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
+import { useQuery } from "@tanstack/react-query"
 
 export default function Quotes() {
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+      
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+      
+      return data;
+    },
+  });
 
   const handleLogout = async () => {
     try {
@@ -30,7 +47,11 @@ export default function Quotes() {
   };
 
   return (
-    <DashboardLayout onLogout={handleLogout}>
+    <DashboardLayout 
+      firstName={profile?.first_name}
+      role={profile?.role}
+      onLogout={handleLogout}
+    >
       <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
         <div className="container mx-auto py-12">
           <div className="px-6">

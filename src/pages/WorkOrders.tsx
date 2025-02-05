@@ -1,16 +1,30 @@
-import { WorkOrderList } from "@/components/work-orders/WorkOrderList"
-import { useAdminStatus } from "@/hooks/useAdminStatus"
-import { useNavigate } from "react-router-dom"
-import { useEffect } from "react"
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
+import { WorkOrdersList } from "@/components/work-orders/WorkOrdersList"
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout"
+import { useNavigate } from "react-router-dom"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
+import { useQuery } from "@tanstack/react-query"
 
 export default function WorkOrders() {
-  const { isAdmin, loading } = useAdminStatus()
-  const navigate = useNavigate()
-  const { toast } = useToast()
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+      
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+      
+      return data;
+    },
+  });
 
   const handleLogout = async () => {
     try {
@@ -32,33 +46,22 @@ export default function WorkOrders() {
     }
   };
 
-  useEffect(() => {
-    if (!loading && !isAdmin) {
-      navigate("/")
-    }
-  }, [isAdmin, loading, navigate])
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-pulse text-primary/60 text-lg">Loading...</div>
-      </div>
-    )
-  }
-
-  if (!isAdmin) {
-    return null
-  }
-
   return (
-    <DashboardLayout onLogout={handleLogout}>
+    <DashboardLayout 
+      firstName={profile?.first_name}
+      role={profile?.role}
+      onLogout={handleLogout}
+    >
       <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
         <div className="container mx-auto py-12">
           <div className="px-6">
-            <PageBreadcrumbs />
+            <div className="mb-8">
+              <PageBreadcrumbs />
+              <h1 className="text-3xl font-bold">Work Orders</h1>
+            </div>
           </div>
           <div className="max-w-[1600px] mx-auto">
-            <WorkOrderList />
+            <WorkOrdersList />
           </div>
         </div>
       </div>

@@ -15,6 +15,22 @@ export default function Invoices() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const { toast } = useToast()
 
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+      
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+      
+      return data;
+    },
+  });
+
   const handleLogout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -36,7 +52,11 @@ export default function Invoices() {
   };
 
   return (
-    <DashboardLayout onLogout={handleLogout}>
+    <DashboardLayout 
+      firstName={profile?.first_name}
+      role={profile?.role}
+      onLogout={handleLogout}
+    >
       <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
         <div className="container mx-auto py-12">
           <div className="px-6">
