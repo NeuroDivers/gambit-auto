@@ -6,6 +6,7 @@ import { Plus } from "lucide-react"
 import { ServiceItemForm } from "./service-selection/ServiceItemForm"
 import { useServiceData } from "./service-selection/useServiceData"
 import { ServiceItemType } from "@/components/work-orders/types"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 type ServiceSelectionFieldProps = {
   form: UseFormReturn<any>
@@ -65,42 +66,44 @@ export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
       name="service_items"
       render={({ field }) => (
         <FormItem>
-          <Card className="border-border/5 bg-[#1A1F2C]/80">
-            <CardContent className="p-4">
-              <div className="flex justify-between items-center mb-4">
-                <FormLabel className="text-lg font-semibold text-white/90">
-                  Services
-                </FormLabel>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddService}
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Service
-                </Button>
-              </div>
-              
-              <div className="space-y-4">
-                {serviceItems.map((item: ServiceItemType, index: number) => (
-                  <ServiceItemForm
-                    key={index}
-                    index={index}
-                    item={item}
-                    services={services}
-                    onUpdate={handleServiceUpdate}
-                    onRemove={() => handleRemoveService(index)}
-                  />
-                ))}
-                {serviceItems.length === 0 && (
-                  <p className="text-muted-foreground">No services added</p>
-                )}
-              </div>
-              <FormMessage />
-            </CardContent>
-          </Card>
+          <ScrollArea className="h-[calc(100vh-20rem)]">
+            <Card className="border-border/5 bg-[#1A1F2C]/80">
+              <CardContent className="p-4">
+                <div className="flex justify-between items-center mb-4">
+                  <FormLabel className="text-lg font-semibold text-white/90">
+                    Services
+                  </FormLabel>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddService}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Service
+                  </Button>
+                </div>
+                
+                <div className="space-y-4">
+                  {serviceItems.map((item: ServiceItemType, index: number) => (
+                    <ServiceItemForm
+                      key={index}
+                      index={index}
+                      item={item}
+                      services={services}
+                      onUpdate={handleServiceUpdate}
+                      onRemove={() => handleRemoveService(index)}
+                    />
+                  ))}
+                  {serviceItems.length === 0 && (
+                    <p className="text-muted-foreground">No services added</p>
+                  )}
+                </div>
+                <FormMessage />
+              </CardContent>
+            </Card>
+          </ScrollArea>
         </FormItem>
       )}
     />

@@ -1,18 +1,14 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ServiceItemType } from "@/components/work-orders/types"
-import { Trash2 } from "lucide-react"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { X } from "lucide-react"
+import { ServiceItemType } from "@/components/work-orders/types"
 
-type ServiceItemFormProps = {
+interface ServiceItemFormProps {
   index: number
   item: ServiceItemType
-  services: Array<{
-    id: string
-    name: string
-    price: number | null
-  }>
+  services: any[]
   onUpdate: (index: number, field: keyof ServiceItemType, value: any) => void
   onRemove: () => void
 }
@@ -33,14 +29,14 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
         type="button"
         variant="ghost"
         size="icon"
-        className="absolute top-2 right-2"
         onClick={onRemove}
+        className="absolute right-2 top-2"
       >
-        <Trash2 className="w-4 h-4" />
+        <X className="h-4 w-4" />
       </Button>
 
-      <div className="grid gap-4">
-        <div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
           <Label>Service</Label>
           <Select
             value={item.service_id}
@@ -59,26 +55,22 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
           </Select>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Quantity</Label>
-            <Input
-              type="number"
-              min="1"
-              value={item.quantity}
-              onChange={(e) => onUpdate(index, "quantity", parseInt(e.target.value))}
-            />
-          </div>
-          <div>
-            <Label>Unit Price</Label>
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              value={item.unit_price}
-              onChange={(e) => onUpdate(index, "unit_price", parseFloat(e.target.value))}
-            />
-          </div>
+        <div className="space-y-2">
+          <Label>Quantity</Label>
+          <Input
+            type="number"
+            value={item.quantity}
+            onChange={(e) => onUpdate(index, "quantity", parseInt(e.target.value) || 0)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Unit Price</Label>
+          <Input
+            type="number"
+            value={item.unit_price}
+            onChange={(e) => onUpdate(index, "unit_price", parseFloat(e.target.value) || 0)}
+          />
         </div>
       </div>
     </div>
