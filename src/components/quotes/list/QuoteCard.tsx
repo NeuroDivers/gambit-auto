@@ -45,7 +45,7 @@ export function QuoteCard({
                 </div>
               </HoverCardTrigger>
               {!canConvert && quote.status !== 'converted' && (
-                <HoverCardContent className="w-64">
+                <HoverCardContent className="w-64 border-l-2 border-l-destructive">
                   <h4 className="font-semibold text-destructive mb-1">Warning</h4>
                   <p className="text-sm text-muted-foreground">
                     This quote must be approved before converting to a work order.
