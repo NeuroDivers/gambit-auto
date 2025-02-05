@@ -36,6 +36,8 @@ export function useQuoteForm(onSuccess?: () => void) {
 
   const onSubmit = async (values: QuoteFormValues) => {
     try {
+      console.log('Submitting form with values:', values)
+      
       // Calculate totals
       const subtotal = values.quote_items.reduce(
         (sum, item) => sum + (item.quantity * item.unit_price),
@@ -52,6 +54,8 @@ export function useQuoteForm(onSuccess?: () => void) {
       const taxRate = taxData?.tax_rate || 0
       const taxAmount = subtotal * (taxRate / 100)
       const total = subtotal + taxAmount
+
+      console.log('Creating quote with calculated values:', { subtotal, taxAmount, total })
 
       // Insert quote
       const { data: quote, error: quoteError } = await supabase
@@ -76,7 +80,12 @@ export function useQuoteForm(onSuccess?: () => void) {
         .select()
         .single()
 
-      if (quoteError) throw quoteError
+      if (quoteError) {
+        console.error('Error creating quote:', quoteError)
+        throw quoteError
+      }
+
+      console.log('Quote created successfully:', quote)
 
       // Insert quote items
       if (values.quote_items.length > 0) {
@@ -91,7 +100,10 @@ export function useQuoteForm(onSuccess?: () => void) {
             }))
           )
 
-        if (itemsError) throw itemsError
+        if (itemsError) {
+          console.error('Error creating quote items:', itemsError)
+          throw itemsError
+        }
       }
 
       toast({
@@ -101,6 +113,7 @@ export function useQuoteForm(onSuccess?: () => void) {
 
       onSuccess?.()
     } catch (error: any) {
+      console.error('Form submission error:', error)
       toast({
         variant: "destructive",
         title: "Error",
