@@ -1,8 +1,7 @@
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs";
 import { WorkOrderCalendar } from "@/components/work-orders/WorkOrderCalendar";
 import { WorkOrdersSection } from "@/components/work-orders/sections/WorkOrdersSection";
@@ -19,56 +18,6 @@ export default function Dashboard() {
       return session;
     },
   });
-
-  const { data: profile } = useQuery({
-    queryKey: ["profile", session?.user?.id],
-    enabled: !!session?.user?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session?.user?.id)
-        .maybeSingle();
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: userRole } = useQuery({
-    queryKey: ["userRole", session?.user?.id],
-    enabled: !!session?.user?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", session?.user?.id)
-        .maybeSingle();
-      
-      if (error) throw error;
-      return data?.role;
-    },
-  });
-
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      toast({
-        title: "Logged out successfully",
-        description: "You have been logged out of your account.",
-      });
-      
-      navigate("/auth");
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message,
-      });
-    }
-  };
 
   useEffect(() => {
     if (!sessionLoading && !session) {
@@ -89,18 +38,12 @@ export default function Dashboard() {
   }
 
   return (
-    <DashboardLayout 
-      firstName={profile?.first_name}
-      role={userRole}
-      onLogout={handleLogout}
-    >
-      <div className="p-8 space-y-8">
-        <PageBreadcrumbs />
-        <div className="grid grid-cols-1 gap-8">
-          <WorkOrderCalendar />
-          <WorkOrdersSection />
-        </div>
+    <div className="p-8 space-y-8">
+      <PageBreadcrumbs />
+      <div className="grid grid-cols-1 gap-8">
+        <WorkOrderCalendar />
+        <WorkOrdersSection />
       </div>
-    </DashboardLayout>
+    </div>
   );
 }
