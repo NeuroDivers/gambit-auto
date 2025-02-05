@@ -3,6 +3,7 @@ import { useAdminStatus } from "@/hooks/useAdminStatus"
 import { useNavigate } from "react-router-dom"
 import { useEffect } from "react"
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout"
 
 export default function WorkOrders() {
   const { isAdmin, loading } = useAdminStatus()
@@ -27,15 +28,17 @@ export default function WorkOrders() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
-      <div className="container mx-auto py-12">
-        <div className="px-6">
-          <PageBreadcrumbs />
-        </div>
-        <div className="max-w-[1600px] mx-auto">
-          <WorkOrderList />
+    <DashboardLayout>
+      <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
+        <div className="container mx-auto py-12">
+          <div className="px-6">
+            <PageBreadcrumbs />
+          </div>
+          <div className="max-w-[1600px] mx-auto">
+            <WorkOrderList />
+          </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }
