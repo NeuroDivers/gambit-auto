@@ -57,7 +57,9 @@ export function BayAssignmentField({ form }: BayAssignmentFieldProps) {
       if (wo.assigned_bay_id !== bayId || !wo.start_time || !wo.estimated_duration) return false
 
       const woStartTime = parseISO(wo.start_time)
-      const woDuration = parseInt(wo.estimated_duration.replace(' hours', ''))
+      // The duration is stored as an interval in Postgres, which comes back as a string like '2 hours'
+      // We need to extract just the number
+      const woDuration = parseInt(wo.estimated_duration.toString().split(' ')[0])
       const woEndTime = new Date(woStartTime)
       woEndTime.setHours(woEndTime.getHours() + woDuration)
 
