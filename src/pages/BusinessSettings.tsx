@@ -9,9 +9,9 @@ import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 
 export default function BusinessSettings() {
-  const { isAdmin } = useAdminStatus()
+  const { isAdmin, isLoading: isAdminLoading } = useAdminStatus()
 
-  const { data: profile } = useQuery({
+  const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -27,6 +27,16 @@ export default function BusinessSettings() {
     },
   })
 
+  // Show loading state while checking admin status
+  if (isAdminLoading || isProfileLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+      </div>
+    )
+  }
+
+  // Redirect if not admin
   if (!isAdmin) {
     return <Navigate to="/" replace />
   }
