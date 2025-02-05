@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs";
-import { WelcomeHeader } from "@/components/dashboard/WelcomeHeader";
 import { WorkOrderCalendar } from "@/components/work-orders/WorkOrderCalendar";
 import { WorkOrdersSection } from "@/components/work-orders/sections/WorkOrdersSection";
 import { useToast } from "@/hooks/use-toast";
@@ -63,7 +62,6 @@ export default function Dashboard() {
     <DashboardLayout onLogout={handleLogout}>
       <div className="p-8 space-y-8">
         <PageBreadcrumbs />
-        <WelcomeHeader />
         <div className="grid grid-cols-1 gap-8">
           <WorkOrderCalendar />
           <WorkOrdersSection />
