@@ -39,9 +39,19 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
   })
 
   const handlePrint = useReactToPrint({
-    content: () => printRef.current,
+    documentTitle: `Invoice-${invoice?.invoice_number || 'draft'}`,
     onAfterPrint: () => toast.success("Invoice printed successfully"),
-    onPrintError: () => toast.error("Failed to print invoice")
+    onPrintError: () => toast.error("Failed to print invoice"),
+    removeAfterPrint: true,
+    pageStyle: "@page { size: auto; margin: 20mm; }",
+    print: async (printIframe: HTMLIFrameElement) => {
+      const document = printIframe.contentDocument
+      if (document) {
+        const html = document.getElementsByTagName("html")[0]
+        html.style.background = 'none'
+      }
+      return window.print()
+    }
   })
 
   const form = useForm<InvoiceFormValues>({
@@ -143,7 +153,11 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
     <div className="space-y-6">
       <div className="flex justify-end">
         <Button
-          onClick={handlePrint}
+          onClick={() => {
+            if (printRef.current) {
+              handlePrint(printRef.current)
+            }
+          }}
           className="gap-2"
         >
           <Printer className="h-4 w-4" />
