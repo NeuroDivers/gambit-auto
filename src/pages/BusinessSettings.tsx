@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAdminStatus } from "@/hooks/useAdminStatus"
 import { Navigate } from "react-router-dom"
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout"
+import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 
@@ -40,6 +41,8 @@ export default function BusinessSettings() {
       }}
     >
       <div className="container py-6 space-y-6">
+        <PageBreadcrumbs />
+        
         <div>
           <h1 className="text-2xl font-bold">Business Settings</h1>
           <p className="text-muted-foreground">
@@ -52,10 +55,10 @@ export default function BusinessSettings() {
             <TabsTrigger value="profile">Business Profile</TabsTrigger>
             <TabsTrigger value="taxes">Tax Information</TabsTrigger>
           </TabsList>
-          <TabsContent value="profile">
+          <TabsContent value="profile" className="mt-6">
             <BusinessProfileForm />
           </TabsContent>
-          <TabsContent value="taxes">
+          <TabsContent value="taxes" className="mt-6">
             <BusinessTaxForm />
           </TabsContent>
         </Tabs>
