@@ -45,26 +45,21 @@ const items = [
 const settingsItems = [
   {
     title: "Business Settings",
+    href: "/business-settings",
     icon: Settings,
-    dialogId: "business-settings-trigger",
+    adminOnly: true,
   },
   {
     title: "Profile Settings",
+    href: "/profile-settings",
     icon: User,
-    dialogId: "profile-settings-trigger",
+    adminOnly: false,
   },
 ]
 
 export function SidebarNav() {
   const location = useLocation()
   const { isAdmin } = useAdminStatus()
-
-  const handleDialogClick = (dialogId: string) => {
-    const element = document.getElementById(dialogId)
-    if (element) {
-      element.click()
-    }
-  }
 
   return (
     <div className="flex flex-col gap-0.5 p-1">
@@ -82,16 +77,23 @@ export function SidebarNav() {
         </Link>
       ))}
 
-      {settingsItems.map((item) => (
-        <button
-          key={item.dialogId}
-          onClick={() => handleDialogClick(item.dialogId)}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent text-left"
-        >
-          <item.icon className="h-4 w-4" />
-          <span>{item.title}</span>
-        </button>
-      ))}
+      {settingsItems.map((item) => {
+        if (item.adminOnly && !isAdmin) return null
+        
+        return (
+          <Link
+            key={item.href}
+            to={item.href}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent",
+              location.pathname === item.href ? "bg-accent" : "transparent"
+            )}
+          >
+            <item.icon className="h-4 w-4" />
+            <span>{item.title}</span>
+          </Link>
+        )
+      })}
     </div>
   )
 }

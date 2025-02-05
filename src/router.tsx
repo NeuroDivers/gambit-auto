@@ -11,6 +11,8 @@ import Invoices from "./pages/Invoices"
 import InvoiceDetails from "./pages/InvoiceDetails"
 import NotFound from "./pages/NotFound"
 import ClientManagement from "./pages/ClientManagement"
+import BusinessSettings from "./pages/BusinessSettings"
+import ProfileSettings from "./pages/ProfileSettings"
 
 export const router = createBrowserRouter([
   {
@@ -56,6 +58,14 @@ export const router = createBrowserRouter([
   {
     path: "/clients",
     element: <ClientManagement />,
+  },
+  {
+    path: "/business-settings",
+    element: <BusinessSettings />,
+  },
+  {
+    path: "/profile-settings",
+    element: <ProfileSettings />,
   },
   {
     path: "*",
