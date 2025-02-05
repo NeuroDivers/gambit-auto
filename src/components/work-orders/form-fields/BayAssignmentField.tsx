@@ -57,12 +57,10 @@ export function BayAssignmentField({ form }: BayAssignmentFieldProps) {
       if (wo.assigned_bay_id !== bayId || !wo.start_time || !wo.estimated_duration) return false
 
       const woStartTime = parseISO(wo.start_time)
-      // Extract the hours from the interval string (e.g., "2 hours" -> 2)
-      const durationMatch = wo.estimated_duration.toString().match(/(\d+)\s*hours?/)
-      const woDuration = durationMatch ? parseInt(durationMatch[1]) : 0
+      const durationHours = parseInt(wo.estimated_duration.toString())
       
       const woEndTime = new Date(woStartTime)
-      woEndTime.setHours(woEndTime.getHours() + woDuration)
+      woEndTime.setHours(woEndTime.getHours() + durationHours)
 
       return (
         isWithinInterval(startTime, { start: woStartTime, end: woEndTime }) ||
@@ -75,13 +73,13 @@ export function BayAssignmentField({ form }: BayAssignmentFieldProps) {
   }
 
   const handleBaySelection = (value: string) => {
-    if (value === "none") {
-      form.setValue("assigned_bay_id", null)
+    if (!startTime || !duration) {
+      toast.error("Please select a start time and duration first")
       return
     }
 
-    if (!startTime || !duration) {
-      toast.error("Please select a start time and duration first")
+    if (value === "none") {
+      form.setValue("assigned_bay_id", null)
       return
     }
 
@@ -100,9 +98,8 @@ export function BayAssignmentField({ form }: BayAssignmentFieldProps) {
       render={({ field }) => (
         <FormItem>
           <FormLabel>Assign Service Bay</FormLabel>
-          <Select
+          <Select 
             onValueChange={handleBaySelection}
-            defaultValue={field.value || "none"}
             value={field.value || "none"}
           >
             <SelectTrigger>
