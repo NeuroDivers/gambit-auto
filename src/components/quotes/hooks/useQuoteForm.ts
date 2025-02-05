@@ -49,6 +49,16 @@ export function useQuoteForm({ quote, onSuccess }: UseQuoteFormProps = {}) {
       notes: quote.notes || '',
       quote_items: quote.quote_items || []
     } : {
+      customer_first_name: '',
+      customer_last_name: '',
+      customer_email: '',
+      customer_phone: '',
+      customer_address: '',
+      vehicle_make: '',
+      vehicle_model: '',
+      vehicle_year: new Date().getFullYear(),
+      vehicle_vin: '',
+      notes: '',
       quote_items: []
     }
   })
@@ -139,11 +149,10 @@ export function useQuoteForm({ quote, onSuccess }: UseQuoteFormProps = {}) {
         })
       } else {
         // Generate quote number for new quote
-        const { data: quoteNumber, error: quoteNumberError } = await supabase
+        const { data: quoteNumber } = await supabase
           .rpc('generate_quote_number')
 
-        if (quoteNumberError) {
-          console.error('Error generating quote number:', quoteNumberError)
+        if (!quoteNumber) {
           throw new Error('Failed to generate quote number')
         }
 
@@ -170,7 +179,7 @@ export function useQuoteForm({ quote, onSuccess }: UseQuoteFormProps = {}) {
           .select()
           .single()
 
-        if (quoteError) {
+        if (quoteError || !newQuote) {
           console.error('Error creating quote:', quoteError)
           throw new Error('Failed to create quote')
         }
