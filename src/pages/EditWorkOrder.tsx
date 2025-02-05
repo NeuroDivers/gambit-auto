@@ -5,6 +5,7 @@ import { WorkOrderForm } from "@/components/work-orders/WorkOrderForm";
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function EditWorkOrder() {
   const { id } = useParams();
@@ -56,12 +57,14 @@ export default function EditWorkOrder() {
             </Button>
           </div>
         </div>
-        <div className="max-w-4xl mx-auto">
-          <WorkOrderForm
-            workOrder={workOrder}
-            onSuccess={() => navigate("/work-orders")}
-          />
-        </div>
+        <ScrollArea className="h-[calc(100vh-12rem)] px-6">
+          <div className="max-w-4xl mx-auto">
+            <WorkOrderForm
+              workOrder={workOrder}
+              onSuccess={() => navigate("/work-orders")}
+            />
+          </div>
+        </ScrollArea>
       </div>
     </div>
   );
