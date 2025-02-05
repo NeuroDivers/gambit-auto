@@ -8,6 +8,8 @@ import Invoices from "./pages/Invoices"
 import InvoiceDetails from "./pages/InvoiceDetails"
 import NotFound from "./pages/NotFound"
 import Quotes from "./pages/Quotes"
+import ServiceTypes from "./pages/ServiceTypes"
+import ServiceBays from "./pages/ServiceBays"
 
 export const router = createBrowserRouter([
   {
@@ -41,6 +43,14 @@ export const router = createBrowserRouter([
   {
     path: "/quotes",
     element: <Quotes />,
+  },
+  {
+    path: "/service-types",
+    element: <ServiceTypes />,
+  },
+  {
+    path: "/service-bays",
+    element: <ServiceBays />,
   },
   {
     path: "*",

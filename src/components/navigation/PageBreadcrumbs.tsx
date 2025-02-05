@@ -16,6 +16,8 @@ const routeNames: Record<string, string> = {
   "auth": "Authentication",
   "invoices": "Invoices",
   "edit": "Edit Work Order",
+  "service-types": "Service Types",
+  "service-bays": "Service Bays",
 };
 
 export function PageBreadcrumbs() {
