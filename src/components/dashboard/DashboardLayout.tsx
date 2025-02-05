@@ -53,7 +53,7 @@ function SidebarNav() {
   ]
 
   return (
-    <div className="flex flex-col gap-1 p-2">
+    <div className="flex flex-col gap-0.5 p-1">
       {items.map((item) => (
         <Link
           key={item.href}
