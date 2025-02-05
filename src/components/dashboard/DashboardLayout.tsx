@@ -1,4 +1,4 @@
-import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sidebar"
+import { Sidebar } from "@/components/ui/sidebar"
 import { useLocation } from "react-router-dom"
 import { Calendar, FileText, Settings, Users, Wrench } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -73,15 +73,17 @@ function SidebarNav() {
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <Sidebar>
-          <SidebarContent>
+    <div className="flex min-h-screen w-full bg-background">
+      <Sidebar className="border-r">
+        <div className="pb-12">
+          <div className="space-y-4 py-4">
             <SidebarNav />
-          </SidebarContent>
-        </Sidebar>
-        <main className="flex-1">{children}</main>
+          </div>
+        </div>
+      </Sidebar>
+      <div className="flex-1 p-8">
+        {children}
       </div>
-    </SidebarProvider>
+    </div>
   )
 }
