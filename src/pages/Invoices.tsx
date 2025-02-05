@@ -8,13 +8,35 @@ import { useNavigate } from "react-router-dom"
 import { CreateInvoiceDialog } from "@/components/invoices/CreateInvoiceDialog"
 import { useState } from "react"
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout"
+import { useToast } from "@/hooks/use-toast"
 
 export default function Invoices() {
   const navigate = useNavigate()
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const { toast } = useToast()
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account.",
+      });
+      
+      navigate("/auth");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    }
+  };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout onLogout={handleLogout}>
       <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
         <div className="container mx-auto py-12">
           <div className="px-6">

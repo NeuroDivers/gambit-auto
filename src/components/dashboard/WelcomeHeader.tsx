@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { WelcomeCard } from "./WelcomeCard";
 
 export const WelcomeHeader = () => {
   const navigate = useNavigate();
@@ -51,10 +50,8 @@ export const WelcomeHeader = () => {
   };
 
   return (
-    <WelcomeCard 
-      firstName={profile?.first_name} 
-      role={profile?.role}
-      onLogout={handleLogout} 
-    />
+    <div className="flex-1">
+      {profile?.first_name} {profile?.role && `(${profile.role})`}
+    </div>
   );
 };
