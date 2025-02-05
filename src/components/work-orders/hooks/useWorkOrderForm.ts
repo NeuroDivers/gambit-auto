@@ -21,6 +21,7 @@ const formSchema = z.object({
   start_time: z.date().nullable().optional(),
   estimated_duration: z.number().nullable().optional(),
   end_time: z.date().nullable().optional(),
+  assigned_bay_id: z.string().nullable().optional(),
   service_items: z.array(z.object({
     service_id: z.string(),
     service_name: z.string(),
@@ -49,6 +50,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
       start_time: workOrder?.start_time ? new Date(workOrder.start_time) : defaultStartTime || null,
       estimated_duration: null,
       end_time: workOrder?.end_time ? new Date(workOrder.end_time) : null,
+      assigned_bay_id: workOrder?.assigned_bay_id || null,
       service_items: []
     }
   })

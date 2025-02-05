@@ -4,6 +4,7 @@ import { CustomerInfoFields } from "./CustomerInfoFields"
 import { VehicleInfoFields } from "./VehicleInfoFields"
 import { TimeSelectionFields } from "./TimeSelectionFields"
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
+import { BayAssignmentField } from "../form-fields/BayAssignmentField"
 
 type FormSectionsProps = {
   form: UseFormReturn<WorkOrderFormValues>
@@ -18,6 +19,7 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
         <div className="space-y-8">
           <CustomerInfoFields form={form} />
           <TimeSelectionFields form={form} />
+          <BayAssignmentField form={form} />
         </div>
         <div className="space-y-8">
           <VehicleInfoFields form={form} />

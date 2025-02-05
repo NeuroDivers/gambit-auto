@@ -19,6 +19,7 @@ export type WorkOrderFormValues = {
   start_time?: Date | null
   estimated_duration?: number | null
   end_time?: Date | null
+  assigned_bay_id?: string | null
 }
 
 export type WorkOrderFormProps = {
