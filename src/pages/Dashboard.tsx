@@ -7,7 +7,7 @@ import { useEffect } from "react";
 import { ProfileDialog } from "@/components/profile/ProfileDialog";
 import { BusinessSettingsDialog } from "@/components/business/BusinessSettingsDialog";
 import { Button } from "@/components/ui/button";
-import { Users, Wrench, Receipt } from "lucide-react";
+import { Users, Wrench, Receipt, Quote } from "lucide-react";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { ServiceBaysList } from "@/components/service-bays/ServiceBaysList";
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs";
@@ -71,6 +71,14 @@ export default function Dashboard() {
             >
               <Receipt className="h-4 w-4" />
               Invoices
+            </Button>
+            <Button
+              onClick={() => navigate("/quotes")}
+              variant="outline"
+              className="gap-2"
+            >
+              <Quote className="h-4 w-4" />
+              Quotes
             </Button>
           </>
         )}
