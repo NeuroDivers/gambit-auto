@@ -8,7 +8,7 @@ import { useEffect, useRef } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
-import { useReactToPrint, UseReactToPrintOptions } from 'react-to-print'
+import { useReactToPrint } from 'react-to-print'
 import { Button } from "@/components/ui/button"
 import { Printer } from "lucide-react"
 
@@ -43,8 +43,8 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
     onAfterPrint: () => toast.success("Invoice printed successfully"),
     onPrintError: () => toast.error("Failed to print invoice"),
     pageStyle: "@page { size: auto; margin: 20mm; }",
-    content: (): HTMLDivElement | null => printRef.current,
-  } as UseReactToPrintOptions)
+    content: () => printRef.current,
+  })
 
   const form = useForm<InvoiceFormValues>({
     defaultValues: {
@@ -144,7 +144,7 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
     <div className="space-y-6">
       <div className="flex justify-end">
         <Button
-          onClick={() => handlePrint()}
+          onClick={handlePrint}
           className="gap-2"
         >
           <Printer className="h-4 w-4" />
