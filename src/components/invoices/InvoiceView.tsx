@@ -4,13 +4,12 @@ import { InvoicePrintPreview } from './sections/InvoicePrintPreview'
 import { InvoiceFormValues } from "./types"
 import { useInvoiceData } from "./hooks/useInvoiceData"
 import { useInvoiceMutation } from "./hooks/useInvoiceMutation"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { useReactToPrint } from 'react-to-print'
-import { Button } from "@/components/ui/button"
-import { Printer } from "lucide-react"
+import { InvoiceActions } from "./sections/InvoiceActions"
 
 type InvoiceViewProps = {
   invoiceId?: string
@@ -157,23 +156,12 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
     )
   }
 
-  const onPrintClick = () => {
-    if (handlePrint) {
-      handlePrint()
-    }
-  }
-
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <Button
-          onClick={onPrintClick}
-          className="gap-2"
-        >
-          <Printer className="h-4 w-4" />
-          Print Invoice
-        </Button>
-      </div>
+      <InvoiceActions
+        invoiceId={invoiceId}
+        onPrint={handlePrint}
+      />
       <div ref={printRef}>
         <InvoicePrintPreview invoice={invoice} businessProfile={businessProfile} />
       </div>
