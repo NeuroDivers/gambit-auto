@@ -11,11 +11,76 @@ import Invoices from "./pages/Invoices"
 import InvoiceDetails from "./pages/InvoiceDetails"
 import NotFound from "./pages/NotFound"
 import ClientManagement from "./pages/ClientManagement"
+import { DashboardLayout } from "./components/dashboard/DashboardLayout"
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "./integrations/supabase/client"
+import { useNavigate } from "react-router-dom"
+import { useToast } from "./hooks/use-toast"
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const { data: session, isLoading } = useQuery({
+    queryKey: ["session"],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session;
+    },
+  });
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account.",
+      });
+      
+      navigate("/auth");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-pulse text-primary/60 text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    navigate("/auth");
+    return null;
+  }
+
+  return (
+    <DashboardLayout 
+      firstName={session.user?.user_metadata?.first_name} 
+      role={session.user?.user_metadata?.role}
+      onLogout={handleLogout}
+    >
+      {children}
+    </DashboardLayout>
+  );
+};
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Dashboard />,
+    element: (
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/auth",
@@ -23,39 +88,75 @@ export const router = createBrowserRouter([
   },
   {
     path: "/work-orders",
-    element: <WorkOrders />,
+    element: (
+      <ProtectedRoute>
+        <WorkOrders />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/work-orders/:id/edit",
-    element: <EditWorkOrder />,
+    element: (
+      <ProtectedRoute>
+        <EditWorkOrder />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/service-types",
-    element: <ServiceTypes />,
+    element: (
+      <ProtectedRoute>
+        <ServiceTypes />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/service-bays",
-    element: <ServiceBays />,
+    element: (
+      <ProtectedRoute>
+        <ServiceBays />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/users",
-    element: <UserManagement />,
+    element: (
+      <ProtectedRoute>
+        <UserManagement />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/quotes",
-    element: <Quotes />,
+    element: (
+      <ProtectedRoute>
+        <Quotes />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/invoices",
-    element: <Invoices />,
+    element: (
+      <ProtectedRoute>
+        <Invoices />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/invoices/:id",
-    element: <InvoiceDetails />,
+    element: (
+      <ProtectedRoute>
+        <InvoiceDetails />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/clients",
-    element: <ClientManagement />,
+    element: (
+      <ProtectedRoute>
+        <ClientManagement />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "*",
