@@ -11,11 +11,12 @@ import Invoices from "./pages/Invoices"
 import InvoiceDetails from "./pages/InvoiceDetails"
 import NotFound from "./pages/NotFound"
 import ClientManagement from "./pages/ClientManagement"
+import { DashboardLayout } from "./components/dashboard/DashboardLayout"
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Dashboard />,
+    element: <DashboardLayout><Dashboard /></DashboardLayout>,
   },
   {
     path: "/auth",
@@ -23,39 +24,39 @@ export const router = createBrowserRouter([
   },
   {
     path: "/work-orders",
-    element: <WorkOrders />,
+    element: <DashboardLayout><WorkOrders /></DashboardLayout>,
   },
   {
     path: "/work-orders/:id",
-    element: <EditWorkOrder />,
+    element: <DashboardLayout><EditWorkOrder /></DashboardLayout>,
   },
   {
     path: "/service-types",
-    element: <ServiceTypes />,
+    element: <DashboardLayout><ServiceTypes /></DashboardLayout>,
   },
   {
     path: "/service-bays",
-    element: <ServiceBays />,
+    element: <DashboardLayout><ServiceBays /></DashboardLayout>,
   },
   {
     path: "/users",
-    element: <UserManagement />,
+    element: <DashboardLayout><UserManagement /></DashboardLayout>,
   },
   {
     path: "/quotes",
-    element: <Quotes />,
+    element: <DashboardLayout><Quotes /></DashboardLayout>,
   },
   {
     path: "/invoices",
-    element: <Invoices />,
+    element: <DashboardLayout><Invoices /></DashboardLayout>,
   },
   {
     path: "/invoices/:id",
-    element: <InvoiceDetails />,
+    element: <DashboardLayout><InvoiceDetails /></DashboardLayout>,
   },
   {
     path: "/clients",
-    element: <ClientManagement />,
+    element: <DashboardLayout><ClientManagement /></DashboardLayout>,
   },
   {
     path: "*",
