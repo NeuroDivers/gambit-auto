@@ -2,13 +2,20 @@ import { WorkOrder } from "../types"
 import { useState } from "react"
 import { WorkOrderDetailsDialog } from "./WorkOrderDetailsDialog"
 import { cn } from "@/lib/utils"
+import { format } from "date-fns"
 
 type WorkOrderCardProps = {
   workOrder: WorkOrder
+  className?: string
 }
 
-export function WorkOrderCard({ workOrder }: WorkOrderCardProps) {
+export function WorkOrderCard({ workOrder, className }: WorkOrderCardProps) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent the click from reaching the calendar day
+    setIsDetailsOpen(true)
+  }
 
   const getStatusStyle = (status: string) => {
     switch (status) {
@@ -30,9 +37,10 @@ export function WorkOrderCard({ workOrder }: WorkOrderCardProps) {
       <div 
         className={cn(
           "relative text-sm p-2 rounded truncate cursor-pointer transition-colors shadow-sm",
-          getStatusStyle(workOrder.status)
+          getStatusStyle(workOrder.status),
+          className
         )}
-        onClick={() => setIsDetailsOpen(true)}
+        onClick={handleClick}
       >
         <div className="truncate font-semibold">
           {workOrder.first_name} {workOrder.last_name}
@@ -40,6 +48,11 @@ export function WorkOrderCard({ workOrder }: WorkOrderCardProps) {
         <div className="text-inherit opacity-100 truncate">
           {workOrder.vehicle_make} {workOrder.vehicle_model}
         </div>
+        {workOrder.start_time && (
+          <div className="text-xs opacity-70">
+            {format(new Date(workOrder.start_time), 'h:mm a')}
+          </div>
+        )}
       </div>
       <WorkOrderDetailsDialog
         workOrder={workOrder}
