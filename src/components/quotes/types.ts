@@ -8,7 +8,7 @@ export type QuoteItem = {
 export type QuoteFormValues = {
   notes: string
   status: string
-  quote_items: QuoteItem[]
+  service_items: QuoteItem[]
   customer_first_name: string
   customer_last_name: string
   customer_email: string

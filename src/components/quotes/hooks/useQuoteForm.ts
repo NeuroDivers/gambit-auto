@@ -17,7 +17,7 @@ const formSchema = z.object({
   vehicle_year: z.number().min(1900).max(new Date().getFullYear() + 1),
   vehicle_vin: z.string().min(1, "Vehicle VIN is required"),
   notes: z.string().optional(),
-  quote_items: z.array(z.object({
+  service_items: z.array(z.object({
     service_name: z.string(),
     description: z.string().optional(),
     quantity: z.number(),
@@ -47,7 +47,7 @@ export function useQuoteForm({ quote, onSuccess }: UseQuoteFormProps = {}) {
       vehicle_year: quote.vehicle_year || new Date().getFullYear(),
       vehicle_vin: quote.vehicle_vin || '',
       notes: quote.notes || '',
-      quote_items: quote.quote_items || []
+      service_items: quote.quote_items || []
     } : {
       customer_first_name: '',
       customer_last_name: '',
@@ -59,7 +59,7 @@ export function useQuoteForm({ quote, onSuccess }: UseQuoteFormProps = {}) {
       vehicle_year: new Date().getFullYear(),
       vehicle_vin: '',
       notes: '',
-      quote_items: []
+      service_items: []
     }
   })
 
@@ -68,7 +68,7 @@ export function useQuoteForm({ quote, onSuccess }: UseQuoteFormProps = {}) {
       console.log('Starting quote submission with values:', values)
       
       // Calculate totals
-      const subtotal = values.quote_items.reduce(
+      const subtotal = values.service_items.reduce(
         (sum, item) => sum + (item.quantity * item.unit_price),
         0
       )
@@ -124,11 +124,12 @@ export function useQuoteForm({ quote, onSuccess }: UseQuoteFormProps = {}) {
         }
 
         // Insert new quote items
-        if (values.quote_items.length > 0) {
+        if (values.service_items.length > 0) {
+          console.log('Inserting quote items:', values.service_items)
           const { error: itemsError } = await supabase
             .from("quote_items")
             .insert(
-              values.quote_items.map(item => ({
+              values.service_items.map(item => ({
                 quote_id: quote.id,
                 service_name: item.service_name,
                 description: item.description || '',
@@ -185,12 +186,12 @@ export function useQuoteForm({ quote, onSuccess }: UseQuoteFormProps = {}) {
         }
 
         // Insert quote items
-        if (values.quote_items.length > 0) {
-          console.log('Inserting quote items:', values.quote_items)
+        if (values.service_items.length > 0) {
+          console.log('Inserting quote items:', values.service_items)
           const { error: itemsError } = await supabase
             .from("quote_items")
             .insert(
-              values.quote_items.map(item => ({
+              values.service_items.map(item => ({
                 quote_id: newQuote.id,
                 service_name: item.service_name,
                 description: item.description || '',
