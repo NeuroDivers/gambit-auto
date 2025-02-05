@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { CardDescription, CardTitle } from "@/components/ui/card"
 import { WorkOrderStatusSelect } from "./WorkOrderStatusSelect"
-import { format } from "date-fns"
+import { format, parseISO } from "date-fns"
 import { WorkOrder } from "../types"
 
 type WorkOrderCardHeaderProps = {
@@ -17,7 +17,7 @@ export function WorkOrderCardHeader({ request }: WorkOrderCardHeaderProps) {
             {request.first_name} {request.last_name}
           </span>
           <Badge variant="outline" className="text-xs font-normal bg-background/50">
-            {format(new Date(request.created_at), "MMM d, yyyy")}
+            {format(parseISO(request.created_at), "MMM d, yyyy")}
           </Badge>
         </CardTitle>
         <CardDescription className="text-sm flex items-center gap-2">
