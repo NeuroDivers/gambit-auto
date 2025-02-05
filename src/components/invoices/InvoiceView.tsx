@@ -4,10 +4,13 @@ import { InvoicePrintPreview } from './sections/InvoicePrintPreview'
 import { InvoiceFormValues } from "./types"
 import { useInvoiceData } from "./hooks/useInvoiceData"
 import { useInvoiceMutation } from "./hooks/useInvoiceMutation"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
+import { useReactToPrint } from 'react-to-print'
+import { Button } from "@/components/ui/button"
+import { Printer } from "lucide-react"
 
 type InvoiceViewProps = {
   invoiceId?: string
@@ -18,6 +21,7 @@ type InvoiceViewProps = {
 export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps) {
   const { data: invoice, isLoading: isInvoiceLoading } = useInvoiceData(invoiceId)
   const updateInvoiceMutation = useInvoiceMutation(invoiceId)
+  const printRef = useRef<HTMLDivElement>(null)
 
   // Also fetch business profile data which is needed for the invoice
   const { data: businessProfile, isLoading: isBusinessLoading } = useQuery({
@@ -32,6 +36,12 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
       if (error) throw error
       return data
     },
+  })
+
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
+    onAfterPrint: () => toast.success("Invoice printed successfully"),
+    onPrintError: () => toast.error("Failed to print invoice")
   })
 
   const form = useForm<InvoiceFormValues>({
@@ -129,5 +139,20 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
     )
   }
 
-  return <InvoicePrintPreview invoice={invoice} businessProfile={businessProfile} />
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-end">
+        <Button
+          onClick={handlePrint}
+          className="gap-2"
+        >
+          <Printer className="h-4 w-4" />
+          Print Invoice
+        </Button>
+      </div>
+      <div ref={printRef}>
+        <InvoicePrintPreview invoice={invoice} businessProfile={businessProfile} />
+      </div>
+    </div>
+  )
 }
