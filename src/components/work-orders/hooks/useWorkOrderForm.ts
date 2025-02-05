@@ -2,10 +2,9 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { WorkOrder, WorkOrderFormValues } from "../types"
-import { useToast } from "@/hooks/use-toast"
-import { useQueryClient } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
+import { useWorkOrderSubmission } from "./useWorkOrderSubmission"
 import { useEffect } from "react"
+import { supabase } from "@/integrations/supabase/client"
 
 const formSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
@@ -29,8 +28,7 @@ const formSchema = z.object({
 })
 
 export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) {
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
+  const { submitWorkOrder } = useWorkOrderSubmission()
 
   const form = useForm<WorkOrderFormValues>({
     resolver: zodResolver(formSchema),
@@ -86,118 +84,9 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void) 
   }, [workOrder?.id, form])
 
   const onSubmit = async (values: WorkOrderFormValues) => {
-    console.log("Form values being submitted:", values)
-    try {
-      if (workOrder) {
-        console.log("Updating work order:", workOrder.id)
-        // Update work order
-        const { error: workOrderError } = await supabase
-          .from("work_orders")
-          .update({
-            first_name: values.first_name,
-            last_name: values.last_name,
-            email: values.email,
-            phone_number: values.phone_number,
-            contact_preference: values.contact_preference,
-            vehicle_make: values.vehicle_make,
-            vehicle_model: values.vehicle_model,
-            vehicle_year: values.vehicle_year,
-            vehicle_serial: values.vehicle_serial,
-            additional_notes: values.additional_notes,
-            address: values.address,
-            scheduled_date: values.scheduled_date?.toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .eq("id", workOrder.id)
-
-        if (workOrderError) {
-          console.error("Error updating work order:", workOrderError)
-          throw workOrderError
-        }
-
-        // Update work order services
-        // First, delete existing services
-        const { error: deleteError } = await supabase
-          .from('work_order_services')
-          .delete()
-          .eq('work_order_id', workOrder.id)
-
-        if (deleteError) throw deleteError
-
-        // Then insert new services
-        if (values.service_items.length > 0) {
-          const { error: servicesError } = await supabase
-            .from('work_order_services')
-            .insert(
-              values.service_items.map(item => ({
-                work_order_id: workOrder.id,
-                service_id: item.service_id,
-                quantity: item.quantity,
-                unit_price: item.unit_price
-              }))
-            )
-
-          if (servicesError) throw servicesError
-        }
-
-        // Refresh work orders list and call success callback
-        await queryClient.invalidateQueries({ queryKey: ["workOrder", workOrder.id] })
-        await queryClient.invalidateQueries({ queryKey: ["workOrders"] })
-        onSuccess?.()
-      } else {
-        // Insert new work order
-        const { data: workOrder, error: workOrderError } = await supabase
-          .from("work_orders")
-          .insert({
-            first_name: values.first_name,
-            last_name: values.last_name,
-            email: values.email,
-            phone_number: values.phone_number,
-            contact_preference: values.contact_preference,
-            vehicle_make: values.vehicle_make,
-            vehicle_model: values.vehicle_model,
-            vehicle_year: values.vehicle_year,
-            vehicle_serial: values.vehicle_serial,
-            additional_notes: values.additional_notes,
-            address: values.address,
-            scheduled_date: values.scheduled_date?.toISOString(),
-            status: "pending"
-          })
-          .select()
-          .single()
-
-        if (workOrderError) throw workOrderError
-
-        // Insert service items only for new work orders
-        if (values.service_items.length > 0) {
-          const { error: servicesError } = await supabase
-            .from("work_order_services")
-            .insert(
-              values.service_items.map(item => ({
-                work_order_id: workOrder.id,
-                service_id: item.service_id,
-                quantity: item.quantity,
-                unit_price: item.unit_price
-              }))
-            )
-
-          if (servicesError) throw servicesError
-        }
-
-        // Refresh work orders list and call success callback
-        await queryClient.invalidateQueries({ queryKey: ["workOrders"] })
-        onSuccess?.()
-      }
-
-      // Reset form
-      form.reset()
-    } catch (error: any) {
-      console.error("Error saving work order:", error)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to save work order",
-      })
+    const success = await submitWorkOrder(values, workOrder?.id)
+    if (success) {
+      onSuccess?.()
     }
   }
 
