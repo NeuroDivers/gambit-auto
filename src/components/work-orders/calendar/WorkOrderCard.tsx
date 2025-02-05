@@ -1,7 +1,7 @@
 import { WorkOrder } from "../types"
+import { cn } from "@/lib/utils"
 import { useState } from "react"
 import { WorkOrderDetailsDialog } from "./WorkOrderDetailsDialog"
-import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 
 type WorkOrderCardProps = {
@@ -10,11 +10,11 @@ type WorkOrderCardProps = {
 }
 
 export function WorkOrderCard({ workOrder, className }: WorkOrderCardProps) {
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+  const [showDetails, setShowDetails] = useState(false)
 
   const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setIsDetailsOpen(true)
+    e.stopPropagation() // Stop event from bubbling up to calendar day
+    setShowDetails(true)
   }
 
   const getStatusStyle = (status: string) => {
@@ -57,8 +57,8 @@ export function WorkOrderCard({ workOrder, className }: WorkOrderCardProps) {
       </div>
       <WorkOrderDetailsDialog
         workOrder={workOrder}
-        open={isDetailsOpen}
-        onOpenChange={setIsDetailsOpen}
+        open={showDetails}
+        onOpenChange={setShowDetails}
       />
     </>
   )

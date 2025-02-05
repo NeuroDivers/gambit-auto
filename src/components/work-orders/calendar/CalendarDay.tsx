@@ -18,7 +18,8 @@ export function CalendarDay({ date, workOrders, isCurrentMonth }: CalendarDayPro
   const defaultStartTime = setHours(date, 8)
 
   const handleDayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget || (e.target instanceof Element && !e.target.closest('.work-order-card'))) {
+    // Only open create dialog if clicking directly on the day cell
+    if (e.target === e.currentTarget) {
       setShowCreateDialog(true)
     }
   }
