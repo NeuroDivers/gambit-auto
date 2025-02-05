@@ -46,10 +46,7 @@ export const UserEditDialog = ({ user, open, onOpenChange }: UserEditDialogProps
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <UserEditFormFields 
-              form={form}
-              defaultValues={form.getValues()}
-            />
+            <UserEditFormFields form={form} />
             <button 
               type="submit"
               className="w-full px-4 py-2 bg-[#BB86FC] text-white rounded-lg hover:bg-[#BB86FC]/90 transition-colors"

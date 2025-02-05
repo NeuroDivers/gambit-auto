@@ -25,7 +25,6 @@ type FormData = z.infer<typeof formSchema>;
 
 interface UserEditFormFieldsProps {
   form: UseFormReturn<FormData>;
-  defaultValues: FormData;
 }
 
 export const UserEditFormFields = ({ form }: UserEditFormFieldsProps) => {
