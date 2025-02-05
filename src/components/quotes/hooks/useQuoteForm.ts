@@ -1,9 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { QuoteFormValues } from "../types"
+import { Quote, QuoteFormValues } from "../types"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
+import { useQueryClient } from "@tanstack/react-query"
 
 const formSchema = z.object({
   customer_first_name: z.string().min(1, "First name is required"),
@@ -24,12 +25,30 @@ const formSchema = z.object({
   }))
 })
 
-export function useQuoteForm(onSuccess?: () => void) {
+interface UseQuoteFormProps {
+  quote?: Quote
+  onSuccess?: () => void
+}
+
+export function useQuoteForm({ quote, onSuccess }: UseQuoteFormProps = {}) {
   const { toast } = useToast()
+  const queryClient = useQueryClient()
 
   const form = useForm<QuoteFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: quote ? {
+      customer_first_name: quote.customer_first_name || '',
+      customer_last_name: quote.customer_last_name || '',
+      customer_email: quote.customer_email || '',
+      customer_phone: quote.customer_phone || '',
+      customer_address: quote.customer_address || '',
+      vehicle_make: quote.vehicle_make || '',
+      vehicle_model: quote.vehicle_model || '',
+      vehicle_year: quote.vehicle_year || new Date().getFullYear(),
+      vehicle_vin: quote.vehicle_vin || '',
+      notes: quote.notes || '',
+      quote_items: quote.quote_items || []
+    } : {
       quote_items: []
     }
   })
@@ -57,79 +76,139 @@ export function useQuoteForm(onSuccess?: () => void) {
 
       console.log('Calculated values:', { subtotal, taxAmount, total })
 
-      // Generate quote number
-      const { data: quoteNumber, error: quoteNumberError } = await supabase
-        .rpc('generate_quote_number')
+      if (quote) {
+        // Update existing quote
+        const { error: quoteError } = await supabase
+          .from("quotes")
+          .update({
+            customer_first_name: values.customer_first_name,
+            customer_last_name: values.customer_last_name,
+            customer_email: values.customer_email,
+            customer_phone: values.customer_phone,
+            customer_address: values.customer_address,
+            vehicle_make: values.vehicle_make,
+            vehicle_model: values.vehicle_model,
+            vehicle_year: values.vehicle_year,
+            vehicle_vin: values.vehicle_vin,
+            notes: values.notes,
+            subtotal,
+            tax_amount: taxAmount,
+            total
+          })
+          .eq('id', quote.id)
 
-      if (quoteNumberError) {
-        console.error('Error generating quote number:', quoteNumberError)
-        throw new Error('Failed to generate quote number')
-      }
-
-      console.log('Generated quote number:', quoteNumber)
-
-      // Insert quote
-      const { data: quote, error: quoteError } = await supabase
-        .from("quotes")
-        .insert({
-          quote_number: quoteNumber,
-          customer_first_name: values.customer_first_name,
-          customer_last_name: values.customer_last_name,
-          customer_email: values.customer_email,
-          customer_phone: values.customer_phone,
-          customer_address: values.customer_address,
-          vehicle_make: values.vehicle_make,
-          vehicle_model: values.vehicle_model,
-          vehicle_year: values.vehicle_year,
-          vehicle_vin: values.vehicle_vin,
-          notes: values.notes,
-          subtotal,
-          tax_amount: taxAmount,
-          total,
-          status: "draft"
-        })
-        .select()
-        .single()
-
-      if (quoteError) {
-        console.error('Error creating quote:', quoteError)
-        throw new Error('Failed to create quote')
-      }
-
-      console.log('Quote created successfully:', quote)
-
-      // Insert quote items
-      if (values.quote_items.length > 0) {
-        const { error: itemsError } = await supabase
-          .from("quote_items")
-          .insert(
-            values.quote_items.map(item => ({
-              quote_id: quote.id,
-              service_name: item.service_name,
-              description: item.description || '',
-              quantity: item.quantity,
-              unit_price: item.unit_price
-            }))
-          )
-
-        if (itemsError) {
-          console.error('Error creating quote items:', itemsError)
-          throw new Error('Failed to create quote items')
+        if (quoteError) {
+          console.error('Error updating quote:', quoteError)
+          throw new Error('Failed to update quote')
         }
+
+        // Delete existing quote items
+        const { error: deleteError } = await supabase
+          .from("quote_items")
+          .delete()
+          .eq('quote_id', quote.id)
+
+        if (deleteError) {
+          console.error('Error deleting quote items:', deleteError)
+          throw new Error('Failed to delete quote items')
+        }
+
+        // Insert new quote items
+        if (values.quote_items.length > 0) {
+          const { error: itemsError } = await supabase
+            .from("quote_items")
+            .insert(
+              values.quote_items.map(item => ({
+                quote_id: quote.id,
+                service_name: item.service_name,
+                description: item.description || '',
+                quantity: item.quantity,
+                unit_price: item.unit_price
+              }))
+            )
+
+          if (itemsError) {
+            console.error('Error creating quote items:', itemsError)
+            throw new Error('Failed to create quote items')
+          }
+        }
+
+        toast({
+          title: "Success",
+          description: "Quote updated successfully",
+        })
+      } else {
+        // Generate quote number for new quote
+        const { data: quoteNumber, error: quoteNumberError } = await supabase
+          .rpc('generate_quote_number')
+
+        if (quoteNumberError) {
+          console.error('Error generating quote number:', quoteNumberError)
+          throw new Error('Failed to generate quote number')
+        }
+
+        // Insert new quote
+        const { data: newQuote, error: quoteError } = await supabase
+          .from("quotes")
+          .insert({
+            quote_number: quoteNumber,
+            customer_first_name: values.customer_first_name,
+            customer_last_name: values.customer_last_name,
+            customer_email: values.customer_email,
+            customer_phone: values.customer_phone,
+            customer_address: values.customer_address,
+            vehicle_make: values.vehicle_make,
+            vehicle_model: values.vehicle_model,
+            vehicle_year: values.vehicle_year,
+            vehicle_vin: values.vehicle_vin,
+            notes: values.notes,
+            subtotal,
+            tax_amount: taxAmount,
+            total,
+            status: "draft"
+          })
+          .select()
+          .single()
+
+        if (quoteError) {
+          console.error('Error creating quote:', quoteError)
+          throw new Error('Failed to create quote')
+        }
+
+        // Insert quote items
+        if (values.quote_items.length > 0) {
+          const { error: itemsError } = await supabase
+            .from("quote_items")
+            .insert(
+              values.quote_items.map(item => ({
+                quote_id: newQuote.id,
+                service_name: item.service_name,
+                description: item.description || '',
+                quantity: item.quantity,
+                unit_price: item.unit_price
+              }))
+            )
+
+          if (itemsError) {
+            console.error('Error creating quote items:', itemsError)
+            throw new Error('Failed to create quote items')
+          }
+        }
+
+        toast({
+          title: "Success",
+          description: "Quote created successfully",
+        })
       }
 
-      toast({
-        title: "Success",
-        description: "Quote created successfully",
-      })
-
+      await queryClient.invalidateQueries({ queryKey: ["quotes"] })
       onSuccess?.()
     } catch (error: any) {
       console.error('Form submission error:', error)
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || 'Failed to create quote'
+        description: error.message || 'Failed to save quote'
       })
     }
   }

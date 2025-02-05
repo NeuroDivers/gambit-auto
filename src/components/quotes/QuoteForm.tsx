@@ -13,7 +13,7 @@ interface QuoteFormProps {
 }
 
 export function QuoteForm({ quote, onSuccess }: QuoteFormProps) {
-  const { form, onSubmit } = useQuoteForm(onSuccess, quote)
+  const { form, onSubmit } = useQuoteForm({ quote, onSuccess })
 
   return (
     <Form {...form}>
