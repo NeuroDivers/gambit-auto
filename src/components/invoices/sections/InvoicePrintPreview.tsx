@@ -1,9 +1,4 @@
 import { Invoice } from '../types'
-import { InvoiceHeader } from './InvoiceHeader'
-import { CustomerInfo } from './CustomerInfo'
-import { ServicesList } from './ServicesList'
-import { InvoiceTotals } from './InvoiceTotals'
-import { InvoiceFooter } from './InvoiceFooter'
 import { Tables } from '@/integrations/supabase/types'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
@@ -137,8 +132,8 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
           )}
           {qstTax && (
             <div className="flex justify-between text-gray-600">
-              <span>TVQ/QST ({qstTax.tax_rate}%)</span>
-              <span>${qstAmount.toFixed(2)}</span>
+              <span>TVQ/QST ({qstTax.tax_rate.toFixed(3)}%)</span>
+              <span>${qstAmount.toFixed(3)}</span>
             </div>
           )}
           <div className="flex justify-between font-bold pt-2 border-t text-black">
