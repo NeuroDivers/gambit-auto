@@ -109,13 +109,8 @@ const PublicInvoiceWrapper = () => {
     return <Navigate to={`/invoices/${invoiceId}`} replace />;
   }
 
-  // If user is logged in (non-admin), they can view the invoice directly
-  if (session) {
-    return <Outlet />;
-  }
-
   // If not verified and not logged in, show verification
-  if (!isVerified) {
+  if (!isVerified && !session) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
         <div className="container mx-auto py-12">
@@ -130,7 +125,7 @@ const PublicInvoiceWrapper = () => {
     );
   }
 
-  // If verified, show the invoice
+  // If verified or logged in, show the invoice
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
       <div className="container mx-auto py-12">

@@ -2,14 +2,12 @@ import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { InvoiceView } from "@/components/invoices/InvoiceView"
-import { useParams, useLocation, useNavigate } from "react-router-dom"
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout"
+import { useParams, useLocation } from "react-router-dom"
 import { useAdminStatus } from "@/hooks/useAdminStatus"
 
 export default function InvoiceDetails() {
   const { id } = useParams()
   const location = useLocation()
-  const navigate = useNavigate()
   const isPublicView = !location.pathname.startsWith('/invoices')
   const { isAdmin } = useAdminStatus()
 
@@ -56,20 +54,18 @@ export default function InvoiceDetails() {
     )
   }
 
-  // For authenticated users and admins, show the dashboard layout
+  // For authenticated users and admins
   return (
-    <DashboardLayout onLogout={() => navigate("/auth")}>
-      <div className="container mx-auto py-12">
-        <div className="px-6">
-          <PageBreadcrumbs />
-        </div>
-        <div className="max-w-[1000px] mx-auto">
-          <InvoiceView 
-            invoiceId={id} 
-            showEmailButton={true}
-          />
-        </div>
+    <div className="container mx-auto py-12">
+      <div className="px-6">
+        <PageBreadcrumbs />
       </div>
-    </DashboardLayout>
+      <div className="max-w-[1000px] mx-auto">
+        <InvoiceView 
+          invoiceId={id} 
+          showEmailButton={true}
+        />
+      </div>
+    </div>
   )
 }
