@@ -22,6 +22,7 @@ serve(async (req) => {
     // Check for authorization header
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.error('Missing authorization header')
       throw new Error('Missing authorization header')
     }
 
@@ -38,6 +39,22 @@ serve(async (req) => {
     if (authError || !user) {
       console.error('Authentication error:', authError)
       throw new Error('Unauthorized')
+    }
+
+    // Verify SMTP settings are configured
+    const smtpHost = Deno.env.get("SMTP_HOST")
+    const smtpPort = Deno.env.get("SMTP_PORT")
+    const smtpUser = Deno.env.get("SMTP_USER")
+    const smtpPassword = Deno.env.get("SMTP_PASSWORD")
+
+    if (!smtpHost || !smtpPort || !smtpUser || !smtpPassword) {
+      console.error('SMTP settings not configured:', {
+        host: !!smtpHost,
+        port: !!smtpPort,
+        user: !!smtpUser,
+        password: !!smtpPassword
+      })
+      throw new Error('SMTP settings are not properly configured')
     }
 
     const { invoiceId, recipientEmail }: EmailRequest = await req.json()
@@ -65,15 +82,11 @@ serve(async (req) => {
       throw businessError
     }
 
-    // Verify SMTP settings are configured
-    const smtpHost = Deno.env.get("SMTP_HOST")
-    const smtpPort = Deno.env.get("SMTP_PORT")
-    const smtpUser = Deno.env.get("SMTP_USER")
-    const smtpPassword = Deno.env.get("SMTP_PASSWORD")
-
-    if (!smtpHost || !smtpPort || !smtpUser || !smtpPassword) {
-      throw new Error('SMTP settings are not properly configured')
-    }
+    console.log('Attempting to connect to SMTP server:', {
+      host: smtpHost,
+      port: smtpPort,
+      user: smtpUser
+    })
 
     const client = new SMTPClient({
       connection: {
@@ -147,6 +160,8 @@ serve(async (req) => {
       </html>
     `;
 
+    console.log('Attempting to send email to:', recipientEmail)
+
     await client.send({
       from: smtpUser,
       to: recipientEmail,
@@ -156,6 +171,8 @@ serve(async (req) => {
     });
 
     await client.close();
+
+    console.log('Email sent successfully to:', recipientEmail)
 
     return new Response(
       JSON.stringify({ message: 'Email sent successfully' }),
