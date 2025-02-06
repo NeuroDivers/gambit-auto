@@ -75,14 +75,19 @@ export function SidekickAssignmentField({ form, bayId }: SidekickAssignmentField
               <FormLabel className="text-white/90">Assign Sidekick</FormLabel>
               <FormControl>
                 <Select
-                  value={field.value || undefined}
-                  onValueChange={field.onChange}
+                  value={field.value || "unassigned"}
+                  onValueChange={(value) => {
+                    console.log("Selected sidekick:", value)
+                    field.onChange(value === "unassigned" ? null : value)
+                  }}
                 >
                   <SelectTrigger className="w-full bg-[#221F26]/60 border-border/5 text-white/80">
                     <SelectValue placeholder="Select a sidekick" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1A1F2C] border-border/5">
-                    <SelectItem value="unassigned">None</SelectItem>
+                    <SelectItem value="unassigned" className="hover:bg-primary/10 text-white/80">
+                      None
+                    </SelectItem>
                     {sidekicks.map((sidekick) => (
                       <SelectItem 
                         key={sidekick.id} 

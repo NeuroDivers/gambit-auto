@@ -22,6 +22,7 @@ const formSchema = z.object({
   estimated_duration: z.number().nullable().optional(),
   end_time: z.date().nullable().optional(),
   assigned_bay_id: z.string().nullable().optional(),
+  assigned_sidekick_id: z.string().nullable().optional(),
   service_items: z.array(z.object({
     service_id: z.string(),
     service_name: z.string(),
@@ -51,6 +52,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
       estimated_duration: null,
       end_time: workOrder?.end_time ? new Date(workOrder.end_time) : null,
       assigned_bay_id: workOrder?.assigned_bay_id || null,
+      assigned_sidekick_id: workOrder?.assigned_sidekick_id || null,
       service_items: []
     }
   })
@@ -90,6 +92,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
   }, [workOrder?.id, form])
 
   const onSubmit = async (values: WorkOrderFormValues) => {
+    console.log("Submitting work order with values:", values)
     const success = await submitWorkOrder(values, workOrder?.id)
     if (success) {
       onSuccess?.()
