@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { InvoiceView } from "@/components/invoices/InvoiceView"
 import { InvoiceEmailVerification } from "@/components/invoices/sections/InvoiceEmailVerification"
-import { useParams, useLocation } from "react-router-dom"
+import { useParams, useLocation, useNavigate } from "react-router-dom"
 import { useState } from "react"
 import { useAdminStatus } from "@/hooks/useAdminStatus"
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout"
@@ -11,6 +11,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout"
 export default function InvoiceDetails() {
   const { id } = useParams()
   const location = useLocation()
+  const navigate = useNavigate()
   const isPublicView = !location.pathname.startsWith('/invoices')
   const [isVerified, setIsVerified] = useState(false)
   const { isAdmin, isLoading: isAdminLoading } = useAdminStatus()
@@ -76,7 +77,7 @@ export default function InvoiceDetails() {
       {content}
     </div>
   ) : (
-    <DashboardLayout>
+    <DashboardLayout onLogout={() => navigate("/auth")}>
       {content}
     </DashboardLayout>
   )
