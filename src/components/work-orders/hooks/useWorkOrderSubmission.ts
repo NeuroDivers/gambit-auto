@@ -56,11 +56,24 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
       start_time: values.start_time?.toISOString(),
       estimated_duration: values.estimated_duration ? `${values.estimated_duration} hours` : null,
       end_time: values.end_time?.toISOString(),
+      assigned_bay_id: values.assigned_bay_id === "unassigned" ? null : values.assigned_bay_id,
       updated_at: new Date().toISOString()
     })
     .eq("id", workOrderId)
 
   if (workOrderError) throw workOrderError
+
+  // If a bay is assigned, update the bay's assigned sidekick
+  if (values.assigned_bay_id && values.assigned_bay_id !== "unassigned") {
+    const { error: bayError } = await supabase
+      .from('service_bays')
+      .update({ 
+        assigned_sidekick_id: values.assigned_sidekick_id === "unassigned" ? null : values.assigned_sidekick_id 
+      })
+      .eq('id', values.assigned_bay_id)
+
+    if (bayError) throw bayError
+  }
 
   // Update work order services
   // First, delete existing services
@@ -106,12 +119,25 @@ async function createWorkOrder(values: WorkOrderFormValues) {
       start_time: values.start_time?.toISOString(),
       estimated_duration: values.estimated_duration ? `${values.estimated_duration} hours` : null,
       end_time: values.end_time?.toISOString(),
+      assigned_bay_id: values.assigned_bay_id === "unassigned" ? null : values.assigned_bay_id,
       status: "pending"
     })
     .select()
     .single()
 
   if (workOrderError || !workOrder) throw workOrderError
+
+  // If a bay is assigned, update the bay's assigned sidekick
+  if (values.assigned_bay_id && values.assigned_bay_id !== "unassigned") {
+    const { error: bayError } = await supabase
+      .from('service_bays')
+      .update({ 
+        assigned_sidekick_id: values.assigned_sidekick_id === "unassigned" ? null : values.assigned_sidekick_id 
+      })
+      .eq('id', values.assigned_bay_id)
+
+    if (bayError) throw bayError
+  }
 
   // Insert service items only for new work orders
   if (values.service_items.length > 0) {
