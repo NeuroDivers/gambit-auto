@@ -19,10 +19,26 @@ serve(async (req) => {
   }
 
   try {
+    // Check for authorization header
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('Missing authorization header')
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+
+    // Verify the user is authenticated
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    )
+    
+    if (authError || !user) {
+      console.error('Authentication error:', authError)
+      throw new Error('Unauthorized')
+    }
 
     const { invoiceId, recipientEmail }: EmailRequest = await req.json()
 
@@ -33,7 +49,10 @@ serve(async (req) => {
       .eq('id', invoiceId)
       .single()
 
-    if (invoiceError) throw invoiceError
+    if (invoiceError) {
+      console.error('Error fetching invoice:', invoiceError)
+      throw invoiceError
+    }
 
     // Fetch business profile
     const { data: businessProfile, error: businessError } = await supabaseClient
@@ -41,16 +60,29 @@ serve(async (req) => {
       .select('*')
       .single()
 
-    if (businessError) throw businessError
+    if (businessError) {
+      console.error('Error fetching business profile:', businessError)
+      throw businessError
+    }
+
+    // Verify SMTP settings are configured
+    const smtpHost = Deno.env.get("SMTP_HOST")
+    const smtpPort = Deno.env.get("SMTP_PORT")
+    const smtpUser = Deno.env.get("SMTP_USER")
+    const smtpPassword = Deno.env.get("SMTP_PASSWORD")
+
+    if (!smtpHost || !smtpPort || !smtpUser || !smtpPassword) {
+      throw new Error('SMTP settings are not properly configured')
+    }
 
     const client = new SMTPClient({
       connection: {
-        hostname: Deno.env.get("SMTP_HOST") || "",
-        port: parseInt(Deno.env.get("SMTP_PORT") || "587"),
+        hostname: smtpHost,
+        port: parseInt(smtpPort),
         tls: true,
         auth: {
-          username: Deno.env.get("SMTP_USER") || "",
-          password: Deno.env.get("SMTP_PASSWORD") || "",
+          username: smtpUser,
+          password: smtpPassword,
         },
       },
     });
@@ -116,7 +148,7 @@ serve(async (req) => {
     `;
 
     await client.send({
-      from: Deno.env.get("SMTP_USER") || "",
+      from: smtpUser,
       to: recipientEmail,
       subject: `Invoice #${invoice.invoice_number} from ${businessProfile.company_name}`,
       content: "text/html",
@@ -139,7 +171,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ error: error.message }), 
       { 
-        status: 500,
+        status: error.message === 'Unauthorized' ? 401 : 500,
         headers: { 
           'Content-Type': 'application/json',
           ...corsHeaders
