@@ -15,6 +15,7 @@ export function BusinessProfileForm() {
 
   useEffect(() => {
     if (profile) {
+      setMediaUrl(profile.logo_url || null)
       form.reset({
         company_name: profile.company_name || "",
         phone_number: profile.phone_number || "",
@@ -25,7 +26,6 @@ export function BusinessProfileForm() {
           : defaultBusinessHours,
         logo_url: profile.logo_url || "",
       })
-      setMediaUrl(profile.logo_url)
     }
   }, [profile, form, setMediaUrl, defaultBusinessHours])
 
@@ -37,8 +37,15 @@ export function BusinessProfileForm() {
     await onSubmit(updatedValues)
   }
 
+  const handleLogoUpload = async (file: File) => {
+    await handleFileUpload(file)
+    // Update the form's logo_url field when a new logo is uploaded
+    form.setValue('logo_url', mediaUrl)
+  }
+
   const handleLogoRemove = async () => {
     handleMediaRemove()
+    form.setValue('logo_url', null)
     const currentValues = form.getValues()
     const updatedValues = {
       ...currentValues,
@@ -77,7 +84,7 @@ export function BusinessProfileForm() {
           </Avatar>
           <div className="flex-1">
             <MediaUploadField
-              onFileUpload={handleFileUpload}
+              onFileUpload={handleLogoUpload}
               mediaUrl={mediaUrl}
               uploading={uploading}
               onMediaRemove={handleLogoRemove}
