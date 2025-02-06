@@ -29,6 +29,15 @@ export function BusinessProfileForm() {
     }
   }, [profile, form, setMediaUrl, defaultBusinessHours])
 
+  const handleSubmitWithLogo = async (values: any) => {
+    // Update the form values with the current logo URL
+    const updatedValues = {
+      ...values,
+      logo_url: mediaUrl
+    }
+    await onSubmit(updatedValues)
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-6 animate-pulse">
@@ -49,7 +58,7 @@ export function BusinessProfileForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmitWithLogo)} className="space-y-6">
         <div className="flex items-center gap-6">
           <Avatar className="h-24 w-24">
             <AvatarImage src={mediaUrl || ""} alt="Business Logo" />
