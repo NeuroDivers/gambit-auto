@@ -6,6 +6,8 @@ import { MediaUploadField } from "../work-orders/form-fields/MediaUploadField"
 import { useMediaUpload } from "../work-orders/hooks/useMediaUpload"
 import { useBusinessProfileForm } from "./hooks/useBusinessProfileForm"
 import { useEffect } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Building2 } from "lucide-react"
 
 export function BusinessProfileForm() {
   const { form, profile, isLoading, onSubmit, defaultBusinessHours } = useBusinessProfileForm()
@@ -48,12 +50,24 @@ export function BusinessProfileForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <MediaUploadField
-          onFileUpload={handleFileUpload}
-          mediaUrl={mediaUrl}
-          uploading={uploading}
-          onMediaRemove={handleMediaRemove}
-        />
+        <div className="flex items-center gap-6">
+          <Avatar className="h-24 w-24">
+            <AvatarImage src={mediaUrl || ""} alt="Business Logo" />
+            <AvatarFallback>
+              <Building2 className="h-12 w-12 text-muted-foreground" />
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <MediaUploadField
+              onFileUpload={handleFileUpload}
+              mediaUrl={mediaUrl}
+              uploading={uploading}
+              onMediaRemove={handleMediaRemove}
+              label="Business Logo"
+              description="Upload your business logo. Recommended size: 256x256px"
+            />
+          </div>
+        </div>
         <ContactInfoSection form={form} />
         <BusinessHoursSection form={form} />
         <Button type="submit">Update Business Profile</Button>
