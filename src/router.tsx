@@ -20,9 +20,6 @@ import { useToast } from "./hooks/use-toast"
 import { supabase } from "./integrations/supabase/client"
 import { useQuery } from "@tanstack/react-query"
 import { Outlet, Navigate } from "react-router-dom"
-import { useState } from "react"
-import { InvoiceEmailVerification } from "./components/invoices/sections/InvoiceEmailVerification"
-import { useAdminStatus } from "@/hooks/useAdminStatus"
 
 const DashboardLayoutWrapper = () => {
   const navigate = useNavigate();
@@ -89,68 +86,10 @@ const DashboardLayoutWrapper = () => {
   );
 };
 
-const PublicInvoiceWrapper = () => {
-  const [isVerified, setIsVerified] = useState(false);
-  const { data: session } = useQuery({
-    queryKey: ["session"],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session;
-    },
-  });
-
-  const { isAdmin } = useAdminStatus();
-  const pathname = window.location.pathname;
-  const invoiceId = pathname.split('/').pop();
-
-  // If user is logged in as admin, redirect to the authenticated route
-  if (session && isAdmin) {
-    return <Navigate to={`/invoices/${invoiceId}`} replace />;
-  }
-
-  // If not verified and not logged in, show verification
-  if (!isVerified && !session) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
-        <div className="container mx-auto py-12">
-          <div className="max-w-[1000px] mx-auto">
-            <InvoiceEmailVerification
-              invoiceId={invoiceId!}
-              onVerified={() => setIsVerified(true)}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // If verified or logged in, show the invoice
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
-      <div className="container mx-auto py-12">
-        <div className="max-w-[1000px] mx-auto">
-          <Outlet />
-        </div>
-      </div>
-    </div>
-  );
-};
-
 export const router = createBrowserRouter([
   {
     path: "/auth",
     element: <Auth />,
-  },
-  // Public invoice routes with verification
-  {
-    path: "/i/:id",
-    element: <PublicInvoiceWrapper />,
-    children: [
-      {
-        path: "",
-        element: <InvoiceDetails />,
-      },
-    ]
   },
   {
     element: <DashboardLayoutWrapper />,
@@ -188,6 +127,10 @@ export const router = createBrowserRouter([
         element: <Invoices />,
       },
       {
+        path: "/invoices/:id",
+        element: <InvoiceDetails />,
+      },
+      {
         path: "/clients",
         element: <ClientManagement />,
       },
@@ -202,10 +145,6 @@ export const router = createBrowserRouter([
       {
         path: "/developer-settings",
         element: <DeveloperSettings />,
-      },
-      {
-        path: "/invoices/:id",
-        element: <InvoiceDetails />,
       },
     ]
   },
