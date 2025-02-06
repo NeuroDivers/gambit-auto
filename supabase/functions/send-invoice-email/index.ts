@@ -1,79 +1,67 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency: "CAD",
+  }).format(amount);
 }
 
 serve(async (req) => {
   try {
-    if (req.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders })
+    if (req.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
     }
 
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
-    const authHeader = req.headers.get('Authorization')?.split(' ')[1]
-    if (!authHeader) {
-      throw new Error('No authorization header')
-    }
+    const authHeader = req.headers.get("Authorization")?.split(" ")[1];
+    if (!authHeader) throw new Error("No authorization header");
 
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(authHeader)
-    if (authError || !user) {
-      throw new Error('Not authenticated')
-    }
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(authHeader);
+    if (authError || !user) throw new Error("Not authenticated");
 
-    const { invoiceId } = await req.json()
-    if (!invoiceId) {
-      throw new Error('Invoice ID is required')
-    }
+    const { invoiceId } = await req.json();
+    if (!invoiceId) throw new Error("Invoice ID is required");
 
-    // Fetch only the required fields
+    // ✅ Fetch invoice data
     const { data: invoice, error: invoiceError } = await supabaseClient
-      .from('invoices')
+      .from("invoices")
       .select(`
-        id,
-        invoice_number,
-        due_date,
-        subtotal,
-        tax_amount,
-        total,
-        customer_email,
-        customer_first_name,
-        invoice_items (
-          service_name,
-          quantity,
-          unit_price
-        )
+        id, invoice_number, due_date, subtotal, tax_amount, total, 
+        customer_email, customer_first_name, 
+        invoice_items ( service_name, quantity, unit_price )
       `)
-      .eq('id', invoiceId)
-      .single()
+      .eq("id", invoiceId)
+      .single();
 
-    if (invoiceError || !invoice) {
-      throw new Error('Invoice not found')
-    }
+    console.log("Invoice Data:", invoice);
+    if (invoiceError || !invoice) throw new Error("Invoice not found");
 
+    // ✅ Fetch business profile
     const { data: businessProfile, error: businessError } = await supabaseClient
-      .from('business_profile')
-      .select('company_name, email, phone_number, address')
-      .single()
+      .from("business_profile")
+      .select("company_name, email, phone_number, address")
+      .single();
 
-    if (businessError || !businessProfile) {
-      throw new Error('Business profile not found')
-    }
+    console.log("Business Profile Data:", businessProfile);
+    if (businessError || !businessProfile) throw new Error("Business profile not found");
 
-    const recipientEmail = invoice.customer_email
-    if (!recipientEmail) {
-      throw new Error('Customer email is required')
-    }
+    const recipientEmail = invoice.customer_email;
+    if (!recipientEmail) throw new Error("Customer email is required");
 
-    const appUrl = Deno.env.get('PUBLIC_APP_URL') || 'http://localhost:5173'
-    const invoiceUrl = `${appUrl}/invoices/${invoice.id}`
+    const appUrl = Deno.env.get("PUBLIC_APP_URL") || "http://localhost:5173";
+    const invoiceUrl = `${appUrl}/invoices/${invoice.id}`;
 
     const emailContent = `
       <!DOCTYPE html>
@@ -121,14 +109,16 @@ serve(async (req) => {
                   <th style="text-align: right;">Total</th>
                 </tr>
               </thead>
-              <tbody>${invoice.invoice_items.map((item: any) => `
-                <tr>
-                  <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.service_name}</td>
-                  <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
-                  <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatCurrency(item.unit_price)}</td>
-                  <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatCurrency(item.quantity * item.unit_price)}</td>
-                </tr>
-              `).join('')}</tbody>
+              <tbody>
+                ${(invoice.invoice_items ?? []).map((item: any) => `
+                  <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.service_name}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatCurrency(item.unit_price)}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatCurrency(item.quantity * item.unit_price)}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
               <tfoot>
                 <tr class="total">
                   <td colspan="3" style="text-align: right; padding: 8px;">Subtotal:</td>
@@ -144,7 +134,7 @@ serve(async (req) => {
                 </tr>
               </tfoot>
             </table>
-            
+
             <div style="text-align: center; margin-top: 30px; color: #666;">
               <p>Thank you for your business!</p>
               <p>${businessProfile.company_name}<br>
@@ -154,50 +144,53 @@ serve(async (req) => {
           </div>
         </body>
       </html>
-    `
+    `;
 
-    const client = new SMTPClient({
-      connection: {
-        hostname: Deno.env.get('SMTP_HOST') || '',
-        port: parseInt(Deno.env.get('SMTP_PORT') || '587'),
-        tls: true,
-        auth: {
-          username: Deno.env.get('SMTP_USER') || '',
-          password: Deno.env.get('SMTP_PASSWORD') || '',
-        },
-      },
-    })
+    const response = new Response(
+      JSON.stringify({ message: "Invoice email is being sent" }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
 
-    await client.send({
-      from: Deno.env.get('SMTP_USER') || '',
-      to: recipientEmail,
-      subject: `Invoice ${invoice.invoice_number} from ${businessProfile.company_name}`,
-      html: emailContent,
-    })
+    (async () => {
+      try {
+        const client = new SMTPClient({
+          connection: {
+            hostname: Deno.env.get("SMTP_HOST") || "",
+            port: parseInt(Deno.env.get("SMTP_PORT") || "587"),
+            tls: true,
+            auth: {
+              username: Deno.env.get("SMTP_USER") || "",
+              password: Deno.env.get("SMTP_PASSWORD") || "",
+            },
+          },
+        });
 
-    await client.close()
+        await client.send({
+          from: Deno.env.get("SMTP_USER") || "",
+          to: recipientEmail,
+          subject: `Invoice ${invoice.invoice_number} from ${businessProfile.company_name}`,
+          html: emailContent,
+        });
 
-    return new Response(
-      JSON.stringify({ message: 'Invoice email sent successfully' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-
-  } catch (error) {
-    console.error('Error sending invoice email:', error)
-    
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        await client.close();
+        console.log("Email sent successfully");
+      } catch (error) {
+        console.error("Email sending failed:", error);
       }
-    )
-  }
-})
+    })();
 
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('en-CA', {
-    style: 'currency',
-    currency: 'CAD'
-  }).format(amount)
-}
+    return response;
+  } catch (error) {
+    console.error("Error:", error);
+    return new Response(
+      JSON.stringify({ error: error.message }), 
+      { 
+        status: 500, 
+        headers: { 
+          "Content-Type": "application/json",
+          ...corsHeaders 
+        } 
+      }
+    );
+  }
+});
