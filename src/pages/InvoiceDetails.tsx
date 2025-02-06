@@ -6,6 +6,7 @@ import { InvoiceEmailVerification } from "@/components/invoices/sections/Invoice
 import { useParams, useLocation } from "react-router-dom"
 import { useState } from "react"
 import { useAdminStatus } from "@/hooks/useAdminStatus"
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout"
 
 export default function InvoiceDetails() {
   const { id } = useParams()
@@ -47,28 +48,36 @@ export default function InvoiceDetails() {
     )
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
-      <div className="container mx-auto py-12">
-        {!isPublicView && (
-          <div className="px-6">
-            <PageBreadcrumbs />
-          </div>
-        )}
-        <div className="max-w-[1000px] mx-auto">
-          {isPublicView && !isVerified && !isAdmin ? (
-            <InvoiceEmailVerification 
-              invoiceId={id!} 
-              onVerified={() => setIsVerified(true)} 
-            />
-          ) : (
-            <InvoiceView 
-              invoiceId={id} 
-              showEmailButton={!isPublicView} 
-            />
-          )}
+  const content = (
+    <div className="container mx-auto py-12">
+      {!isPublicView && (
+        <div className="px-6">
+          <PageBreadcrumbs />
         </div>
+      )}
+      <div className="max-w-[1000px] mx-auto">
+        {isPublicView && !isVerified && !isAdmin ? (
+          <InvoiceEmailVerification 
+            invoiceId={id!} 
+            onVerified={() => setIsVerified(true)} 
+          />
+        ) : (
+          <InvoiceView 
+            invoiceId={id} 
+            showEmailButton={!isPublicView} 
+          />
+        )}
       </div>
     </div>
+  )
+
+  return isPublicView ? (
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
+      {content}
+    </div>
+  ) : (
+    <DashboardLayout>
+      {content}
+    </DashboardLayout>
   )
 }
