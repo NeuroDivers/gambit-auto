@@ -38,7 +38,7 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
   }, 0) ?? 0
 
   return (
-    <div className="invoice-preview max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-sm space-y-8">
+    <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-sm space-y-8">
       <div className="flex justify-between items-start">
         <InvoiceBusinessInfo businessProfile={businessProfile} />
         <InvoiceHeader invoice={invoice} />

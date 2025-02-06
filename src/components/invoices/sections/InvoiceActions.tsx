@@ -3,7 +3,7 @@ import { Mail, Printer } from "lucide-react"
 import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
-import * as htmlToImage from 'html-to-image'
+import { UseReactToPrintFn } from "react-to-print"
 
 type InvoiceActionsProps = {
   invoiceId?: string
@@ -16,26 +16,8 @@ export function InvoiceActions({ invoiceId, onPrint }: InvoiceActionsProps) {
   const handleSendEmail = async () => {
     try {
       setIsSending(true)
-      
-      const invoiceElement = document.querySelector('.invoice-preview') as HTMLElement
-      if (!invoiceElement) {
-        throw new Error('Invoice preview element not found')
-      }
-
-      // Convert the invoice to a PNG image with better quality
-      const dataUrl = await htmlToImage.toPng(invoiceElement, {
-        quality: 1.0,
-        pixelRatio: 2
-      })
-
-      // Remove the data URL prefix to get just the base64 data
-      const base64Image = dataUrl.split(',')[1]
-
       const { error } = await supabase.functions.invoke('send-invoice-email', {
-        body: { 
-          invoiceId,
-          invoiceImage: base64Image
-        }
+        body: { invoiceId }
       })
       
       if (error) throw error
