@@ -8,17 +8,21 @@ type MediaUploadFieldProps = {
   mediaUrl: string | null
   uploading: boolean
   onMediaRemove: () => void
+  label?: string
+  description?: string
 }
 
 export function MediaUploadField({
   onFileUpload,
   mediaUrl,
   uploading,
-  onMediaRemove
+  onMediaRemove,
+  label = "Upload Media",
+  description
 }: MediaUploadFieldProps) {
   return (
     <FormItem>
-      <FormLabel>Upload Media</FormLabel>
+      <FormLabel>{label}</FormLabel>
       <div className="space-y-4">
         {mediaUrl ? (
           <div className="relative w-full aspect-video">
@@ -48,6 +52,11 @@ export function MediaUploadField({
             }}
             disabled={uploading}
           />
+        )}
+        {description && (
+          <p className="text-sm text-muted-foreground">
+            {description}
+          </p>
         )}
       </div>
     </FormItem>
