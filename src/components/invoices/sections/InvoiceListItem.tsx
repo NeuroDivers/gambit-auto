@@ -19,6 +19,8 @@ type InvoiceListItemProps = {
 }
 
 export function InvoiceListItem({ invoice, onEdit, onStatusChange }: InvoiceListItemProps) {
+  const serviceNames = invoice.invoice_items?.map((item: any) => item.service_name).join(", ")
+
   return (
     <Link 
       to={`/invoices/${invoice.id}`}
@@ -34,6 +36,9 @@ export function InvoiceListItem({ invoice, onEdit, onStatusChange }: InvoiceList
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 {invoice.customer_email} • {invoice.customer_phone}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                Services: {serviceNames || 'No services listed'}
               </p>
             </div>
             <div className="text-right flex-1">
