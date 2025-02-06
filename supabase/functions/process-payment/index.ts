@@ -61,19 +61,27 @@ serve(async (req) => {
         .eq('id', invoiceId)
     }
 
-    // Create payment intent
-    const paymentIntent = await stripe.paymentIntents.create({
+    // Create payment intent with different configurations based on payment method presence
+    const paymentIntentConfig: any = {
       amount: Math.round(amount * 100), // Convert to cents
       currency: 'cad',
       customer: stripeCustomerId,
-      payment_method: paymentMethodId,
-      confirm: true,
-      return_url: `${Deno.env.get('PUBLIC_APP_URL')}/invoices/${invoiceId}`,
-      automatic_payment_methods: paymentMethodId ? undefined : {
+      automatic_payment_methods: {
         enabled: true,
         allow_redirects: 'always',
       },
-    })
+      return_url: `${Deno.env.get('PUBLIC_APP_URL')}/invoices/${invoiceId}`,
+    }
+
+    // If payment method is provided, update config to use it
+    if (paymentMethodId) {
+      delete paymentIntentConfig.automatic_payment_methods
+      paymentIntentConfig.payment_method = paymentMethodId
+      paymentIntentConfig.confirm = true
+    }
+
+    // Create payment intent
+    const paymentIntent = await stripe.paymentIntents.create(paymentIntentConfig)
 
     // Create payment record
     await supabaseClient.from('payments').insert({
@@ -100,6 +108,7 @@ serve(async (req) => {
       },
     )
   } catch (error) {
+    console.error('Payment processing error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
