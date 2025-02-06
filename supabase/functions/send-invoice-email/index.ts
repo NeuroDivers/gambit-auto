@@ -163,7 +163,7 @@ serve(async (req) => {
     console.log('Attempting to send email to:', recipientEmail)
 
     await client.send({
-      from: smtpUser,
+      from: `Gambit Auto <${smtpUser}>`,
       to: recipientEmail,
       subject: `Invoice #${invoice.invoice_number} from ${businessProfile.company_name}`,
       content: "text/html",
