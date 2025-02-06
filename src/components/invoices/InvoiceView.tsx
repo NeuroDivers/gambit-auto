@@ -4,13 +4,14 @@ import { InvoicePrintPreview } from './sections/InvoicePrintPreview'
 import { InvoiceFormValues } from "./types"
 import { useInvoiceData } from "./hooks/useInvoiceData"
 import { useInvoiceMutation } from "./hooks/useInvoiceMutation"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { useReactToPrint } from 'react-to-print'
 import { InvoiceActions } from "./sections/InvoiceActions"
 import { PrintButton } from "./sections/PrintButton"
+import { EmailVerification } from "./sections/EmailVerification"
 
 type InvoiceViewProps = {
   invoiceId?: string
@@ -20,6 +21,7 @@ type InvoiceViewProps = {
 }
 
 export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: InvoiceViewProps) {
+  const [isVerified, setIsVerified] = useState(false)
   const { data: invoice, isLoading: isInvoiceLoading } = useInvoiceData(invoiceId)
   const updateInvoiceMutation = useInvoiceMutation(invoiceId)
   const printRef = useRef<HTMLDivElement>(null)
@@ -173,6 +175,16 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
         onSubmit={handleSubmit}
         isPending={updateInvoiceMutation.isPending}
         invoiceId={invoiceId || ''}
+      />
+    )
+  }
+
+  // Show verification form for public view if not verified and not admin
+  if (isPublic && !isAdmin && !isVerified) {
+    return (
+      <EmailVerification 
+        correctEmail={invoice?.customer_email || null}
+        onVerified={() => setIsVerified(true)}
       />
     )
   }
