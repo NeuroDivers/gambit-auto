@@ -51,9 +51,7 @@ serve(async (req) => {
     const baseUrl = Deno.env.get('PUBLIC_APP_URL') || 'https://gambit-auto.lovable.app';
     const invoiceUrl = `${baseUrl}/invoices/${invoiceId}`;
 
-    // Configure SMTP client
-    const client = new SmtpClient();
-
+    // Configure email content
     const emailContent = `
       <html>
         <body>
@@ -70,6 +68,9 @@ serve(async (req) => {
         </body>
       </html>
     `;
+
+    // Configure SMTP client
+    const client = new SmtpClient();
 
     await client.connectTLS({
       hostname: Deno.env.get('SMTP_HOST')!,
