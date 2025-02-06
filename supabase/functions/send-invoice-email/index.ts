@@ -63,17 +63,17 @@ serve(async (req) => {
     const appUrl = Deno.env.get('PUBLIC_APP_URL')
     const invoiceUrl = `${appUrl}/invoices/${invoiceId}`
 
-    // Format items table
+    // Format items table with proper HTML
     const itemsTable = invoice.invoice_items.map(item => `
-      <tr>
-        <td style="padding: 8px; border: 1px solid #ddd;">${item.service_name}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${item.quantity}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">$${item.unit_price.toFixed(2)}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">$${(item.quantity * item.unit_price).toFixed(2)}</td>
+      <tr style="border-bottom: 1px solid #eee;">
+        <td style="padding: 8px;">${item.service_name}</td>
+        <td style="padding: 8px;">${item.quantity}</td>
+        <td style="padding: 8px;">$${item.unit_price.toFixed(2)}</td>
+        <td style="padding: 8px;">$${(item.quantity * item.unit_price).toFixed(2)}</td>
       </tr>
     `).join('')
 
-    // Format email content
+    // Format email content with proper HTML structure
     const emailContent = `
       <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
         <div style="padding: 20px; background-color: #f8f9fa; margin-bottom: 20px;">
@@ -86,10 +86,10 @@ serve(async (req) => {
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
           <thead>
             <tr style="background-color: #f8f9fa;">
-              <th style="padding: 8px; border: 1px solid #ddd;">Service</th>
-              <th style="padding: 8px; border: 1px solid #ddd;">Quantity</th>
-              <th style="padding: 8px; border: 1px solid #ddd;">Unit Price</th>
-              <th style="padding: 8px; border: 1px solid #ddd;">Amount</th>
+              <th style="padding: 8px; text-align: left;">Service</th>
+              <th style="padding: 8px; text-align: left;">Quantity</th>
+              <th style="padding: 8px; text-align: left;">Unit Price</th>
+              <th style="padding: 8px; text-align: left;">Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -103,15 +103,15 @@ serve(async (req) => {
           <h3>Total: $${invoice.total.toFixed(2)}</h3>
         </div>
 
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+        <div style="margin-top: 30px;">
           <p>You can view your invoice online at: <a href="${invoiceUrl}">${invoiceUrl}</a></p>
-          
-          <div style="margin-top: 20px; color: #666;">
-            <p>${businessProfile.company_name}</p>
-            <p>${businessProfile.email}</p>
-            <p>${businessProfile.phone_number}</p>
-            <p>${businessProfile.address}</p>
-          </div>
+        </div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+          <p>${businessProfile.company_name}</p>
+          <p>${businessProfile.email}</p>
+          <p>${businessProfile.phone_number}</p>
+          <p>${businessProfile.address}</p>
         </div>
       </div>
     `
