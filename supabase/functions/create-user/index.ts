@@ -12,20 +12,25 @@ serve(async (req) => {
   }
 
   try {
+    // Initialize Supabase Client with Service Role Key
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    // Parse request body
     const { email, password, role, firstName, lastName } = await req.json()
+    if (!email || !password || !role) {
+      throw new Error('Missing required fields: email, password, or role')
+    }
 
-    console.log('Creating user with email:', email, 'and role:', role)
+    console.log('Creating user:', { email, role })
 
-    // Create user with admin API
+    // Create the user using Supabase Admin API (does not affect current session)
     const { data: { user }, error: createUserError } = await supabaseClient.auth.admin.createUser({
       email,
       password,
-      email_confirm: true,
+      email_confirm: true, // Ensure email is confirmed upon creation
       user_metadata: {
         first_name: firstName,
         last_name: lastName,
@@ -33,10 +38,9 @@ serve(async (req) => {
     })
 
     if (createUserError) throw createUserError
-
     if (!user) throw new Error('User creation failed')
 
-    // Create profile
+    // Insert user details into profiles table
     const { error: profileError } = await supabaseClient
       .from('profiles')
       .insert({
@@ -48,7 +52,7 @@ serve(async (req) => {
 
     if (profileError) throw profileError
 
-    // Create user role
+    // Assign the correct role using a Postgres function
     const { error: roleError } = await supabaseClient.rpc('create_user_role', {
       user_id: user.id,
       role_name: role
