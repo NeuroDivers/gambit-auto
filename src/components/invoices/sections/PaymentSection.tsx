@@ -11,6 +11,9 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js"
+import { Input } from "@/components/ui/input"
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form"
+import { useForm } from "react-hook-form"
 
 // Initialize Stripe
 const stripePromise = loadStripe('pk_test_51OpAcWB1FxNNsOFNKJ6RCR2pVvq79iBDqTz3mwYPUEQa8j7G26zfFn3KOVjwV1Fmw6wdpBz4wxjlZwTZrLxgZu0h00Yh1AOwag')
@@ -19,10 +22,19 @@ type PaymentSectionProps = {
   invoice: Invoice
 }
 
+type PaymentFormData = {
+  email: string
+}
+
 function PaymentForm({ invoice, clientSecret }: { invoice: Invoice, clientSecret: string }) {
   const stripe = useStripe()
   const elements = useElements()
   const [isLoading, setIsLoading] = useState(false)
+  const form = useForm<PaymentFormData>({
+    defaultValues: {
+      email: invoice.customer_email || '',
+    }
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,6 +48,11 @@ function PaymentForm({ invoice, clientSecret }: { invoice: Invoice, clientSecret
         elements,
         confirmParams: {
           return_url: `${window.location.origin}/invoices/${invoice.id}`,
+          payment_method_data: {
+            billing_details: {
+              email: form.getValues('email'),
+            }
+          }
         },
       })
 
@@ -51,8 +68,26 @@ function PaymentForm({ invoice, clientSecret }: { invoice: Invoice, clientSecret
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <PaymentElement />
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <Form {...form}>
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input placeholder="your@email.com" {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+      </Form>
+
+      <div className="border rounded-lg p-4">
+        <PaymentElement />
+      </div>
+
       <Button 
         type="submit" 
         disabled={!stripe || isLoading}
