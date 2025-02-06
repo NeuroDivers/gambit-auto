@@ -2,6 +2,25 @@ import { WorkOrder as BaseWorkOrder } from "@/types"
 
 export type WorkOrder = BaseWorkOrder
 
+export type WorkOrderFormProps = {
+  workOrder?: WorkOrder
+  onSuccess?: () => void
+  defaultStartTime?: Date
+}
+
+export type ServiceItemType = {
+  service_id: string
+  service_name: string
+  quantity: number
+  unit_price: number
+}
+
+export type ServiceListProps = {
+  workOrderServices: ServiceItemType[]
+  onServicesChange: (services: ServiceItemType[]) => void
+  disabled?: boolean
+}
+
 export type WorkOrderFormValues = {
   first_name: string
   last_name: string

@@ -16,7 +16,6 @@ interface ServiceItemFormProps {
 
 export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: ServiceItemFormProps) {
   useEffect(() => {
-    // Find the service_id based on service_name when component mounts
     if (item.service_name && !item.service_id) {
       const matchingService = services.find(service => service.name === item.service_name)
       if (matchingService) {
@@ -26,6 +25,8 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
   }, [item.service_name, item.service_id, services, index, onUpdate])
 
   const handleServiceSelect = (serviceId: string) => {
+    if (!serviceId) return // Prevent empty string values
+    
     const selectedService = services.find(service => service.id === serviceId)
     if (selectedService) {
       onUpdate(index, "service_id", serviceId)
@@ -50,7 +51,7 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
         <div className="space-y-2">
           <Label>Service</Label>
           <Select
-            value={item.service_id || ''}
+            value={item.service_id || undefined}
             onValueChange={handleServiceSelect}
           >
             <SelectTrigger>
