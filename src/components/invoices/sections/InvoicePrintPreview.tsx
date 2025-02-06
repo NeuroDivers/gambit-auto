@@ -52,21 +52,21 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
               }}
             />
           )}
-          <div className="space-y-1">
+          <div className="space-y-1 text-[#9b87f5]">
             <h1 className="text-xl font-bold">{businessProfile.company_name}</h1>
-            <p className="text-sm text-gray-600 whitespace-pre-wrap">{businessProfile.address}</p>
-            <p className="text-sm text-gray-600">{businessProfile.phone_number}</p>
-            <p className="text-sm text-gray-600">{businessProfile.email}</p>
+            <p className="text-sm whitespace-pre-wrap">{businessProfile.address}</p>
+            <p className="text-sm">{businessProfile.phone_number}</p>
+            <p className="text-sm">{businessProfile.email}</p>
           </div>
         </div>
         <div className="text-right space-y-2">
-          <h2 className="text-2xl font-bold text-purple-500">FACTURE / INVOICE</h2>
+          <h2 className="text-2xl font-bold text-[#9b87f5]">FACTURE / INVOICE</h2>
           {invoice.status && (
             <div className="px-4 py-1.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800 inline-block uppercase">
               {invoice.status}
             </div>
           )}
-          <div className="text-sm text-gray-600 space-y-1">
+          <div className="text-sm text-[#9b87f5] space-y-1">
             <p>No. de facture / Invoice #: {invoice.invoice_number}</p>
             <p>Date d'émission / Issue Date: {new Date(invoice.created_at).toLocaleDateString()}</p>
             {invoice.due_date && (
@@ -76,39 +76,60 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
         </div>
       </div>
 
-      <div className="space-y-1">
+      <div className="space-y-1 text-[#9b87f5]">
         <h2 className="font-semibold">Facturer à / Bill To:</h2>
         <p>{invoice.customer_first_name} {invoice.customer_last_name}</p>
-        <p className="text-gray-600">{invoice.customer_email}</p>
-        {invoice.customer_phone && <p className="text-gray-600">{invoice.customer_phone}</p>}
-        {invoice.customer_address && <p className="text-gray-600">{invoice.customer_address}</p>}
+        <p>{invoice.customer_email}</p>
+        {invoice.customer_phone && <p>{invoice.customer_phone}</p>}
+        {invoice.customer_address && <p>{invoice.customer_address}</p>}
       </div>
 
-      <ServicesList services={invoice.invoice_items || []} />
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-[#F1F0FB]">
+            <th className="py-2 text-left font-medium text-[#7E69AB]">Service / Service</th>
+            <th className="py-2 text-left font-medium text-[#7E69AB]">Description / Description</th>
+            <th className="py-2 text-right font-medium text-[#7E69AB]">Quantité / Quantity</th>
+            <th className="py-2 text-right font-medium text-[#7E69AB]">Prix unitaire / Unit Price</th>
+            <th className="py-2 text-right font-medium text-[#7E69AB]">Montant / Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {invoice.invoice_items?.map((item, index) => (
+            <tr key={index} className="border-b border-[#F1F0FB]">
+              <td className="py-3 text-[#9b87f5]">{item.service_name}</td>
+              <td className="py-3 text-[#9b87f5]">{item.description}</td>
+              <td className="py-3 text-right text-[#9b87f5]">{item.quantity}</td>
+              <td className="py-3 text-right text-[#9b87f5]">${item.unit_price.toFixed(2)}</td>
+              <td className="py-3 text-right text-[#9b87f5]">${(item.quantity * item.unit_price).toFixed(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
       <div className="flex justify-end">
         <div className="w-64 space-y-2">
-          <div className="flex justify-between text-gray-600">
+          <div className="flex justify-between text-[#9b87f5]">
             <span>Sous-total / Subtotal</span>
             <span>${invoice.subtotal.toFixed(2)}</span>
           </div>
           {gstTax && (
-            <div className="flex justify-between text-gray-600">
+            <div className="flex justify-between text-[#9b87f5]">
               <span>TPS/GST ({gstTax.tax_rate}%)</span>
               <span>${((invoice.subtotal * gstTax.tax_rate) / 100).toFixed(2)}</span>
             </div>
           )}
           {qstTax && (
-            <div className="flex justify-between text-gray-600">
+            <div className="flex justify-between text-[#9b87f5]">
               <span>TVQ/QST ({qstTax.tax_rate}%)</span>
               <span>${((invoice.subtotal * qstTax.tax_rate) / 100).toFixed(2)}</span>
             </div>
           )}
-          <div className="flex justify-between font-bold pt-2 border-t">
+          <div className="flex justify-between font-bold pt-2 border-t text-[#9b87f5]">
             <span>Total / Total</span>
             <span>${invoice.total.toFixed(2)}</span>
           </div>
-          <div className="text-xs text-gray-500 space-y-1 pt-2">
+          <div className="text-xs text-[#9b87f5] space-y-1 pt-2">
             {gstTax && <p>TPS/GST No: {gstTax.tax_number}</p>}
             {qstTax && <p>TVQ/QST No: {qstTax.tax_number}</p>}
           </div>
@@ -126,7 +147,7 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
         </div>
       )}
 
-      <div className="text-center text-sm text-gray-600 space-y-2">
+      <div className="text-center text-sm text-[#9b87f5] space-y-2">
         <p>Merci d'avoir choisi {businessProfile.company_name}</p>
         <p>Thank you for choosing {businessProfile.company_name}</p>
         <p>
