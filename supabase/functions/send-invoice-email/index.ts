@@ -1,18 +1,20 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-Deno.serve(async (req) => {
+serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { invoiceId, recipientEmail } = await req.json();
+    const { invoiceId } = await req.json();
 
     // Create Supabase client
     const supabaseClient = createClient(
@@ -60,10 +62,11 @@ Deno.serve(async (req) => {
           <ul>
             <li>Invoice Number: ${invoice.invoice_number}</li>
             <li>Total Amount: $${invoice.total}</li>
-            <li>Due Date: ${new Date(invoice.due_date).toLocaleDateString()}</li>
+            ${invoice.due_date ? `<li>Due Date: ${new Date(invoice.due_date).toLocaleDateString()}</li>` : ''}
           </ul>
           <p>You can view your invoice online at: <a href="${invoiceUrl}">${invoiceUrl}</a></p>
           <p>Thank you for your business!</p>
+          <p>Best regards,<br>${businessProfile.company_name}</p>
         </body>
       </html>
     `;
@@ -77,13 +80,15 @@ Deno.serve(async (req) => {
 
     await client.send({
       from: businessProfile.email,
-      to: recipientEmail,
+      to: invoice.customer_email || '',
       subject: `Invoice ${invoice.invoice_number} from ${businessProfile.company_name}`,
       content: emailContent,
       html: emailContent,
     });
 
     await client.close();
+
+    console.log('Email sent successfully for invoice:', invoiceId);
 
     return new Response(
       JSON.stringify({ message: 'Email sent successfully' }),
@@ -94,7 +99,7 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error('Error in send-invoice-email function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
