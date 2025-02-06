@@ -26,7 +26,7 @@ export function ServiceBaysList() {
         .from("service_bays")
         .select(`
           *,
-          bay_services!inner (
+          bay_services (
             service_id,
             is_active,
             service_types (
@@ -44,11 +44,11 @@ export function ServiceBaysList() {
       
       return data?.map(bay => ({
         ...bay,
-        bay_services: bay.bay_services.map(service => ({
+        bay_services: bay.bay_services?.map(service => ({
           service_id: service.service_id,
           name: service.service_types.name,
           is_active: service.is_active
-        }))
+        })) || []
       })) || []
     },
   })
