@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form"
 import { EditInvoiceForm } from './sections/EditInvoiceForm'
 import { InvoicePrintPreview } from './sections/InvoicePrintPreview'
@@ -12,6 +13,7 @@ import { useReactToPrint } from 'react-to-print'
 import { InvoiceActions } from "./sections/InvoiceActions"
 import { PrintButton } from "./sections/PrintButton"
 import { EmailVerification } from "./sections/EmailVerification"
+import { PaymentSection } from "./sections/PaymentSection"
 
 type InvoiceViewProps = {
   invoiceId?: string
@@ -205,6 +207,9 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
       <div ref={printRef}>
         <InvoicePrintPreview invoice={invoice} businessProfile={businessProfile} />
       </div>
+      {(isVerified || isAdmin) && invoice && (
+        <PaymentSection invoice={invoice} />
+      )}
     </div>
   )
 }

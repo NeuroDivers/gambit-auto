@@ -1,3 +1,4 @@
+
 export type InvoiceItem = {
   service_name: string
   description: string
@@ -46,4 +47,6 @@ export type Invoice = {
   vehicle_year: number | null
   vehicle_vin: string | null
   invoice_items: InvoiceItem[]
+  payment_status?: string
+  stripe_customer_id?: string | null
 }
