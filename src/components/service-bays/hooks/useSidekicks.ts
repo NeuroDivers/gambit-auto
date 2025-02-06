@@ -14,17 +14,29 @@ export function useSidekicks() {
         .select("user_id")
         .eq("role", "sidekick")
 
-      if (rolesError) throw rolesError
+      if (rolesError) {
+        console.error("Error fetching sidekick roles:", rolesError)
+        throw rolesError
+      }
 
       const userIds = userRoles.map(role => role.user_id)
+
+      if (userIds.length === 0) {
+        console.log("No sidekick roles found")
+        return []
+      }
 
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("id, first_name, last_name")
         .in("id", userIds)
 
-      if (profilesError) throw profilesError
+      if (profilesError) {
+        console.error("Error fetching sidekick profiles:", profilesError)
+        throw profilesError
+      }
 
+      console.log("Fetched sidekicks:", profiles)
       return profiles
     },
   })
