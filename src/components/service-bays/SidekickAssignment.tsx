@@ -17,12 +17,17 @@ export function SidekickAssignment({ bayId, currentSidekickId }: SidekickAssignm
 
   const handleAssignSidekick = async (sidekickId: string | null) => {
     try {
+      console.log("Assigning sidekick:", sidekickId, "to bay:", bayId)
+      
       const { error } = await supabase
         .from("service_bays")
         .update({ assigned_sidekick_id: sidekickId })
         .eq("id", bayId)
 
-      if (error) throw error
+      if (error) {
+        console.error("Error assigning sidekick:", error)
+        throw error
+      }
 
       toast({
         title: "Success",
@@ -31,6 +36,7 @@ export function SidekickAssignment({ bayId, currentSidekickId }: SidekickAssignm
 
       queryClient.invalidateQueries({ queryKey: ["serviceBays"] })
     } catch (error) {
+      console.error("Error in handleAssignSidekick:", error)
       toast({
         title: "Error",
         description: error.message,

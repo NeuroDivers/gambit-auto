@@ -9,6 +9,8 @@ export function useSidekicks() {
     queryKey: ["sidekicks"],
     queryFn: async () => {
       console.log("Fetching sidekicks...")
+      
+      // First get all users with sidekick role
       const { data: userRoles, error: rolesError } = await supabase
         .from("user_roles")
         .select("user_id")
@@ -19,13 +21,14 @@ export function useSidekicks() {
         throw rolesError
       }
 
-      const userIds = userRoles.map(role => role.user_id)
-
-      if (userIds.length === 0) {
+      if (userRoles.length === 0) {
         console.log("No sidekick roles found")
         return []
       }
 
+      const userIds = userRoles.map(role => role.user_id)
+
+      // Then get the corresponding profiles
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("id, first_name, last_name")
