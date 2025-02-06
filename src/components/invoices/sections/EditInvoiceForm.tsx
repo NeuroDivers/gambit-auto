@@ -7,6 +7,9 @@ import { InvoiceNotesField } from "../form-sections/InvoiceNotesField"
 import { CustomerInfoFields } from "../form-sections/CustomerInfoFields"
 import { VehicleInfoFields } from "../form-sections/VehicleInfoFields"
 import { InvoiceServiceItems } from "./InvoiceServiceItems"
+import { InvoiceTotalsDisplay } from "../form-sections/InvoiceTotalsDisplay"
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
 
 type EditInvoiceFormProps = {
   form: UseFormReturn<InvoiceFormValues>
@@ -16,9 +19,45 @@ type EditInvoiceFormProps = {
 }
 
 export function EditInvoiceForm({ form, onSubmit, isPending, invoiceId }: EditInvoiceFormProps) {
+  // Fetch business taxes for calculations
+  const { data: taxes } = useQuery({
+    queryKey: ["business-taxes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("business_taxes")
+        .select("*")
+      
+      if (error) throw error
+      return data
+    },
+  })
+
+  const handleSubmit = (values: InvoiceFormValues) => {
+    // Calculate totals before submitting
+    const subtotal = values.invoice_items.reduce(
+      (sum, item) => sum + item.quantity * item.unit_price,
+      0
+    )
+    
+    const gstTax = taxes?.find(tax => tax.tax_type === 'GST')
+    const qstTax = taxes?.find(tax => tax.tax_type === 'QST')
+    
+    const gstAmount = gstTax ? (subtotal * gstTax.tax_rate) / 100 : 0
+    const qstAmount = qstTax ? (subtotal * qstTax.tax_rate) / 100 : 0
+    const total = subtotal + gstAmount + qstAmount
+
+    // Include calculated values in the submission
+    onSubmit({
+      ...values,
+      subtotal,
+      tax_amount: gstAmount + qstAmount,
+      total
+    })
+  }
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[calc(100vh-8rem)] overflow-y-auto px-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 max-h-[calc(100vh-8rem)] overflow-y-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-6">
             <InvoiceStatusField form={form} />
@@ -53,6 +92,13 @@ export function EditInvoiceForm({ form, onSubmit, isPending, invoiceId }: EditIn
           items={form.watch('invoice_items')}
           setItems={(items) => form.setValue('invoice_items', items)}
         />
+
+        <div className="border-t pt-4">
+          <InvoiceTotalsDisplay 
+            items={form.watch('invoice_items')} 
+            taxes={taxes}
+          />
+        </div>
 
         <InvoiceNotesField form={form} />
 
