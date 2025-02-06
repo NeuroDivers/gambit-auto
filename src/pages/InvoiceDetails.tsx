@@ -2,10 +2,12 @@ import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { InvoiceView } from "@/components/invoices/InvoiceView"
-import { useParams } from "react-router-dom"
+import { useParams, useLocation } from "react-router-dom"
 
 export default function InvoiceDetails() {
   const { id } = useParams()
+  const location = useLocation()
+  const isPublicView = !location.pathname.startsWith('/dashboard')
 
   const { isLoading } = useQuery({
     queryKey: ["invoice", id],
@@ -43,11 +45,13 @@ export default function InvoiceDetails() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
       <div className="container mx-auto py-12">
-        <div className="px-6">
-          <PageBreadcrumbs />
-        </div>
+        {!isPublicView && (
+          <div className="px-6">
+            <PageBreadcrumbs />
+          </div>
+        )}
         <div className="max-w-[1000px] mx-auto">
-          <InvoiceView invoiceId={id} />
+          <InvoiceView invoiceId={id} showEmailButton={!isPublicView} />
         </div>
       </div>
     </div>

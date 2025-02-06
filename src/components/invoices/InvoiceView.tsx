@@ -15,9 +15,10 @@ type InvoiceViewProps = {
   invoiceId?: string
   isEditing?: boolean
   onClose?: () => void
+  showEmailButton?: boolean
 }
 
-export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps) {
+export function InvoiceView({ invoiceId, isEditing, onClose, showEmailButton = true }: InvoiceViewProps) {
   const { data: invoice, isLoading: isInvoiceLoading } = useInvoiceData(invoiceId)
   const updateInvoiceMutation = useInvoiceMutation(invoiceId)
   const printRef = useRef<HTMLDivElement>(null)
@@ -161,6 +162,7 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
       <InvoiceActions
         invoiceId={invoiceId}
         onPrint={handlePrint}
+        showEmailButton={showEmailButton}
       />
       <div ref={printRef}>
         <InvoicePrintPreview invoice={invoice} businessProfile={businessProfile} />
