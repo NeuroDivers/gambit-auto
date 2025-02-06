@@ -37,6 +37,20 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
   const gstTax = taxes?.find(tax => tax.tax_type === 'GST')
   const qstTax = taxes?.find(tax => tax.tax_type === 'QST')
 
+  // Calculate subtotal
+  const subtotal = invoice.invoice_items.reduce((acc, item) => {
+    return acc + (item.quantity * item.unit_price)
+  }, 0)
+
+  // Calculate GST
+  const gstAmount = gstTax ? (subtotal * gstTax.tax_rate) / 100 : 0
+
+  // Calculate QST
+  const qstAmount = qstTax ? (subtotal * qstTax.tax_rate) / 100 : 0
+
+  // Calculate total
+  const total = subtotal + gstAmount + qstAmount
+
   return (
     <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-sm space-y-8">
       <div className="flex justify-between items-start">
@@ -113,23 +127,23 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
         <div className="w-64 space-y-2">
           <div className="flex justify-between text-gray-600">
             <span>Sous-total / Subtotal</span>
-            <span>${invoice.subtotal.toFixed(2)}</span>
+            <span>${subtotal.toFixed(2)}</span>
           </div>
           {gstTax && (
             <div className="flex justify-between text-gray-600">
               <span>TPS/GST ({gstTax.tax_rate}%)</span>
-              <span>${((invoice.subtotal * gstTax.tax_rate) / 100).toFixed(2)}</span>
+              <span>${gstAmount.toFixed(2)}</span>
             </div>
           )}
           {qstTax && (
             <div className="flex justify-between text-gray-600">
               <span>TVQ/QST ({qstTax.tax_rate}%)</span>
-              <span>${((invoice.subtotal * qstTax.tax_rate) / 100).toFixed(2)}</span>
+              <span>${qstAmount.toFixed(2)}</span>
             </div>
           )}
-          <div className="flex justify-between font-bold pt-2 border-t">
+          <div className="flex justify-between font-bold pt-2 border-t text-black">
             <span>Total / Total</span>
-            <span>${invoice.total.toFixed(2)}</span>
+            <span>${total.toFixed(2)}</span>
           </div>
           <div className="text-xs text-gray-500 space-y-1 pt-2">
             {gstTax && <p>TPS/GST No: {gstTax.tax_number}</p>}
