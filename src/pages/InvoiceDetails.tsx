@@ -5,12 +5,14 @@ import { InvoiceView } from "@/components/invoices/InvoiceView"
 import { InvoiceEmailVerification } from "@/components/invoices/sections/InvoiceEmailVerification"
 import { useParams, useLocation } from "react-router-dom"
 import { useState } from "react"
+import { useAdminStatus } from "@/hooks/useAdminStatus"
 
 export default function InvoiceDetails() {
   const { id } = useParams()
   const location = useLocation()
   const isPublicView = !location.pathname.startsWith('/dashboard')
   const [isVerified, setIsVerified] = useState(false)
+  const { isAdmin, isLoading: isAdminLoading } = useAdminStatus()
 
   const { isLoading } = useQuery({
     queryKey: ["invoice", id],
@@ -37,7 +39,7 @@ export default function InvoiceDetails() {
     },
   })
 
-  if (isLoading) {
+  if (isLoading || isAdminLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-pulse text-primary/60 text-lg">Loading...</div>
@@ -54,7 +56,7 @@ export default function InvoiceDetails() {
           </div>
         )}
         <div className="max-w-[1000px] mx-auto">
-          {isPublicView && !isVerified ? (
+          {isPublicView && !isVerified && !isAdmin ? (
             <InvoiceEmailVerification 
               invoiceId={id!} 
               onVerified={() => setIsVerified(true)} 
