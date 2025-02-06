@@ -46,6 +46,8 @@ export function useBusinessProfileForm() {
 
   const onSubmit = async (data: BusinessFormValues) => {
     try {
+      console.log("Submitting form with data:", data) // Debug log
+      
       const { error } = await supabase
         .from("business_profile")
         .upsert({
@@ -55,7 +57,7 @@ export function useBusinessProfileForm() {
           email: data.email,
           address: data.address,
           business_hours: data.business_hours,
-          logo_url: data.logo_url,
+          logo_url: data.logo_url, // Ensure logo_url is included in the upsert
         })
 
       if (error) throw error
@@ -67,6 +69,7 @@ export function useBusinessProfileForm() {
       
       refetch()
     } catch (error: any) {
+      console.error("Error updating business profile:", error) // Debug log
       toast({
         title: "Error",
         description: error.message,
