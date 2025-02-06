@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { invoiceId } = await req.json()
+    const { invoiceId, pdfBase64 } = await req.json()
     console.log('Processing invoice:', invoiceId)
 
     const supabaseClient = createClient(
@@ -90,29 +90,9 @@ serve(async (req) => {
             <p>Date: ${new Date(invoice.created_at).toLocaleDateString()}</p>
           </div>
 
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <thead>
-              <tr style="background-color: #f8f9fa;">
-                <th style="padding: 8px; text-align: left;">Service</th>
-                <th style="padding: 8px; text-align: left;">Quantity</th>
-                <th style="padding: 8px; text-align: left;">Unit Price</th>
-                <th style="padding: 8px; text-align: left;">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemsTable}
-            </tbody>
-          </table>
-
-          <div style="text-align: right; margin-top: 20px;">
-            <p>Subtotal: $${invoice.subtotal.toFixed(2)}</p>
-            <p>Tax: $${invoice.tax_amount.toFixed(2)}</p>
-            <h3>Total: $${invoice.total.toFixed(2)}</h3>
-          </div>
-
-          <div style="margin-top: 30px;">
-            <p>You can view your invoice online at: <a href="${invoiceUrl}">${invoiceUrl}</a></p>
-          </div>
+          <p>Please find your invoice attached to this email.</p>
+          
+          <p>You can also view your invoice online at: <a href="${invoiceUrl}">${invoiceUrl}</a></p>
 
           <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
             <p>${businessProfile.company_name}</p>
@@ -125,12 +105,20 @@ serve(async (req) => {
       </html>
     `
 
-    // Send email with proper content type
+    // Convert base64 PDF to Uint8Array for attachment
+    const pdfBytes = Uint8Array.from(atob(pdfBase64.split(',')[1]), c => c.charCodeAt(0))
+
+    // Send email with proper content type and PDF attachment
     await client.send({
       from: Deno.env.get('SMTP_USER') ?? '',
       to: invoice.customer_email,
       subject: `Invoice #${invoice.invoice_number} from ${businessProfile.company_name}`,
       html: emailContent,
+      attachments: [{
+        filename: `Invoice-${invoice.invoice_number}.pdf`,
+        content: pdfBytes,
+        contentType: 'application/pdf'
+      }],
       headers: {
         'Content-Type': 'text/html; charset=UTF-8'
       }

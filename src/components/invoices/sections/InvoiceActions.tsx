@@ -3,21 +3,34 @@ import { Mail, Printer } from "lucide-react"
 import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
-import { UseReactToPrintFn } from "react-to-print"
+import html2pdf from 'html2pdf.js'
 
 type InvoiceActionsProps = {
   invoiceId?: string
   onPrint: () => void
+  printRef: React.RefObject<HTMLDivElement>
 }
 
-export function InvoiceActions({ invoiceId, onPrint }: InvoiceActionsProps) {
+export function InvoiceActions({ invoiceId, onPrint, printRef }: InvoiceActionsProps) {
   const [isSending, setIsSending] = useState(false)
 
   const handleSendEmail = async () => {
     try {
       setIsSending(true)
+      
+      // Generate PDF from the print preview
+      const element = printRef.current
+      if (!element) {
+        throw new Error('Print preview not found')
+      }
+
+      const pdf = await html2pdf().from(element).outputPdf('datauristring')
+      
       const { error } = await supabase.functions.invoke('send-invoice-email', {
-        body: { invoiceId }
+        body: { 
+          invoiceId,
+          pdfBase64: pdf
+        }
       })
       
       if (error) throw error

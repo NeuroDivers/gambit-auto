@@ -161,6 +161,7 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
       <InvoiceActions
         invoiceId={invoiceId}
         onPrint={handlePrint}
+        printRef={printRef}
       />
       <div ref={printRef}>
         <InvoicePrintPreview invoice={invoice} businessProfile={businessProfile} />
