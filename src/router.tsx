@@ -22,6 +22,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Outlet, Navigate } from "react-router-dom"
 import { useState } from "react"
 import { InvoiceEmailVerification } from "./components/invoices/sections/InvoiceEmailVerification"
+import { useAdminStatus } from "@/hooks/useAdminStatus"
 
 const DashboardLayoutWrapper = () => {
   const navigate = useNavigate();
@@ -103,7 +104,7 @@ const PublicInvoiceWrapper = () => {
 
   // If user is logged in as admin, redirect to the authenticated route
   if (session && isAdmin) {
-    return <Navigate to={`/invoices${window.location.pathname}`} replace />;
+    return <Navigate to={`/invoices${window.location.pathname.replace('/i', '')}`} replace />;
   }
 
   // If user is logged in (non-admin), they can view the invoice directly
