@@ -14,10 +14,11 @@ import { InvoiceActions } from "./sections/InvoiceActions"
 type InvoiceViewProps = {
   invoiceId?: string
   isEditing?: boolean
+  isPublic?: boolean
   onClose?: () => void
 }
 
-export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps) {
+export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: InvoiceViewProps) {
   const { data: invoice, isLoading: isInvoiceLoading } = useInvoiceData(invoiceId)
   const updateInvoiceMutation = useInvoiceMutation(invoiceId)
   const printRef = useRef<HTMLDivElement>(null)
@@ -158,10 +159,12 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
 
   return (
     <div className="space-y-6">
-      <InvoiceActions
-        invoiceId={invoiceId}
-        onPrint={handlePrint}
-      />
+      {!isPublic && (
+        <InvoiceActions
+          invoiceId={invoiceId}
+          onPrint={handlePrint}
+        />
+      )}
       <div ref={printRef}>
         <InvoicePrintPreview invoice={invoice} businessProfile={businessProfile} />
       </div>

@@ -9,6 +9,7 @@ import UserManagement from "./pages/UserManagement"
 import Quotes from "./pages/Quotes"
 import Invoices from "./pages/Invoices"
 import InvoiceDetails from "./pages/InvoiceDetails"
+import PublicInvoiceView from "./pages/PublicInvoiceView"
 import NotFound from "./pages/NotFound"
 import ClientManagement from "./pages/ClientManagement"
 import BusinessSettings from "./pages/BusinessSettings"
@@ -90,6 +91,10 @@ export const router = createBrowserRouter([
   {
     path: "/auth",
     element: <Auth />,
+  },
+  {
+    path: "/i/:id",
+    element: <PublicInvoiceView />,
   },
   {
     element: <DashboardLayoutWrapper />,
