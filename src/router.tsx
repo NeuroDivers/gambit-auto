@@ -101,10 +101,12 @@ const PublicInvoiceWrapper = () => {
   });
 
   const { isAdmin } = useAdminStatus();
+  const pathname = window.location.pathname;
+  const invoiceId = pathname.split('/').pop();
 
   // If user is logged in as admin, redirect to the authenticated route
   if (session && isAdmin) {
-    return <Navigate to={`/invoices${window.location.pathname.replace('/i', '')}`} replace />;
+    return <Navigate to={`/invoices/${invoiceId}`} replace />;
   }
 
   // If user is logged in (non-admin), they can view the invoice directly
@@ -119,7 +121,7 @@ const PublicInvoiceWrapper = () => {
         <div className="container mx-auto py-12">
           <div className="max-w-[1000px] mx-auto">
             <InvoiceEmailVerification
-              invoiceId={window.location.pathname.split('/').pop()!}
+              invoiceId={invoiceId!}
               onVerified={() => setIsVerified(true)}
             />
           </div>
