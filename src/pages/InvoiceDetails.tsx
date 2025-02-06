@@ -49,36 +49,48 @@ export default function InvoiceDetails() {
     )
   }
 
-  const content = (
-    <div className="container mx-auto py-12">
-      {!isPublicView && (
+  // Determine what content to show based on user status and verification
+  const renderContent = () => {
+    if (isPublicView && !isVerified && !isAdmin) {
+      return (
+        <InvoiceEmailVerification 
+          invoiceId={id!} 
+          onVerified={() => setIsVerified(true)} 
+        />
+      )
+    }
+
+    return (
+      <InvoiceView 
+        invoiceId={id} 
+        showEmailButton={!isPublicView} 
+      />
+    )
+  }
+
+  // Wrap content in appropriate layout based on view type
+  if (isPublicView) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
+        <div className="container mx-auto py-12">
+          <div className="max-w-[1000px] mx-auto">
+            {renderContent()}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <DashboardLayout onLogout={() => navigate("/auth")}>
+      <div className="container mx-auto py-12">
         <div className="px-6">
           <PageBreadcrumbs />
         </div>
-      )}
-      <div className="max-w-[1000px] mx-auto">
-        {isPublicView && !isVerified && !isAdmin ? (
-          <InvoiceEmailVerification 
-            invoiceId={id!} 
-            onVerified={() => setIsVerified(true)} 
-          />
-        ) : (
-          <InvoiceView 
-            invoiceId={id} 
-            showEmailButton={!isPublicView} 
-          />
-        )}
+        <div className="max-w-[1000px] mx-auto">
+          {renderContent()}
+        </div>
       </div>
-    </div>
-  )
-
-  return isPublicView ? (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
-      {content}
-    </div>
-  ) : (
-    <DashboardLayout onLogout={() => navigate("/auth")}>
-      {content}
     </DashboardLayout>
   )
 }
