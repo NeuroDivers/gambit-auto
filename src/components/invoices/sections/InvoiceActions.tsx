@@ -17,8 +17,8 @@ export function InvoiceActions({ invoiceId, onPrint }: InvoiceActionsProps) {
     try {
       setIsSending(true)
       
-      // Get the invoice preview element
-      const invoiceElement = document.querySelector('.invoice-preview')
+      // Get the invoice preview element with type assertion
+      const invoiceElement = document.querySelector('.invoice-preview') as HTMLElement
       if (!invoiceElement) {
         throw new Error('Invoice preview element not found')
       }
