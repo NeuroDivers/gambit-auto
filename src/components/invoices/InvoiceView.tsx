@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { useReactToPrint } from 'react-to-print'
 import { InvoiceActions } from "./sections/InvoiceActions"
+import { PrintButton } from "./sections/PrintButton"
 
 type InvoiceViewProps = {
   invoiceId?: string
@@ -183,6 +184,11 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
           invoiceId={invoiceId}
           onPrint={handlePrint}
         />
+      )}
+      {isPublic && !isAdmin && (
+        <div className="flex justify-end">
+          <PrintButton onPrint={handlePrint} />
+        </div>
       )}
       <div ref={printRef}>
         <InvoicePrintPreview invoice={invoice} businessProfile={businessProfile} />
