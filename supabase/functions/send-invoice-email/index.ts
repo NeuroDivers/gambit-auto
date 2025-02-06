@@ -69,36 +69,48 @@ serve(async (req) => {
       </html>
     `;
 
-    // Configure SMTP client
-    const client = new SmtpClient();
+    let client;
+    try {
+      // Configure SMTP client
+      client = new SmtpClient();
 
-    await client.connectTLS({
-      hostname: Deno.env.get('SMTP_HOST')!,
-      port: Number(Deno.env.get('SMTP_PORT')),
-      username: Deno.env.get('SMTP_USER')!,
-      password: Deno.env.get('SMTP_PASSWORD')!,
-    });
+      await client.connectTLS({
+        hostname: Deno.env.get('SMTP_HOST')!,
+        port: Number(Deno.env.get('SMTP_PORT')),
+        username: Deno.env.get('SMTP_USER')!,
+        password: Deno.env.get('SMTP_PASSWORD')!,
+      });
 
-    await client.send({
-      from: businessProfile.email,
-      to: invoice.customer_email || '',
-      subject: `Invoice ${invoice.invoice_number} from ${businessProfile.company_name}`,
-      content: emailContent,
-      html: emailContent,
-    });
+      await client.send({
+        from: businessProfile.email,
+        to: invoice.customer_email || '',
+        subject: `Invoice ${invoice.invoice_number} from ${businessProfile.company_name}`,
+        content: emailContent,
+        html: emailContent,
+      });
 
-    await client.close();
+      console.log('Email sent successfully for invoice:', invoiceId);
 
-    console.log('Email sent successfully for invoice:', invoiceId);
-
-    return new Response(
-      JSON.stringify({ message: 'Email sent successfully' }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
+      return new Response(
+        JSON.stringify({ message: 'Email sent successfully' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    } catch (error) {
+      console.error('SMTP error:', error);
+      throw error;
+    } finally {
+      // Ensure SMTP client is properly closed
+      if (client) {
+        try {
+          await client.close();
+        } catch (closeError) {
+          console.error('Error closing SMTP client:', closeError);
+        }
       }
-    );
-
+    }
   } catch (error) {
     console.error('Error in send-invoice-email function:', error);
     return new Response(
