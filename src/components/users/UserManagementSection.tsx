@@ -2,9 +2,13 @@ import { useState } from "react";
 import { UserList } from "./UserList";
 import { RoleManagement } from "./RoleManagement";
 import { CreateUserDialog } from "./CreateUserDialog";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { useAdminStatus } from "@/hooks/useAdminStatus";
 
 export const UserManagementSection = () => {
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
+  const { isAdmin } = useAdminStatus();
 
   return (
     <div className="space-y-8">
@@ -13,10 +17,12 @@ export const UserManagementSection = () => {
           <h2 className="text-2xl font-bold mb-2 text-white/[0.87]">User Management</h2>
           <p className="text-white/60">Manage users and their roles</p>
         </div>
-        <CreateUserDialog 
-          open={isCreateUserOpen} 
-          onOpenChange={setIsCreateUserOpen} 
-        />
+        {isAdmin && (
+          <Button onClick={() => setIsCreateUserOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Create User
+          </Button>
+        )}
       </div>
       <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
         <div className="space-y-6">
@@ -28,6 +34,10 @@ export const UserManagementSection = () => {
         </div>
         <RoleManagement />
       </div>
+      <CreateUserDialog 
+        open={isCreateUserOpen} 
+        onOpenChange={setIsCreateUserOpen} 
+      />
     </div>
   );
 };

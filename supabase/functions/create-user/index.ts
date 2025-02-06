@@ -17,7 +17,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { email, password, role } = await req.json()
+    const { email, password, role, firstName, lastName } = await req.json()
 
     console.log('Creating user with email:', email, 'and role:', role)
 
@@ -25,12 +25,28 @@ serve(async (req) => {
     const { data: { user }, error: createUserError } = await supabaseClient.auth.admin.createUser({
       email,
       password,
-      email_confirm: true
+      email_confirm: true,
+      user_metadata: {
+        first_name: firstName,
+        last_name: lastName,
+      }
     })
 
     if (createUserError) throw createUserError
 
     if (!user) throw new Error('User creation failed')
+
+    // Create profile
+    const { error: profileError } = await supabaseClient
+      .from('profiles')
+      .insert({
+        id: user.id,
+        email: user.email,
+        first_name: firstName,
+        last_name: lastName,
+      })
+
+    if (profileError) throw profileError
 
     // Create user role
     const { error: roleError } = await supabaseClient.rpc('create_user_role', {
