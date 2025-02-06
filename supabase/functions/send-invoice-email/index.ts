@@ -63,7 +63,7 @@ serve(async (req) => {
     const appUrl = Deno.env.get('PUBLIC_APP_URL')
     const invoiceUrl = `${appUrl}/invoices/${invoiceId}`
 
-    // Format items table
+    // Format items table with proper spacing and no quoted-printable encoding
     const itemsTable = invoice.invoice_items.map(item => `
       <tr>
         <td style="padding: 8px; border: 1px solid #ddd;">${item.service_name}</td>
@@ -73,17 +73,15 @@ serve(async (req) => {
       </tr>
     `).join('')
 
-    // Format email content
+    // Format email content with proper HTML structure
     const emailContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
-        <div style="padding: 20px; background-color: #f8f9fa; margin-bottom: 20px;">
-          <h2>Invoice #${invoice.invoice_number}</h2>
-          <p>From: ${businessProfile.company_name}</p>
-          <p>To: ${invoice.customer_first_name} ${invoice.customer_last_name}</p>
-          <p>Date: ${new Date(invoice.created_at).toLocaleDateString()}</p>
-        </div>
+      <div style="font-family: Arial, sans-serif;">
+        <h2>Invoice #${invoice.invoice_number}</h2>
+        <p><strong>From:</strong> ${businessProfile.company_name}</p>
+        <p><strong>To:</strong> ${invoice.customer_first_name} ${invoice.customer_last_name}</p>
+        <p><strong>Date:</strong> ${new Date(invoice.created_at).toLocaleDateString()}</p>
 
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
           <thead>
             <tr style="background-color: #f8f9fa;">
               <th style="padding: 8px; border: 1px solid #ddd;">Service</th>
@@ -97,30 +95,24 @@ serve(async (req) => {
           </tbody>
         </table>
 
-        <div style="text-align: right; margin-top: 20px;">
-          <p>Subtotal: $${invoice.subtotal.toFixed(2)}</p>
-          <p>Tax: $${invoice.tax_amount.toFixed(2)}</p>
-          <h3>Total: $${invoice.total.toFixed(2)}</h3>
+        <div style="margin-top: 20px;">
+          <p><strong>Subtotal:</strong> $${invoice.subtotal.toFixed(2)}</p>
+          <p><strong>Tax:</strong> $${invoice.tax_amount.toFixed(2)}</p>
+          <p><strong>Total:</strong> $${invoice.total.toFixed(2)}</p>
         </div>
 
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-          <p>You can view your invoice online at: <a href="${invoiceUrl}">${invoiceUrl}</a></p>
-          
-          <div style="margin-top: 20px; color: #666;">
-            <p>${businessProfile.company_name}</p>
-            <p>${businessProfile.email}</p>
-            <p>${businessProfile.phone_number}</p>
-            <p>${businessProfile.address}</p>
-          </div>
-        </div>
+        <p style="margin-top: 30px;">
+          You can view your invoice online at: <a href="${invoiceUrl}">${invoiceUrl}</a>
+        </p>
       </div>
     `
 
-    // Send email
+    // Send email with HTML content type
     await client.send({
       from: Deno.env.get('SMTP_USER') ?? '',
       to: invoice.customer_email,
       subject: `Invoice #${invoice.invoice_number} from ${businessProfile.company_name}`,
+      content: "text/html",
       html: emailContent,
     })
 
