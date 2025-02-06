@@ -1,8 +1,10 @@
+
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { InvoiceView } from "@/components/invoices/InvoiceView"
 import { useParams } from "react-router-dom"
+import { LoadingState } from "@/components/invoices/sections/LoadingState"
 
 export default function InvoiceDetails() {
   const { id } = useParams()
@@ -35,7 +37,7 @@ export default function InvoiceDetails() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-pulse text-primary/60 text-lg">Loading...</div>
+        <LoadingState />
       </div>
     )
   }
