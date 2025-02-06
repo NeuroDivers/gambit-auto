@@ -39,6 +39,8 @@ export function useWorkOrderSubmission() {
 }
 
 async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues) {
+  console.log("Updating work order with values:", values)
+  
   const { error: workOrderError } = await supabase
     .from("work_orders")
     .update({
@@ -103,6 +105,8 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
 }
 
 async function createWorkOrder(values: WorkOrderFormValues) {
+  console.log("Creating work order with values:", values)
+  
   const { data: workOrder, error: workOrderError } = await supabase
     .from("work_orders")
     .insert({

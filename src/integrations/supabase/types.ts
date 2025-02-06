@@ -583,6 +583,7 @@ export type Database = {
           additional_notes: string | null
           address: string | null
           assigned_bay_id: string | null
+          assigned_sidekick_id: string | null
           client_id: string | null
           contact_preference: Database["public"]["Enums"]["contact_preference"]
           created_at: string
@@ -606,6 +607,7 @@ export type Database = {
           additional_notes?: string | null
           address?: string | null
           assigned_bay_id?: string | null
+          assigned_sidekick_id?: string | null
           client_id?: string | null
           contact_preference: Database["public"]["Enums"]["contact_preference"]
           created_at?: string
@@ -629,6 +631,7 @@ export type Database = {
           additional_notes?: string | null
           address?: string | null
           assigned_bay_id?: string | null
+          assigned_sidekick_id?: string | null
           client_id?: string | null
           contact_preference?: Database["public"]["Enums"]["contact_preference"]
           created_at?: string
