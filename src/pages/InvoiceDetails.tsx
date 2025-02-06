@@ -2,12 +2,15 @@ import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { InvoiceView } from "@/components/invoices/InvoiceView"
+import { InvoiceEmailVerification } from "@/components/invoices/sections/InvoiceEmailVerification"
 import { useParams, useLocation } from "react-router-dom"
+import { useState } from "react"
 
 export default function InvoiceDetails() {
   const { id } = useParams()
   const location = useLocation()
   const isPublicView = !location.pathname.startsWith('/dashboard')
+  const [isVerified, setIsVerified] = useState(false)
 
   const { isLoading } = useQuery({
     queryKey: ["invoice", id],
@@ -51,7 +54,14 @@ export default function InvoiceDetails() {
           </div>
         )}
         <div className="max-w-[1000px] mx-auto">
-          <InvoiceView invoiceId={id} showEmailButton={!isPublicView} />
+          {isPublicView && !isVerified ? (
+            <InvoiceEmailVerification 
+              invoiceId={id!} 
+              onVerified={() => setIsVerified(true)} 
+            />
+          ) : (
+            <InvoiceView invoiceId={id} showEmailButton={!isPublicView} />
+          )}
         </div>
       </div>
     </div>
