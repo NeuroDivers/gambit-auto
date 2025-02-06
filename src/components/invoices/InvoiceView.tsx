@@ -23,6 +23,25 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
   const updateInvoiceMutation = useInvoiceMutation(invoiceId)
   const printRef = useRef<HTMLDivElement>(null)
 
+  // Check if user is admin
+  const { data: userRole } = useQuery({
+    queryKey: ["user-role"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return null
+      
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .single()
+      
+      return roleData?.role
+    }
+  })
+
+  const isAdmin = userRole === 'admin'
+
   // Also fetch business profile data which is needed for the invoice
   const { data: businessProfile, isLoading: isBusinessLoading } = useQuery({
     queryKey: ["business-profile"],
@@ -159,7 +178,7 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
 
   return (
     <div className="space-y-6">
-      {!isPublic && (
+      {(!isPublic || isAdmin) && (
         <InvoiceActions
           invoiceId={invoiceId}
           onPrint={handlePrint}
