@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { BayHeader } from "./BayHeader"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { CreateServiceBayDialog } from "./CreateServiceBayDialog"
 import { ServiceBayCard } from "./ServiceBayCard"
+import { useToast } from "@/hooks/use-toast"
 
 interface ServiceBay {
   id: string
@@ -15,10 +16,12 @@ interface ServiceBay {
 
 export function ServiceBaysList() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const { toast } = useToast()
 
-  const { data: serviceBays, isLoading } = useQuery({
+  const { data: serviceBays, isLoading, refetch } = useQuery({
     queryKey: ["serviceBays"],
     queryFn: async () => {
+      console.log("Fetching service bays...")
       const { data, error } = await supabase
         .from("service_bays")
         .select(`
@@ -34,7 +37,10 @@ export function ServiceBaysList() {
         `)
         .order('created_at', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        console.error("Error fetching service bays:", error)
+        throw error
+      }
       
       return data?.map(bay => ({
         ...bay,
@@ -59,6 +65,36 @@ export function ServiceBaysList() {
       return data || []
     },
   })
+
+  // Subscribe to real-time changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('service-bays-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'service_bays'
+        },
+        async (payload) => {
+          console.log('Service bay change detected:', payload)
+          await refetch()
+          
+          if (payload.eventType === 'INSERT') {
+            toast({
+              title: "Service Bay Added",
+              description: "A new service bay has been added.",
+            })
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [refetch, toast])
 
   if (isLoading) {
     return <div className="animate-pulse text-primary/60 text-lg">Loading...</div>
