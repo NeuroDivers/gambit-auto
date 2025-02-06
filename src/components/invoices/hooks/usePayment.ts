@@ -18,7 +18,6 @@ export function usePayment() {
       customerId?: string
       email: string
     }) => {
-      // Use Supabase client's function invocation instead of raw fetch
       const { data, error } = await supabase.functions.invoke('process-payment', {
         body: {
           invoiceId,
@@ -35,9 +34,6 @@ export function usePayment() {
       }
 
       return data
-    },
-    onSuccess: () => {
-      toast.success("Payment processed successfully")
     },
     onError: (error) => {
       toast.error(error.message || "Payment failed")

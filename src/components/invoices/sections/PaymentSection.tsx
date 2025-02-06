@@ -3,15 +3,79 @@ import { Button } from "@/components/ui/button"
 import { usePayment } from "../hooks/usePayment"
 import { Loader2 } from "lucide-react"
 import { Invoice } from "../types"
+import { useState } from "react"
+import { loadStripe } from "@stripe/stripe-js"
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js"
+
+// Initialize Stripe
+const stripePromise = loadStripe('pk_test_51OpAcWB1FxNNsOFNKJ6RCR2pVvq79iBDqTz3mwYPUEQa8j7G26zfFn3KOVjwV1Fmw6wdpBz4wxjlZwTZrLxgZu0h00Yh1AOwag')
 
 type PaymentSectionProps = {
   invoice: Invoice
 }
 
-export function PaymentSection({ invoice }: PaymentSectionProps) {
-  const { mutate: processPayment, isPending } = usePayment()
+function PaymentForm({ invoice, clientSecret }: { invoice: Invoice, clientSecret: string }) {
+  const stripe = useStripe()
+  const elements = useElements()
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handlePayment = () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!stripe || !elements) return
+
+    setIsLoading(true)
+
+    try {
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/invoices/${invoice.id}`,
+        },
+      })
+
+      if (error) {
+        console.error('Payment error:', error)
+        throw error
+      }
+    } catch (error) {
+      console.error('Payment submission error:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <PaymentElement />
+      <Button 
+        type="submit" 
+        disabled={!stripe || isLoading}
+        className="w-full"
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Processing...
+          </>
+        ) : (
+          'Pay Now'
+        )}
+      </Button>
+    </form>
+  )
+}
+
+export function PaymentSection({ invoice }: PaymentSectionProps) {
+  const { mutate: processPayment, isPending, data } = usePayment()
+  const [showPaymentForm, setShowPaymentForm] = useState(false)
+
+  const handlePaymentStart = () => {
     processPayment({
       invoiceId: invoice.id,
       amount: invoice.total,
@@ -36,21 +100,35 @@ export function PaymentSection({ invoice }: PaymentSectionProps) {
             Status: {invoice.payment_status || 'unpaid'}
           </p>
         </div>
-        <Button 
-          onClick={handlePayment} 
-          disabled={isPending || invoice.payment_status === 'succeeded'}
-          className="min-w-[120px]"
-        >
-          {isPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing...
-            </>
-          ) : (
-            'Pay Now'
-          )}
-        </Button>
       </div>
+
+      {!showPaymentForm && !data?.paymentIntent?.client_secret ? (
+        <Button 
+          onClick={() => {
+            setShowPaymentForm(true)
+            handlePaymentStart()
+          }}
+          disabled={isPending}
+          className="w-full"
+        >
+          Proceed to Payment
+        </Button>
+      ) : data?.paymentIntent?.client_secret ? (
+        <Elements 
+          stripe={stripePromise} 
+          options={{
+            clientSecret: data.paymentIntent.client_secret,
+            appearance: {
+              theme: 'stripe',
+            },
+          }}
+        >
+          <PaymentForm 
+            invoice={invoice} 
+            clientSecret={data.paymentIntent.client_secret}
+          />
+        </Elements>
+      ) : null}
     </div>
   )
 }
