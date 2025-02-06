@@ -39,6 +39,7 @@ export default function DeveloperSettings() {
       SMTP_USER: "",
       SMTP_PASSWORD: "",
     },
+    values: smtpConfig, // This will update the form with the fetched values
   })
 
   const onSubmit = async (values: SmtpFormValues) => {
@@ -79,6 +80,7 @@ export default function DeveloperSettings() {
               <CardTitle>SMTP Configuration</CardTitle>
               <CardDescription>
                 Configure the SMTP settings for sending emails from the application.
+                These settings are currently being used for sending invoice emails.
               </CardDescription>
             </CardHeader>
             <CardContent>
