@@ -20,23 +20,5 @@ export type WorkOrderFormValues = {
   estimated_duration?: number | null
   end_time?: Date | null
   assigned_bay_id?: string | null
-}
-
-export type WorkOrderFormProps = {
-  workOrder?: WorkOrder
-  onSuccess?: () => void
-  defaultStartTime?: Date
-}
-
-export type ServiceItemType = {
-  service_id: string
-  service_name: string
-  quantity: number
-  unit_price: number
-}
-
-export type ServiceListProps = {
-  workOrderServices: ServiceItemType[]
-  onServicesChange: (services: ServiceItemType[]) => void
-  disabled?: boolean
+  assigned_sidekick_id?: string | null
 }

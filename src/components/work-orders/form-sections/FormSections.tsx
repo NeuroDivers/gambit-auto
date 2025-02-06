@@ -5,6 +5,7 @@ import { VehicleInfoFields } from "./VehicleInfoFields"
 import { TimeSelectionFields } from "./TimeSelectionFields"
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 import { BayAssignmentField } from "../form-fields/BayAssignmentField"
+import { SidekickAssignmentField } from "../form-fields/SidekickAssignmentField"
 
 type FormSectionsProps = {
   form: UseFormReturn<WorkOrderFormValues>
@@ -13,6 +14,8 @@ type FormSectionsProps = {
 }
 
 export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProps) {
+  const bayId = form.watch("assigned_bay_id")
+
   return (
     <div className="space-y-8">
       <div className="grid gap-8 md:grid-cols-2">
@@ -20,6 +23,7 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
           <CustomerInfoFields form={form} />
           <TimeSelectionFields form={form} />
           <BayAssignmentField form={form} />
+          <SidekickAssignmentField form={form} bayId={bayId} />
         </div>
         <div className="space-y-8">
           <VehicleInfoFields form={form} />
