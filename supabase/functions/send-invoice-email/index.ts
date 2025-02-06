@@ -63,71 +63,85 @@ serve(async (req) => {
     const appUrl = Deno.env.get('PUBLIC_APP_URL')
     const invoiceUrl = `${appUrl}/invoices/${invoiceId}`
 
-    // Format items table with proper spacing and no quoted-printable encoding
+    // Create a clean HTML table for invoice items
     const itemsTable = invoice.invoice_items.map(item => `
       <tr>
-        <td style="padding: 8px; border: 1px solid #ddd;">${item.service_name}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${item.quantity}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">$${item.unit_price.toFixed(2)}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">$${(item.quantity * item.unit_price).toFixed(2)}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #eee;">${item.service_name}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;">$${item.unit_price.toFixed(2)}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;">$${(item.quantity * item.unit_price).toFixed(2)}</td>
       </tr>
     `).join('')
 
-    // Format email content with proper HTML structure
     const emailContent = `
-      <div style="font-family: Arial, sans-serif;">
-        <h2>Invoice #${invoice.invoice_number}</h2>
-        <p><strong>From:</strong> ${businessProfile.company_name}</p>
-        <p><strong>To:</strong> ${invoice.customer_first_name} ${invoice.customer_last_name}</p>
-        <p><strong>Date:</strong> ${new Date(invoice.created_at).toLocaleDateString()}</p>
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="margin-bottom: 30px;">
+            <h2 style="color: #2d3748; margin-bottom: 20px;">Invoice #${invoice.invoice_number}</h2>
+            <p style="margin: 5px 0;"><strong>From:</strong> ${businessProfile.company_name}</p>
+            <p style="margin: 5px 0;"><strong>To:</strong> ${invoice.customer_first_name} ${invoice.customer_last_name}</p>
+            <p style="margin: 5px 0;"><strong>Date:</strong> ${new Date(invoice.created_at).toLocaleDateString()}</p>
+          </div>
 
-        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-          <thead>
-            <tr style="background-color: #f8f9fa;">
-              <th style="padding: 8px; border: 1px solid #ddd;">Service</th>
-              <th style="padding: 8px; border: 1px solid #ddd;">Quantity</th>
-              <th style="padding: 8px; border: 1px solid #ddd;">Unit Price</th>
-              <th style="padding: 8px; border: 1px solid #ddd;">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itemsTable}
-          </tbody>
-        </table>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+            <thead>
+              <tr style="background-color: #f7fafc;">
+                <th style="padding: 12px; text-align: left; border-bottom: 2px solid #eee;">Service</th>
+                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #eee;">Quantity</th>
+                <th style="padding: 12px; text-align: right; border-bottom: 2px solid #eee;">Unit Price</th>
+                <th style="padding: 12px; text-align: right; border-bottom: 2px solid #eee;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsTable}
+            </tbody>
+          </table>
 
-        <div style="margin-top: 20px;">
-          <p><strong>Subtotal:</strong> $${invoice.subtotal.toFixed(2)}</p>
-          <p><strong>Tax:</strong> $${invoice.tax_amount.toFixed(2)}</p>
-          <p><strong>Total:</strong> $${invoice.total.toFixed(2)}</p>
-        </div>
+          <div style="margin-top: 20px; text-align: right;">
+            <p style="margin: 5px 0;"><strong>Subtotal:</strong> $${invoice.subtotal.toFixed(2)}</p>
+            <p style="margin: 5px 0;"><strong>Tax:</strong> $${invoice.tax_amount.toFixed(2)}</p>
+            <p style="margin: 15px 0; font-size: 1.2em;"><strong>Total:</strong> $${invoice.total.toFixed(2)}</p>
+          </div>
 
-        <p style="margin-top: 30px;">
-          You can view your invoice online at: <a href="${invoiceUrl}">${invoiceUrl}</a>
-        </p>
-      </div>
+          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
+            <p>
+              You can view your invoice online at: 
+              <a href="${invoiceUrl}" style="color: #4299e1;">${invoiceUrl}</a>
+            </p>
+          </div>
+        </body>
+      </html>
     `
 
-    // Send email with HTML content type
-    await client.send({
-      from: Deno.env.get('SMTP_USER') ?? '',
-      to: invoice.customer_email,
-      subject: `Invoice #${invoice.invoice_number} from ${businessProfile.company_name}`,
-      content: "text/html",
-      html: emailContent,
-    })
+    try {
+      await client.send({
+        from: Deno.env.get('SMTP_USER') ?? '',
+        to: invoice.customer_email,
+        subject: `Invoice #${invoice.invoice_number} from ${businessProfile.company_name}`,
+        content: "text/html",
+        html: emailContent,
+        encoding: '8bit', // Prevent quoted-printable encoding
+      })
 
-    await client.close()
-    console.log('Email sent successfully to:', invoice.customer_email)
+      console.log('Email sent successfully to:', invoice.customer_email)
 
-    return new Response(
-      JSON.stringify({ message: 'Email sent successfully' }),
-      { 
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
+      return new Response(
+        JSON.stringify({ message: 'Email sent successfully' }),
+        { 
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
         }
-      }
-    )
+      )
+    } finally {
+      await client.close()
+    }
   } catch (error) {
     console.error('Error sending invoice email:', error)
     return new Response(
