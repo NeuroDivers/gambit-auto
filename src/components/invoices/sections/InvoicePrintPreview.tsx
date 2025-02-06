@@ -98,11 +98,11 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
           <tbody>
             {invoice.invoice_items.map((item, index) => (
               <tr key={index} className="border-t">
-                <td className="py-2">{item.service_name}</td>
-                <td className="py-2">{item.description}</td>
-                <td className="text-right py-2">{item.quantity}</td>
-                <td className="text-right py-2">${item.unit_price.toFixed(2)}</td>
-                <td className="text-right py-2">${(item.quantity * item.unit_price).toFixed(2)}</td>
+                <td className="py-2 text-black">{item.service_name}</td>
+                <td className="py-2 text-black">{item.description}</td>
+                <td className="text-right py-2 text-black">{item.quantity}</td>
+                <td className="text-right py-2 text-black">${item.unit_price.toFixed(2)}</td>
+                <td className="text-right py-2 text-black">${(item.quantity * item.unit_price).toFixed(2)}</td>
               </tr>
             ))}
           </tbody>
