@@ -30,16 +30,17 @@ export function BusinessProfileForm() {
   }, [profile, form, setMediaUrl, defaultBusinessHours])
 
   const handleSubmitWithLogo = async (values: any) => {
-    const updatedValues = {
+    console.log("Submitting form with values:", { ...values, logo_url: mediaUrl })
+    await onSubmit({
       ...values,
       logo_url: mediaUrl
-    }
-    await onSubmit(updatedValues)
+    })
   }
 
   const handleLogoUpload = async (file: File) => {
     const uploadedUrl = await handleFileUpload(file)
     if (uploadedUrl) {
+      setMediaUrl(uploadedUrl)
       form.setValue('logo_url', uploadedUrl)
     }
   }
@@ -47,12 +48,12 @@ export function BusinessProfileForm() {
   const handleLogoRemove = async () => {
     handleMediaRemove()
     form.setValue('logo_url', null)
+    setMediaUrl(null)
     const currentValues = form.getValues()
-    const updatedValues = {
+    await onSubmit({
       ...currentValues,
       logo_url: null
-    }
-    await onSubmit(updatedValues)
+    })
   }
 
   if (isLoading) {
