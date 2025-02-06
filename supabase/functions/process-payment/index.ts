@@ -61,23 +61,25 @@ serve(async (req) => {
         .eq('id', invoiceId)
     }
 
-    // Create payment intent with different configurations based on payment method presence
+    // Base payment intent configuration
     const paymentIntentConfig: any = {
       amount: Math.round(amount * 100), // Convert to cents
       currency: 'cad',
       customer: stripeCustomerId,
-      automatic_payment_methods: {
-        enabled: true,
-        allow_redirects: 'always',
-      },
-      return_url: `${Deno.env.get('PUBLIC_APP_URL')}/invoices/${invoiceId}`,
     }
 
-    // If payment method is provided, update config to use it
+    // Add configuration based on payment method presence
     if (paymentMethodId) {
-      delete paymentIntentConfig.automatic_payment_methods
+      // When using a specific payment method, we confirm immediately
       paymentIntentConfig.payment_method = paymentMethodId
       paymentIntentConfig.confirm = true
+      paymentIntentConfig.return_url = `${Deno.env.get('PUBLIC_APP_URL')}/invoices/${invoiceId}`
+    } else {
+      // When no payment method is provided, use automatic payment methods
+      paymentIntentConfig.automatic_payment_methods = {
+        enabled: true,
+        allow_redirects: 'always',
+      }
     }
 
     // Create payment intent
