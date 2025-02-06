@@ -22,10 +22,7 @@ export function useInvoiceMutation(invoiceId?: string) {
           vehicle_make: values.vehicle_make,
           vehicle_model: values.vehicle_model,
           vehicle_year: values.vehicle_year,
-          vehicle_vin: values.vehicle_vin,
-          subtotal: values.subtotal,
-          tax_amount: values.tax_amount,
-          total: values.total
+          vehicle_vin: values.vehicle_vin
         })
         .eq('id', invoiceId)
 

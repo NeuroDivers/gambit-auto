@@ -18,9 +18,6 @@ export type InvoiceFormValues = {
   vehicle_model: string
   vehicle_year: number
   vehicle_vin: string
-  subtotal?: number
-  tax_amount?: number
-  total?: number
 }
 
 export type Invoice = {

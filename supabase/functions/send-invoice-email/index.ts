@@ -1,34 +1,27 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "@supabase/supabase-js";
-import { Resend } from "npm:resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { invoiceId } = await req.json();
-    
-    if (!invoiceId) {
-      throw new Error('Invoice ID is required');
-    }
+    const { invoiceId } = await req.json()
+    console.log('Processing invoice:', invoiceId)
 
-    // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    )
 
-    // Fetch invoice details with items
+    // Fetch invoice with work order details
     const { data: invoice, error: invoiceError } = await supabaseClient
       .from('invoices')
       .select(`
@@ -36,130 +29,124 @@ serve(async (req) => {
         invoice_items (*)
       `)
       .eq('id', invoiceId)
-      .single();
+      .single()
 
-    if (invoiceError || !invoice) {
-      throw new Error('Failed to fetch invoice');
+    if (invoiceError) {
+      console.error('Error fetching invoice:', invoiceError)
+      throw invoiceError
     }
 
     // Fetch business profile
-    const { data: businessProfile, error: businessError } = await supabaseClient
+    const { data: businessProfile, error: profileError } = await supabaseClient
       .from('business_profile')
       .select('*')
-      .limit(1)
-      .single();
+      .single()
 
-    if (businessError || !businessProfile) {
-      throw new Error('Failed to fetch business profile');
+    if (profileError) {
+      console.error('Error fetching business profile:', profileError)
+      throw profileError
     }
 
-    // Generate invoice HTML
-    const invoiceHtml = `
-      <html>
-        <head>
-          <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .header { margin-bottom: 20px; }
-            .company-info { margin-bottom: 20px; }
-            .invoice-details { margin-bottom: 20px; }
-            .customer-info { margin-bottom: 20px; }
-            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-            .totals { text-align: right; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>Invoice from ${businessProfile.company_name}</h1>
-          </div>
+    // Create SMTP client
+    const client = new SMTPClient({
+      connection: {
+        hostname: "smtppro.zoho.com",
+        port: 465,
+        tls: true,
+        auth: {
+          username: Deno.env.get('SMTP_USER') ?? '',
+          password: Deno.env.get('SMTP_PASSWORD') ?? '',
+        },
+      },
+    })
+
+    const appUrl = Deno.env.get('PUBLIC_APP_URL')
+    const invoiceUrl = `${appUrl}/invoices/${invoiceId}`
+
+    // Format items table
+    const itemsTable = invoice.invoice_items.map(item => `
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">${item.service_name}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${item.quantity}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">$${item.unit_price.toFixed(2)}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">$${(item.quantity * item.unit_price).toFixed(2)}</td>
+      </tr>
+    `).join('')
+
+    // Format email content
+    const emailContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
+        <div style="padding: 20px; background-color: #f8f9fa; margin-bottom: 20px;">
+          <h2>Invoice #${invoice.invoice_number}</h2>
+          <p>From: ${businessProfile.company_name}</p>
+          <p>To: ${invoice.customer_first_name} ${invoice.customer_last_name}</p>
+          <p>Date: ${new Date(invoice.created_at).toLocaleDateString()}</p>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <thead>
+            <tr style="background-color: #f8f9fa;">
+              <th style="padding: 8px; border: 1px solid #ddd;">Service</th>
+              <th style="padding: 8px; border: 1px solid #ddd;">Quantity</th>
+              <th style="padding: 8px; border: 1px solid #ddd;">Unit Price</th>
+              <th style="padding: 8px; border: 1px solid #ddd;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsTable}
+          </tbody>
+        </table>
+
+        <div style="text-align: right; margin-top: 20px;">
+          <p>Subtotal: $${invoice.subtotal.toFixed(2)}</p>
+          <p>Tax: $${invoice.tax_amount.toFixed(2)}</p>
+          <h3>Total: $${invoice.total.toFixed(2)}</h3>
+        </div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+          <p>You can view your invoice online at: <a href="${invoiceUrl}">${invoiceUrl}</a></p>
           
-          <div class="company-info">
+          <div style="margin-top: 20px; color: #666;">
             <p>${businessProfile.company_name}</p>
-            <p>${businessProfile.address || ''}</p>
-            <p>${businessProfile.phone_number || ''}</p>
-            <p>${businessProfile.email || ''}</p>
+            <p>${businessProfile.email}</p>
+            <p>${businessProfile.phone_number}</p>
+            <p>${businessProfile.address}</p>
           </div>
+        </div>
+      </div>
+    `
 
-          <div class="invoice-details">
-            <p><strong>Invoice Number:</strong> ${invoice.invoice_number}</p>
-            <p><strong>Date:</strong> ${new Date(invoice.created_at).toLocaleDateString()}</p>
-            ${invoice.due_date ? `<p><strong>Due Date:</strong> ${new Date(invoice.due_date).toLocaleDateString()}</p>` : ''}
-          </div>
+    // Send email
+    await client.send({
+      from: Deno.env.get('SMTP_USER') ?? '',
+      to: invoice.customer_email,
+      subject: `Invoice #${invoice.invoice_number} from ${businessProfile.company_name}`,
+      html: emailContent,
+    })
 
-          <div class="customer-info">
-            <h3>Bill To:</h3>
-            <p>${invoice.customer_first_name} ${invoice.customer_last_name}</p>
-            ${invoice.customer_email ? `<p>${invoice.customer_email}</p>` : ''}
-            ${invoice.customer_phone ? `<p>${invoice.customer_phone}</p>` : ''}
-            ${invoice.customer_address ? `<p>${invoice.customer_address}</p>` : ''}
-          </div>
+    await client.close()
+    console.log('Email sent successfully to:', invoice.customer_email)
 
-          <table>
-            <thead>
-              <tr>
-                <th>Service</th>
-                <th>Description</th>
-                <th>Quantity</th>
-                <th>Unit Price</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${invoice.invoice_items.map(item => `
-                <tr>
-                  <td>${item.service_name}</td>
-                  <td>${item.description || ''}</td>
-                  <td>${item.quantity}</td>
-                  <td>$${item.unit_price.toFixed(2)}</td>
-                  <td>$${(item.quantity * item.unit_price).toFixed(2)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-
-          <div class="totals">
-            <p><strong>Subtotal:</strong> $${invoice.subtotal.toFixed(2)}</p>
-            <p><strong>Tax:</strong> $${invoice.tax_amount.toFixed(2)}</p>
-            <p><strong>Total:</strong> $${invoice.total.toFixed(2)}</p>
-          </div>
-
-          <div style="margin-top: 40px; text-align: center;">
-            <p>Thank you for your business!</p>
-            <p>If you have any questions about this invoice, please contact us at ${businessProfile.email}</p>
-          </div>
-        </body>
-      </html>
-    `;
-
-    try {
-      const emailResponse = await resend.emails.send({
-        from: `${businessProfile.company_name} <onboarding@resend.dev>`,
-        to: [invoice.customer_email || ''],
-        subject: `Invoice ${invoice.invoice_number} from ${businessProfile.company_name}`,
-        html: invoiceHtml,
-      });
-
-      console.log('Email sent successfully:', emailResponse);
-
-      return new Response(
-        JSON.stringify({ message: 'Email sent successfully' }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
+    return new Response(
+      JSON.stringify({ message: 'Email sent successfully' }),
+      { 
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         }
-      );
-    } catch (error) {
-      console.error('Failed to send email:', error);
-      throw error;
-    }
+      }
+    )
   } catch (error) {
-    console.error('Error in send-invoice-email function:', error);
+    console.error('Error sending invoice email:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500 
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        },
+        status: 500
       }
-    );
+    )
   }
-});
+})
