@@ -7,11 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-interface EmailRequest {
-  invoiceId: string;
-  recipientEmail: string;
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -57,7 +52,11 @@ serve(async (req) => {
       throw new Error('SMTP settings are not properly configured')
     }
 
-    const { invoiceId, recipientEmail }: EmailRequest = await req.json()
+    const { invoiceId } = await req.json()
+
+    if (!invoiceId) {
+      throw new Error('Invoice ID is required')
+    }
 
     // Fetch invoice details
     const { data: invoice, error: invoiceError } = await supabaseClient
@@ -115,6 +114,11 @@ serve(async (req) => {
         <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatCurrency(item.quantity * item.unit_price)}</td>
       </tr>
     `).join('');
+
+    const recipientEmail = invoice.customer_email
+    if (!recipientEmail) {
+      throw new Error('Customer email is required')
+    }
 
     const emailContent = `
       <!DOCTYPE html>
