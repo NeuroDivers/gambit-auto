@@ -73,7 +73,7 @@ export function WorkOrderCardDetails({ request }: WorkOrderCardDetailsProps) {
                 {assignedSidekick?.bayName || 'Bay assigned'}
               </Badge>
               {assignedSidekick?.profile ? (
-                <Badge variant="outline" className="gap-1.5">
+                <Badge variant="outline" className="gap-1.5 text-emerald-400 border-emerald-400/20 bg-emerald-400/10">
                   <User className="h-3 w-3" />
                   {assignedSidekick.profile.first_name} {assignedSidekick.profile.last_name}
                 </Badge>
