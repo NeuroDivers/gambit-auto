@@ -35,7 +35,7 @@ export function ServiceBaysList() {
             )
           )
         `)
-        .order('created_at', { ascending: true })
+        .order('name', { ascending: true })
 
       if (error) {
         console.error("Error fetching service bays:", error)
