@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,13 +13,11 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Verify authentication
     const authHeader = req.headers.get('Authorization')?.split(' ')[1]
     if (!authHeader) {
       throw new Error('No authorization header')
@@ -30,40 +28,28 @@ serve(async (req) => {
       throw new Error('Not authenticated')
     }
 
-    // Check if user has admin role
-    const { data: roleData, error: roleError } = await supabaseClient
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single()
-
-    if (roleError || roleData?.role !== 'admin') {
-      throw new Error('Unauthorized - Admin access required')
-    }
-
-    // Validate SMTP settings
-    const smtpHost = Deno.env.get('SMTP_HOST')
-    const smtpPort = Deno.env.get('SMTP_PORT')
-    const smtpUser = Deno.env.get('SMTP_USER')
-    const smtpPass = Deno.env.get('SMTP_PASSWORD')
-
-    if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
-      console.error('Missing SMTP configuration:', { smtpHost, smtpPort, smtpUser })
-      throw new Error('SMTP settings are not properly configured')
-    }
-
     const { invoiceId } = await req.json()
-
     if (!invoiceId) {
       throw new Error('Invoice ID is required')
     }
 
-    // Fetch invoice details
+    // Fetch only the required fields
     const { data: invoice, error: invoiceError } = await supabaseClient
       .from('invoices')
       .select(`
-        *,
-        invoice_items (*)
+        id,
+        invoice_number,
+        due_date,
+        subtotal,
+        tax_amount,
+        total,
+        customer_email,
+        customer_first_name,
+        invoice_items (
+          service_name,
+          quantity,
+          unit_price
+        )
       `)
       .eq('id', invoiceId)
       .single()
@@ -72,10 +58,9 @@ serve(async (req) => {
       throw new Error('Invoice not found')
     }
 
-    // Fetch business profile
     const { data: businessProfile, error: businessError } = await supabaseClient
       .from('business_profile')
-      .select('*')
+      .select('company_name, email, phone_number, address')
       .single()
 
     if (businessError || !businessProfile) {
@@ -96,7 +81,7 @@ serve(async (req) => {
         <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatCurrency(item.unit_price)}</td>
         <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatCurrency(item.quantity * item.unit_price)}</td>
       </tr>
-    `).join('');
+    `).join('')
 
     const recipientEmail = invoice.customer_email
     if (!recipientEmail) {
@@ -111,11 +96,9 @@ serve(async (req) => {
             body { font-family: Arial, sans-serif; line-height: 1.6; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
             .header { text-align: center; margin-bottom: 30px; }
-            .invoice-details { margin-bottom: 30px; }
-            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
             th { background-color: #f8f9fa; text-align: left; padding: 12px 8px; }
-            .total { font-weight: bold; font-size: 1.1em; }
-            .footer { text-align: center; margin-top: 30px; color: #666; }
+            .total { font-weight: bold; }
           </style>
         </head>
         <body>
@@ -123,12 +106,11 @@ serve(async (req) => {
             <div class="header">
               <h2>Invoice from ${businessProfile.company_name}</h2>
             </div>
-            <div class="invoice-details">
-              <p>Dear ${invoice.customer_first_name},</p>
-              <p>Please find your invoice details below:</p>
-              <p><strong>Invoice Number:</strong> ${invoice.invoice_number}</p>
-              <p><strong>Due Date:</strong> ${new Date(invoice.due_date).toLocaleDateString()}</p>
-            </div>
+            <p>Dear ${invoice.customer_first_name},</p>
+            <p>Please find your invoice details below:</p>
+            <p><strong>Invoice Number:</strong> ${invoice.invoice_number}</p>
+            <p><strong>Due Date:</strong> ${new Date(invoice.due_date).toLocaleDateString()}</p>
+            
             <table>
               <thead>
                 <tr>
@@ -138,9 +120,7 @@ serve(async (req) => {
                   <th style="text-align: right;">Total</th>
                 </tr>
               </thead>
-              <tbody>
-                ${itemsHtml}
-              </tbody>
+              <tbody>${itemsHtml}</tbody>
               <tfoot>
                 <tr class="total">
                   <td colspan="3" style="text-align: right; padding: 8px;">Subtotal:</td>
@@ -156,8 +136,8 @@ serve(async (req) => {
                 </tr>
               </tfoot>
             </table>
-            <p>You can view your invoice online at: <a href="https://app.gambitauto.com/invoices/${invoice.id}">View Invoice</a></p>
-            <div class="footer">
+            
+            <div style="text-align: center; margin-top: 30px; color: #666;">
               <p>Thank you for your business!</p>
               <p>${businessProfile.company_name}<br>
               ${businessProfile.address}<br>
@@ -170,19 +150,18 @@ serve(async (req) => {
 
     const client = new SMTPClient({
       connection: {
-        hostname: smtpHost,
-        port: parseInt(smtpPort),
+        hostname: Deno.env.get('SMTP_HOST') || '',
+        port: parseInt(Deno.env.get('SMTP_PORT') || '587'),
         tls: true,
         auth: {
-          username: smtpUser,
-          password: smtpPass,
+          username: Deno.env.get('SMTP_USER') || '',
+          password: Deno.env.get('SMTP_PASSWORD') || '',
         },
       },
     })
 
-    // Use the authenticated SMTP_USER as the sender
     await client.send({
-      from: smtpUser,
+      from: Deno.env.get('SMTP_USER') || '',
       to: recipientEmail,
       subject: `Invoice ${invoice.invoice_number} from ${businessProfile.company_name}`,
       html: emailContent,
