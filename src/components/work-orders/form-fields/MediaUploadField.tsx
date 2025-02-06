@@ -10,6 +10,7 @@ type MediaUploadFieldProps = {
   onMediaRemove: () => void
   label?: string
   description?: string
+  imageClassName?: string
 }
 
 export function MediaUploadField({
@@ -18,18 +19,19 @@ export function MediaUploadField({
   uploading,
   onMediaRemove,
   label = "Upload Media",
-  description
+  description,
+  imageClassName
 }: MediaUploadFieldProps) {
   return (
     <FormItem>
       <FormLabel>{label}</FormLabel>
       <div className="space-y-4">
         {mediaUrl ? (
-          <div className="relative w-full aspect-video">
+          <div className="relative w-full">
             <img
               src={mediaUrl}
               alt="Uploaded media"
-              className="rounded-lg object-cover w-full h-full"
+              className={`rounded-lg ${imageClassName || "aspect-video object-cover w-full h-full"}`}
             />
             <Button
               variant="destructive"

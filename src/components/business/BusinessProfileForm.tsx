@@ -68,7 +68,7 @@ export function BusinessProfileForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmitWithLogo)} className="space-y-6">
-        <div className="flex items-center gap-6">
+        <div className="flex items-start gap-6">
           <Avatar className="h-24 w-24">
             <AvatarImage src={mediaUrl || ""} alt="Business Logo" />
             <AvatarFallback>
@@ -83,6 +83,7 @@ export function BusinessProfileForm() {
               onMediaRemove={handleLogoRemove}
               label="Business Logo"
               description="Upload your business logo. Recommended size: 256x256px"
+              imageClassName="w-full h-32 object-contain"
             />
           </div>
         </div>
