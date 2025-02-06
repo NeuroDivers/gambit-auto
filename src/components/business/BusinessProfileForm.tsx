@@ -38,9 +38,10 @@ export function BusinessProfileForm() {
   }
 
   const handleLogoUpload = async (file: File) => {
-    await handleFileUpload(file)
-    // Update the form's logo_url field when a new logo is uploaded
-    form.setValue('logo_url', mediaUrl)
+    const uploadedUrl = await handleFileUpload(file)
+    if (uploadedUrl) {
+      form.setValue('logo_url', uploadedUrl)
+    }
   }
 
   const handleLogoRemove = async () => {

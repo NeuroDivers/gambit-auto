@@ -7,7 +7,7 @@ export function useMediaUpload(bucket: string = 'quote-request-media') {
   const [mediaUrl, setMediaUrl] = useState<string | null>(null)
   const { toast } = useToast()
 
-  const handleFileUpload = async (file: File) => {
+  const handleFileUpload = async (file: File): Promise<string | null> => {
     try {
       setUploading(true)
       
@@ -27,12 +27,14 @@ export function useMediaUpload(bucket: string = 'quote-request-media') {
         .getPublicUrl(filePath)
 
       setMediaUrl(publicUrl)
+      return publicUrl
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Error uploading file",
         variant: "destructive",
       })
+      return null
     } finally {
       setUploading(false)
     }
