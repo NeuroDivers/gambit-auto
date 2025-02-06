@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import puppeteer from 'https://deno.land/x/puppeteer@16.2.0/mod.ts'
+import { html_to_pdf } from "https://deno.land/x/html2pdf@v0.2.2/mod.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -57,11 +57,7 @@ serve(async (req) => {
       throw profileError
     }
 
-    // Generate PDF using Puppeteer
-    const browser = await puppeteer.launch({ args: ['--no-sandbox'] })
-    const page = await browser.newPage()
-    
-    // Set the HTML content for the PDF
+    // Generate HTML content
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -128,9 +124,16 @@ serve(async (req) => {
       </html>
     `
 
-    await page.setContent(htmlContent)
-    const pdf = await page.pdf({ format: 'A4' })
-    await browser.close()
+    // Generate PDF
+    const pdf = await html_to_pdf(htmlContent, {
+      format: 'Letter',
+      margin: {
+        top: '1in',
+        right: '1in',
+        bottom: '1in',
+        left: '1in',
+      },
+    })
 
     // Create SMTP client
     const client = new SMTPClient({
