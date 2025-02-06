@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { SMTPClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3"
 
 const corsHeaders = {
@@ -8,12 +7,19 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
     const { invoiceId } = await req.json()
+    
+    if (!invoiceId) {
+      throw new Error('Invoice ID is required')
+    }
+
+    console.log('Sending invoice email for invoice:', invoiceId)
     
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -30,7 +36,14 @@ serve(async (req) => {
       .eq('id', invoiceId)
       .single()
 
-    if (invoiceError) throw invoiceError
+    if (invoiceError) {
+      console.error('Error fetching invoice:', invoiceError)
+      throw invoiceError
+    }
+
+    if (!invoice.customer_email) {
+      throw new Error('Customer email is required')
+    }
 
     // Fetch business profile
     const { data: businessProfile, error: businessError } = await supabaseClient
@@ -38,8 +51,19 @@ serve(async (req) => {
       .select('*')
       .single()
 
-    if (businessError) throw businessError
+    if (businessError) {
+      console.error('Error fetching business profile:', businessError)
+      throw businessError
+    }
 
+    const appUrl = Deno.env.get('PUBLIC_APP_URL')
+    if (!appUrl) {
+      throw new Error('PUBLIC_APP_URL environment variable is not set')
+    }
+
+    const invoiceUrl = `${appUrl}/invoices/${invoiceId}`
+    
+    // Send email using SMTP
     const client = new SMTPClient({
       connection: {
         hostname: Deno.env.get('SMTP_HOST') || '',
@@ -52,8 +76,6 @@ serve(async (req) => {
       },
     })
 
-    const invoiceUrl = `${Deno.env.get('PUBLIC_APP_URL')}/invoices/${invoiceId}`
-    
     await client.send({
       from: Deno.env.get('SMTP_USER') || '',
       to: invoice.customer_email,
@@ -64,7 +86,6 @@ serve(async (req) => {
           <p>Dear ${invoice.customer_first_name},</p>
           <p>Please find your invoice details below:</p>
           <p><strong>Invoice Number:</strong> ${invoice.invoice_number}</p>
-          <p><strong>Due Date:</strong> ${new Date(invoice.due_date).toLocaleDateString()}</p>
           <p><strong>Total Amount:</strong> $${invoice.total}</p>
           <div style="margin: 30px 0;">
             <a href="${invoiceUrl}" 
@@ -85,9 +106,17 @@ serve(async (req) => {
 
     await client.close()
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    console.log('Email sent successfully for invoice:', invoiceId)
+
+    return new Response(
+      JSON.stringify({ success: true }), 
+      { 
+        headers: { 
+          'Content-Type': 'application/json',
+          ...corsHeaders 
+        } 
+      }
+    )
 
   } catch (error) {
     console.error('Error sending invoice email:', error)
@@ -95,7 +124,10 @@ serve(async (req) => {
       JSON.stringify({ error: error.message }),
       { 
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          ...corsHeaders 
+        }
       }
     )
   }
