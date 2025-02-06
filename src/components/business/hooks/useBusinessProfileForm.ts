@@ -46,7 +46,7 @@ export function useBusinessProfileForm() {
 
   const onSubmit = async (data: BusinessFormValues) => {
     try {
-      console.log("Submitting form with data:", data) // Debug log
+      console.log("Submitting business profile with data:", data)
       
       const { error } = await supabase
         .from("business_profile")
@@ -57,11 +57,12 @@ export function useBusinessProfileForm() {
           email: data.email,
           address: data.address,
           business_hours: data.business_hours,
-          logo_url: data.logo_url || null, // Ensure logo_url is included and handle null case
+          logo_url: data.logo_url,
+          updated_at: new Date().toISOString(),
         })
 
       if (error) {
-        console.error("Error updating business profile:", error) // Debug log
+        console.error("Error updating business profile:", error)
         throw error
       }
 
@@ -72,7 +73,7 @@ export function useBusinessProfileForm() {
       
       refetch()
     } catch (error: any) {
-      console.error("Error updating business profile:", error) // Debug log
+      console.error("Error updating business profile:", error)
       toast({
         title: "Error",
         description: error.message,

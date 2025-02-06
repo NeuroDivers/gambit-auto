@@ -15,7 +15,6 @@ export function BusinessProfileForm() {
 
   useEffect(() => {
     if (profile) {
-      setMediaUrl(profile.logo_url || null)
       form.reset({
         company_name: profile.company_name || "",
         phone_number: profile.phone_number || "",
@@ -26,6 +25,7 @@ export function BusinessProfileForm() {
           : defaultBusinessHours,
         logo_url: profile.logo_url || "",
       })
+      setMediaUrl(profile.logo_url || null)
     }
   }, [profile, form, setMediaUrl, defaultBusinessHours])
 
@@ -42,6 +42,13 @@ export function BusinessProfileForm() {
     if (uploadedUrl) {
       setMediaUrl(uploadedUrl)
       form.setValue('logo_url', uploadedUrl)
+      
+      // Submit the form with the new logo URL
+      const currentValues = form.getValues()
+      await onSubmit({
+        ...currentValues,
+        logo_url: uploadedUrl
+      })
     }
   }
 
