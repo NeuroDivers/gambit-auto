@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { Mail, Printer } from "lucide-react"
+import { ExternalLink, Mail, Printer } from "lucide-react"
 import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
@@ -48,6 +48,14 @@ export function InvoiceActions({ invoiceId, onPrint }: InvoiceActionsProps) {
       >
         <Printer className="h-4 w-4" />
         Print Invoice
+      </Button>
+      <Button
+        variant="outline"
+        onClick={() => window.open(`/i/${invoiceId}`, '_blank')}
+        className="gap-2"
+      >
+        <ExternalLink className="h-4 w-4" />
+        Public View
       </Button>
     </div>
   )
