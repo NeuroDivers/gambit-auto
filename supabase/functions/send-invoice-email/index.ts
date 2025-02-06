@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
@@ -8,47 +8,47 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    // Check for authorization header
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      console.error('Missing authorization header')
-      throw new Error('Missing authorization header')
-    }
-
+    // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Verify the user is authenticated
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    )
-    
-    if (authError || !user) {
-      console.error('Authentication error:', authError)
-      throw new Error('Unauthorized')
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization')?.split(' ')[1]
+    if (!authHeader) {
+      throw new Error('No authorization header')
     }
 
-    // Verify SMTP settings are configured
-    const smtpHost = Deno.env.get("SMTP_HOST")
-    const smtpPort = Deno.env.get("SMTP_PORT")
-    const smtpUser = Deno.env.get("SMTP_USER")
-    const smtpPassword = Deno.env.get("SMTP_PASSWORD")
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(authHeader)
+    if (authError || !user) {
+      throw new Error('Not authenticated')
+    }
 
-    if (!smtpHost || !smtpPort || !smtpUser || !smtpPassword) {
-      console.error('SMTP settings not configured:', {
-        host: !!smtpHost,
-        port: !!smtpPort,
-        user: !!smtpUser,
-        password: !!smtpPassword
-      })
+    // Check if user has admin role
+    const { data: roleData, error: roleError } = await supabaseClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single()
+
+    if (roleError || roleData?.role !== 'admin') {
+      throw new Error('Unauthorized - Admin access required')
+    }
+
+    // Validate SMTP settings
+    const smtpHost = Deno.env.get('SMTP_HOST')
+    const smtpPort = Deno.env.get('SMTP_PORT')
+    const smtpUser = Deno.env.get('SMTP_USER')
+    const smtpPass = Deno.env.get('SMTP_PASSWORD')
+
+    if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
+      console.error('Missing SMTP configuration:', { smtpHost, smtpPort, smtpUser })
       throw new Error('SMTP settings are not properly configured')
     }
 
@@ -61,13 +61,15 @@ serve(async (req) => {
     // Fetch invoice details
     const { data: invoice, error: invoiceError } = await supabaseClient
       .from('invoices')
-      .select('*, invoice_items(*)')
+      .select(`
+        *,
+        invoice_items (*)
+      `)
       .eq('id', invoiceId)
       .single()
 
-    if (invoiceError) {
-      console.error('Error fetching invoice:', invoiceError)
-      throw invoiceError
+    if (invoiceError || !invoice) {
+      throw new Error('Invoice not found')
     }
 
     // Fetch business profile
@@ -76,37 +78,18 @@ serve(async (req) => {
       .select('*')
       .single()
 
-    if (businessError) {
-      console.error('Error fetching business profile:', businessError)
-      throw businessError
+    if (businessError || !businessProfile) {
+      throw new Error('Business profile not found')
     }
 
-    console.log('Attempting to connect to SMTP server:', {
-      host: smtpHost,
-      port: smtpPort,
-      user: smtpUser
-    })
-
-    const client = new SMTPClient({
-      connection: {
-        hostname: smtpHost,
-        port: parseInt(smtpPort),
-        tls: true,
-        auth: {
-          username: smtpUser,
-          password: smtpPassword,
-        },
-      },
-    });
-
     const formatCurrency = (amount: number) => {
-      return new Intl.NumberFormat('en-US', {
+      return new Intl.NumberFormat('en-CA', {
         style: 'currency',
-        currency: 'USD'
-      }).format(amount);
-    };
+        currency: 'CAD'
+      }).format(amount)
+    }
 
-    const items = invoice.invoice_items.map(item => `
+    const itemsHtml = invoice.invoice_items.map((item: any) => `
       <tr>
         <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.service_name}</td>
         <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
@@ -124,79 +107,101 @@ serve(async (req) => {
       <!DOCTYPE html>
       <html>
         <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Invoice ${invoice.invoice_number}</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .invoice-details { margin-bottom: 30px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            th { background-color: #f8f9fa; text-align: left; padding: 12px 8px; }
+            .total { font-weight: bold; font-size: 1.1em; }
+            .footer { text-align: center; margin-top: 30px; color: #666; }
+          </style>
         </head>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
-          <h2>Invoice #${invoice.invoice_number}</h2>
-          <p><strong>From:</strong> ${businessProfile.company_name}</p>
-          <p><strong>To:</strong> ${invoice.customer_first_name} ${invoice.customer_last_name}</p>
-          <p><strong>Date:</strong> ${new Date(invoice.created_at).toLocaleDateString()}</p>
-
-          <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-            <thead>
-              <tr style="background-color: #f8f9fa;">
-                <th style="padding: 12px 8px; text-align: left;">Service</th>
-                <th style="padding: 12px 8px; text-align: center;">Quantity</th>
-                <th style="padding: 12px 8px; text-align: right;">Unit Price</th>
-                <th style="padding: 12px 8px; text-align: right;">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${items}
-            </tbody>
-          </table>
-
-          <div style="margin-top: 20px; text-align: right;">
-            <p><strong>Subtotal:</strong> ${formatCurrency(invoice.subtotal)}</p>
-            <p><strong>Tax:</strong> ${formatCurrency(invoice.tax_amount)}</p>
-            <p style="font-size: 1.2em;"><strong>Total:</strong> ${formatCurrency(invoice.total)}</p>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h2>Invoice from ${businessProfile.company_name}</h2>
+            </div>
+            <div class="invoice-details">
+              <p>Dear ${invoice.customer_first_name},</p>
+              <p>Please find your invoice details below:</p>
+              <p><strong>Invoice Number:</strong> ${invoice.invoice_number}</p>
+              <p><strong>Due Date:</strong> ${new Date(invoice.due_date).toLocaleDateString()}</p>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Service</th>
+                  <th style="text-align: center;">Quantity</th>
+                  <th style="text-align: right;">Unit Price</th>
+                  <th style="text-align: right;">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsHtml}
+              </tbody>
+              <tfoot>
+                <tr class="total">
+                  <td colspan="3" style="text-align: right; padding: 8px;">Subtotal:</td>
+                  <td style="text-align: right; padding: 8px;">${formatCurrency(invoice.subtotal)}</td>
+                </tr>
+                <tr class="total">
+                  <td colspan="3" style="text-align: right; padding: 8px;">Tax:</td>
+                  <td style="text-align: right; padding: 8px;">${formatCurrency(invoice.tax_amount)}</td>
+                </tr>
+                <tr class="total">
+                  <td colspan="3" style="text-align: right; padding: 8px;">Total:</td>
+                  <td style="text-align: right; padding: 8px;">${formatCurrency(invoice.total)}</td>
+                </tr>
+              </tfoot>
+            </table>
+            <p>You can view your invoice online at: <a href="https://app.gambitauto.com/invoices/${invoice.id}">View Invoice</a></p>
+            <div class="footer">
+              <p>Thank you for your business!</p>
+              <p>${businessProfile.company_name}<br>
+              ${businessProfile.address}<br>
+              ${businessProfile.phone_number}</p>
+            </div>
           </div>
-
-          <p style="margin-top: 30px;">
-            You can view your invoice online at: 
-            <a href="https://gambitauto.com/invoices/${invoice.id}">
-              https://gambitauto.com/invoices/${invoice.id}
-            </a>
-          </p>
         </body>
       </html>
-    `;
+    `
 
-    console.log('Attempting to send email to:', recipientEmail)
+    const client = new SMTPClient({
+      connection: {
+        hostname: smtpHost,
+        port: parseInt(smtpPort),
+        tls: true,
+        auth: {
+          username: smtpUser,
+          password: smtpPass,
+        },
+      },
+    });
 
     await client.send({
-      from: `Gambit Auto <${smtpUser}>`,
+      from: `${businessProfile.company_name} <noreply@gambitauto.com>`,
       to: recipientEmail,
-      subject: `Invoice #${invoice.invoice_number} from ${businessProfile.company_name}`,
-      content: "text/html",
+      subject: `Invoice ${invoice.invoice_number} from ${businessProfile.company_name}`,
       html: emailContent,
     });
 
     await client.close();
 
-    console.log('Email sent successfully to:', recipientEmail)
-
     return new Response(
-      JSON.stringify({ message: 'Email sent successfully' }),
-      { 
-        headers: { 
-          'Content-Type': 'application/json',
-          ...corsHeaders
-        } 
-      }
+      JSON.stringify({ message: 'Invoice email sent successfully' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
+
   } catch (error) {
     console.error('Error sending invoice email:', error)
+    
     return new Response(
-      JSON.stringify({ error: error.message }), 
+      JSON.stringify({ error: error.message }),
       { 
-        status: error.message === 'Unauthorized' ? 401 : 500,
-        headers: { 
-          'Content-Type': 'application/json',
-          ...corsHeaders
-        }
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     )
   }
