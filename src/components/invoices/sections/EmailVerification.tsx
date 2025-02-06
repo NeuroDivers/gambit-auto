@@ -25,25 +25,32 @@ export function EmailVerification({ correctEmail, onVerified }: EmailVerificatio
 
   return (
     <div className="max-w-md mx-auto mt-8">
-      <div className="bg-white p-6 rounded-lg shadow-sm space-y-4">
-        <h2 className="text-lg font-semibold text-center">Verify Invoice Access</h2>
-        <p className="text-sm text-muted-foreground text-center">
-          Please enter the email address associated with this invoice to view it
-        </p>
+      <div className="bg-card p-8 rounded-lg border border-border shadow-lg space-y-6">
+        <div className="space-y-2 text-center">
+          <h2 className="text-xl font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            Verify Invoice Access
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Please enter the email address associated with this invoice to view it
+          </p>
+        </div>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Input
               type="email"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full"
+              className="w-full bg-background border-border"
               required
             />
           </div>
           
-          <Button type="submit" className="w-full gap-2">
+          <Button 
+            type="submit" 
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
+          >
             <Mail className="h-4 w-4" />
             Verify Email
           </Button>
