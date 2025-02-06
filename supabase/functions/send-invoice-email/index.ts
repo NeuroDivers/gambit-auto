@@ -61,7 +61,8 @@ serve(async (req) => {
     if (!recipientEmail) throw new Error("Customer email is required");
 
     const appUrl = Deno.env.get("PUBLIC_APP_URL") || "http://localhost:5173";
-    const invoiceUrl = `${appUrl}/invoices/${invoice.id}`;
+    // Use the public invoice URL format (/i/[id]) instead of the admin URL
+    const invoiceUrl = `${appUrl}/i/${invoice.id}`;
 
     const emailContent = `
       <!DOCTYPE html>
