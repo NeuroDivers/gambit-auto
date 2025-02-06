@@ -133,7 +133,7 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
           {qstTax && (
             <div className="flex justify-between text-gray-600">
               <span>TVQ/QST ({qstTax.tax_rate.toFixed(3)}%)</span>
-              <span>${qstAmount.toFixed(3)}</span>
+              <span>${qstAmount.toFixed(2)}</span>
             </div>
           )}
           <div className="flex justify-between font-bold pt-2 border-t text-black">
