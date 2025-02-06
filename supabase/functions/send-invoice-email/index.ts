@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from '@supabase/supabase-js'
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -178,7 +178,7 @@ serve(async (req) => {
           password: smtpPass,
         },
       },
-    });
+    })
 
     // Use the authenticated SMTP_USER as the sender
     await client.send({
@@ -186,9 +186,9 @@ serve(async (req) => {
       to: recipientEmail,
       subject: `Invoice ${invoice.invoice_number} from ${businessProfile.company_name}`,
       html: emailContent,
-    });
+    })
 
-    await client.close();
+    await client.close()
 
     return new Response(
       JSON.stringify({ message: 'Invoice email sent successfully' }),
