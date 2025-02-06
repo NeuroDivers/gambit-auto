@@ -10,7 +10,10 @@ interface InvoiceEmailVerificationProps {
   onVerified: () => void
 }
 
-export function InvoiceEmailVerification({ invoiceId, onVerified }: InvoiceEmailVerificationProps) {
+export function InvoiceEmailVerification({
+  invoiceId,
+  onVerified,
+}: InvoiceEmailVerificationProps) {
   const [email, setEmail] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
 
@@ -21,13 +24,15 @@ export function InvoiceEmailVerification({ invoiceId, onVerified }: InvoiceEmail
     try {
       const { data: invoice, error } = await supabase
         .from("invoices")
-        .select(`
+        .select(
+          `
           customer_email,
           work_order:work_orders (
             email
           )
-        `)
-        .eq('id', invoiceId)
+        `
+        )
+        .eq("id", invoiceId)
         .maybeSingle()
 
       if (error) {
@@ -39,7 +44,8 @@ export function InvoiceEmailVerification({ invoiceId, onVerified }: InvoiceEmail
         return
       }
 
-      const workOrderEmail = invoice.work_order?.email
+      // Handle work_order as an array and get the first email if available
+      const workOrderEmail = invoice.work_order?.[0]?.email
       const invoiceEmail = invoice.customer_email
 
       if (email === workOrderEmail || email === invoiceEmail) {
@@ -49,7 +55,7 @@ export function InvoiceEmailVerification({ invoiceId, onVerified }: InvoiceEmail
         toast.error("Email verification failed. Please try again.")
       }
     } catch (error) {
-      console.error('Verification error:', error)
+      console.error("Verification error:", error)
       toast.error("Failed to verify email")
     } finally {
       setIsVerifying(false)
