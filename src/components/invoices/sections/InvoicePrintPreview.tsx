@@ -53,7 +53,7 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
             />
           )}
           <div className="space-y-1">
-            <h1 className="text-xl font-bold">{businessProfile.company_name}</h1>
+            <h1 className="text-xl font-bold text-purple-600">{businessProfile.company_name}</h1>
             <p className="text-sm text-gray-600 whitespace-pre-wrap">{businessProfile.address}</p>
             <p className="text-sm text-gray-600">{businessProfile.phone_number}</p>
             <p className="text-sm text-gray-600">{businessProfile.email}</p>
@@ -78,13 +78,36 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
 
       <div className="space-y-1">
         <h2 className="font-semibold">Facturer à / Bill To:</h2>
-        <p>{invoice.customer_first_name} {invoice.customer_last_name}</p>
+        <p className="text-purple-600">{invoice.customer_first_name} {invoice.customer_last_name}</p>
         <p className="text-gray-600">{invoice.customer_email}</p>
         {invoice.customer_phone && <p className="text-gray-600">{invoice.customer_phone}</p>}
         {invoice.customer_address && <p className="text-gray-600">{invoice.customer_address}</p>}
       </div>
 
-      <ServicesList services={invoice.invoice_items || []} />
+      <div className="overflow-x-auto">
+        <table className="min-w-full">
+          <thead>
+            <tr>
+              <th className="text-left text-purple-600 py-2">Service</th>
+              <th className="text-left text-purple-600 py-2">Description</th>
+              <th className="text-right text-purple-600 py-2">Quantité</th>
+              <th className="text-right text-purple-600 py-2">Prix unitaire</th>
+              <th className="text-right text-purple-600 py-2">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {invoice.invoice_items.map((item, index) => (
+              <tr key={index} className="border-t">
+                <td className="py-2">{item.service_name}</td>
+                <td className="py-2">{item.description}</td>
+                <td className="text-right py-2">{item.quantity}</td>
+                <td className="text-right py-2">${item.unit_price.toFixed(2)}</td>
+                <td className="text-right py-2">${(item.quantity * item.unit_price).toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <div className="flex justify-end">
         <div className="w-64 space-y-2">
