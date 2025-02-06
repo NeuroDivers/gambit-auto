@@ -30,13 +30,19 @@ export function InvoiceListItem({ invoice, onEdit, onStatusChange }: InvoiceList
             <div className="flex-1">
               <h3 className="font-semibold">{invoice.invoice_number}</h3>
               <p className="text-sm text-muted-foreground">
-                {invoice.work_order.first_name} {invoice.work_order.last_name}
+                {invoice.customer_first_name} {invoice.customer_last_name}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {invoice.customer_email} • {invoice.customer_phone}
               </p>
             </div>
             <div className="text-right flex-1">
               <p className="font-semibold">${invoice.total}</p>
               <p className="text-sm text-muted-foreground">
                 {format(new Date(invoice.created_at), "MMM d, yyyy")}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Due: {invoice.due_date ? format(new Date(invoice.due_date), "MMM d, yyyy") : 'Not set'}
               </p>
             </div>
             <div className="flex items-center gap-2 ml-4">
