@@ -17,15 +17,19 @@ export function InvoiceActions({ invoiceId, onPrint }: InvoiceActionsProps) {
     try {
       setIsSending(true)
       
-      // Get the invoice preview element with type assertion
       const invoiceElement = document.querySelector('.invoice-preview') as HTMLElement
       if (!invoiceElement) {
         throw new Error('Invoice preview element not found')
       }
 
-      // Convert the invoice to a PNG image
-      const dataUrl = await htmlToImage.toPng(invoiceElement)
-      const base64Image = dataUrl.split(',')[1] // Remove the data:image/png;base64, prefix
+      // Convert the invoice to a PNG image with better quality
+      const dataUrl = await htmlToImage.toPng(invoiceElement, {
+        quality: 1.0,
+        pixelRatio: 2
+      })
+
+      // Remove the data URL prefix to get just the base64 data
+      const base64Image = dataUrl.split(',')[1]
 
       const { error } = await supabase.functions.invoke('send-invoice-email', {
         body: { 
