@@ -9,6 +9,11 @@ type WorkOrderCardDetailsProps = {
   request: WorkOrder
 }
 
+type SidekickProfile = {
+  first_name: string | null
+  last_name: string | null
+}
+
 export function WorkOrderCardDetails({ request }: WorkOrderCardDetailsProps) {
   const { data: assignedSidekick } = useQuery({
     queryKey: ["sidekick", request.assigned_bay_id],
@@ -25,9 +30,9 @@ export function WorkOrderCardDetails({ request }: WorkOrderCardDetailsProps) {
           )
         `)
         .eq("id", request.assigned_bay_id)
-        .single()
+        .maybeSingle()
 
-      return bay?.profiles || null
+      return bay?.profiles as SidekickProfile | null
     },
     enabled: !!request.assigned_bay_id
   })
