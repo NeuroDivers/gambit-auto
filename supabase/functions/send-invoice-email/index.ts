@@ -88,6 +88,9 @@ serve(async (req) => {
       throw new Error('Customer email is required')
     }
 
+    const appUrl = Deno.env.get('PUBLIC_APP_URL') || 'http://localhost:5173'
+    const invoiceUrl = `${appUrl}/invoices/${invoice.id}`
+
     const emailContent = `
       <!DOCTYPE html>
       <html>
@@ -99,6 +102,15 @@ serve(async (req) => {
             table { width: 100%; border-collapse: collapse; margin: 20px 0; }
             th { background-color: #f8f9fa; text-align: left; padding: 12px 8px; }
             .total { font-weight: bold; }
+            .button {
+              display: inline-block;
+              padding: 12px 24px;
+              background-color: #7c3aed;
+              color: white;
+              text-decoration: none;
+              border-radius: 6px;
+              margin: 20px 0;
+            }
           </style>
         </head>
         <body>
@@ -107,7 +119,12 @@ serve(async (req) => {
               <h2>Invoice from ${businessProfile.company_name}</h2>
             </div>
             <p>Dear ${invoice.customer_first_name},</p>
-            <p>Please find your invoice details below:</p>
+            <p>Please find your invoice details below. You can also view your invoice online by clicking the button below:</p>
+            
+            <div style="text-align: center;">
+              <a href="${invoiceUrl}" class="button" style="color: white;">View Invoice Online</a>
+            </div>
+
             <p><strong>Invoice Number:</strong> ${invoice.invoice_number}</p>
             <p><strong>Due Date:</strong> ${new Date(invoice.due_date).toLocaleDateString()}</p>
             
