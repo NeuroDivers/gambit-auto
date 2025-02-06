@@ -20,6 +20,8 @@ import { useToast } from "./hooks/use-toast"
 import { supabase } from "./integrations/supabase/client"
 import { useQuery } from "@tanstack/react-query"
 import { Outlet, Navigate } from "react-router-dom"
+import { useState } from "react"
+import { InvoiceEmailVerification } from "./components/invoices/sections/InvoiceEmailVerification"
 
 const DashboardLayoutWrapper = () => {
   const navigate = useNavigate();
@@ -86,8 +88,39 @@ const DashboardLayoutWrapper = () => {
   );
 };
 
-// New wrapper for public invoice views
+// Updated wrapper for public invoice views with verification
 const PublicInvoiceWrapper = () => {
+  const [isVerified, setIsVerified] = useState(false);
+  const { data: session } = useQuery({
+    queryKey: ["session"],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session;
+    },
+  });
+
+  // If user is logged in, they can view the invoice directly
+  if (session) {
+    return <Outlet />;
+  }
+
+  // If not verified and not logged in, show verification
+  if (!isVerified) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
+        <div className="container mx-auto py-12">
+          <div className="max-w-[1000px] mx-auto">
+            <InvoiceEmailVerification
+              invoiceId={window.location.pathname.split('/').pop()!}
+              onVerified={() => setIsVerified(true)}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If verified, show the invoice
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
       <div className="container mx-auto py-12">
@@ -104,7 +137,7 @@ export const router = createBrowserRouter([
     path: "/auth",
     element: <Auth />,
   },
-  // Public invoice routes
+  // Public invoice routes with verification
   {
     element: <PublicInvoiceWrapper />,
     children: [
