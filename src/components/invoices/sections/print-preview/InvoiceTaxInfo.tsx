@@ -14,7 +14,7 @@ export function InvoiceTaxInfo({ taxes, subtotal }: InvoiceTaxInfoProps) {
   const total = subtotal + gstAmount + qstAmount
 
   return (
-    <div className="w-64 space-y-2">
+    <div className="w-full md:w-64 space-y-2">
       <div className="flex justify-between text-gray-600">
         <span>Sous-total / Subtotal</span>
         <span>${subtotal.toFixed(2)}</span>

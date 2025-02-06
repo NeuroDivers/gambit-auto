@@ -38,8 +38,8 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
   }, 0) ?? 0
 
   return (
-    <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-sm space-y-8">
-      <div className="flex justify-between items-start">
+    <div className="w-full bg-white p-4 md:p-8 rounded-lg shadow-sm space-y-6 md:space-y-8">
+      <div className="flex flex-col md:flex-row justify-between items-start gap-6">
         <InvoiceBusinessInfo businessProfile={businessProfile} />
         <InvoiceHeader invoice={invoice} />
       </div>
@@ -52,29 +52,31 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
         {invoice.customer_address && <p className="text-gray-600">{invoice.customer_address}</p>}
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full">
-          <thead>
-            <tr>
-              <th className="text-left text-purple-600 py-2">Service</th>
-              <th className="text-left text-purple-600 py-2">Description</th>
-              <th className="text-right text-purple-600 py-2">Quantité</th>
-              <th className="text-right text-purple-600 py-2">Prix unitaire</th>
-              <th className="text-right text-purple-600 py-2">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoice.invoice_items?.map((item, index) => (
-              <tr key={index} className="border-t">
-                <td className="py-2 text-black">{item.service_name}</td>
-                <td className="py-2 text-black">{item.description}</td>
-                <td className="text-right py-2 text-black">{item.quantity}</td>
-                <td className="text-right py-2 text-black">${item.unit_price.toFixed(2)}</td>
-                <td className="text-right py-2 text-black">${(item.quantity * item.unit_price).toFixed(2)}</td>
+      <div className="overflow-x-auto -mx-4 md:mx-0">
+        <div className="min-w-[600px] md:w-full p-4 md:p-0">
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th className="text-left text-purple-600 py-2">Service</th>
+                <th className="text-left text-purple-600 py-2">Description</th>
+                <th className="text-right text-purple-600 py-2">Quantité</th>
+                <th className="text-right text-purple-600 py-2">Prix unitaire</th>
+                <th className="text-right text-purple-600 py-2">Total</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {invoice.invoice_items?.map((item, index) => (
+                <tr key={index} className="border-t">
+                  <td className="py-2 text-black">{item.service_name}</td>
+                  <td className="py-2 text-black">{item.description}</td>
+                  <td className="text-right py-2 text-black">{item.quantity}</td>
+                  <td className="text-right py-2 text-black">${item.unit_price.toFixed(2)}</td>
+                  <td className="text-right py-2 text-black">${(item.quantity * item.unit_price).toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="flex justify-end">
@@ -95,7 +97,7 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
       <div className="text-center text-sm text-gray-600 space-y-2">
         <p>Merci d'avoir choisi {businessProfile.company_name}</p>
         <p>Thank you for choosing {businessProfile.company_name}</p>
-        <p>
+        <p className="break-words">
           Pour toute question concernant cette facture, veuillez nous contacter à {businessProfile.email}
           <br />
           For questions about this invoice, please contact us at {businessProfile.email}

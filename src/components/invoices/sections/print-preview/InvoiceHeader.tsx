@@ -6,7 +6,7 @@ type InvoiceHeaderProps = {
 
 export function InvoiceHeader({ invoice }: InvoiceHeaderProps) {
   return (
-    <div className="text-right space-y-2">
+    <div className="text-left md:text-right space-y-2 w-full md:w-auto">
       <h2 className="text-2xl font-bold text-purple-500">FACTURE / INVOICE</h2>
       {invoice.status && (
         <div className="px-4 py-1.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800 inline-block uppercase">
