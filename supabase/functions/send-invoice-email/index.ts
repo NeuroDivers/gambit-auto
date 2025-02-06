@@ -8,11 +8,11 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
   try {
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders })
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -66,22 +66,6 @@ serve(async (req) => {
     if (businessError || !businessProfile) {
       throw new Error('Business profile not found')
     }
-
-    const formatCurrency = (amount: number) => {
-      return new Intl.NumberFormat('en-CA', {
-        style: 'currency',
-        currency: 'CAD'
-      }).format(amount)
-    }
-
-    const itemsHtml = invoice.invoice_items.map((item: any) => `
-      <tr>
-        <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.service_name}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatCurrency(item.unit_price)}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatCurrency(item.quantity * item.unit_price)}</td>
-      </tr>
-    `).join('')
 
     const recipientEmail = invoice.customer_email
     if (!recipientEmail) {
@@ -137,7 +121,14 @@ serve(async (req) => {
                   <th style="text-align: right;">Total</th>
                 </tr>
               </thead>
-              <tbody>${itemsHtml}</tbody>
+              <tbody>${invoice.invoice_items.map((item: any) => `
+                <tr>
+                  <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.service_name}</td>
+                  <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
+                  <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatCurrency(item.unit_price)}</td>
+                  <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatCurrency(item.quantity * item.unit_price)}</td>
+                </tr>
+              `).join('')}</tbody>
               <tfoot>
                 <tr class="total">
                   <td colspan="3" style="text-align: right; padding: 8px;">Subtotal:</td>
@@ -203,3 +194,10 @@ serve(async (req) => {
     )
   }
 })
+
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat('en-CA', {
+    style: 'currency',
+    currency: 'CAD'
+  }).format(amount)
+}
