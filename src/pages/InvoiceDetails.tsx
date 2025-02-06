@@ -10,7 +10,7 @@ import { useAdminStatus } from "@/hooks/useAdminStatus"
 export default function InvoiceDetails() {
   const { id } = useParams()
   const location = useLocation()
-  const isPublicView = !location.pathname.startsWith('/dashboard')
+  const isPublicView = !location.pathname.startsWith('/invoices')
   const [isVerified, setIsVerified] = useState(false)
   const { isAdmin, isLoading: isAdminLoading } = useAdminStatus()
 
@@ -62,7 +62,10 @@ export default function InvoiceDetails() {
               onVerified={() => setIsVerified(true)} 
             />
           ) : (
-            <InvoiceView invoiceId={id} showEmailButton={!isPublicView} />
+            <InvoiceView 
+              invoiceId={id} 
+              showEmailButton={!isPublicView} 
+            />
           )}
         </div>
       </div>
