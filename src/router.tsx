@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound"
 import ClientManagement from "./pages/ClientManagement"
 import BusinessSettings from "./pages/BusinessSettings"
 import ProfileSettings from "./pages/ProfileSettings"
+import DeveloperSettings from "./pages/DeveloperSettings"
 import { DashboardLayout } from "./components/dashboard/DashboardLayout"
 import { useNavigate } from "react-router-dom"
 import { useToast } from "./hooks/use-toast"
@@ -140,6 +141,10 @@ export const router = createBrowserRouter([
       {
         path: "/profile-settings",
         element: <ProfileSettings />,
+      },
+      {
+        path: "/developer-settings",
+        element: <DeveloperSettings />,
       },
     ]
   },

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
-import { Calendar, FileText, Settings, Users, Wrench, User } from "lucide-react"
+import { Calendar, FileText, Settings, Users, Wrench, User, Terminal } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAdminStatus } from "@/hooks/useAdminStatus"
 
@@ -54,6 +54,12 @@ const settingsItems = [
     href: "/profile-settings",
     icon: User,
     adminOnly: false,
+  },
+  {
+    title: "Developer Settings",
+    href: "/developer-settings",
+    icon: Terminal,
+    adminOnly: true,
   },
 ]
 
