@@ -76,12 +76,6 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
     contentRef: printRef,
   })
 
-  const onPrintClick = () => {
-    if (handlePrint) {
-      handlePrint()
-    }
-  }
-
   const form = useForm<InvoiceFormValues>({
     defaultValues: {
       notes: '',
@@ -216,7 +210,7 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
       {isAuthenticated && (
         <InvoiceActions
           invoiceId={invoiceId}
-          onPrint={onPrintClick}
+          onPrint={handlePrint}
         />
       )}
       <div ref={printRef}>
@@ -224,7 +218,7 @@ export function InvoiceView({ invoiceId, isEditing, onClose }: InvoiceViewProps)
       </div>
       {!isAuthenticated && (
         <div className="flex justify-end mt-6">
-          <Button onClick={onPrintClick} className="gap-2">
+          <Button onClick={handlePrint} className="gap-2">
             Print Invoice
           </Button>
         </div>
