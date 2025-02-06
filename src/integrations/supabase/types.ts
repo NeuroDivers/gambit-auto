@@ -210,8 +210,10 @@ export type Database = {
           id: string
           invoice_number: string
           notes: string | null
+          payment_status: string
           qst_number: string | null
           status: string
+          stripe_customer_id: string | null
           subtotal: number
           tax_amount: number
           total: number
@@ -238,8 +240,10 @@ export type Database = {
           id?: string
           invoice_number: string
           notes?: string | null
+          payment_status?: string
           qst_number?: string | null
           status?: string
+          stripe_customer_id?: string | null
           subtotal: number
           tax_amount: number
           total: number
@@ -266,8 +270,10 @@ export type Database = {
           id?: string
           invoice_number?: string
           notes?: string | null
+          payment_status?: string
           qst_number?: string | null
           status?: string
+          stripe_customer_id?: string | null
           subtotal?: number
           tax_amount?: number
           total?: number
@@ -284,6 +290,93 @@ export type Database = {
             columns: ["work_order_id"]
             isOneToOne: false
             referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_methods: {
+        Row: {
+          card_brand: string
+          card_exp_month: number
+          card_exp_year: number
+          card_last4: string
+          created_at: string
+          customer_id: string
+          id: string
+          is_default: boolean | null
+          stripe_payment_method_id: string
+          updated_at: string
+        }
+        Insert: {
+          card_brand: string
+          card_exp_month: number
+          card_exp_year: number
+          card_last4: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          is_default?: boolean | null
+          stripe_payment_method_id: string
+          updated_at?: string
+        }
+        Update: {
+          card_brand?: string
+          card_exp_month?: number
+          card_exp_year?: number
+          card_last4?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          is_default?: boolean | null
+          stripe_payment_method_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          invoice_id: string
+          payment_method_id: string | null
+          status: string
+          stripe_payment_intent_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          invoice_id: string
+          payment_method_id?: string | null
+          status?: string
+          stripe_payment_intent_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          payment_method_id?: string | null
+          status?: string
+          stripe_payment_intent_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
             referencedColumns: ["id"]
           },
         ]
