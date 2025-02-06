@@ -23,11 +23,11 @@ export function WorkOrderCardDetails({ request }: WorkOrderCardDetailsProps) {
       // First get the bay to get the sidekick ID
       const { data: bay } = await supabase
         .from("service_bays")
-        .select("assigned_sidekick_id")
+        .select("assigned_sidekick_id, name")
         .eq("id", request.assigned_bay_id)
         .maybeSingle()
 
-      if (!bay?.assigned_sidekick_id) return null
+      if (!bay?.assigned_sidekick_id) return { profile: null, bayName: bay?.name }
 
       // Then get the profile data for that sidekick
       const { data: profile } = await supabase
@@ -36,7 +36,10 @@ export function WorkOrderCardDetails({ request }: WorkOrderCardDetailsProps) {
         .eq("id", bay.assigned_sidekick_id)
         .maybeSingle()
 
-      return profile as SidekickProfile
+      return { 
+        profile: profile as SidekickProfile,
+        bayName: bay.name
+      }
     },
     enabled: !!request.assigned_bay_id
   })
@@ -65,16 +68,21 @@ export function WorkOrderCardDetails({ request }: WorkOrderCardDetailsProps) {
         {request.assigned_bay_id && (
           <div className="flex items-center gap-2 text-sm">
             <span className="text-white/50">Assignment:</span>
-            {assignedSidekick ? (
-              <Badge variant="outline" className="gap-1.5">
-                <User className="h-3 w-3" />
-                {assignedSidekick.first_name} {assignedSidekick.last_name}
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-emerald-400 border-emerald-400/20 bg-emerald-400/10">
+                {assignedSidekick?.bayName || 'Bay assigned'}
               </Badge>
-            ) : (
-              <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500">
-                Bay assigned, no sidekick yet
-              </Badge>
-            )}
+              {assignedSidekick?.profile ? (
+                <Badge variant="outline" className="gap-1.5">
+                  <User className="h-3 w-3" />
+                  {assignedSidekick.profile.first_name} {assignedSidekick.profile.last_name}
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500">
+                  No sidekick assigned
+                </Badge>
+              )}
+            </div>
           </div>
         )}
       </div>
