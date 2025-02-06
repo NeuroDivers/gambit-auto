@@ -89,7 +89,6 @@ const DashboardLayoutWrapper = () => {
   );
 };
 
-// Updated wrapper for public invoice views with verification
 const PublicInvoiceWrapper = () => {
   const [isVerified, setIsVerified] = useState(false);
   const { data: session } = useQuery({
@@ -144,10 +143,11 @@ export const router = createBrowserRouter([
   },
   // Public invoice routes with verification
   {
+    path: "/i/:id",
     element: <PublicInvoiceWrapper />,
     children: [
       {
-        path: "/i/:id",
+        path: "",
         element: <InvoiceDetails />,
       },
     ]
