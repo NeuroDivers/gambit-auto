@@ -71,9 +71,8 @@ serve(async (req) => {
 
     let client;
     try {
-      // Configure SMTP client
       client = new SmtpClient();
-
+      
       await client.connectTLS({
         hostname: Deno.env.get('SMTP_HOST')!,
         port: Number(Deno.env.get('SMTP_PORT')),
@@ -81,7 +80,7 @@ serve(async (req) => {
         password: Deno.env.get('SMTP_PASSWORD')!,
       });
 
-      await client.send({
+      const sendResult = await client.send({
         from: businessProfile.email,
         to: invoice.customer_email || '',
         subject: `Invoice ${invoice.invoice_number} from ${businessProfile.company_name}`,
@@ -89,7 +88,7 @@ serve(async (req) => {
         html: emailContent,
       });
 
-      console.log('Email sent successfully for invoice:', invoiceId);
+      console.log('Email sent successfully:', sendResult);
 
       return new Response(
         JSON.stringify({ message: 'Email sent successfully' }),
@@ -102,7 +101,6 @@ serve(async (req) => {
       console.error('SMTP error:', error);
       throw error;
     } finally {
-      // Ensure SMTP client is properly closed
       if (client) {
         try {
           await client.close();
