@@ -11,9 +11,7 @@ export const UserManagementSection = () => {
   const { isAdmin } = useAdminStatus();
 
   return (
-    <div className="space-y-8">
-      <h2 className="text-2xl font-bold text-white/[0.87]">User Management</h2>
-      
+    <div className="space-y-8">      
       <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
