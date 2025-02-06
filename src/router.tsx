@@ -99,7 +99,14 @@ const PublicInvoiceWrapper = () => {
     },
   });
 
-  // If user is logged in, they can view the invoice directly
+  const { isAdmin } = useAdminStatus();
+
+  // If user is logged in as admin, redirect to the authenticated route
+  if (session && isAdmin) {
+    return <Navigate to={`/invoices${window.location.pathname}`} replace />;
+  }
+
+  // If user is logged in (non-admin), they can view the invoice directly
   if (session) {
     return <Outlet />;
   }
@@ -142,7 +149,7 @@ export const router = createBrowserRouter([
     element: <PublicInvoiceWrapper />,
     children: [
       {
-        path: "/invoices/:id",
+        path: "/i/:id",
         element: <InvoiceDetails />,
       },
     ]
@@ -197,6 +204,10 @@ export const router = createBrowserRouter([
       {
         path: "/developer-settings",
         element: <DeveloperSettings />,
+      },
+      {
+        path: "/invoices/:id",
+        element: <InvoiceDetails />,
       },
     ]
   },

@@ -10,7 +10,7 @@ export default function InvoiceDetails() {
   const { id } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
-  const isPublicView = !location.pathname.startsWith('/dashboard')
+  const isPublicView = !location.pathname.startsWith('/invoices')
   const { isAdmin } = useAdminStatus()
 
   const { isLoading } = useQuery({
@@ -46,8 +46,8 @@ export default function InvoiceDetails() {
     )
   }
 
-  // If it's a public view, the verification is handled by the router wrapper
-  if (isPublicView) {
+  // If it's a public view and not an admin, use the public wrapper
+  if (isPublicView && !isAdmin) {
     return (
       <InvoiceView 
         invoiceId={id} 
@@ -56,7 +56,7 @@ export default function InvoiceDetails() {
     )
   }
 
-  // For authenticated users, show the dashboard layout
+  // For authenticated users and admins, show the dashboard layout
   return (
     <DashboardLayout onLogout={() => navigate("/auth")}>
       <div className="container mx-auto py-12">
