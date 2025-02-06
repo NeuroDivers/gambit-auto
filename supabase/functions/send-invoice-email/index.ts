@@ -73,55 +73,67 @@ serve(async (req) => {
       </tr>
     `).join('')
 
-    // Format email content with proper HTML structure
+    // Format email content with proper HTML structure and content-type
     const emailContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
-        <div style="padding: 20px; background-color: #f8f9fa; margin-bottom: 20px;">
-          <h2>Invoice #${invoice.invoice_number}</h2>
-          <p>From: ${businessProfile.company_name}</p>
-          <p>To: ${invoice.customer_first_name} ${invoice.customer_last_name}</p>
-          <p>Date: ${new Date(invoice.created_at).toLocaleDateString()}</p>
-        </div>
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body>
+        <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
+          <div style="padding: 20px; background-color: #f8f9fa; margin-bottom: 20px;">
+            <h2>Invoice #${invoice.invoice_number}</h2>
+            <p>From: ${businessProfile.company_name}</p>
+            <p>To: ${invoice.customer_first_name} ${invoice.customer_last_name}</p>
+            <p>Date: ${new Date(invoice.created_at).toLocaleDateString()}</p>
+          </div>
 
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-          <thead>
-            <tr style="background-color: #f8f9fa;">
-              <th style="padding: 8px; text-align: left;">Service</th>
-              <th style="padding: 8px; text-align: left;">Quantity</th>
-              <th style="padding: 8px; text-align: left;">Unit Price</th>
-              <th style="padding: 8px; text-align: left;">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itemsTable}
-          </tbody>
-        </table>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <thead>
+              <tr style="background-color: #f8f9fa;">
+                <th style="padding: 8px; text-align: left;">Service</th>
+                <th style="padding: 8px; text-align: left;">Quantity</th>
+                <th style="padding: 8px; text-align: left;">Unit Price</th>
+                <th style="padding: 8px; text-align: left;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsTable}
+            </tbody>
+          </table>
 
-        <div style="text-align: right; margin-top: 20px;">
-          <p>Subtotal: $${invoice.subtotal.toFixed(2)}</p>
-          <p>Tax: $${invoice.tax_amount.toFixed(2)}</p>
-          <h3>Total: $${invoice.total.toFixed(2)}</h3>
-        </div>
+          <div style="text-align: right; margin-top: 20px;">
+            <p>Subtotal: $${invoice.subtotal.toFixed(2)}</p>
+            <p>Tax: $${invoice.tax_amount.toFixed(2)}</p>
+            <h3>Total: $${invoice.total.toFixed(2)}</h3>
+          </div>
 
-        <div style="margin-top: 30px;">
-          <p>You can view your invoice online at: <a href="${invoiceUrl}">${invoiceUrl}</a></p>
-        </div>
+          <div style="margin-top: 30px;">
+            <p>You can view your invoice online at: <a href="${invoiceUrl}">${invoiceUrl}</a></p>
+          </div>
 
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-          <p>${businessProfile.company_name}</p>
-          <p>${businessProfile.email}</p>
-          <p>${businessProfile.phone_number}</p>
-          <p>${businessProfile.address}</p>
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <p>${businessProfile.company_name}</p>
+            <p>${businessProfile.email}</p>
+            <p>${businessProfile.phone_number}</p>
+            <p>${businessProfile.address}</p>
+          </div>
         </div>
-      </div>
+      </body>
+      </html>
     `
 
-    // Send email
+    // Send email with proper content type
     await client.send({
       from: Deno.env.get('SMTP_USER') ?? '',
       to: invoice.customer_email,
       subject: `Invoice #${invoice.invoice_number} from ${businessProfile.company_name}`,
       html: emailContent,
+      headers: {
+        'Content-Type': 'text/html; charset=UTF-8'
+      }
     })
 
     await client.close()
