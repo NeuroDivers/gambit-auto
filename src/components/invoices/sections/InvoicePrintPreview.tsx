@@ -32,10 +32,10 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
   const gstTax = taxes?.find(tax => tax.tax_type === 'GST')
   const qstTax = taxes?.find(tax => tax.tax_type === 'QST')
 
-  // Calculate subtotal
-  const subtotal = invoice.invoice_items.reduce((acc, item) => {
+  // Calculate subtotal with null check for invoice_items
+  const subtotal = invoice.invoice_items?.reduce((acc, item) => {
     return acc + (item.quantity * item.unit_price)
-  }, 0)
+  }, 0) ?? 0
 
   // Calculate GST
   const gstAmount = gstTax ? (subtotal * gstTax.tax_rate) / 100 : 0
@@ -105,7 +105,7 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
             </tr>
           </thead>
           <tbody>
-            {invoice.invoice_items.map((item, index) => (
+            {invoice.invoice_items?.map((item, index) => (
               <tr key={index} className="border-t">
                 <td className="py-2 text-black">{item.service_name}</td>
                 <td className="py-2 text-black">{item.description}</td>
