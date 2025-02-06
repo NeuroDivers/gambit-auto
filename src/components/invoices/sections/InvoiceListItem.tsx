@@ -20,7 +20,9 @@ type InvoiceListItemProps = {
 }
 
 export function InvoiceListItem({ invoice, onEdit, onStatusChange }: InvoiceListItemProps) {
-  const serviceNames = invoice.invoice_items?.map(item => item.service_name).join(", ")
+  const serviceNames = invoice.invoice_items && invoice.invoice_items.length > 0
+    ? invoice.invoice_items.map(item => item.service_name).join(", ")
+    : 'No services listed'
 
   return (
     <Link 
@@ -39,7 +41,7 @@ export function InvoiceListItem({ invoice, onEdit, onStatusChange }: InvoiceList
                 {invoice.customer_email} • {invoice.customer_phone}
               </p>
               <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-                Services: {serviceNames || 'No services listed'}
+                Services: {serviceNames}
               </p>
             </div>
             <div className="text-right flex-1">
