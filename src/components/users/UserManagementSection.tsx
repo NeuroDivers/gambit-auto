@@ -13,7 +13,6 @@ export const UserManagementSection = () => {
   return (
     <div className="space-y-8">
       <h2 className="text-2xl font-bold text-white/[0.87]">User Management</h2>
-      <p className="text-white/60">Manage users and their roles</p>
       
       <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
         <div className="space-y-6">
