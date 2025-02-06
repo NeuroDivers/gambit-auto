@@ -30,10 +30,19 @@ export function BusinessProfileForm() {
   }, [profile, form, setMediaUrl, defaultBusinessHours])
 
   const handleSubmitWithLogo = async (values: any) => {
-    // Update the form values with the current logo URL
     const updatedValues = {
       ...values,
       logo_url: mediaUrl
+    }
+    await onSubmit(updatedValues)
+  }
+
+  const handleLogoRemove = async () => {
+    handleMediaRemove()
+    const currentValues = form.getValues()
+    const updatedValues = {
+      ...currentValues,
+      logo_url: null
     }
     await onSubmit(updatedValues)
   }
@@ -71,7 +80,7 @@ export function BusinessProfileForm() {
               onFileUpload={handleFileUpload}
               mediaUrl={mediaUrl}
               uploading={uploading}
-              onMediaRemove={handleMediaRemove}
+              onMediaRemove={handleLogoRemove}
               label="Business Logo"
               description="Upload your business logo. Recommended size: 256x256px"
             />
