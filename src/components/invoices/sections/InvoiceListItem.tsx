@@ -11,15 +11,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Link } from "react-router-dom"
+import { Invoice } from "../types"
 
 type InvoiceListItemProps = {
-  invoice: any // Using any temporarily, should be properly typed
+  invoice: Invoice
   onEdit: (id: string) => void
   onStatusChange: (id: string, status: string) => void
 }
 
 export function InvoiceListItem({ invoice, onEdit, onStatusChange }: InvoiceListItemProps) {
-  const serviceNames = invoice.invoice_items?.map((item: any) => item.service_name).join(", ")
+  const serviceNames = invoice.invoice_items?.map(item => item.service_name).join(", ")
 
   return (
     <Link 
