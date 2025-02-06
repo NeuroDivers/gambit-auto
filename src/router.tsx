@@ -86,10 +86,33 @@ const DashboardLayoutWrapper = () => {
   );
 };
 
+// New wrapper for public invoice views
+const PublicInvoiceWrapper = () => {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
+      <div className="container mx-auto py-12">
+        <div className="max-w-[1000px] mx-auto">
+          <Outlet />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const router = createBrowserRouter([
   {
     path: "/auth",
     element: <Auth />,
+  },
+  // Public invoice routes
+  {
+    element: <PublicInvoiceWrapper />,
+    children: [
+      {
+        path: "/invoices/:id",
+        element: <InvoiceDetails />,
+      },
+    ]
   },
   {
     element: <DashboardLayoutWrapper />,
@@ -125,10 +148,6 @@ export const router = createBrowserRouter([
       {
         path: "/invoices",
         element: <Invoices />,
-      },
-      {
-        path: "/invoices/:id",
-        element: <InvoiceDetails />,
       },
       {
         path: "/clients",
