@@ -9,6 +9,8 @@ export function useWorkOrderSubmission() {
 
   const submitWorkOrder = async (values: WorkOrderFormValues, workOrderId?: string) => {
     try {
+      console.log("Submitting work order with values:", values)
+      
       if (workOrderId) {
         await updateWorkOrder(workOrderId, values)
       } else {
@@ -64,7 +66,10 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
     })
     .eq("id", workOrderId)
 
-  if (workOrderError) throw workOrderError
+  if (workOrderError) {
+    console.error("Error updating work order:", workOrderError)
+    throw workOrderError
+  }
 
   // If a bay is assigned, update the bay's assigned sidekick
   if (values.assigned_bay_id && values.assigned_bay_id !== "unassigned") {
@@ -75,7 +80,10 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
       })
       .eq('id', values.assigned_bay_id)
 
-    if (bayError) throw bayError
+    if (bayError) {
+      console.error("Error updating service bay:", bayError)
+      throw bayError
+    }
   }
 
   // Update work order services
@@ -85,7 +93,10 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
     .delete()
     .eq('work_order_id', workOrderId)
 
-  if (deleteError) throw deleteError
+  if (deleteError) {
+    console.error("Error deleting work order services:", deleteError)
+    throw deleteError
+  }
 
   // Then insert new services
   if (values.service_items.length > 0) {
@@ -100,7 +111,10 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
         }))
       )
 
-    if (servicesError) throw servicesError
+    if (servicesError) {
+      console.error("Error inserting work order services:", servicesError)
+      throw servicesError
+    }
   }
 }
 
@@ -131,7 +145,10 @@ async function createWorkOrder(values: WorkOrderFormValues) {
     .select()
     .single()
 
-  if (workOrderError || !workOrder) throw workOrderError
+  if (workOrderError || !workOrder) {
+    console.error("Error creating work order:", workOrderError)
+    throw workOrderError
+  }
 
   // If a bay is assigned, update the bay's assigned sidekick
   if (values.assigned_bay_id && values.assigned_bay_id !== "unassigned") {
@@ -142,7 +159,10 @@ async function createWorkOrder(values: WorkOrderFormValues) {
       })
       .eq('id', values.assigned_bay_id)
 
-    if (bayError) throw bayError
+    if (bayError) {
+      console.error("Error updating service bay:", bayError)
+      throw bayError
+    }
   }
 
   // Insert service items only for new work orders
@@ -158,6 +178,9 @@ async function createWorkOrder(values: WorkOrderFormValues) {
         }))
       )
 
-    if (servicesError) throw servicesError
+    if (servicesError) {
+      console.error("Error inserting work order services:", servicesError)
+      throw servicesError
+    }
   }
 }
