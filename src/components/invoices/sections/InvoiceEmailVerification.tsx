@@ -19,7 +19,7 @@ export function InvoiceEmailVerification({ invoiceId, onVerified }: InvoiceEmail
     setIsVerifying(true)
 
     try {
-      const { data: invoice } = await supabase
+      const { data: invoice, error } = await supabase
         .from("invoices")
         .select(`
           customer_email,
@@ -29,6 +29,10 @@ export function InvoiceEmailVerification({ invoiceId, onVerified }: InvoiceEmail
         `)
         .eq('id', invoiceId)
         .maybeSingle()
+
+      if (error) {
+        throw error
+      }
 
       if (!invoice) {
         toast.error("Invoice not found")
