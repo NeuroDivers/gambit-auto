@@ -2,6 +2,9 @@ import { Invoice } from '../types'
 import { Tables } from '@/integrations/supabase/types'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
+import { InvoiceBusinessInfo } from './print-preview/InvoiceBusinessInfo'
+import { InvoiceHeader } from './print-preview/InvoiceHeader'
+import { InvoiceTaxInfo } from './print-preview/InvoiceTaxInfo'
 
 type InvoicePrintPreviewProps = {
   invoice: Invoice | null
@@ -29,60 +32,16 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
     return <div>No invoice data available</div>
   }
 
-  const gstTax = taxes?.find(tax => tax.tax_type === 'GST')
-  const qstTax = taxes?.find(tax => tax.tax_type === 'QST')
-
-  // Calculate subtotal with null check for invoice_items
+  // Calculate subtotal
   const subtotal = invoice.invoice_items?.reduce((acc, item) => {
     return acc + (item.quantity * item.unit_price)
   }, 0) ?? 0
 
-  // Calculate GST
-  const gstAmount = gstTax ? (subtotal * gstTax.tax_rate) / 100 : 0
-
-  // Calculate QST
-  const qstAmount = qstTax ? (subtotal * qstTax.tax_rate) / 100 : 0
-
-  // Calculate total
-  const total = subtotal + gstAmount + qstAmount
-
   return (
     <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-sm space-y-8">
       <div className="flex justify-between items-start">
-        <div className="flex items-start gap-4">
-          {businessProfile.logo_url && (
-            <img 
-              src={businessProfile.logo_url} 
-              alt="Business Logo" 
-              className="h-16 w-16 object-contain"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-              }}
-            />
-          )}
-          <div className="space-y-1">
-            <h1 className="text-xl font-bold text-purple-600">{businessProfile.company_name}</h1>
-            <p className="text-sm text-gray-600 whitespace-pre-wrap">{businessProfile.address}</p>
-            <p className="text-sm text-gray-600">{businessProfile.phone_number}</p>
-            <p className="text-sm text-gray-600">{businessProfile.email}</p>
-          </div>
-        </div>
-        <div className="text-right space-y-2">
-          <h2 className="text-2xl font-bold text-purple-500">FACTURE / INVOICE</h2>
-          {invoice.status && (
-            <div className="px-4 py-1.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800 inline-block uppercase">
-              {invoice.status}
-            </div>
-          )}
-          <div className="text-sm text-gray-600 space-y-1">
-            <p>No. de facture / Invoice #: {invoice.invoice_number}</p>
-            <p>Date d'émission / Issue Date: {new Date(invoice.created_at).toLocaleDateString()}</p>
-            {invoice.due_date && (
-              <p>Date d'échéance / Due Date: {new Date(invoice.due_date).toLocaleDateString()}</p>
-            )}
-          </div>
-        </div>
+        <InvoiceBusinessInfo businessProfile={businessProfile} />
+        <InvoiceHeader invoice={invoice} />
       </div>
 
       <div className="space-y-1">
@@ -119,32 +78,7 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
       </div>
 
       <div className="flex justify-end">
-        <div className="w-64 space-y-2">
-          <div className="flex justify-between text-gray-600">
-            <span>Sous-total / Subtotal</span>
-            <span>${subtotal.toFixed(2)}</span>
-          </div>
-          {gstTax && (
-            <div className="flex justify-between text-gray-600">
-              <span>TPS/GST ({gstTax.tax_rate}%)</span>
-              <span>${gstAmount.toFixed(2)}</span>
-            </div>
-          )}
-          {qstTax && (
-            <div className="flex justify-between text-gray-600">
-              <span>TVQ/QST ({qstTax.tax_rate.toFixed(3)}%)</span>
-              <span>${qstAmount.toFixed(2)}</span>
-            </div>
-          )}
-          <div className="flex justify-between font-bold pt-2 border-t text-black">
-            <span>Total / Total</span>
-            <span>${total.toFixed(2)}</span>
-          </div>
-          <div className="text-xs text-gray-500 space-y-1 pt-2">
-            {gstTax && <p>TPS/GST No: {gstTax.tax_number}</p>}
-            {qstTax && <p>TVQ/QST No: {qstTax.tax_number}</p>}
-          </div>
-        </div>
+        <InvoiceTaxInfo taxes={taxes} subtotal={subtotal} />
       </div>
 
       {invoice.status === 'draft' && (
