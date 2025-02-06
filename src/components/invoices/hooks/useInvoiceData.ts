@@ -9,14 +9,13 @@ export function useInvoiceData(invoiceId?: string) {
         .from("invoices")
         .select(`
           *,
-          work_order:work_orders (
-            *,
-            services:work_order_services (
-              *,
-              service:service_types (*)
-            )
-          ),
-          invoice_items (*)
+          invoice_items (
+            id,
+            service_name,
+            description,
+            quantity,
+            unit_price
+          )
         `)
         .eq('id', invoiceId)
         .maybeSingle()
