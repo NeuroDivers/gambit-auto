@@ -20,19 +20,23 @@ export function WorkOrderCardDetails({ request }: WorkOrderCardDetailsProps) {
     queryFn: async () => {
       if (!request.assigned_bay_id) return null
       
+      // First get the bay to get the sidekick ID
       const { data: bay } = await supabase
         .from("service_bays")
-        .select(`
-          assigned_sidekick_id,
-          profiles:assigned_sidekick_id (
-            first_name,
-            last_name
-          )
-        `)
+        .select("assigned_sidekick_id")
         .eq("id", request.assigned_bay_id)
         .maybeSingle()
 
-      return bay?.profiles as SidekickProfile | null
+      if (!bay?.assigned_sidekick_id) return null
+
+      // Then get the profile data for that sidekick
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name")
+        .eq("id", bay.assigned_sidekick_id)
+        .maybeSingle()
+
+      return profile as SidekickProfile
     },
     enabled: !!request.assigned_bay_id
   })
