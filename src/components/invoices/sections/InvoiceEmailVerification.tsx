@@ -23,15 +23,20 @@ export function InvoiceEmailVerification({ invoiceId, onVerified }: InvoiceEmail
         .from("invoices")
         .select(`
           customer_email,
-          work_orders (
+          work_order:work_orders (
             email
           )
         `)
         .eq('id', invoiceId)
-        .single()
+        .maybeSingle()
 
-      const workOrderEmail = invoice?.work_orders?.email
-      const invoiceEmail = invoice?.customer_email
+      if (!invoice) {
+        toast.error("Invoice not found")
+        return
+      }
+
+      const workOrderEmail = invoice.work_order?.email
+      const invoiceEmail = invoice.customer_email
 
       if (email === workOrderEmail || email === invoiceEmail) {
         onVerified()
@@ -40,6 +45,7 @@ export function InvoiceEmailVerification({ invoiceId, onVerified }: InvoiceEmail
         toast.error("Email verification failed. Please try again.")
       }
     } catch (error) {
+      console.error('Verification error:', error)
       toast.error("Failed to verify email")
     } finally {
       setIsVerifying(false)
