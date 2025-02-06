@@ -59,14 +59,14 @@ export function SidekickAssignmentField({ form, bayId }: SidekickAssignmentField
               <FormLabel className="text-white/90">Assign Sidekick</FormLabel>
               <FormControl>
                 <Select
-                  value={field.value || ""}
+                  value={field.value || undefined}
                   onValueChange={field.onChange}
                 >
                   <SelectTrigger className="w-full bg-[#221F26]/60 border-border/5 text-white/80">
                     <SelectValue placeholder="Select a sidekick" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1A1F2C] border-border/5">
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="unassigned">None</SelectItem>
                     {sidekicks.map((sidekick) => (
                       <SelectItem 
                         key={sidekick.id} 
