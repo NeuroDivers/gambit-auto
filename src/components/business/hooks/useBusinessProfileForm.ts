@@ -57,10 +57,13 @@ export function useBusinessProfileForm() {
           email: data.email,
           address: data.address,
           business_hours: data.business_hours,
-          logo_url: data.logo_url, // Ensure logo_url is included in the upsert
+          logo_url: data.logo_url || null, // Ensure logo_url is included and handle null case
         })
 
-      if (error) throw error
+      if (error) {
+        console.error("Error updating business profile:", error) // Debug log
+        throw error
+      }
 
       toast({
         title: "Success",
