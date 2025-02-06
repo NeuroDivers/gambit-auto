@@ -1,7 +1,5 @@
-
 import { useForm } from "react-hook-form"
 import { EditInvoiceForm } from './sections/EditInvoiceForm'
-import { InvoicePrintPreview } from './sections/InvoicePrintPreview'
 import { InvoiceFormValues } from "./types"
 import { useInvoiceData } from "./hooks/useInvoiceData"
 import { useInvoiceMutation } from "./hooks/useInvoiceMutation"
@@ -10,10 +8,9 @@ import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { useReactToPrint } from 'react-to-print'
-import { InvoiceActions } from "./sections/InvoiceActions"
-import { PrintButton } from "./sections/PrintButton"
-import { EmailVerification } from "./sections/EmailVerification"
-import { PaymentSection } from "./sections/PaymentSection"
+import { LoadingState } from "./sections/LoadingState"
+import { PublicView } from "./sections/PublicView"
+import { AdminView } from "./sections/AdminView"
 
 type InvoiceViewProps = {
   invoiceId?: string
@@ -47,7 +44,7 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
 
   const isAdmin = userRole === 'admin'
 
-  // Also fetch business profile data which is needed for the invoice
+  // Fetch business profile data
   const { data: businessProfile, isLoading: isBusinessLoading } = useQuery({
     queryKey: ["business-profile"],
     queryFn: async () => {
@@ -60,23 +57,6 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
       if (error) throw error
       return data
     },
-  })
-
-  // Only fetch taxes if we have a business profile
-  const { data: taxes } = useQuery({
-    queryKey: ["business-taxes", businessProfile?.id],
-    queryFn: async () => {
-      if (!businessProfile?.id) return []
-      
-      const { data, error } = await supabase
-        .from("business_taxes")
-        .select("*")
-        .eq("business_id", businessProfile.id)
-
-      if (error) throw error
-      return data
-    },
-    enabled: !!businessProfile?.id,
   })
 
   const handlePrint = useReactToPrint({
@@ -150,24 +130,7 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
   }
 
   if (isInvoiceLoading || isBusinessLoading) {
-    return (
-      <div className="space-y-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-muted rounded w-1/3" />
-          <div className="h-32 bg-muted rounded" />
-          <div className="grid grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <div className="h-6 bg-muted rounded w-2/3" />
-              <div className="h-20 bg-muted rounded" />
-            </div>
-            <div className="space-y-4">
-              <div className="h-6 bg-muted rounded w-2/3" />
-              <div className="h-20 bg-muted rounded" />
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+    return <LoadingState />
   }
 
   if (isEditing) {
@@ -181,35 +144,33 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
     )
   }
 
-  // Show verification form for public view if not verified and not admin
-  if (isPublic && !isAdmin && !isVerified) {
+  const printContainer = <div ref={printRef}>{/* This will be populated by react-to-print */}</div>
+
+  if (isPublic) {
     return (
-      <EmailVerification 
-        correctEmail={invoice?.customer_email || null}
-        onVerified={() => setIsVerified(true)}
-      />
+      <>
+        {printContainer}
+        <PublicView
+          invoice={invoice}
+          businessProfile={businessProfile}
+          isVerified={isVerified}
+          setIsVerified={setIsVerified}
+          isAdmin={isAdmin}
+          onPrint={handlePrint}
+        />
+      </>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {(!isPublic || isAdmin) && (
-        <InvoiceActions
-          invoiceId={invoiceId}
-          onPrint={handlePrint}
-        />
-      )}
-      {isPublic && !isAdmin && (
-        <div className="flex justify-end">
-          <PrintButton onPrint={handlePrint} />
-        </div>
-      )}
-      <div ref={printRef}>
-        <InvoicePrintPreview invoice={invoice} businessProfile={businessProfile} />
-      </div>
-      {(isVerified || isAdmin) && invoice && (
-        <PaymentSection invoice={invoice} />
-      )}
-    </div>
+    <>
+      {printContainer}
+      <AdminView
+        invoice={invoice}
+        businessProfile={businessProfile}
+        invoiceId={invoiceId}
+        onPrint={handlePrint}
+      />
+    </>
   )
 }
