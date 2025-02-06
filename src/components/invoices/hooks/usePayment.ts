@@ -18,33 +18,23 @@ export function usePayment() {
       customerId?: string
       email: string
     }) => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) throw new Error("Not authenticated")
+      // Use Supabase client's function invocation instead of raw fetch
+      const { data, error } = await supabase.functions.invoke('process-payment', {
+        body: {
+          invoiceId,
+          paymentMethodId,
+          amount,
+          customerId,
+          email,
+        },
+      })
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-payment`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            invoiceId,
-            paymentMethodId,
-            amount,
-            customerId,
-            email,
-          }),
-        }
-      )
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Payment failed")
+      if (error) {
+        console.error('Payment error:', error)
+        throw error
       }
 
-      return response.json()
+      return data
     },
     onSuccess: () => {
       toast.success("Payment processed successfully")
