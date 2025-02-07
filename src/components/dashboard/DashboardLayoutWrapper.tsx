@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { useQuery } from "@tanstack/react-query"
 import { Outlet, Navigate } from "react-router-dom"
 import { DashboardLayout } from "./DashboardLayout"
+import { LoadingScreen } from "../shared/LoadingScreen"
 
 export function DashboardLayoutWrapper() {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ export function DashboardLayoutWrapper() {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <LoadingScreen />;
   }
 
   if (!profile) {

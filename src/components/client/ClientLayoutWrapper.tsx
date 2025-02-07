@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { useQuery } from "@tanstack/react-query"
 import { Outlet, Navigate } from "react-router-dom"
 import { ClientLayout } from "./ClientLayout"
+import { LoadingScreen } from "../shared/LoadingScreen"
 
 export function ClientLayoutWrapper() {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ export function ClientLayoutWrapper() {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <LoadingScreen />;
   }
 
   if (!profile) {
