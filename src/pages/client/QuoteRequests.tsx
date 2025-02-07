@@ -72,8 +72,8 @@ export default function QuoteRequests() {
           isLoading={isLoading}
           onAcceptEstimate={(id) => handleResponseMutation.mutate({ id, response: "accepted" })}
           onRejectEstimate={(id) => handleResponseMutation.mutate({ id, response: "rejected" })}
-          onUploadImage={handleImageUpload}
-          onRemoveImage={handleImageRemove}
+          onUploadImages={(event, quoteId, currentUrls) => handleImageUpload(event, quoteId, currentUrls)}
+          onImageRemove={(quoteId, urlToRemove, currentUrls) => handleImageRemove(quoteId, urlToRemove, currentUrls)}
           uploading={uploading}
         />
       </div>
