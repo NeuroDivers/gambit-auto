@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { getImageUrl, getServiceNames, getStatusBadgeVariant } from "./utils"
+import { getServiceNames, getStatusBadgeVariant } from "./utils"
 import { ImageGallery } from "@/components/client/quotes/ImageGallery"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 type QuoteRequest = {
   id: string
@@ -32,6 +33,7 @@ type QuoteRequestCardProps = {
   setEstimateAmount: (value: ServiceEstimates) => void
   onEstimateSubmit: (id: string) => void
   onImageRemove?: (url: string) => void
+  onStatusChange?: (id: string, status: QuoteRequest['status']) => void
 }
 
 export function QuoteRequestCard({ 
@@ -40,7 +42,8 @@ export function QuoteRequestCard({
   estimateAmount, 
   setEstimateAmount, 
   onEstimateSubmit,
-  onImageRemove
+  onImageRemove,
+  onStatusChange
 }: QuoteRequestCardProps) {
   const totalEstimate = request.service_estimates 
     ? Object.values(request.service_estimates).reduce((sum, amount) => sum + amount, 0)
@@ -55,9 +58,29 @@ export function QuoteRequestCard({
         <CardTitle className="text-lg font-medium">
           {request.vehicle_make} {request.vehicle_model} ({request.vehicle_year})
         </CardTitle>
-        <Badge variant={getStatusBadgeVariant(request.status)}>
-          {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-        </Badge>
+        <div className="flex items-center gap-2">
+          {onStatusChange ? (
+            <Select
+              value={request.status}
+              onValueChange={(value) => onStatusChange(request.id, value as QuoteRequest['status'])}
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="estimated">Estimated</SelectItem>
+                <SelectItem value="accepted">Accepted</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="converted">Converted</SelectItem>
+              </SelectContent>
+            </Select>
+          ) : (
+            <Badge variant={getStatusBadgeVariant(request.status)}>
+              {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+            </Badge>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground mb-2">{request.description}</p>

@@ -209,6 +209,7 @@ export type Database = {
           gst_number: string | null
           id: string
           invoice_number: string
+          is_archived: boolean | null
           notes: string | null
           payment_status: string
           qst_number: string | null
@@ -239,6 +240,7 @@ export type Database = {
           gst_number?: string | null
           id?: string
           invoice_number: string
+          is_archived?: boolean | null
           notes?: string | null
           payment_status?: string
           qst_number?: string | null
@@ -269,6 +271,7 @@ export type Database = {
           gst_number?: string | null
           id?: string
           invoice_number?: string
+          is_archived?: boolean | null
           notes?: string | null
           payment_status?: string
           qst_number?: string | null
@@ -742,6 +745,7 @@ export type Database = {
           estimated_duration: unknown | null
           first_name: string
           id: string
+          is_archived: boolean | null
           last_name: string
           media_url: string | null
           phone_number: string
@@ -766,6 +770,7 @@ export type Database = {
           estimated_duration?: unknown | null
           first_name: string
           id?: string
+          is_archived?: boolean | null
           last_name: string
           media_url?: string | null
           phone_number: string
@@ -790,6 +795,7 @@ export type Database = {
           estimated_duration?: unknown | null
           first_name?: string
           id?: string
+          is_archived?: boolean | null
           last_name?: string
           media_url?: string | null
           phone_number?: string

@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -66,6 +67,24 @@ export default function QuoteRequestsManagement() {
     },
     onError: (error) => {
       toast.error("Failed to update quote request: " + error.message)
+    }
+  })
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: QuoteRequest['status'] }) => {
+      const { error } = await supabase
+        .from("quote_requests")
+        .update({ status })
+        .eq("id", id)
+
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["adminQuoteRequests"] })
+      toast.success("Status updated successfully")
+    },
+    onError: (error) => {
+      toast.error("Failed to update status: " + error.message)
     }
   })
 
@@ -158,6 +177,10 @@ export default function QuoteRequestsManagement() {
     })
   }
 
+  const handleStatusChange = (id: string, status: QuoteRequest['status']) => {
+    updateStatusMutation.mutate({ id, status })
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-[200px]">
@@ -181,13 +204,15 @@ export default function QuoteRequestsManagement() {
           <div className="grid gap-4">
             {activeQuotes.map((request) => (
               <div key={request.id} className="relative">
-                <button
+                <Button
                   onClick={() => handleArchiveToggle(request.id, request.is_archived)}
-                  className="absolute top-4 right-4 p-2 hover:bg-accent rounded-full"
+                  className="absolute top-4 right-4 z-10"
+                  variant="ghost"
+                  size="icon"
                   title="Archive quote request"
                 >
                   <Archive className="h-5 w-5" />
-                </button>
+                </Button>
                 <QuoteRequestCard
                   request={request}
                   services={services || []}
@@ -195,6 +220,7 @@ export default function QuoteRequestsManagement() {
                   setEstimateAmount={setEstimateAmount}
                   onEstimateSubmit={handleEstimateSubmit}
                   onImageRemove={(url) => handleImageRemove(request.id, url, request.media_urls)}
+                  onStatusChange={handleStatusChange}
                 />
               </div>
             ))}
@@ -208,13 +234,15 @@ export default function QuoteRequestsManagement() {
           <div className="grid gap-4">
             {archivedQuotes.map((request) => (
               <div key={request.id} className="relative">
-                <button
+                <Button
                   onClick={() => handleArchiveToggle(request.id, request.is_archived)}
-                  className="absolute top-4 right-4 p-2 hover:bg-accent rounded-full"
+                  className="absolute top-4 right-4 z-10"
+                  variant="ghost"
+                  size="icon"
                   title="Unarchive quote request"
                 >
                   <Archive className="h-5 w-5 text-muted-foreground" />
-                </button>
+                </Button>
                 <QuoteRequestCard
                   request={request}
                   services={services || []}
@@ -222,6 +250,7 @@ export default function QuoteRequestsManagement() {
                   setEstimateAmount={setEstimateAmount}
                   onEstimateSubmit={handleEstimateSubmit}
                   onImageRemove={(url) => handleImageRemove(request.id, url, request.media_urls)}
+                  onStatusChange={handleStatusChange}
                 />
               </div>
             ))}
