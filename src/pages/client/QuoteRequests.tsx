@@ -113,6 +113,16 @@ export default function QuoteRequests() {
       const files = event.target.files
       if (!files || files.length === 0) return
 
+      // Get the current quote request to check its media_urls
+      const { data: currentQuote, error: fetchError } = await supabase
+        .from('quote_requests')
+        .select('media_urls')
+        .eq('id', quoteId)
+        .single()
+
+      if (fetchError) throw fetchError
+
+      const existingUrls = currentQuote?.media_urls || []
       const newUrls: string[] = []
 
       // Check quote request status
@@ -149,7 +159,9 @@ export default function QuoteRequests() {
       // Update quote request with new URLs
       const { error: updateError } = await supabase
         .from('quote_requests')
-        .update({ media_urls: [...currentUrls, ...newUrls] })
+        .update({ 
+          media_urls: [...existingUrls, ...newUrls]
+        })
         .eq('id', quoteId)
 
       if (updateError) throw updateError
