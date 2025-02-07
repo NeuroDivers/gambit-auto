@@ -81,7 +81,7 @@ export default function QuoteRequestsManagement() {
               <Badge 
                 variant={
                   request.status === "approved" 
-                    ? "success" 
+                    ? "secondary" 
                     : request.status === "rejected" 
                     ? "destructive" 
                     : "default"
