@@ -25,7 +25,8 @@ export function DescriptionSection({
   onMediaRemove 
 }: DescriptionSectionProps) {
   return (
-    <div className="space-y-6">
+    <div className="rounded-lg border border-white/10 p-6 bg-black/20 space-y-6">
+      <h3 className="text-lg font-medium text-white/90 mb-4">Service Details</h3>
       <FormField
         control={form.control}
         name="description"

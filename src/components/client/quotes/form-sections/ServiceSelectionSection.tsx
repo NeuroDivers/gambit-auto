@@ -34,9 +34,9 @@ export function ServiceSelectionSection({ form, services }: ServiceSelectionSect
       control={form.control}
       name="service_ids"
       render={() => (
-        <FormItem>
-          <FormLabel className="text-white/90">Services *</FormLabel>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <FormItem className="rounded-lg border border-white/10 p-6 bg-black/20">
+          <h3 className="text-lg font-medium text-white/90 mb-4">Available Services</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {services.map((service) => (
               <FormField
                 key={service.id}
@@ -47,12 +47,17 @@ export function ServiceSelectionSection({ form, services }: ServiceSelectionSect
                   return (
                     <div
                       key={service.id}
-                      className="flex flex-row items-center justify-between rounded-lg border border-white/10 hover:border-[#D6BCFA] p-4 bg-[#121212] cursor-pointer transition-colors duration-200"
+                      className="flex flex-row items-center justify-between rounded-lg border border-white/10 hover:border-[#9b87f5] p-4 bg-[#1A1F2C] transition-all duration-200 group"
                     >
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base text-white/90">
+                      <div className="space-y-1">
+                        <FormLabel className="text-base text-white/90 group-hover:text-white transition-colors duration-200">
                           {service.name}
                         </FormLabel>
+                        {service.price && (
+                          <p className="text-sm text-white/60">
+                            Starting from ${service.price}
+                          </p>
+                        )}
                       </div>
                       <FormControl>
                         <Switch
@@ -69,7 +74,7 @@ export function ServiceSelectionSection({ form, services }: ServiceSelectionSect
               />
             ))}
           </div>
-          <FormMessage />
+          <FormMessage className="mt-4" />
         </FormItem>
       )}
     />
