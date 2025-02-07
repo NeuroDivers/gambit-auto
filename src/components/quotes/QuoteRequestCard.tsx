@@ -92,10 +92,11 @@ export function QuoteRequestCard({
               type="number"
               placeholder="Enter estimate amount"
               value={estimateAmount[request.id] || ""}
-              onChange={(e) => setEstimateAmount(prev => ({
-                ...prev,
-                [request.id]: e.target.value
-              }))}
+              onChange={(e) => {
+                const newEstimateAmount = { ...estimateAmount }
+                newEstimateAmount[request.id] = e.target.value
+                setEstimateAmount(newEstimateAmount)
+              }}
               className="max-w-[200px]"
             />
             <Button 
@@ -120,3 +121,4 @@ export function QuoteRequestCard({
     </Card>
   )
 }
+
