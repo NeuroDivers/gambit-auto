@@ -14,6 +14,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form"
 import { useForm } from "react-hook-form"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { supabase } from "@/integrations/supabase/client"
 
 // Initialize Stripe
 const stripePromise = loadStripe('pk_test_51OpAcWB1FxNNsOFNKJ6RCR2pVvq79iBDqTz3mwYPUEQa8j7G26zfFn3KOVjwV1Fmw6wdpBz4wxjlZwTZrLxgZu0h00Yh1AOwag')
@@ -24,17 +26,41 @@ type PaymentSectionProps = {
 
 type PaymentFormData = {
   email: string
+  paymentMethodId?: string
+}
+
+type SavedPaymentMethod = {
+  id: string
+  card_brand: string
+  card_last4: string
+  card_exp_month: number
+  card_exp_year: number
 }
 
 function PaymentForm({ invoice, clientSecret }: { invoice: Invoice, clientSecret: string }) {
   const stripe = useStripe()
   const elements = useElements()
   const [isLoading, setIsLoading] = useState(false)
+  const [savedPaymentMethods, setSavedPaymentMethods] = useState<SavedPaymentMethod[]>([])
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>()
   const form = useForm<PaymentFormData>({
     defaultValues: {
       email: invoice.customer_email || '',
     }
   })
+
+  const fetchPaymentMethods = async () => {
+    if (invoice.stripe_customer_id) {
+      const { data } = await supabase
+        .from('payment_methods')
+        .select('*')
+        .eq('customer_id', invoice.stripe_customer_id)
+      
+      if (data) {
+        setSavedPaymentMethods(data)
+      }
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -82,11 +108,44 @@ function PaymentForm({ invoice, clientSecret }: { invoice: Invoice, clientSecret
             </FormItem>
           )}
         />
+
+        {savedPaymentMethods.length > 0 && (
+          <FormField
+            control={form.control}
+            name="paymentMethodId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Saved Payment Methods</FormLabel>
+                <Select 
+                  onValueChange={(value) => {
+                    field.onChange(value)
+                    setSelectedPaymentMethod(value)
+                  }}
+                  value={field.value}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a payment method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {savedPaymentMethods.map((method) => (
+                      <SelectItem key={method.id} value={method.id}>
+                        {method.card_brand} **** {method.card_last4} (Expires {method.card_exp_month}/{method.card_exp_year})
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="new">Add new payment method</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
+          />
+        )}
       </Form>
 
-      <div className="border rounded-lg p-4">
-        <PaymentElement />
-      </div>
+      {(!selectedPaymentMethod || selectedPaymentMethod === 'new') && (
+        <div className="border rounded-lg p-4">
+          <PaymentElement />
+        </div>
+      )}
 
       <Button 
         type="submit" 
