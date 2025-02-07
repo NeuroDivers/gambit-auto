@@ -60,7 +60,7 @@ export function DashboardLayoutWrapper() {
     return <Navigate to="/auth" replace />;
   }
 
-  // Client users should not access the dashboard layout
+  // Client users should be redirected to the client dashboard
   if (profile.role === 'client') {
     return <Navigate to="/client" replace />;
   }

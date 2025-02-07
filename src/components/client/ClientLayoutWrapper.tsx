@@ -60,7 +60,7 @@ export function ClientLayoutWrapper() {
     return <Navigate to="/auth" replace />;
   }
 
-  // Non-client users should not access the client layout
+  // Non-client users should be redirected to the main dashboard
   if (profile.role !== 'client') {
     return <Navigate to="/" replace />;
   }
