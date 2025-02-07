@@ -78,50 +78,66 @@ export function ManagePaymentMethods({ customerId }: { customerId?: string }) {
   const fetchPaymentMethods = async () => {
     if (!customerId) return
 
-    const { data, error } = await supabase
-      .from('payment_methods')
-      .select('*')
-      .eq('customer_id', customerId)
+    try {
+      const { data, error } = await supabase
+        .from('payment_methods')
+        .select('*')
+        .eq('customer_id', customerId)
 
-    if (error) {
-      console.error('Error fetching payment methods:', error)
-      return
+      if (error) {
+        console.error('Error fetching payment methods:', error)
+        return
+      }
+
+      console.log('Payment methods fetched:', data)
+      setPaymentMethods(data || [])
+    } catch (error) {
+      console.error('Error in fetchPaymentMethods:', error)
+    } finally {
+      setIsLoading(false)
     }
-
-    setPaymentMethods(data || [])
-    setIsLoading(false)
   }
 
   const createSetupIntent = async () => {
-    const { data, error } = await supabase.functions.invoke('create-setup-intent', {
-      body: { customerId }
-    })
+    try {
+      const { data, error } = await supabase.functions.invoke('create-setup-intent', {
+        body: { customerId }
+      })
 
-    if (error) {
-      console.error('Error creating setup intent:', error)
-      return
+      if (error) {
+        console.error('Error creating setup intent:', error)
+        return
+      }
+
+      setSetupIntent(data.client_secret)
+    } catch (error) {
+      console.error('Error in createSetupIntent:', error)
     }
-
-    setSetupIntent(data.client_secret)
   }
 
   const handleDelete = async (paymentMethodId: string) => {
-    const { error } = await supabase
-      .from('payment_methods')
-      .delete()
-      .eq('id', paymentMethodId)
+    try {
+      const { error } = await supabase
+        .from('payment_methods')
+        .delete()
+        .eq('id', paymentMethodId)
 
-    if (error) {
-      toast.error("Failed to delete payment method")
-      return
+      if (error) {
+        toast.error("Failed to delete payment method")
+        return
+      }
+
+      toast.success("Payment method deleted")
+      fetchPaymentMethods()
+    } catch (error) {
+      console.error('Error in handleDelete:', error)
     }
-
-    toast.success("Payment method deleted")
-    fetchPaymentMethods()
   }
 
   useEffect(() => {
-    fetchPaymentMethods()
+    if (customerId) {
+      fetchPaymentMethods()
+    }
   }, [customerId])
 
   if (isLoading) {
