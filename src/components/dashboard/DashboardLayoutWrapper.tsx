@@ -60,7 +60,7 @@ export function DashboardLayoutWrapper() {
     return <Navigate to="/auth" replace />;
   }
 
-  // Client users should be redirected to the client dashboard
+  // Route client users to the client dashboard, other roles stay here
   if (profile.role === 'client') {
     return <Navigate to="/client" replace />;
   }
@@ -75,3 +75,4 @@ export function DashboardLayoutWrapper() {
     </DashboardLayout>
   );
 }
+

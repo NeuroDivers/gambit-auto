@@ -60,7 +60,7 @@ export function ClientLayoutWrapper() {
     return <Navigate to="/auth" replace />;
   }
 
-  // Non-client users should be redirected to the main dashboard
+  // Only allow clients to access client pages
   if (profile.role !== 'client') {
     return <Navigate to="/" replace />;
   }
@@ -75,3 +75,4 @@ export function ClientLayoutWrapper() {
     </ClientLayout>
   );
 }
+

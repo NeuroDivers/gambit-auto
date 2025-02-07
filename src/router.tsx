@@ -30,83 +30,85 @@ export const router = createBrowserRouter([
     element: <PublicInvoiceView />,
   },
   {
+    path: "/",
     element: <DashboardLayoutWrapper />,
     children: [
       {
-        path: "/",
+        path: "",
         element: <Dashboard />,
       },
       {
-        path: "/work-orders",
+        path: "work-orders",
         element: <WorkOrders />,
       },
       {
-        path: "/work-orders/:id/edit",
+        path: "work-orders/:id/edit",
         element: <EditWorkOrder />,
       },
       {
-        path: "/service-types",
+        path: "service-types",
         element: <ServiceTypes />,
       },
       {
-        path: "/service-bays",
+        path: "service-bays",
         element: <ServiceBays />,
       },
       {
-        path: "/users",
+        path: "users",
         element: <UserManagement />,
       },
       {
-        path: "/quotes",
+        path: "quotes",
         element: <Quotes />,
       },
       {
-        path: "/invoices",
+        path: "invoices",
         element: <Invoices />,
       },
       {
-        path: "/invoices/:id",
+        path: "invoices/:id",
         element: <InvoiceDetails />,
       },
       {
-        path: "/clients",
+        path: "clients",
         element: <ClientManagement />,
       },
       {
-        path: "/business-settings",
+        path: "business-settings",
         element: <BusinessSettings />,
       },
       {
-        path: "/profile-settings",
+        path: "profile-settings",
         element: <ProfileSettings />,
       },
       {
-        path: "/developer-settings",
+        path: "developer-settings",
         element: <DeveloperSettings />,
       },
     ]
   },
   {
+    path: "/client",
     element: <ClientLayoutWrapper />,
     children: [
       {
-        path: "/client",
+        path: "",
         element: <ClientDashboard />,
       },
       {
-        path: "/client/quotes",
+        path: "quotes",
         element: <div>Quotes</div>,
       },
       {
-        path: "/client/invoices",
+        path: "invoices",
         element: <div>Invoices</div>,
       },
       {
-        path: "/client/bookings",
+        path: "bookings",
         element: <div>Bookings</div>,
       },
       {
-        path: "/client/payment-methods",
+        path: "payment-methods",
         element: <div>Payment Methods</div>,
       },
     ]
@@ -116,3 +118,4 @@ export const router = createBrowserRouter([
     element: <NotFound />,
   },
 ])
+
