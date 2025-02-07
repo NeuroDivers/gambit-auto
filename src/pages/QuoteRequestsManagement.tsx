@@ -16,6 +16,7 @@ type QuoteRequest = {
   description: string
   created_at: string
   estimated_amount: number | null
+  service_estimates: Record<string, number> | null
   client_response: "accepted" | "rejected" | null
   service_ids: string[]
   media_urls: string[]
@@ -50,11 +51,25 @@ export default function QuoteRequestsManagement() {
   })
 
   const submitEstimateMutation = useMutation({
-    mutationFn: async ({ id, amount }: { id: string; amount: number }) => {
+    mutationFn: async ({ id, estimates }: { id: string; estimates: Record<string, number> }) => {
+      // Convert string values to numbers and validate
+      const validEstimates: Record<string, number> = {}
+      let total = 0
+
+      for (const [serviceId, amount] of Object.entries(estimates)) {
+        const numAmount = parseFloat(amount)
+        if (isNaN(numAmount) || numAmount <= 0) {
+          throw new Error("Please enter valid amounts for all services")
+        }
+        validEstimates[serviceId] = numAmount
+        total += numAmount
+      }
+
       const { error } = await supabase
         .from("quote_requests")
         .update({ 
-          estimated_amount: amount,
+          service_estimates: validEstimates,
+          estimated_amount: total,
           status: "estimated"
         })
         .eq("id", id)
@@ -63,10 +78,10 @@ export default function QuoteRequestsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["adminQuoteRequests"] })
-      toast.success("Estimate submitted successfully")
+      toast.success("Estimates submitted successfully")
     },
     onError: (error) => {
-      toast.error("Failed to submit estimate: " + error.message)
+      toast.error("Failed to submit estimates: " + error.message)
     }
   })
 
@@ -108,13 +123,13 @@ export default function QuoteRequestsManagement() {
   }
 
   const handleEstimateSubmit = (id: string) => {
-    const amount = parseFloat(estimateAmount[id])
-    if (isNaN(amount) || amount <= 0) {
-      toast.error("Please enter a valid amount")
+    const requestEstimates = estimateAmount
+    if (!Object.keys(requestEstimates).length) {
+      toast.error("Please enter estimates for all services")
       return
     }
-    submitEstimateMutation.mutate({ id, amount })
-    setEstimateAmount(prev => ({ ...prev, [id]: "" }))
+    submitEstimateMutation.mutate({ id, estimates: requestEstimates })
+    setEstimateAmount({})
   }
 
   if (isLoading) {

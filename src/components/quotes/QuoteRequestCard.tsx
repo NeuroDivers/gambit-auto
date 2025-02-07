@@ -17,16 +17,19 @@ type QuoteRequest = {
   description: string
   created_at: string
   estimated_amount: number | null
+  service_estimates: Record<string, number> | null
   client_response: "accepted" | "rejected" | null
   service_ids: string[]
   media_urls: string[]
 }
 
+type ServiceEstimates = { [key: string]: string }
+
 type QuoteRequestCardProps = {
   request: QuoteRequest
   services: any[]
-  estimateAmount: { [key: string]: string }
-  setEstimateAmount: (value: { [key: string]: string }) => void
+  estimateAmount: ServiceEstimates
+  setEstimateAmount: (value: ServiceEstimates) => void
   onEstimateSubmit: (id: string) => void
   onImageRemove?: (url: string) => void
 }
@@ -39,6 +42,10 @@ export function QuoteRequestCard({
   onEstimateSubmit,
   onImageRemove
 }: QuoteRequestCardProps) {
+  const totalEstimate = request.service_estimates 
+    ? Object.values(request.service_estimates).reduce((sum, amount) => sum + amount, 0)
+    : null
+
   return (
     <Card className={cn(
       "transition-colors",
@@ -74,31 +81,49 @@ export function QuoteRequestCard({
           />
         )}
         
-        {request.estimated_amount !== null && (
-          <p className="mt-2 text-lg font-semibold">
-            Estimated Cost: ${request.estimated_amount.toFixed(2)}
-          </p>
+        {totalEstimate !== null && (
+          <div className="mt-2">
+            <h4 className="text-sm font-semibold mb-1">Service Estimates (before taxes):</h4>
+            {Object.entries(request.service_estimates || {}).map(([serviceId, amount]) => (
+              <p key={serviceId} className="text-sm">
+                {services?.find(s => s.id === serviceId)?.name}: ${amount.toFixed(2)}
+              </p>
+            ))}
+            <p className="mt-2 text-lg font-semibold">
+              Total Estimate: ${totalEstimate.toFixed(2)}
+            </p>
+          </div>
         )}
 
         {request.status === "pending" && (
-          <div className="flex gap-2 mt-4">
-            <Input
-              type="number"
-              placeholder="Enter estimate amount"
-              value={estimateAmount[request.id] || ""}
-              onChange={(e) => {
-                setEstimateAmount({
-                  ...estimateAmount,
-                  [request.id]: e.target.value
-                });
-              }}
-              className="max-w-[200px]"
-            />
+          <div className="space-y-4 mt-4">
+            <h4 className="text-sm font-semibold">Enter Service Estimates:</h4>
+            {request.service_ids.map((serviceId) => {
+              const service = services?.find(s => s.id === serviceId)
+              return (
+                <div key={serviceId} className="flex gap-2 items-center">
+                  <span className="text-sm min-w-[150px]">{service?.name}:</span>
+                  <Input
+                    type="number"
+                    placeholder="Enter amount"
+                    value={estimateAmount[serviceId] || ""}
+                    onChange={(e) => {
+                      setEstimateAmount({
+                        ...estimateAmount,
+                        [serviceId]: e.target.value
+                      });
+                    }}
+                    className="max-w-[200px]"
+                  />
+                </div>
+              )
+            })}
             <Button 
               variant="default"
               onClick={() => onEstimateSubmit(request.id)}
+              className="mt-2"
             >
-              Submit Estimate
+              Submit Estimates
             </Button>
           </div>
         )}

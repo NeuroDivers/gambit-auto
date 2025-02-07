@@ -13,6 +13,7 @@ export type QuoteRequest = {
   description: string
   created_at: string
   estimated_amount: number | null
+  service_estimates: Record<string, number> | null
   client_response: "accepted" | "rejected" | null
   service_ids: string[]
   media_urls: string[]
@@ -46,4 +47,3 @@ export function useQuoteRequestActions() {
     handleResponseMutation
   }
 }
-
