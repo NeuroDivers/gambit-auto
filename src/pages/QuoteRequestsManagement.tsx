@@ -6,21 +6,26 @@ import { Loader2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { toast } from "@/hooks/use-toast"
+import { Input } from "@/components/ui/input"
+import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
 type QuoteRequest = {
   id: string
-  status: "pending" | "approved" | "rejected"
+  status: "pending" | "estimated" | "accepted" | "rejected" | "converted"
   vehicle_make: string
   vehicle_model: string
   vehicle_year: number
   vehicle_vin: string
   description: string
   created_at: string
+  estimated_amount: number | null
+  client_response: "accepted" | "rejected" | null
 }
 
 export default function QuoteRequestsManagement() {
   const queryClient = useQueryClient()
+  const [estimateAmount, setEstimateAmount] = useState<{ [key: string]: string }>({})
 
   const { data: quoteRequests, isLoading } = useQuery({
     queryKey: ["adminQuoteRequests"],
@@ -35,30 +40,53 @@ export default function QuoteRequestsManagement() {
     },
   })
 
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: "approved" | "rejected" }) => {
+  const submitEstimateMutation = useMutation({
+    mutationFn: async ({ id, amount }: { id: string; amount: number }) => {
       const { error } = await supabase
         .from("quote_requests")
-        .update({ status })
+        .update({ 
+          estimated_amount: amount,
+          status: "estimated"
+        })
         .eq("id", id)
 
       if (error) throw error
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["adminQuoteRequests"] })
-      toast({
-        title: "Success",
-        description: "Quote request status updated successfully.",
-      })
+      toast.success("Estimate submitted successfully")
     },
     onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update quote request status.",
-      })
-    },
+      toast.error("Failed to submit estimate: " + error.message)
+    }
   })
+
+  const getStatusBadgeVariant = (status: QuoteRequest['status']) => {
+    switch (status) {
+      case "pending":
+        return "default"
+      case "estimated":
+        return "secondary"
+      case "accepted":
+        return "success"
+      case "rejected":
+        return "destructive"
+      case "converted":
+        return "outline"
+      default:
+        return "default"
+    }
+  }
+
+  const handleEstimateSubmit = (id: string) => {
+    const amount = parseFloat(estimateAmount[id])
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Please enter a valid amount")
+      return
+    }
+    submitEstimateMutation.mutate({ id, amount })
+    setEstimateAmount(prev => ({ ...prev, [id]: "" }))
+  }
 
   if (isLoading) {
     return (
@@ -70,52 +98,59 @@ export default function QuoteRequestsManagement() {
 
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-2xl font-bold mb-6">Quote Requests Management</h1>
       <div className="grid gap-4">
         {quoteRequests?.map((request) => (
-          <Card key={request.id}>
+          <Card key={request.id} className={cn(
+            "transition-colors",
+            request.status === "accepted" && !request.client_response && "border-primary"
+          )}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-lg font-medium">
                 {request.vehicle_make} {request.vehicle_model} ({request.vehicle_year})
               </CardTitle>
-              <Badge 
-                variant={
-                  request.status === "approved" 
-                    ? "secondary" 
-                    : request.status === "rejected" 
-                    ? "destructive" 
-                    : "default"
-                }
-              >
+              <Badge variant={getStatusBadgeVariant(request.status)}>
                 {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
               </Badge>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">{request.description}</p>
-              <p className="text-xs text-muted-foreground mt-2">
-                VIN: {request.vehicle_vin}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Submitted: {new Date(request.created_at).toLocaleDateString()}
-              </p>
+              
+              {request.estimated_amount !== null && (
+                <p className="mt-2 text-lg font-semibold">
+                  Estimated Cost: ${request.estimated_amount.toFixed(2)}
+                </p>
+              )}
+
               {request.status === "pending" && (
                 <div className="flex gap-2 mt-4">
-                  <Button
+                  <Input
+                    type="number"
+                    placeholder="Enter estimate amount"
+                    value={estimateAmount[request.id] || ""}
+                    onChange={(e) => setEstimateAmount(prev => ({
+                      ...prev,
+                      [request.id]: e.target.value
+                    }))}
+                    className="max-w-[200px]"
+                  />
+                  <Button 
                     variant="default"
-                    size="sm"
-                    onClick={() => updateStatusMutation.mutate({ id: request.id, status: "approved" })}
+                    onClick={() => handleEstimateSubmit(request.id)}
                   >
-                    Approve
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => updateStatusMutation.mutate({ id: request.id, status: "rejected" })}
-                  >
-                    Reject
+                    Submit Estimate
                   </Button>
                 </div>
               )}
+
+              <div className="mt-2 text-xs text-muted-foreground">
+                <p>VIN: {request.vehicle_vin}</p>
+                <p>Submitted: {new Date(request.created_at).toLocaleDateString()}</p>
+                {request.client_response && (
+                  <p className="mt-1">
+                    Client response: <span className="font-semibold">{request.client_response}</span>
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
         ))}

@@ -464,8 +464,10 @@ export type Database = {
       quote_requests: {
         Row: {
           client_id: string
+          client_response: string | null
           created_at: string
           description: string | null
+          estimated_amount: number | null
           id: string
           media_url: string | null
           service_ids: string[]
@@ -478,8 +480,10 @@ export type Database = {
         }
         Insert: {
           client_id: string
+          client_response?: string | null
           created_at?: string
           description?: string | null
+          estimated_amount?: number | null
           id?: string
           media_url?: string | null
           service_ids?: string[]
@@ -492,8 +496,10 @@ export type Database = {
         }
         Update: {
           client_id?: string
+          client_response?: string | null
           created_at?: string
           description?: string | null
+          estimated_amount?: number | null
           id?: string
           media_url?: string | null
           service_ids?: string[]
