@@ -192,6 +192,7 @@ export function ServicePackageList({ serviceId, packages, onPackagesChange }: Se
             placeholder="Description (optional)"
             value={newPackage.description}
             onChange={(e) => setNewPackage({ ...newPackage, description: e.target.value })}
+            className="min-h-[100px]"
           />
           <Input
             type="number"
@@ -225,33 +226,34 @@ export function ServicePackageList({ serviceId, packages, onPackagesChange }: Se
             <TableRow key={pkg.id}>
               {editingId === pkg.id ? (
                 <>
-                  <TableCell>
+                  <TableCell className="align-top">
                     <Input
                       value={editPackage?.name || ""}
                       onChange={(e) => setEditPackage(prev => ({ ...prev!, name: e.target.value }))}
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="align-top">
                     <Textarea
                       value={editPackage?.description || ""}
                       onChange={(e) => setEditPackage(prev => ({ ...prev!, description: e.target.value }))}
+                      className="min-h-[120px] w-full"
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="align-top">
                     <Input
                       type="number"
                       value={editPackage?.price || ""}
                       onChange={(e) => setEditPackage(prev => ({ ...prev!, price: parseFloat(e.target.value) }))}
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="align-top">
                     <Input
                       type="number"
                       value={editPackage?.sale_price || ""}
                       onChange={(e) => setEditPackage(prev => ({ ...prev!, sale_price: parseFloat(e.target.value) }))}
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="align-top">
                     <Select
                       value={editPackage?.status}
                       onValueChange={(value: "active" | "inactive") => 
@@ -267,8 +269,8 @@ export function ServicePackageList({ serviceId, packages, onPackagesChange }: Se
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
+                  <TableCell className="align-top">
+                    <div className="flex flex-col gap-2">
                       <Button size="sm" onClick={() => handleEditPackage(pkg.id)}>
                         Save
                       </Button>
@@ -281,7 +283,7 @@ export function ServicePackageList({ serviceId, packages, onPackagesChange }: Se
               ) : (
                 <>
                   <TableCell>{pkg.name}</TableCell>
-                  <TableCell>{pkg.description}</TableCell>
+                  <TableCell className="whitespace-pre-wrap">{pkg.description}</TableCell>
                   <TableCell>{pkg.price ? `$${pkg.price}` : "-"}</TableCell>
                   <TableCell>{pkg.sale_price ? `$${pkg.sale_price}` : "-"}</TableCell>
                   <TableCell>
