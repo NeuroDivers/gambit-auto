@@ -63,7 +63,7 @@ export function ServiceSelectionSection({ form, services }: ServiceSelectionSect
                           </div>
                           <div 
                             className={`w-12 h-6 rounded-full transition-all relative
-                              ${isChecked ? 'bg-primary' : 'bg-background'}`}
+                              ${isChecked ? 'bg-primary' : 'bg-muted'}`}
                           >
                             <div 
                               className={`w-5 h-5 rounded-full bg-[#F1F1F1] absolute top-0.5 transition-transform
