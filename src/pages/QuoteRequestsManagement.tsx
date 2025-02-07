@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -206,7 +207,7 @@ export default function QuoteRequestsManagement() {
               <div key={request.id} className="relative">
                 <Button
                   onClick={() => handleArchiveToggle(request.id, request.is_archived)}
-                  className="absolute top-4 right-4 z-10"
+                  className="absolute top-4 right-20 z-10"
                   variant="ghost"
                   size="icon"
                   title="Archive quote request"
@@ -236,7 +237,7 @@ export default function QuoteRequestsManagement() {
               <div key={request.id} className="relative">
                 <Button
                   onClick={() => handleArchiveToggle(request.id, request.is_archived)}
-                  className="absolute top-4 right-4 z-10"
+                  className="absolute top-4 right-20 z-10"
                   variant="ghost"
                   size="icon"
                   title="Unarchive quote request"
