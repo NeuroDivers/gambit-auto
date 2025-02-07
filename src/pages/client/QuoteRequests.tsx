@@ -70,4 +70,13 @@ export default function QuoteRequests() {
           quoteRequests={quoteRequests}
           services={services}
           isLoading={isLoading}
-          onAcceptEstimate={(id) => handleResponseMutation.mutate({ id,
+          onAcceptEstimate={(id) => handleResponseMutation.mutate({ id, response: "accepted" })}
+          onRejectEstimate={(id) => handleResponseMutation.mutate({ id, response: "rejected" })}
+          onUploadImage={handleImageUpload}
+          onRemoveImage={handleImageRemove}
+          uploading={uploading}
+        />
+      </div>
+    </div>
+  )
+}
