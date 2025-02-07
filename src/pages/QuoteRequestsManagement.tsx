@@ -18,7 +18,7 @@ type QuoteRequest = {
   estimated_amount: number | null
   client_response: "accepted" | "rejected" | null
   service_ids: string[]
-  media_url: string | null
+  media_urls: string[]
 }
 
 export default function QuoteRequestsManagement() {

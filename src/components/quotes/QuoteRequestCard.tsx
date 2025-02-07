@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { getImageUrl, getServiceNames, getStatusBadgeVariant } from "./utils"
+import { ImageGallery } from "@/components/client/quotes/ImageGallery"
 
 type QuoteRequest = {
   id: string
@@ -18,7 +19,7 @@ type QuoteRequest = {
   estimated_amount: number | null
   client_response: "accepted" | "rejected" | null
   service_ids: string[]
-  media_url: string | null
+  media_urls: string[]
 }
 
 type QuoteRequestCardProps = {
@@ -36,8 +37,6 @@ export function QuoteRequestCard({
   setEstimateAmount, 
   onEstimateSubmit 
 }: QuoteRequestCardProps) {
-  const imageUrl = request.media_url ? getImageUrl(request.media_url) : null;
-
   return (
     <Card className={cn(
       "transition-colors",
@@ -65,22 +64,12 @@ export function QuoteRequestCard({
           </div>
         </div>
 
-        {imageUrl && (
-          <div className="mb-4">
-            <h4 className="text-sm font-semibold mb-2">Uploaded Image:</h4>
-            <div className="relative aspect-video w-full max-w-[300px] overflow-hidden rounded-lg border bg-muted">
-              <img 
-                src={imageUrl}
-                alt="Vehicle image" 
-                className="object-cover w-full h-full"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = '/placeholder.svg';
-                  console.error('Failed to load image:', imageUrl);
-                }}
-              />
-            </div>
-          </div>
+        {request.media_urls && request.media_urls.length > 0 && (
+          <ImageGallery
+            mediaUrls={request.media_urls}
+            status={request.status}
+            onImageRemove={() => {}} // Admin view doesn't allow image removal
+          />
         )}
         
         {request.estimated_amount !== null && (
