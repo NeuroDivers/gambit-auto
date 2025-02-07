@@ -66,7 +66,7 @@ export function QuoteRequestForm() {
           .upload(filePath, file)
 
         if (uploadError) throw uploadError
-        
+
         const { data: { publicUrl } } = supabase.storage
           .from('quote-request-media')
           .getPublicUrl(filePath)
@@ -106,7 +106,7 @@ export function QuoteRequestForm() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("No user found")
       
-      // Create quote request
+      // Create quote request with media_urls included
       const { error: requestError } = await supabase
         .from('quote_requests')
         .insert([{
@@ -118,14 +118,14 @@ export function QuoteRequestForm() {
           vehicle_vin: values.vehicle_vin,
           description: values.description,
           service_ids: values.service_ids,
-          media_urls: mediaUrls
+          media_urls: mediaUrls // Ensure media_urls is included in the insert
         }])
 
       if (requestError) throw requestError
 
       toast.success("Quote request submitted successfully")
       form.reset()
-      setMediaUrls([])
+      setMediaUrls([]) // Reset media URLs after successful submission
     } catch (error: any) {
       toast.error(error.message)
     } finally {
