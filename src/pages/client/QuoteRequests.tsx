@@ -115,6 +115,18 @@ export default function QuoteRequests() {
 
       const newUrls: string[] = []
 
+      // Check quote request status
+      const { data: quoteRequest } = await supabase
+        .from('quote_requests')
+        .select('status')
+        .eq('id', quoteId)
+        .single()
+
+      if (!quoteRequest || !['pending', 'estimated'].includes(quoteRequest.status)) {
+        toast.error('Cannot add images in the current status')
+        return
+      }
+
       // Upload each file
       for (const file of files) {
         const fileExt = file.name.split('.').pop()
@@ -147,6 +159,17 @@ export default function QuoteRequests() {
 
   const handleImageRemove = async (quoteId: string, urlToRemove: string, currentUrls: string[]) => {
     try {
+      const { data: quoteRequest } = await supabase
+        .from('quote_requests')
+        .select('status')
+        .eq('id', quoteId)
+        .single()
+
+      if (!quoteRequest || !['pending', 'estimated'].includes(quoteRequest.status)) {
+        toast.error('Cannot modify images in the current status')
+        return
+      }
+
       // Remove file from storage
       const { error: deleteError } = await supabase.storage
         .from('quote-request-media')
