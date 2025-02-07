@@ -15,7 +15,7 @@ export const getStatusBadgeVariant = (status: string) => {
     case "estimated":
       return "secondary"
     case "accepted":
-      return "success"
+      return "secondary" // Changed from "success" to "secondary"
     case "rejected":
       return "destructive"
     case "converted":
