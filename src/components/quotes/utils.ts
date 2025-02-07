@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client"
 
 export const getServiceNames = (serviceIds: string[], services: any[]) => {
@@ -10,7 +9,13 @@ export const getServiceNames = (serviceIds: string[], services: any[]) => {
 
 export const getImageUrl = (mediaUrl: string | null) => {
   if (!mediaUrl) return null
-  // Get the public URL directly from the storage bucket
+  
+  // If the URL already contains the storage URL, return it as is
+  if (mediaUrl.startsWith('http')) {
+    return mediaUrl
+  }
+  
+  // Otherwise, get the public URL from the storage bucket
   const { data } = supabase.storage
     .from('quote-request-media')
     .getPublicUrl(mediaUrl)
