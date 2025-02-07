@@ -60,18 +60,19 @@ export function ClientLayoutWrapper() {
     return <Navigate to="/auth" replace />;
   }
 
-  // Only allow clients to access this layout
-  if (profile.role !== 'client') {
-    return <Navigate to="/" replace />;
+  // Only allow clients to access the client layout
+  if (profile.role === 'client') {
+    return (
+      <ClientLayout
+        firstName={profile?.first_name}
+        role={profile?.role}
+        onLogout={handleLogout}
+      >
+        <Outlet />
+      </ClientLayout>
+    );
   }
 
-  return (
-    <ClientLayout
-      firstName={profile?.first_name}
-      role={profile?.role}
-      onLogout={handleLogout}
-    >
-      <Outlet />
-    </ClientLayout>
-  );
+  // If user is not a client, redirect to main dashboard
+  return <Navigate to="/" replace />;
 }
