@@ -469,7 +469,7 @@ export type Database = {
           description: string | null
           estimated_amount: number | null
           id: string
-          media_url: string | null
+          media_urls: string[] | null
           service_ids: string[]
           status: string
           updated_at: string
@@ -485,7 +485,7 @@ export type Database = {
           description?: string | null
           estimated_amount?: number | null
           id?: string
-          media_url?: string | null
+          media_urls?: string[] | null
           service_ids?: string[]
           status?: string
           updated_at?: string
@@ -501,7 +501,7 @@ export type Database = {
           description?: string | null
           estimated_amount?: number | null
           id?: string
-          media_url?: string | null
+          media_urls?: string[] | null
           service_ids?: string[]
           status?: string
           updated_at?: string

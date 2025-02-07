@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -22,7 +23,7 @@ type QuoteRequest = {
   estimated_amount: number | null
   client_response: "accepted" | "rejected" | null
   service_ids: string[]
-  media_url: string | null
+  media_urls: string[]
 }
 
 export default function QuoteRequests() {
@@ -109,34 +110,67 @@ export default function QuoteRequests() {
     }
   })
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, quoteId: string) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, quoteId: string, currentUrls: string[]) => {
     try {
       setUploading(true)
-      const file = event.target.files?.[0]
-      if (!file) return
+      const files = event.target.files
+      if (!files || files.length === 0) return
 
-      const fileExt = file.name.split('.').pop()
-      const filePath = `${quoteId}-${Math.random()}.${fileExt}`
+      const newUrls: string[] = []
 
-      const { error: uploadError } = await supabase.storage
-        .from('quote-request-media')
-        .upload(filePath, file)
+      // Upload each file
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop()
+        const filePath = `${quoteId}-${Math.random()}.${fileExt}`
 
-      if (uploadError) throw uploadError
+        const { error: uploadError } = await supabase.storage
+          .from('quote-request-media')
+          .upload(filePath, file)
 
+        if (uploadError) throw uploadError
+        newUrls.push(filePath)
+      }
+
+      // Update quote request with new URLs
       const { error: updateError } = await supabase
         .from('quote_requests')
-        .update({ media_url: filePath })
+        .update({ media_urls: [...currentUrls, ...newUrls] })
         .eq('id', quoteId)
 
       if (updateError) throw updateError
 
       queryClient.invalidateQueries({ queryKey: ['quoteRequests'] })
-      toast.success('Image uploaded successfully')
+      toast.success(`Successfully uploaded ${files.length} image${files.length > 1 ? 's' : ''}`)
     } catch (error: any) {
       toast.error('Error uploading image: ' + error.message)
     } finally {
       setUploading(false)
+    }
+  }
+
+  const handleImageRemove = async (quoteId: string, urlToRemove: string, currentUrls: string[]) => {
+    try {
+      // Remove file from storage
+      const { error: deleteError } = await supabase.storage
+        .from('quote-request-media')
+        .remove([urlToRemove])
+
+      if (deleteError) throw deleteError
+
+      // Update quote request to remove URL from array
+      const { error: updateError } = await supabase
+        .from('quote_requests')
+        .update({
+          media_urls: currentUrls.filter(url => url !== urlToRemove)
+        })
+        .eq('id', quoteId)
+
+      if (updateError) throw updateError
+
+      queryClient.invalidateQueries({ queryKey: ['quoteRequests'] })
+      toast.success('Image removed successfully')
+    } catch (error: any) {
+      toast.error('Error removing image: ' + error.message)
     }
   }
 
@@ -179,19 +213,33 @@ export default function QuoteRequests() {
                 </div>
               </div>
 
-              {request.media_url && (
+              {request.media_urls && request.media_urls.length > 0 && (
                 <div className="mb-4">
-                  <h4 className="text-sm font-semibold mb-2">Uploaded Image:</h4>
-                  <div className="relative aspect-video w-full max-w-[300px] overflow-hidden rounded-lg border bg-muted">
-                    <img 
-                      src={getImageUrl(request.media_url)}
-                      alt="Vehicle image" 
-                      className="object-cover w-full h-full"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/placeholder.svg';
-                      }}
-                    />
+                  <h4 className="text-sm font-semibold mb-2">Uploaded Images:</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {request.media_urls.map((url, index) => (
+                      <div key={index} className="relative aspect-video overflow-hidden rounded-lg border bg-muted">
+                        <img 
+                          src={getImageUrl(url)}
+                          alt={`Vehicle image ${index + 1}`}
+                          className="object-cover w-full h-full"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/placeholder.svg';
+                          }}
+                        />
+                        {["pending", "estimated"].includes(request.status) && (
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2"
+                            onClick={() => handleImageRemove(request.id, url, request.media_urls)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -206,12 +254,13 @@ export default function QuoteRequests() {
                   >
                     <label>
                       <Upload className="h-4 w-4" />
-                      {uploading ? "Uploading..." : "Upload Image"}
+                      {uploading ? "Uploading..." : "Upload Images"}
                       <input
                         type="file"
                         className="hidden"
                         accept="image/*"
-                        onChange={(e) => handleImageUpload(e, request.id)}
+                        multiple
+                        onChange={(e) => handleImageUpload(e, request.id, request.media_urls || [])}
                         disabled={uploading}
                       />
                     </label>
@@ -261,4 +310,3 @@ export default function QuoteRequests() {
       </div>
     </div>
   )
-}
