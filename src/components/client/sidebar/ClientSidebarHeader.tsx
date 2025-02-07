@@ -29,18 +29,16 @@ export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebar
             <User className="h-4 w-4" />
           </AvatarFallback>
         </Avatar>
-        <div className="space-y-2">
+        <div className="space-y-1">
           <h2 className="text-lg font-medium">
             Welcome, {formatName(firstName)}
           </h2>
-          {role && (
-            <span className="text-sm rounded-md px-2 py-1 capitalize inline-block" style={{
-              color: '#bb86fc',
-              background: 'rgb(187 134 252 / 0.1)',
-            }}>
-              {role} account
-            </span>
-          )}
+          <span className="text-sm rounded-md px-2 py-1 capitalize inline-block" style={{
+            color: '#bb86fc',
+            background: 'rgb(187 134 252 / 0.1)',
+          }}>
+            {role || 'Guest'} account
+          </span>
         </div>
       </div>
       <Button
