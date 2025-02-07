@@ -10,9 +10,9 @@ import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useQuery } from "@tanstack/react-query"
 import { MediaUploadField } from "@/components/work-orders/form-fields/MediaUploadField"
+import { Checkbox } from "@/components/ui/checkbox"
 
 const formSchema = z.object({
   vehicle_make: z.string().min(1, "Vehicle make is required"),
@@ -20,14 +20,14 @@ const formSchema = z.object({
   vehicle_year: z.string().min(4, "Valid year required"),
   vehicle_vin: z.string().min(1, "VIN is required"),
   description: z.string().min(1, "Please describe the service you need"),
-  service_id: z.string().min(1, "Please select a service")
+  service_ids: z.array(z.string()).min(1, "Please select at least one service")
 })
 
 export function QuoteRequestForm() {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [mediaUrl, setMediaUrl] = useState<string | null>(null)
-  const [uploading, setUploading] = useState(false)
+  const { useMediaUpload } = require('@/components/work-orders/hooks/useMediaUpload')
+  const { mediaUrl, uploading, handleFileUpload, handleMediaRemove } = useMediaUpload('quote-request-media')
 
   const { data: services = [] } = useQuery({
     queryKey: ["services"],
@@ -50,40 +50,9 @@ export function QuoteRequestForm() {
       vehicle_year: new Date().getFullYear().toString(),
       vehicle_vin: "",
       description: "",
-      service_id: ""
+      service_ids: []
     }
   })
-
-  const handleFileUpload = async (file: File) => {
-    try {
-      setUploading(true)
-      
-      const fileExt = file.name.split('.').pop()
-      const filePath = `${Math.random()}.${fileExt}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('quote-request-media')
-        .upload(filePath, file)
-
-      if (uploadError) {
-        throw uploadError
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('quote-request-media')
-        .getPublicUrl(filePath)
-
-      setMediaUrl(publicUrl)
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Error uploading file",
-        variant: "destructive",
-      })
-    } finally {
-      setUploading(false)
-    }
-  }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -104,7 +73,7 @@ export function QuoteRequestForm() {
           vehicle_year: parseInt(values.vehicle_year),
           vehicle_vin: values.vehicle_vin,
           description: values.description,
-          service_id: values.service_id,
+          service_ids: values.service_ids,
           media_url: mediaUrl
         }])
 
@@ -116,7 +85,7 @@ export function QuoteRequestForm() {
       })
       
       form.reset()
-      setMediaUrl(null)
+      handleMediaRemove()
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -196,24 +165,65 @@ export function QuoteRequestForm() {
 
             <FormField
               control={form.control}
-              name="service_id"
-              render={({ field }) => (
+              name="service_ids"
+              render={() => (
                 <FormItem>
-                  <FormLabel>Service Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a service" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {services.map((service) => (
-                        <SelectItem key={service.id} value={service.id}>
-                          {service.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Service Types</FormLabel>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {services.map((service) => (
+                      <FormField
+                        key={service.id}
+                        control={form.control}
+                        name="service_ids"
+                        render={({ field }) => {
+                          return (
+                            <FormItem
+                              key={service.id}
+                              className="flex flex-col items-start space-y-0"
+                            >
+                              <FormControl>
+                                <Card
+                                  className={`w-full cursor-pointer transition-all ${
+                                    field.value?.includes(service.id)
+                                      ? "border-primary bg-primary/5"
+                                      : ""
+                                  }`}
+                                  onClick={() => {
+                                    const current = field.value || []
+                                    const updated = current.includes(service.id)
+                                      ? current.filter((id) => id !== service.id)
+                                      : [...current, service.id]
+                                    field.onChange(updated)
+                                  }}
+                                >
+                                  <CardContent className="flex items-center space-x-4 p-4">
+                                    <Checkbox
+                                      checked={field.value?.includes(service.id)}
+                                      onCheckedChange={() => {
+                                        const current = field.value || []
+                                        const updated = current.includes(service.id)
+                                          ? current.filter((id) => id !== service.id)
+                                          : [...current, service.id]
+                                        field.onChange(updated)
+                                      }}
+                                    />
+                                    <div className="flex-1">
+                                      <h4 className="font-medium">{service.name}</h4>
+                                      {service.price && (
+                                        <p className="text-sm text-muted-foreground">
+                                          Starting from ${service.price}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              </FormControl>
+                            </FormItem>
+                          )
+                        }}
+                      />
+                    ))}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -241,7 +251,7 @@ export function QuoteRequestForm() {
               onFileUpload={handleFileUpload}
               mediaUrl={mediaUrl}
               uploading={uploading}
-              onMediaRemove={() => setMediaUrl(null)}
+              onMediaRemove={handleMediaRemove}
               label="Upload Vehicle Images"
               description="Upload images of your vehicle to help us better understand your service needs."
             />

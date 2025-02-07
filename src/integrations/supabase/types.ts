@@ -468,7 +468,7 @@ export type Database = {
           description: string | null
           id: string
           media_url: string | null
-          service_id: string | null
+          service_ids: string[]
           status: string
           updated_at: string
           vehicle_make: string | null
@@ -482,7 +482,7 @@ export type Database = {
           description?: string | null
           id?: string
           media_url?: string | null
-          service_id?: string | null
+          service_ids?: string[]
           status?: string
           updated_at?: string
           vehicle_make?: string | null
@@ -496,7 +496,7 @@ export type Database = {
           description?: string | null
           id?: string
           media_url?: string | null
-          service_id?: string | null
+          service_ids?: string[]
           status?: string
           updated_at?: string
           vehicle_make?: string | null
@@ -504,15 +504,7 @@ export type Database = {
           vehicle_vin?: string | null
           vehicle_year?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "quote_requests_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "service_types"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       quotes: {
         Row: {
