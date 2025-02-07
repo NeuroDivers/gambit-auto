@@ -36,6 +36,8 @@ export function QuoteRequestCard({
   setEstimateAmount, 
   onEstimateSubmit 
 }: QuoteRequestCardProps) {
+  const imageUrl = request.media_url ? getImageUrl(request.media_url) : null;
+
   return (
     <Card className={cn(
       "transition-colors",
@@ -63,17 +65,18 @@ export function QuoteRequestCard({
           </div>
         </div>
 
-        {request.media_url && (
+        {imageUrl && (
           <div className="mb-4">
             <h4 className="text-sm font-semibold mb-2">Uploaded Image:</h4>
             <div className="relative aspect-video w-full max-w-[300px] overflow-hidden rounded-lg border bg-muted">
               <img 
-                src={getImageUrl(request.media_url)}
+                src={imageUrl}
                 alt="Vehicle image" 
                 className="object-cover w-full h-full"
                 onError={(e) => {
-                  const target = e.target as HTMLImageElement
-                  target.src = 'placeholder.svg'
+                  const target = e.target as HTMLImageElement;
+                  target.src = '/placeholder.svg';
+                  console.error('Failed to load image:', imageUrl);
                 }}
               />
             </div>
@@ -93,9 +96,10 @@ export function QuoteRequestCard({
               placeholder="Enter estimate amount"
               value={estimateAmount[request.id] || ""}
               onChange={(e) => {
-                const newEstimateAmount = { ...estimateAmount }
-                newEstimateAmount[request.id] = e.target.value
-                setEstimateAmount(newEstimateAmount)
+                setEstimateAmount({
+                  ...estimateAmount,
+                  [request.id]: e.target.value
+                });
               }}
               className="max-w-[200px]"
             />
@@ -121,4 +125,3 @@ export function QuoteRequestCard({
     </Card>
   )
 }
-

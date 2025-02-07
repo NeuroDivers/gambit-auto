@@ -10,7 +10,12 @@ export const getServiceNames = (serviceIds: string[], services: any[]) => {
 
 export const getImageUrl = (mediaUrl: string | null) => {
   if (!mediaUrl) return null
-  return supabase.storage.from('quote-request-media').getPublicUrl(mediaUrl).data.publicUrl
+  // Get the public URL directly from the storage bucket
+  const { data } = supabase.storage
+    .from('quote-request-media')
+    .getPublicUrl(mediaUrl)
+  
+  return data.publicUrl
 }
 
 export const getStatusBadgeVariant = (status: "pending" | "estimated" | "accepted" | "rejected" | "converted") => {
