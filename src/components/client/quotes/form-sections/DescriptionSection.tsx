@@ -25,18 +25,17 @@ export function DescriptionSection({
   onMediaRemove 
 }: DescriptionSectionProps) {
   return (
-    <div className="rounded-lg border border-white/10 p-6 bg-black/20 space-y-6">
-      <h3 className="text-lg font-medium text-white/90 mb-4">Service Details</h3>
+    <div className="space-y-6">
       <FormField
         control={form.control}
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-white/90">Service Description</FormLabel>
+            <FormLabel>Service Description</FormLabel>
             <FormControl>
               <Textarea 
                 placeholder="Please describe the service you need..."
-                className="min-h-[100px] bg-[#1A1F2C] border-zinc-800 text-white/90 placeholder:text-white/60"
+                className="min-h-[100px]"
                 {...field}
               />
             </FormControl>
@@ -50,8 +49,8 @@ export function DescriptionSection({
         mediaUrl={mediaUrl}
         uploading={uploading}
         onMediaRemove={onMediaRemove}
-        label="Upload Images/Videos"
-        description="Upload images or videos of the damage (max 10MB per file)"
+        label="Upload Vehicle Images"
+        description="Upload images of your vehicle to help us better understand your service needs."
       />
     </div>
   )

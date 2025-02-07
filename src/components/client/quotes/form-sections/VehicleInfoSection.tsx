@@ -17,81 +17,62 @@ const formSchema = z.object({
 
 export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
   return (
-    <div className="rounded-lg border border-white/10 p-6 bg-black/20">
-      <h3 className="text-lg font-medium text-white/90 mb-4">Vehicle Information</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <FormField
-          control={form.control}
-          name="vehicle_make"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-white/90">Vehicle Make</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="e.g. Toyota" 
-                  className="bg-[#1A1F2C] border-zinc-800 text-white/90 placeholder:text-white/60"
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <FormField
+        control={form.control}
+        name="vehicle_make"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Vehicle Make</FormLabel>
+            <FormControl>
+              <Input placeholder="e.g. Toyota" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-        <FormField
-          control={form.control}
-          name="vehicle_model"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-white/90">Vehicle Model</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="e.g. Camry" 
-                  className="bg-[#1A1F2C] border-zinc-800 text-white/90 placeholder:text-white/60"
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <FormField
+        control={form.control}
+        name="vehicle_model"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Vehicle Model</FormLabel>
+            <FormControl>
+              <Input placeholder="e.g. Camry" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-        <FormField
-          control={form.control}
-          name="vehicle_year"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-white/90">Vehicle Year</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  className="bg-[#1A1F2C] border-zinc-800 text-white/90"
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <FormField
+        control={form.control}
+        name="vehicle_year"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Vehicle Year</FormLabel>
+            <FormControl>
+              <Input type="number" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-        <FormField
-          control={form.control}
-          name="vehicle_vin"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-white/90">Vehicle VIN</FormLabel>
-              <FormControl>
-                <Input 
-                  className="bg-[#1A1F2C] border-zinc-800 text-white/90 placeholder:text-white/60"
-                  placeholder="Enter VIN number"
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+      <FormField
+        control={form.control}
+        name="vehicle_vin"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Vehicle VIN</FormLabel>
+            <FormControl>
+              <Input {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   )
 }
