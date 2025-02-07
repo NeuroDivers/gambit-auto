@@ -22,6 +22,13 @@ const formSchema = z.object({
 })
 
 export function ServiceSelectionSection({ form, services }: ServiceSelectionSectionProps) {
+  const handleServiceToggle = (serviceId: string, currentValue: string[]) => {
+    const updated = currentValue.includes(serviceId)
+      ? currentValue.filter((id) => id !== serviceId)
+      : [...currentValue, serviceId]
+    return updated
+  }
+
   return (
     <FormField
       control={form.control}
@@ -49,10 +56,7 @@ export function ServiceSelectionSection({ form, services }: ServiceSelectionSect
                               : ""
                           }`}
                           onClick={() => {
-                            const current = field.value || []
-                            const updated = current.includes(service.id)
-                              ? current.filter((id) => id !== service.id)
-                              : [...current, service.id]
+                            const updated = handleServiceToggle(service.id, field.value || [])
                             field.onChange(updated)
                           }}
                         >
@@ -60,10 +64,7 @@ export function ServiceSelectionSection({ form, services }: ServiceSelectionSect
                             <Checkbox
                               checked={field.value?.includes(service.id)}
                               onCheckedChange={() => {
-                                const current = field.value || []
-                                const updated = current.includes(service.id)
-                                  ? current.filter((id) => id !== service.id)
-                                  : [...current, service.id]
+                                const updated = handleServiceToggle(service.id, field.value || [])
                                 field.onChange(updated)
                               }}
                             />
