@@ -1,3 +1,4 @@
+
 import { createBrowserRouter } from "react-router-dom"
 import Auth from "./pages/Auth"
 import Dashboard from "./pages/Dashboard"
@@ -16,6 +17,8 @@ import BusinessSettings from "./pages/BusinessSettings"
 import ProfileSettings from "./pages/ProfileSettings"
 import DeveloperSettings from "./pages/DeveloperSettings"
 import { DashboardLayoutWrapper } from "./components/dashboard/DashboardLayoutWrapper"
+import { ClientLayoutWrapper } from "./components/client/ClientLayoutWrapper"
+import ClientDashboard from "./pages/client/Dashboard"
 
 export const router = createBrowserRouter([
   {
@@ -80,6 +83,31 @@ export const router = createBrowserRouter([
       {
         path: "/developer-settings",
         element: <DeveloperSettings />,
+      },
+    ]
+  },
+  {
+    element: <ClientLayoutWrapper />,
+    children: [
+      {
+        path: "/client",
+        element: <ClientDashboard />,
+      },
+      {
+        path: "/client/quotes",
+        element: <div>Quotes</div>,
+      },
+      {
+        path: "/client/invoices",
+        element: <div>Invoices</div>,
+      },
+      {
+        path: "/client/bookings",
+        element: <div>Bookings</div>,
+      },
+      {
+        path: "/client/payment-methods",
+        element: <div>Payment Methods</div>,
       },
     ]
   },
