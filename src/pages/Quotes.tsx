@@ -4,10 +4,12 @@ import { QuoteList } from "@/components/quotes/QuoteList"
 import { QuoteStats } from "@/components/quotes/QuoteStats"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import QuoteRequestsManagement from "./QuoteRequestsManagement"
+import { Toaster } from "sonner"
 
 export default function Quotes() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
+      <Toaster />
       <div className="container mx-auto py-12">
         <div className="px-6">
           <div className="mb-8">
@@ -35,3 +37,4 @@ export default function Quotes() {
     </div>
   )
 }
+
