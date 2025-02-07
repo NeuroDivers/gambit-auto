@@ -1,139 +1,29 @@
 import { useState } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
 import { Loader2, Archive } from "lucide-react"
-import { toast } from "sonner"
 import { QuoteRequestCard } from "@/components/quotes/QuoteRequestCard"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-
-type QuoteRequest = {
-  id: string
-  status: "pending" | "estimated" | "accepted" | "rejected" | "converted"
-  vehicle_make: string
-  vehicle_model: string
-  vehicle_year: number
-  vehicle_vin: string
-  description: string
-  created_at: string
-  estimated_amount: number | null
-  service_estimates: Record<string, number> | null
-  client_response: "accepted" | "rejected" | null
-  service_ids: string[]
-  media_urls: string[]
-  is_archived: boolean
-}
+import { DeleteQuoteDialog } from "@/components/quotes/DeleteQuoteDialog"
+import { useQuoteRequests } from "@/hooks/useQuoteRequests"
+import { toast } from "sonner"
+import { useQueryClient } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
 
 export default function QuoteRequestsManagement() {
-  const queryClient = useQueryClient()
   const [estimateAmount, setEstimateAmount] = useState<Record<string, string>>({})
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null)
 
-  const { data: services } = useQuery({
-    queryKey: ["services"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("service_types")
-        .select("*")
-      if (error) throw error
-      return data
-    },
-  })
+  const {
+    services,
+    quoteRequests,
+    isLoading,
+    archiveQuoteMutation,
+    updateStatusMutation,
+    deleteQuoteMutation
+  } = useQuoteRequests()
 
-  const { data: quoteRequests, isLoading } = useQuery({
-    queryKey: ["adminQuoteRequests"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("quote_requests")
-        .select("*")
-        .order("created_at", { ascending: false })
-
-      if (error) throw error
-      return data as QuoteRequest[]
-    },
-  })
-
-  const archiveQuoteMutation = useMutation({
-    mutationFn: async ({ id, isArchived }: { id: string; isArchived: boolean }) => {
-      const { error } = await supabase
-        .from("quote_requests")
-        .update({ is_archived: isArchived })
-        .eq("id", id)
-
-      if (error) throw error
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["adminQuoteRequests"] })
-      toast.success("Quote request updated successfully")
-    },
-    onError: (error) => {
-      toast.error("Failed to update quote request: " + error.message)
-    }
-  })
-
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: QuoteRequest['status'] }) => {
-      const { error } = await supabase
-        .from("quote_requests")
-        .update({ status })
-        .eq("id", id)
-
-      if (error) throw error
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["adminQuoteRequests"] })
-      toast.success("Status updated successfully")
-    },
-    onError: (error) => {
-      toast.error("Failed to update status: " + error.message)
-    }
-  })
-
-  const submitEstimateMutation = useMutation({
-    mutationFn: async ({ id, estimates }: { id: string; estimates: Record<string, string> }) => {
-      // Convert string values to numbers and validate
-      const validEstimates: Record<string, number> = {}
-      let total = 0
-
-      for (const [serviceId, amount] of Object.entries(estimates)) {
-        const numAmount = parseFloat(amount)
-        if (isNaN(numAmount) || numAmount <= 0) {
-          throw new Error("Please enter valid amounts for all services")
-        }
-        validEstimates[serviceId] = numAmount
-        total += numAmount
-      }
-
-      const { error } = await supabase
-        .from("quote_requests")
-        .update({ 
-          service_estimates: validEstimates,
-          estimated_amount: total,
-          status: "estimated"
-        })
-        .eq("id", id)
-
-      if (error) throw error
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["adminQuoteRequests"] })
-      toast.success("Estimates submitted successfully")
-    },
-    onError: (error) => {
-      toast.error("Failed to submit estimates: " + error.message)
-    }
-  })
+  const queryClient = useQueryClient()
 
   const handleImageRemove = async (quoteId: string, urlToRemove: string, currentUrls: string[]) => {
     try {
@@ -181,6 +71,41 @@ export default function QuoteRequestsManagement() {
     submitEstimateMutation.mutate({ id, estimates: requestEstimates })
     setEstimateAmount({})
   }
+
+  const submitEstimateMutation = useMutation({
+    mutationFn: async ({ id, estimates }: { id: string; estimates: Record<string, string> }) => {
+      // Convert string values to numbers and validate
+      const validEstimates: Record<string, number> = {}
+      let total = 0
+
+      for (const [serviceId, amount] of Object.entries(estimates)) {
+        const numAmount = parseFloat(amount)
+        if (isNaN(numAmount) || numAmount <= 0) {
+          throw new Error("Please enter valid amounts for all services")
+        }
+        validEstimates[serviceId] = numAmount
+        total += numAmount
+      }
+
+      const { error } = await supabase
+        .from("quote_requests")
+        .update({ 
+          service_estimates: validEstimates,
+          estimated_amount: total,
+          status: "estimated"
+        })
+        .eq("id", id)
+
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["adminQuoteRequests"] })
+      toast.success("Estimates submitted successfully")
+    },
+    onError: (error) => {
+      toast.error("Failed to submit estimates: " + error.message)
+    }
+  })
 
   const handleArchiveToggle = (id: string, currentArchiveStatus: boolean) => {
     archiveQuoteMutation.mutate({ 
@@ -280,26 +205,16 @@ export default function QuoteRequestsManagement() {
         </TabsContent>
       </Tabs>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the quote request
-              and all associated media files.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => selectedQuoteId && deleteQuoteMutation.mutate(selectedQuoteId)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteQuoteDialog 
+        open={deleteDialogOpen} 
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={() => {
+          if (selectedQuoteId) {
+            deleteQuoteMutation.mutate(selectedQuoteId)
+            setDeleteDialogOpen(false)
+          }
+        }}
+      />
     </div>
   )
 }

@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -6,31 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ImageGallery } from "@/components/client/quotes/ImageGallery"
 import { getServiceNames, getStatusBadgeVariant } from "./utils"
 import { Trash2 } from "lucide-react"
-
-type QuoteRequest = {
-  id: string
-  status: "pending" | "estimated" | "accepted" | "rejected" | "converted"
-  vehicle_make: string
-  vehicle_model: string
-  vehicle_year: number
-  vehicle_vin: string
-  description: string
-  created_at: string
-  estimated_amount: number | null
-  service_estimates: Record<string, number> | null
-  client_response: "accepted" | "rejected" | null
-  service_ids: string[]
-  media_urls: string[]
-  is_archived: boolean
-}
-
-type ServiceEstimates = { [key: string]: string }
+import { QuoteRequest } from "@/hooks/useQuoteRequests"
 
 type QuoteRequestCardProps = {
   request: QuoteRequest
   services: any[]
-  estimateAmount: ServiceEstimates
-  setEstimateAmount: (value: ServiceEstimates) => void
+  estimateAmount: Record<string, string>
+  setEstimateAmount: (value: Record<string, string>) => void
   onEstimateSubmit: (id: string) => void
   onImageRemove?: (url: string) => void
   onStatusChange?: (id: string, status: QuoteRequest['status']) => void
@@ -127,39 +110,6 @@ export function QuoteRequestCard({
             <p className="mt-2 text-lg font-semibold">
               Total Estimate: ${totalEstimate.toFixed(2)}
             </p>
-          </div>
-        )}
-
-        {request.status === "pending" && (
-          <div className="space-y-4 mt-4">
-            <h4 className="text-sm font-semibold">Enter Service Estimates:</h4>
-            {request.service_ids.map((serviceId) => {
-              const service = services?.find(s => s.id === serviceId)
-              return (
-                <div key={serviceId} className="flex gap-2 items-center">
-                  <span className="text-sm min-w-[150px]">{service?.name}:</span>
-                  <Input
-                    type="number"
-                    placeholder="Enter amount"
-                    value={estimateAmount[serviceId] || ""}
-                    onChange={(e) => {
-                      setEstimateAmount({
-                        ...estimateAmount,
-                        [serviceId]: e.target.value
-                      });
-                    }}
-                    className="max-w-[200px]"
-                  />
-                </div>
-              )
-            })}
-            <Button 
-              variant="default"
-              onClick={() => onEstimateSubmit(request.id)}
-              className="mt-2"
-            >
-              Submit Estimates
-            </Button>
           </div>
         )}
 
