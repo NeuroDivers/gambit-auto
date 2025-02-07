@@ -1,12 +1,11 @@
-
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { getServiceNames, getStatusBadgeVariant } from "./utils"
-import { ImageGallery } from "@/components/client/quotes/ImageGallery"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ImageGallery } from "@/components/client/quotes/ImageGallery"
+import { getServiceNames, getStatusBadgeVariant } from "./utils"
+import { Trash2 } from "lucide-react"
 
 type QuoteRequest = {
   id: string
@@ -22,6 +21,7 @@ type QuoteRequest = {
   client_response: "accepted" | "rejected" | null
   service_ids: string[]
   media_urls: string[]
+  is_archived: boolean
 }
 
 type ServiceEstimates = { [key: string]: string }
@@ -34,6 +34,7 @@ type QuoteRequestCardProps = {
   onEstimateSubmit: (id: string) => void
   onImageRemove?: (url: string) => void
   onStatusChange?: (id: string, status: QuoteRequest['status']) => void
+  onDelete?: (id: string) => void
 }
 
 export function QuoteRequestCard({ 
@@ -43,7 +44,8 @@ export function QuoteRequestCard({
   setEstimateAmount, 
   onEstimateSubmit,
   onImageRemove,
-  onStatusChange
+  onStatusChange,
+  onDelete
 }: QuoteRequestCardProps) {
   const totalEstimate = request.service_estimates 
     ? Object.values(request.service_estimates).reduce((sum, amount) => sum + amount, 0)
@@ -79,6 +81,16 @@ export function QuoteRequestCard({
             <Badge variant={getStatusBadgeVariant(request.status)}>
               {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
             </Badge>
+          )}
+          {onDelete && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onDelete(request.id)}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           )}
         </div>
       </CardHeader>

@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -7,6 +6,16 @@ import { toast } from "sonner"
 import { QuoteRequestCard } from "@/components/quotes/QuoteRequestCard"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 type QuoteRequest = {
   id: string
@@ -28,6 +37,8 @@ type QuoteRequest = {
 export default function QuoteRequestsManagement() {
   const queryClient = useQueryClient()
   const [estimateAmount, setEstimateAmount] = useState<Record<string, string>>({})
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null)
 
   const { data: services } = useQuery({
     queryKey: ["services"],
@@ -182,6 +193,11 @@ export default function QuoteRequestsManagement() {
     updateStatusMutation.mutate({ id, status })
   }
 
+  const handleDelete = (id: string) => {
+    setSelectedQuoteId(id)
+    setDeleteDialogOpen(true)
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-[200px]">
@@ -222,6 +238,7 @@ export default function QuoteRequestsManagement() {
                   onEstimateSubmit={handleEstimateSubmit}
                   onImageRemove={(url) => handleImageRemove(request.id, url, request.media_urls)}
                   onStatusChange={handleStatusChange}
+                  onDelete={handleDelete}
                 />
               </div>
             ))}
@@ -252,6 +269,7 @@ export default function QuoteRequestsManagement() {
                   onEstimateSubmit={handleEstimateSubmit}
                   onImageRemove={(url) => handleImageRemove(request.id, url, request.media_urls)}
                   onStatusChange={handleStatusChange}
+                  onDelete={handleDelete}
                 />
               </div>
             ))}
@@ -261,6 +279,27 @@ export default function QuoteRequestsManagement() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the quote request
+              and all associated media files.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => selectedQuoteId && deleteQuoteMutation.mutate(selectedQuoteId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
