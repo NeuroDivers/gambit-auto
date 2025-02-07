@@ -1,12 +1,13 @@
+
 import { useState } from "react"
 import { Loader2, Archive } from "lucide-react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { QuoteRequestCard } from "@/components/quotes/QuoteRequestCard"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { DeleteQuoteDialog } from "@/components/quotes/DeleteQuoteDialog"
-import { useQuoteRequests } from "@/hooks/useQuoteRequests"
+import { useQuoteRequests, QuoteRequest } from "@/hooks/useQuoteRequests"
 import { toast } from "sonner"
-import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 
 export default function QuoteRequestsManagement() {
