@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,8 +12,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { ServiceTypeFormFields, formSchema } from "./ServiceTypeFormFields";
+import { ServicePackageList } from "./ServicePackageList";
+import { ServicePackage } from "@/integrations/supabase/types/service-types";
 import * as z from "zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ServiceTypeDialogProps {
   open: boolean;
@@ -36,6 +40,7 @@ export const ServiceTypeDialog = ({
 }: ServiceTypeDialogProps) => {
   const { toast } = useToast();
   const isEditing = !!serviceType;
+  const [packages, setPackages] = useState<ServicePackage[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -48,7 +53,6 @@ export const ServiceTypeDialog = ({
     },
   });
 
-  // Reset form with service type data when editing
   useEffect(() => {
     if (serviceType) {
       form.reset({
@@ -58,6 +62,7 @@ export const ServiceTypeDialog = ({
         price: serviceType.price?.toString() || "",
         duration: serviceType.duration?.toString() || "",
       });
+      fetchPackages();
     } else {
       form.reset({
         name: "",
@@ -66,8 +71,29 @@ export const ServiceTypeDialog = ({
         price: "",
         duration: "",
       });
+      setPackages([]);
     }
   }, [serviceType, form]);
+
+  const fetchPackages = async () => {
+    if (!serviceType?.id) return;
+    
+    const { data, error } = await supabase
+      .from("service_packages")
+      .select("*")
+      .eq("service_id", serviceType.id)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      setPackages(data);
+    }
+  };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -111,35 +137,54 @@ export const ServiceTypeDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#1E1E1E] border-white/10">
+      <DialogContent className="bg-[#1E1E1E] border-white/10 max-w-3xl">
         <DialogHeader>
           <DialogTitle className="text-white/[0.87]">
             {isEditing ? "Edit Service Type" : "Create Service Type"}
           </DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <ServiceTypeFormFields form={form} />
-            
-            <div className="flex justify-end space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="border-white/10 text-white/[0.87] hover:bg-[#242424] hover:text-white"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="bg-[#BB86FC] hover:bg-[#BB86FC]/90 text-white"
-              >
-                {isEditing ? "Update" : "Create"}
-              </Button>
-            </div>
-          </form>
-        </Form>
+        <Tabs defaultValue="details" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="details">Service Details</TabsTrigger>
+            {isEditing && <TabsTrigger value="packages">Packages</TabsTrigger>}
+          </TabsList>
+
+          <TabsContent value="details">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <ServiceTypeFormFields form={form} />
+                
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => onOpenChange(false)}
+                    className="border-white/10 text-white/[0.87] hover:bg-[#242424] hover:text-white"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="bg-[#BB86FC] hover:bg-[#BB86FC]/90 text-white"
+                  >
+                    {isEditing ? "Update" : "Create"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </TabsContent>
+
+          {isEditing && (
+            <TabsContent value="packages">
+              <ServicePackageList
+                serviceId={serviceType.id}
+                packages={packages}
+                onPackagesChange={fetchPackages}
+              />
+            </TabsContent>
+          )}
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

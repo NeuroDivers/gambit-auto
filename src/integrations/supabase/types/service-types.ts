@@ -1,5 +1,17 @@
+
 import { Json } from './json';
 import { Database } from './database';
+
+export interface ServicePackage {
+  id: string;
+  service_id: string;
+  name: string;
+  description: string | null;
+  price: number | null;
+  status: Database["public"]["Enums"]["service_status"];
+  created_at: string;
+  updated_at: string;
+}
 
 export interface ServiceTypesTable {
   Row: {
