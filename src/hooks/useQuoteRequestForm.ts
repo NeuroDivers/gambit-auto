@@ -138,6 +138,7 @@ export function useQuoteRequestForm() {
       if (requestError) throw requestError
 
       toast.success("Quote request submitted successfully")
+      // Only reset form after successful submission
       form.reset()
       setStep(1)
     } catch (error: any) {
