@@ -23,6 +23,17 @@ interface ServicePackageListProps {
   onPackagesChange: () => void;
 }
 
+const getStatusStyles = (status: "active" | "inactive") => {
+  switch (status) {
+    case "active":
+      return "text-green-400 bg-[rgb(34,197,94,0.2)] border-[rgb(34,197,94,0.3)]"
+    case "inactive":
+      return "text-[#ea384c] bg-[rgb(234,56,76,0.2)] border-[rgb(234,56,76,0.3)]"
+    default:
+      return ""
+  }
+}
+
 export function ServicePackageList({ serviceId, packages, onPackagesChange }: ServicePackageListProps) {
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
@@ -226,8 +237,8 @@ export function ServicePackageList({ serviceId, packages, onPackagesChange }: Se
             <TableRow key={pkg.id}>
               {editingId === pkg.id ? (
                 <>
-                  <TableCell colSpan={6} className="p-4">
-                    <div className="space-y-4">
+                  <TableCell colSpan={6}>
+                    <div className="space-y-6 p-4">
                       <div className="grid grid-cols-3 gap-4">
                         <Input
                           placeholder="Package Name"
@@ -254,7 +265,7 @@ export function ServicePackageList({ serviceId, packages, onPackagesChange }: Se
                             setEditPackage(prev => ({ ...prev!, status: value }))
                           }
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className={`w-[130px] ${getStatusStyles(editPackage?.status || 'inactive')}`}>
                             <SelectValue placeholder="Select status" />
                           </SelectTrigger>
                           <SelectContent>
@@ -264,12 +275,14 @@ export function ServicePackageList({ serviceId, packages, onPackagesChange }: Se
                         </Select>
                       </div>
                       
-                      <Textarea
-                        placeholder="Description"
-                        value={editPackage?.description || ""}
-                        onChange={(e) => setEditPackage(prev => ({ ...prev!, description: e.target.value }))}
-                        className="min-h-[150px] w-full"
-                      />
+                      <div className="w-full">
+                        <Textarea
+                          placeholder="Description"
+                          value={editPackage?.description || ""}
+                          onChange={(e) => setEditPackage(prev => ({ ...prev!, description: e.target.value }))}
+                          className="min-h-[150px] w-full"
+                        />
+                      </div>
                       
                       <div className="flex justify-end gap-2">
                         <Button
@@ -302,7 +315,7 @@ export function ServicePackageList({ serviceId, packages, onPackagesChange }: Se
                         handleUpdateStatus(pkg.id, value)
                       }
                     >
-                      <SelectTrigger className="w-[120px]">
+                      <SelectTrigger className={`w-[130px] ${getStatusStyles(pkg.status)}`}>
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
