@@ -22,11 +22,12 @@ const formSchema = z.object({
 })
 
 export function ServiceSelectionSection({ form, services }: ServiceSelectionSectionProps) {
-  const handleServiceToggle = (serviceId: string, currentValue: string[]) => {
-    const updated = currentValue.includes(serviceId)
-      ? currentValue.filter((id) => id !== serviceId)
-      : [...currentValue, serviceId]
-    return updated
+  const handleServiceChange = (serviceId: string, checked: boolean, field: any) => {
+    const currentValue = field.value || []
+    const newValue = checked 
+      ? [...currentValue, serviceId]
+      : currentValue.filter((id: string) => id !== serviceId)
+    field.onChange(newValue)
   }
 
   return (
@@ -43,6 +44,7 @@ export function ServiceSelectionSection({ form, services }: ServiceSelectionSect
                 control={form.control}
                 name="service_ids"
                 render={({ field }) => {
+                  const isChecked = field.value?.includes(service.id)
                   return (
                     <FormItem
                       key={service.id}
@@ -50,22 +52,15 @@ export function ServiceSelectionSection({ form, services }: ServiceSelectionSect
                     >
                       <FormControl>
                         <Card
-                          className={`w-full cursor-pointer transition-all ${
-                            field.value?.includes(service.id)
-                              ? "border-primary bg-primary/5"
-                              : ""
+                          className={`w-full transition-all ${
+                            isChecked ? "border-primary bg-primary/5" : ""
                           }`}
-                          onClick={() => {
-                            const updated = handleServiceToggle(service.id, field.value || [])
-                            field.onChange(updated)
-                          }}
                         >
                           <CardContent className="flex items-center space-x-4 p-4">
                             <Checkbox
-                              checked={field.value?.includes(service.id)}
-                              onCheckedChange={() => {
-                                const updated = handleServiceToggle(service.id, field.value || [])
-                                field.onChange(updated)
+                              checked={isChecked}
+                              onCheckedChange={(checked) => {
+                                handleServiceChange(service.id, checked as boolean, field)
                               }}
                             />
                             <div className="flex-1">
