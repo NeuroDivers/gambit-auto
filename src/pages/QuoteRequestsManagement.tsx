@@ -70,6 +70,32 @@ export default function QuoteRequestsManagement() {
     }
   })
 
+  const handleImageRemove = async (quoteId: string, urlToRemove: string, currentUrls: string[]) => {
+    try {
+      // Remove file from storage
+      const { error: deleteError } = await supabase.storage
+        .from('quote-request-media')
+        .remove([urlToRemove])
+
+      if (deleteError) throw deleteError
+
+      // Update quote request to remove URL from array
+      const { error: updateError } = await supabase
+        .from('quote_requests')
+        .update({
+          media_urls: currentUrls.filter(url => url !== urlToRemove)
+        })
+        .eq('id', quoteId)
+
+      if (updateError) throw updateError
+
+      queryClient.invalidateQueries({ queryKey: ['adminQuoteRequests'] })
+      toast.success('Image removed successfully')
+    } catch (error: any) {
+      toast.error('Error removing image: ' + error.message)
+    }
+  }
+
   const handleEstimateSubmit = (id: string) => {
     const amount = parseFloat(estimateAmount[id])
     if (isNaN(amount) || amount <= 0) {
@@ -99,6 +125,7 @@ export default function QuoteRequestsManagement() {
             estimateAmount={estimateAmount}
             setEstimateAmount={setEstimateAmount}
             onEstimateSubmit={handleEstimateSubmit}
+            onImageRemove={(url) => handleImageRemove(request.id, url, request.media_urls)}
           />
         ))}
         {quoteRequests?.length === 0 && (

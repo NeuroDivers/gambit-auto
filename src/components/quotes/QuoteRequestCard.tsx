@@ -28,6 +28,7 @@ type QuoteRequestCardProps = {
   estimateAmount: { [key: string]: string }
   setEstimateAmount: (value: { [key: string]: string }) => void
   onEstimateSubmit: (id: string) => void
+  onImageRemove?: (url: string) => void
 }
 
 export function QuoteRequestCard({ 
@@ -35,7 +36,8 @@ export function QuoteRequestCard({
   services, 
   estimateAmount, 
   setEstimateAmount, 
-  onEstimateSubmit 
+  onEstimateSubmit,
+  onImageRemove
 }: QuoteRequestCardProps) {
   return (
     <Card className={cn(
@@ -68,7 +70,7 @@ export function QuoteRequestCard({
           <ImageGallery
             mediaUrls={request.media_urls}
             status={request.status}
-            onImageRemove={() => {}} // Admin view doesn't allow image removal
+            onImageRemove={onImageRemove || (() => {})}
           />
         )}
         
