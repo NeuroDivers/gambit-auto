@@ -28,7 +28,21 @@ export function useQuoteRequestData() {
 
       const { data, error } = await supabase
         .from("quote_requests")
-        .select("*")
+        .select(`
+          id,
+          status,
+          vehicle_make,
+          vehicle_model,
+          vehicle_year,
+          vehicle_vin,
+          description,
+          created_at,
+          estimated_amount,
+          client_response,
+          service_ids,
+          media_urls,
+          client_id
+        `)
         .eq("client_id", user.id)
         .order("created_at", { ascending: false })
 
@@ -54,3 +68,4 @@ export function useQuoteRequestData() {
     queryClient
   }
 }
+
