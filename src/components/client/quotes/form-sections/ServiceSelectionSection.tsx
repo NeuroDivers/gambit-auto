@@ -3,6 +3,8 @@ import { FormField, FormItem, FormLabel, FormMessage, FormControl } from "@/comp
 import { Switch } from "@/components/ui/switch"
 import { UseFormReturn } from "react-hook-form"
 import * as z from "zod"
+import { motion } from "framer-motion"
+import { CheckCircle } from "lucide-react"
 
 type ServiceType = {
   id: string
@@ -34,9 +36,11 @@ export function ServiceSelectionSection({ form, services }: ServiceSelectionSect
       control={form.control}
       name="service_ids"
       render={() => (
-        <FormItem className="rounded-lg border border-white/10 p-6 bg-black/20">
-          <h3 className="text-lg font-medium text-white/90 mb-4">Available Services</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormItem className="rounded-xl border border-[#9b87f5]/20 p-6 bg-[#1A1F2C]/40 backdrop-blur-sm">
+          <h3 className="text-xl font-semibold bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent mb-6">
+            Available Services
+          </h3>
+          <div className="grid grid-cols-1 gap-4">
             {services.map((service) => (
               <FormField
                 key={service.id}
@@ -45,36 +49,69 @@ export function ServiceSelectionSection({ form, services }: ServiceSelectionSect
                 render={({ field }) => {
                   const isChecked = field.value?.includes(service.id)
                   return (
-                    <div
-                      key={service.id}
-                      className="flex flex-row items-center justify-between rounded-lg border border-white/10 hover:border-[#9b87f5] p-4 bg-[#1A1F2C] transition-all duration-200 group"
+                    <motion.div
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`
+                        relative overflow-hidden rounded-lg border transition-all duration-300
+                        ${isChecked 
+                          ? 'border-[#9b87f5] bg-[#9b87f5]/10' 
+                          : 'border-white/10 bg-[#1A1F2C]/60 hover:border-[#9b87f5]/50'}
+                      `}
                     >
-                      <div className="space-y-1">
-                        <FormLabel className="text-base text-white/90 group-hover:text-white transition-colors duration-200">
-                          {service.name}
-                        </FormLabel>
-                        {service.price && (
-                          <p className="text-sm text-white/60">
-                            Starting from ${service.price}
-                          </p>
-                        )}
+                      <div 
+                        className="p-6 cursor-pointer"
+                        onClick={() => handleServiceChange(service.id, !isChecked, field)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-2">
+                            <FormLabel className="text-lg font-medium text-white/90">
+                              {service.name}
+                            </FormLabel>
+                            {service.price && (
+                              <p className="text-sm text-white/60">
+                                Starting from ${service.price}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-4">
+                            {isChecked && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="text-[#9b87f5]"
+                              >
+                                <CheckCircle className="w-6 h-6" />
+                              </motion.div>
+                            )}
+                            <FormControl>
+                              <Switch
+                                checked={isChecked}
+                                onCheckedChange={(checked) => {
+                                  handleServiceChange(service.id, checked, field)
+                                }}
+                                className="data-[state=checked]:bg-[#9b87f5]"
+                              />
+                            </FormControl>
+                          </div>
+                        </div>
                       </div>
-                      <FormControl>
-                        <Switch
-                          checked={isChecked}
-                          onCheckedChange={(checked) => {
-                            handleServiceChange(service.id, checked, field)
-                          }}
-                          className="data-[state=checked]:bg-[#9b87f5]"
+                      {isChecked && (
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: '100%' }}
+                          className="absolute bottom-0 left-0 h-1 bg-[#9b87f5]"
                         />
-                      </FormControl>
-                    </div>
+                      )}
+                    </motion.div>
                   )
                 }}
               />
             ))}
           </div>
-          <FormMessage className="mt-4" />
+          <FormMessage className="mt-4 text-[#ff6b6b]" />
         </FormItem>
       )}
     />
