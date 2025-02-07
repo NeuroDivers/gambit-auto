@@ -465,25 +465,54 @@ export type Database = {
         Row: {
           client_id: string
           created_at: string
+          description: string | null
           id: string
+          media_url: string | null
+          service_id: string | null
           status: string
           updated_at: string
+          vehicle_make: string | null
+          vehicle_model: string | null
+          vehicle_vin: string | null
+          vehicle_year: number | null
         }
         Insert: {
           client_id: string
           created_at?: string
+          description?: string | null
           id?: string
+          media_url?: string | null
+          service_id?: string | null
           status?: string
           updated_at?: string
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_vin?: string | null
+          vehicle_year?: number | null
         }
         Update: {
           client_id?: string
           created_at?: string
+          description?: string | null
           id?: string
+          media_url?: string | null
+          service_id?: string | null
           status?: string
           updated_at?: string
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_vin?: string | null
+          vehicle_year?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "quote_requests_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quotes: {
         Row: {
