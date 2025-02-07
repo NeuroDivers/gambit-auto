@@ -8,6 +8,7 @@ export interface ServicePackage {
   name: string;
   description: string | null;
   price: number | null;
+  sale_price: number | null;
   status: Database["public"]["Enums"]["service_status"];
   created_at: string;
   updated_at: string;

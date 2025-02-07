@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Plus } from "lucide-react";
+import { X, Plus, Pencil } from "lucide-react";
 
 interface ServicePackageListProps {
   serviceId: string;
@@ -26,12 +26,15 @@ interface ServicePackageListProps {
 export function ServicePackageList({ serviceId, packages, onPackagesChange }: ServicePackageListProps) {
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [newPackage, setNewPackage] = useState({
     name: "",
     description: "",
     price: "",
+    sale_price: "",
     status: "active" as const,
   });
+  const [editPackage, setEditPackage] = useState<ServicePackage | null>(null);
 
   const handleAddPackage = async () => {
     try {
@@ -49,6 +52,7 @@ export function ServicePackageList({ serviceId, packages, onPackagesChange }: Se
         name: newPackage.name,
         description: newPackage.description,
         price: newPackage.price ? parseFloat(newPackage.price) : null,
+        sale_price: newPackage.sale_price ? parseFloat(newPackage.sale_price) : null,
         status: newPackage.status,
       });
 
@@ -63,9 +67,44 @@ export function ServicePackageList({ serviceId, packages, onPackagesChange }: Se
         name: "",
         description: "",
         price: "",
+        sale_price: "",
         status: "active",
       });
       setIsAdding(false);
+      onPackagesChange();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditPackage = async (packageId: string) => {
+    if (!editPackage) return;
+
+    try {
+      const { error } = await supabase
+        .from("service_packages")
+        .update({
+          name: editPackage.name,
+          description: editPackage.description,
+          price: editPackage.price,
+          sale_price: editPackage.sale_price,
+          status: editPackage.status,
+        })
+        .eq("id", packageId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Package updated successfully",
+      });
+
+      setEditingId(null);
+      setEditPackage(null);
       onPackagesChange();
     } catch (error: any) {
       toast({
@@ -122,6 +161,11 @@ export function ServicePackageList({ serviceId, packages, onPackagesChange }: Se
     }
   };
 
+  const startEditing = (pkg: ServicePackage) => {
+    setEditingId(pkg.id);
+    setEditPackage(pkg);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -151,9 +195,15 @@ export function ServicePackageList({ serviceId, packages, onPackagesChange }: Se
           />
           <Input
             type="number"
-            placeholder="Price (optional)"
+            placeholder="Regular Price (optional)"
             value={newPackage.price}
             onChange={(e) => setNewPackage({ ...newPackage, price: e.target.value })}
+          />
+          <Input
+            type="number"
+            placeholder="Sale Price (optional)"
+            value={newPackage.sale_price}
+            onChange={(e) => setNewPackage({ ...newPackage, sale_price: e.target.value })}
           />
           <Button onClick={handleAddPackage}>Add Package</Button>
         </div>
@@ -164,7 +214,8 @@ export function ServicePackageList({ serviceId, packages, onPackagesChange }: Se
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Description</TableHead>
-            <TableHead>Price</TableHead>
+            <TableHead>Regular Price</TableHead>
+            <TableHead>Sale Price</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -172,34 +223,103 @@ export function ServicePackageList({ serviceId, packages, onPackagesChange }: Se
         <TableBody>
           {packages.map((pkg) => (
             <TableRow key={pkg.id}>
-              <TableCell>{pkg.name}</TableCell>
-              <TableCell>{pkg.description}</TableCell>
-              <TableCell>{pkg.price ? `$${pkg.price}` : "-"}</TableCell>
-              <TableCell>
-                <Select
-                  value={pkg.status}
-                  onValueChange={(value: "active" | "inactive") => 
-                    handleUpdateStatus(pkg.id, value)
-                  }
-                >
-                  <SelectTrigger className="w-[120px]">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </TableCell>
-              <TableCell>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDeletePackage(pkg.id)}
-                >
-                  Delete
-                </Button>
-              </TableCell>
+              {editingId === pkg.id ? (
+                <>
+                  <TableCell>
+                    <Input
+                      value={editPackage?.name || ""}
+                      onChange={(e) => setEditPackage(prev => ({ ...prev!, name: e.target.value }))}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Textarea
+                      value={editPackage?.description || ""}
+                      onChange={(e) => setEditPackage(prev => ({ ...prev!, description: e.target.value }))}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      value={editPackage?.price || ""}
+                      onChange={(e) => setEditPackage(prev => ({ ...prev!, price: parseFloat(e.target.value) }))}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      value={editPackage?.sale_price || ""}
+                      onChange={(e) => setEditPackage(prev => ({ ...prev!, sale_price: parseFloat(e.target.value) }))}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Select
+                      value={editPackage?.status}
+                      onValueChange={(value: "active" | "inactive") => 
+                        setEditPackage(prev => ({ ...prev!, status: value }))
+                      }
+                    >
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => handleEditPackage(pkg.id)}>
+                        Save
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </TableCell>
+                </>
+              ) : (
+                <>
+                  <TableCell>{pkg.name}</TableCell>
+                  <TableCell>{pkg.description}</TableCell>
+                  <TableCell>{pkg.price ? `$${pkg.price}` : "-"}</TableCell>
+                  <TableCell>{pkg.sale_price ? `$${pkg.sale_price}` : "-"}</TableCell>
+                  <TableCell>
+                    <Select
+                      value={pkg.status}
+                      onValueChange={(value: "active" | "inactive") => 
+                        handleUpdateStatus(pkg.id, value)
+                      }
+                    >
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => startEditing(pkg)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeletePackage(pkg.id)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </TableCell>
+                </>
+              )}
             </TableRow>
           ))}
         </TableBody>
