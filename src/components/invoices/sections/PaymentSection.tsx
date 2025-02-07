@@ -1,9 +1,8 @@
-
 import { Button } from "@/components/ui/button"
 import { usePayment } from "../hooks/usePayment"
 import { Loader2 } from "lucide-react"
 import { Invoice } from "../types"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { loadStripe } from "@stripe/stripe-js"
 import {
   Elements,
@@ -16,6 +15,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/
 import { useForm } from "react-hook-form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { supabase } from "@/integrations/supabase/client"
+import { ManagePaymentMethods } from "./ManagePaymentMethods"
+import { useAdminStatus } from "@/hooks/useAdminStatus"
 
 // Initialize Stripe
 const stripePromise = loadStripe('pk_test_51OpAcWB1FxNNsOFNKJ6RCR2pVvq79iBDqTz3mwYPUEQa8j7G26zfFn3KOVjwV1Fmw6wdpBz4wxjlZwTZrLxgZu0h00Yh1AOwag')
@@ -93,81 +94,90 @@ function PaymentForm({ invoice, clientSecret }: { invoice: Invoice, clientSecret
     }
   }
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <Form {...form}>
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input placeholder="your@email.com" {...field} />
-              </FormControl>
-            </FormItem>
-          )}
-        />
+  useEffect(() => {
+    if (invoice.stripe_customer_id) {
+      fetchPaymentMethods()
+    }
+  }, [invoice.stripe_customer_id])
 
-        {savedPaymentMethods.length > 0 && (
+  return (
+    <div className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Form {...form}>
           <FormField
             control={form.control}
-            name="paymentMethodId"
+            name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Saved Payment Methods</FormLabel>
-                <Select 
-                  onValueChange={(value) => {
-                    field.onChange(value)
-                    setSelectedPaymentMethod(value)
-                  }}
-                  value={field.value}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a payment method" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {savedPaymentMethods.map((method) => (
-                      <SelectItem key={method.id} value={method.id}>
-                        {method.card_brand} **** {method.card_last4} (Expires {method.card_exp_month}/{method.card_exp_year})
-                      </SelectItem>
-                    ))}
-                    <SelectItem value="new">Add new payment method</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input placeholder="your@email.com" {...field} />
+                </FormControl>
               </FormItem>
             )}
           />
-        )}
-      </Form>
 
-      {(!selectedPaymentMethod || selectedPaymentMethod === 'new') && (
-        <div className="border rounded-lg p-4">
-          <PaymentElement />
-        </div>
-      )}
+          {savedPaymentMethods.length > 0 && (
+            <FormField
+              control={form.control}
+              name="paymentMethodId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Saved Payment Methods</FormLabel>
+                  <Select 
+                    onValueChange={(value) => {
+                      field.onChange(value)
+                      setSelectedPaymentMethod(value)
+                    }}
+                    value={field.value}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a payment method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {savedPaymentMethods.map((method) => (
+                        <SelectItem key={method.id} value={method.id}>
+                          {method.card_brand} **** {method.card_last4} (Expires {method.card_exp_month}/{method.card_exp_year})
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="new">Add new payment method</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+          )}
+        </Form>
 
-      <Button 
-        type="submit" 
-        disabled={!stripe || isLoading}
-        className="w-full"
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Processing...
-          </>
-        ) : (
-          'Pay Now'
+        {(!selectedPaymentMethod || selectedPaymentMethod === 'new') && (
+          <div className="border rounded-lg p-4">
+            <PaymentElement />
+          </div>
         )}
-      </Button>
-    </form>
+
+        <Button 
+          type="submit" 
+          disabled={!stripe || isLoading}
+          className="w-full"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            'Pay Now'
+          )}
+        </Button>
+      </form>
+    </div>
   )
 }
 
-export function PaymentSection({ invoice }: PaymentSectionProps) {
+export function PaymentSection({ invoice }: { invoice: Invoice }) {
   const { mutate: processPayment, isPending, data } = usePayment()
   const [showPaymentForm, setShowPaymentForm] = useState(false)
+  const { isAdmin } = useAdminStatus()
 
   const handlePaymentStart = () => {
     processPayment({
@@ -186,43 +196,49 @@ export function PaymentSection({ invoice }: PaymentSectionProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4 border rounded-lg">
-      <div className="flex justify-between items-center">
-        <div>
-          <p className="text-lg font-semibold">Total Amount: ${invoice.total.toFixed(2)}</p>
-          <p className="text-sm text-muted-foreground">
-            Status: {invoice.payment_status || 'unpaid'}
-          </p>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 p-4 border rounded-lg">
+        <div className="flex justify-between items-center">
+          <div>
+            <p className="text-lg font-semibold">Total Amount: ${invoice.total.toFixed(2)}</p>
+            <p className="text-sm text-muted-foreground">
+              Status: {invoice.payment_status || 'unpaid'}
+            </p>
+          </div>
         </div>
+
+        {!showPaymentForm && !data?.paymentIntent?.client_secret ? (
+          <Button 
+            onClick={() => {
+              setShowPaymentForm(true)
+              handlePaymentStart()
+            }}
+            disabled={isPending}
+            className="w-full"
+          >
+            Proceed to Payment
+          </Button>
+        ) : data?.paymentIntent?.client_secret ? (
+          <Elements 
+            stripe={stripePromise} 
+            options={{
+              clientSecret: data.paymentIntent.client_secret,
+              appearance: {
+                theme: 'stripe',
+              },
+            }}
+          >
+            <PaymentForm 
+              invoice={invoice} 
+              clientSecret={data.paymentIntent.client_secret}
+            />
+          </Elements>
+        ) : null}
       </div>
 
-      {!showPaymentForm && !data?.paymentIntent?.client_secret ? (
-        <Button 
-          onClick={() => {
-            setShowPaymentForm(true)
-            handlePaymentStart()
-          }}
-          disabled={isPending}
-          className="w-full"
-        >
-          Proceed to Payment
-        </Button>
-      ) : data?.paymentIntent?.client_secret ? (
-        <Elements 
-          stripe={stripePromise} 
-          options={{
-            clientSecret: data.paymentIntent.client_secret,
-            appearance: {
-              theme: 'stripe',
-            },
-          }}
-        >
-          <PaymentForm 
-            invoice={invoice} 
-            clientSecret={data.paymentIntent.client_secret}
-          />
-        </Elements>
-      ) : null}
+      {(isAdmin || invoice.stripe_customer_id) && (
+        <ManagePaymentMethods customerId={invoice.stripe_customer_id} />
+      )}
     </div>
   )
 }
