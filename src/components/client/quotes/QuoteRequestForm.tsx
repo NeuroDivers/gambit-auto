@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useQuery } from "@tanstack/react-query"
 import { MediaUploadField } from "@/components/work-orders/form-fields/MediaUploadField"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useMediaUpload } from '@/components/work-orders/hooks/useMediaUpload'
 
 const formSchema = z.object({
   vehicle_make: z.string().min(1, "Vehicle make is required"),
@@ -26,7 +27,6 @@ const formSchema = z.object({
 export function QuoteRequestForm() {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { useMediaUpload } = require('@/components/work-orders/hooks/useMediaUpload')
   const { mediaUrl, uploading, handleFileUpload, handleMediaRemove } = useMediaUpload('quote-request-media')
 
   const { data: services = [] } = useQuery({
