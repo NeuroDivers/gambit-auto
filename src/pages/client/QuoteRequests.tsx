@@ -42,12 +42,12 @@ export default function QuoteRequests() {
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*', // Listen for all events
           schema: 'public',
           table: 'quote_requests'
         },
         () => {
-          // Invalidate and refetch quotes when an update occurs
+          // Invalidate and refetch quotes when any change occurs
           queryClient.invalidateQueries({ queryKey: ["quoteRequests"] })
         }
       )
