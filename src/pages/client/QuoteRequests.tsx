@@ -10,7 +10,7 @@ import { QuoteRequestList } from "@/components/client/quotes/QuoteRequestList"
 
 export default function QuoteRequests() {
   const navigate = useNavigate()
-  const { services, quoteRequests, isLoading } = useQuoteRequestData()
+  const { services, quoteRequests, isLoading, queryClient } = useQuoteRequestData()
   const { handleResponseMutation } = useQuoteRequestActions()
   const { uploading, handleImageUpload, handleImageRemove } = useMediaUpload()
 
@@ -34,6 +34,29 @@ export default function QuoteRequests() {
 
     return () => subscription.unsubscribe()
   }, [navigate])
+
+  // Set up real-time subscription for quote updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'quote_requests'
+        },
+        () => {
+          // Invalidate and refetch quotes when an update occurs
+          queryClient.invalidateQueries({ queryKey: ["quoteRequests"] })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [queryClient])
 
   return (
     <div className="container mx-auto py-6">

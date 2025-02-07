@@ -1,5 +1,5 @@
 
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import type { QuoteRequest } from "./useQuoteRequestActions"
 import { useNavigate } from "react-router-dom"
@@ -7,6 +7,7 @@ import { toast } from "sonner"
 
 export function useQuoteRequestData() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const { data: services } = useQuery({
     queryKey: ["services"],
@@ -49,7 +50,7 @@ export function useQuoteRequestData() {
   return {
     services,
     quoteRequests,
-    isLoading
+    isLoading,
+    queryClient
   }
 }
-
