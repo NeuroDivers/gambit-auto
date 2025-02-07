@@ -81,7 +81,7 @@ export default function QuoteRequestsManagement() {
       case "estimated":
         return "secondary"
       case "accepted":
-        return "success"
+        return "secondary"
       case "rejected":
         return "destructive"
       case "converted":
@@ -209,3 +209,4 @@ export default function QuoteRequestsManagement() {
     </div>
   )
 }
+
