@@ -1,6 +1,7 @@
 
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { QuoteList } from "@/components/quotes/QuoteList"
+import { QuoteStats } from "@/components/quotes/QuoteStats"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import QuoteRequestsManagement from "./QuoteRequestsManagement"
 
@@ -15,6 +16,8 @@ export default function Quotes() {
           </div>
         </div>
         <div className="max-w-[1600px] mx-auto">
+          <QuoteStats />
+          
           <Tabs defaultValue="quotes" className="space-y-4">
             <TabsList>
               <TabsTrigger value="quotes">Quotes</TabsTrigger>
