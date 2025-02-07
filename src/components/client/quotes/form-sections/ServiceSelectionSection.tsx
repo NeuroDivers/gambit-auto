@@ -47,7 +47,8 @@ export function ServiceSelectionSection({ form, services }: ServiceSelectionSect
                   return (
                     <div
                       key={service.id}
-                      className="flex flex-row items-center justify-between rounded-lg border border-white/10 hover:border-[#D6BCFA] p-4 bg-black cursor-pointer transition-colors duration-200"
+                      className="flex flex-row items-center justify-between rounded-lg border border-white/10 hover:border-[#D6BCFA] p-4 bg-[#121212] cursor-pointer transition-colors duration-200"
+                      onClick={() => handleServiceChange(service.id, !isChecked, field)}
                     >
                       <div className="space-y-0.5">
                         <FormLabel className="text-base text-white/90">
