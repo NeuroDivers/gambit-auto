@@ -2,7 +2,7 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { Loader2 } from "lucide-react"
+import { Loader2, ImageIcon } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -21,11 +21,24 @@ type QuoteRequest = {
   created_at: string
   estimated_amount: number | null
   client_response: "accepted" | "rejected" | null
+  service_ids: string[]
+  media_url: string | null
 }
 
 export default function QuoteRequestsManagement() {
   const queryClient = useQueryClient()
   const [estimateAmount, setEstimateAmount] = useState<{ [key: string]: string }>({})
+
+  const { data: services } = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_types")
+        .select("*")
+      if (error) throw error
+      return data
+    },
+  })
 
   const { data: quoteRequests, isLoading } = useQuery({
     queryKey: ["adminQuoteRequests"],
@@ -88,6 +101,13 @@ export default function QuoteRequestsManagement() {
     setEstimateAmount(prev => ({ ...prev, [id]: "" }))
   }
 
+  const getServiceNames = (serviceIds: string[]) => {
+    if (!services) return []
+    return serviceIds.map(id => 
+      services.find(s => s.id === id)?.name || 'Unknown Service'
+    )
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-[200px]">
@@ -113,7 +133,35 @@ export default function QuoteRequestsManagement() {
               </Badge>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">{request.description}</p>
+              <p className="text-sm text-muted-foreground mb-2">{request.description}</p>
+              
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold mb-1">Requested Services:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {getServiceNames(request.service_ids).map((serviceName, index) => (
+                    <Badge key={index} variant="secondary">
+                      {serviceName}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {request.media_url && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold mb-2">Uploaded Image:</h4>
+                  <div className="relative aspect-video w-full max-w-[300px] overflow-hidden rounded-lg border bg-muted">
+                    <img 
+                      src={request.media_url}
+                      alt="Vehicle image" 
+                      className="object-cover w-full h-full"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.src = 'placeholder.svg'
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
               
               {request.estimated_amount !== null && (
                 <p className="mt-2 text-lg font-semibold">
