@@ -79,12 +79,14 @@ export default function QuoteRequests() {
       return data as QuoteRequest[]
     },
     retry: false,
-    onError: (error) => {
-      console.error("Error fetching quotes:", error)
-      if (error.message === "Not authenticated") {
-        navigate("/auth")
-      } else {
-        toast.error("Failed to load quote requests")
+    meta: {
+      onError: (error: Error) => {
+        console.error("Error fetching quotes:", error)
+        if (error.message === "Not authenticated") {
+          navigate("/auth")
+        } else {
+          toast.error("Failed to load quote requests")
+        }
       }
     }
   })
