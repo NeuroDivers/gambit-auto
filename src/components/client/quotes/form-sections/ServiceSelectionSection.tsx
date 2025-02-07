@@ -47,7 +47,7 @@ export function ServiceSelectionSection({ form, services }: ServiceSelectionSect
                     <FormItem key={service.id}>
                       <FormControl>
                         <div
-                          className={`flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer
+                          className={`flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer bg-[#121212]
                             ${isChecked 
                               ? 'border-primary bg-primary/10' 
                               : 'border-border/40 hover:border-primary/50'}`}
