@@ -1,10 +1,10 @@
-
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { Loader2 } from "lucide-react"
+import { Loader2, Archive } from "lucide-react"
 import { toast } from "sonner"
 import { QuoteRequestCard } from "@/components/quotes/QuoteRequestCard"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 type QuoteRequest = {
   id: string
@@ -20,6 +20,7 @@ type QuoteRequest = {
   client_response: "accepted" | "rejected" | null
   service_ids: string[]
   media_urls: string[]
+  is_archived: boolean
 }
 
 export default function QuoteRequestsManagement() {
@@ -48,6 +49,24 @@ export default function QuoteRequestsManagement() {
       if (error) throw error
       return data as QuoteRequest[]
     },
+  })
+
+  const archiveQuoteMutation = useMutation({
+    mutationFn: async ({ id, isArchived }: { id: string; isArchived: boolean }) => {
+      const { error } = await supabase
+        .from("quote_requests")
+        .update({ is_archived: isArchived })
+        .eq("id", id)
+
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["adminQuoteRequests"] })
+      toast.success("Quote request updated successfully")
+    },
+    onError: (error) => {
+      toast.error("Failed to update quote request: " + error.message)
+    }
   })
 
   const submitEstimateMutation = useMutation({
@@ -132,6 +151,13 @@ export default function QuoteRequestsManagement() {
     setEstimateAmount({})
   }
 
+  const handleArchiveToggle = (id: string, currentArchiveStatus: boolean) => {
+    archiveQuoteMutation.mutate({ 
+      id, 
+      isArchived: !currentArchiveStatus 
+    })
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-[200px]">
@@ -140,24 +166,71 @@ export default function QuoteRequestsManagement() {
     )
   }
 
+  const activeQuotes = quoteRequests?.filter(q => !q.is_archived) || []
+  const archivedQuotes = quoteRequests?.filter(q => q.is_archived) || []
+
   return (
     <div className="container mx-auto py-6">
-      <div className="grid gap-4">
-        {quoteRequests?.map((request) => (
-          <QuoteRequestCard
-            key={request.id}
-            request={request}
-            services={services || []}
-            estimateAmount={estimateAmount}
-            setEstimateAmount={setEstimateAmount}
-            onEstimateSubmit={handleEstimateSubmit}
-            onImageRemove={(url) => handleImageRemove(request.id, url, request.media_urls)}
-          />
-        ))}
-        {quoteRequests?.length === 0 && (
-          <p className="text-center text-muted-foreground">No quote requests found.</p>
-        )}
-      </div>
+      <Tabs defaultValue="active" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="active">Active Requests</TabsTrigger>
+          <TabsTrigger value="archived">Archived Requests</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="active">
+          <div className="grid gap-4">
+            {activeQuotes.map((request) => (
+              <div key={request.id} className="relative">
+                <button
+                  onClick={() => handleArchiveToggle(request.id, request.is_archived)}
+                  className="absolute top-4 right-4 p-2 hover:bg-accent rounded-full"
+                  title="Archive quote request"
+                >
+                  <Archive className="h-5 w-5" />
+                </button>
+                <QuoteRequestCard
+                  request={request}
+                  services={services || []}
+                  estimateAmount={estimateAmount}
+                  setEstimateAmount={setEstimateAmount}
+                  onEstimateSubmit={handleEstimateSubmit}
+                  onImageRemove={(url) => handleImageRemove(request.id, url, request.media_urls)}
+                />
+              </div>
+            ))}
+            {activeQuotes.length === 0 && (
+              <p className="text-center text-muted-foreground">No active quote requests found.</p>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="archived">
+          <div className="grid gap-4">
+            {archivedQuotes.map((request) => (
+              <div key={request.id} className="relative">
+                <button
+                  onClick={() => handleArchiveToggle(request.id, request.is_archived)}
+                  className="absolute top-4 right-4 p-2 hover:bg-accent rounded-full"
+                  title="Unarchive quote request"
+                >
+                  <Archive className="h-5 w-5 text-muted-foreground" />
+                </button>
+                <QuoteRequestCard
+                  request={request}
+                  services={services || []}
+                  estimateAmount={estimateAmount}
+                  setEstimateAmount={setEstimateAmount}
+                  onEstimateSubmit={handleEstimateSubmit}
+                  onImageRemove={(url) => handleImageRemove(request.id, url, request.media_urls)}
+                />
+              </div>
+            ))}
+            {archivedQuotes.length === 0 && (
+              <p className="text-center text-muted-foreground">No archived quote requests found.</p>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

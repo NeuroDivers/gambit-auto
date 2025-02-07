@@ -469,6 +469,7 @@ export type Database = {
           description: string | null
           estimated_amount: number | null
           id: string
+          is_archived: boolean | null
           media_urls: string[] | null
           service_estimates: Json | null
           service_ids: string[]
@@ -486,6 +487,7 @@ export type Database = {
           description?: string | null
           estimated_amount?: number | null
           id?: string
+          is_archived?: boolean | null
           media_urls?: string[] | null
           service_estimates?: Json | null
           service_ids?: string[]
@@ -503,6 +505,7 @@ export type Database = {
           description?: string | null
           estimated_amount?: number | null
           id?: string
+          is_archived?: boolean | null
           media_urls?: string[] | null
           service_estimates?: Json | null
           service_ids?: string[]
