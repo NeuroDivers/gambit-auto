@@ -1,5 +1,4 @@
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Loader2, Upload, X } from "lucide-react"
@@ -9,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { getImageUrl, getServiceNames, getStatusBadgeVariant } from "@/components/quotes/utils"
+import { useNavigate } from "react-router-dom"
 
 type QuoteRequest = {
   id: string
@@ -28,6 +28,28 @@ type QuoteRequest = {
 export default function QuoteRequests() {
   const queryClient = useQueryClient()
   const [uploading, setUploading] = useState(false)
+  const navigate = useNavigate()
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession()
+      if (error || !session) {
+        toast.error("Please sign in to view your quotes")
+        navigate("/auth")
+      }
+    }
+    
+    checkAuth()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        navigate("/auth")
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [navigate])
 
   const { data: services } = useQuery({
     queryKey: ["services"],
@@ -43,16 +65,27 @@ export default function QuoteRequests() {
   const { data: quoteRequests, isLoading } = useQuery({
     queryKey: ["quoteRequests"],
     queryFn: async () => {
-      const { data: user } = await supabase.auth.getUser()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error("Not authenticated")
+
       const { data, error } = await supabase
         .from("quote_requests")
         .select("*")
-        .eq("client_id", user.user?.id)
+        .eq("client_id", user.id)
         .order("created_at", { ascending: false })
 
       if (error) throw error
       return data as QuoteRequest[]
     },
+    retry: false,
+    onError: (error) => {
+      console.error("Error fetching quotes:", error)
+      if (error.message === "Not authenticated") {
+        navigate("/auth")
+      } else {
+        toast.error("Failed to load quote requests")
+      }
+    }
   })
 
   const handleResponseMutation = useMutation({
