@@ -2,6 +2,7 @@
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
+import { QuoteRequestForm } from "@/components/client/quotes/QuoteRequestForm"
 
 export default function ClientDashboard() {
   const { data: profile, isLoading } = useQuery({
@@ -38,6 +39,10 @@ export default function ClientDashboard() {
             <p className="text-muted-foreground mt-2">
               Manage your quotes, invoices, and bookings all in one place.
             </p>
+          </div>
+
+          <div className="mt-8">
+            <QuoteRequestForm />
           </div>
         </div>
       </div>
