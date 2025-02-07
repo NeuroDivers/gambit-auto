@@ -60,7 +60,7 @@ export function ClientLayoutWrapper() {
     return <Navigate to="/auth" replace />;
   }
 
-  // Only allow clients to access the client layout
+  // Non-client users should not access the client layout
   if (profile.role !== 'client') {
     return <Navigate to="/" replace />;
   }
