@@ -1,7 +1,5 @@
 
 import { FormField, FormItem, FormLabel, FormMessage, FormControl } from "@/components/ui/form"
-import { Card, CardContent } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
 import { UseFormReturn } from "react-hook-form"
 import * as z from "zod"
 
@@ -37,7 +35,7 @@ export function ServiceSelectionSection({ form, services }: ServiceSelectionSect
       render={() => (
         <FormItem>
           <FormLabel>Service Types</FormLabel>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {services.map((service) => (
               <FormField
                 key={service.id}
@@ -46,33 +44,33 @@ export function ServiceSelectionSection({ form, services }: ServiceSelectionSect
                 render={({ field }) => {
                   const isChecked = field.value?.includes(service.id)
                   return (
-                    <FormItem
-                      key={service.id}
-                      className="flex flex-col items-start space-y-0"
-                    >
+                    <FormItem key={service.id}>
                       <FormControl>
-                        <Card
-                          className={`w-full transition-all ${
-                            isChecked ? "border-primary bg-primary/5" : ""
-                          }`}
+                        <div
+                          className={`flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer
+                            ${isChecked 
+                              ? 'border-primary bg-primary/10' 
+                              : 'border-border/40 hover:border-primary/50'}`}
+                          onClick={() => handleServiceChange(service.id, !isChecked, field)}
                         >
-                          <CardContent className="flex items-center space-x-4 p-4">
-                            <Checkbox
-                              checked={isChecked}
-                              onCheckedChange={(checked) => {
-                                handleServiceChange(service.id, checked as boolean, field)
-                              }}
+                          <div className="flex-1">
+                            <h4 className="font-medium text-foreground">{service.name}</h4>
+                            {service.price && (
+                              <p className="text-sm text-muted-foreground">
+                                Starting from ${service.price}
+                              </p>
+                            )}
+                          </div>
+                          <div 
+                            className={`w-12 h-6 rounded-full transition-all relative
+                              ${isChecked ? 'bg-primary' : 'bg-muted'}`}
+                          >
+                            <div 
+                              className={`w-5 h-5 rounded-full bg-background absolute top-0.5 transition-transform
+                                ${isChecked ? 'translate-x-6' : 'translate-x-1'}`}
                             />
-                            <div className="flex-1">
-                              <h4 className="font-medium">{service.name}</h4>
-                              {service.price && (
-                                <p className="text-sm text-muted-foreground">
-                                  Starting from ${service.price}
-                                </p>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
+                          </div>
+                        </div>
                       </FormControl>
                     </FormItem>
                   )
