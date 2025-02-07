@@ -6,23 +6,11 @@ import { toast } from "sonner"
 export function useMediaUpload() {
   const [uploading, setUploading] = useState(false)
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, quoteId: string) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, quoteId: string, currentUrls: string[]) => {
     try {
       setUploading(true)
       const files = event.target.files
       if (!files || files.length === 0) return
-
-      // Get the current quote request to check its media_urls
-      const { data: currentQuote, error: fetchError } = await supabase
-        .from('quote_requests')
-        .select('media_urls')
-        .eq('id', quoteId)
-        .single()
-
-      if (fetchError) throw fetchError
-
-      const existingUrls = currentQuote?.media_urls || []
-      const newUrls: string[] = []
 
       // Check quote request status
       const { data: quoteRequest } = await supabase
@@ -36,30 +24,34 @@ export function useMediaUpload() {
         return
       }
 
+      const newUrls: string[] = []
+
       // Upload each file
       for (const file of files) {
         const fileExt = file.name.split('.').pop()
-        const filePath = `${quoteId}-${Math.random()}.${fileExt}`
+        const fileName = `${quoteId}-${Math.random()}.${fileExt}`
 
         const { error: uploadError } = await supabase.storage
           .from('quote-request-media')
-          .upload(filePath, file)
+          .upload(fileName, file)
 
         if (uploadError) throw uploadError
 
         // Get the public URL for the uploaded file
-        const { data: { publicUrl } } = supabase.storage
+        const { data } = supabase.storage
           .from('quote-request-media')
-          .getPublicUrl(filePath)
+          .getPublicUrl(fileName)
 
-        newUrls.push(publicUrl)
+        if (data.publicUrl) {
+          newUrls.push(data.publicUrl)
+        }
       }
 
       // Update quote request with new URLs
       const { error: updateError } = await supabase
         .from('quote_requests')
         .update({ 
-          media_urls: [...existingUrls, ...newUrls]
+          media_urls: [...currentUrls, ...newUrls]
         })
         .eq('id', quoteId)
 
@@ -86,16 +78,16 @@ export function useMediaUpload() {
         return
       }
 
-      // Extract the file path from the public URL
-      const filePath = urlToRemove.split('/').pop()
-      if (!filePath) {
-        throw new Error('Invalid file path')
+      // Extract the file name from the URL
+      const fileName = urlToRemove.split('/').pop()
+      if (!fileName) {
+        throw new Error('Invalid file URL')
       }
 
       // Remove file from storage
       const { error: deleteError } = await supabase.storage
         .from('quote-request-media')
-        .remove([filePath])
+        .remove([fileName])
 
       if (deleteError) throw deleteError
 
@@ -121,4 +113,3 @@ export function useMediaUpload() {
     handleImageRemove
   }
 }
-
