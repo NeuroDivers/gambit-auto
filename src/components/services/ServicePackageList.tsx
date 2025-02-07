@@ -226,57 +226,66 @@ export function ServicePackageList({ serviceId, packages, onPackagesChange }: Se
             <TableRow key={pkg.id}>
               {editingId === pkg.id ? (
                 <>
-                  <TableCell className="align-top">
-                    <Input
-                      value={editPackage?.name || ""}
-                      onChange={(e) => setEditPackage(prev => ({ ...prev!, name: e.target.value }))}
-                    />
-                  </TableCell>
-                  <TableCell className="align-top">
-                    <Textarea
-                      value={editPackage?.description || ""}
-                      onChange={(e) => setEditPackage(prev => ({ ...prev!, description: e.target.value }))}
-                      className="min-h-[120px] w-full"
-                    />
-                  </TableCell>
-                  <TableCell className="align-top">
-                    <Input
-                      type="number"
-                      value={editPackage?.price || ""}
-                      onChange={(e) => setEditPackage(prev => ({ ...prev!, price: parseFloat(e.target.value) }))}
-                    />
-                  </TableCell>
-                  <TableCell className="align-top">
-                    <Input
-                      type="number"
-                      value={editPackage?.sale_price || ""}
-                      onChange={(e) => setEditPackage(prev => ({ ...prev!, sale_price: parseFloat(e.target.value) }))}
-                    />
-                  </TableCell>
-                  <TableCell className="align-top">
-                    <Select
-                      value={editPackage?.status}
-                      onValueChange={(value: "active" | "inactive") => 
-                        setEditPackage(prev => ({ ...prev!, status: value }))
-                      }
-                    >
-                      <SelectTrigger className="w-[120px]">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell className="align-top">
-                    <div className="flex flex-col gap-2">
-                      <Button size="sm" onClick={() => handleEditPackage(pkg.id)}>
-                        Save
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
-                        Cancel
-                      </Button>
+                  <TableCell colSpan={6} className="p-4">
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-3 gap-4">
+                        <Input
+                          placeholder="Package Name"
+                          value={editPackage?.name || ""}
+                          onChange={(e) => setEditPackage(prev => ({ ...prev!, name: e.target.value }))}
+                        />
+                        <div className="flex gap-4">
+                          <Input
+                            type="number"
+                            placeholder="Regular Price"
+                            value={editPackage?.price || ""}
+                            onChange={(e) => setEditPackage(prev => ({ ...prev!, price: parseFloat(e.target.value) }))}
+                          />
+                          <Input
+                            type="number"
+                            placeholder="Sale Price"
+                            value={editPackage?.sale_price || ""}
+                            onChange={(e) => setEditPackage(prev => ({ ...prev!, sale_price: parseFloat(e.target.value) }))}
+                          />
+                        </div>
+                        <Select
+                          value={editPackage?.status}
+                          onValueChange={(value: "active" | "inactive") => 
+                            setEditPackage(prev => ({ ...prev!, status: value }))
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="inactive">Inactive</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <Textarea
+                        placeholder="Description"
+                        value={editPackage?.description || ""}
+                        onChange={(e) => setEditPackage(prev => ({ ...prev!, description: e.target.value }))}
+                        className="min-h-[150px] w-full"
+                      />
+                      
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingId(null)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleEditPackage(pkg.id)}
+                        >
+                          Save Changes
+                        </Button>
+                      </div>
                     </div>
                   </TableCell>
                 </>
