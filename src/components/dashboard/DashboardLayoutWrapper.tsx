@@ -60,19 +60,19 @@ export function DashboardLayoutWrapper() {
     return <Navigate to="/auth" replace />;
   }
 
-  // Only allow non-client users to access the dashboard layout
-  if (profile.role !== 'client') {
-    return (
-      <DashboardLayout
-        firstName={profile?.first_name}
-        role={profile?.role}
-        onLogout={handleLogout}
-      >
-        <Outlet />
-      </DashboardLayout>
-    );
+  // If user is a client, redirect to client dashboard
+  if (profile.role === 'client') {
+    return <Navigate to="/client" replace />;
   }
 
-  // If user is a client, redirect to client dashboard
-  return <Navigate to="/client" replace />;
+  // For all other roles, show the dashboard layout
+  return (
+    <DashboardLayout
+      firstName={profile?.first_name}
+      role={profile?.role}
+      onLogout={handleLogout}
+    >
+      <Outlet />
+    </DashboardLayout>
+  );
 }
