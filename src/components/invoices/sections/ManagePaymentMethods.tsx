@@ -79,6 +79,7 @@ export function ManagePaymentMethods({ customerId }: { customerId?: string }) {
     if (!customerId) return
 
     try {
+      console.log('Fetching payment methods for customer:', customerId)
       const { data, error } = await supabase
         .from('payment_methods')
         .select('*')
@@ -86,6 +87,7 @@ export function ManagePaymentMethods({ customerId }: { customerId?: string }) {
 
       if (error) {
         console.error('Error fetching payment methods:', error)
+        toast.error("Failed to fetch payment methods")
         return
       }
 
@@ -93,25 +95,32 @@ export function ManagePaymentMethods({ customerId }: { customerId?: string }) {
       setPaymentMethods(data || [])
     } catch (error) {
       console.error('Error in fetchPaymentMethods:', error)
+      toast.error("Failed to fetch payment methods")
     } finally {
       setIsLoading(false)
     }
   }
 
   const createSetupIntent = async () => {
+    if (!customerId) return
+
     try {
+      console.log('Creating setup intent for customer:', customerId)
       const { data, error } = await supabase.functions.invoke('create-setup-intent', {
         body: { customerId }
       })
 
       if (error) {
         console.error('Error creating setup intent:', error)
+        toast.error("Failed to create setup intent")
         return
       }
 
+      console.log('Setup intent created:', data)
       setSetupIntent(data.client_secret)
     } catch (error) {
       console.error('Error in createSetupIntent:', error)
+      toast.error("Failed to create setup intent")
     }
   }
 
@@ -123,6 +132,7 @@ export function ManagePaymentMethods({ customerId }: { customerId?: string }) {
         .eq('id', paymentMethodId)
 
       if (error) {
+        console.error('Error deleting payment method:', error)
         toast.error("Failed to delete payment method")
         return
       }
@@ -131,6 +141,7 @@ export function ManagePaymentMethods({ customerId }: { customerId?: string }) {
       fetchPaymentMethods()
     } catch (error) {
       console.error('Error in handleDelete:', error)
+      toast.error("Failed to delete payment method")
     }
   }
 
