@@ -7,6 +7,7 @@ import { useQuoteRequestData } from "@/hooks/useQuoteRequestData"
 import { useQuoteRequestActions } from "@/hooks/useQuoteRequestActions"
 import { useMediaUpload } from "@/hooks/useMediaUpload"
 import { QuoteRequestList } from "@/components/client/quotes/QuoteRequestList"
+import { MultiStepQuoteRequestForm } from "@/components/client/quotes/MultiStepQuoteRequestForm"
 
 export default function QuoteRequests() {
   const navigate = useNavigate()
@@ -61,16 +62,12 @@ export default function QuoteRequests() {
   return (
     <div className="container mx-auto py-6">
       <h1 className="text-2xl font-bold mb-6">My Quote Requests</h1>
-      <QuoteRequestList
-        quoteRequests={quoteRequests}
-        services={services}
-        isLoading={isLoading}
-        onAcceptEstimate={(id) => handleResponseMutation.mutate({ id, response: "accepted" })}
-        onRejectEstimate={(id) => handleResponseMutation.mutate({ id, response: "rejected" })}
-        onUploadImages={handleImageUpload}
-        uploading={uploading}
-        onImageRemove={handleImageRemove}
-      />
-    </div>
-  )
-}
+      
+      <div className="space-y-8">
+        <MultiStepQuoteRequestForm />
+        
+        <QuoteRequestList
+          quoteRequests={quoteRequests}
+          services={services}
+          isLoading={isLoading}
+          onAcceptEstimate={(id) => handleResponseMutation.mutate({ id,

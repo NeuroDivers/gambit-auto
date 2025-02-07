@@ -474,6 +474,7 @@ export type Database = {
           id: string
           is_archived: boolean | null
           media_urls: string[] | null
+          service_details: Json | null
           service_estimates: Json | null
           service_ids: string[]
           status: string
@@ -492,6 +493,7 @@ export type Database = {
           id?: string
           is_archived?: boolean | null
           media_urls?: string[] | null
+          service_details?: Json | null
           service_estimates?: Json | null
           service_ids?: string[]
           status?: string
@@ -510,6 +512,7 @@ export type Database = {
           id?: string
           is_archived?: boolean | null
           media_urls?: string[] | null
+          service_details?: Json | null
           service_estimates?: Json | null
           service_ids?: string[]
           status?: string
@@ -877,10 +880,17 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "manager" | "sidekick" | "client"
+      auto_detail_type: "interior" | "exterior" | "both"
       bay_status: "available" | "in_use" | "maintenance"
       contact_preference: "phone" | "email"
+      ppf_package_type:
+        | "partial_front"
+        | "full_front"
+        | "track_pack"
+        | "full_vehicle"
       service_status: "active" | "inactive"
       tax_type: "GST" | "QST" | "HST" | "PST"
+      window_tint_type: "two_front" | "front_and_rear" | "complete"
     }
     CompositeTypes: {
       [_ in never]: never
