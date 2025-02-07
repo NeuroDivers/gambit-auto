@@ -108,6 +108,11 @@ export default function QuoteRequestsManagement() {
     )
   }
 
+  const getImageUrl = (mediaUrl: string | null) => {
+    if (!mediaUrl) return null
+    return supabase.storage.from('quote-request-media').getPublicUrl(mediaUrl).data.publicUrl
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-[200px]">
@@ -151,7 +156,7 @@ export default function QuoteRequestsManagement() {
                   <h4 className="text-sm font-semibold mb-2">Uploaded Image:</h4>
                   <div className="relative aspect-video w-full max-w-[300px] overflow-hidden rounded-lg border bg-muted">
                     <img 
-                      src={request.media_url}
+                      src={getImageUrl(request.media_url)}
                       alt="Vehicle image" 
                       className="object-cover w-full h-full"
                       onError={(e) => {
@@ -209,4 +214,3 @@ export default function QuoteRequestsManagement() {
     </div>
   )
 }
-
