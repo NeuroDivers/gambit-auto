@@ -2,9 +2,11 @@
 import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
+import { useQueryClient } from "@tanstack/react-query"
 
 export function useMediaUpload() {
   const [uploading, setUploading] = useState(false)
+  const queryClient = useQueryClient()
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, quoteId: string, currentUrls: string[]) => {
     try {
@@ -57,6 +59,8 @@ export function useMediaUpload() {
 
       if (updateError) throw updateError
 
+      // Invalidate the quotes query to trigger a refresh
+      queryClient.invalidateQueries({ queryKey: ["quoteRequests"] })
       toast.success(`Successfully uploaded ${files.length} image${files.length > 1 ? 's' : ''}`)
     } catch (error: any) {
       toast.error('Error uploading image: ' + error.message)
@@ -70,6 +74,7 @@ export function useMediaUpload() {
       const { data: quoteRequest } = await supabase
         .from('quote_requests')
         .select('status')
+        .eq('id', quoteId)
         .maybeSingle()
 
       if (!quoteRequest || !['pending', 'estimated'].includes(quoteRequest.status)) {
@@ -100,6 +105,8 @@ export function useMediaUpload() {
 
       if (updateError) throw updateError
 
+      // Invalidate the quotes query to trigger a refresh
+      queryClient.invalidateQueries({ queryKey: ["quoteRequests"] })
       toast.success('Image removed successfully')
     } catch (error: any) {
       toast.error('Error removing image: ' + error.message)
