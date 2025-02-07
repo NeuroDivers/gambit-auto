@@ -207,7 +207,7 @@ export default function QuoteRequestsManagement() {
               <div key={request.id} className="relative">
                 <Button
                   onClick={() => handleArchiveToggle(request.id, request.is_archived)}
-                  className="absolute top-4 right-32 z-10"
+                  className="absolute top-4 right-48 z-10"
                   variant="ghost"
                   size="icon"
                   title="Archive quote request"
@@ -237,7 +237,7 @@ export default function QuoteRequestsManagement() {
               <div key={request.id} className="relative">
                 <Button
                   onClick={() => handleArchiveToggle(request.id, request.is_archived)}
-                  className="absolute top-4 right-32 z-10"
+                  className="absolute top-4 right-48 z-10"
                   variant="ghost"
                   size="icon"
                   title="Unarchive quote request"
