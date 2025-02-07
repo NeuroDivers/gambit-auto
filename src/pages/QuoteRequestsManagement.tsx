@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -6,6 +5,7 @@ import { Loader2, Archive } from "lucide-react"
 import { toast } from "sonner"
 import { QuoteRequestCard } from "@/components/quotes/QuoteRequestCard"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
 
 type QuoteRequest = {
   id: string
