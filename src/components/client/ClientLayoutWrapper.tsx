@@ -60,6 +60,11 @@ export function ClientLayoutWrapper() {
     return <Navigate to="/auth" replace />;
   }
 
+  // Only allow clients to access this layout
+  if (profile.role !== 'client') {
+    return <Navigate to="/" replace />;
+  }
+
   return (
     <ClientLayout
       firstName={profile?.first_name}
