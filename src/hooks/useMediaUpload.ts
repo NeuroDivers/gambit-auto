@@ -38,12 +38,12 @@ export function useMediaUpload() {
         if (uploadError) throw uploadError
 
         // Get the public URL for the uploaded file
-        const { data } = supabase.storage
+        const { data: publicUrlData } = supabase.storage
           .from('quote-request-media')
           .getPublicUrl(fileName)
 
-        if (data.publicUrl) {
-          newUrls.push(data.publicUrl)
+        if (publicUrlData?.publicUrl) {
+          newUrls.push(publicUrlData.publicUrl)
         }
       }
 
@@ -51,7 +51,7 @@ export function useMediaUpload() {
       const { error: updateError } = await supabase
         .from('quote_requests')
         .update({ 
-          media_urls: [...currentUrls, ...newUrls]
+          media_urls: [...(currentUrls || []), ...newUrls]
         })
         .eq('id', quoteId)
 

@@ -41,6 +41,8 @@ export function QuoteRequestCard({
   uploading,
   onImageRemove
 }: QuoteRequestCardProps) {
+  const inputId = `image-upload-${request.id}`
+
   return (
     <Card className={cn(
       "transition-colors",
@@ -82,21 +84,20 @@ export function QuoteRequestCard({
               variant="outline" 
               className="gap-2"
               disabled={uploading}
-              asChild
+              onClick={() => document.getElementById(inputId)?.click()}
             >
-              <label>
-                <Upload className="h-4 w-4" />
-                {uploading ? "Uploading..." : "Upload Images"}
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  multiple
-                  onChange={(e) => onUploadImages(e, request.id, request.media_urls || [])}
-                  disabled={uploading}
-                />
-              </label>
+              <Upload className="h-4 w-4" />
+              {uploading ? "Uploading..." : "Upload Images"}
             </Button>
+            <input
+              id={inputId}
+              type="file"
+              className="hidden"
+              accept="image/*"
+              multiple
+              onChange={(e) => onUploadImages(e, request.id, request.media_urls || [])}
+              disabled={uploading}
+            />
           </div>
         )}
         
