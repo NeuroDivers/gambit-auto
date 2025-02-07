@@ -31,11 +31,11 @@ export function DescriptionSection({
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Service Description</FormLabel>
+            <FormLabel className="text-white/90">Service Description</FormLabel>
             <FormControl>
               <Textarea 
                 placeholder="Please describe the service you need..."
-                className="min-h-[100px]"
+                className="min-h-[100px] bg-[#1A1F2C] border-zinc-800 text-white/90 placeholder:text-white/60"
                 {...field}
               />
             </FormControl>
@@ -49,8 +49,8 @@ export function DescriptionSection({
         mediaUrl={mediaUrl}
         uploading={uploading}
         onMediaRemove={onMediaRemove}
-        label="Upload Vehicle Images"
-        description="Upload images of your vehicle to help us better understand your service needs."
+        label="Upload Images/Videos"
+        description="Upload images or videos of the damage (max 10MB per file)"
       />
     </div>
   )
