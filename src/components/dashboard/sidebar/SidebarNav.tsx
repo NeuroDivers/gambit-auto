@@ -5,7 +5,7 @@ import { Calendar, FileText, Settings, Users, Wrench, User, Terminal } from "luc
 import { cn } from "@/lib/utils"
 import { useAdminStatus } from "@/hooks/useAdminStatus"
 
-const items = [
+const adminOnlyItems = [
   {
     title: "Work Orders",
     href: "/work-orders",
@@ -22,11 +22,6 @@ const items = [
     icon: Calendar,
   },
   {
-    title: "Quotes",
-    href: "/quotes",
-    icon: FileText,
-  },
-  {
     title: "Invoices",
     href: "/invoices",
     icon: FileText,
@@ -40,6 +35,14 @@ const items = [
     title: "Clients",
     href: "/clients",
     icon: Users,
+  },
+]
+
+const commonItems = [
+  {
+    title: "Quotes",
+    href: "/quotes",
+    icon: FileText,
   },
 ]
 
@@ -70,7 +73,21 @@ export function SidebarNav() {
 
   return (
     <div className="flex flex-col gap-0.5 p-1">
-      {items.map((item) => (
+      {isAdmin && adminOnlyItems.map((item) => (
+        <Link
+          key={item.href}
+          to={item.href}
+          className={cn(
+            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent",
+            location.pathname === item.href ? "bg-accent" : "transparent"
+          )}
+        >
+          <item.icon className="h-4 w-4" />
+          <span>{item.title}</span>
+        </Link>
+      ))}
+
+      {commonItems.map((item) => (
         <Link
           key={item.href}
           to={item.href}

@@ -1,5 +1,5 @@
 
-import { createBrowserRouter } from "react-router-dom"
+import { createBrowserRouter, Navigate } from "react-router-dom"
 import Auth from "./pages/Auth"
 import Dashboard from "./pages/Dashboard"
 import WorkOrders from "./pages/WorkOrders"
@@ -20,6 +20,26 @@ import { DashboardLayoutWrapper } from "./components/dashboard/DashboardLayoutWr
 import { ClientLayoutWrapper } from "./components/client/ClientLayoutWrapper"
 import ClientDashboard from "./pages/client/Dashboard"
 import ClientQuoteRequests from "./pages/client/QuoteRequests"
+import { useAdminStatus } from "@/hooks/useAdminStatus"
+
+// Role-based route protection component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAdmin, isLoading } = useAdminStatus()
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+      </div>
+    )
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/client" replace />
+  }
+
+  return <>{children}</>
+}
 
 export const router = createBrowserRouter([
   {
@@ -40,23 +60,23 @@ export const router = createBrowserRouter([
       },
       {
         path: "work-orders",
-        element: <WorkOrders />,
+        element: <ProtectedRoute><WorkOrders /></ProtectedRoute>,
       },
       {
         path: "work-orders/:id/edit",
-        element: <EditWorkOrder />,
+        element: <ProtectedRoute><EditWorkOrder /></ProtectedRoute>,
       },
       {
         path: "service-types",
-        element: <ServiceTypes />,
+        element: <ProtectedRoute><ServiceTypes /></ProtectedRoute>,
       },
       {
         path: "service-bays",
-        element: <ServiceBays />,
+        element: <ProtectedRoute><ServiceBays /></ProtectedRoute>,
       },
       {
         path: "users",
-        element: <UserManagement />,
+        element: <ProtectedRoute><UserManagement /></ProtectedRoute>,
       },
       {
         path: "quotes",
@@ -64,15 +84,15 @@ export const router = createBrowserRouter([
       },
       {
         path: "invoices",
-        element: <Invoices />,
+        element: <ProtectedRoute><Invoices /></ProtectedRoute>,
       },
       {
         path: "invoices/:id",
-        element: <InvoiceDetails />,
+        element: <ProtectedRoute><InvoiceDetails /></ProtectedRoute>,
       },
       {
         path: "clients",
-        element: <ClientManagement />,
+        element: <ProtectedRoute><ClientManagement /></ProtectedRoute>,
       },
       {
         path: "business-settings",
