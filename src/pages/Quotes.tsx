@@ -1,5 +1,8 @@
+
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { QuoteList } from "@/components/quotes/QuoteList"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import QuoteRequestsManagement from "./QuoteRequestsManagement"
 
 export default function Quotes() {
   return (
@@ -12,7 +15,18 @@ export default function Quotes() {
           </div>
         </div>
         <div className="max-w-[1600px] mx-auto">
-          <QuoteList />
+          <Tabs defaultValue="quotes" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="quotes">Quotes</TabsTrigger>
+              <TabsTrigger value="requests">Quote Requests</TabsTrigger>
+            </TabsList>
+            <TabsContent value="quotes">
+              <QuoteList />
+            </TabsContent>
+            <TabsContent value="requests">
+              <QuoteRequestsManagement />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>

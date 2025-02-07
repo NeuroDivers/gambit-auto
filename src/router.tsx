@@ -1,3 +1,4 @@
+
 import { createBrowserRouter } from "react-router-dom"
 import Auth from "./pages/Auth"
 import Dashboard from "./pages/Dashboard"
@@ -7,7 +8,6 @@ import ServiceTypes from "./pages/ServiceTypes"
 import ServiceBays from "./pages/ServiceBays"
 import UserManagement from "./pages/UserManagement"
 import Quotes from "./pages/Quotes"
-import QuoteRequestsManagement from "./pages/QuoteRequestsManagement"
 import Invoices from "./pages/Invoices"
 import InvoiceDetails from "./pages/InvoiceDetails"
 import PublicInvoiceView from "./pages/PublicInvoiceView"
@@ -61,10 +61,6 @@ export const router = createBrowserRouter([
       {
         path: "quotes",
         element: <Quotes />,
-      },
-      {
-        path: "quote-requests",
-        element: <QuoteRequestsManagement />,
       },
       {
         path: "invoices",
