@@ -31,7 +31,6 @@ export function DashboardLayoutWrapper() {
       
       return { ...profileData, role: roleData?.role };
     },
-    // Add stale time and caching to prevent unnecessary refetches
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
     retry: 1,
@@ -71,7 +70,7 @@ export function DashboardLayoutWrapper() {
     return <Navigate to="/auth" replace />;
   }
 
-  // Route client users to the client dashboard, other roles stay here
+  // Only route client users to the client dashboard if they explicitly have the client role
   if (profile.role === 'client') {
     return <Navigate to="/client" replace />;
   }

@@ -31,7 +31,6 @@ export function ClientLayoutWrapper() {
       
       return { ...profileData, role: roleData?.role };
     },
-    // Add stale time and caching to prevent unnecessary refetches
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
     retry: 1,
@@ -71,8 +70,9 @@ export function ClientLayoutWrapper() {
     return <Navigate to="/auth" replace />;
   }
 
-  // Only allow clients to access client pages
-  if (profile.role !== 'client') {
+  // Allow access to client pages if the user has no explicit role (guest)
+  // or if they have the client role
+  if (profile.role && profile.role !== 'client') {
     return <Navigate to="/" replace />;
   }
 
