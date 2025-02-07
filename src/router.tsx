@@ -8,6 +8,7 @@ import ServiceTypes from "./pages/ServiceTypes"
 import ServiceBays from "./pages/ServiceBays"
 import UserManagement from "./pages/UserManagement"
 import Quotes from "./pages/Quotes"
+import QuoteRequestsManagement from "./pages/QuoteRequestsManagement"
 import Invoices from "./pages/Invoices"
 import InvoiceDetails from "./pages/InvoiceDetails"
 import PublicInvoiceView from "./pages/PublicInvoiceView"
@@ -19,6 +20,7 @@ import DeveloperSettings from "./pages/DeveloperSettings"
 import { DashboardLayoutWrapper } from "./components/dashboard/DashboardLayoutWrapper"
 import { ClientLayoutWrapper } from "./components/client/ClientLayoutWrapper"
 import ClientDashboard from "./pages/client/Dashboard"
+import ClientQuoteRequests from "./pages/client/QuoteRequests"
 
 export const router = createBrowserRouter([
   {
@@ -63,7 +65,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "quote-requests",
-        element: <div>Quote Requests Management</div>,
+        element: <QuoteRequestsManagement />,
       },
       {
         path: "invoices",
@@ -105,7 +107,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "quote-requests",
-        element: <div>My Quote Requests</div>,
+        element: <ClientQuoteRequests />,
       },
       {
         path: "invoices",

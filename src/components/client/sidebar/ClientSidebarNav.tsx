@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
-import { FileText, Calendar, User, CreditCard, MessageSquare } from "lucide-react"
+import { FileText, Calendar, User, CreditCard, MessageSquare, Send } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const items = [
@@ -14,6 +14,11 @@ const items = [
     title: "Quotes",
     href: "/client/quotes",
     icon: MessageSquare,
+  },
+  {
+    title: "Quote Requests",
+    href: "/client/quote-requests",
+    icon: Send,
   },
   {
     title: "Invoices",
