@@ -137,7 +137,13 @@ export default function QuoteRequests() {
           .upload(filePath, file)
 
         if (uploadError) throw uploadError
-        newUrls.push(filePath)
+
+        // Get the public URL for the uploaded file
+        const { data: { publicUrl } } = supabase.storage
+          .from('quote-request-media')
+          .getPublicUrl(filePath)
+
+        newUrls.push(publicUrl)
       }
 
       // Update quote request with new URLs
@@ -170,10 +176,16 @@ export default function QuoteRequests() {
         return
       }
 
+      // Extract the file path from the public URL
+      const filePath = urlToRemove.split('/').pop()
+      if (!filePath) {
+        throw new Error('Invalid file path')
+      }
+
       // Remove file from storage
       const { error: deleteError } = await supabase.storage
         .from('quote-request-media')
-        .remove([urlToRemove])
+        .remove([filePath])
 
       if (deleteError) throw deleteError
 
