@@ -62,6 +62,10 @@ export const router = createBrowserRouter([
         element: <Quotes />,
       },
       {
+        path: "quote-requests",
+        element: <div>Quote Requests Management</div>,
+      },
+      {
         path: "invoices",
         element: <Invoices />,
       },
@@ -100,6 +104,10 @@ export const router = createBrowserRouter([
         element: <div>Quotes</div>,
       },
       {
+        path: "quote-requests",
+        element: <div>My Quote Requests</div>,
+      },
+      {
         path: "invoices",
         element: <div>Invoices</div>,
       },
@@ -118,4 +126,3 @@ export const router = createBrowserRouter([
     element: <NotFound />,
   },
 ])
-
