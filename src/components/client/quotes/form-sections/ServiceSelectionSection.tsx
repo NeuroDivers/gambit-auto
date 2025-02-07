@@ -47,26 +47,26 @@ export function ServiceSelectionSection({ form, services }: ServiceSelectionSect
                     <FormItem key={service.id}>
                       <FormControl>
                         <div
-                          className={`flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer bg-white
+                          className={`flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer
                             ${isChecked 
-                              ? 'border-primary bg-primary/5' 
-                              : 'border-gray-200 hover:border-primary/50 hover:bg-gray-50'}`}
+                              ? 'border-primary bg-primary/10' 
+                              : 'border-border/40 hover:border-primary/50'}`}
                           onClick={() => handleServiceChange(service.id, !isChecked, field)}
                         >
                           <div className="flex-1">
-                            <h4 className="font-medium text-gray-900">{service.name}</h4>
+                            <h4 className="font-medium text-foreground">{service.name}</h4>
                             {service.price && (
-                              <p className="text-sm text-gray-500">
+                              <p className="text-sm text-muted-foreground">
                                 Starting from ${service.price}
                               </p>
                             )}
                           </div>
                           <div 
                             className={`w-12 h-6 rounded-full transition-all relative
-                              ${isChecked ? 'bg-primary' : 'bg-gray-200'}`}
+                              ${isChecked ? 'bg-primary' : 'bg-muted'}`}
                           >
                             <div 
-                              className={`w-5 h-5 rounded-full bg-white absolute top-0.5 shadow-sm transition-transform
+                              className={`w-5 h-5 rounded-full bg-background absolute top-0.5 transition-transform
                                 ${isChecked ? 'translate-x-6' : 'translate-x-1'}`}
                             />
                           </div>
