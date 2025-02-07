@@ -11,7 +11,7 @@ export function DashboardLayoutWrapper() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading, error } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -31,6 +31,10 @@ export function DashboardLayoutWrapper() {
       
       return { ...profileData, role: roleData?.role };
     },
+    // Add stale time and caching to prevent unnecessary refetches
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    cacheTime: 1000 * 60 * 30, // 30 minutes
+    retry: 1,
   });
 
   const handleLogout = async () => {
@@ -57,6 +61,12 @@ export function DashboardLayoutWrapper() {
     return <LoadingScreen />;
   }
 
+  // Add error handling
+  if (error) {
+    navigate("/auth");
+    return null;
+  }
+
   if (!profile) {
     return <Navigate to="/auth" replace />;
   }
@@ -76,4 +86,3 @@ export function DashboardLayoutWrapper() {
     </DashboardLayout>
   );
 }
-
