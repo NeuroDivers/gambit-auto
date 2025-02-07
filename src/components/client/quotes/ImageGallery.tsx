@@ -2,7 +2,6 @@
 import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { getImageUrl } from "@/components/quotes/utils"
 
 type ImageGalleryProps = {
   mediaUrls: string[]
@@ -18,7 +17,7 @@ export function ImageGallery({ mediaUrls, status, onImageRemove }: ImageGalleryP
         {mediaUrls.map((url, index) => (
           <div key={index} className="relative aspect-video overflow-hidden rounded-lg border bg-muted">
             <img 
-              src={getImageUrl(url)}
+              src={url}
               alt={`Vehicle image ${index + 1}`}
               className="object-cover w-full h-full"
               onError={(e) => {

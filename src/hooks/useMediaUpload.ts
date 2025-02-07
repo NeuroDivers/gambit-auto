@@ -17,7 +17,7 @@ export function useMediaUpload() {
         .from('quote_requests')
         .select('status')
         .eq('id', quoteId)
-        .single()
+        .maybeSingle()
 
       if (!quoteRequest || !['pending', 'estimated'].includes(quoteRequest.status)) {
         toast.error('Cannot add images in the current status')
@@ -70,8 +70,7 @@ export function useMediaUpload() {
       const { data: quoteRequest } = await supabase
         .from('quote_requests')
         .select('status')
-        .eq('id', quoteId)
-        .single()
+        .maybeSingle()
 
       if (!quoteRequest || !['pending', 'estimated'].includes(quoteRequest.status)) {
         toast.error('Cannot modify images in the current status')
