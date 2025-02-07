@@ -33,12 +33,14 @@ export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebar
           <h2 className="text-lg font-medium">
             Welcome, {formatName(firstName)}
           </h2>
-          <span className="text-sm rounded-md px-2 py-1 capitalize inline-block" style={{
-            color: '#bb86fc',
-            background: 'rgb(187 134 252 / 0.1)',
-          }}>
-            Client account
-          </span>
+          {role && (
+            <span className="text-sm rounded-md px-2 py-1 capitalize inline-block" style={{
+              color: '#bb86fc',
+              background: 'rgb(187 134 252 / 0.1)',
+            }}>
+              {role} account
+            </span>
+          )}
         </div>
       </div>
       <Button
