@@ -38,6 +38,7 @@ export function useQuoteRequestData() {
           description,
           created_at,
           estimated_amount,
+          service_estimates,
           client_response,
           service_ids,
           media_urls,

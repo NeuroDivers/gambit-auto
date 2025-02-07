@@ -24,7 +24,7 @@ type QuoteRequest = {
 
 export default function QuoteRequestsManagement() {
   const queryClient = useQueryClient()
-  const [estimateAmount, setEstimateAmount] = useState<{ [key: string]: string }>({})
+  const [estimateAmount, setEstimateAmount] = useState<Record<string, string>>({})
 
   const { data: services } = useQuery({
     queryKey: ["services"],
@@ -51,7 +51,7 @@ export default function QuoteRequestsManagement() {
   })
 
   const submitEstimateMutation = useMutation({
-    mutationFn: async ({ id, estimates }: { id: string; estimates: Record<string, number> }) => {
+    mutationFn: async ({ id, estimates }: { id: string; estimates: Record<string, string> }) => {
       // Convert string values to numbers and validate
       const validEstimates: Record<string, number> = {}
       let total = 0
