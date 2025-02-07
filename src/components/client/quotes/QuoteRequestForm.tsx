@@ -1,14 +1,14 @@
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useQuery } from "@tanstack/react-query"
-import { useMediaUpload } from '@/components/work-orders/hooks/useMediaUpload'
 import { VehicleInfoSection } from "./form-sections/VehicleInfoSection"
 import { ServiceSelectionSection } from "./form-sections/ServiceSelectionSection"
 import { DescriptionSection } from "./form-sections/DescriptionSection"
@@ -23,9 +23,9 @@ const formSchema = z.object({
 })
 
 export function QuoteRequestForm() {
-  const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { mediaUrl, uploading, handleFileUpload, handleMediaRemove } = useMediaUpload('quote-request-media')
+  const [uploading, setUploading] = useState(false)
+  const [mediaUrls, setMediaUrls] = useState<string[]>([])
 
   const { data: services = [] } = useQuery({
     queryKey: ["services"],
@@ -52,6 +52,52 @@ export function QuoteRequestForm() {
     }
   })
 
+  const handleFileUpload = async (files: FileList) => {
+    try {
+      setUploading(true)
+      const newUrls: string[] = []
+
+      for (const file of Array.from(files)) {
+        const fileExt = file.name.split('.').pop()
+        const filePath = `${crypto.randomUUID()}.${fileExt}`
+
+        const { error: uploadError } = await supabase.storage
+          .from('quote-request-media')
+          .upload(filePath, file)
+
+        if (uploadError) throw uploadError
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('quote-request-media')
+          .getPublicUrl(filePath)
+
+        newUrls.push(filePath)
+      }
+
+      setMediaUrls(prev => [...prev, ...newUrls])
+      toast.success(`Successfully uploaded ${files.length} image${files.length > 1 ? 's' : ''}`)
+    } catch (error: any) {
+      toast.error('Error uploading image: ' + error.message)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleMediaRemove = async (urlToRemove: string) => {
+    try {
+      const { error: deleteError } = await supabase.storage
+        .from('quote-request-media')
+        .remove([urlToRemove])
+
+      if (deleteError) throw deleteError
+
+      setMediaUrls(prev => prev.filter(url => url !== urlToRemove))
+      toast.success('Image removed successfully')
+    } catch (error: any) {
+      toast.error('Error removing image: ' + error.message)
+    }
+  }
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsSubmitting(true)
@@ -72,31 +118,19 @@ export function QuoteRequestForm() {
           vehicle_vin: values.vehicle_vin,
           description: values.description,
           service_ids: values.service_ids,
-          media_url: mediaUrl
+          media_urls: mediaUrls
         }])
 
       if (requestError) throw requestError
 
-      toast({
-        title: "Quote request submitted",
-        description: "We'll review your request and get back to you soon.",
-      })
-      
+      toast.success("Quote request submitted successfully")
       form.reset()
-      handleMediaRemove()
+      setMediaUrls([])
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message
-      })
+      toast.error(error.message)
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  const handleUpload = async (file: File) => {
-    await handleFileUpload(file)
   }
 
   return (
@@ -111,9 +145,9 @@ export function QuoteRequestForm() {
             <ServiceSelectionSection form={form} services={services} />
             <DescriptionSection 
               form={form}
-              mediaUrl={mediaUrl}
+              mediaUrls={mediaUrls}
               uploading={uploading}
-              onFileUpload={handleUpload}
+              onFileUpload={handleFileUpload}
               onMediaRemove={handleMediaRemove}
             />
             <Button type="submit" disabled={isSubmitting}>
