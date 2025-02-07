@@ -1,4 +1,3 @@
-
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -97,8 +96,7 @@ export function QuoteRequestForm() {
   }
 
   const handleUpload = async (file: File) => {
-    const url = await handleFileUpload(file)
-    return url
+    await handleFileUpload(file)
   }
 
   return (
