@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
@@ -57,6 +58,11 @@ export function DashboardLayoutWrapper() {
 
   if (!profile) {
     return <Navigate to="/auth" replace />;
+  }
+
+  // Add role-based redirect for clients
+  if (profile.role === 'client') {
+    return <Navigate to="/client" replace />;
   }
 
   return (
