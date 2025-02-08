@@ -11,11 +11,13 @@ import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { Switch } from "@/components/ui/switch";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   nicename: z.string().min(1, "Display name is required"),
   description: z.string().optional(),
+  can_be_assigned_to_bay: z.boolean().default(true),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -28,6 +30,7 @@ interface RoleDialogProps {
     name: string;
     nicename: string;
     description: string | null;
+    can_be_assigned_to_bay: boolean;
   } | null;
   onSuccess?: () => void;
 }
@@ -59,6 +62,7 @@ export const RoleDialog = ({ open, onOpenChange, role, onSuccess }: RoleDialogPr
       name: "",
       nicename: "",
       description: "",
+      can_be_assigned_to_bay: true,
     },
   });
 
@@ -70,6 +74,7 @@ export const RoleDialog = ({ open, onOpenChange, role, onSuccess }: RoleDialogPr
         name: roleData.name,
         nicename: roleData.nicename,
         description: roleData.description || "",
+        can_be_assigned_to_bay: roleData.can_be_assigned_to_bay,
       });
     } else if (role) {
       console.log("Setting form values with prop data:", role);
@@ -77,6 +82,7 @@ export const RoleDialog = ({ open, onOpenChange, role, onSuccess }: RoleDialogPr
         name: role.name,
         nicename: role.nicename,
         description: role.description || "",
+        can_be_assigned_to_bay: role.can_be_assigned_to_bay,
       });
     } else {
       console.log("Resetting form to empty values");
@@ -84,6 +90,7 @@ export const RoleDialog = ({ open, onOpenChange, role, onSuccess }: RoleDialogPr
         name: "",
         nicename: "",
         description: "",
+        can_be_assigned_to_bay: true,
       });
     }
   }, [roleData, role, form]);
@@ -98,6 +105,7 @@ export const RoleDialog = ({ open, onOpenChange, role, onSuccess }: RoleDialogPr
             name: values.name,
             nicename: values.nicename,
             description: values.description,
+            can_be_assigned_to_bay: values.can_be_assigned_to_bay,
           })
           .eq("id", role.id);
 
@@ -115,6 +123,7 @@ export const RoleDialog = ({ open, onOpenChange, role, onSuccess }: RoleDialogPr
             name: values.name,
             nicename: values.nicename,
             description: values.description,
+            can_be_assigned_to_bay: values.can_be_assigned_to_bay,
           });
 
         if (error) throw error;
@@ -193,6 +202,27 @@ export const RoleDialog = ({ open, onOpenChange, role, onSuccess }: RoleDialogPr
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="can_be_assigned_to_bay"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Bay Assignment</FormLabel>
+                    <div className="text-sm text-muted-foreground">
+                      Allow this role to be assigned to service bays
+                    </div>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
@@ -207,3 +237,4 @@ export const RoleDialog = ({ open, onOpenChange, role, onSuccess }: RoleDialogPr
     </Dialog>
   );
 };
+
