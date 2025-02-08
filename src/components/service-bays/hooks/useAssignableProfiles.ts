@@ -46,12 +46,12 @@ export function useAssignableProfiles() {
       }
 
       // Filter profiles to only include those with roles that can be assigned to bays
-      const assignableProfiles = profiles.filter(profile => 
+      const assignableProfiles = profiles.filter((profile: any) => 
         profile.role && profile.role.can_be_assigned_to_bay
       );
 
       // Transform the data to match our expected type
-      const transformedProfiles = assignableProfiles.map(profile => ({
+      const transformedProfiles: Profile[] = assignableProfiles.map((profile: any) => ({
         id: profile.id,
         first_name: profile.first_name,
         last_name: profile.last_name,
@@ -61,7 +61,7 @@ export function useAssignableProfiles() {
           nicename: profile.role.nicename,
           can_be_assigned_to_bay: profile.role.can_be_assigned_to_bay
         } : null
-      })) as Profile[];
+      }));
 
       console.log("Fetched assignable profiles:", transformedProfiles)
       return transformedProfiles;
