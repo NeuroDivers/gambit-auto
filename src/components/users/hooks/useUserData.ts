@@ -41,9 +41,12 @@ export const useUserData = () => {
       // Transform the data to match the expected type
       return profiles.map(profile => ({
         ...profile,
-        user_roles: {
-          role: profile.roles?.name || "",
-          nicename: profile.roles?.nicename || ""
+        user_roles: profile.roles ? {
+          role: profile.roles.name,
+          nicename: profile.roles.nicename
+        } : {
+          role: "",
+          nicename: ""
         }
       })) as User[];
     },

@@ -20,7 +20,7 @@ export const useRoleStats = () => {
       // Initialize stats with 0 for all roles
       const stats: RoleStats = {};
       roles.forEach(role => {
-        stats[role.name] = 0;
+        stats[role.name as string] = 0;
       });
 
       // Count users for each role

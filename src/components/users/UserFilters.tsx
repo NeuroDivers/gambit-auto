@@ -39,19 +39,21 @@ export const UserFilters = ({
           className="bg-[#242424] border-white/10"
         />
       </div>
-      <Select value={roleFilter} onValueChange={onRoleFilterChange}>
-        <SelectTrigger className="w-full sm:w-[180px] bg-[#242424] border-white/10">
-          <SelectValue placeholder="Filter by role" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Roles</SelectItem>
-          {roles?.map((role) => (
-            <SelectItem key={role.id} value={role.name}>
-              {role.nicename}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="sm:w-[180px]">
+        <Select value={roleFilter} onValueChange={onRoleFilterChange}>
+          <SelectTrigger className="w-full bg-[#242424] border-white/10">
+            <SelectValue placeholder="Filter by role" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Roles</SelectItem>
+            {roles?.map((role) => (
+              <SelectItem key={role.id} value={role.name}>
+                {role.nicename}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 };

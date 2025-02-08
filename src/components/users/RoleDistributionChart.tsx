@@ -1,26 +1,21 @@
+
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { Card } from "@/components/ui/card";
 
 const COLORS = ['#BB86FC', '#9B6BFD', '#7B51FE', '#03DAC5'];
 
-interface RoleStats {
-  admin: number;
-  manager: number;
-  sidekick: number;
-  client: number;
-}
+type RoleStats = Record<string, number>;
 
 interface RoleDistributionChartProps {
   roleStats: RoleStats;
 }
 
 export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps) => {
-  const chartData = [
-    { name: 'Administrators', value: roleStats.admin || 0 },
-    { name: 'Managers', value: roleStats.manager || 0 },
-    { name: 'Sidekicks', value: roleStats.sidekick || 0 },
-    { name: 'Clients', value: roleStats.client || 0 }
-  ];
+  // Transform the roleStats object into an array format for Recharts
+  const chartData = Object.entries(roleStats).map(([name, value]) => ({
+    name,
+    value
+  }));
 
   const total = Object.values(roleStats).reduce((acc, curr) => acc + curr, 0);
 
