@@ -27,8 +27,7 @@ export const useUserData = () => {
           roles (
             name
           )
-        `)
-        .cs('roles.name', ['admin', 'manager', 'sidekick', 'client']);
+        `);
 
       if (profilesError) {
         console.error("Error fetching profiles:", profilesError);
