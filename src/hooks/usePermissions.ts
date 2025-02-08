@@ -9,8 +9,8 @@ interface Role {
   nicename: string;
 }
 
-interface ProfileData {
-  role: Role | null;
+interface ProfileResponse {
+  role: Role;
 }
 
 export const usePermissions = () => {
@@ -60,7 +60,7 @@ export const usePermissions = () => {
         return false;
       }
 
-      const userRole = (profileData as ProfileData)?.role?.name?.toLowerCase();
+      const userRole = (profileData as ProfileResponse)?.role?.name?.toLowerCase();
       console.log("Current user role:", userRole);
 
       // Full access roles - administrator and king should always have full access
