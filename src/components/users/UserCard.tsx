@@ -7,8 +7,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { UserAvatar } from "./card/UserAvatar";
 import { UserActions } from "./card/UserActions";
 
-type UserRole = "admin" | "manager" | "sidekick" | "client";
-
 type UserCardProps = {
   user: {
     id: string;

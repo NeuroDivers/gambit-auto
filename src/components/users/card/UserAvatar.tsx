@@ -26,7 +26,7 @@ export const UserAvatar = ({ displayName, email, showEmail, userRole }: UserAvat
           {userRole && (
             <div className="flex items-center gap-1 text-sm text-[#BB86FC]">
               <Shield className="h-3 w-3" />
-              <span className="capitalize">{userRole.nicename}</span>
+              <span className="capitalize">{userRole.nicename} ({userRole.role})</span>
             </div>
           )}
         </div>

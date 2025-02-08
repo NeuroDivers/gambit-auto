@@ -42,8 +42,8 @@ export const useUserData = () => {
       return profiles.map(profile => ({
         ...profile,
         user_roles: {
-          role: profile.roles.name,
-          nicename: profile.roles.nicename
+          role: profile.roles?.name || "",
+          nicename: profile.roles?.nicename || ""
         }
       })) as User[];
     },
