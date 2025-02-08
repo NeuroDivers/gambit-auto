@@ -31,7 +31,7 @@ export const UserFilters = ({
 
   return (
     <div className="flex flex-col sm:flex-row gap-4 mb-6">
-      <div className="sm:w-2/3">
+      <div className="flex-1">
         <Input
           placeholder="Search by name or email..."
           value={searchQuery}
@@ -39,7 +39,7 @@ export const UserFilters = ({
           className="bg-[#242424] border-white/10"
         />
       </div>
-      <div className="sm:w-1/3">
+      <div className="sm:w-[180px]">
         <Select value={roleFilter} onValueChange={onRoleFilterChange}>
           <SelectTrigger className="w-full bg-[#242424] border-white/10">
             <SelectValue placeholder="Filter by role" />
@@ -57,4 +57,3 @@ export const UserFilters = ({
     </div>
   );
 };
-
