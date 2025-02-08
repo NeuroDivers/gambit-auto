@@ -27,12 +27,9 @@ export const useUserData = () => {
           email,
           first_name,
           last_name,
-          user_roles!inner(
-            role_id,
-            roles!inner(
-              name,
-              nicename
-            )
+          roles!inner(
+            name,
+            nicename
           )
         `);
 
@@ -47,8 +44,8 @@ export const useUserData = () => {
       return profiles.map((profile: any) => ({
         ...profile,
         user_roles: {
-          role: profile.user_roles[0]?.roles?.name as UserRole || "client",
-          nicename: profile.user_roles[0]?.roles?.nicename || "Client"
+          role: profile.roles.name as UserRole || "client",
+          nicename: profile.roles.nicename || "Client"
         }
       })) as User[];
     },
