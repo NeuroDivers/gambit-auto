@@ -33,8 +33,9 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
   const chartData = Object.entries(roleStats).map(([name, value], index) => ({
     id: index,
     name,
-    displayName: roleNames?.[name] || name,
-    value
+    value,
+    // Use the display name for the chart labels
+    displayName: roleNames?.[name] || name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
   }));
 
   const total = Object.values(roleStats).reduce((acc, curr) => acc + curr, 0);
@@ -60,10 +61,10 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
                 dataKey="value"
                 nameKey="displayName"
               >
-                {chartData.map((entry, index) => (
+                {chartData.map((entry) => (
                   <Cell 
                     key={`cell-${entry.id}`} 
-                    fill={COLORS[index % COLORS.length]}
+                    fill={COLORS[entry.id % COLORS.length]}
                     className="hover:opacity-80 transition-opacity cursor-pointer"
                   />
                 ))}
@@ -81,9 +82,10 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
                 ]}
               />
               <Legend 
-                verticalAlign="bottom" 
+                verticalAlign="bottom"
                 height={36}
                 iconType="circle"
+                formatter={(value: string) => value}
               />
             </PieChart>
           </ResponsiveContainer>
