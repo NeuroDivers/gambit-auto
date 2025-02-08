@@ -1,5 +1,8 @@
+
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 type UserFiltersProps = {
   searchQuery: string;
@@ -14,6 +17,18 @@ export const UserFilters = ({
   roleFilter,
   onRoleFilterChange,
 }: UserFiltersProps) => {
+  const { data: roles } = useQuery({
+    queryKey: ["roles"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("roles")
+        .select("id, name, nicename");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
     <div className="flex flex-col sm:flex-row gap-4 mb-6">
       <div className="flex-1">
@@ -30,10 +45,11 @@ export const UserFilters = ({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Roles</SelectItem>
-          <SelectItem value="admin">Admin</SelectItem>
-          <SelectItem value="manager">Manager</SelectItem>
-          <SelectItem value="sidekick">Sidekick</SelectItem>
-          <SelectItem value="client">Client</SelectItem>
+          {roles?.map((role) => (
+            <SelectItem key={role.id} value={role.name}>
+              {role.nicename}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>

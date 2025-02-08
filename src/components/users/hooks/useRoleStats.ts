@@ -2,42 +2,42 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export type RoleStats = {
-  admin: number;
-  manager: number;
-  sidekick: number;
-  client: number;
-};
+export type RoleStats = Record<string, number>;
 
 export const useRoleStats = () => {
   return useQuery({
     queryKey: ["roleStats"],
     queryFn: async () => {
       console.log("Fetching role stats...");
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("role");
       
-      if (error) {
-        console.error("Error fetching role stats:", error);
-        throw error;
-      }
+      // First get all roles to ensure we include roles with 0 users
+      const { data: roles, error: rolesError } = await supabase
+        .from("roles")
+        .select("name");
+      
+      if (rolesError) throw rolesError;
+      
+      // Initialize stats with 0 for all roles
+      const stats: RoleStats = {};
+      roles.forEach(role => {
+        stats[role.name] = 0;
+      });
 
-      const stats = {
-        admin: 0,
-        manager: 0,
-        sidekick: 0,
-        client: 0
-      };
+      // Count users for each role
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select(`
+          roles (
+            name
+          )
+        `);
       
-      if (!data || data.length === 0) {
-        console.log("No roles found, returning default stats");
-        return stats;
-      }
-      
-      data.forEach((profile) => {
-        if (profile.role) {
-          stats[profile.role] = (stats[profile.role] || 0) + 1;
+      if (profilesError) throw profilesError;
+
+      // Update counts for roles that have users
+      profiles.forEach((profile) => {
+        if (profile.roles?.name) {
+          stats[profile.roles.name] = (stats[profile.roles.name] || 0) + 1;
         }
       });
       
