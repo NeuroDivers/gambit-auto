@@ -30,13 +30,15 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
   });
 
   // Transform the roleStats object into an array format for Recharts
-  const chartData = Object.entries(roleStats).map(([name, value], index) => ({
-    id: index,
-    name,
-    value,
-    // Use the display name for the chart labels
-    displayName: roleNames?.[name] || name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-  }));
+  const chartData = Object.entries(roleStats).map(([name, value], index) => {
+    const displayName = roleNames?.[name] || name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    return {
+      id: index,
+      name,
+      value,
+      displayName
+    };
+  });
 
   const total = Object.values(roleStats).reduce((acc, curr) => acc + curr, 0);
 
@@ -85,7 +87,12 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
                 verticalAlign="bottom"
                 height={36}
                 iconType="circle"
-                formatter={(value) => typeof value === 'string' ? value : ''}
+                formatter={(value) => {
+                  if (typeof value === 'string') {
+                    return value;
+                  }
+                  return '';
+                }}
               />
             </PieChart>
           </ResponsiveContainer>
