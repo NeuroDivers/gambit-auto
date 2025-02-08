@@ -3,15 +3,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button"
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Calendar } from "@/components/ui/calendar"
-import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { CalendarX, Plus } from "lucide-react"
+import { CalendarX } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useState } from "react"
 import { format } from "date-fns"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
@@ -32,6 +30,8 @@ type BlockedDateFormValues = z.infer<typeof blockedDateSchema>
 
 export function BlockedDatesDialog() {
   const [open, setOpen] = useState(false)
+  const [dateDialogOpen, setDateDialogOpen] = useState<'start' | 'end' | null>(null)
+  
   const form = useForm<BlockedDateFormValues>({
     resolver: zodResolver(blockedDateSchema),
   })
@@ -77,15 +77,16 @@ export function BlockedDatesDialog() {
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Start Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
+                  <Dialog open={dateDialogOpen === 'start'} onOpenChange={(open) => setDateDialogOpen(open ? 'start' : null)}>
+                    <DialogTrigger asChild>
                       <FormControl>
                         <Button
-                          variant={"outline"}
+                          variant="outline"
                           className={cn(
-                            "w-full pl-3 text-left font-normal",
+                            "w-full justify-start text-left font-normal",
                             !field.value && "text-muted-foreground"
                           )}
+                          type="button"
                         >
                           {field.value ? (
                             format(field.value, "PPP")
@@ -95,16 +96,22 @@ export function BlockedDatesDialog() {
                           <CalendarX className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
                       </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-0" align="start">
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Select Start Date</DialogTitle>
+                      </DialogHeader>
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={field.onChange}
+                        onSelect={(date) => {
+                          field.onChange(date)
+                          setDateDialogOpen(null)
+                        }}
                         initialFocus
                       />
-                    </PopoverContent>
-                  </Popover>
+                    </DialogContent>
+                  </Dialog>
                   <FormMessage />
                 </FormItem>
               )}
@@ -115,15 +122,16 @@ export function BlockedDatesDialog() {
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>End Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
+                  <Dialog open={dateDialogOpen === 'end'} onOpenChange={(open) => setDateDialogOpen(open ? 'end' : null)}>
+                    <DialogTrigger asChild>
                       <FormControl>
                         <Button
-                          variant={"outline"}
+                          variant="outline"
                           className={cn(
-                            "w-full pl-3 text-left font-normal",
+                            "w-full justify-start text-left font-normal",
                             !field.value && "text-muted-foreground"
                           )}
+                          type="button"
                         >
                           {field.value ? (
                             format(field.value, "PPP")
@@ -133,26 +141,23 @@ export function BlockedDatesDialog() {
                           <CalendarX className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
                       </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-0" align="start">
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Select End Date</DialogTitle>
+                      </DialogHeader>
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={field.onChange}
+                        onSelect={(date) => {
+                          field.onChange(date)
+                          setDateDialogOpen(null)
+                        }}
                         initialFocus
-                        modifiers={{
-                          selected: [form.getValues("start_date")],
-                        }}
-                        modifiersStyles={{
-                          selected: {
-                            backgroundColor: "var(--primary)",
-                            color: "white",
-                          },
-                        }}
                         fromDate={form.getValues("start_date")}
                       />
-                    </PopoverContent>
-                  </Popover>
+                    </DialogContent>
+                  </Dialog>
                   <FormMessage />
                 </FormItem>
               )}
