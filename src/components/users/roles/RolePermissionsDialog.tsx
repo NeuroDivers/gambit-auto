@@ -79,8 +79,8 @@ export const RolePermissionsDialog = ({
     enabled: !!roleId,
   });
 
-  const handlePermissionToggle = async (permissionId: string, newValue: boolean) => {
-    console.log("Updating permission:", permissionId, "to value:", newValue);
+  const handlePermissionToggle = async (permission: Permission, newValue: boolean) => {
+    console.log("Updating permission:", permission.id, "to value:", newValue);
     try {
       const { error } = await supabase
         .from("role_permissions")
@@ -88,7 +88,7 @@ export const RolePermissionsDialog = ({
           is_active: newValue,
           updated_at: new Date().toISOString()
         })
-        .eq("id", permissionId);
+        .eq("id", permission.id);
 
       if (error) {
         console.error("Error updating permission:", error);
@@ -99,14 +99,17 @@ export const RolePermissionsDialog = ({
         queryKey: ["role-permissions", roleId]
       });
       
+      const resourceName = permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      const action = newValue ? "enabled" : "disabled";
+      
       toast({
-        title: "Permission updated",
-        description: "The permission has been updated successfully.",
+        title: `Permission ${action}`,
+        description: `${resourceName} permission has been ${action} for ${permission.permission_type.toLowerCase()} operations.`,
       });
     } catch (error: any) {
       console.error("Permission update error:", error);
       toast({
-        title: "Error",
+        title: "Error updating permission",
         description: error.message,
         variant: "destructive",
       });
@@ -131,14 +134,15 @@ export const RolePermissionsDialog = ({
         queryKey: ["role", roleId]
       });
       
+      const action = newValue ? "enabled" : "disabled";
       toast({
         title: "Bay assignment updated",
-        description: `This role ${newValue ? "can now" : "can no longer"} be assigned to service bays.`,
+        description: `This role ${newValue ? "can now" : "can no longer"} be assigned to service bays. Bay assignment has been ${action}.`,
       });
     } catch (error: any) {
       console.error("Bay assignment update error:", error);
       toast({
-        title: "Error",
+        title: "Error updating bay assignment",
         description: error.message,
         variant: "destructive",
       });
@@ -177,6 +181,7 @@ export const RolePermissionsDialog = ({
               id="bay-assignment"
               checked={role?.can_be_assigned_to_bay || false}
               onCheckedChange={handleBayAssignmentToggle}
+              className="data-[state=checked]:bg-primary"
             />
           </div>
         </div>
@@ -199,7 +204,8 @@ export const RolePermissionsDialog = ({
                     <Switch
                       id={permission.id}
                       checked={permission.is_active}
-                      onCheckedChange={(checked) => handlePermissionToggle(permission.id, checked)}
+                      onCheckedChange={(checked) => handlePermissionToggle(permission, checked)}
+                      className="data-[state=checked]:bg-primary"
                     />
                   </div>
                 ))}
