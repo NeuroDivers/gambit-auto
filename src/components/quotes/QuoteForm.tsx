@@ -1,3 +1,4 @@
+
 import { Form } from "@/components/ui/form"
 import { useQuoteForm } from "./hooks/useQuoteForm"
 import { Button } from "@/components/ui/button"
@@ -6,6 +7,9 @@ import { VehicleInfoFields } from "@/components/shared/form-fields/VehicleInfoFi
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Quote } from "./types"
+import { useEffect } from "react"
+import { useVinLookup } from "@/hooks/useVinLookup"
+import { toast } from "sonner"
 
 interface QuoteFormProps {
   quote?: Quote
@@ -14,6 +18,18 @@ interface QuoteFormProps {
 
 export function QuoteForm({ quote, onSuccess }: QuoteFormProps) {
   const { form, onSubmit } = useQuoteForm({ quote, onSuccess })
+  const vin = form.watch('vehicle_vin')
+  const { data: vinData, isLoading: isLoadingVin } = useVinLookup(vin)
+
+  useEffect(() => {
+    if (vinData && !vinData.error) {
+      if (vinData.make) form.setValue('vehicle_make', vinData.make)
+      if (vinData.model) form.setValue('vehicle_model', vinData.model)
+      if (vinData.year) form.setValue('vehicle_year', vinData.year)
+    } else if (vinData?.error && vin?.length === 17) {
+      toast.error(vinData.error)
+    }
+  }, [vinData, form, vin])
 
   return (
     <Form {...form}>
@@ -32,7 +48,11 @@ export function QuoteForm({ quote, onSuccess }: QuoteFormProps) {
             <CardTitle>Vehicle Information</CardTitle>
           </CardHeader>
           <CardContent>
-            <VehicleInfoFields form={form} />
+            <VehicleInfoFields 
+              form={form} 
+              isLoadingVin={isLoadingVin}
+              vinAutoFillEnabled={true}
+            />
           </CardContent>
         </Card>
 

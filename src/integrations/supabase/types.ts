@@ -838,6 +838,42 @@ export type Database = {
         }
         Relationships: []
       }
+      vin_lookups: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          make: string | null
+          model: string | null
+          raw_data: Json | null
+          success: boolean | null
+          vin: string
+          year: number | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          make?: string | null
+          model?: string | null
+          raw_data?: Json | null
+          success?: boolean | null
+          vin: string
+          year?: number | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          make?: string | null
+          model?: string | null
+          raw_data?: Json | null
+          success?: boolean | null
+          vin?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
       work_order_services: {
         Row: {
           created_at: string
