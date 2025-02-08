@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
+import { PermissionType } from "@/types/permissions";
 
 interface RolePermissionsDialogProps {
   roleId: string | null;
@@ -24,7 +25,7 @@ export const RolePermissionsDialog = ({
   open,
   onOpenChange,
 }: RolePermissionsDialogProps) => {
-  const [activeTab, setActiveTab] = useState<string>("page_access");
+  const [activeTab, setActiveTab] = useState<PermissionType>("page_access");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

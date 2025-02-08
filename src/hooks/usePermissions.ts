@@ -3,13 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PermissionType } from "@/types/permissions";
 
-interface RoleResponse {
-  role: {
-    name: string;
-    nicename: string;
-  }
-}
-
 export const usePermissions = () => {
   const { data: permissions } = useQuery({
     queryKey: ["permissions"],
@@ -54,13 +47,12 @@ export const usePermissions = () => {
         .single();
 
       // Administrator has all permissions
-      // Check if data.role exists and if the name property is 'administrator'
-      if (data?.role && 
-          typeof data.role === 'object' && 
-          'name' in data.role && 
-          data.role.name.toLowerCase() === 'administrator') {
-        console.log("User is administrator, granting access");
-        return true;
+      if (data?.role && typeof data.role === 'object' && 'name' in data.role) {
+        const roleName = data.role.name.toLowerCase();
+        if (roleName === 'administrator' || roleName === 'admin') {
+          console.log("User is administrator, granting access");
+          return true;
+        }
       }
 
       // For non-administrators, check specific permissions
