@@ -148,23 +148,42 @@ export function useQuoteRequestForm() {
     }
   }
 
+  const getNextStep = (currentStep: number): number => {
+    if (currentStep === 1) return 2;
+    if (currentStep === 2) return 3;
+    
+    // For service detail steps
+    const serviceIndex = currentStep - 3;
+    if (serviceIndex < selectedServices.length) {
+      return currentStep + 1;
+    }
+    
+    // If there are no more services, go to summary
+    return totalSteps;
+  }
+
+  const getPreviousStep = (currentStep: number): number => {
+    if (currentStep <= 1) return 1;
+    return currentStep - 1;
+  }
+
   const nextStep = () => {
     if (step === 1) {
       form.trigger(['vehicle_make', 'vehicle_model', 'vehicle_year'])
         .then((isValid) => {
-          if (isValid) setStep(step + 1)
+          if (isValid) setStep(getNextStep(step))
         })
     } else if (step === 2) {
       form.trigger('service_ids')
         .then((isValid) => {
-          if (isValid) setStep(step + 1)
+          if (isValid) setStep(getNextStep(step))
         })
     } else {
-      setStep(step + 1)
+      setStep(getNextStep(step))
     }
   }
 
-  const prevStep = () => setStep(step - 1)
+  const prevStep = () => setStep(getPreviousStep(step))
 
   return {
     form,
