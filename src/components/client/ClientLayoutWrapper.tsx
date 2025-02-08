@@ -72,7 +72,7 @@ export function ClientLayoutWrapper() {
   return (
     <ClientLayout
       firstName={profile?.first_name}
-      role={profile?.role}
+      role={profile?.role?.nicename}
       onLogout={handleLogout}
     >
       <Outlet />
