@@ -21,13 +21,7 @@ export const useUserData = () => {
 
       if (profilesError) throw profilesError;
 
-      return profiles.map(profile => ({
-        id: profile.id,
-        email: profile.email,
-        first_name: profile.first_name,
-        last_name: profile.last_name,
-        role: profile.role
-      })) as User[];
+      return profiles as User[];
     },
   });
 };
