@@ -7,9 +7,10 @@ import { supabase } from "@/integrations/supabase/client";
 interface RoleStatsCardProps {
   role: string;
   count: number;
+  onRoleSelect?: (role: string) => void;
 }
 
-export const RoleStatsCard = ({ role, count }: RoleStatsCardProps) => {
+export const RoleStatsCard = ({ role, count, onRoleSelect }: RoleStatsCardProps) => {
   const { data: roleInfo } = useQuery({
     queryKey: ["role", role],
     queryFn: async () => {
@@ -24,8 +25,17 @@ export const RoleStatsCard = ({ role, count }: RoleStatsCardProps) => {
     },
   });
 
+  const handleClick = () => {
+    if (onRoleSelect) {
+      onRoleSelect(role);
+    }
+  };
+
   return (
-    <Card className="bg-card/50 backdrop-blur-sm border-white/[0.08] hover:border-primary/50 transition-all duration-200">
+    <Card 
+      className="bg-card/50 backdrop-blur-sm border-white/[0.08] hover:border-primary/50 transition-all duration-200 cursor-pointer hover:bg-card/70"
+      onClick={handleClick}
+    >
       <div className="p-6">
         <div className="flex items-center gap-4">
           <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">

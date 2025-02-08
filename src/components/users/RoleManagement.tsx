@@ -9,11 +9,15 @@ import { useState } from "react";
 import { RoleDialog } from "./roles/RoleDialog";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
 
-export const RoleManagement = () => {
+interface RoleManagementProps {
+  onRoleSelect?: (role: string) => void;
+}
+
+export const RoleManagement = ({ onRoleSelect }: RoleManagementProps) => {
   const { data: roleStats } = useRoleStats();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { isAdmin } = useAdminStatus();
-  useRoleSubscription(); // Add this line to enable realtime updates
+  useRoleSubscription();
 
   return (
     <div className="space-y-6">
@@ -36,7 +40,12 @@ export const RoleManagement = () => {
 
       <div className="grid gap-4">
         {roleStats && Object.entries(roleStats).map(([role, count]) => (
-          <RoleStatsCard key={role} role={role} count={count} />
+          <RoleStatsCard 
+            key={role} 
+            role={role} 
+            count={count} 
+            onRoleSelect={onRoleSelect}
+          />
         ))}
       </div>
 

@@ -10,7 +10,12 @@ import { RoleList } from "./roles/RoleList";
 
 export const UserManagementSection = () => {
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState("all");
   const { isAdmin } = useAdminStatus();
+
+  const handleRoleSelect = (role: string) => {
+    setSelectedRole(role);
+  };
 
   return (
     <div className="space-y-8">      
@@ -28,10 +33,10 @@ export const UserManagementSection = () => {
               </Button>
             )}
           </div>
-          <UserList />
+          <UserList initialRoleFilter={selectedRole} />
         </div>
         <div className="space-y-8">
-          <RoleManagement />
+          <RoleManagement onRoleSelect={handleRoleSelect} />
           <RoleList />
         </div>
       </div>
