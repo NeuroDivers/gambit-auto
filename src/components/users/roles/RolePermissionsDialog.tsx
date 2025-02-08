@@ -20,6 +20,17 @@ interface RolePermissionsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+type Permission = {
+  id: string;
+  role_id: string;
+  resource_name: string;
+  permission_type: PermissionType;
+  is_active: boolean;
+  description?: string;
+};
+
+type GroupedPermissions = Record<string, Permission[]>;
+
 export const RolePermissionsDialog = ({
   roleId,
   open,
@@ -46,7 +57,7 @@ export const RolePermissionsDialog = ({
       }
       
       console.log("Fetched permissions:", data);
-      return data;
+      return data as Permission[];
     },
     enabled: !!roleId,
   });
@@ -138,7 +149,7 @@ export const RolePermissionsDialog = ({
     return null;
   }
 
-  const groupedPermissions = permissions?.reduce((acc: Record<string, typeof permissions>, permission) => {
+  const groupedPermissions = permissions?.reduce((acc: GroupedPermissions, permission) => {
     const section = permission.permission_type;
     if (!acc[section]) {
       acc[section] = [];
