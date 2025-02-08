@@ -22,21 +22,28 @@ export const useAdminStatus = () => {
           return
         }
 
-        const { data: isAdmin, error } = await supabase.rpc(
-          'has_role_by_name',
-          { 
-            user_id: user.id,
-            role_name: 'administrator'
-          }
-        );
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select(`
+            role:role_id (
+              name,
+              nicename
+            )
+          `)
+          .eq('id', user.id)
+          .single();
 
-        if (error) {
-          console.error('Admin check error:', error);
+        if (profileError) {
+          console.error('Profile fetch error:', profileError);
           setIsAdmin(false);
           return;
         }
 
-        setIsAdmin(isAdmin || false);
+        const userRole = (profileData as RoleResponse)?.role?.name?.toLowerCase();
+        console.log("Checking admin status, user role:", userRole);
+        
+        // Consider both administrator and king as admin roles
+        setIsAdmin(userRole === 'administrator' || userRole === 'king');
       } catch (error) {
         console.error('Error checking admin status:', error)
         setIsAdmin(false)

@@ -60,13 +60,12 @@ export const usePermissions = () => {
         return false;
       }
 
-      // Full access roles - king should always have full access
-      const fullAccessRoles = ['administrator', 'king'];
-      
-      // Check if user has a full access role (case insensitive)
       const userRole = (profileData as ProfileData)?.role?.name?.toLowerCase();
-      if (userRole && fullAccessRoles.includes(userRole)) {
-        console.log("User has full access role, granting access");
+      console.log("Current user role:", userRole);
+
+      // Full access roles - administrator and king should always have full access
+      if (userRole === 'administrator' || userRole === 'king') {
+        console.log("User has full access role (administrator/king), granting access");
         return true;
       }
 
@@ -82,6 +81,7 @@ export const usePermissions = () => {
         return false;
       }
 
+      console.log(`Permission check for ${resource} (${type}):`, hasPermission);
       return hasPermission || false;
     } catch (error) {
       console.error('Permission check error:', error);
