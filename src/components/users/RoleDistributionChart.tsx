@@ -85,7 +85,7 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
                 verticalAlign="bottom"
                 height={36}
                 iconType="circle"
-                formatter={(value: string) => value}
+                formatter={(value) => typeof value === 'string' ? value : ''}
               />
             </PieChart>
           </ResponsiveContainer>
