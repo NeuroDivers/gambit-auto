@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PermissionType } from "@/types/permissions";
 
 interface Role {
+  id: string;
   name: string;
   nicename: string;
 }
@@ -49,6 +50,7 @@ export const usePermissions = () => {
         .from('profiles')
         .select(`
           role:role_id (
+            id,
             name,
             nicename
           )

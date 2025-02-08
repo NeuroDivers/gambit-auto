@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 
 interface Role {
+  id: string;
   name: string;
   nicename: string;
 }
@@ -24,6 +25,7 @@ export default function ProfileSettings() {
         .from('profiles')
         .select(`
           role:role_id (
+            id,
             name,
             nicename
           )
