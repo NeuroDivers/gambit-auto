@@ -11,21 +11,19 @@ export function DashboardLayoutWrapper() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const { data: profile, isLoading, error } = useQuery({
-    queryKey: ["profile"],
+  const { data: session } = useQuery({
+    queryKey: ["session"],
     queryFn: async () => {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) {
-        console.error("Session error:", sessionError);
-        throw sessionError;
-      }
-      
-      if (!session?.user) {
-        console.log("No session found, redirecting to auth");
-        return null;
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      return session;
+    },
+  });
 
-      console.log("Session found, fetching profile for user:", session.user.id);
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ["profile", session?.user?.id],
+    enabled: !!session?.user?.id,
+    queryFn: async () => {
+      if (!session?.user) return null;
       
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
@@ -40,24 +38,17 @@ export function DashboardLayoutWrapper() {
         .eq("id", session.user.id)
         .maybeSingle();
 
-      if (profileError) {
-        console.error("Profile fetch error:", profileError);
-        throw profileError;
-      }
-
+      if (profileError) throw profileError;
       return profileData;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 30, // 30 minutes
-    retry: false, // Don't retry on error
   });
 
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      localStorage.clear(); // Clear all local storage
+      // Use queryClient to clear all cached data
+      // Navigate first, then show toast to ensure smooth transition
       navigate("/auth", { replace: true });
-      
       toast({
         title: "Logged out successfully",
         description: "You have been logged out of your account.",
@@ -76,17 +67,13 @@ export function DashboardLayoutWrapper() {
     return <LoadingScreen />;
   }
 
-  if (error) {
-    console.error("Profile fetch error, redirecting to auth:", error);
+  if (!session) {
     return <Navigate to="/auth" replace />;
   }
 
   if (!profile) {
-    console.log("No profile found, redirecting to auth");
     return <Navigate to="/auth" replace />;
   }
-
-  console.log("Rendering DashboardLayout with profile:", profile);
 
   return (
     <DashboardLayout

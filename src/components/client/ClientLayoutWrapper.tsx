@@ -11,12 +11,18 @@ export function ClientLayoutWrapper() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const { data: profile, isLoading, error } = useQuery({
-    queryKey: ["profile"],
+  const { data: session } = useQuery({
+    queryKey: ["session"],
     queryFn: async () => {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) throw sessionError;
-      
+      const { data: { session } } = await supabase.auth.getSession();
+      return session;
+    },
+  });
+
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ["profile", session?.user?.id],
+    enabled: !!session?.user?.id,
+    queryFn: async () => {
       if (!session?.user) return null;
       
       const { data: profileData, error: profileError } = await supabase
@@ -30,21 +36,17 @@ export function ClientLayoutWrapper() {
         `)
         .eq("id", session.user.id)
         .maybeSingle();
-      
+
       if (profileError) throw profileError;
       return profileData;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 30, // 30 minutes
-    retry: false, // Don't retry on error
   });
 
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      localStorage.clear(); // Clear all local storage
+      // Navigate first, then show toast to ensure smooth transition
       navigate("/auth", { replace: true });
-      
       toast({
         title: "Logged out successfully",
         description: "You have been logged out of your account.",
@@ -63,7 +65,11 @@ export function ClientLayoutWrapper() {
     return <LoadingScreen />;
   }
 
-  if (error || !profile) {
+  if (!session) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (!profile) {
     return <Navigate to="/auth" replace />;
   }
 
