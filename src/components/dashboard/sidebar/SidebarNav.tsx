@@ -52,12 +52,12 @@ const allItems: NavItem[] = [
   },
 ]
 
+// Settings items don't require permission checks except for developer settings
 const settingsItems: NavItem[] = [
   {
     title: "Business Settings",
     href: "/business-settings",
     icon: Settings,
-    requiredPermission: "business_settings",
   },
   {
     title: "Profile Settings",
@@ -80,6 +80,7 @@ export function SidebarNav() {
 
   useEffect(() => {
     const checkPermissions = async () => {
+      // Filter main nav items based on permissions
       const filteredItems = await Promise.all(
         allItems.map(async (item) => {
           if (!item.requiredPermission) return item
@@ -92,6 +93,7 @@ export function SidebarNav() {
       )
       setAllowedItems(filteredItems.filter((item): item is NavItem => item !== null))
 
+      // Filter settings items - only check dev settings permission
       const filteredSettingsItems = await Promise.all(
         settingsItems.map(async (item) => {
           if (!item.requiredPermission) return item
