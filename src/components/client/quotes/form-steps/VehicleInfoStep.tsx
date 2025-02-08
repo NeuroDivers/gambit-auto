@@ -23,9 +23,13 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
           name="vehicle_make"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vehicle Make</FormLabel>
+              <FormLabel htmlFor="quote_vehicle_make">Vehicle Make</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Toyota" {...field} />
+                <Input 
+                  id="quote_vehicle_make"
+                  placeholder="e.g. Toyota" 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -37,9 +41,13 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
           name="vehicle_model"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vehicle Model</FormLabel>
+              <FormLabel htmlFor="quote_vehicle_model">Vehicle Model</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Camry" {...field} />
+                <Input 
+                  id="quote_vehicle_model"
+                  placeholder="e.g. Camry" 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -51,9 +59,13 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
           name="vehicle_year"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vehicle Year</FormLabel>
+              <FormLabel htmlFor="quote_vehicle_year">Vehicle Year</FormLabel>
               <FormControl>
-                <Input type="number" {...field} />
+                <Input 
+                  id="quote_vehicle_year"
+                  type="number" 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -65,9 +77,12 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
           name="vehicle_vin"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vehicle VIN (Optional)</FormLabel>
+              <FormLabel htmlFor="quote_vehicle_vin">Vehicle VIN (Optional)</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input 
+                  id="quote_vehicle_vin"
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

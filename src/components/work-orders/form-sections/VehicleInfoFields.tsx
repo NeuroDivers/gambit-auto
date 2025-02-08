@@ -1,3 +1,4 @@
+
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { UseFormReturn } from "react-hook-form"
@@ -15,9 +16,13 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
           name="vehicle_make"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vehicle Make</FormLabel>
+              <FormLabel htmlFor="vehicle_make">Vehicle Make</FormLabel>
               <FormControl>
-                <Input placeholder="Enter vehicle make" {...field} />
+                <Input 
+                  id="vehicle_make"
+                  placeholder="Enter vehicle make" 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -28,9 +33,13 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
           name="vehicle_model"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vehicle Model</FormLabel>
+              <FormLabel htmlFor="vehicle_model">Vehicle Model</FormLabel>
               <FormControl>
-                <Input placeholder="Enter vehicle model" {...field} />
+                <Input 
+                  id="vehicle_model"
+                  placeholder="Enter vehicle model" 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -43,9 +52,10 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
           name="vehicle_year"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vehicle Year</FormLabel>
+              <FormLabel htmlFor="vehicle_year">Vehicle Year</FormLabel>
               <FormControl>
                 <Input 
+                  id="vehicle_year"
                   type="number" 
                   placeholder="Enter vehicle year"
                   {...field}
@@ -61,9 +71,13 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
           name="vehicle_serial"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vehicle Serial Number</FormLabel>
+              <FormLabel htmlFor="vehicle_serial">Vehicle Serial Number</FormLabel>
               <FormControl>
-                <Input placeholder="Enter vehicle serial number" {...field} />
+                <Input 
+                  id="vehicle_serial"
+                  placeholder="Enter vehicle serial number" 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
