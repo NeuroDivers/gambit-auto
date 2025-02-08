@@ -87,20 +87,11 @@ export const RolePermissionsDialog = ({
     console.log("Updating permission:", permission.id, "to value:", newValue);
     
     try {
-      // First verify the permission exists
-      const { data: existingPerm, error: checkError } = await supabase
-        .from("role_permissions")
-        .select()
-        .eq("id", permission.id)
-        .maybeSingle();
-
-      if (checkError) {
-        throw checkError;
-      }
-
-      if (!existingPerm) {
-        throw new Error("Permission not found");
-      }
+      // Optimistically update the UI
+      queryClient.setQueryData(["role-permissions", roleId], (oldData: Permission[] | undefined) => {
+        if (!oldData) return oldData;
+        return oldData.map(p => p.id === permission.id ? { ...p, is_active: newValue } : p);
+      });
 
       // Perform the update
       const { error: updateError } = await supabase
@@ -115,13 +106,7 @@ export const RolePermissionsDialog = ({
         throw updateError;
       }
 
-      // Update the cache immediately
-      queryClient.setQueryData(["role-permissions", roleId], (oldData: Permission[] | undefined) => {
-        if (!oldData) return oldData;
-        return oldData.map(p => p.id === permission.id ? { ...p, is_active: newValue } : p);
-      });
-
-      // Invalidate to ensure fresh data
+      // Invalidate the query to refetch fresh data
       await queryClient.invalidateQueries({ 
         queryKey: ["role-permissions", roleId]
       });
@@ -156,20 +141,11 @@ export const RolePermissionsDialog = ({
 
     setIsUpdating(true);
     try {
-      // First verify the role exists
-      const { data: existingRole, error: checkError } = await supabase
-        .from("roles")
-        .select()
-        .eq("id", roleId)
-        .maybeSingle();
-
-      if (checkError) {
-        throw checkError;
-      }
-
-      if (!existingRole) {
-        throw new Error("Role not found");
-      }
+      // Optimistically update the UI
+      queryClient.setQueryData(["role", roleId], (oldData: any) => {
+        if (!oldData) return oldData;
+        return { ...oldData, can_be_assigned_to_bay: newValue };
+      });
 
       // Perform the update
       const { error: updateError } = await supabase
@@ -183,12 +159,6 @@ export const RolePermissionsDialog = ({
       if (updateError) {
         throw updateError;
       }
-
-      // Update the cache immediately
-      queryClient.setQueryData(["role", roleId], (oldData: any) => {
-        if (!oldData) return oldData;
-        return { ...oldData, can_be_assigned_to_bay: newValue };
-      });
 
       // Invalidate to ensure fresh data
       await queryClient.invalidateQueries({ 
