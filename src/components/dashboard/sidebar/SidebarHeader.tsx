@@ -23,7 +23,7 @@ export function SidebarHeader({ firstName, role, onLogout }: SidebarHeaderProps)
     return name;
   };
 
-  console.log('Current role:', role); // Add this to debug
+  console.log('Current role:', role); // Keep this log to help debug
 
   return (
     <div className="p-4 space-y-4 border-b">
@@ -42,7 +42,7 @@ export function SidebarHeader({ firstName, role, onLogout }: SidebarHeaderProps)
             color: '#bb86fc',
             background: 'rgb(187 134 252 / 0.1)',
           }}>
-            {role ? `${role.nicename}` : 'Guest'} role
+            {role?.nicename || 'Loading...'} role
           </span>
         </div>
       </div>
