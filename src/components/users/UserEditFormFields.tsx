@@ -50,9 +50,10 @@ export const UserEditFormFields = ({ form }: UserEditFormFieldsProps) => {
         name="first_name"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-white/[0.87]">First Name</FormLabel>
+            <FormLabel className="text-white/[0.87]" htmlFor="first_name">First Name</FormLabel>
             <FormControl>
               <Input 
+                id="first_name"
                 placeholder="John" 
                 {...field} 
                 className="bg-[#242424] border-white/10 text-white/[0.87]"
@@ -67,9 +68,10 @@ export const UserEditFormFields = ({ form }: UserEditFormFieldsProps) => {
         name="last_name"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-white/[0.87]">Last Name</FormLabel>
+            <FormLabel className="text-white/[0.87]" htmlFor="last_name">Last Name</FormLabel>
             <FormControl>
               <Input 
+                id="last_name"
                 placeholder="Doe" 
                 {...field} 
                 className="bg-[#242424] border-white/10 text-white/[0.87]"
@@ -84,13 +86,13 @@ export const UserEditFormFields = ({ form }: UserEditFormFieldsProps) => {
         name="role"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-white/[0.87]">Role</FormLabel>
+            <FormLabel className="text-white/[0.87]" htmlFor="role">Role</FormLabel>
             <FormControl>
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}
               >
-                <SelectTrigger className="bg-[#242424] border-white/10 text-white/[0.87]">
+                <SelectTrigger id="role" className="bg-[#242424] border-white/10 text-white/[0.87]">
                   <SelectValue placeholder="Select a role" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#242424] border-white/10">
