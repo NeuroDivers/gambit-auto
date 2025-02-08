@@ -45,7 +45,7 @@ export const usePermissions = () => {
       if (!user) return false;
 
       // First check if user's role is administrator
-      const { data } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select(`
           role:role_id (
@@ -57,8 +57,8 @@ export const usePermissions = () => {
         .single();
 
       // Administrator has all permissions
-      if (data?.role?.name) {
-        const roleName = data.role.name.toLowerCase();
+      if (profile?.role && profile.role.name) {
+        const roleName = profile.role.name.toLowerCase();
         if (roleName === 'administrator' || roleName === 'admin') {
           console.log("User is administrator, granting access");
           return true;

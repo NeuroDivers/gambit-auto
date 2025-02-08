@@ -20,7 +20,7 @@ export default function ProfileSettings() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return null
 
-      const { data } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select(`
           role:role_id (
@@ -32,7 +32,7 @@ export default function ProfileSettings() {
         .single()
       
       // Return the role name if it exists
-      return data?.role?.name || null;
+      return profile?.role?.name || null;
     }
   })
 
