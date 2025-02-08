@@ -33,7 +33,10 @@ export const useAdminStatus = () => {
 
         // Use type assertion to tell TypeScript the correct shape
         const response = data as unknown as RoleResponse
-        setIsAdmin(response.roles?.name === 'administrator')
+        // Log the role name for debugging
+        console.log('User role:', response.roles?.name)
+        // Check if the role contains "admin" (case insensitive)
+        setIsAdmin(response.roles?.name?.toLowerCase().includes('admin') || false)
       } catch (error) {
         console.error('Error checking admin status:', error)
         setIsAdmin(false)
