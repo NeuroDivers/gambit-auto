@@ -1,7 +1,8 @@
+
 import { Client } from "./types"
 import { Card, CardContent } from "../ui/card"
 import { Button } from "../ui/button"
-import { Edit, Trash, User } from "lucide-react"
+import { Edit, Trash, User, UserCheck } from "lucide-react"
 import { EditClientDialog } from "./EditClientDialog"
 import { useState } from "react"
 import { useToast } from "@/hooks/use-toast"
@@ -48,11 +49,20 @@ export function ClientCard({ client }: ClientCardProps) {
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-4">
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="h-5 w-5" />
+                {client.user_id ? (
+                  <UserCheck className="h-5 w-5 text-primary" />
+                ) : (
+                  <User className="h-5 w-5" />
+                )}
               </div>
               <div>
                 <h3 className="font-semibold">
                   {client.first_name} {client.last_name}
+                  {client.user_id && (
+                    <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                      Has Account
+                    </span>
+                  )}
                 </h3>
                 <p className="text-sm text-muted-foreground">{client.email}</p>
                 {client.phone_number && (

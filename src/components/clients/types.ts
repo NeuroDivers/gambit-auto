@@ -1,3 +1,4 @@
+
 export type Client = {
   id: string
   first_name: string
@@ -7,6 +8,8 @@ export type Client = {
   address?: string | null
   created_at: string
   updated_at: string
+  user_id?: string | null
+  access_token?: string | null
 }
 
 export type ClientFormValues = {

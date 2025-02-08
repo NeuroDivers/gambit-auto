@@ -148,6 +148,7 @@ export type Database = {
       }
       clients: {
         Row: {
+          access_token: string | null
           address: string | null
           created_at: string
           email: string
@@ -156,8 +157,10 @@ export type Database = {
           last_name: string
           phone_number: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
+          access_token?: string | null
           address?: string | null
           created_at?: string
           email: string
@@ -166,8 +169,10 @@ export type Database = {
           last_name: string
           phone_number?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
+          access_token?: string | null
           address?: string | null
           created_at?: string
           email?: string
@@ -176,6 +181,7 @@ export type Database = {
           last_name?: string
           phone_number?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
