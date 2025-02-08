@@ -3,9 +3,9 @@ import { useState, useEffect } from "react"
 import { supabase } from "@/integrations/supabase/client"
 
 type RoleResponse = {
-  role: {
+  roles: {
     name: string
-  } | null
+  }[]
 }
 
 export const useAdminStatus = () => {
@@ -31,8 +31,8 @@ export const useAdminStatus = () => {
           .eq('id', user.id)
           .single()
 
-        const role = data?.roles
-        setIsAdmin(role?.name === 'administrator')
+        const roles = (data as RoleResponse)?.roles
+        setIsAdmin(roles?.[0]?.name === 'administrator')
       } catch (error) {
         console.error('Error checking admin status:', error)
         setIsAdmin(false)
