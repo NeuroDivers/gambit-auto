@@ -40,7 +40,7 @@ export function SidebarHeader({ firstName, role, onLogout }: SidebarHeaderProps)
             color: '#bb86fc',
             background: 'rgb(187 134 252 / 0.1)',
           }}>
-            {role ? `${role.nicename} (${role.name})` : 'Guest'} account
+            {role ? role.name : 'Guest'} role
           </span>
         </div>
       </div>
