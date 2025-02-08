@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client"
 type RoleResponse = {
   roles: {
     name: string
-  }[]
+  }
 }
 
 export const useAdminStatus = () => {
@@ -24,7 +24,7 @@ export const useAdminStatus = () => {
         const { data } = await supabase
           .from('profiles')
           .select(`
-            roles!role_id (
+            roles:role_id (
               name
             )
           `)
@@ -32,7 +32,7 @@ export const useAdminStatus = () => {
           .single()
 
         const roles = (data as RoleResponse)?.roles
-        setIsAdmin(roles?.[0]?.name === 'administrator')
+        setIsAdmin(roles?.name === 'administrator')
       } catch (error) {
         console.error('Error checking admin status:', error)
         setIsAdmin(false)
