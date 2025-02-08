@@ -9,8 +9,12 @@ interface Role {
   nicename: string;
 }
 
-interface ProfileWithRole {
-  role: Role | null;
+interface RoleResponse {
+  role: {
+    id: string;
+    name: string;
+    nicename: string;
+  } | null;
 }
 
 export const usePermissions = () => {
@@ -59,7 +63,7 @@ export const usePermissions = () => {
         .single();
 
       // Administrator has all permissions
-      if (profile?.role && profile.role.name) {
+      if (profile?.role?.name) {
         const roleName = profile.role.name.toLowerCase();
         if (roleName === 'administrator' || roleName === 'admin') {
           console.log("User is administrator, granting access");

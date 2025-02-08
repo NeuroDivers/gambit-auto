@@ -10,8 +10,12 @@ interface Role {
   nicename: string;
 }
 
-interface ProfileResponse {
-  role: Role | null;
+interface RoleResponse {
+  role: {
+    id: string;
+    name: string;
+    nicename: string;
+  } | null;
 }
 
 export default function ProfileSettings() {
