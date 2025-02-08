@@ -1,6 +1,7 @@
+
 import { CardContent } from "@/components/ui/card"
 import { BayStatusToggle } from "../BayStatusToggle"
-import { SidekickAssignment } from "../SidekickAssignment"
+import { ProfileAssignment } from "../ProfileAssignment"
 import { BayServiceToggles } from "../BayServiceToggles"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
@@ -8,7 +9,7 @@ import { Label } from "@/components/ui/label"
 type BayCardContentProps = {
   bayId: string
   status: 'available' | 'in_use' | 'maintenance'
-  assignedSidekickId: string | null
+  assignedProfileId: string | null
   notes: string | null
   services: {
     service_id: string
@@ -28,7 +29,7 @@ type BayCardContentProps = {
 export function BayCardContent({
   bayId,
   status,
-  assignedSidekickId,
+  assignedProfileId,
   notes,
   services,
   availableServices,
@@ -44,9 +45,9 @@ export function BayCardContent({
             status={status} 
             onStatusChange={onStatusChange} 
           />
-          <SidekickAssignment 
+          <ProfileAssignment 
             bayId={bayId}
-            currentSidekickId={assignedSidekickId}
+            currentProfileId={assignedProfileId}
           />
         </div>
         <div className="space-y-2">

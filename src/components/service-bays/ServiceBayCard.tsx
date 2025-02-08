@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card"
 import { BayCardHeader } from "./card/BayCardHeader"
 import { BayCardContent } from "./card/BayCardContent"
@@ -8,7 +9,7 @@ type ServiceBayCardProps = {
     id: string
     name: string
     status: 'available' | 'in_use' | 'maintenance'
-    assigned_sidekick_id?: string | null
+    assigned_profile_id?: string | null
     notes?: string | null
   }
   services: {
@@ -35,7 +36,7 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
       <BayCardContent
         bayId={bay.id}
         status={bay.status}
-        assignedSidekickId={bay.assigned_sidekick_id}
+        assignedProfileId={bay.assigned_profile_id}
         notes={bay.notes}
         services={services}
         availableServices={availableServices}
