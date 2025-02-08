@@ -13,11 +13,16 @@ export default function ProfileSettings() {
 
       const { data } = await supabase
         .from('profiles')
-        .select('role')
+        .select(`
+          role:role_id (
+            name,
+            nicename
+          )
+        `)
         .eq('id', user.id)
         .single()
 
-      return data?.role
+      return data?.role?.name
     }
   })
 
