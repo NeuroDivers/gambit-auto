@@ -4,7 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Role {
+  id: string;
   name: string;
+  nicename: string;
 }
 
 interface ProfileData {
@@ -26,14 +28,16 @@ export const useAuthRedirect = () => {
             .from("profiles")
             .select(`
               role:role_id (
-                name
+                id,
+                name,
+                nicename
               )
             `)
             .eq("id", session.user.id)
             .single();
 
           // Redirect based on role
-          if ((profileData as ProfileData)?.role?.name === 'client') {
+          if ((profileData as ProfileData)?.role?.name?.toLowerCase() === 'client') {
             navigate("/client");
           } else {
             navigate("/");
@@ -55,14 +59,16 @@ export const useAuthRedirect = () => {
             .from("profiles")
             .select(`
               role:role_id (
-                name
+                id,
+                name,
+                nicename
               )
             `)
             .eq("id", session.user.id)
             .single();
 
           // Redirect based on role
-          if ((profileData as ProfileData)?.role?.name === 'client') {
+          if ((profileData as ProfileData)?.role?.name?.toLowerCase() === 'client') {
             navigate("/client");
           } else {
             navigate("/");

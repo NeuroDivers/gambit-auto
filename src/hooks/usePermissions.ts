@@ -47,7 +47,9 @@ export const usePermissions = () => {
         .from('profiles')
         .select(`
           role:role_id (
-            name
+            id,
+            name,
+            nicename
           )
         `)
         .eq('id', user.id)
@@ -58,14 +60,12 @@ export const usePermissions = () => {
         return false;
       }
 
-      // Full access roles - add 'king' to this list
+      // Full access roles - king should always have full access
       const fullAccessRoles = ['administrator', 'king'];
       
       // Check if user has a full access role (case insensitive)
-      if ((profileData as ProfileData)?.role?.name && 
-          fullAccessRoles.some(role => 
-            role.toLowerCase() === (profileData as ProfileData).role?.name.toLowerCase()
-          )) {
+      const userRole = (profileData as ProfileData)?.role?.name?.toLowerCase();
+      if (userRole && fullAccessRoles.includes(userRole)) {
         console.log("User has full access role, granting access");
         return true;
       }
