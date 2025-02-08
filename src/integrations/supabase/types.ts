@@ -768,6 +768,7 @@ export type Database = {
           id: string
           name: string
           price: number | null
+          sale_price: number | null
           service_id: string
           status: Database["public"]["Enums"]["service_status"] | null
           updated_at: string
@@ -778,6 +779,7 @@ export type Database = {
           id?: string
           name: string
           price?: number | null
+          sale_price?: number | null
           service_id: string
           status?: Database["public"]["Enums"]["service_status"] | null
           updated_at?: string
@@ -788,6 +790,7 @@ export type Database = {
           id?: string
           name?: string
           price?: number | null
+          sale_price?: number | null
           service_id?: string
           status?: Database["public"]["Enums"]["service_status"] | null
           updated_at?: string

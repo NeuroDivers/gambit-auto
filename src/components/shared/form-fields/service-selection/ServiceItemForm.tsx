@@ -36,6 +36,7 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
       onUpdate(index, "service_id", serviceId)
       onUpdate(index, "service_name", selectedService.name)
       onUpdate(index, "unit_price", selectedService.price || 0)
+      onUpdate(index, "package_id", null)
     }
   }
 
@@ -50,6 +51,7 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
         onUpdate(index, "service_id", selectedService.id)
         onUpdate(index, "service_name", selectedPackage.name)
         onUpdate(index, "unit_price", selectedPackage.price || 0)
+        onUpdate(index, "package_id", selectedPackage.id)
       }
     }
   }
@@ -95,7 +97,7 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
             <div className="mt-2">
               <Label>Package</Label>
               <Select
-                value={item.service_name}
+                value={item.package_id || undefined}
                 onValueChange={handlePackageSelect}
               >
                 <SelectTrigger>
