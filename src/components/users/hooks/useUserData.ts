@@ -23,11 +23,11 @@ export const useUserData = () => {
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select(`
-          id, 
-          email, 
-          first_name, 
+          id,
+          email,
+          first_name,
           last_name,
-          user_roles(
+          user_roles!inner(
             roles(
               name,
               nicename

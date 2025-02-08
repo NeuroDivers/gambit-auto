@@ -34,7 +34,7 @@ export const useRoleStats = () => {
       const { data: userRoles, error: userRolesError } = await supabase
         .from("profiles")
         .select(`
-          user_roles(
+          user_roles!inner(
             roles(
               name
             )
