@@ -1,3 +1,4 @@
+
 import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 import { SidebarNav } from "./sidebar/SidebarNav"
@@ -6,7 +7,10 @@ import { SidebarHeader } from "./sidebar/SidebarHeader"
 interface DashboardLayoutProps {
   children: React.ReactNode
   firstName?: string | null
-  role?: string | null
+  role?: {
+    name: string
+    nicename: string
+  } | null
   onLogout: () => void
 }
 
