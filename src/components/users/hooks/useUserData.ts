@@ -27,11 +27,12 @@ export const useUserData = () => {
           email,
           first_name,
           last_name,
-          role:roles!role_id(
+          roles (
             name,
             nicename
           )
-        `);
+        `)
+        .not('role_id', 'is', null);
 
       if (profilesError) {
         console.error("Error fetching profiles:", profilesError);
@@ -47,8 +48,8 @@ export const useUserData = () => {
         first_name: profile.first_name,
         last_name: profile.last_name,
         user_roles: {
-          role: profile.role.name as UserRole,
-          nicename: profile.role.nicename
+          role: profile.roles?.name as UserRole,
+          nicename: profile.roles?.nicename
         }
       })) as User[];
     },
