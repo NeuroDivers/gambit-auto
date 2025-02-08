@@ -247,6 +247,7 @@ export const RolePermissionsDialog = ({
             </Label>
             <Switch
               id="bay-assignment"
+              name="bay-assignment"
               checked={role?.can_be_assigned_to_bay || false}
               onCheckedChange={handleBayAssignmentToggle}
               disabled={isUpdating}
@@ -262,23 +263,27 @@ export const RolePermissionsDialog = ({
                 {section.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
               </h3>
               <div className="grid grid-cols-4 gap-4">
-                {sectionPermissions.map((permission) => (
-                  <div key={permission.id} className="flex items-start justify-between space-x-4 p-4 rounded-lg bg-muted/50">
-                    <Label htmlFor={permission.id} className="flex-1">
-                      <span className="font-medium">{permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                      {permission.description && (
-                        <p className="text-sm text-muted-foreground">{permission.description}</p>
-                      )}
-                    </Label>
-                    <Switch
-                      id={permission.id}
-                      checked={permission.is_active}
-                      onCheckedChange={(checked) => handlePermissionToggle(permission, checked)}
-                      disabled={isUpdating}
-                      className="data-[state=checked]:bg-primary"
-                    />
-                  </div>
-                ))}
+                {sectionPermissions.map((permission) => {
+                  const switchId = `permission-${permission.id}`;
+                  return (
+                    <div key={permission.id} className="flex items-start justify-between space-x-4 p-4 rounded-lg bg-muted/50">
+                      <Label htmlFor={switchId} className="flex-1">
+                        <span className="font-medium">{permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                        {permission.description && (
+                          <p className="text-sm text-muted-foreground">{permission.description}</p>
+                        )}
+                      </Label>
+                      <Switch
+                        id={switchId}
+                        name={switchId}
+                        checked={permission.is_active}
+                        onCheckedChange={(checked) => handlePermissionToggle(permission, checked)}
+                        disabled={isUpdating}
+                        className="data-[state=checked]:bg-primary"
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}

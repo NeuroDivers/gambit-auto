@@ -59,7 +59,7 @@ export function PageBreadcrumbs() {
               )}
             </BreadcrumbItem>
           );
-        })}
+        }).filter(Boolean)}
       </BreadcrumbList>
     </Breadcrumb>
   );
