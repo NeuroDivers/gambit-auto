@@ -7,7 +7,9 @@ export type User = {
   email: string;
   first_name?: string;
   last_name?: string;
-  role: "admin" | "manager" | "sidekick" | "client";
+  user_roles: {
+    role: "admin" | "manager" | "sidekick" | "client";
+  };
 };
 
 export const useUserData = () => {
@@ -21,7 +23,13 @@ export const useUserData = () => {
 
       if (profilesError) throw profilesError;
 
-      return profiles as User[];
+      // Transform the data to match the expected type
+      return profiles.map(profile => ({
+        ...profile,
+        user_roles: {
+          role: profile.role
+        }
+      })) as User[];
     },
   });
 };

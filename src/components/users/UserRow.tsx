@@ -14,7 +14,9 @@ type UserRowProps = {
     email: string;
     first_name?: string;
     last_name?: string;
-    role: UserRole;
+    user_roles: {
+      role: UserRole;
+    };
   };
 };
 
@@ -54,7 +56,7 @@ export const UserRow = ({ user }: UserRowProps) => {
         <UserInfo
           displayName={displayName}
           email={user.email}
-          userRole={user.role}
+          userRole={user.user_roles.role}
         />
         <UserActions
           onEdit={() => setIsEditing(true)}
