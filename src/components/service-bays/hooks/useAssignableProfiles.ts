@@ -55,14 +55,12 @@ export function useAssignableProfiles() {
         id: profile.id,
         first_name: profile.first_name,
         last_name: profile.last_name,
-        role: Array.isArray(profile.role) && profile.role.length > 0 
-          ? {
-              id: profile.role[0].id,
-              name: profile.role[0].name,
-              nicename: profile.role[0].nicename,
-              can_be_assigned_to_bay: profile.role[0].can_be_assigned_to_bay
-            }
-          : null
+        role: profile.role ? {
+          id: profile.role.id,
+          name: profile.role.name,
+          nicename: profile.role.nicename,
+          can_be_assigned_to_bay: profile.role.can_be_assigned_to_bay
+        } : null
       })) as Profile[];
 
       console.log("Fetched assignable profiles:", transformedProfiles)

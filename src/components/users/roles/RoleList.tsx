@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Pencil, Plus, Trash2, Shield } from "lucide-react";
@@ -15,6 +14,7 @@ type Role = {
   name: string;
   nicename: string;
   description: string | null;
+  can_be_assigned_to_bay: boolean;
 };
 
 export const RoleList = () => {
