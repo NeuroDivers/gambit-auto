@@ -6,19 +6,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { useUserEditSubmit } from "./hooks/useUserEditSubmit";
-
-type UserRole = "admin" | "manager" | "sidekick" | "client";
+import { User } from "./hooks/useUserData";
 
 type UserEditDialogProps = {
-  user: {
-    id: string;
-    email: string;
-    first_name?: string;
-    last_name?: string;
-    user_roles: {
-      role: UserRole;
-    };
-  };
+  user: User;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
@@ -29,13 +20,13 @@ export const UserEditDialog = ({ user, open, onOpenChange }: UserEditDialogProps
     defaultValues: {
       first_name: user.first_name || "",
       last_name: user.last_name || "",
-      role: user.user_roles.role,
+      role: user.role?.id || "",
     },
   });
 
   const { handleSubmit } = useUserEditSubmit({
     userId: user.id,
-    currentRole: user.user_roles.role,
+    currentRole: user.role?.id,
     onSuccess: () => onOpenChange(false),
   });
 

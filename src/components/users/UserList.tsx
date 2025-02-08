@@ -19,7 +19,7 @@ export const UserList = () => {
       user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesRole = roleFilter === "all" || user.user_roles.name === roleFilter;
+    const matchesRole = roleFilter === "all" || user.role?.name === roleFilter;
     
     return matchesSearch && matchesRole;
   });

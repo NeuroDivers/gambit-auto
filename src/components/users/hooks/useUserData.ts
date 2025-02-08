@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export type UserRole = {
+  id: string;
   name: string;
   nicename: string;
 };
@@ -28,6 +29,7 @@ export const useUserData = () => {
           first_name,
           last_name,
           roles:role_id (
+            id,
             name,
             nicename
           )
