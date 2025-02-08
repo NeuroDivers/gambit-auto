@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { PermissionType } from "@/types/permissions";
 
 interface RolePermissionsDialogProps {
@@ -137,9 +138,18 @@ export const RolePermissionsDialog = ({
     return null;
   }
 
+  const groupedPermissions = permissions?.reduce((acc: Record<string, typeof permissions>, permission) => {
+    const section = permission.permission_type;
+    if (!acc[section]) {
+      acc[section] = [];
+    }
+    acc[section].push(permission);
+    return acc;
+  }, {});
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px]">
+      <DialogContent className="sm:max-w-[1200px]">
         <DialogHeader>
           <DialogTitle>Manage Role Permissions</DialogTitle>
         </DialogHeader>
@@ -160,26 +170,32 @@ export const RolePermissionsDialog = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          {permissions?.map((permission) => (
-            <div key={permission.id} className="flex items-start justify-between space-x-4 p-4 rounded-lg bg-muted/50">
-              <Label htmlFor={permission.id} className="flex-1">
-                <span className="font-medium">{permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                {permission.description && (
-                  <p className="text-sm text-muted-foreground">{permission.description}</p>
-                )}
-                <p className="text-xs text-muted-foreground mt-1">
-                  Type: {permission.permission_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                </p>
-              </Label>
-              <Switch
-                id={permission.id}
-                checked={permission.is_active}
-                onCheckedChange={(checked) => handlePermissionToggle(permission.id, checked)}
-              />
+        <ScrollArea className="h-[500px] pr-4">
+          {groupedPermissions && Object.entries(groupedPermissions).map(([section, sectionPermissions]) => (
+            <div key={section} className="mb-8">
+              <h3 className="text-lg font-semibold mb-4 text-primary">
+                {section.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              </h3>
+              <div className="grid grid-cols-4 gap-4">
+                {sectionPermissions.map((permission) => (
+                  <div key={permission.id} className="flex items-start justify-between space-x-4 p-4 rounded-lg bg-muted/50">
+                    <Label htmlFor={permission.id} className="flex-1">
+                      <span className="font-medium">{permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                      {permission.description && (
+                        <p className="text-sm text-muted-foreground">{permission.description}</p>
+                      )}
+                    </Label>
+                    <Switch
+                      id={permission.id}
+                      checked={permission.is_active}
+                      onCheckedChange={(checked) => handlePermissionToggle(permission.id, checked)}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
-        </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
