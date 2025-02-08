@@ -34,11 +34,10 @@ export const useRoleStats = () => {
       const { data: profilesWithRoles, error: countError } = await supabase
         .from("profiles")
         .select(`
-          roles (
+          roles:role_id (
             name
           )
-        `)
-        .not('role_id', 'is', null);
+        `);
       
       if (countError) throw countError;
 

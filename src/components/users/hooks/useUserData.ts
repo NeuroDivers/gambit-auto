@@ -27,12 +27,11 @@ export const useUserData = () => {
           email,
           first_name,
           last_name,
-          roles (
+          roles:role_id (
             name,
             nicename
           )
-        `)
-        .not('role_id', 'is', null);
+        `);
 
       if (profilesError) {
         console.error("Error fetching profiles:", profilesError);
