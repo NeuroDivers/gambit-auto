@@ -10,7 +10,7 @@ interface Role {
 }
 
 interface ProfileResponse {
-  role?: Role;
+  role: Role | null;
 }
 
 export default function ProfileSettings() {
@@ -30,15 +30,9 @@ export default function ProfileSettings() {
         `)
         .eq('id', user.id)
         .single()
-
-      const profileData = data as ProfileResponse;
       
       // Return the role name if it exists
-      if (profileData?.role && 'name' in profileData.role) {
-        return profileData.role.name;
-      }
-      
-      return null;
+      return data?.role?.name || null;
     }
   })
 
