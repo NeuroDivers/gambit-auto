@@ -43,8 +43,22 @@ export function useAssignableProfiles() {
         throw profilesError
       }
 
-      console.log("Fetched profiles:", profiles)
-      return profiles as Profile[];
+      // Transform the data to match our expected type
+      const transformedProfiles = profiles.map(profile => ({
+        id: profile.id,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        role: Array.isArray(profile.role) && profile.role.length > 0 
+          ? {
+              id: profile.role[0].id,
+              name: profile.role[0].name,
+              nicename: profile.role[0].nicename
+            }
+          : null
+      })) as Profile[];
+
+      console.log("Fetched profiles:", transformedProfiles)
+      return transformedProfiles;
     },
   })
 
