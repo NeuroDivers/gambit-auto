@@ -173,7 +173,7 @@ export const RolePermissionsDialog = ({
           <TabsContent value="page_access" className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
               {pagePermissions.map((permission) => (
-                <div key={permission.id} className="flex items-start justify-between space-x-4">
+                <div key={permission.id} className="flex items-start justify-between space-x-4 p-4 rounded-lg bg-muted/50">
                   <Label htmlFor={permission.id} className="flex-1">
                     <span className="font-medium">{permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                     {permission.description && (
@@ -193,7 +193,7 @@ export const RolePermissionsDialog = ({
           <TabsContent value="feature_access" className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
               {featurePermissions.map((permission) => (
-                <div key={permission.id} className="flex items-start justify-between space-x-4">
+                <div key={permission.id} className="flex items-start justify-between space-x-4 p-4 rounded-lg bg-muted/50">
                   <Label htmlFor={permission.id} className="flex-1">
                     <span className="font-medium">{permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                     {permission.description && (
