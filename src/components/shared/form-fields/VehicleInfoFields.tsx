@@ -24,6 +24,7 @@ export function VehicleInfoFields({ form, isLoadingVin, vinAutoFillEnabled }: Ve
                 <div className="relative">
                   <Input 
                     id="vehicle_make"
+                    name="vehicle_make"
                     placeholder="Enter vehicle make" 
                     {...field} 
                     disabled={isLoadingVin}
@@ -47,6 +48,7 @@ export function VehicleInfoFields({ form, isLoadingVin, vinAutoFillEnabled }: Ve
                 <div className="relative">
                   <Input 
                     id="vehicle_model"
+                    name="vehicle_model"
                     placeholder="Enter vehicle model" 
                     {...field} 
                     disabled={isLoadingVin}
@@ -72,6 +74,7 @@ export function VehicleInfoFields({ form, isLoadingVin, vinAutoFillEnabled }: Ve
                 <div className="relative">
                   <Input 
                     id="vehicle_year"
+                    name="vehicle_year"
                     type="number" 
                     placeholder="Enter vehicle year"
                     {...field}
@@ -101,6 +104,7 @@ export function VehicleInfoFields({ form, isLoadingVin, vinAutoFillEnabled }: Ve
               <FormControl>
                 <Input 
                   id="vehicle_vin"
+                  name="vehicle_vin"
                   placeholder="Enter vehicle VIN" 
                   {...field} 
                 />

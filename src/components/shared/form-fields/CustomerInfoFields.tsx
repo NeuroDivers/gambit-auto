@@ -1,3 +1,4 @@
+
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { UseFormReturn } from "react-hook-form"
@@ -19,7 +20,9 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
               <FormControl>
                 <Input 
                   id="customer_first_name"
+                  name="customer_first_name"
                   placeholder="Enter first name" 
+                  autoComplete="given-name"
                   {...field} 
                 />
               </FormControl>
@@ -36,7 +39,9 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
               <FormControl>
                 <Input 
                   id="customer_last_name"
+                  name="customer_last_name"
                   placeholder="Enter last name" 
+                  autoComplete="family-name"
                   {...field} 
                 />
               </FormControl>
@@ -55,8 +60,10 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
               <FormControl>
                 <Input 
                   id="customer_email"
+                  name="customer_email"
                   type="email" 
                   placeholder="Enter email" 
+                  autoComplete="email"
                   {...field} 
                 />
               </FormControl>
@@ -73,7 +80,9 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
               <FormControl>
                 <Input 
                   id="customer_phone"
+                  name="customer_phone"
                   placeholder="Enter phone number" 
+                  autoComplete="tel"
                   {...field} 
                 />
               </FormControl>
@@ -91,7 +100,9 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
             <FormControl>
               <Input 
                 id="customer_address"
+                name="customer_address"
                 placeholder="Enter address" 
+                autoComplete="street-address"
                 {...field} 
               />
             </FormControl>
