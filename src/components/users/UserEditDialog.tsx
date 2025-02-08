@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { UserEditFormFields, formSchema } from "./UserEditFormFields";
 import { z } from "zod";
@@ -16,7 +17,7 @@ type UserEditDialogProps = {
     last_name?: string;
     user_roles: {
       role: UserRole;
-    } | null;
+    };
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -28,13 +29,13 @@ export const UserEditDialog = ({ user, open, onOpenChange }: UserEditDialogProps
     defaultValues: {
       first_name: user.first_name || "",
       last_name: user.last_name || "",
-      role: user.user_roles?.role || "client",
+      role: user.user_roles.role,
     },
   });
 
   const { handleSubmit } = useUserEditSubmit({
     userId: user.id,
-    currentRole: user.user_roles?.role,
+    currentRole: user.user_roles.role,
     onSuccess: () => onOpenChange(false),
   });
 

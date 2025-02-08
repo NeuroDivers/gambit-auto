@@ -19,12 +19,22 @@ export const useUserEditSubmit = ({ userId, currentRole, onSuccess }: UseUserEdi
     try {
       console.log("Updating profile for user:", userId, "with values:", values);
       
+      // First, get the role ID for the selected role
+      const { data: roleData, error: roleError } = await supabase
+        .from('roles')
+        .select('id')
+        .eq('name', values.role)
+        .single();
+
+      if (roleError) throw roleError;
+
+      // Update the profile with the new role_id
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
           first_name: values.first_name,
           last_name: values.last_name,
-          role: values.role
+          role_id: roleData.id
         })
         .eq("id", userId);
 

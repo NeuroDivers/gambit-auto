@@ -395,7 +395,7 @@ export type Database = {
           id: string
           last_name: string | null
           phone_number: string | null
-          role: Database["public"]["Enums"]["app_role"]
+          role_id: string
           updated_at: string
         }
         Insert: {
@@ -408,7 +408,7 @@ export type Database = {
           id: string
           last_name?: string | null
           phone_number?: string | null
-          role?: Database["public"]["Enums"]["app_role"]
+          role_id: string
           updated_at?: string
         }
         Update: {
@@ -421,10 +421,18 @@ export type Database = {
           id?: string
           last_name?: string | null
           phone_number?: string | null
-          role?: Database["public"]["Enums"]["app_role"]
+          role_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quote_items: {
         Row: {
