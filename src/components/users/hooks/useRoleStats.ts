@@ -35,7 +35,8 @@ export const useRoleStats = () => {
         .from("profiles")
         .select(`
           user_roles!inner(
-            roles(
+            role_id,
+            roles!inner(
               name
             )
           )

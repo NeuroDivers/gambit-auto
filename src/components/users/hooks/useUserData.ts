@@ -28,7 +28,8 @@ export const useUserData = () => {
           first_name,
           last_name,
           user_roles!inner(
-            roles(
+            role_id,
+            roles!inner(
               name,
               nicename
             )
