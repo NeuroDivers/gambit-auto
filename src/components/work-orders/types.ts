@@ -1,3 +1,4 @@
+
 import { WorkOrder as BaseWorkOrder } from "@/types"
 
 export type WorkOrder = BaseWorkOrder
@@ -13,6 +14,8 @@ export type ServiceItemType = {
   service_name: string
   quantity: number
   unit_price: number
+  package_id?: string | null
+  package_name?: string | null
 }
 
 export type ServiceListProps = {
