@@ -19,7 +19,13 @@ export function ClientLayoutWrapper() {
       
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("*")
+        .select(`
+          *,
+          role:role_id (
+            name,
+            nicename
+          )
+        `)
         .eq("id", user.id)
         .single();
       
@@ -66,6 +72,7 @@ export function ClientLayoutWrapper() {
   return (
     <ClientLayout
       firstName={profile?.first_name}
+      role={profile?.role}
       onLogout={handleLogout}
     >
       <Outlet />
