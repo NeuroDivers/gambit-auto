@@ -7,9 +7,7 @@ export type User = {
   email: string;
   first_name?: string;
   last_name?: string;
-  user_roles: {
-    role: "admin" | "manager" | "sidekick" | "client";
-  } | null;
+  role: "admin" | "manager" | "sidekick" | "client";
 };
 
 export const useUserData = () => {
@@ -19,22 +17,16 @@ export const useUserData = () => {
       console.log("Fetching users...");
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, email, first_name, last_name");
+        .select("id, email, first_name, last_name, role");
 
       if (profilesError) throw profilesError;
 
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("user_id, role");
-
-      return profiles?.map(profile => ({
+      return profiles.map(profile => ({
         id: profile.id,
         email: profile.email,
         first_name: profile.first_name,
         last_name: profile.last_name,
-        user_roles: roles?.find(role => role.user_id === profile.id)
-          ? { role: roles.find(role => role.user_id === profile.id)?.role as "admin" | "manager" | "sidekick" | "client" }
-          : { role: 'client' as const }
+        role: profile.role
       })) as User[];
     },
   });

@@ -395,6 +395,7 @@ export type Database = {
           id: string
           last_name: string | null
           phone_number: string | null
+          role: Database["public"]["Enums"]["app_role"]
           updated_at: string
         }
         Insert: {
@@ -407,6 +408,7 @@ export type Database = {
           id: string
           last_name?: string | null
           phone_number?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }
         Update: {
@@ -419,6 +421,7 @@ export type Database = {
           id?: string
           last_name?: string | null
           phone_number?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }
         Relationships: []
@@ -733,27 +736,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
       work_order_services: {
         Row: {
           created_at: string
@@ -915,13 +897,6 @@ export type Database = {
           work_order_id: string
         }
         Returns: string
-      }
-      create_user_role: {
-        Args: {
-          user_id: string
-          role_name: string
-        }
-        Returns: undefined
       }
       generate_invoice_number: {
         Args: Record<PropertyKey, never>

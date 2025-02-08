@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,7 +15,7 @@ export const useRoleStats = () => {
     queryFn: async () => {
       console.log("Fetching role stats...");
       const { data, error } = await supabase
-        .from("user_roles")
+        .from("profiles")
         .select("role");
       
       if (error) {
@@ -34,9 +35,9 @@ export const useRoleStats = () => {
         return stats;
       }
       
-      data.forEach((row) => {
-        if (row.role) {
-          stats[row.role] = (stats[row.role] || 0) + 1;
+      data.forEach((profile) => {
+        if (profile.role) {
+          stats[profile.role] = (stats[profile.role] || 0) + 1;
         }
       });
       

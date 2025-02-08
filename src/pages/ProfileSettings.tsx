@@ -1,3 +1,4 @@
+
 import { ProfileForm } from "@/components/profile/ProfileForm"
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { useQuery } from "@tanstack/react-query"
@@ -10,13 +11,13 @@ export default function ProfileSettings() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return null
 
-      const { data: roleData } = await supabase
-        .from('user_roles')
+      const { data } = await supabase
+        .from('profiles')
         .select('role')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .single()
 
-      return roleData?.role
+      return data?.role
     }
   })
 
