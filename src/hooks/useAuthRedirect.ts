@@ -33,7 +33,7 @@ export const useAuthRedirect = () => {
             .single();
 
           // Redirect based on role
-          if (profileData?.role?.name === 'client') {
+          if ((profileData as ProfileData)?.role?.name === 'client') {
             navigate("/client");
           } else {
             navigate("/");
@@ -62,7 +62,7 @@ export const useAuthRedirect = () => {
             .single();
 
           // Redirect based on role
-          if (profileData?.role?.name === 'client') {
+          if ((profileData as ProfileData)?.role?.name === 'client') {
             navigate("/client");
           } else {
             navigate("/");

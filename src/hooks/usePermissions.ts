@@ -43,7 +43,7 @@ export const usePermissions = () => {
       if (!user) return false;
 
       // First get the user's role
-      const { data: profile, error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select(`
           role:role_id (
@@ -62,9 +62,9 @@ export const usePermissions = () => {
       const fullAccessRoles = ['administrator', 'king'];
       
       // Check if user has a full access role (case insensitive)
-      if (profile?.role?.name && 
+      if ((profileData as ProfileData)?.role?.name && 
           fullAccessRoles.some(role => 
-            role.toLowerCase() === profile.role.name.toLowerCase()
+            role.toLowerCase() === (profileData as ProfileData).role?.name.toLowerCase()
           )) {
         console.log("User has full access role, granting access");
         return true;
