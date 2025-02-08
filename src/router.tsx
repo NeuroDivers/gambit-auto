@@ -20,11 +20,17 @@ import { DashboardLayoutWrapper } from "./components/dashboard/DashboardLayoutWr
 import { ClientLayoutWrapper } from "./components/client/ClientLayoutWrapper"
 import ClientDashboard from "./pages/client/Dashboard"
 import ClientQuoteRequests from "./pages/client/QuoteRequests"
+import { PermissionGuard } from "./components/auth/PermissionGuard"
+import Unauthorized from "./pages/Unauthorized"
 
 export const router = createBrowserRouter([
   {
     path: "/auth",
     element: <Auth />,
+  },
+  {
+    path: "/unauthorized",
+    element: <Unauthorized />,
   },
   {
     path: "/i/:id",
@@ -40,43 +46,83 @@ export const router = createBrowserRouter([
       },
       {
         path: "work-orders",
-        element: <WorkOrders />,
+        element: (
+          <PermissionGuard resource="work_orders" type="page_access">
+            <WorkOrders />
+          </PermissionGuard>
+        ),
       },
       {
         path: "work-orders/:id/edit",
-        element: <EditWorkOrder />,
+        element: (
+          <PermissionGuard resource="work_orders" type="page_access">
+            <EditWorkOrder />
+          </PermissionGuard>
+        ),
       },
       {
         path: "service-types",
-        element: <ServiceTypes />,
+        element: (
+          <PermissionGuard resource="service_types" type="page_access">
+            <ServiceTypes />
+          </PermissionGuard>
+        ),
       },
       {
         path: "service-bays",
-        element: <ServiceBays />,
+        element: (
+          <PermissionGuard resource="service_bays" type="page_access">
+            <ServiceBays />
+          </PermissionGuard>
+        ),
       },
       {
         path: "users",
-        element: <UserManagement />,
+        element: (
+          <PermissionGuard resource="users" type="page_access">
+            <UserManagement />
+          </PermissionGuard>
+        ),
       },
       {
         path: "quotes",
-        element: <Quotes />,
+        element: (
+          <PermissionGuard resource="quotes" type="page_access">
+            <Quotes />
+          </PermissionGuard>
+        ),
       },
       {
         path: "invoices",
-        element: <Invoices />,
+        element: (
+          <PermissionGuard resource="invoices" type="page_access">
+            <Invoices />
+          </PermissionGuard>
+        ),
       },
       {
         path: "invoices/:id",
-        element: <InvoiceDetails />,
+        element: (
+          <PermissionGuard resource="invoices" type="page_access">
+            <InvoiceDetails />
+          </PermissionGuard>
+        ),
       },
       {
         path: "clients",
-        element: <ClientManagement />,
+        element: (
+          <PermissionGuard resource="clients" type="page_access">
+            <ClientManagement />
+          </PermissionGuard>
+        ),
       },
       {
         path: "business-settings",
-        element: <BusinessSettings />,
+        element: (
+          <PermissionGuard resource="business_settings" type="page_access">
+            <BusinessSettings />
+          </PermissionGuard>
+        ),
       },
       {
         path: "profile-settings",
@@ -84,7 +130,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "developer-settings",
-        element: <DeveloperSettings />,
+        element: (
+          <PermissionGuard resource="developer_settings" type="page_access">
+            <DeveloperSettings />
+          </PermissionGuard>
+        ),
       },
     ]
   },
@@ -118,4 +168,4 @@ export const router = createBrowserRouter([
     path: "*",
     element: <NotFound />,
   },
-])
+]);

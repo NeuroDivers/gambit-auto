@@ -1,13 +1,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useState } from "react";
 import { RoleDialog } from "./RoleDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
+import { RolePermissionsDialog } from "./RolePermissionsDialog";
 
 type Role = {
   id: string;
@@ -19,6 +20,7 @@ type Role = {
 export const RoleList = () => {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
   const { toast } = useToast();
   const { isAdmin } = useAdminStatus();
 
@@ -119,6 +121,16 @@ export const RoleList = () => {
                     size="icon"
                     onClick={() => {
                       setSelectedRole(role);
+                      setIsPermissionsDialogOpen(true);
+                    }}
+                  >
+                    <Shield className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setSelectedRole(role);
                       setIsDialogOpen(true);
                     }}
                   >
@@ -151,6 +163,12 @@ export const RoleList = () => {
           setIsDialogOpen(false);
           refetch();
         }}
+      />
+
+      <RolePermissionsDialog
+        roleId={selectedRole?.id || null}
+        open={isPermissionsDialogOpen}
+        onOpenChange={setIsPermissionsDialogOpen}
       />
     </div>
   );

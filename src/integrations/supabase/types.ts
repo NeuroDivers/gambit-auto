@@ -616,6 +616,47 @@ export type Database = {
           },
         ]
       }
+      role_permissions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          permission_type: Database["public"]["Enums"]["permission_type"]
+          resource_name: string
+          role_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          permission_type: Database["public"]["Enums"]["permission_type"]
+          resource_name: string
+          role_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          permission_type?: Database["public"]["Enums"]["permission_type"]
+          resource_name?: string
+          role_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roles: {
         Row: {
           created_at: string
@@ -623,6 +664,7 @@ export type Database = {
           id: string
           name: string
           nicename: string
+          permissions_configured: boolean | null
           updated_at: string
         }
         Insert: {
@@ -631,6 +673,7 @@ export type Database = {
           id?: string
           name: string
           nicename: string
+          permissions_configured?: boolean | null
           updated_at?: string
         }
         Update: {
@@ -639,6 +682,7 @@ export type Database = {
           id?: string
           name?: string
           nicename?: string
+          permissions_configured?: boolean | null
           updated_at?: string
         }
         Relationships: []
@@ -917,6 +961,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      has_permission: {
+        Args: {
+          user_id: string
+          resource: string
+          perm_type: Database["public"]["Enums"]["permission_type"]
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           user_id: string
@@ -940,6 +992,7 @@ export type Database = {
       auto_detail_type: "interior" | "exterior" | "both"
       bay_status: "available" | "in_use" | "maintenance"
       contact_preference: "phone" | "email"
+      permission_type: "page_access" | "feature_access"
       ppf_package_type:
         | "partial_front"
         | "full_front"
