@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { UserList } from "./UserList";
 import { RoleManagement } from "./RoleManagement";
@@ -5,6 +6,7 @@ import { CreateUserDialog } from "./CreateUserDialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
+import { RoleList } from "./roles/RoleList";
 
 export const UserManagementSection = () => {
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
@@ -28,7 +30,10 @@ export const UserManagementSection = () => {
           </div>
           <UserList />
         </div>
-        <RoleManagement />
+        <div className="space-y-8">
+          <RoleManagement />
+          <RoleList />
+        </div>
       </div>
       <CreateUserDialog 
         open={isCreateUserOpen} 
