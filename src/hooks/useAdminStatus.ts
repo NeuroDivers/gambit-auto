@@ -3,12 +3,13 @@ import { useState, useEffect } from "react"
 import { supabase } from "@/integrations/supabase/client"
 
 interface RoleData {
+  id: string
   name: string
   nicename: string
 }
 
 interface ProfileResponse {
-  role: RoleData
+  role_id: RoleData
 }
 
 export const useAdminStatus = () => {
@@ -28,6 +29,7 @@ export const useAdminStatus = () => {
           .from('profiles')
           .select(`
             role:role_id (
+              id,
               name,
               nicename
             )
@@ -41,7 +43,7 @@ export const useAdminStatus = () => {
           return;
         }
 
-        const userRole = (profileData as ProfileResponse)?.role?.name?.toLowerCase();
+        const userRole = (profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase();
         console.log("Checking admin status, user role:", userRole);
         
         // Consider both administrator and king as admin roles
