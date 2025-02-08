@@ -30,22 +30,24 @@ export const useRoleStats = () => {
         stats[role.name as UserRole] = 0;
       });
 
-      // Count users for each role
+      // Count users for each role by joining profiles and user_roles
       const { data: userRoles, error: userRolesError } = await supabase
-        .from("user_roles")
+        .from("profiles")
         .select(`
-          roles (
-            name
+          user_roles(
+            roles(
+              name
+            )
           )
         `);
       
       if (userRolesError) throw userRolesError;
 
       // Update counts for roles that have users
-      userRoles.forEach((userRole: any) => {
-        if (userRole.roles?.name) {
-          const roleName = userRole.roles.name as UserRole;
-          stats[roleName] = (stats[roleName] || 0) + 1;
+      userRoles.forEach((profile: any) => {
+        const roleName = profile.user_roles[0]?.roles?.name;
+        if (roleName) {
+          stats[roleName as UserRole] = (stats[roleName as UserRole] || 0) + 1;
         }
       });
       
