@@ -28,7 +28,7 @@ export const useUserData = () => {
           email,
           first_name,
           last_name,
-          roles:role_id (
+          role:roles!role_id (
             id,
             name,
             nicename
@@ -47,7 +47,7 @@ export const useUserData = () => {
         email: profile.email,
         first_name: profile.first_name,
         last_name: profile.last_name,
-        role: profile.roles
+        role: profile.role
       })) as User[];
     },
   });
