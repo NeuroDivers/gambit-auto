@@ -103,14 +103,11 @@ export const RolePermissionsDialog = ({
         .eq("id", permission.id);
 
       if (updateError) {
+        console.error("Update error:", updateError);
         throw updateError;
       }
 
-      // Invalidate the query to refetch fresh data
-      await queryClient.invalidateQueries({ 
-        queryKey: ["role-permissions", roleId]
-      });
-      
+      // Toast success message
       const resourceName = permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
       const permissionType = permission.permission_type.toLowerCase().replace(/_/g, ' ');
       const action = newValue ? "enabled" : "disabled";
@@ -119,8 +116,10 @@ export const RolePermissionsDialog = ({
         title: `Permission ${action}`,
         description: `${resourceName} permission has been ${action} for ${permissionType} operations.`,
       });
+
     } catch (error: any) {
       console.error("Permission update error:", error);
+      
       // Revert optimistic update
       queryClient.invalidateQueries({ 
         queryKey: ["role-permissions", roleId]
@@ -157,14 +156,10 @@ export const RolePermissionsDialog = ({
         .eq("id", roleId);
 
       if (updateError) {
+        console.error("Update error:", updateError);
         throw updateError;
       }
 
-      // Invalidate to ensure fresh data
-      await queryClient.invalidateQueries({ 
-        queryKey: ["role", roleId]
-      });
-      
       const action = newValue ? "enabled" : "disabled";
       toast({
         title: "Bay assignment updated",
@@ -172,6 +167,7 @@ export const RolePermissionsDialog = ({
       });
     } catch (error: any) {
       console.error("Bay assignment update error:", error);
+      
       // Revert optimistic update
       queryClient.invalidateQueries({ 
         queryKey: ["role", roleId]

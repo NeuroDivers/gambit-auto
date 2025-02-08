@@ -33,6 +33,8 @@ export const UserFilters = ({
     <div className="flex flex-col sm:flex-row gap-4 mb-6">
       <div className="flex-1">
         <Input
+          id="user-search"
+          name="user-search"
           placeholder="Search by name or email..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
@@ -41,7 +43,7 @@ export const UserFilters = ({
       </div>
       <div className="sm:w-[180px]">
         <Select value={roleFilter} onValueChange={onRoleFilterChange}>
-          <SelectTrigger className="w-full bg-[#242424] border-white/10">
+          <SelectTrigger id="role-filter" name="role-filter" className="w-full bg-[#242424] border-white/10">
             <SelectValue placeholder="Filter by role" />
           </SelectTrigger>
           <SelectContent>
