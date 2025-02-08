@@ -12,6 +12,7 @@ import { useAdminStatus } from "@/hooks/useAdminStatus";
 type Role = {
   id: string;
   name: string;
+  nicename: string;
   description: string | null;
 };
 
@@ -105,7 +106,8 @@ export const RoleList = () => {
           <Card key={role.id} className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-medium text-white/[0.87] capitalize">{role.name}</h4>
+                <h4 className="font-medium text-white/[0.87]">{role.nicename}</h4>
+                <p className="text-sm text-white/60 mt-0.5">{role.name}</p>
                 {role.description && (
                   <p className="text-sm text-white/60 mt-1">{role.description}</p>
                 )}

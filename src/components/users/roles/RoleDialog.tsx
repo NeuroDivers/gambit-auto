@@ -13,6 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
+  nicename: z.string().min(1, "Display name is required"),
   description: z.string().optional(),
 });
 
@@ -24,6 +25,7 @@ interface RoleDialogProps {
   role?: {
     id: string;
     name: string;
+    nicename: string;
     description: string | null;
   } | null;
   onSuccess?: () => void;
@@ -54,6 +56,7 @@ export const RoleDialog = ({ open, onOpenChange, role, onSuccess }: RoleDialogPr
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: roleData?.name || role?.name || "",
+      nicename: roleData?.nicename || role?.nicename || "",
       description: roleData?.description || role?.description || "",
     },
   });
@@ -66,6 +69,7 @@ export const RoleDialog = ({ open, onOpenChange, role, onSuccess }: RoleDialogPr
           .from("roles")
           .update({
             name: values.name,
+            nicename: values.nicename,
             description: values.description,
           })
           .eq("id", role.id);
@@ -82,6 +86,7 @@ export const RoleDialog = ({ open, onOpenChange, role, onSuccess }: RoleDialogPr
           .from("roles")
           .insert({
             name: values.name,
+            nicename: values.nicename,
             description: values.description,
           });
 
@@ -120,9 +125,23 @@ export const RoleDialog = ({ open, onOpenChange, role, onSuccess }: RoleDialogPr
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Technical Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter role name" {...field} />
+                    <Input placeholder="Enter role name (e.g. project_manager)" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="nicename"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Display Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter display name (e.g. Project Manager)" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
