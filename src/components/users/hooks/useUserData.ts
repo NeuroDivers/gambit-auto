@@ -12,10 +12,7 @@ export type User = {
   email: string;
   first_name?: string;
   last_name?: string;
-  user_roles: {
-    role: string;
-    nicename: string;
-  };
+  user_roles: UserRole;
 };
 
 export const useUserData = () => {
@@ -50,7 +47,7 @@ export const useUserData = () => {
         first_name: profile.first_name,
         last_name: profile.last_name,
         user_roles: {
-          role: profile.roles?.name || 'no-role',
+          name: profile.roles?.name || 'no-role',
           nicename: profile.roles?.nicename || 'No Role'
         }
       })) as User[];
