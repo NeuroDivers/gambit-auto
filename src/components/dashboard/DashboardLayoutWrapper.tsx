@@ -17,18 +17,25 @@ export function DashboardLayoutWrapper() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
       
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select(`
           *,
           role:role_id (
+            id,
             name,
             nicename
           )
         `)
         .eq("id", user.id)
         .single();
-      
+
+      if (profileError) {
+        console.error("Profile fetch error:", profileError);
+        throw profileError;
+      }
+
+      console.log("Fetched profile data:", profileData);
       return profileData;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
