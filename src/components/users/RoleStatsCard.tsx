@@ -18,9 +18,13 @@ export const RoleStatsCard = ({ role, count, onRoleSelect }: RoleStatsCardProps)
         .from("roles")
         .select("nicename")
         .eq("name", role)
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching role info:", error);
+        return null;
+      }
+      
       return data;
     },
   });
@@ -30,6 +34,9 @@ export const RoleStatsCard = ({ role, count, onRoleSelect }: RoleStatsCardProps)
       onRoleSelect(role);
     }
   };
+
+  // Format the role name nicely if no nicename is found
+  const displayName = roleInfo?.nicename || role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
   return (
     <Card 
@@ -43,7 +50,7 @@ export const RoleStatsCard = ({ role, count, onRoleSelect }: RoleStatsCardProps)
           </div>
           <div>
             <p className="text-lg font-semibold capitalize text-white/[0.87]">
-              {roleInfo?.nicename || role}
+              {displayName}
             </p>
             <p className="text-sm text-white/60">
               {count} {count === 1 ? 'user' : 'users'}
