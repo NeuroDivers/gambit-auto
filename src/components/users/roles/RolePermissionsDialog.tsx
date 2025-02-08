@@ -87,19 +87,32 @@ export const RolePermissionsDialog = ({
     console.log("Updating permission:", permission.id, "to value:", newValue);
     
     try {
-      const { error, data } = await supabase
+      // First verify the permission exists
+      const { data: existingPerm, error: checkError } = await supabase
+        .from("role_permissions")
+        .select()
+        .eq("id", permission.id)
+        .maybeSingle();
+
+      if (checkError) {
+        throw checkError;
+      }
+
+      if (!existingPerm) {
+        throw new Error("Permission not found");
+      }
+
+      // Perform the update
+      const { error: updateError } = await supabase
         .from("role_permissions")
         .update({ 
           is_active: newValue,
           updated_at: new Date().toISOString()
         })
-        .eq("id", permission.id)
-        .select()
-        .maybeSingle();
+        .eq("id", permission.id);
 
-      if (error) {
-        console.error("Error updating permission:", error);
-        throw error;
+      if (updateError) {
+        throw updateError;
       }
 
       // Update the cache immediately
@@ -143,17 +156,33 @@ export const RolePermissionsDialog = ({
 
     setIsUpdating(true);
     try {
-      const { error, data } = await supabase
+      // First verify the role exists
+      const { data: existingRole, error: checkError } = await supabase
+        .from("roles")
+        .select()
+        .eq("id", roleId)
+        .maybeSingle();
+
+      if (checkError) {
+        throw checkError;
+      }
+
+      if (!existingRole) {
+        throw new Error("Role not found");
+      }
+
+      // Perform the update
+      const { error: updateError } = await supabase
         .from("roles")
         .update({ 
           can_be_assigned_to_bay: newValue,
           updated_at: new Date().toISOString()
         })
-        .eq("id", roleId)
-        .select()
-        .maybeSingle();
+        .eq("id", roleId);
 
-      if (error) throw error;
+      if (updateError) {
+        throw updateError;
+      }
 
       // Update the cache immediately
       queryClient.setQueryData(["role", roleId], (oldData: any) => {
