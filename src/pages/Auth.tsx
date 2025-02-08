@@ -1,146 +1,27 @@
-
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 import { Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { SignUpDialog } from "@/components/auth/SignUpDialog";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
+import { useAuthForm } from "@/hooks/useAuthForm";
 
 const Auth = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-  const [loading, setLoading] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    // Check for existing session
-    const checkSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        
-        if (session) {
-          // Get user role
-          const { data: roleData } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", session.user.id)
-            .single();
-
-          // Redirect based on role
-          if (roleData?.role === 'client') {
-            navigate("/client");
-          } else {
-            navigate("/");
-          }
-        }
-      } catch (error: any) {
-        console.error("Session check error:", error.message);
-      }
-    };
-
-    checkSession();
-
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          // Get user role
-          const { data: roleData } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", session.user.id)
-            .single();
-
-          // Redirect based on role
-          if (roleData?.role === 'client') {
-            navigate("/client");
-          } else {
-            navigate("/");
-          }
-        } else if (event === 'SIGNED_OUT') {
-          navigate("/auth");
-        }
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (loading) return;
-    setLoading(true);
-
-    try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        });
-        if (error) {
-          if (error.message === "Invalid login credentials") {
-            throw new Error(
-              "Invalid email or password. Please check your credentials and try again."
-            );
-          }
-          throw error;
-        }
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth`,
-          },
-        });
-        if (error) throw error;
-        toast({
-          title: "Success!",
-          description: "Please check your email to verify your account.",
-        });
-        setIsLogin(true);
-        setIsModalOpen(false);
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      email: "",
-      password: "",
-    });
-  };
+  const { formData, loading, handleInputChange, handleAuth, resetForm } = useAuthForm();
+  
+  // Set up auth redirect
+  useAuthRedirect();
 
   const handleSignInClick = () => {
     setIsLogin(true);
     resetForm();
     setIsModalOpen(false);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    handleAuth(e, isLogin);
   };
 
   return (
@@ -157,7 +38,7 @@ const Auth = () => {
             <LoginForm
               formData={formData}
               loading={loading}
-              onSubmit={handleAuth}
+              onSubmit={handleSubmit}
               onChange={handleInputChange}
             />
             <div className="text-center">
@@ -166,7 +47,7 @@ const Auth = () => {
                 onOpenChange={setIsModalOpen}
                 formData={formData}
                 loading={loading}
-                onSubmit={handleAuth}
+                onSubmit={handleSubmit}
                 onChange={handleInputChange}
                 onSignInClick={handleSignInClick}
               />
@@ -177,7 +58,7 @@ const Auth = () => {
             <LoginForm
               formData={formData}
               loading={loading}
-              onSubmit={handleAuth}
+              onSubmit={handleSubmit}
               onChange={handleInputChange}
             />
             <div className="text-center">
