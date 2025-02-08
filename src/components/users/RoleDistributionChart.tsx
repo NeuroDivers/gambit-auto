@@ -38,6 +38,12 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
 
   const total = Object.values(roleStats).reduce((acc, curr) => acc + curr, 0);
 
+  // Custom formatter for legend text to ensure we return a string
+  const formatLegendText = (value: string) => {
+    const displayName = roleNames?.[value] || value;
+    return displayName;
+  };
+
   return (
     <Card className="bg-card/50 backdrop-blur-sm border-white/[0.08] p-6">
       <div className="space-y-4">
@@ -76,16 +82,14 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
                 }}
                 formatter={(value: number, name: string) => [
                   `${value} user${value !== 1 ? 's' : ''}`,
-                  String(roleNames?.[name] || name)
+                  formatLegendText(name)
                 ]}
               />
               <Legend 
                 verticalAlign="bottom" 
                 height={36}
                 iconType="circle"
-                formatter={(value: string) => 
-                  String(roleNames?.[value] || value)
-                }
+                formatter={formatLegendText}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -94,4 +98,3 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
     </Card>
   );
 };
-
