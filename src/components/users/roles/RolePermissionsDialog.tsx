@@ -85,7 +85,10 @@ export const RolePermissionsDialog = ({
         throw error;
       }
 
-      await queryClient.invalidateQueries({ queryKey: ["role-permissions"] });
+      // Invalidate the specific role's permissions
+      await queryClient.invalidateQueries({ 
+        queryKey: ["role-permissions", roleId]
+      });
       
       toast({
         title: "Permission updated",
@@ -115,7 +118,9 @@ export const RolePermissionsDialog = ({
 
       if (error) throw error;
 
-      await queryClient.invalidateQueries({ queryKey: ["role", roleId] });
+      await queryClient.invalidateQueries({ 
+        queryKey: ["role", roleId]
+      });
       
       toast({
         title: "Bay assignment updated",
@@ -214,3 +219,4 @@ export const RolePermissionsDialog = ({
     </Dialog>
   );
 };
+
