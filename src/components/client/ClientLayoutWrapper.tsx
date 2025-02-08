@@ -14,10 +14,12 @@ export function ClientLayoutWrapper() {
   const { data: profile, isLoading, error } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
       
-      const { data: profileData } = await supabase
+      if (!session?.user) return null;
+      
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select(`
           *,
@@ -26,26 +28,27 @@ export function ClientLayoutWrapper() {
             nicename
           )
         `)
-        .eq("id", user.id)
-        .single();
+        .eq("id", session.user.id)
+        .maybeSingle();
       
+      if (profileError) throw profileError;
       return profileData;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
-    retry: 1,
+    retry: false, // Don't retry on error
   });
 
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
+      localStorage.clear(); // Clear all local storage
+      navigate("/auth", { replace: true });
       
       toast({
         title: "Logged out successfully",
         description: "You have been logged out of your account.",
       });
-      
-      navigate("/auth", { replace: true });
     } catch (error: any) {
       console.error("Logout error:", error);
       toast({
@@ -60,12 +63,7 @@ export function ClientLayoutWrapper() {
     return <LoadingScreen />;
   }
 
-  if (error) {
-    navigate("/auth");
-    return null;
-  }
-
-  if (!profile) {
+  if (error || !profile) {
     return <Navigate to="/auth" replace />;
   }
 

@@ -22,7 +22,7 @@ export function DashboardLayoutWrapper() {
       
       if (!session?.user) {
         console.log("No session found, redirecting to auth");
-        throw new Error("No authenticated user");
+        return null;
       }
 
       console.log("Session found, fetching profile for user:", session.user.id);
@@ -38,31 +38,30 @@ export function DashboardLayoutWrapper() {
           )
         `)
         .eq("id", session.user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error("Profile fetch error:", profileError);
         throw profileError;
       }
 
-      console.log("Fetched profile data:", profileData);
       return profileData;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
-    retry: 1,
+    retry: false, // Don't retry on error
   });
 
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
+      localStorage.clear(); // Clear all local storage
+      navigate("/auth", { replace: true });
       
       toast({
         title: "Logged out successfully",
         description: "You have been logged out of your account.",
       });
-      
-      navigate("/auth", { replace: true });
     } catch (error: any) {
       console.error("Logout error:", error);
       toast({
@@ -79,8 +78,7 @@ export function DashboardLayoutWrapper() {
 
   if (error) {
     console.error("Profile fetch error, redirecting to auth:", error);
-    navigate("/auth", { replace: true });
-    return null;
+    return <Navigate to="/auth" replace />;
   }
 
   if (!profile) {
