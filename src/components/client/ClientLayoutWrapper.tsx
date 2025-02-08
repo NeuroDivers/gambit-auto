@@ -13,16 +13,16 @@ export function ClientLayoutWrapper() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: session } = useQuery({
+  const { data: session, isLoading: sessionLoading } = useQuery({
     queryKey: ["session"],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) throw error;
       return session;
     },
-    staleTime: 1000 * 60 * 5, // Keep session fresh for 5 minutes
   });
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile", session?.user?.id],
     enabled: !!session?.user?.id,
     queryFn: async () => {
@@ -43,38 +43,12 @@ export function ClientLayoutWrapper() {
       if (profileError) throw profileError;
       return profileData;
     },
-    staleTime: 1000 * 60 * 5, // Keep profile fresh for 5 minutes
   });
-
-  // Prefetch the profile data if we have a session
-  React.useEffect(() => {
-    if (session?.user?.id) {
-      queryClient.prefetchQuery({
-        queryKey: ["profile", session.user.id],
-        queryFn: async () => {
-          const { data, error } = await supabase
-            .from("profiles")
-            .select(`
-              *,
-              role:role_id (
-                name,
-                nicename
-              )
-            `)
-            .eq("id", session.user.id)
-            .maybeSingle();
-
-          if (error) throw error;
-          return data;
-        },
-      });
-    }
-  }, [session?.user?.id, queryClient]);
 
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      queryClient.clear(); // Clear all queries from cache
+      queryClient.removeQueries(); // Clear all queries
       navigate("/auth", { replace: true });
       toast({
         title: "Logged out successfully",
@@ -90,14 +64,22 @@ export function ClientLayoutWrapper() {
     }
   };
 
-  if (isLoading) {
+  // Show loading screen while checking initial session
+  if (sessionLoading) {
     return <LoadingScreen />;
   }
 
+  // Redirect to auth if no session
   if (!session) {
     return <Navigate to="/auth" replace />;
   }
 
+  // Show loading while fetching profile
+  if (profileLoading) {
+    return <LoadingScreen />;
+  }
+
+  // Redirect to auth if no profile
   if (!profile) {
     return <Navigate to="/auth" replace />;
   }
