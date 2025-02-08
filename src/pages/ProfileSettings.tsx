@@ -24,7 +24,12 @@ export default function ProfileSettings() {
         .eq('id', user.id)
         .single()
 
-      return (data as RoleResponse)?.role?.name as string | null || null
+      // Ensure we have the correct data structure before type assertion
+      if (data?.role && typeof data.role === 'object' && 'name' in data.role) {
+        return (data.role as { name: string }).name
+      }
+      
+      return null
     }
   })
 

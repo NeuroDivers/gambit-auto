@@ -43,19 +43,19 @@ export const usePermissions = () => {
       if (!user) return false;
 
       // First check if user is administrator
-      const { data: profile } = await supabase
+      const { data } = await supabase
         .from('profiles')
         .select('role:role_id(name)')
         .eq('id', user.id)
         .single();
 
       // Administrator has all permissions
-      if ((profile?.role as { name: string })?.name === 'administrator') {
+      if (data?.role && typeof data.role === 'object' && 'name' in data.role && data.role.name === 'administrator') {
         return true;
       }
 
       // For non-administrators, check specific permissions
-      const { data, error } = await supabase.rpc('has_permission', {
+      const { data: hasPermission, error } = await supabase.rpc('has_permission', {
         user_id: user.id,
         resource: resource,
         perm_type: type
@@ -66,7 +66,7 @@ export const usePermissions = () => {
         return false;
       }
 
-      return data || false;
+      return hasPermission || false;
     } catch (error) {
       console.error('Permission check error:', error);
       return false;
