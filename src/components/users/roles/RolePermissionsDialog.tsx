@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
@@ -25,7 +24,6 @@ export const RolePermissionsDialog = ({
   open,
   onOpenChange,
 }: RolePermissionsDialogProps) => {
-  const [activeTab, setActiveTab] = useState<PermissionType>("page_access");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -85,7 +83,6 @@ export const RolePermissionsDialog = ({
         throw error;
       }
 
-      // Invalidate the specific role's permissions
       await queryClient.invalidateQueries({ 
         queryKey: ["role-permissions", roleId]
       });
@@ -136,9 +133,6 @@ export const RolePermissionsDialog = ({
     }
   };
 
-  const pagePermissions = permissions?.filter(p => p.permission_type === 'page_access') || [];
-  const featurePermissions = permissions?.filter(p => p.permission_type === 'feature_access') || [];
-
   if (isLoading) {
     return null;
   }
@@ -166,55 +160,26 @@ export const RolePermissionsDialog = ({
           </div>
         </div>
 
-        <Tabs 
-          value={activeTab} 
-          onValueChange={(value: string) => setActiveTab(value as PermissionType)}
-        >
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="page_access">Page Access</TabsTrigger>
-            <TabsTrigger value="feature_access">Feature Access</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="page_access" className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              {pagePermissions.map((permission) => (
-                <div key={permission.id} className="flex items-start justify-between space-x-4 p-4 rounded-lg bg-muted/50">
-                  <Label htmlFor={permission.id} className="flex-1">
-                    <span className="font-medium">{permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                    {permission.description && (
-                      <p className="text-sm text-muted-foreground">{permission.description}</p>
-                    )}
-                  </Label>
-                  <Switch
-                    id={permission.id}
-                    checked={permission.is_active}
-                    onCheckedChange={(checked) => handlePermissionToggle(permission.id, checked)}
-                  />
-                </div>
-              ))}
+        <div className="grid grid-cols-3 gap-4">
+          {permissions?.map((permission) => (
+            <div key={permission.id} className="flex items-start justify-between space-x-4 p-4 rounded-lg bg-muted/50">
+              <Label htmlFor={permission.id} className="flex-1">
+                <span className="font-medium">{permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                {permission.description && (
+                  <p className="text-sm text-muted-foreground">{permission.description}</p>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  Type: {permission.permission_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                </p>
+              </Label>
+              <Switch
+                id={permission.id}
+                checked={permission.is_active}
+                onCheckedChange={(checked) => handlePermissionToggle(permission.id, checked)}
+              />
             </div>
-          </TabsContent>
-
-          <TabsContent value="feature_access" className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              {featurePermissions.map((permission) => (
-                <div key={permission.id} className="flex items-start justify-between space-x-4 p-4 rounded-lg bg-muted/50">
-                  <Label htmlFor={permission.id} className="flex-1">
-                    <span className="font-medium">{permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                    {permission.description && (
-                      <p className="text-sm text-muted-foreground">{permission.description}</p>
-                    )}
-                  </Label>
-                  <Switch
-                    id={permission.id}
-                    checked={permission.is_active}
-                    onCheckedChange={(checked) => handlePermissionToggle(permission.id, checked)}
-                  />
-                </div>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
+          ))}
+        </div>
       </DialogContent>
     </Dialog>
   );
