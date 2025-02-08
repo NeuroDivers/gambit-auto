@@ -42,28 +42,24 @@ export const usePermissions = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      // First check if user's role is administrator
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select(`
-          role:role_id (
-            id,
-            name,
-            nicename
-          )
-        `)
-        .eq('id', user.id)
-        .single();
+      // First check if user has admin role using the new function
+      const { data: isAdmin, error: adminCheckError } = await supabase.rpc(
+        'has_role_by_name',
+        { 
+          user_id: user.id,
+          role_name: 'administrator'
+        }
+      );
 
-      const profileWithRole = profile as unknown as ProfileWithRole;
+      if (adminCheckError) {
+        console.error('Admin check error:', adminCheckError);
+        return false;
+      }
 
       // Administrator has all permissions
-      if (profileWithRole?.role?.name) {
-        const roleName = profileWithRole.role.name.toLowerCase();
-        if (roleName === 'administrator' || roleName === 'admin') {
-          console.log("User is administrator, granting access");
-          return true;
-        }
+      if (isAdmin) {
+        console.log("User is administrator, granting access");
+        return true;
       }
 
       // For non-administrators, check specific permissions
