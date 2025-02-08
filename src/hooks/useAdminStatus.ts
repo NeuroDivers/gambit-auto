@@ -22,23 +22,21 @@ export const useAdminStatus = () => {
           return
         }
 
-        const { data } = await supabase
-          .from('profiles')
-          .select(`
-            role:role_id (
-              name,
-              nicename
-            )
-          `)
-          .eq('id', user.id)
-          .single()
+        const { data: isAdmin, error } = await supabase.rpc(
+          'has_role_by_name',
+          { 
+            user_id: user.id,
+            role_name: 'administrator'
+          }
+        );
 
-        // Use type assertion to tell TypeScript the correct shape
-        const response = data as unknown as RoleResponse
-        // Log the role name for debugging
-        console.log('User role:', response.role?.name)
-        // Check if the role contains "admin" (case insensitive)
-        setIsAdmin(response.role?.name?.toLowerCase().includes('admin') || false)
+        if (error) {
+          console.error('Admin check error:', error);
+          setIsAdmin(false);
+          return;
+        }
+
+        setIsAdmin(isAdmin || false);
       } catch (error) {
         console.error('Error checking admin status:', error)
         setIsAdmin(false)

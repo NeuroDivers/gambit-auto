@@ -16,12 +16,16 @@ export const useAuthRedirect = () => {
           // Get user role from profiles
           const { data: profileData } = await supabase
             .from("profiles")
-            .select("role")
+            .select(`
+              role:role_id (
+                name
+              )
+            `)
             .eq("id", session.user.id)
             .single();
 
           // Redirect based on role
-          if (profileData?.role === 'client') {
+          if (profileData?.role?.name === 'client') {
             navigate("/client");
           } else {
             navigate("/");
@@ -41,12 +45,16 @@ export const useAuthRedirect = () => {
           // Get user role
           const { data: profileData } = await supabase
             .from("profiles")
-            .select("role")
+            .select(`
+              role:role_id (
+                name
+              )
+            `)
             .eq("id", session.user.id)
             .single();
 
           // Redirect based on role
-          if (profileData?.role === 'client') {
+          if (profileData?.role?.name === 'client') {
             navigate("/client");
           } else {
             navigate("/");
