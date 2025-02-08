@@ -42,27 +42,35 @@ export const usePermissions = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      // First check if user has admin role using the new function
-      const { data: isAdmin, error: adminCheckError } = await supabase.rpc(
-        'has_role_by_name',
-        { 
-          user_id: user.id,
-          role_name: 'administrator'
-        }
-      );
+      // First get the user's role
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select(`
+          role:role_id (
+            name
+          )
+        `)
+        .eq('id', user.id)
+        .single();
 
-      if (adminCheckError) {
-        console.error('Admin check error:', adminCheckError);
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
         return false;
       }
 
-      // Administrator has all permissions
-      if (isAdmin) {
-        console.log("User is administrator, granting access");
+      // Full access roles - add 'king' to this list
+      const fullAccessRoles = ['administrator', 'king'];
+      
+      // Check if user has a full access role (case insensitive)
+      if (profile?.role?.name && 
+          fullAccessRoles.some(role => 
+            role.toLowerCase() === profile.role.name.toLowerCase()
+          )) {
+        console.log("User has full access role, granting access");
         return true;
       }
 
-      // For non-administrators, check specific permissions
+      // For other roles, check specific permissions
       const { data: hasPermission, error } = await supabase.rpc('has_permission', {
         user_id: user.id,
         resource: resource,
