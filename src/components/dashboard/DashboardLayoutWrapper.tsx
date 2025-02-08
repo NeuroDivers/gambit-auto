@@ -19,7 +19,13 @@ export function DashboardLayoutWrapper() {
       
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("*")
+        .select(`
+          *,
+          role:role_id (
+            name,
+            nicename
+          )
+        `)
         .eq("id", user.id)
         .single();
       
@@ -66,6 +72,7 @@ export function DashboardLayoutWrapper() {
   return (
     <DashboardLayout
       firstName={profile?.first_name}
+      role={profile?.role}
       onLogout={handleLogout}
     >
       <Outlet />

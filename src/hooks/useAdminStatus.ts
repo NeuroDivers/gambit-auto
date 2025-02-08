@@ -3,8 +3,9 @@ import { useState, useEffect } from "react"
 import { supabase } from "@/integrations/supabase/client"
 
 type RoleResponse = {
-  roles: {
+  role: {
     name: string
+    nicename: string
   }
 }
 
@@ -24,8 +25,9 @@ export const useAdminStatus = () => {
         const { data } = await supabase
           .from('profiles')
           .select(`
-            roles:role_id (
-              name
+            role:role_id (
+              name,
+              nicename
             )
           `)
           .eq('id', user.id)
@@ -34,9 +36,9 @@ export const useAdminStatus = () => {
         // Use type assertion to tell TypeScript the correct shape
         const response = data as unknown as RoleResponse
         // Log the role name for debugging
-        console.log('User role:', response.roles?.name)
+        console.log('User role:', response.role?.name)
         // Check if the role contains "admin" (case insensitive)
-        setIsAdmin(response.roles?.name?.toLowerCase().includes('admin') || false)
+        setIsAdmin(response.role?.name?.toLowerCase().includes('admin') || false)
       } catch (error) {
         console.error('Error checking admin status:', error)
         setIsAdmin(false)
