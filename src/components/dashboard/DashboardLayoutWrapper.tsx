@@ -22,14 +22,8 @@ export function DashboardLayoutWrapper() {
         .select("*")
         .eq("id", user.id)
         .single();
-
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .single();
       
-      return { ...profileData, role: roleData?.role };
+      return profileData;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
@@ -72,7 +66,6 @@ export function DashboardLayoutWrapper() {
   return (
     <DashboardLayout
       firstName={profile?.first_name}
-      role={profile?.role}
       onLogout={handleLogout}
     >
       <Outlet />

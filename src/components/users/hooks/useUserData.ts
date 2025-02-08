@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -22,11 +23,9 @@ export const useUserData = () => {
 
       if (profilesError) throw profilesError;
 
-      const { data: roles, error: rolesError } = await supabase
+      const { data: roles } = await supabase
         .from("user_roles")
         .select("user_id, role");
-
-      if (rolesError) throw rolesError;
 
       return profiles?.map(profile => ({
         id: profile.id,
