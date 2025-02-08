@@ -22,7 +22,7 @@ export default function ProfileSettings() {
         .eq('id', user.id)
         .single()
 
-      return data?.role?.name
+      return data?.role?.name || null
     }
   })
 
