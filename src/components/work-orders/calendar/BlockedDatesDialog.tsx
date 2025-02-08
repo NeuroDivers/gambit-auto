@@ -57,6 +57,11 @@ export function BlockedDatesDialog() {
     }
   }
 
+  const handleCalendarClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -98,17 +103,21 @@ export function BlockedDatesDialog() {
                     </PopoverTrigger>
                     <PopoverContent 
                       className="w-auto p-0" 
-                      align="start" 
+                      align="start"
                       style={{ zIndex: 9999 }}
                       onPointerDownOutside={(e) => e.preventDefault()}
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={handleCalendarClick}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onPointerDown={(e) => e.stopPropagation()}
                     >
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                      />
+                      <div onClick={handleCalendarClick} onMouseDown={(e) => e.stopPropagation()}>
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </div>
                     </PopoverContent>
                   </Popover>
                   <FormMessage />
@@ -142,17 +151,21 @@ export function BlockedDatesDialog() {
                     </PopoverTrigger>
                     <PopoverContent 
                       className="w-auto p-0" 
-                      align="start" 
+                      align="start"
                       style={{ zIndex: 9999 }}
                       onPointerDownOutside={(e) => e.preventDefault()}
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={handleCalendarClick}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onPointerDown={(e) => e.stopPropagation()}
                     >
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                      />
+                      <div onClick={handleCalendarClick} onMouseDown={(e) => e.stopPropagation()}>
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </div>
                     </PopoverContent>
                   </Popover>
                   <FormMessage />
@@ -184,4 +197,3 @@ export function BlockedDatesDialog() {
     </Dialog>
   )
 }
-
