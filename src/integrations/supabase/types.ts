@@ -395,7 +395,6 @@ export type Database = {
           id: string
           last_name: string | null
           phone_number: string | null
-          role_id: string
           updated_at: string
         }
         Insert: {
@@ -408,7 +407,6 @@ export type Database = {
           id: string
           last_name?: string | null
           phone_number?: string | null
-          role_id: string
           updated_at?: string
         }
         Update: {
@@ -421,18 +419,9 @@ export type Database = {
           id?: string
           last_name?: string | null
           phone_number?: string | null
-          role_id?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "roles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       quote_items: {
         Row: {
@@ -746,6 +735,42 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       work_order_services: {
         Row: {

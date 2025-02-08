@@ -25,25 +25,25 @@ export const useRoleStats = () => {
       
       // Initialize stats with 0 for all roles
       const stats: RoleStats = {} as RoleStats;
-      (roles as Role[]).forEach((role: any) => {
+      (roles as Role[]).forEach((role) => {
         stats[role.name as UserRole] = 0;
       });
 
       // Count users for each role
-      const { data: profiles, error: profilesError } = await supabase
-        .from("profiles")
+      const { data: userRoles, error: userRolesError } = await supabase
+        .from("user_roles")
         .select(`
           roles (
             name
           )
         `);
       
-      if (profilesError) throw profilesError;
+      if (userRolesError) throw userRolesError;
 
       // Update counts for roles that have users
-      profiles.forEach((profile: any) => {
-        if (profile.roles?.name) {
-          const roleName = profile.roles.name as UserRole;
+      userRoles.forEach((userRole: any) => {
+        if (userRole.roles?.name) {
+          const roleName = userRole.roles.name as UserRole;
           stats[roleName] = (stats[roleName] || 0) + 1;
         }
       });
