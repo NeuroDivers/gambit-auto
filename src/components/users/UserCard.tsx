@@ -16,7 +16,8 @@ type UserCardProps = {
     first_name?: string;
     last_name?: string;
     user_roles: {
-      role: UserRole;
+      role: string;
+      nicename: string;
     };
   };
 };
@@ -66,7 +67,7 @@ export const UserCard = ({ user }: UserCardProps) => {
             displayName={displayName}
             email={user.email}
             showEmail={!!(user.first_name && user.last_name)}
-            userRole={user.user_roles.role}
+            userRole={user.user_roles}
           />
           <UserActions
             onEdit={() => setIsEditing(true)}

@@ -1,3 +1,4 @@
+
 import {
   FormField,
   FormItem,
@@ -14,9 +15,11 @@ import {
 } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
 import * as z from "zod";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export const formSchema = z.object({
-  role: z.enum(["admin", "manager", "sidekick", "client"]),
+  role: z.string(),
   first_name: z.string(),
   last_name: z.string(),
 });
@@ -28,6 +31,18 @@ interface UserEditFormFieldsProps {
 }
 
 export const UserEditFormFields = ({ form }: UserEditFormFieldsProps) => {
+  const { data: roles } = useQuery({
+    queryKey: ["roles"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("roles")
+        .select("id, name, nicename");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
     <div className="space-y-4">
       <FormField
@@ -79,10 +94,15 @@ export const UserEditFormFields = ({ form }: UserEditFormFieldsProps) => {
                   <SelectValue placeholder="Select a role" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#242424] border-white/10">
-                  <SelectItem value="admin" className="text-white/[0.87]">Admin</SelectItem>
-                  <SelectItem value="manager" className="text-white/[0.87]">Manager</SelectItem>
-                  <SelectItem value="sidekick" className="text-white/[0.87]">Sidekick</SelectItem>
-                  <SelectItem value="client" className="text-white/[0.87]">Client</SelectItem>
+                  {roles?.map((role) => (
+                    <SelectItem 
+                      key={role.id} 
+                      value={role.id} 
+                      className="text-white/[0.87]"
+                    >
+                      {role.nicename}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </FormControl>

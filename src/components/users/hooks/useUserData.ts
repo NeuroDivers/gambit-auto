@@ -8,7 +8,8 @@ export type User = {
   first_name?: string;
   last_name?: string;
   user_roles: {
-    role: "admin" | "manager" | "sidekick" | "client";
+    role: string;
+    nicename: string;
   };
 };
 
@@ -25,7 +26,8 @@ export const useUserData = () => {
           first_name, 
           last_name,
           roles (
-            name
+            name,
+            nicename
           )
         `);
 
@@ -40,7 +42,8 @@ export const useUserData = () => {
       return profiles.map(profile => ({
         ...profile,
         user_roles: {
-          role: profile.roles.name as "admin" | "manager" | "sidekick" | "client"
+          role: profile.roles.name,
+          nicename: profile.roles.nicename
         }
       })) as User[];
     },
