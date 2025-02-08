@@ -8,7 +8,7 @@ import { CalendarX } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { supabase } from "@/integrations/supabase/client"
@@ -35,6 +35,14 @@ export function BlockedDatesDialog() {
   const form = useForm<BlockedDateFormValues>({
     resolver: zodResolver(blockedDateSchema),
   })
+
+  // Update end_date when start_date changes
+  useEffect(() => {
+    const startDate = form.watch("start_date")
+    if (startDate && !form.getValues("end_date")) {
+      form.setValue("end_date", startDate)
+    }
+  }, [form.watch("start_date")])
 
   const onSubmit = async (data: BlockedDateFormValues) => {
     try {
