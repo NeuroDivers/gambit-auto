@@ -25,7 +25,6 @@ export const UserCard = ({ user }: UserCardProps) => {
 
       if (error) throw error;
 
-      // Invalidate both users and role stats queries
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["users"] }),
         queryClient.invalidateQueries({ queryKey: ["roleStats"] })
@@ -57,7 +56,7 @@ export const UserCard = ({ user }: UserCardProps) => {
             displayName={displayName}
             email={user.email}
             showEmail={!!(user.first_name && user.last_name)}
-            userRole={user.user_roles}
+            role={user.role}
           />
           <UserActions
             onEdit={() => setIsEditing(true)}

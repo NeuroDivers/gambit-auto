@@ -12,7 +12,7 @@ export type User = {
   email: string;
   first_name?: string;
   last_name?: string;
-  user_roles: UserRole;
+  role?: UserRole;
 };
 
 export const useUserData = () => {
@@ -40,16 +40,12 @@ export const useUserData = () => {
 
       console.log("Fetched profiles:", profiles);
 
-      // Transform the data to match the expected type
       return profiles.map((profile: any) => ({
         id: profile.id,
         email: profile.email,
         first_name: profile.first_name,
         last_name: profile.last_name,
-        user_roles: {
-          name: profile.roles?.name || 'no-role',
-          nicename: profile.roles?.nicename || 'No Role'
-        }
+        role: profile.roles
       })) as User[];
     },
   });

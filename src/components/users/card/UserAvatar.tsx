@@ -6,10 +6,10 @@ type UserAvatarProps = {
   displayName: string;
   email: string;
   showEmail: boolean;
-  userRole?: UserRole;
+  role?: UserRole;
 };
 
-export const UserAvatar = ({ displayName, email, showEmail, userRole }: UserAvatarProps) => {
+export const UserAvatar = ({ displayName, email, showEmail, role }: UserAvatarProps) => {
   return (
     <div className="flex items-center gap-3">
       <div className="h-10 w-10 rounded-full bg-[#BB86FC]/10 flex items-center justify-center">
@@ -21,10 +21,10 @@ export const UserAvatar = ({ displayName, email, showEmail, userRole }: UserAvat
           {showEmail && (
             <p className="text-sm text-white/60">{email}</p>
           )}
-          {userRole && (
+          {role && (
             <div className="flex items-center gap-1 text-sm text-[#BB86FC]">
               <Shield className="h-3 w-3" />
-              <span className="capitalize">{userRole.nicename} ({userRole.name})</span>
+              <span className="capitalize">{role.nicename} ({role.name})</span>
             </div>
           )}
         </div>
