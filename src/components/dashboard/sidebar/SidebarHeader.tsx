@@ -6,7 +6,10 @@ import { User } from "lucide-react"
 
 interface SidebarHeaderProps {
   firstName?: string | null
-  role?: string | null
+  role?: {
+    name: string
+    nicename: string
+  } | null
   onLogout: () => void
 }
 
@@ -37,7 +40,7 @@ export function SidebarHeader({ firstName, role, onLogout }: SidebarHeaderProps)
             color: '#bb86fc',
             background: 'rgb(187 134 252 / 0.1)',
           }}>
-            {role || 'Guest'} account
+            {role ? `${role.nicename} (${role.name})` : 'Guest'} account
           </span>
         </div>
       </div>
