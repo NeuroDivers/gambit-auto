@@ -1,31 +1,51 @@
-import { format, isToday, setHours } from "date-fns"
+
+import { format, isToday, setHours, isWithinInterval } from "date-fns"
 import { WorkOrder } from "../types"
 import { cn } from "@/lib/utils"
 import { WorkOrderCard } from "./WorkOrderCard"
 import { useState } from "react"
 import { CreateWorkOrderDialog } from "../CreateWorkOrderDialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Calendar } from "lucide-react"
+import { Calendar, Lock } from "lucide-react"
+import { BlockedDate } from "./types"
+import { toast } from "sonner"
 
 type CalendarDayProps = {
   date: Date
   workOrders: WorkOrder[]
   isCurrentMonth: boolean
+  blockedDates?: BlockedDate[]
 }
 
-export function CalendarDay({ date, workOrders, isCurrentMonth }: CalendarDayProps) {
+export function CalendarDay({ date, workOrders, isCurrentMonth, blockedDates = [] }: CalendarDayProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const defaultStartTime = setHours(date, 8)
+
+  const isDateBlocked = blockedDates.some(block => {
+    const startDate = new Date(block.start_date)
+    const endDate = new Date(block.end_date)
+    return isWithinInterval(date, { start: startDate, end: endDate })
+  })
 
   const handleDayClick = (e: React.MouseEvent) => {
     // Only open create dialog if clicking directly on the day cell
     if (e.target === e.currentTarget) {
+      if (isDateBlocked) {
+        toast.error("This date is blocked for bookings")
+        return
+      }
       setShowCreateDialog(true)
     }
   }
 
   const unscheduledWorkOrders = workOrders.filter(wo => !wo.start_time)
   const scheduledWorkOrders = workOrders.filter(wo => wo.start_time)
+
+  const blockedDateInfo = blockedDates.find(block => {
+    const startDate = new Date(block.start_date)
+    const endDate = new Date(block.end_date)
+    return isWithinInterval(date, { start: startDate, end: endDate })
+  })
 
   return (
     <>
@@ -35,6 +55,7 @@ export function CalendarDay({ date, workOrders, isCurrentMonth }: CalendarDayPro
           "hover:bg-primary/5 cursor-pointer group",
           !isCurrentMonth && "opacity-50 bg-muted/20",
           isToday(date) && "ring-2 ring-primary bg-primary/5",
+          isDateBlocked && "bg-red-100/10 hover:bg-red-100/20"
         )}
         onClick={handleDayClick}
       >
@@ -48,13 +69,24 @@ export function CalendarDay({ date, workOrders, isCurrentMonth }: CalendarDayPro
           )}>
             {format(date, 'd')}
           </span>
-          {isCurrentMonth && (
+          {isCurrentMonth && !isDateBlocked && (
             <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
               Click to add
             </span>
           )}
+          {isDateBlocked && (
+            <Lock className="h-4 w-4 text-red-500" />
+          )}
         </div>
         
+        {isDateBlocked && blockedDateInfo?.reason && (
+          <Alert variant="destructive" className="mt-2 py-1 px-2 bg-red-500/10 border-red-500/20">
+            <AlertDescription className="text-xs text-red-500">
+              {blockedDateInfo.reason}
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="space-y-1">
           {scheduledWorkOrders.map((workOrder) => (
             <WorkOrderCard

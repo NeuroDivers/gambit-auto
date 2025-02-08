@@ -1,6 +1,8 @@
+
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth } from "date-fns"
 import { CalendarDay } from "./CalendarDay"
 import { WorkOrder } from "../types"
+import { useBlockedDates } from "./hooks/useBlockedDates"
 
 type CalendarGridProps = {
   currentDate: Date
@@ -12,6 +14,7 @@ export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
   const monthEnd = endOfMonth(monthStart)
   const calendarStart = startOfWeek(monthStart)
   const calendarEnd = endOfWeek(monthEnd)
+  const { blockedDates } = useBlockedDates()
 
   const days = eachDayOfInterval({
     start: calendarStart,
@@ -44,6 +47,7 @@ export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
             date={day}
             workOrders={getWorkOrdersForDay(day)}
             isCurrentMonth={isSameMonth(day, currentDate)}
+            blockedDates={blockedDates}
           />
         ))}
       </div>

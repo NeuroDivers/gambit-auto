@@ -45,6 +45,33 @@ export type Database = {
           },
         ]
       }
+      blocked_dates: {
+        Row: {
+          created_at: string | null
+          end_date: string
+          id: string
+          reason: string | null
+          start_date: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_date: string
+          id?: string
+          reason?: string | null
+          start_date: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          reason?: string | null
+          start_date?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       business_profile: {
         Row: {
           address: string | null
