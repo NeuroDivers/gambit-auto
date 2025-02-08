@@ -11,58 +11,35 @@ export function useSidekicks() {
     queryFn: async () => {
       console.log("Fetching sidekicks...")
       
-      // First get all users with knights role
-      const { data: userRoles, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "knights")
-
-      if (rolesError) {
-        console.error("Error fetching knights roles:", rolesError)
-        throw rolesError
-      }
-
-      if (userRoles.length === 0) {
-        console.log("No knights roles found")
-        return []
-      }
-
-      const userIds = userRoles.map(role => role.user_id)
-
-      // Then get the corresponding profiles
+      // Get profiles where role name is 'knights'
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name")
-        .in("id", userIds)
+        .select(`
+          id, 
+          first_name, 
+          last_name,
+          role:role_id (
+            name
+          )
+        `)
+        .not('role_id', 'is', null);
 
       if (profilesError) {
-        console.error("Error fetching knights profiles:", profilesError)
+        console.error("Error fetching profiles:", profilesError)
         throw profilesError
       }
 
-      console.log("Fetched knights:", profiles)
-      return profiles
+      // Filter profiles to only include knights
+      const knightProfiles = profiles.filter(
+        profile => profile.role?.name?.toLowerCase() === 'knights'
+      );
+
+      console.log("Fetched knights:", knightProfiles)
+      return knightProfiles
     },
   })
 
   useEffect(() => {
-    const rolesChannel = supabase
-      .channel('roles-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_roles',
-          filter: `role=eq.knights`
-        },
-        () => {
-          console.log("Knights roles changed, invalidating query...")
-          queryClient.invalidateQueries({ queryKey: ["sidekicks"] })
-        }
-      )
-      .subscribe()
-
     const profilesChannel = supabase
       .channel('profiles-changes')
       .on(
@@ -80,7 +57,6 @@ export function useSidekicks() {
       .subscribe()
 
     return () => {
-      supabase.removeChannel(rolesChannel)
       supabase.removeChannel(profilesChannel)
     }
   }, [queryClient])
