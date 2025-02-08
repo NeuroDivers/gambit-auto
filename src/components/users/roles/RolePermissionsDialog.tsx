@@ -72,7 +72,7 @@ export const RolePermissionsDialog = ({
         .from("roles")
         .select("*")
         .eq("id", roleId)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       return data;
@@ -95,7 +95,7 @@ export const RolePermissionsDialog = ({
         })
         .eq("id", permission.id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error updating permission:", error);
@@ -151,7 +151,7 @@ export const RolePermissionsDialog = ({
         })
         .eq("id", roleId)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
