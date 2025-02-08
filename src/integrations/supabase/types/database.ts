@@ -1,7 +1,8 @@
+
 import { Json } from './json';
 import { ProfilesTable } from './profiles';
 import { ServiceTypesTable } from './service-types';
-import { UserRolesTable } from './user-roles';
+import { RolesTable } from './user-roles';
 import { DatabaseEnums } from './enums';
 
 export type Database = {
@@ -9,7 +10,7 @@ export type Database = {
     Tables: {
       profiles: ProfilesTable
       service_types: ServiceTypesTable
-      user_roles: UserRolesTable
+      roles: RolesTable
     }
     Views: {
       [_ in never]: never
