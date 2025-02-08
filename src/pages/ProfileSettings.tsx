@@ -4,6 +4,13 @@ import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 
+interface RoleResponse {
+  role: {
+    name: string;
+    nicename: string;
+  }
+}
+
 export default function ProfileSettings() {
   const { data: userRole } = useQuery({
     queryKey: ["userRole"],
@@ -17,7 +24,7 @@ export default function ProfileSettings() {
         .eq('id', user.id)
         .single()
 
-      return data?.role?.name as string | null || null
+      return (data as RoleResponse)?.role?.name as string | null || null
     }
   })
 
