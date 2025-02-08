@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -55,11 +56,37 @@ export const RoleDialog = ({ open, onOpenChange, role, onSuccess }: RoleDialogPr
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: roleData?.name || role?.name || "",
-      nicename: roleData?.nicename || role?.nicename || "",
-      description: roleData?.description || role?.description || "",
+      name: "",
+      nicename: "",
+      description: "",
     },
   });
+
+  // Update form values when role data changes
+  useEffect(() => {
+    if (roleData) {
+      console.log("Setting form values with role data:", roleData);
+      form.reset({
+        name: roleData.name,
+        nicename: roleData.nicename,
+        description: roleData.description || "",
+      });
+    } else if (role) {
+      console.log("Setting form values with prop data:", role);
+      form.reset({
+        name: role.name,
+        nicename: role.nicename,
+        description: role.description || "",
+      });
+    } else {
+      console.log("Resetting form to empty values");
+      form.reset({
+        name: "",
+        nicename: "",
+        description: "",
+      });
+    }
+  }, [roleData, role, form]);
 
   const onSubmit = async (values: FormValues) => {
     try {
