@@ -76,18 +76,16 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
                 }}
                 formatter={(value: number, name: string) => [
                   `${value} user${value !== 1 ? 's' : ''}`,
-                  roleNames?.[name] || name
+                  String(roleNames?.[name] || name)
                 ]}
               />
               <Legend 
                 verticalAlign="bottom" 
                 height={36}
                 iconType="circle"
-                formatter={(value) => (
-                  <span className="text-sm text-white/80">
-                    {roleNames?.[value] || value}
-                  </span>
-                )}
+                formatter={(value: string) => 
+                  String(roleNames?.[value] || value)
+                }
               />
             </PieChart>
           </ResponsiveContainer>
@@ -96,3 +94,4 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
     </Card>
   );
 };
+
