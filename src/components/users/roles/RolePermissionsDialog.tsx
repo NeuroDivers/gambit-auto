@@ -38,6 +38,7 @@ export const RolePermissionsDialog = ({
 }: RolePermissionsDialogProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const { data: permissions, isLoading } = useQuery({
     queryKey: ["role-permissions", roleId],
@@ -80,56 +81,87 @@ export const RolePermissionsDialog = ({
   });
 
   const handlePermissionToggle = async (permission: Permission, newValue: boolean) => {
+    if (isUpdating) return;
+    
+    setIsUpdating(true);
     console.log("Updating permission:", permission.id, "to value:", newValue);
+    
     try {
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from("role_permissions")
         .update({ 
           is_active: newValue,
           updated_at: new Date().toISOString()
         })
-        .eq("id", permission.id);
+        .eq("id", permission.id)
+        .select()
+        .single();
 
       if (error) {
         console.error("Error updating permission:", error);
         throw error;
       }
 
+      // Update the cache immediately
+      queryClient.setQueryData(["role-permissions", roleId], (oldData: Permission[] | undefined) => {
+        if (!oldData) return oldData;
+        return oldData.map(p => p.id === permission.id ? { ...p, is_active: newValue } : p);
+      });
+
+      // Invalidate to ensure fresh data
       await queryClient.invalidateQueries({ 
         queryKey: ["role-permissions", roleId]
       });
       
       const resourceName = permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      const permissionType = permission.permission_type.toLowerCase().replace(/_/g, ' ');
       const action = newValue ? "enabled" : "disabled";
       
       toast({
         title: `Permission ${action}`,
-        description: `${resourceName} permission has been ${action} for ${permission.permission_type.toLowerCase()} operations.`,
+        description: `${resourceName} permission has been ${action} for ${permissionType} operations.`,
       });
     } catch (error: any) {
       console.error("Permission update error:", error);
+      // Revert optimistic update
+      queryClient.invalidateQueries({ 
+        queryKey: ["role-permissions", roleId]
+      });
+      
       toast({
         title: "Error updating permission",
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsUpdating(false);
     }
   };
 
   const handleBayAssignmentToggle = async (newValue: boolean) => {
-    if (!roleId) return;
+    if (!roleId || isUpdating) return;
 
+    setIsUpdating(true);
     try {
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from("roles")
         .update({ 
           can_be_assigned_to_bay: newValue,
           updated_at: new Date().toISOString()
         })
-        .eq("id", roleId);
+        .eq("id", roleId)
+        .select()
+        .single();
 
       if (error) throw error;
 
+      // Update the cache immediately
+      queryClient.setQueryData(["role", roleId], (oldData: any) => {
+        if (!oldData) return oldData;
+        return { ...oldData, can_be_assigned_to_bay: newValue };
+      });
+
+      // Invalidate to ensure fresh data
       await queryClient.invalidateQueries({ 
         queryKey: ["role", roleId]
       });
@@ -141,11 +173,18 @@ export const RolePermissionsDialog = ({
       });
     } catch (error: any) {
       console.error("Bay assignment update error:", error);
+      // Revert optimistic update
+      queryClient.invalidateQueries({ 
+        queryKey: ["role", roleId]
+      });
+      
       toast({
         title: "Error updating bay assignment",
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -181,6 +220,7 @@ export const RolePermissionsDialog = ({
               id="bay-assignment"
               checked={role?.can_be_assigned_to_bay || false}
               onCheckedChange={handleBayAssignmentToggle}
+              disabled={isUpdating}
               className="data-[state=checked]:bg-primary"
             />
           </div>
@@ -205,6 +245,7 @@ export const RolePermissionsDialog = ({
                       id={permission.id}
                       checked={permission.is_active}
                       onCheckedChange={(checked) => handlePermissionToggle(permission, checked)}
+                      disabled={isUpdating}
                       className="data-[state=checked]:bg-primary"
                     />
                   </div>
@@ -217,4 +258,3 @@ export const RolePermissionsDialog = ({
     </Dialog>
   );
 };
-
