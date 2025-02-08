@@ -1,14 +1,12 @@
 
 import { User, Shield } from "lucide-react";
+import { UserRole } from "../hooks/useUserData";
 
 type UserAvatarProps = {
   displayName: string;
   email: string;
   showEmail: boolean;
-  userRole?: {
-    name: string;
-    nicename: string;
-  };
+  userRole?: UserRole;
 };
 
 export const UserAvatar = ({ displayName, email, showEmail, userRole }: UserAvatarProps) => {
