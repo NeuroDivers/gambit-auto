@@ -1,3 +1,4 @@
+
 import { useLocation } from "react-router-dom";
 import {
   Breadcrumb,
@@ -24,7 +25,8 @@ export function PageBreadcrumbs() {
   const location = useLocation();
   const pathSegments = location.pathname.split("/").filter(Boolean);
 
-  if (location.pathname === "/") return null;
+  // Hide breadcrumbs on home page and client routes
+  if (location.pathname === "/" || location.pathname.startsWith("/client")) return null;
 
   return (
     <Breadcrumb className="mb-6">
