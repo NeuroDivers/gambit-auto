@@ -101,6 +101,7 @@ export function BlockedDatesDialog() {
                       align="start" 
                       style={{ zIndex: 9999 }}
                       onPointerDownOutside={(e) => e.preventDefault()}
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <Calendar
                         mode="single"
@@ -144,6 +145,7 @@ export function BlockedDatesDialog() {
                       align="start" 
                       style={{ zIndex: 9999 }}
                       onPointerDownOutside={(e) => e.preventDefault()}
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <Calendar
                         mode="single"
@@ -182,3 +184,4 @@ export function BlockedDatesDialog() {
     </Dialog>
   )
 }
+
