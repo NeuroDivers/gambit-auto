@@ -1,8 +1,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { UserRole } from "./useUserData";
 
-export type RoleStats = Record<string, number>;
+export type RoleStats = Record<UserRole, number>;
+
+interface Role {
+  name: string;
+  nicename: string;
+}
 
 export const useRoleStats = () => {
   return useQuery({
@@ -13,14 +19,14 @@ export const useRoleStats = () => {
       // First get all roles to ensure we include roles with 0 users
       const { data: roles, error: rolesError } = await supabase
         .from("roles")
-        .select("name");
+        .select("name, nicename");
       
       if (rolesError) throw rolesError;
       
       // Initialize stats with 0 for all roles
-      const stats: RoleStats = {};
-      roles.forEach(role => {
-        stats[role.name as string] = 0;
+      const stats: RoleStats = {} as RoleStats;
+      (roles as Role[]).forEach(role => {
+        stats[role.name as UserRole] = 0;
       });
 
       // Count users for each role
@@ -37,7 +43,8 @@ export const useRoleStats = () => {
       // Update counts for roles that have users
       profiles.forEach((profile) => {
         if (profile.roles?.name) {
-          stats[profile.roles.name] = (stats[profile.roles.name] || 0) + 1;
+          const roleName = profile.roles.name as UserRole;
+          stats[roleName] = (stats[roleName] || 0) + 1;
         }
       });
       

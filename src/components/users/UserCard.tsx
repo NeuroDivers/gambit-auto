@@ -1,4 +1,3 @@
-
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { UserEditDialog } from "./UserEditDialog";
@@ -6,18 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { UserAvatar } from "./card/UserAvatar";
 import { UserActions } from "./card/UserActions";
+import { User } from "./hooks/useUserData";
 
 type UserCardProps = {
-  user: {
-    id: string;
-    email: string;
-    first_name?: string;
-    last_name?: string;
-    user_roles: {
-      role: string;
-      nicename: string;
-    };
-  };
+  user: User;
 };
 
 export const UserCard = ({ user }: UserCardProps) => {
