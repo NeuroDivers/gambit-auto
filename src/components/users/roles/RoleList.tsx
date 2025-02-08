@@ -21,15 +21,21 @@ export const RoleList = () => {
   const { toast } = useToast();
   const { isAdmin } = useAdminStatus();
 
-  const { data: roles, refetch } = useQuery({
+  const { data: roles, refetch, error } = useQuery({
     queryKey: ["roles"],
     queryFn: async () => {
+      console.log("Fetching roles...");
       const { data, error } = await supabase
         .from("roles")
         .select("*")
         .order("name");
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching roles:", error);
+        throw error;
+      }
+      
+      console.log("Fetched roles:", data);
       return data as Role[];
     },
   });
@@ -50,6 +56,7 @@ export const RoleList = () => {
 
       refetch();
     } catch (error: any) {
+      console.error("Error deleting role:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -57,6 +64,23 @@ export const RoleList = () => {
       });
     }
   };
+
+  if (error) {
+    console.error("Error in RoleList:", error);
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-semibold text-white/[0.87]">System Roles</h3>
+            <p className="text-sm text-white/60">Manage application roles and their descriptions</p>
+          </div>
+        </div>
+        <Card className="p-4 text-white/60">
+          There was an error loading the roles. Please try again later.
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -110,6 +134,11 @@ export const RoleList = () => {
             </div>
           </Card>
         ))}
+        {roles?.length === 0 && (
+          <Card className="p-4 text-white/60">
+            No roles found. {isAdmin && 'Click "Create Role" to add one.'}
+          </Card>
+        )}
       </div>
 
       <RoleDialog
