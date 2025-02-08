@@ -4,11 +4,13 @@ import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 
-interface RoleResponse {
-  role: {
-    name: string;
-    nicename: string;
-  }
+interface Role {
+  name: string;
+  nicename: string;
+}
+
+interface ProfileResponse {
+  role?: Role;
 }
 
 export default function ProfileSettings() {
@@ -29,12 +31,14 @@ export default function ProfileSettings() {
         .eq('id', user.id)
         .single()
 
-      // Ensure we have the correct data structure before returning
-      if (data?.role && typeof data.role === 'object' && 'name' in data.role) {
-        return data.role.name
+      const profileData = data as ProfileResponse;
+      
+      // Return the role name if it exists
+      if (profileData?.role && 'name' in profileData.role) {
+        return profileData.role.name;
       }
       
-      return null
+      return null;
     }
   })
 

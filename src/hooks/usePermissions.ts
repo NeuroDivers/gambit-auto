@@ -3,6 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PermissionType } from "@/types/permissions";
 
+interface Role {
+  name: string;
+  nicename: string;
+}
+
+interface ProfileWithRole {
+  role?: Role;
+}
+
 export const usePermissions = () => {
   const { data: permissions } = useQuery({
     queryKey: ["permissions"],
@@ -40,15 +49,18 @@ export const usePermissions = () => {
         .from('profiles')
         .select(`
           role:role_id (
-            name
+            name,
+            nicename
           )
         `)
         .eq('id', user.id)
         .single();
 
+      const profileData = data as ProfileWithRole;
+
       // Administrator has all permissions
-      if (data?.role && typeof data.role === 'object' && 'name' in data.role) {
-        const roleName = data.role.name.toLowerCase();
+      if (profileData?.role && profileData.role.name) {
+        const roleName = profileData.role.name.toLowerCase();
         if (roleName === 'administrator' || roleName === 'admin') {
           console.log("User is administrator, granting access");
           return true;

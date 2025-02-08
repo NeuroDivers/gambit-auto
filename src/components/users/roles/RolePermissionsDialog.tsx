@@ -84,7 +84,10 @@ export const RolePermissionsDialog = ({
           <DialogTitle>Manage Role Permissions</DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs 
+          value={activeTab} 
+          onValueChange={(value: string) => setActiveTab(value as PermissionType)}
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="page_access">Page Access</TabsTrigger>
             <TabsTrigger value="feature_access">Feature Access</TabsTrigger>
