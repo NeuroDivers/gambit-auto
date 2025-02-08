@@ -31,8 +31,9 @@ export const useAdminStatus = () => {
           .eq('id', user.id)
           .single()
 
-        const roles = (data as RoleResponse)?.roles
-        setIsAdmin(roles?.name === 'administrator')
+        // Use type assertion to tell TypeScript the correct shape
+        const response = data as unknown as RoleResponse
+        setIsAdmin(response.roles?.name === 'administrator')
       } catch (error) {
         console.error('Error checking admin status:', error)
         setIsAdmin(false)
