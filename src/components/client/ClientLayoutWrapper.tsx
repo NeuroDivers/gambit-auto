@@ -38,20 +38,20 @@ export function ClientLayoutWrapper() {
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      await supabase.auth.signOut();
       
       toast({
         title: "Logged out successfully",
         description: "You have been logged out of your account.",
       });
       
-      navigate("/auth");
+      navigate("/auth", { replace: true });
     } catch (error: any) {
+      console.error("Logout error:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to log out",
       });
     }
   };
