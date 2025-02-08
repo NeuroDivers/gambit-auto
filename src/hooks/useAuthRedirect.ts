@@ -37,7 +37,7 @@ export const useAuthRedirect = () => {
             .single();
 
           // Redirect based on role
-          if ((profileData as any)?.role?.name?.toLowerCase() === 'client') {
+          if ((profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase() === 'client') {
             navigate("/client");
           } else {
             navigate("/");
@@ -68,7 +68,7 @@ export const useAuthRedirect = () => {
             .single();
 
           // Redirect based on role
-          if ((profileData as any)?.role?.name?.toLowerCase() === 'client') {
+          if ((profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase() === 'client') {
             navigate("/client");
           } else {
             navigate("/");

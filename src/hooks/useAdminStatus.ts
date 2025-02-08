@@ -9,7 +9,7 @@ interface RoleData {
 }
 
 interface ProfileResponse {
-  role_id: RoleData
+  role: RoleData
 }
 
 export const useAdminStatus = () => {
@@ -43,7 +43,7 @@ export const useAdminStatus = () => {
           return;
         }
 
-        const userRole = (profileData as unknown as ProfileResponse)?.role_id?.name?.toLowerCase();
+        const userRole = (profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase();
         console.log("Checking admin status, user role:", userRole);
         
         // Consider both administrator and king as admin roles
