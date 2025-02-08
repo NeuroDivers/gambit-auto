@@ -3,6 +3,17 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useEffect } from "react"
 
+interface Role {
+  name: string;
+}
+
+interface Profile {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  role: Role | null;
+}
+
 export function useSidekicks() {
   const queryClient = useQueryClient()
 
@@ -30,7 +41,7 @@ export function useSidekicks() {
       }
 
       // Filter profiles to only include knights
-      const knightProfiles = profiles.filter(
+      const knightProfiles = (profiles as Profile[]).filter(
         profile => profile.role?.name?.toLowerCase() === 'knights'
       );
 

@@ -10,12 +10,8 @@ interface Role {
   nicename: string;
 }
 
-interface RoleResponse {
-  role: {
-    id: string;
-    name: string;
-    nicename: string;
-  } | null;
+interface ProfileWithRole {
+  role: Role | null;
 }
 
 export default function ProfileSettings() {
@@ -38,7 +34,7 @@ export default function ProfileSettings() {
         .single()
       
       // Return the role name if it exists
-      return profile?.role?.name || null;
+      return (profile as ProfileWithRole)?.role?.name || null;
     }
   })
 

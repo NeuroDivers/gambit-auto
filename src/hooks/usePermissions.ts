@@ -9,21 +9,14 @@ interface Role {
   nicename: string;
 }
 
-interface RoleResponse {
-  role: {
-    id: string;
-    name: string;
-    nicename: string;
-  } | null;
+interface ProfileWithRole {
+  role: Role | null;
 }
 
 export const usePermissions = () => {
   const { data: permissions } = useQuery({
     queryKey: ["permissions"],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
-
       const { data, error } = await supabase
         .from("role_permissions")
         .select(`
@@ -63,8 +56,8 @@ export const usePermissions = () => {
         .single();
 
       // Administrator has all permissions
-      if (profile?.role?.name) {
-        const roleName = profile.role.name.toLowerCase();
+      if ((profile as ProfileWithRole)?.role?.name) {
+        const roleName = (profile as ProfileWithRole).role.name.toLowerCase();
         if (roleName === 'administrator' || roleName === 'admin') {
           console.log("User is administrator, granting access");
           return true;
