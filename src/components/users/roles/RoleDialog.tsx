@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useQuery } from "@tanstack/react-query";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -30,17 +31,37 @@ interface RoleDialogProps {
 
 export const RoleDialog = ({ open, onOpenChange, role, onSuccess }: RoleDialogProps) => {
   const { toast } = useToast();
+  
+  // Fetch role data when editing
+  const { data: roleData } = useQuery({
+    queryKey: ["role", role?.id],
+    queryFn: async () => {
+      if (!role?.id) return null;
+      console.log("Fetching role data for:", role.id);
+      const { data, error } = await supabase
+        .from("roles")
+        .select("*")
+        .eq("id", role.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!role?.id,
+  });
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: role?.name || "",
-      description: role?.description || "",
+      name: roleData?.name || role?.name || "",
+      description: roleData?.description || role?.description || "",
     },
   });
 
   const onSubmit = async (values: FormValues) => {
     try {
       if (role?.id) {
+        console.log("Updating role:", role.id, values);
         const { error } = await supabase
           .from("roles")
           .update({
@@ -56,6 +77,7 @@ export const RoleDialog = ({ open, onOpenChange, role, onSuccess }: RoleDialogPr
           description: "The role has been updated successfully.",
         });
       } else {
+        console.log("Creating new role:", values);
         const { error } = await supabase
           .from("roles")
           .insert({
@@ -72,8 +94,10 @@ export const RoleDialog = ({ open, onOpenChange, role, onSuccess }: RoleDialogPr
       }
 
       onSuccess?.();
+      onOpenChange(false);
       form.reset();
     } catch (error: any) {
+      console.error("Error in role operation:", error);
       toast({
         variant: "destructive",
         title: "Error",
