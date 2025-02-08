@@ -3,10 +3,12 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
-interface RoleData {
-  role: {
-    name: string;
-  } | null;
+interface Role {
+  name: string;
+}
+
+interface ProfileData {
+  role: Role | null;
 }
 
 export const useAuthRedirect = () => {
@@ -30,10 +32,8 @@ export const useAuthRedirect = () => {
             .eq("id", session.user.id)
             .single();
 
-          const typedProfileData = profileData as RoleData;
-
           // Redirect based on role
-          if (typedProfileData?.role?.name === 'client') {
+          if (profileData?.role?.name === 'client') {
             navigate("/client");
           } else {
             navigate("/");
@@ -61,10 +61,8 @@ export const useAuthRedirect = () => {
             .eq("id", session.user.id)
             .single();
 
-          const typedProfileData = profileData as RoleData;
-
           // Redirect based on role
-          if (typedProfileData?.role?.name === 'client') {
+          if (profileData?.role?.name === 'client') {
             navigate("/client");
           } else {
             navigate("/");

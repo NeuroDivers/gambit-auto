@@ -9,7 +9,7 @@ interface Role {
   nicename: string;
 }
 
-interface ProfileWithRole {
+interface ProfileData {
   role: Role | null;
 }
 
