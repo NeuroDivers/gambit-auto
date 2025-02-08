@@ -41,7 +41,7 @@ export const useUserData = () => {
       console.log("Fetched profiles:", profiles);
 
       // Transform the data to match the expected type
-      return profiles.map(profile => ({
+      return profiles.map((profile: any) => ({
         ...profile,
         user_roles: profile.roles ? {
           role: profile.roles.name as UserRole,

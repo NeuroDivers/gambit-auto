@@ -25,7 +25,7 @@ export const useRoleStats = () => {
       
       // Initialize stats with 0 for all roles
       const stats: RoleStats = {} as RoleStats;
-      (roles as Role[]).forEach(role => {
+      (roles as Role[]).forEach((role: any) => {
         stats[role.name as UserRole] = 0;
       });
 
@@ -41,7 +41,7 @@ export const useRoleStats = () => {
       if (profilesError) throw profilesError;
 
       // Update counts for roles that have users
-      profiles.forEach((profile) => {
+      profiles.forEach((profile: any) => {
         if (profile.roles?.name) {
           const roleName = profile.roles.name as UserRole;
           stats[roleName] = (stats[roleName] || 0) + 1;
