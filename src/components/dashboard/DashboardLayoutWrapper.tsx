@@ -14,8 +14,18 @@ export function DashboardLayoutWrapper() {
   const { data: profile, isLoading, error } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error("Session error:", sessionError);
+        throw sessionError;
+      }
+      
+      if (!session?.user) {
+        console.log("No session found, redirecting to auth");
+        throw new Error("No authenticated user");
+      }
+
+      console.log("Session found, fetching profile for user:", session.user.id);
       
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
@@ -27,7 +37,7 @@ export function DashboardLayoutWrapper() {
             nicename
           )
         `)
-        .eq("id", user.id)
+        .eq("id", session.user.id)
         .single();
 
       if (profileError) {
@@ -68,18 +78,22 @@ export function DashboardLayoutWrapper() {
   }
 
   if (error) {
-    navigate("/auth");
+    console.error("Profile fetch error, redirecting to auth:", error);
+    navigate("/auth", { replace: true });
     return null;
   }
 
   if (!profile) {
+    console.log("No profile found, redirecting to auth");
     return <Navigate to="/auth" replace />;
   }
+
+  console.log("Rendering DashboardLayout with profile:", profile);
 
   return (
     <DashboardLayout
       firstName={profile?.first_name}
-      role={profile?.role?.nicename}
+      role={profile?.role}
       onLogout={handleLogout}
     >
       <Outlet />
