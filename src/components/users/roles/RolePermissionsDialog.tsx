@@ -157,7 +157,6 @@ export const RolePermissionsDialog = ({
               id="bay-assignment"
               checked={role?.can_be_assigned_to_bay || false}
               onCheckedChange={handleBayAssignmentToggle}
-              className="data-[state=checked]:bg-primary"
             />
           </div>
         </div>
@@ -185,7 +184,6 @@ export const RolePermissionsDialog = ({
                     id={permission.id}
                     checked={permission.is_active}
                     onCheckedChange={(checked) => handlePermissionToggle(permission.id, checked)}
-                    className="data-[state=checked]:bg-primary"
                   />
                 </div>
               ))}
@@ -206,7 +204,6 @@ export const RolePermissionsDialog = ({
                     id={permission.id}
                     checked={permission.is_active}
                     onCheckedChange={(checked) => handlePermissionToggle(permission.id, checked)}
-                    className="data-[state=checked]:bg-primary"
                   />
                 </div>
               ))}
