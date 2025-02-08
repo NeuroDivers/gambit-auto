@@ -202,26 +202,6 @@ export const RolePermissionsDialog = ({
         <DialogHeader>
           <DialogTitle>Manage Role Permissions</DialogTitle>
         </DialogHeader>
-
-        <div className="mb-6 pb-6 border-b">
-          <div className="flex items-start justify-between space-x-4">
-            <Label htmlFor="bay-assignment" className="flex-1">
-              <span className="font-medium">Bay Assignment</span>
-              <p className="text-sm text-muted-foreground">
-                Allow this role to be assigned to service bays
-              </p>
-            </Label>
-            <Switch
-              id="bay-assignment"
-              name="bay-assignment"
-              checked={role?.can_be_assigned_to_bay || false}
-              onCheckedChange={handleBayAssignmentToggle}
-              disabled={isUpdating}
-              className="data-[state=checked]:bg-primary"
-            />
-          </div>
-        </div>
-
         <ScrollArea className="h-[500px] pr-4">
           {groupedPermissions && Object.entries(groupedPermissions).map(([section, sectionPermissions]) => (
             <div key={section} className="mb-8">
