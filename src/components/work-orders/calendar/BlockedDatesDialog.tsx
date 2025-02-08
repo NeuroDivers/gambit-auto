@@ -54,7 +54,10 @@ export function BlockedDatesDialog() {
           reason: data.reason,
         }])
 
-      if (error) throw error
+      if (error) {
+        toast.error("Failed to block dates: " + error.message)
+        return
+      }
 
       toast.success("Date range blocked successfully")
       setOpen(false)

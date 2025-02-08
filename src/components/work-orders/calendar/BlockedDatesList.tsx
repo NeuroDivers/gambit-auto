@@ -19,8 +19,12 @@ export function BlockedDatesList() {
         .delete()
         .eq('id', id)
 
-      if (error) throw error
-      toast.success("Blocked date removed")
+      if (error) {
+        toast.error("Failed to remove blocked date: " + error.message)
+        return
+      }
+      
+      toast.success("Blocked date removed successfully")
     } catch (error) {
       console.error('Error removing blocked date:', error)
       toast.error("Failed to remove blocked date")
