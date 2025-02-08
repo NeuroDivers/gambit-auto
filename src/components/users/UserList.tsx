@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserCard } from "./UserCard";
@@ -18,7 +19,7 @@ export const UserList = () => {
       user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesRole = roleFilter === "all" || user.user_roles?.role === roleFilter;
+    const matchesRole = roleFilter === "all" || user.role === roleFilter;
     
     return matchesSearch && matchesRole;
   });

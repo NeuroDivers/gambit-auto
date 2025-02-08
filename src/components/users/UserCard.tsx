@@ -1,6 +1,5 @@
 
 import { useToast } from "@/hooks/use-toast";
-import { Shield } from "lucide-react";
 import { useState } from "react";
 import { UserEditDialog } from "./UserEditDialog";
 import { supabase } from "@/integrations/supabase/client";
