@@ -34,26 +34,39 @@ export const RolePermissionsDialog = ({
     queryFn: async () => {
       if (!roleId) return null;
       
+      console.log("Fetching permissions for role:", roleId);
       const { data, error } = await supabase
         .from("role_permissions")
         .select("*")
         .eq("role_id", roleId)
         .order("resource_name");
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching permissions:", error);
+        throw error;
+      }
+      
+      console.log("Fetched permissions:", data);
       return data;
     },
     enabled: !!roleId,
   });
 
   const handlePermissionToggle = async (permissionId: string, newValue: boolean) => {
+    console.log("Updating permission:", permissionId, "to value:", newValue);
     try {
       const { error } = await supabase
         .from("role_permissions")
-        .update({ is_active: newValue })
+        .update({ 
+          is_active: newValue,
+          updated_at: new Date().toISOString()
+        })
         .eq("id", permissionId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating permission:", error);
+        throw error;
+      }
 
       await queryClient.invalidateQueries({ queryKey: ["role-permissions"] });
       
@@ -62,6 +75,7 @@ export const RolePermissionsDialog = ({
         description: "The permission has been updated successfully.",
       });
     } catch (error: any) {
+      console.error("Permission update error:", error);
       toast({
         title: "Error",
         description: error.message,
