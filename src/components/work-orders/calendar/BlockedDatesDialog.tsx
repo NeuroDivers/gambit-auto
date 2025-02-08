@@ -96,11 +96,7 @@ export function BlockedDatesDialog() {
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent 
-                      className="w-auto p-0" 
-                      align="start"
-                      style={{ zIndex: 9999 }}
-                    >
+                    <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
                         selected={field.value}
@@ -138,16 +134,22 @@ export function BlockedDatesDialog() {
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent 
-                      className="w-auto p-0" 
-                      align="start"
-                      style={{ zIndex: 9999 }}
-                    >
+                    <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
                         initialFocus
+                        modifiers={{
+                          selected: [form.getValues("start_date")],
+                        }}
+                        modifiersStyles={{
+                          selected: {
+                            backgroundColor: "var(--primary)",
+                            color: "white",
+                          },
+                        }}
+                        fromDate={form.getValues("start_date")}
                       />
                     </PopoverContent>
                   </Popover>
