@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Outlet, Navigate } from "react-router-dom"
 import { ClientLayout } from "./ClientLayout"
 import { LoadingScreen } from "../shared/LoadingScreen"
@@ -10,6 +10,7 @@ import { LoadingScreen } from "../shared/LoadingScreen"
 export function ClientLayoutWrapper() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: session } = useQuery({
     queryKey: ["session"],
@@ -17,6 +18,7 @@ export function ClientLayoutWrapper() {
       const { data: { session } } = await supabase.auth.getSession();
       return session;
     },
+    staleTime: 1000 * 60 * 5, // Keep session fresh for 5 minutes
   });
 
   const { data: profile, isLoading } = useQuery({
@@ -40,12 +42,38 @@ export function ClientLayoutWrapper() {
       if (profileError) throw profileError;
       return profileData;
     },
+    staleTime: 1000 * 60 * 5, // Keep profile fresh for 5 minutes
   });
+
+  // Prefetch the profile data if we have a session
+  React.useEffect(() => {
+    if (session?.user?.id) {
+      queryClient.prefetchQuery({
+        queryKey: ["profile", session.user.id],
+        queryFn: async () => {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select(`
+              *,
+              role:role_id (
+                name,
+                nicename
+              )
+            `)
+            .eq("id", session.user.id)
+            .maybeSingle();
+
+          if (error) throw error;
+          return data;
+        },
+      });
+    }
+  }, [session?.user?.id, queryClient]);
 
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      // Navigate first, then show toast to ensure smooth transition
+      queryClient.clear(); // Clear all queries from cache
       navigate("/auth", { replace: true });
       toast({
         title: "Logged out successfully",

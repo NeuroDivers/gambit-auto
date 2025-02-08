@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Outlet, Navigate } from "react-router-dom"
 import { DashboardLayout } from "./DashboardLayout"
 import { LoadingScreen } from "../shared/LoadingScreen"
@@ -10,6 +10,7 @@ import { LoadingScreen } from "../shared/LoadingScreen"
 export function DashboardLayoutWrapper() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: session } = useQuery({
     queryKey: ["session"],
@@ -17,6 +18,7 @@ export function DashboardLayoutWrapper() {
       const { data: { session } } = await supabase.auth.getSession();
       return session;
     },
+    staleTime: 1000 * 60 * 5, // Keep session fresh for 5 minutes
   });
 
   const { data: profile, isLoading } = useQuery({
@@ -41,13 +43,13 @@ export function DashboardLayoutWrapper() {
       if (profileError) throw profileError;
       return profileData;
     },
+    staleTime: 1000 * 60 * 5, // Keep profile fresh for 5 minutes
   });
 
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      // Use queryClient to clear all cached data
-      // Navigate first, then show toast to ensure smooth transition
+      queryClient.clear(); // Clear all queries from cache
       navigate("/auth", { replace: true });
       toast({
         title: "Logged out successfully",
@@ -62,6 +64,32 @@ export function DashboardLayoutWrapper() {
       });
     }
   };
+
+  // Prefetch the profile data if we have a session
+  React.useEffect(() => {
+    if (session?.user?.id) {
+      queryClient.prefetchQuery({
+        queryKey: ["profile", session.user.id],
+        queryFn: async () => {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select(`
+              *,
+              role:role_id (
+                id,
+                name,
+                nicename
+              )
+            `)
+            .eq("id", session.user.id)
+            .maybeSingle();
+
+          if (error) throw error;
+          return data;
+        },
+      });
+    }
+  }, [session?.user?.id, queryClient]);
 
   if (isLoading) {
     return <LoadingScreen />;
