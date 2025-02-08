@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,7 +18,10 @@ interface ServiceItemFormProps {
 export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: ServiceItemFormProps) {
   useEffect(() => {
     if (item.service_name && !item.service_id) {
-      const matchingService = services.find(service => service.name === item.service_name)
+      const matchingService = services.find(service => 
+        service.name === item.service_name || 
+        service.service_packages?.some((pkg: any) => pkg.name === item.service_name)
+      )
       if (matchingService) {
         onUpdate(index, "service_id", matchingService.id)
       }
@@ -25,7 +29,7 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
   }, [item.service_name, item.service_id, services, index, onUpdate])
 
   const handleServiceSelect = (serviceId: string) => {
-    if (!serviceId) return // Prevent empty string values
+    if (!serviceId) return
     
     const selectedService = services.find(service => service.id === serviceId)
     if (selectedService) {
@@ -33,6 +37,27 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
       onUpdate(index, "service_name", selectedService.name)
       onUpdate(index, "unit_price", selectedService.price || 0)
     }
+  }
+
+  const handlePackageSelect = (packageId: string) => {
+    const selectedService = services.find(service => 
+      service.service_packages?.some((pkg: any) => pkg.id === packageId)
+    )
+    
+    if (selectedService) {
+      const selectedPackage = selectedService.service_packages.find((pkg: any) => pkg.id === packageId)
+      if (selectedPackage) {
+        onUpdate(index, "service_id", selectedService.id)
+        onUpdate(index, "service_name", selectedPackage.name)
+        onUpdate(index, "unit_price", selectedPackage.price || 0)
+      }
+    }
+  }
+
+  const getAvailablePackages = () => {
+    if (!item.service_id) return []
+    const service = services.find(s => s.id === item.service_id)
+    return service?.service_packages?.filter((pkg: any) => pkg.status === 'active') || []
   }
 
   return (
@@ -65,6 +90,27 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
               ))}
             </SelectContent>
           </Select>
+
+          {item.service_id && getAvailablePackages().length > 0 && (
+            <div className="mt-2">
+              <Label>Package</Label>
+              <Select
+                value={item.service_name}
+                onValueChange={handlePackageSelect}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a package" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getAvailablePackages().map((pkg: any) => (
+                    <SelectItem key={pkg.id} value={pkg.id}>
+                      {pkg.name} - ${pkg.price}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
