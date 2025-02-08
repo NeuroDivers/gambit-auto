@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +27,19 @@ const Auth = () => {
         if (error) throw error;
         
         if (session) {
-          navigate("/");
+          // Get user role
+          const { data: roleData } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", session.user.id)
+            .single();
+
+          // Redirect based on role
+          if (roleData?.role === 'client') {
+            navigate("/client");
+          } else {
+            navigate("/");
+          }
         }
       } catch (error: any) {
         console.error("Session check error:", error.message);
@@ -39,7 +52,19 @@ const Auth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
-          navigate("/");
+          // Get user role
+          const { data: roleData } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", session.user.id)
+            .single();
+
+          // Redirect based on role
+          if (roleData?.role === 'client') {
+            navigate("/client");
+          } else {
+            navigate("/");
+          }
         } else if (event === 'SIGNED_OUT') {
           navigate("/auth");
         }
