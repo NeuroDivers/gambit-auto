@@ -30,19 +30,14 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
   });
 
   // Transform the roleStats object into an array format for Recharts
-  const chartData = Object.entries(roleStats).map(([name, value]) => ({
+  const chartData = Object.entries(roleStats).map(([name, value], index) => ({
+    id: index,
     name,
-    nicename: roleNames?.[name] || name,
+    displayName: roleNames?.[name] || name,
     value
   }));
 
   const total = Object.values(roleStats).reduce((acc, curr) => acc + curr, 0);
-
-  // Custom formatter for legend text to ensure we return a string
-  const formatLegendText = (value: string) => {
-    const displayName = roleNames?.[value] || value;
-    return displayName;
-  };
 
   return (
     <Card className="bg-card/50 backdrop-blur-sm border-white/[0.08] p-6">
@@ -63,11 +58,11 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
                 outerRadius={80}
                 paddingAngle={5}
                 dataKey="value"
-                nameKey="nicename"
+                nameKey="displayName"
               >
                 {chartData.map((entry, index) => (
                   <Cell 
-                    key={`cell-${index}`} 
+                    key={`cell-${entry.id}`} 
                     fill={COLORS[index % COLORS.length]}
                     className="hover:opacity-80 transition-opacity cursor-pointer"
                   />
@@ -82,14 +77,13 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
                 }}
                 formatter={(value: number, name: string) => [
                   `${value} user${value !== 1 ? 's' : ''}`,
-                  formatLegendText(name)
+                  name
                 ]}
               />
               <Legend 
                 verticalAlign="bottom" 
                 height={36}
                 iconType="circle"
-                formatter={formatLegendText}
               />
             </PieChart>
           </ResponsiveContainer>
