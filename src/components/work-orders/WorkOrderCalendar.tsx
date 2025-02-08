@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { addMonths, subMonths, startOfDay, endOfDay } from "date-fns"
 import { CalendarDay } from "./calendar/CalendarDay"
@@ -8,11 +9,16 @@ import { StatusLegend } from "./StatusLegend"
 import { CalendarDayView } from "./calendar/CalendarDayView"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Calendar as CalendarIcon, Clock } from "lucide-react"
+import { BlockedDatesDialog } from "./calendar/BlockedDatesDialog"
+import { BlockedDatesList } from "./calendar/BlockedDatesList"
+import { useAdminStatus } from "@/hooks/useAdminStatus"
+import { Separator } from "@/components/ui/separator"
 
 export function WorkOrderCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [view, setView] = useState<'month' | 'day'>('month')
   const { data: workOrders = [], isLoading } = useWorkOrderData()
+  const { isAdmin } = useAdminStatus()
 
   const statusCounts = {
     pending: workOrders.filter(wo => wo.status === 'pending').length,
@@ -53,14 +59,17 @@ export function WorkOrderCalendar() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-semibold text-foreground">Work Order Calendar</h3>
-          <ToggleGroup type="single" value={view} onValueChange={(value) => value && setView(value as 'month' | 'day')}>
-            <ToggleGroupItem value="month" aria-label="Month view">
-              <CalendarIcon className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="day" aria-label="Day view">
-              <Clock className="h-4 w-4" />
-            </ToggleGroupItem>
-          </ToggleGroup>
+          <div className="flex items-center gap-4">
+            {isAdmin && <BlockedDatesDialog />}
+            <ToggleGroup type="single" value={view} onValueChange={(value) => value && setView(value as 'month' | 'day')}>
+              <ToggleGroupItem value="month" aria-label="Month view">
+                <CalendarIcon className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="day" aria-label="Day view">
+                <Clock className="h-4 w-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
         </div>
         <StatusLegend statusCounts={statusCounts} />
         <div className="space-y-4">
@@ -81,6 +90,13 @@ export function WorkOrderCalendar() {
             />
           )}
         </div>
+        {isAdmin && (
+          <div className="pt-8 space-y-4">
+            <Separator />
+            <h4 className="font-medium">Blocked Dates</h4>
+            <BlockedDatesList />
+          </div>
+        )}
       </div>
     </section>
   )
