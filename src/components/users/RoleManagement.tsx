@@ -13,7 +13,7 @@ export const RoleManagement = () => {
   const { data: roleStats } = useRoleStats();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { isAdmin } = useAdminStatus();
-  useRoleSubscription();
+  useRoleSubscription(); // Add this line to enable realtime updates
 
   return (
     <div className="space-y-6">
