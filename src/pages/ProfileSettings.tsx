@@ -20,13 +20,18 @@ export default function ProfileSettings() {
 
       const { data } = await supabase
         .from('profiles')
-        .select('role:role_id!inner(name, nicename)')
+        .select(`
+          role:role_id (
+            name,
+            nicename
+          )
+        `)
         .eq('id', user.id)
         .single()
 
-      // Ensure we have the correct data structure before type assertion
+      // Ensure we have the correct data structure before returning
       if (data?.role && typeof data.role === 'object' && 'name' in data.role) {
-        return (data.role as { name: string }).name
+        return data.role.name
       }
       
       return null

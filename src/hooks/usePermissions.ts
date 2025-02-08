@@ -42,15 +42,24 @@ export const usePermissions = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      // First check if user is administrator
+      // First check if user's role is administrator
       const { data } = await supabase
         .from('profiles')
-        .select('role:role_id(name)')
+        .select(`
+          role:role_id (
+            name
+          )
+        `)
         .eq('id', user.id)
         .single();
 
       // Administrator has all permissions
-      if (data?.role && typeof data.role === 'object' && 'name' in data.role && data.role.name === 'administrator') {
+      // Check if data.role exists and if the name property is 'administrator'
+      if (data?.role && 
+          typeof data.role === 'object' && 
+          'name' in data.role && 
+          data.role.name.toLowerCase() === 'administrator') {
+        console.log("User is administrator, granting access");
         return true;
       }
 
