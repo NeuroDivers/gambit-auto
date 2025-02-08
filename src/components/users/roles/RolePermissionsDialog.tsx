@@ -93,7 +93,7 @@ export const RolePermissionsDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[900px]">
         <DialogHeader>
           <DialogTitle>Manage Role Permissions</DialogTitle>
         </DialogHeader>
@@ -108,42 +108,47 @@ export const RolePermissionsDialog = ({
           </TabsList>
 
           <TabsContent value="page_access" className="space-y-4">
-            {pagePermissions.map((permission) => (
-              <div key={permission.id} className="flex items-center justify-between space-x-4">
-                <Label htmlFor={permission.id} className="flex-1">
-                  <span className="font-medium">{permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                  {permission.description && (
-                    <p className="text-sm text-muted-foreground">{permission.description}</p>
-                  )}
-                </Label>
-                <Switch
-                  id={permission.id}
-                  checked={permission.is_active}
-                  onCheckedChange={(checked) => handlePermissionToggle(permission.id, checked)}
-                />
-              </div>
-            ))}
+            <div className="grid grid-cols-3 gap-4">
+              {pagePermissions.map((permission) => (
+                <div key={permission.id} className="flex items-start justify-between space-x-4">
+                  <Label htmlFor={permission.id} className="flex-1">
+                    <span className="font-medium">{permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                    {permission.description && (
+                      <p className="text-sm text-muted-foreground">{permission.description}</p>
+                    )}
+                  </Label>
+                  <Switch
+                    id={permission.id}
+                    checked={permission.is_active}
+                    onCheckedChange={(checked) => handlePermissionToggle(permission.id, checked)}
+                  />
+                </div>
+              ))}
+            </div>
           </TabsContent>
 
           <TabsContent value="feature_access" className="space-y-4">
-            {featurePermissions.map((permission) => (
-              <div key={permission.id} className="flex items-center justify-between space-x-4">
-                <Label htmlFor={permission.id} className="flex-1">
-                  <span className="font-medium">{permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                  {permission.description && (
-                    <p className="text-sm text-muted-foreground">{permission.description}</p>
-                  )}
-                </Label>
-                <Switch
-                  id={permission.id}
-                  checked={permission.is_active}
-                  onCheckedChange={(checked) => handlePermissionToggle(permission.id, checked)}
-                />
-              </div>
-            ))}
+            <div className="grid grid-cols-3 gap-4">
+              {featurePermissions.map((permission) => (
+                <div key={permission.id} className="flex items-start justify-between space-x-4">
+                  <Label htmlFor={permission.id} className="flex-1">
+                    <span className="font-medium">{permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                    {permission.description && (
+                      <p className="text-sm text-muted-foreground">{permission.description}</p>
+                    )}
+                  </Label>
+                  <Switch
+                    id={permission.id}
+                    checked={permission.is_active}
+                    onCheckedChange={(checked) => handlePermissionToggle(permission.id, checked)}
+                  />
+                </div>
+              ))}
+            </div>
           </TabsContent>
         </Tabs>
       </DialogContent>
     </Dialog>
   );
 };
+
