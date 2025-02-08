@@ -28,6 +28,7 @@ export const useUserData = () => {
           first_name, 
           last_name,
           user_roles!inner(
+            role_id,
             roles(
               name,
               nicename

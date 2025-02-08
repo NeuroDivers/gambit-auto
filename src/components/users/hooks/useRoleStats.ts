@@ -19,7 +19,8 @@ export const useRoleStats = () => {
       // First get all roles to ensure we include roles with 0 users
       const { data: roles, error: rolesError } = await supabase
         .from("roles")
-        .select("name, nicename");
+        .select("name, nicename")
+        .in('name', ['admin', 'manager', 'sidekick', 'client']);
       
       if (rolesError) throw rolesError;
       
