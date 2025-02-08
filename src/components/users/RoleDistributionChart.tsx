@@ -1,6 +1,8 @@
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { Card } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const COLORS = ['#BB86FC', '#9B6BFD', '#7B51FE', '#03DAC5'];
 
@@ -11,9 +13,26 @@ interface RoleDistributionChartProps {
 }
 
 export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps) => {
+  // Fetch role names to display proper labels
+  const { data: roleNames } = useQuery({
+    queryKey: ["roleNames"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("roles")
+        .select("name, nicename");
+      
+      if (error) throw error;
+      
+      return Object.fromEntries(
+        data.map((role) => [role.name, role.nicename])
+      );
+    }
+  });
+
   // Transform the roleStats object into an array format for Recharts
   const chartData = Object.entries(roleStats).map(([name, value]) => ({
     name,
+    nicename: roleNames?.[name] || name,
     value
   }));
 
@@ -38,6 +57,7 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
                 outerRadius={80}
                 paddingAngle={5}
                 dataKey="value"
+                nameKey="nicename"
               >
                 {chartData.map((entry, index) => (
                   <Cell 
@@ -56,7 +76,7 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
                 }}
                 formatter={(value: number, name: string) => [
                   `${value} user${value !== 1 ? 's' : ''}`,
-                  name
+                  roleNames?.[name] || name
                 ]}
               />
               <Legend 
@@ -64,7 +84,9 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
                 height={36}
                 iconType="circle"
                 formatter={(value) => (
-                  <span className="text-sm text-white/80">{value}</span>
+                  <span className="text-sm text-white/80">
+                    {roleNames?.[value] || value}
+                  </span>
                 )}
               />
             </PieChart>

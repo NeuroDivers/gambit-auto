@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export type UserRole = "admin" | "manager" | "sidekick" | "client";
+export type UserRole = string;
 
 export type User = {
   id: string;
@@ -47,8 +47,8 @@ export const useUserData = () => {
         first_name: profile.first_name,
         last_name: profile.last_name,
         user_roles: {
-          role: profile.roles?.name as UserRole,
-          nicename: profile.roles?.nicename
+          role: profile.roles?.name || '',
+          nicename: profile.roles?.nicename || 'No Role'
         }
       })) as User[];
     },
