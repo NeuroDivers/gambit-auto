@@ -4,7 +4,9 @@ import { supabase } from "@/integrations/supabase/client"
 import { useEffect } from "react"
 
 interface Role {
+  id: string;
   name: string;
+  nicename: string;
 }
 
 interface Profile {
@@ -30,7 +32,9 @@ export function useSidekicks() {
           first_name, 
           last_name,
           role:role_id (
-            name
+            id,
+            name,
+            nicename
           )
         `)
         .not('role_id', 'is', null);
@@ -41,7 +45,7 @@ export function useSidekicks() {
       }
 
       // Filter profiles to only include knights
-      const knightProfiles = (profiles as Profile[]).filter(
+      const knightProfiles = (profiles as unknown as Profile[]).filter(
         profile => profile.role?.name?.toLowerCase() === 'knights'
       );
 

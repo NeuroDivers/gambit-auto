@@ -55,9 +55,11 @@ export const usePermissions = () => {
         .eq('id', user.id)
         .single();
 
+      const profileWithRole = profile as unknown as ProfileWithRole;
+
       // Administrator has all permissions
-      if ((profile as ProfileWithRole)?.role?.name) {
-        const roleName = (profile as ProfileWithRole).role.name.toLowerCase();
+      if (profileWithRole?.role?.name) {
+        const roleName = profileWithRole.role.name.toLowerCase();
         if (roleName === 'administrator' || roleName === 'admin') {
           console.log("User is administrator, granting access");
           return true;

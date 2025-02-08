@@ -33,8 +33,9 @@ export default function ProfileSettings() {
         .eq('id', user.id)
         .single()
       
+      const profileWithRole = profile as unknown as ProfileWithRole;
       // Return the role name if it exists
-      return (profile as ProfileWithRole)?.role?.name || null;
+      return profileWithRole?.role?.name || null;
     }
   })
 
