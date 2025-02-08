@@ -27,11 +27,12 @@ export const useUserData = () => {
           email,
           first_name,
           last_name,
-          roles!inner(
+          roles (
             name,
             nicename
           )
-        `);
+        `)
+        .not('roles', 'is', null);
 
       if (profilesError) {
         console.error("Error fetching profiles:", profilesError);
@@ -42,10 +43,13 @@ export const useUserData = () => {
 
       // Transform the data to match the expected type
       return profiles.map((profile: any) => ({
-        ...profile,
+        id: profile.id,
+        email: profile.email,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
         user_roles: {
-          role: profile.roles.name as UserRole || "client",
-          nicename: profile.roles.nicename || "Client"
+          role: profile.roles.name as UserRole,
+          nicename: profile.roles.nicename
         }
       })) as User[];
     },
