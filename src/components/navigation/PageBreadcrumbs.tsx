@@ -19,6 +19,7 @@ const routeNames: Record<string, string> = {
   "edit": "Edit Work Order",
   "service-types": "Service Types",
   "service-bays": "Service Bays",
+  "developer-settings": "Developer Settings",
 };
 
 export function PageBreadcrumbs() {
@@ -48,16 +49,18 @@ export function PageBreadcrumbs() {
             (index === pathSegments.length - 2 && pathSegments[index + 1] === "edit");
 
           return (
-            <BreadcrumbItem key={path}>
+            <>
               <BreadcrumbSeparator />
-              {isLast ? (
-                <BreadcrumbPage>{routeNames[segment] || segment}</BreadcrumbPage>
-              ) : (
-                <BreadcrumbLink asChild>
-                  <Link to={path}>{routeNames[segment] || segment}</Link>
-                </BreadcrumbLink>
-              )}
-            </BreadcrumbItem>
+              <BreadcrumbItem key={path}>
+                {isLast ? (
+                  <BreadcrumbPage>{routeNames[segment] || segment}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink asChild>
+                    <Link to={path}>{routeNames[segment] || segment}</Link>
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+            </>
           );
         }).filter(Boolean)}
       </BreadcrumbList>
