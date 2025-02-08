@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -17,29 +18,19 @@ export function SidekickAssignmentField({ form, bayId }: SidekickAssignmentField
     queryFn: async () => {
       console.log("Fetching sidekicks for assignment field...")
       
-      // First get all users with sidekick role
-      const { data: userRoles, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "sidekick")
-
-      if (rolesError) {
-        console.error("Error fetching sidekick roles:", rolesError)
-        throw rolesError
-      }
-
-      const userIds = userRoles.map(role => role.user_id)
-
-      if (userIds.length === 0) {
-        console.log("No sidekick roles found")
-        return []
-      }
-
-      // Then get the corresponding profiles
+      // Get all profiles that have a role with can_be_assigned_to_bay = true
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name")
-        .in("id", userIds)
+        .select(`
+          id,
+          first_name,
+          last_name,
+          role:role_id (
+            name,
+            can_be_assigned_to_bay
+          )
+        `)
+        .eq('role.can_be_assigned_to_bay', true)
 
       if (profilesError) {
         console.error("Error fetching sidekick profiles:", profilesError)
@@ -81,18 +72,18 @@ export function SidekickAssignmentField({ form, bayId }: SidekickAssignmentField
                     field.onChange(value === "unassigned" ? null : value)
                   }}
                 >
-                  <SelectTrigger className="w-full bg-[#221F26]/60 border-border/5 text-white/80">
+                  <SelectTrigger className="w-full bg-[#242424] border-white/10 text-white/[0.87]">
                     <SelectValue placeholder="Select a sidekick" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#1A1F2C] border-border/5">
-                    <SelectItem value="unassigned" className="hover:bg-primary/10 text-white/80">
+                  <SelectContent className="bg-[#242424] border-white/10">
+                    <SelectItem value="unassigned" className="text-white/[0.87]">
                       None
                     </SelectItem>
                     {sidekicks.map((sidekick) => (
                       <SelectItem 
                         key={sidekick.id} 
                         value={sidekick.id}
-                        className="hover:bg-primary/10 text-white/80"
+                        className="text-white/[0.87]"
                       >
                         {`${sidekick.first_name || ''} ${sidekick.last_name || ''}`}
                       </SelectItem>

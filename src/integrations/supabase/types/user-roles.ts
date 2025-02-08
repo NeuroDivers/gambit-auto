@@ -1,24 +1,38 @@
+
 import { Json } from './json';
 import { Database } from './database';
 
-export interface UserRolesTable {
+// This interface now represents the roles table instead of user_roles
+export interface RolesTable {
   Row: {
-    created_at: string
     id: string
-    role: Database["public"]["Enums"]["app_role"]
-    user_id: string
+    name: string
+    nicename: string
+    description: string | null
+    can_be_assigned_to_bay: boolean
+    created_at: string
+    permissions_configured: boolean
+    updated_at: string
   }
   Insert: {
-    created_at?: string
     id?: string
-    role?: Database["public"]["Enums"]["app_role"]
-    user_id: string
+    name: string
+    nicename: string
+    description?: string | null
+    can_be_assigned_to_bay?: boolean
+    created_at?: string
+    permissions_configured?: boolean
+    updated_at?: string
   }
   Update: {
-    created_at?: string
     id?: string
-    role?: Database["public"]["Enums"]["app_role"]
-    user_id?: string
+    name?: string
+    nicename?: string
+    description?: string | null
+    can_be_assigned_to_bay?: boolean
+    created_at?: string
+    permissions_configured?: boolean
+    updated_at?: string
   }
   Relationships: []
 }

@@ -32,7 +32,7 @@ export const useRoleStats = () => {
       const { data: profilesWithRoles, error: countError } = await supabase
         .from("profiles")
         .select(`
-          roles:role_id (
+          role:role_id (
             name
           )
         `);
@@ -41,7 +41,7 @@ export const useRoleStats = () => {
 
       // Update counts for roles that have users
       profilesWithRoles.forEach((profile: any) => {
-        const roleName = profile.roles?.name;
+        const roleName = profile.role?.name;
         if (roleName) {
           stats[roleName] = (stats[roleName] || 0) + 1;
         }
