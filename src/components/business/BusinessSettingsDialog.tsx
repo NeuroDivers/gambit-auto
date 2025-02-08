@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -11,13 +12,8 @@ import { Settings } from "lucide-react"
 import { BusinessProfileForm } from "./BusinessProfileForm"
 import { BusinessTaxForm } from "./BusinessTaxForm"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useAdminStatus } from "@/hooks/useAdminStatus"
 
 export function BusinessSettingsDialog() {
-  const { isAdmin } = useAdminStatus()
-
-  if (!isAdmin) return null
-
   return (
     <Dialog>
       <DialogTrigger asChild id="business-settings-trigger">

@@ -60,7 +60,6 @@ export function DashboardLayoutWrapper() {
     return <LoadingScreen />;
   }
 
-  // Add error handling
   if (error) {
     navigate("/auth");
     return null;
@@ -68,11 +67,6 @@ export function DashboardLayoutWrapper() {
 
   if (!profile) {
     return <Navigate to="/auth" replace />;
-  }
-
-  // Only route client users to the client dashboard if they explicitly have the client role
-  if (profile.role === 'client') {
-    return <Navigate to="/client" replace />;
   }
 
   return (

@@ -60,7 +60,6 @@ export function ClientLayoutWrapper() {
     return <LoadingScreen />;
   }
 
-  // Add error handling
   if (error) {
     navigate("/auth");
     return null;
@@ -68,12 +67,6 @@ export function ClientLayoutWrapper() {
 
   if (!profile) {
     return <Navigate to="/auth" replace />;
-  }
-
-  // Allow access to client pages if the user has no explicit role (guest)
-  // or if they have the client role
-  if (profile.role && profile.role !== 'client') {
-    return <Navigate to="/" replace />;
   }
 
   return (

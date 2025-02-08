@@ -1,25 +1,10 @@
+
 import { BusinessProfileForm } from "@/components/business/BusinessProfileForm"
 import { BusinessTaxForm } from "@/components/business/BusinessTaxForm"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useAdminStatus } from "@/hooks/useAdminStatus"
-import { Navigate } from "react-router-dom"
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 
 export default function BusinessSettings() {
-  const { isAdmin, isLoading: isAdminLoading } = useAdminStatus()
-
-  if (isAdminLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-      </div>
-    )
-  }
-
-  if (!isAdmin) {
-    return <Navigate to="/" replace />
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
       <div className="container mx-auto py-12">

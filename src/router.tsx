@@ -20,26 +20,6 @@ import { DashboardLayoutWrapper } from "./components/dashboard/DashboardLayoutWr
 import { ClientLayoutWrapper } from "./components/client/ClientLayoutWrapper"
 import ClientDashboard from "./pages/client/Dashboard"
 import ClientQuoteRequests from "./pages/client/QuoteRequests"
-import { useAdminStatus } from "@/hooks/useAdminStatus"
-
-// Role-based route protection component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAdmin, isLoading } = useAdminStatus()
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-      </div>
-    )
-  }
-
-  if (!isAdmin) {
-    return <Navigate to="/client" replace />
-  }
-
-  return <>{children}</>
-}
 
 export const router = createBrowserRouter([
   {
@@ -60,23 +40,23 @@ export const router = createBrowserRouter([
       },
       {
         path: "work-orders",
-        element: <ProtectedRoute><WorkOrders /></ProtectedRoute>,
+        element: <WorkOrders />,
       },
       {
         path: "work-orders/:id/edit",
-        element: <ProtectedRoute><EditWorkOrder /></ProtectedRoute>,
+        element: <EditWorkOrder />,
       },
       {
         path: "service-types",
-        element: <ProtectedRoute><ServiceTypes /></ProtectedRoute>,
+        element: <ServiceTypes />,
       },
       {
         path: "service-bays",
-        element: <ProtectedRoute><ServiceBays /></ProtectedRoute>,
+        element: <ServiceBays />,
       },
       {
         path: "users",
-        element: <ProtectedRoute><UserManagement /></ProtectedRoute>,
+        element: <UserManagement />,
       },
       {
         path: "quotes",
@@ -84,15 +64,15 @@ export const router = createBrowserRouter([
       },
       {
         path: "invoices",
-        element: <ProtectedRoute><Invoices /></ProtectedRoute>,
+        element: <Invoices />,
       },
       {
         path: "invoices/:id",
-        element: <ProtectedRoute><InvoiceDetails /></ProtectedRoute>,
+        element: <InvoiceDetails />,
       },
       {
         path: "clients",
-        element: <ProtectedRoute><ClientManagement /></ProtectedRoute>,
+        element: <ClientManagement />,
       },
       {
         path: "business-settings",
