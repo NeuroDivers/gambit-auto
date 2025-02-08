@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { 
   Dialog,
@@ -12,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAdminStatus } from "@/hooks/useAdminStatus"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
-import { useQueryClient } from "@tanstack/react-query"
+import { useQueryClient, useQuery } from "@tanstack/react-query"
 
 interface CreateUserDialogProps {
   open: boolean
@@ -26,8 +27,20 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
   const [email, setEmail] = useState("")
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
-  const [role, setRole] = useState<string>("client")
+  const [role, setRole] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const { data: roles } = useQuery({
+    queryKey: ["roles"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("roles")
+        .select("id, name, nicename");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const handleCreateUser = async () => {
     if (!isAdmin) {
@@ -76,7 +89,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       setEmail("")
       setFirstName("")
       setLastName("")
-      setRole("client")
+      setRole("")
       onOpenChange(false)
     } catch (error: any) {
       console.error('Error creating user:', error)
@@ -101,30 +114,37 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
         </DialogHeader>
         <div className="space-y-4 py-4">
           <Input
+            id="firstName"
             placeholder="First Name"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
           />
           <Input
+            id="lastName"
             placeholder="Last Name"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
           />
           <Input
+            id="email"
             placeholder="Email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
           <Select value={role} onValueChange={setRole}>
-            <SelectTrigger>
+            <SelectTrigger id="role">
               <SelectValue placeholder="Select role" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="manager">Manager</SelectItem>
-              <SelectItem value="sidekick">Sidekick</SelectItem>
-              <SelectItem value="client">Client</SelectItem>
+              {roles?.map((role) => (
+                <SelectItem 
+                  key={role.id} 
+                  value={role.id}
+                >
+                  {role.nicename}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -134,7 +154,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
           </Button>
           <Button 
             onClick={handleCreateUser} 
-            disabled={isLoading || isSubmitting || !email || !firstName || !lastName}
+            disabled={isLoading || isSubmitting || !email || !firstName || !lastName || !role}
           >
             Create User
           </Button>
