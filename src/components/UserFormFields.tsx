@@ -1,3 +1,4 @@
+
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -7,7 +8,7 @@ import * as z from "zod"
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  role: z.enum(["admin", "manager", "sidekick", "client"]),
+  role: z.enum(["administrator", "managers", "knights", "client"]),
 })
 
 type UserFormFieldsProps = {
@@ -56,9 +57,9 @@ export const UserFormFields = ({ form }: UserFormFieldsProps) => {
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="sidekick">Sidekick</SelectItem>
+                <SelectItem value="administrator">Administrator</SelectItem>
+                <SelectItem value="managers">Managers</SelectItem>
+                <SelectItem value="knights">Knights</SelectItem>
                 <SelectItem value="client">Client</SelectItem>
               </SelectContent>
             </Select>

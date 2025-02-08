@@ -31,7 +31,7 @@ export const useAdminStatus = () => {
           .eq('id', user.id)
           .single()
 
-        setIsAdmin((data as RoleResponse)?.role?.name === 'admin')
+        setIsAdmin((data as RoleResponse)?.role?.name === 'administrator')
       } catch (error) {
         console.error('Error checking admin status:', error)
         setIsAdmin(false)
