@@ -7,6 +7,7 @@ interface Role {
   id: string;
   name: string;
   nicename: string;
+  can_be_assigned_to_bay: boolean;
 }
 
 interface Profile {
@@ -33,7 +34,8 @@ export function useAssignableProfiles() {
           role:role_id (
             id,
             name,
-            nicename
+            nicename,
+            can_be_assigned_to_bay
           )
         `)
         .not('role_id', 'is', null);
@@ -43,8 +45,13 @@ export function useAssignableProfiles() {
         throw profilesError
       }
 
+      // Filter profiles to only include those with roles that can be assigned to bays
+      const assignableProfiles = profiles.filter(profile => 
+        profile.role && profile.role.can_be_assigned_to_bay
+      );
+
       // Transform the data to match our expected type
-      const transformedProfiles = profiles.map(profile => ({
+      const transformedProfiles = assignableProfiles.map(profile => ({
         id: profile.id,
         first_name: profile.first_name,
         last_name: profile.last_name,
@@ -52,12 +59,13 @@ export function useAssignableProfiles() {
           ? {
               id: profile.role[0].id,
               name: profile.role[0].name,
-              nicename: profile.role[0].nicename
+              nicename: profile.role[0].nicename,
+              can_be_assigned_to_bay: profile.role[0].can_be_assigned_to_bay
             }
           : null
       })) as Profile[];
 
-      console.log("Fetched profiles:", transformedProfiles)
+      console.log("Fetched assignable profiles:", transformedProfiles)
       return transformedProfiles;
     },
   })

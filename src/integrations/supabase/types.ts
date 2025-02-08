@@ -659,6 +659,7 @@ export type Database = {
       }
       roles: {
         Row: {
+          can_be_assigned_to_bay: boolean
           created_at: string
           description: string | null
           id: string
@@ -668,6 +669,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          can_be_assigned_to_bay?: boolean
           created_at?: string
           description?: string | null
           id?: string
@@ -677,6 +679,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          can_be_assigned_to_bay?: boolean
           created_at?: string
           description?: string | null
           id?: string

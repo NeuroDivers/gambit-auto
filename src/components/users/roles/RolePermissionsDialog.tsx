@@ -52,6 +52,23 @@ export const RolePermissionsDialog = ({
     enabled: !!roleId,
   });
 
+  const { data: role } = useQuery({
+    queryKey: ["role", roleId],
+    queryFn: async () => {
+      if (!roleId) return null;
+      
+      const { data, error } = await supabase
+        .from("roles")
+        .select("*")
+        .eq("id", roleId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!roleId,
+  });
+
   const handlePermissionToggle = async (permissionId: string, newValue: boolean) => {
     console.log("Updating permission:", permissionId, "to value:", newValue);
     try {
@@ -84,6 +101,36 @@ export const RolePermissionsDialog = ({
     }
   };
 
+  const handleBayAssignmentToggle = async (newValue: boolean) => {
+    if (!roleId) return;
+
+    try {
+      const { error } = await supabase
+        .from("roles")
+        .update({ 
+          can_be_assigned_to_bay: newValue,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", roleId);
+
+      if (error) throw error;
+
+      await queryClient.invalidateQueries({ queryKey: ["role", roleId] });
+      
+      toast({
+        title: "Bay assignment updated",
+        description: `This role ${newValue ? "can now" : "can no longer"} be assigned to service bays.`,
+      });
+    } catch (error: any) {
+      console.error("Bay assignment update error:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const pagePermissions = permissions?.filter(p => p.permission_type === 'page_access') || [];
   const featurePermissions = permissions?.filter(p => p.permission_type === 'feature_access') || [];
 
@@ -97,6 +144,22 @@ export const RolePermissionsDialog = ({
         <DialogHeader>
           <DialogTitle>Manage Role Permissions</DialogTitle>
         </DialogHeader>
+
+        <div className="mb-6 pb-6 border-b">
+          <div className="flex items-start justify-between space-x-4">
+            <Label htmlFor="bay-assignment" className="flex-1">
+              <span className="font-medium">Bay Assignment</span>
+              <p className="text-sm text-muted-foreground">
+                Allow this role to be assigned to service bays
+              </p>
+            </Label>
+            <Switch
+              id="bay-assignment"
+              checked={role?.can_be_assigned_to_bay || false}
+              onCheckedChange={handleBayAssignmentToggle}
+            />
+          </div>
+        </div>
 
         <Tabs 
           value={activeTab} 
@@ -151,4 +214,3 @@ export const RolePermissionsDialog = ({
     </Dialog>
   );
 };
-
