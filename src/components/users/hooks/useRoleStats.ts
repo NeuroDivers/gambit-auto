@@ -1,9 +1,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { UserRole } from "./useUserData";
 
-export type RoleStats = Record<UserRole, number>;
+export type RoleStats = Record<string, number>;
 
 interface Role {
   name: string;
@@ -24,9 +23,9 @@ export const useRoleStats = () => {
       if (rolesError) throw rolesError;
       
       // Initialize stats with 0 for all roles
-      const stats: RoleStats = {} as RoleStats;
+      const stats: RoleStats = {};
       (roles as Role[]).forEach((role) => {
-        stats[role.name as UserRole] = 0;
+        stats[role.name] = 0;
       });
 
       // Count users for each role by joining profiles with roles
@@ -44,7 +43,7 @@ export const useRoleStats = () => {
       profilesWithRoles.forEach((profile: any) => {
         const roleName = profile.roles?.name;
         if (roleName) {
-          stats[roleName as UserRole] = (stats[roleName as UserRole] || 0) + 1;
+          stats[roleName] = (stats[roleName] || 0) + 1;
         }
       });
       

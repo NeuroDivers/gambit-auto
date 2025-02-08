@@ -13,7 +13,7 @@ export type User = {
   first_name?: string;
   last_name?: string;
   user_roles: {
-    role: UserRole;
+    role: string;
     nicename: string;
   };
 };
@@ -50,7 +50,7 @@ export const useUserData = () => {
         first_name: profile.first_name,
         last_name: profile.last_name,
         user_roles: {
-          role: profile.roles || { name: '', nicename: 'No Role' },
+          role: profile.roles?.name || 'no-role',
           nicename: profile.roles?.nicename || 'No Role'
         }
       })) as User[];
