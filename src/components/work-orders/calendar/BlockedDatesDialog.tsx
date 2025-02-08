@@ -57,11 +57,6 @@ export function BlockedDatesDialog() {
     }
   }
 
-  const handleCalendarClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-  }
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -105,19 +100,13 @@ export function BlockedDatesDialog() {
                       className="w-auto p-0" 
                       align="start"
                       style={{ zIndex: 9999 }}
-                      onPointerDownOutside={(e) => e.preventDefault()}
-                      onClick={handleCalendarClick}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onPointerDown={(e) => e.stopPropagation()}
                     >
-                      <div onClick={handleCalendarClick} onMouseDown={(e) => e.stopPropagation()}>
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                        />
-                      </div>
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                      />
                     </PopoverContent>
                   </Popover>
                   <FormMessage />
@@ -153,19 +142,13 @@ export function BlockedDatesDialog() {
                       className="w-auto p-0" 
                       align="start"
                       style={{ zIndex: 9999 }}
-                      onPointerDownOutside={(e) => e.preventDefault()}
-                      onClick={handleCalendarClick}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onPointerDown={(e) => e.stopPropagation()}
                     >
-                      <div onClick={handleCalendarClick} onMouseDown={(e) => e.stopPropagation()}>
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                        />
-                      </div>
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                      />
                     </PopoverContent>
                   </Popover>
                   <FormMessage />
