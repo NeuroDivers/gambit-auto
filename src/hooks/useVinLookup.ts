@@ -33,6 +33,7 @@ export function useVinLookup(vin: string) {
 
         if (cachedData) {
           if (!cachedData.success) {
+            console.log('Using cached error response:', cachedData.error_message)
             throw new Error(cachedData.error_message || 'Failed to decode VIN')
           }
           return {
@@ -43,6 +44,7 @@ export function useVinLookup(vin: string) {
         }
 
         // If not in cache, fetch from NHTSA API
+        console.log('Fetching from NHTSA API for VIN:', vin)
         const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`)
         const data = await response.json()
 
@@ -56,7 +58,10 @@ export function useVinLookup(vin: string) {
         const yearResult = results.find((r: any) => r.Variable === 'ModelYear')?.Value
         const year = yearResult ? parseInt(yearResult) : undefined
 
+        console.log('NHTSA API response:', { make, model, year, results })
+
         const success = !!(make && model && year)
+        const errorMessage = success ? null : 'Could not decode VIN - incomplete vehicle information returned'
         const timestamp = new Date().toISOString()
 
         // Cache the result
@@ -69,7 +74,7 @@ export function useVinLookup(vin: string) {
             year: year || null,
             raw_data: data,
             success,
-            error_message: !success ? 'Could not decode VIN' : null,
+            error_message: errorMessage,
             created_at: timestamp,
             updated_at: timestamp
           }, {
@@ -85,7 +90,7 @@ export function useVinLookup(vin: string) {
           return { make, model, year }
         }
 
-        throw new Error('Could not decode VIN')
+        throw new Error(errorMessage || 'Could not decode VIN')
       } catch (error: any) {
         console.error('VIN lookup error:', error)
         const timestamp = new Date().toISOString()
