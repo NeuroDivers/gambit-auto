@@ -72,6 +72,8 @@ export function useVinLookup(vin: string) {
             error_message: !success ? 'Could not decode VIN' : null,
             created_at: timestamp,
             updated_at: timestamp
+          }, {
+            onConflict: 'vin'
           })
 
         if (upsertError) {
@@ -101,6 +103,8 @@ export function useVinLookup(vin: string) {
             raw_data: null,
             created_at: timestamp,
             updated_at: timestamp
+          }, {
+            onConflict: 'vin'
           })
 
         if (upsertError) {
