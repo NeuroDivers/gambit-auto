@@ -53,7 +53,7 @@ export function useVinLookup(vin: string) {
 
         // Only cache valid results
         if (make && model && year) {
-          // Cache the result using upsert
+          // Cache the result using upsert with conflict handling
           const { error: cacheError } = await supabase
             .from('vin_lookups')
             .upsert({
@@ -64,6 +64,8 @@ export function useVinLookup(vin: string) {
               raw_data: data,
               success: true,
               error_message: null
+            }, {
+              onConflict: 'vin'
             })
 
           if (cacheError) {
@@ -75,7 +77,7 @@ export function useVinLookup(vin: string) {
 
         throw new Error('Could not decode VIN')
       } catch (error: any) {
-        // Cache failed lookups using upsert
+        // Cache failed lookups using upsert with conflict handling
         const { error: cacheError } = await supabase
           .from('vin_lookups')
           .upsert({
@@ -86,6 +88,8 @@ export function useVinLookup(vin: string) {
             model: null,
             year: null,
             raw_data: null
+          }, {
+            onConflict: 'vin'
           })
 
         if (cacheError) {
