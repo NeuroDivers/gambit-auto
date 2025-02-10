@@ -20,11 +20,16 @@ export function useVinLookup(vin: string) {
 
       try {
         // First check our local cache
-        const { data: cachedData } = await supabase
+        const { data: cachedData, error: cacheError } = await supabase
           .from('vin_lookups')
           .select('*')
           .eq('vin', vin)
           .maybeSingle()
+
+        if (cacheError) {
+          console.error('Cache lookup error:', cacheError)
+          throw cacheError
+        }
 
         if (cachedData) {
           if (!cachedData.success) {
@@ -51,10 +56,9 @@ export function useVinLookup(vin: string) {
         const yearResult = results.find((r: any) => r.Variable === 'ModelYear')?.Value
         const year = yearResult ? parseInt(yearResult) : undefined
 
-        // Only cache valid results
         if (make && model && year) {
-          // Cache the result using upsert with conflict handling
-          const { error: cacheError } = await supabase
+          // Cache the successful result
+          const { error: insertError } = await supabase
             .from('vin_lookups')
             .upsert({
               vin,
@@ -64,12 +68,10 @@ export function useVinLookup(vin: string) {
               raw_data: data,
               success: true,
               error_message: null
-            }, {
-              onConflict: 'vin'
             })
 
-          if (cacheError) {
-            console.error('Failed to cache VIN lookup:', cacheError)
+          if (insertError) {
+            console.error('Failed to cache VIN lookup:', insertError)
           }
 
           return { make, model, year }
@@ -77,8 +79,8 @@ export function useVinLookup(vin: string) {
 
         throw new Error('Could not decode VIN')
       } catch (error: any) {
-        // Cache failed lookups using upsert with conflict handling
-        const { error: cacheError } = await supabase
+        // Cache the failed lookup
+        const { error: insertError } = await supabase
           .from('vin_lookups')
           .upsert({
             vin,
@@ -88,17 +90,16 @@ export function useVinLookup(vin: string) {
             model: null,
             year: null,
             raw_data: null
-          }, {
-            onConflict: 'vin'
           })
 
-        if (cacheError) {
-          console.error('Failed to cache VIN lookup error:', cacheError)
+        if (insertError) {
+          console.error('Failed to cache VIN lookup error:', insertError)
         }
 
         return { error: error.message }
       }
     },
-    enabled: vin?.length === 17
+    enabled: vin?.length === 17,
+    staleTime: 1000 * 60 * 60 // Cache for 1 hour
   })
 }

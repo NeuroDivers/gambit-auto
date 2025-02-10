@@ -23,10 +23,11 @@ export function VehicleInfoFields({ form, isLoadingVin, vinAutoFillEnabled }: Ve
               <FormControl>
                 <div className="relative">
                   <Input 
+                    {...field}
                     id="vehicle_make"
                     name="vehicle_make"
-                    placeholder="Enter vehicle make" 
-                    {...field} 
+                    placeholder="Enter vehicle make"
+                    autoComplete="off"
                     disabled={isLoadingVin}
                   />
                   {isLoadingVin && (
@@ -47,10 +48,11 @@ export function VehicleInfoFields({ form, isLoadingVin, vinAutoFillEnabled }: Ve
               <FormControl>
                 <div className="relative">
                   <Input 
+                    {...field}
                     id="vehicle_model"
                     name="vehicle_model"
-                    placeholder="Enter vehicle model" 
-                    {...field} 
+                    placeholder="Enter vehicle model"
+                    autoComplete="off"
                     disabled={isLoadingVin}
                   />
                   {isLoadingVin && (
@@ -77,6 +79,7 @@ export function VehicleInfoFields({ form, isLoadingVin, vinAutoFillEnabled }: Ve
                     name="vehicle_year"
                     type="number" 
                     placeholder="Enter vehicle year"
+                    autoComplete="off"
                     {...field}
                     onChange={e => field.onChange(parseInt(e.target.value))}
                     disabled={isLoadingVin}
@@ -105,8 +108,9 @@ export function VehicleInfoFields({ form, isLoadingVin, vinAutoFillEnabled }: Ve
                 <Input 
                   id="vehicle_vin"
                   name="vehicle_vin"
-                  placeholder="Enter vehicle VIN" 
-                  {...field} 
+                  placeholder="Enter vehicle VIN"
+                  autoComplete="off"
+                  {...field}
                 />
               </FormControl>
               <FormMessage />

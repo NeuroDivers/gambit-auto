@@ -840,7 +840,7 @@ export type Database = {
       }
       vin_lookups: {
         Row: {
-          created_at: string
+          created_at: string | null
           error_message: string | null
           id: string
           make: string | null
@@ -851,7 +851,7 @@ export type Database = {
           year: number | null
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           error_message?: string | null
           id?: string
           make?: string | null
@@ -862,7 +862,7 @@ export type Database = {
           year?: number | null
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           error_message?: string | null
           id?: string
           make?: string | null
