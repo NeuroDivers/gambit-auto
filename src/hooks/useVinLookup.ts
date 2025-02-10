@@ -32,6 +32,7 @@ export function useVinLookup(vin: string) {
         }
 
         if (cachedData) {
+          console.log('Found cached VIN data:', cachedData)
           if (!cachedData.success) {
             console.log('Using cached error response:', cachedData.error_message)
             throw new Error(cachedData.error_message || 'Failed to decode VIN')
@@ -46,22 +47,42 @@ export function useVinLookup(vin: string) {
         // If not in cache, fetch from NHTSA API
         console.log('Fetching from NHTSA API for VIN:', vin)
         const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`)
-        const data = await response.json()
-
         if (!response.ok) {
-          throw new Error('Failed to fetch vehicle information')
+          throw new Error(`NHTSA API error: ${response.status} ${response.statusText}`)
         }
 
+        const data = await response.json()
         const results = data.Results
+
+        if (!Array.isArray(results)) {
+          throw new Error('Invalid response format from NHTSA API')
+        }
+
         const make = results.find((r: any) => r.Variable === 'Make')?.Value
         const model = results.find((r: any) => r.Variable === 'Model')?.Value
         const yearResult = results.find((r: any) => r.Variable === 'ModelYear')?.Value
         const year = yearResult ? parseInt(yearResult) : undefined
 
-        console.log('NHTSA API response:', { make, model, year, results })
+        console.log('NHTSA API response parsed values:', { 
+          make, 
+          model, 
+          year,
+          makeResult: results.find((r: any) => r.Variable === 'Make'),
+          modelResult: results.find((r: any) => r.Variable === 'Model'),
+          yearResult: results.find((r: any) => r.Variable === 'ModelYear')
+        })
 
         const success = !!(make && model && year)
         const errorMessage = success ? null : 'Could not decode VIN - incomplete vehicle information returned'
+        
+        if (!success) {
+          console.log('Missing required vehicle information:', {
+            hasMake: !!make,
+            hasModel: !!model,
+            hasYear: !!year
+          })
+        }
+
         const timestamp = new Date().toISOString()
 
         // Cache the result
