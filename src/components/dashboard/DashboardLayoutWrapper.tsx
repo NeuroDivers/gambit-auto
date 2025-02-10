@@ -49,7 +49,8 @@ export function DashboardLayoutWrapper() {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      queryClient.removeQueries(); // Clear all queries
+      // Invalidate all queries including permissions
+      queryClient.removeQueries();
       navigate("/auth", { replace: true });
       toast({
         title: "Logged out successfully",
@@ -95,3 +96,4 @@ export function DashboardLayoutWrapper() {
     </DashboardLayout>
   );
 }
+

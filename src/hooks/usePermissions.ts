@@ -14,7 +14,8 @@ interface ProfileResponse {
 }
 
 export const usePermissions = () => {
-  // Cache permissions data with React Query
+  // Cache permissions data with React Query, setting staleTime to Infinity
+  // This means the data will never go stale and will remain cached until explicitly invalidated
   const { data: permissions } = useQuery({
     queryKey: ["permissions"],
     queryFn: async () => {
@@ -33,8 +34,8 @@ export const usePermissions = () => {
       if (error) throw error;
       return data;
     },
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    gcTime: 1000 * 60 * 30, // Keep unused data for 30 minutes
+    staleTime: Infinity, // Never mark the data as stale
+    gcTime: Infinity, // Never remove from cache
   });
 
   const checkPermission = async (
@@ -94,3 +95,4 @@ export const usePermissions = () => {
     checkPermission,
   };
 };
+
