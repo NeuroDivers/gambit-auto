@@ -49,18 +49,16 @@ export function PageBreadcrumbs() {
             (index === pathSegments.length - 2 && pathSegments[index + 1] === "edit");
 
           return (
-            <>
+            <BreadcrumbItem key={path}>
               <BreadcrumbSeparator />
-              <BreadcrumbItem key={path}>
-                {isLast ? (
-                  <BreadcrumbPage>{routeNames[segment] || segment}</BreadcrumbPage>
-                ) : (
-                  <BreadcrumbLink asChild>
-                    <Link to={path}>{routeNames[segment] || segment}</Link>
-                  </BreadcrumbLink>
-                )}
-              </BreadcrumbItem>
-            </>
+              {isLast ? (
+                <BreadcrumbPage>{routeNames[segment] || segment}</BreadcrumbPage>
+              ) : (
+                <BreadcrumbLink asChild>
+                  <Link to={path}>{routeNames[segment] || segment}</Link>
+                </BreadcrumbLink>
+              )}
+            </BreadcrumbItem>
           );
         }).filter(Boolean)}
       </BreadcrumbList>
