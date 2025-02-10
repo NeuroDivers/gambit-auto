@@ -66,7 +66,9 @@ export function useVinLookup(vin: string) {
             year: year || null,
             raw_data: data,
             success: !!(make && model && year),
-            error_message: !make || !model || !year ? 'Could not decode VIN' : null
+            error_message: !make || !model || !year ? 'Could not decode VIN' : null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           })
 
         if (upsertError) {
@@ -91,7 +93,9 @@ export function useVinLookup(vin: string) {
             make: null,
             model: null,
             year: null,
-            raw_data: null
+            raw_data: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           })
 
         if (upsertError) {
