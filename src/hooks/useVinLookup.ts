@@ -56,31 +56,33 @@ export function useVinLookup(vin: string) {
         const yearResult = results.find((r: any) => r.Variable === 'ModelYear')?.Value
         const year = yearResult ? parseInt(yearResult) : undefined
 
+        // Cache the result, whether successful or not
+        const { error: upsertError } = await supabase
+          .from('vin_lookups')
+          .upsert({
+            vin,
+            make: make || null,
+            model: model || null,
+            year: year || null,
+            raw_data: data,
+            success: !!(make && model && year),
+            error_message: !make || !model || !year ? 'Could not decode VIN' : null
+          })
+
+        if (upsertError) {
+          console.error('Failed to cache VIN lookup:', upsertError)
+        }
+
         if (make && model && year) {
-          // Cache the successful result
-          const { error: insertError } = await supabase
-            .from('vin_lookups')
-            .upsert({
-              vin,
-              make,
-              model,
-              year,
-              raw_data: data,
-              success: true,
-              error_message: null
-            })
-
-          if (insertError) {
-            console.error('Failed to cache VIN lookup:', insertError)
-          }
-
           return { make, model, year }
         }
 
         throw new Error('Could not decode VIN')
       } catch (error: any) {
-        // Cache the failed lookup
-        const { error: insertError } = await supabase
+        console.error('VIN lookup error:', error)
+        
+        // Cache the error result
+        const { error: upsertError } = await supabase
           .from('vin_lookups')
           .upsert({
             vin,
@@ -92,8 +94,8 @@ export function useVinLookup(vin: string) {
             raw_data: null
           })
 
-        if (insertError) {
-          console.error('Failed to cache VIN lookup error:', insertError)
+        if (upsertError) {
+          console.error('Failed to cache VIN lookup error:', upsertError)
         }
 
         return { error: error.message }
