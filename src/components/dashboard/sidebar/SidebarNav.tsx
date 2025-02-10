@@ -74,41 +74,37 @@ const settingsItems: NavItem[] = [
 
 export function SidebarNav() {
   const location = useLocation()
-  const { checkPermission } = usePermissions()
+  const { permissions } = usePermissions()
   const [allowedItems, setAllowedItems] = useState<NavItem[]>([])
   const [allowedSettingsItems, setAllowedSettingsItems] = useState<NavItem[]>([])
 
   useEffect(() => {
-    const checkPermissions = async () => {
-      // Filter main nav items based on permissions
-      const filteredItems = await Promise.all(
-        allItems.map(async (item) => {
-          if (!item.requiredPermission) return item
-          const hasPermission = await checkPermission(
-            item.requiredPermission,
-            "page_access"
-          )
-          return hasPermission ? item : null
-        })
-      )
-      setAllowedItems(filteredItems.filter((item): item is NavItem => item !== null))
+    if (!permissions) return;
 
-      // Filter settings items - only check dev settings permission
-      const filteredSettingsItems = await Promise.all(
-        settingsItems.map(async (item) => {
-          if (!item.requiredPermission) return item
-          const hasPermission = await checkPermission(
-            item.requiredPermission,
-            "page_access"
-          )
-          return hasPermission ? item : null
-        })
-      )
-      setAllowedSettingsItems(filteredSettingsItems.filter((item): item is NavItem => item !== null))
-    }
+    // Filter items based on permissions
+    const filteredItems = allItems.filter((item) => {
+      if (!item.requiredPermission) return true;
+      return permissions.some(
+        (p) => 
+          p.resource_name === item.requiredPermission && 
+          p.permission_type === 'page_access' &&
+          p.is_active
+      );
+    });
+    setAllowedItems(filteredItems);
 
-    checkPermissions()
-  }, [checkPermission])
+    // Filter settings items
+    const filteredSettingsItems = settingsItems.filter((item) => {
+      if (!item.requiredPermission) return true;
+      return permissions.some(
+        (p) => 
+          p.resource_name === item.requiredPermission && 
+          p.permission_type === 'page_access' &&
+          p.is_active
+      );
+    });
+    setAllowedSettingsItems(filteredSettingsItems);
+  }, [permissions]);
 
   return (
     <div className="flex flex-col gap-0.5 p-1">
