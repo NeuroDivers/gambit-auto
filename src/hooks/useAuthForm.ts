@@ -24,6 +24,21 @@ export const useAuthForm = () => {
     }));
   };
 
+  const handleGoogleSignIn = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    }
+  };
+
   const handleAuth = async (e: React.FormEvent, isLogin: boolean) => {
     e.preventDefault();
     if (loading) return;
@@ -80,6 +95,7 @@ export const useAuthForm = () => {
     loading,
     handleInputChange,
     handleAuth,
+    handleGoogleSignIn,
     resetForm,
   };
 };

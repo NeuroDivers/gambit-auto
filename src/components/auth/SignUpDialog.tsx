@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,6 +20,7 @@ interface SignUpDialogProps {
   onSubmit: (e: React.FormEvent) => void;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSignInClick: () => void;
+  onGoogleSignIn: () => void;
 }
 
 export const SignUpDialog = ({
@@ -29,6 +31,7 @@ export const SignUpDialog = ({
   onSubmit,
   onChange,
   onSignInClick,
+  onGoogleSignIn,
 }: SignUpDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -51,6 +54,7 @@ export const SignUpDialog = ({
             loading={loading}
             onSubmit={onSubmit}
             onChange={onChange}
+            onGoogleSignIn={onGoogleSignIn}
           />
           <div className="text-center">
             <Button

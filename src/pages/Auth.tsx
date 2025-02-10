@@ -8,7 +8,7 @@ import { useAuthForm } from "@/hooks/useAuthForm";
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { formData, loading, handleInputChange, handleAuth, resetForm } = useAuthForm();
+  const { formData, loading, handleInputChange, handleAuth, handleGoogleSignIn, resetForm } = useAuthForm();
   
   // Set up auth redirect
   useAuthRedirect();
@@ -34,6 +34,7 @@ const Auth = () => {
         onSubmit={handleSubmit}
         onChange={handleInputChange}
         onSignInClick={handleSignInClick}
+        onGoogleSignIn={handleGoogleSignIn}
       />
     </AuthLayout>
   );
