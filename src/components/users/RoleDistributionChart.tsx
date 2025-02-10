@@ -73,10 +73,14 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
               </Pie>
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: 'rgba(17, 17, 17, 0.9)',
+                  backgroundColor: 'rgba(17, 17, 17, 0.95)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '8px',
-                  padding: '8px 12px'
+                  padding: '8px 12px',
+                  color: 'rgba(255, 255, 255, 0.87)'
+                }}
+                labelStyle={{
+                  color: 'rgba(255, 255, 255, 0.87)'
                 }}
                 formatter={(value: number, name: string) => [
                   `${value} user${value !== 1 ? 's' : ''}`,
@@ -92,6 +96,11 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
                     return value;
                   }
                   return '';
+                }}
+                wrapperStyle={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
                 }}
               />
             </PieChart>
