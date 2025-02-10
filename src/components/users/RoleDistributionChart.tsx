@@ -79,6 +79,9 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
                   padding: '8px 12px',
                   color: 'rgba(255, 255, 255, 0.87)'
                 }}
+                itemStyle={{
+                  color: 'rgba(255, 255, 255, 0.87)'
+                }}
                 labelStyle={{
                   color: 'rgba(255, 255, 255, 0.87)'
                 }}
@@ -110,3 +113,4 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
     </Card>
   );
 };
+
