@@ -56,7 +56,10 @@ export function useVinLookup(vin: string) {
         const yearResult = results.find((r: any) => r.Variable === 'ModelYear')?.Value
         const year = yearResult ? parseInt(yearResult) : undefined
 
-        // Cache the result, whether successful or not
+        const success = !!(make && model && year)
+        const timestamp = new Date().toISOString()
+
+        // Cache the result
         const { error: upsertError } = await supabase
           .from('vin_lookups')
           .upsert({
@@ -65,23 +68,25 @@ export function useVinLookup(vin: string) {
             model: model || null,
             year: year || null,
             raw_data: data,
-            success: !!(make && model && year),
-            error_message: !make || !model || !year ? 'Could not decode VIN' : null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            success,
+            error_message: !success ? 'Could not decode VIN' : null,
+            created_at: timestamp,
+            updated_at: timestamp
           })
 
         if (upsertError) {
           console.error('Failed to cache VIN lookup:', upsertError)
+          toast.error('Failed to cache VIN lookup')
         }
 
-        if (make && model && year) {
+        if (success) {
           return { make, model, year }
         }
 
         throw new Error('Could not decode VIN')
       } catch (error: any) {
         console.error('VIN lookup error:', error)
+        const timestamp = new Date().toISOString()
         
         // Cache the error result
         const { error: upsertError } = await supabase
@@ -94,12 +99,13 @@ export function useVinLookup(vin: string) {
             model: null,
             year: null,
             raw_data: null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            created_at: timestamp,
+            updated_at: timestamp
           })
 
         if (upsertError) {
           console.error('Failed to cache VIN lookup error:', upsertError)
+          toast.error('Failed to cache VIN lookup error')
         }
 
         return { error: error.message }
