@@ -1,3 +1,4 @@
+
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
@@ -7,7 +8,7 @@ export interface ServiceBay {
   id: string
   name: string
   status: 'available' | 'in_use' | 'maintenance'
-  assigned_sidekick_id: string | null
+  assigned_profile_id: string | null
   notes: string | null
   bay_services?: {
     service_id: string
