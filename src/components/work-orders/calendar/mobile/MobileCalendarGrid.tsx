@@ -1,3 +1,4 @@
+
 import { format } from "date-fns"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { WorkOrder } from "../../types"
@@ -130,11 +131,11 @@ export function MobileCalendarGrid({
     <div className="overflow-hidden">
       <ScrollArea 
         ref={scrollAreaRef}
-        className="h-[600px] rounded-md border"
+        className="h-[600px] rounded-md border scrollbar-hide"
         onWheel={handleWheel}
       >
         <div 
-          className="min-w-[2000px] select-none touch-pan-x"
+          className="min-w-[2000px] select-none touch-pan-x overflow-x-auto scrollbar-hide"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={stopDragging}
@@ -171,7 +172,6 @@ export function MobileCalendarGrid({
             ))}
           </div>
         </div>
-        <ScrollBar orientation="horizontal" />
       </ScrollArea>
 
       <CreateWorkOrderDialog 
