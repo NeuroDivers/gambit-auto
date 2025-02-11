@@ -82,21 +82,32 @@ export function SidebarNav({ className }: SidebarNavProps) {
   const [allowedSettingsItems, setAllowedSettingsItems] = useState<NavItem[]>([])
 
   useEffect(() => {
-    if (!permissions) return;
+    console.log("Current permissions:", permissions); // Debug log
 
     const filteredItems = allItems.filter((item) => {
       if (!item.requiredPermission) return true;
-      return permissions.some(
+      
+      // If no permissions are loaded yet, don't show restricted items
+      if (!permissions) return false;
+      
+      const hasPermission = permissions.some(
         (p) => 
           p.resource_name === item.requiredPermission && 
           p.permission_type === 'page_access' &&
           p.is_active
       );
+      
+      console.log(`Checking permission for ${item.title}:`, hasPermission); // Debug log
+      return hasPermission;
     });
+    
+    console.log("Filtered main items:", filteredItems); // Debug log
     setAllowedItems(filteredItems);
 
     const filteredSettingsItems = settingsItems.filter((item) => {
       if (!item.requiredPermission) return true;
+      if (!permissions) return false;
+      
       return permissions.some(
         (p) => 
           p.resource_name === item.requiredPermission && 
@@ -104,6 +115,8 @@ export function SidebarNav({ className }: SidebarNavProps) {
           p.is_active
       );
     });
+    
+    console.log("Filtered settings items:", filteredSettingsItems); // Debug log
     setAllowedSettingsItems(filteredSettingsItems);
   }, [permissions]);
 
