@@ -104,7 +104,7 @@ export function SidebarNav() {
   }, [permissions]);
 
   return (
-    <nav className="flex flex-col gap-2 p-4">
+    <nav className="flex flex-col gap-2 p-4 flex-1">
       {allowedItems.map((item) => (
         <Link
           key={item.href}
@@ -137,5 +137,5 @@ export function SidebarNav() {
         ))}
       </div>
     </nav>
-  );
+  )
 }
