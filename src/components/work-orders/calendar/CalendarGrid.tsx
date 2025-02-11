@@ -93,7 +93,7 @@ export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
           </Button>
         </div>
 
-        <ScrollArea className="h-[calc(100vh-12rem)]">
+        <ScrollArea className="h-[calc(100vh-12rem)]" type="hover">
           <div className="min-w-[800px]">
             {/* Header with days */}
             <div className="grid grid-cols-[120px_repeat(7,1fr)] gap-4 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
@@ -186,4 +186,3 @@ export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
     </div>
   )
 }
-
