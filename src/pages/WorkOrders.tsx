@@ -11,8 +11,8 @@ export default function WorkOrders() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
-      <div className="container mx-auto py-12">
-        <div className="px-6">
+      <div className="container mx-auto py-12 px-0 sm:px-6">
+        <div className="px-4 sm:px-6">
           <div className="mb-8 flex justify-between items-center">
             <div>
               <PageBreadcrumbs />
