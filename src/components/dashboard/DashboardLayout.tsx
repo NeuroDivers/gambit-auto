@@ -6,7 +6,7 @@ import { SidebarHeader } from "./sidebar/SidebarHeader"
 import { Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -51,6 +51,10 @@ export function DashboardLayout({
               side="left" 
               className="p-0 w-72 flex flex-col"
             >
+              <SheetHeader className="sr-only">
+                <SheetTitle>Navigation Menu</SheetTitle>
+                <SheetDescription>Access your dashboard navigation</SheetDescription>
+              </SheetHeader>
               <SidebarProvider>
                 <Sidebar className="border-0 flex-1">
                   {sidebarContent}
