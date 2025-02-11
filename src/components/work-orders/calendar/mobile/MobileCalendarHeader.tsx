@@ -31,9 +31,15 @@ export function MobileCalendarHeader({
   }
 
   const handleResetScroll = () => {
-    if (scrollRef?.current) {
-      scrollRef.current.scrollLeft = 0
-    }
+    // First go to today's date
+    onTodayClick()
+    
+    // Then reset scroll after a short delay to ensure state updates have processed
+    setTimeout(() => {
+      if (scrollRef?.current) {
+        scrollRef.current.scrollLeft = 0
+      }
+    }, 100)
   }
 
   return (
