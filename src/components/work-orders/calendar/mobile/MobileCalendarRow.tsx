@@ -8,7 +8,7 @@ type MobileCalendarRowProps = {
   bayName: string
   visibleDays: Date[]
   workOrders: WorkOrder[]
-  onDateClick: (date: Date) => void
+  onDateClick: (date: Date, e?: React.MouseEvent) => void
 }
 
 export function MobileCalendarRow({ bayId, bayName, visibleDays, workOrders, onDateClick }: MobileCalendarRowProps) {
@@ -45,13 +45,13 @@ export function MobileCalendarRow({ bayId, bayName, visibleDays, workOrders, onD
           <div 
             key={day.toISOString()}
             className="relative p-2 border-l h-[80px] min-h-[80px] group hover:bg-muted/50 cursor-pointer"
-            onClick={() => onDateClick(day)}
+            onClick={(e) => onDateClick(day, e)}
           >
             {workOrdersForDay.map((order) => (
               <WorkOrderCard 
                 key={order.id}
                 workOrder={order}
-                className="mb-1"
+                className="work-order-card mb-1"
               />
             ))}
           </div>

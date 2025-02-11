@@ -39,8 +39,9 @@ export function MobileCalendarGrid({
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging || !scrollRef.current) return
+    e.preventDefault()
     const x = e.pageX - (scrollRef.current.offsetLeft || 0)
-    const walk = (x - startX)
+    const walk = (x - startX) * 2 // Multiply by 2 to increase scroll speed
     scrollRef.current.scrollLeft = scrollLeft - walk
   }
 
@@ -55,7 +56,7 @@ export function MobileCalendarGrid({
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging || !scrollRef.current) return
     const x = e.touches[0].pageX - scrollRef.current.offsetLeft
-    const walk = (x - startX)
+    const walk = (x - startX) * 2 // Multiply by 2 to increase scroll speed
     scrollRef.current.scrollLeft = scrollLeft - walk
   }
 
@@ -69,9 +70,15 @@ export function MobileCalendarGrid({
     return true // Prevent click events
   }
 
-  const handleDateClick = (date: Date) => {
-    setSelectedDate(date)
-    setShowWorkOrderDialog(true)
+  const handleDateClick = (date: Date, e?: React.MouseEvent) => {
+    // Only open dialog if it's not from a work order click
+    if (e?.target instanceof HTMLElement) {
+      const isWorkOrderClick = e.target.closest('.work-order-card')
+      if (!isWorkOrderClick) {
+        setSelectedDate(date)
+        setShowWorkOrderDialog(true)
+      }
+    }
   }
 
   return (
@@ -82,7 +89,7 @@ export function MobileCalendarGrid({
         onScroll={onScroll}
       >
         <div 
-          className="min-w-[800px] select-none"
+          className="min-w-[800px] select-none touch-pan-x"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={stopDragging}
@@ -97,7 +104,7 @@ export function MobileCalendarGrid({
               <div 
                 key={day.toISOString()} 
                 className="text-sm font-medium text-muted-foreground text-center cursor-pointer hover:bg-accent/50 rounded p-1"
-                onClick={() => handleDateClick(day)}
+                onClick={(e) => handleDateClick(day, e)}
               >
                 {format(day, 'EEE d')}
               </div>
