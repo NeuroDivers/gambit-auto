@@ -37,7 +37,22 @@ export function MobileCalendarGrid({
     if (!isDragging || !scrollRef.current) return
     e.preventDefault()
     const x = e.pageX - (scrollRef.current.offsetLeft || 0)
-    const walk = (x - startX) * 2 // Multiply by 2 for faster scrolling
+    const walk = (x - startX)
+    scrollRef.current.scrollLeft = scrollLeft - walk
+  }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!scrollRef.current) return
+    setIsDragging(true)
+    setStartX(e.touches[0].pageX - scrollRef.current.offsetLeft)
+    setScrollLeft(scrollRef.current.scrollLeft)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || !scrollRef.current) return
+    e.preventDefault()
+    const x = e.touches[0].pageX - scrollRef.current.offsetLeft
+    const walk = (x - startX)
     scrollRef.current.scrollLeft = scrollLeft - walk
   }
 
@@ -49,10 +64,14 @@ export function MobileCalendarGrid({
     setIsDragging(false)
   }
 
+  const handleTouchEnd = () => {
+    setIsDragging(false)
+  }
+
   return (
     <ScrollArea 
       ref={scrollRef} 
-      className="h-[600px] rounded-md border cursor-grab active:cursor-grabbing"
+      className="h-[600px] rounded-md border cursor-grab active:cursor-grabbing overflow-x-auto"
       onScroll={onScroll}
     >
       <div 
@@ -61,6 +80,9 @@ export function MobileCalendarGrid({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         <div className="grid grid-cols-[86px_repeat(7,64px)] gap-4 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
           <div className="text-sm font-medium text-muted-foreground">Bays</div>
