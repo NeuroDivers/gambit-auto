@@ -9,6 +9,7 @@ import { CalendarGridHeader } from "./grid/CalendarGridHeader"
 import { useDragScroll } from "./hooks/useDragScroll"
 import { BlockedDate } from "../types"
 import { parseISO, isWithinInterval } from "date-fns"
+import { HorizontalCalendar } from "@/components/calendar"
 
 type MobileCalendarGridProps = {
   visibleDays: Date[]
@@ -32,7 +33,6 @@ export function MobileCalendarGrid({
   const [showWorkOrderDialog, setShowWorkOrderDialog] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
-  const dragControls = useDragScroll(scrollRef)
 
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     if (!scrollAreaRef.current) return
@@ -56,16 +56,10 @@ export function MobileCalendarGrid({
     })
   }
 
-  const handleDateClick = (date: Date, e?: React.MouseEvent) => {
+  const handleDateClick = (date: Date) => {
     if (isDateBlocked(date)) return
-    
-    if (e?.target instanceof HTMLElement) {
-      const isWorkOrderClick = e.target.closest('.work-order-card')
-      if (!isWorkOrderClick) {
-        setSelectedDate(date)
-        setShowWorkOrderDialog(true)
-      }
-    }
+    setSelectedDate(date)
+    setShowWorkOrderDialog(true)
     onDateClick(date)
   }
 
@@ -75,21 +69,10 @@ export function MobileCalendarGrid({
       className="rounded-md border"
       onWheel={handleWheel}
     >
-      <div 
-        className="w-max overflow-x-auto"
-        onMouseDown={dragControls.handleMouseDown}
-        onMouseMove={dragControls.handleMouseMove}
-        onMouseUp={dragControls.stopDragging}
-        onMouseLeave={dragControls.stopDragging}
-        onTouchStart={dragControls.handleTouchStart}
-        onTouchMove={dragControls.handleTouchMove}
-        onTouchEnd={dragControls.stopDragging}
-        ref={scrollRef}
-      >
-        <CalendarGridHeader 
-          visibleDays={visibleDays}
-          onDateClick={handleDateClick}
-          blockedDates={blockedDates}
+      <div className="w-max overflow-x-auto">
+        <HorizontalCalendar 
+          onDateSelect={handleDateClick}
+          className="mb-4"
         />
 
         <div className="grid grid-cols-[86px_repeat(30,64px)]">

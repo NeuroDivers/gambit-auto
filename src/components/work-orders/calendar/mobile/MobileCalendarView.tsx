@@ -6,6 +6,7 @@ import { MobileCalendarHeader } from "./MobileCalendarHeader"
 import { MobileCalendarGrid } from "./MobileCalendarGrid"
 import { useBlockedDates } from "../hooks/useBlockedDates"
 import { MobileCalendarProvider, useMobileCalendar } from "./MobileCalendarProvider"
+import { HorizontalCalendar } from "@/components/calendar"
 
 type MobileCalendarViewProps = {
   currentDate: Date
@@ -34,6 +35,7 @@ function MobileCalendarContent({ workOrders }: { workOrders: WorkOrder[] }) {
         onDateChange={handleDateChange}
         onMonthPickerOpen={() => setShowMonthPicker(true)}
         onTodayClick={scrollToToday}
+        scrollRef={scrollRef}
       />
 
       <MobileCalendarGrid
