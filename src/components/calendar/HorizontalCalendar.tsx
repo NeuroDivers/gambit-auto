@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect, useCallback } from "react"
 import { format, addDays, startOfDay, isToday, isSameDay, parseISO } from "date-fns"
 import { Button } from "@/components/ui/button"
@@ -35,7 +34,6 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     isDragging
   } = useDragScroll(scrollRef)
 
-  // Initialize calendar with current date and next days
   useEffect(() => {
     const initialDays = Array.from({ length: DAYS_TO_LOAD }, (_, i) =>
       addDays(startOfDay(new Date()), i)
@@ -43,7 +41,6 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     setDays(initialDays)
   }, [])
 
-  // Handle scroll to detect when we need to load more days
   const handleScroll = useCallback(() => {
     if (!scrollRef.current || isLoading) return
 
@@ -60,7 +57,6 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
       setIsLoading(false)
     }
 
-    // Update current month based on visible dates
     const visibleIndex = Math.floor(scrollLeft / 200)
     const visibleDate = days[visibleIndex]
     if (visibleDate) {
@@ -68,7 +64,6 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     }
   }, [days, isLoading])
 
-  // Scroll to today's date
   const scrollToToday = useCallback(() => {
     const today = startOfDay(new Date())
     const todayIndex = days.findIndex(date => isSameDay(date, today))
@@ -83,7 +78,6 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     }
   }, [days])
 
-  // Navigate months
   const navigateMonth = (direction: 'prev' | 'next') => {
     if (!scrollRef.current) return
     
@@ -121,9 +115,29 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     return parseInt(workOrder.estimated_duration) || 1;
   }
 
+  const isWorkOrderContinuation = (date: Date, bayId: string) => {
+    for (let i = 1; i <= 7; i++) {
+      const prevDate = addDays(date, -i)
+      const workOrder = workOrders?.find(order => 
+        order.assigned_bay_id === bayId && 
+        isSameDay(new Date(order.start_time || ''), prevDate)
+      )
+      
+      if (workOrder) {
+        const duration = getWorkOrderSpan(workOrder)
+        const startDate = new Date(workOrder.start_time || '')
+        const endDate = addDays(startDate, duration - 1)
+        
+        if (date >= startDate && date <= endDate) {
+          return workOrder
+        }
+      }
+    }
+    return null
+  }
+
   return (
     <div className={cn("p-4 bg-[#222226] rounded-lg shadow-lg", className)}>
-      {/* Header */}
       <div className="flex items-center justify-between px-2 mb-6">
         <div className="flex items-center gap-2">
           <Button 
@@ -158,7 +172,6 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
         </Button>
       </div>
 
-      {/* Calendar Grid */}
       <div
         ref={scrollRef}
         onScroll={handleScroll}
@@ -182,7 +195,6 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
             minWidth: 'max-content'
           }}
         >
-          {/* Days header */}
           <div className="grid" style={{ gridTemplateColumns: `100px repeat(${days.length}, 200px)` }}>
             <div className="p-4 text-gray-400 font-medium sticky left-0 bg-[#222226] z-10">Bay</div>
             {days.map((date) => (
@@ -196,7 +208,6 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
             ))}
           </div>
 
-          {/* Bays and events grid */}
           {serviceBays?.map((bay) => (
             <div 
               key={bay.id}
@@ -208,11 +219,13 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
               </div>
               {days.map((date, index) => {
                 const workOrder = getWorkOrder(date, bay.id)
-                const isStart = workOrder && !getWorkOrder(addDays(date, -1), bay.id)
+                const continuedWorkOrder = isWorkOrderContinuation(date, bay.id)
                 
-                // Only render the work order card if this is the start date
-                if (workOrder && isStart) {
+                if (workOrder) {
                   const duration = getWorkOrderSpan(workOrder)
+                  const remainingDays = days.length - index
+                  const actualSpan = Math.min(duration, remainingDays)
+                  
                   return (
                     <div 
                       key={date.toISOString()}
@@ -226,9 +239,9 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
                         setSelectedWorkOrder(workOrder)
                       }}
                       style={{
-                        gridColumn: `span ${duration}`,
+                        gridColumn: `span ${actualSpan}`,
                         marginLeft: index === 0 ? '0' : '-2px',
-                        marginRight: duration > 1 ? '-2px' : '0',
+                        marginRight: actualSpan > 1 ? '-2px' : '0',
                       }}
                     >
                       <TooltipProvider>
@@ -261,12 +274,10 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
                   )
                 }
                 
-                // For continuation days of a work order, render an empty cell
-                if (workOrder && !isStart) {
+                if (continuedWorkOrder) {
                   return <div key={date.toISOString()} className="border-b border-gray-700/50" />
                 }
 
-                // For empty days
                 return (
                   <div 
                     key={date.toISOString()}
@@ -284,7 +295,6 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
         </div>
       </div>
 
-      {/* Work Order Details Dialog */}
       {selectedWorkOrder && (
         <WorkOrderDetailsDialog
           workOrder={selectedWorkOrder}
