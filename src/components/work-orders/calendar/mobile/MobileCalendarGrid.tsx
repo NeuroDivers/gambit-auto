@@ -1,11 +1,12 @@
 
-import { format, isToday } from "date-fns"
+import React, { useEffect, useRef, useState } from "react"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { WorkOrder } from "../../types"
 import { MobileCalendarRow } from "./MobileCalendarRow"
-import React, { useState, useEffect, useRef } from "react"
 import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
 import { CreateWorkOrderDialog } from "../../CreateWorkOrderDialog"
+import { CalendarGridHeader } from "./grid/CalendarGridHeader"
+import { useDragScroll } from "./hooks/useDragScroll"
 
 type MobileCalendarGridProps = {
   visibleDays: Date[]
@@ -24,15 +25,12 @@ export function MobileCalendarGrid({
   onDateClick,
   scrollRef 
 }: MobileCalendarGridProps) {
-  const [isDragging, setIsDragging] = useState(false)
-  const [startX, setStartX] = useState(0)
-  const [scrollLeft, setScrollLeft] = useState(0)
-  const [dragStartTime, setDragStartTime] = useState(0)
   const [showWorkOrderDialog, setShowWorkOrderDialog] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const dragControls = useDragScroll(scrollRef)
 
-  // Handle scroll events for infinite scrolling with debounce
+  // Handle scroll events for infinite scrolling
   useEffect(() => {
     const handleScroll = (e: Event) => {
       const target = e.target as HTMLDivElement
@@ -41,21 +39,17 @@ export function MobileCalendarGrid({
       const { scrollLeft, scrollWidth, clientWidth } = target
       const remainingScroll = scrollWidth - (scrollLeft + clientWidth)
       
-      if (remainingScroll < 500) { // Increased threshold for earlier loading
+      if (remainingScroll < 500) {
         console.log('Loading more days...', { remainingScroll, scrollWidth, scrollLeft, clientWidth })
         onScroll()
       }
     }
 
-    const debouncedHandleScroll = (e: Event) => {
-      handleScroll(e)
-    }
-
     const currentRef = scrollRef.current
     if (currentRef) {
-      currentRef.addEventListener('scroll', debouncedHandleScroll)
+      currentRef.addEventListener('scroll', handleScroll)
       return () => {
-        currentRef.removeEventListener('scroll', debouncedHandleScroll)
+        currentRef.removeEventListener('scroll', handleScroll)
       }
     }
   }, [onScroll, scrollRef])
@@ -72,52 +66,6 @@ export function MobileCalendarGrid({
     }
 
     e.stopPropagation()
-  }
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!scrollRef.current) return
-    setIsDragging(true)
-    setStartX(e.pageX)
-    setScrollLeft(scrollRef.current.scrollLeft)
-    setDragStartTime(Date.now())
-    e.preventDefault()
-  }
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !scrollRef.current) return
-    e.preventDefault()
-    const x = e.pageX
-    const walk = (startX - x) * 2
-    scrollRef.current.scrollLeft = scrollLeft + walk
-  }
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (!scrollRef.current) return
-    setIsDragging(true)
-    setStartX(e.touches[0].pageX)
-    setScrollLeft(scrollRef.current.scrollLeft)
-    setDragStartTime(Date.now())
-  }
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || !scrollRef.current) return
-    const x = e.touches[0].pageX
-    const walk = (startX - x) * 2
-    scrollRef.current.scrollLeft = scrollLeft + walk
-  }
-
-  const stopDragging = (e?: React.MouseEvent | React.TouchEvent) => {
-    const dragDuration = Date.now() - dragStartTime
-    setIsDragging(false)
-
-    if (dragDuration < 150) {
-      return false
-    }
-    
-    if (e) {
-      e.preventDefault()
-    }
-    return true
   }
 
   const handleDateClick = (date: Date, e?: React.MouseEvent) => {
@@ -139,34 +87,19 @@ export function MobileCalendarGrid({
     >
       <div 
         className="w-max overflow-x-auto"
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={stopDragging}
-        onMouseLeave={stopDragging}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={stopDragging}
+        onMouseDown={dragControls.handleMouseDown}
+        onMouseMove={dragControls.handleMouseMove}
+        onMouseUp={dragControls.stopDragging}
+        onMouseLeave={dragControls.stopDragging}
+        onTouchStart={dragControls.handleTouchStart}
+        onTouchMove={dragControls.handleTouchMove}
+        onTouchEnd={dragControls.stopDragging}
         ref={scrollRef}
       >
-        <div className="grid grid-cols-[86px_repeat(30,64px)] gap-4 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
-          <div className="text-sm font-medium text-muted-foreground">Bays</div>
-          {visibleDays.map((day) => (
-            <div 
-              key={day.toISOString()} 
-              className={`flex flex-col items-center justify-center cursor-pointer hover:bg-accent/50 rounded p-1 ${
-                isToday(day) ? 'bg-primary/10 text-primary' : ''
-              }`}
-              onClick={(e) => handleDateClick(day, e)}
-            >
-              <span className="text-sm font-medium text-muted-foreground">
-                {format(day, 'EEE')}
-              </span>
-              <span className={`text-sm font-bold ${isToday(day) ? 'text-primary' : ''}`}>
-                {format(day, 'd')}
-              </span>
-            </div>
-          ))}
-        </div>
+        <CalendarGridHeader 
+          visibleDays={visibleDays}
+          onDateClick={handleDateClick}
+        />
 
         <div className="grid grid-cols-[86px_repeat(30,64px)] gap-4">
           {serviceBays.map((bay) => (
