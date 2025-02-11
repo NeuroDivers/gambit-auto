@@ -37,7 +37,7 @@ export function MobileCalendarGrid({
     if (!isDragging || !scrollRef.current) return
     e.preventDefault()
     const x = e.pageX - (scrollRef.current.offsetLeft || 0)
-    const walk = (x - startX)
+    const walk = (x - startX) * 1.5 // Increased scrolling speed
     scrollRef.current.scrollLeft = scrollLeft - walk
   }
 
@@ -52,7 +52,7 @@ export function MobileCalendarGrid({
     if (!isDragging || !scrollRef.current) return
     e.preventDefault()
     const x = e.touches[0].pageX - scrollRef.current.offsetLeft
-    const walk = (x - startX)
+    const walk = (x - startX) * 1.5 // Increased scrolling speed
     scrollRef.current.scrollLeft = scrollLeft - walk
   }
 
@@ -69,44 +69,46 @@ export function MobileCalendarGrid({
   }
 
   return (
-    <ScrollArea 
-      ref={scrollRef} 
-      className="h-[600px] rounded-md border cursor-grab active:cursor-grabbing overflow-x-auto"
-      onScroll={onScroll}
-    >
-      <div 
-        className="min-w-[800px] select-none"
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+    <div className="overflow-hidden">
+      <ScrollArea 
+        ref={scrollRef} 
+        className="h-[600px] rounded-md border cursor-grab active:cursor-grabbing"
+        onScroll={onScroll}
       >
-        <div className="grid grid-cols-[86px_repeat(7,64px)] gap-4 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
-          <div className="text-sm font-medium text-muted-foreground">Bays</div>
-          {visibleDays.slice(0, 7).map((day) => (
-            <div key={day.toISOString()} className="text-sm font-medium text-muted-foreground text-center">
-              {format(day, 'EEE d')}
-            </div>
-          ))}
-        </div>
+        <div 
+          className="min-w-[800px] select-none"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className="grid grid-cols-[86px_repeat(7,64px)] gap-4 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
+            <div className="text-sm font-medium text-muted-foreground">Bays</div>
+            {visibleDays.slice(0, 7).map((day) => (
+              <div key={day.toISOString()} className="text-sm font-medium text-muted-foreground text-center">
+                {format(day, 'EEE d')}
+              </div>
+            ))}
+          </div>
 
-        <div className="grid grid-cols-[86px_repeat(7,64px)] gap-4">
-          {serviceBays.map((bay) => (
-            <React.Fragment key={bay.id}>
-              <MobileCalendarRow
-                bayId={bay.id}
-                bayName={bay.name}
-                visibleDays={visibleDays}
-                workOrders={workOrders}
-                onDateClick={onDateClick}
-              />
-            </React.Fragment>
-          ))}
+          <div className="grid grid-cols-[86px_repeat(7,64px)] gap-4">
+            {serviceBays.map((bay) => (
+              <React.Fragment key={bay.id}>
+                <MobileCalendarRow
+                  bayId={bay.id}
+                  bayName={bay.name}
+                  visibleDays={visibleDays}
+                  workOrders={workOrders}
+                  onDateClick={onDateClick}
+                />
+              </React.Fragment>
+            ))}
+          </div>
         </div>
-      </div>
-    </ScrollArea>
+      </ScrollArea>
+    </div>
   )
 }
