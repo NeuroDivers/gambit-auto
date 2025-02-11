@@ -37,7 +37,7 @@ export function MobileCalendarGrid({
     if (!isDragging || !scrollRef.current) return
     e.preventDefault()
     const x = e.pageX - (scrollRef.current.offsetLeft || 0)
-    const walk = (x - startX) * 1.5 // Increased scrolling speed
+    const walk = (x - startX) * 2 // Increased scrolling speed
     scrollRef.current.scrollLeft = scrollLeft - walk
   }
 
@@ -50,9 +50,8 @@ export function MobileCalendarGrid({
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging || !scrollRef.current) return
-    e.preventDefault()
     const x = e.touches[0].pageX - scrollRef.current.offsetLeft
-    const walk = (x - startX) * 1.5 // Increased scrolling speed
+    const walk = (x - startX) * 2 // Increased scrolling speed
     scrollRef.current.scrollLeft = scrollLeft - walk
   }
 
