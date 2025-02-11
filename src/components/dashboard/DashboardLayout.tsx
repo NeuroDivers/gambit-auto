@@ -49,17 +49,19 @@ export function DashboardLayout({
             </SheetTrigger>
             <SheetContent 
               side="left" 
-              className="p-0 w-72 flex flex-col"
+              className="p-0 w-72 flex flex-col h-full overflow-hidden"
             >
               <SheetHeader className="sr-only">
                 <SheetTitle>Navigation Menu</SheetTitle>
                 <SheetDescription>Access your dashboard navigation</SheetDescription>
               </SheetHeader>
-              <SidebarProvider>
-                <Sidebar className="border-0 flex-1">
-                  {sidebarContent}
-                </Sidebar>
-              </SidebarProvider>
+              <div className="flex-1 overflow-hidden">
+                <SidebarProvider>
+                  <Sidebar className="border-0 h-full">
+                    {sidebarContent}
+                  </Sidebar>
+                </SidebarProvider>
+              </div>
             </SheetContent>
           </Sheet>
           <div className="font-semibold">
@@ -82,3 +84,4 @@ export function DashboardLayout({
     </SidebarProvider>
   )
 }
+

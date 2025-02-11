@@ -82,43 +82,41 @@ export function SidebarNav({ className }: SidebarNavProps) {
   const [allowedSettingsItems, setAllowedSettingsItems] = useState<NavItem[]>([])
 
   useEffect(() => {
-    console.log("Current permissions:", permissions); // Debug log
+    console.log("Current permissions:", permissions)
 
     const filteredItems = allItems.filter((item) => {
-      if (!item.requiredPermission) return true;
-      
-      // If no permissions are loaded yet, don't show restricted items
-      if (!permissions) return false;
+      if (!item.requiredPermission) return true
+      if (!permissions) return false
       
       const hasPermission = permissions.some(
         (p) => 
           p.resource_name === item.requiredPermission && 
           p.permission_type === 'page_access' &&
           p.is_active
-      );
+      )
       
-      console.log(`Checking permission for ${item.title}:`, hasPermission); // Debug log
-      return hasPermission;
-    });
+      console.log(`Checking permission for ${item.title}:`, hasPermission)
+      return hasPermission
+    })
     
-    console.log("Filtered main items:", filteredItems); // Debug log
-    setAllowedItems(filteredItems);
+    console.log("Filtered main items:", filteredItems)
+    setAllowedItems(filteredItems)
 
     const filteredSettingsItems = settingsItems.filter((item) => {
-      if (!item.requiredPermission) return true;
-      if (!permissions) return false;
+      if (!item.requiredPermission) return true
+      if (!permissions) return false
       
       return permissions.some(
         (p) => 
           p.resource_name === item.requiredPermission && 
           p.permission_type === 'page_access' &&
           p.is_active
-      );
-    });
+      )
+    })
     
-    console.log("Filtered settings items:", filteredSettingsItems); // Debug log
-    setAllowedSettingsItems(filteredSettingsItems);
-  }, [permissions]);
+    console.log("Filtered settings items:", filteredSettingsItems)
+    setAllowedSettingsItems(filteredSettingsItems)
+  }, [permissions])
 
   return (
     <nav className={cn("flex flex-col gap-2 p-4 h-full overflow-y-auto", className)}>
@@ -158,3 +156,4 @@ export function SidebarNav({ className }: SidebarNavProps) {
     </nav>
   )
 }
+
