@@ -1,4 +1,3 @@
-
 import { format } from "date-fns"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { WorkOrder } from "../../types"
@@ -32,7 +31,7 @@ export function MobileCalendarGrid({
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
-  // Check scroll position and trigger onScroll for horizontal scrolling
+  // Handle scroll events for both horizontal and vertical scrolling
   useEffect(() => {
     const handleScroll = (e: Event) => {
       const target = e.target as HTMLDivElement
@@ -51,23 +50,19 @@ export function MobileCalendarGrid({
     }
   }, [onScroll, scrollRef])
 
-  // Handle vertical scrolling at boundaries
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     if (!scrollAreaRef.current) return
 
     const { scrollTop, scrollHeight, clientHeight } = scrollAreaRef.current
-
-    // Check if we're at the top or bottom boundary
-    const isAtBottom = Math.abs(scrollHeight - scrollTop - clientHeight) < 1
+    const isAtBottom = scrollHeight - scrollTop <= clientHeight
     const isAtTop = scrollTop === 0
 
-    // If we're at a boundary and trying to scroll further in that direction,
-    // allow the event to propagate (enable page scrolling)
+    // Allow page scrolling when at boundaries
     if ((isAtBottom && e.deltaY > 0) || (isAtTop && e.deltaY < 0)) {
       return // Let the event propagate to enable page scrolling
     }
 
-    // Otherwise prevent propagation to keep scrolling within the calendar
+    // Otherwise, prevent propagation to keep scrolling within the calendar
     e.stopPropagation()
   }
 
@@ -131,7 +126,7 @@ export function MobileCalendarGrid({
     <div className="overflow-hidden">
       <ScrollArea 
         ref={scrollAreaRef}
-        className="h-[600px] rounded-md border scrollbar-hide"
+        className="h-[calc(100vh-200px)] rounded-md border scrollbar-hide"
         onWheel={handleWheel}
       >
         <div 
