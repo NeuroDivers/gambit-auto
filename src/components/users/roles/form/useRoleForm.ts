@@ -32,9 +32,12 @@ export const useRoleForm = ({ role, onSuccess, onOpenChange }: UseRoleFormProps)
         .from("roles")
         .select("*")
         .eq("id", role.id)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching role:", error);
+        throw error;
+      }
       return data;
     },
     enabled: !!role?.id,
