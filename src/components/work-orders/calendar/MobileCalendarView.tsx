@@ -1,7 +1,7 @@
 
 import { addDays } from "date-fns"
 import { WorkOrder } from "../types"
-import React, { useRef, useEffect, useState } from "react"
+import React, { useRef, useEffect, useState, useCallback } from "react"
 import { MonthPicker } from "./MonthPicker"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -19,6 +19,7 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
   const [showMonthPicker, setShowMonthPicker] = useState(false)
   const [visibleDays, setVisibleDays] = useState<Date[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   const { data: serviceBays = [] } = useQuery({
     queryKey: ["serviceBays"],
@@ -48,21 +49,16 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     setVisibleDays(initialDays)
   }, [currentDate])
 
-  const loadMoreDays = () => {
+  const loadMoreDays = useCallback(() => {
+    if (isLoading) return
+
+    setIsLoading(true)
     const lastDay = visibleDays[visibleDays.length - 1]
     const nextDays = Array.from({ length: 10 }, (_, i) => addDays(lastDay, i + 1))
-    setVisibleDays(prev => [...prev, ...nextDays])
-  }
-
-  const handleScroll = () => {
-    if (!scrollRef.current) return
     
-    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
-    // Load more days when user scrolls near the end
-    if (scrollWidth - (scrollLeft + clientWidth) < 300) {
-      loadMoreDays()
-    }
-  }
+    setVisibleDays(prev => [...prev, ...nextDays])
+    setIsLoading(false)
+  }, [visibleDays, isLoading])
 
   return (
     <div className="space-y-4">
@@ -76,15 +72,15 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
         visibleDays={visibleDays}
         workOrders={workOrders}
         serviceBays={serviceBays}
-        onScroll={handleScroll}
+        onScroll={loadMoreDays}
         onDateClick={onDateChange || (() => {})}
         scrollRef={scrollRef}
       />
 
       <MonthPicker
-        currentDate={currentDate}
         open={showMonthPicker}
         onOpenChange={setShowMonthPicker}
+        currentDate={currentDate}
         onDateChange={onDateChange || (() => {})}
       />
     </div>

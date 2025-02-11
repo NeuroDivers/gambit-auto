@@ -3,7 +3,7 @@ import { format } from "date-fns"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { WorkOrder } from "../../types"
 import { MobileCalendarRow } from "./MobileCalendarRow"
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
 import { CreateWorkOrderDialog } from "../../CreateWorkOrderDialog"
 
@@ -20,7 +20,7 @@ export function MobileCalendarGrid({
   visibleDays, 
   workOrders, 
   serviceBays, 
-  onScroll, 
+  onScroll,
   scrollRef 
 }: MobileCalendarGridProps) {
   const [isDragging, setIsDragging] = useState(false)
@@ -30,48 +30,67 @@ export function MobileCalendarGrid({
   const [showWorkOrderDialog, setShowWorkOrderDialog] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
+  // Check scroll position and trigger onScroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!scrollRef.current) return
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
+      if (scrollWidth - (scrollLeft + clientWidth) < 300) {
+        onScroll()
+      }
+    }
+
+    scrollRef.current?.addEventListener('scroll', handleScroll)
+    return () => scrollRef.current?.removeEventListener('scroll', handleScroll)
+  }, [onScroll])
+
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return
     setIsDragging(true)
-    setStartX(e.pageX - (scrollRef.current?.offsetLeft || 0))
-    setScrollLeft(scrollRef.current?.scrollLeft || 0)
+    setStartX(e.pageX)
+    setScrollLeft(scrollRef.current.scrollLeft)
     setDragStartTime(Date.now())
+    e.preventDefault() // Prevent text selection while dragging
   }
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging || !scrollRef.current) return
     e.preventDefault()
-    const x = e.pageX - (scrollRef.current.offsetLeft || 0)
-    const walk = (x - startX) * 3 // Increased scroll speed multiplier
-    scrollRef.current.scrollLeft = scrollLeft - walk
+    const x = e.pageX
+    const walk = (startX - x) * 2 // Adjusted multiplier for smoother scrolling
+    scrollRef.current.scrollLeft = scrollLeft + walk
   }
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!scrollRef.current) return
     setIsDragging(true)
-    setStartX(e.touches[0].pageX - scrollRef.current.offsetLeft)
+    setStartX(e.touches[0].pageX)
     setScrollLeft(scrollRef.current.scrollLeft)
     setDragStartTime(Date.now())
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging || !scrollRef.current) return
-    const x = e.touches[0].pageX - scrollRef.current.offsetLeft
-    const walk = (x - startX) * 3 // Increased scroll speed multiplier
-    scrollRef.current.scrollLeft = scrollLeft - walk
+    const x = e.touches[0].pageX
+    const walk = (startX - x) * 2
+    scrollRef.current.scrollLeft = scrollLeft + walk
   }
 
-  const stopDragging = () => {
+  const stopDragging = (e?: React.MouseEvent | React.TouchEvent) => {
     const dragDuration = Date.now() - dragStartTime
     setIsDragging(false)
-    // If the drag duration is very short, treat it as a click
+
     if (dragDuration < 150) {
       return false // Allow click events to propagate
     }
-    return true // Prevent click events
+    
+    if (e) {
+      e.preventDefault() // Prevent click events after drag
+    }
+    return true
   }
 
   const handleDateClick = (date: Date, e?: React.MouseEvent) => {
-    // Only open dialog if it's not from a work order click
     if (e?.target instanceof HTMLElement) {
       const isWorkOrderClick = e.target.closest('.work-order-card')
       if (!isWorkOrderClick) {
@@ -86,7 +105,6 @@ export function MobileCalendarGrid({
       <ScrollArea 
         ref={scrollRef} 
         className="h-[600px] rounded-md border"
-        onScroll={onScroll}
       >
         <div 
           className="min-w-[2000px] select-none touch-pan-x"
@@ -100,7 +118,7 @@ export function MobileCalendarGrid({
         >
           <div className="grid grid-cols-[86px_repeat(30,64px)] gap-4 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
             <div className="text-sm font-medium text-muted-foreground">Bays</div>
-            {visibleDays.slice(0, 30).map((day) => (
+            {visibleDays.map((day) => (
               <div 
                 key={day.toISOString()} 
                 className="text-sm font-medium text-muted-foreground text-center cursor-pointer hover:bg-accent/50 rounded p-1"
@@ -134,5 +152,5 @@ export function MobileCalendarGrid({
         defaultStartTime={selectedDate || undefined}
       />
     </div>
-  )
+  );
 }
