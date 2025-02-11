@@ -12,13 +12,13 @@ interface ClientSidebarHeaderProps {
 
 export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebarHeaderProps) {
   const formatName = (name: string | null | undefined) => {
-    if (!name) return 'Guest';
-    const nameParts = name.split(' ');
+    if (!name) return 'Guest'
+    const nameParts = name.split(' ')
     if (nameParts.length > 1) {
-      return `${nameParts[0]} ${nameParts[1].charAt(0)}.`;
+      return `${nameParts[0]} ${nameParts[1].charAt(0)}.`
     }
-    return name;
-  };
+    return name
+  }
 
   return (
     <div className="p-4 space-y-4 border-b">
@@ -37,7 +37,7 @@ export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebar
             color: '#bb86fc',
             background: 'rgb(187 134 252 / 0.1)',
           }}>
-            {role || 'Guest'} account
+            {role || 'Client'} account
           </span>
         </div>
       </div>
