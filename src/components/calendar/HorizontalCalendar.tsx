@@ -21,7 +21,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
   const [currentMonth, setCurrentMonth] = useState(format(new Date(), 'MMMM yyyy'))
   const [isLoading, setIsLoading] = useState(false)
   const { serviceBays } = useServiceBays()
-  const DAYS_TO_LOAD = 20
+  const DAYS_TO_LOAD = 14 // Increased initial load
 
   const {
     handleMouseDown,
@@ -32,7 +32,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     isDragging
   } = useDragScroll(scrollRef)
 
-  // Initialize calendar with current date and next 20 days
+  // Initialize calendar with current date and next days
   useEffect(() => {
     const initialDays = Array.from({ length: DAYS_TO_LOAD }, (_, i) =>
       addDays(startOfDay(new Date()), i)
@@ -45,7 +45,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     if (!scrollRef.current || isLoading) return
 
     const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
-    const scrollEndThreshold = scrollWidth - clientWidth - 200
+    const scrollEndThreshold = scrollWidth - clientWidth - 400 // Increased threshold
 
     if (scrollLeft >= scrollEndThreshold) {
       setIsLoading(true)
@@ -58,7 +58,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     }
 
     // Update current month based on visible dates
-    const visibleIndex = Math.floor(scrollLeft / 200) // Adjusted for new width
+    const visibleIndex = Math.floor(scrollLeft / 200)
     const visibleDate = days[visibleIndex]
     if (visibleDate) {
       setCurrentMonth(format(visibleDate, 'MMMM yyyy'))
@@ -71,7 +71,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     const todayIndex = days.findIndex(date => isSameDay(date, today))
     
     if (todayIndex !== -1 && scrollRef.current) {
-      const scrollPosition = todayIndex * 200 // Adjusted for new width
+      const scrollPosition = todayIndex * 200
       scrollRef.current.scrollTo({
         left: scrollPosition,
         behavior: 'smooth'
@@ -86,7 +86,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     
     const currentPosition = scrollRef.current.scrollLeft
     const daysToScroll = direction === 'next' ? 7 : -7
-    const newPosition = currentPosition + (200 * daysToScroll) // Adjusted for new width
+    const newPosition = currentPosition + (200 * daysToScroll)
     
     scrollRef.current.scrollTo({
       left: newPosition,
@@ -153,9 +153,9 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
       >
         <div className="min-w-max">
           {/* Days header */}
-          <div className="grid grid-cols-[100px_repeat(7,200px)] border-b border-gray-700/50">
+          <div className="grid grid-cols-[100px_repeat(14,200px)] border-b border-gray-700/50">
             <div className="p-4 text-gray-400 font-medium">Bay</div>
-            {days.slice(0, 7).map((date) => (
+            {days.map((date) => (
               <div 
                 key={date.toISOString()}
                 className="p-4 text-gray-400 font-medium text-center"
@@ -170,10 +170,10 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
           {serviceBays?.map((bay) => (
             <div 
               key={bay.id}
-              className="grid grid-cols-[100px_repeat(7,200px)] border-b border-gray-700/50 last:border-b-0"
+              className="grid grid-cols-[100px_repeat(14,200px)] border-b border-gray-700/50 last:border-b-0"
             >
               <div className="p-4 text-gray-300">{bay.name}</div>
-              {days.slice(0, 7).map((date) => (
+              {days.map((date) => (
                 <div 
                   key={date.toISOString()}
                   className={cn(
