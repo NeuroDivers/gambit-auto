@@ -19,12 +19,9 @@ export const useAdminStatus = () => {
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
-        setIsLoading(true)
         const { data: { user } } = await supabase.auth.getUser()
-        
         if (!user) {
           setIsAdmin(false)
-          setIsLoading(false)
           return
         }
 
@@ -38,19 +35,19 @@ export const useAdminStatus = () => {
             )
           `)
           .eq('id', user.id)
-          .single()
+          .single();
 
         if (profileError) {
-          console.error('Profile fetch error:', profileError)
-          setIsAdmin(false)
-          setIsLoading(false)
-          return
+          console.error('Profile fetch error:', profileError);
+          setIsAdmin(false);
+          return;
         }
 
-        const userRole = (profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase()
+        const userRole = (profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase();
+        console.log("Checking admin status, user role:", userRole);
         
         // Consider both administrator and king as admin roles
-        setIsAdmin(userRole === 'administrator' || userRole === 'king')
+        setIsAdmin(userRole === 'administrator' || userRole === 'king');
       } catch (error) {
         console.error('Error checking admin status:', error)
         setIsAdmin(false)
@@ -59,12 +56,14 @@ export const useAdminStatus = () => {
       }
     }
 
-    checkAdminStatus()
-
+    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       checkAdminStatus()
     })
 
+    checkAdminStatus()
+
+    // Cleanup subscription
     return () => {
       subscription.unsubscribe()
     }

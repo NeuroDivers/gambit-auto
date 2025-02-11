@@ -76,7 +76,7 @@ export function MobileCalendarGrid({
       onWheel={handleWheel}
     >
       <div 
-        className="w-max overflow-x-auto bg-background"
+        className="w-max overflow-x-auto"
         onMouseDown={dragControls.handleMouseDown}
         onMouseMove={dragControls.handleMouseMove}
         onMouseUp={dragControls.stopDragging}
@@ -92,20 +92,18 @@ export function MobileCalendarGrid({
           blockedDates={blockedDates}
         />
 
-        <div className="grid" style={{ 
-          gridTemplateColumns: `86px repeat(${visibleDays.length}, 64px)`,
-          gap: '0px'
-        }}>
+        <div className="grid grid-cols-[86px_repeat(30,64px)] gap-4">
           {serviceBays.map((bay) => (
-            <MobileCalendarRow
-              key={bay.id}
-              bayId={bay.id}
-              bayName={bay.name}
-              visibleDays={visibleDays}
-              workOrders={workOrders}
-              onDateClick={handleDateClick}
-              blockedDates={blockedDates}
-            />
+            <React.Fragment key={bay.id}>
+              <MobileCalendarRow
+                bayId={bay.id}
+                bayName={bay.name}
+                visibleDays={visibleDays}
+                workOrders={workOrders}
+                onDateClick={handleDateClick}
+                blockedDates={blockedDates}
+              />
+            </React.Fragment>
           ))}
         </div>
       </div>

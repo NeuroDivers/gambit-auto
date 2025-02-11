@@ -1,6 +1,6 @@
 
-import { addDays, startOfDay, isSameDay } from "date-fns"
-import { WorkOrder } from "@/components/work-orders/types"
+import { addDays, startOfMonth } from "date-fns"
+import { WorkOrder } from "../types"
 import React, { useRef, useEffect, useState, useCallback } from "react"
 import { MonthPicker } from "./MonthPicker"
 import { useQuery } from "@tanstack/react-query"
@@ -8,8 +8,6 @@ import { supabase } from "@/integrations/supabase/client"
 import { MobileCalendarHeader } from "./mobile/MobileCalendarHeader"
 import { MobileCalendarGrid } from "./mobile/MobileCalendarGrid"
 import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
-import { useBlockedDates } from "./hooks/useBlockedDates"
-import { toast } from "sonner"
 
 type MobileCalendarViewProps = {
   currentDate: Date
@@ -19,20 +17,11 @@ type MobileCalendarViewProps = {
 
 export function MobileCalendarView({ currentDate, workOrders, onDateChange }: MobileCalendarViewProps) {
   const [showMonthPicker, setShowMonthPicker] = useState(false)
-  const [visibleMonth, setVisibleMonth] = useState(startOfDay(new Date()))
+  const [visibleDays, setVisibleDays] = useState<Date[]>([])
+  const [visibleMonth, setVisibleMonth] = useState(currentDate)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [isLoading, setIsLoading] = useState(false)
   const lastLoadTimeRef = useRef<number>(0)
-  const { blockedDates } = useBlockedDates()
-  const DAYS_TO_LOAD = 30
-  const CELL_WIDTH = 64 // width of each day cell
-
-  // Initialize visible days with today and future dates only
-  const [visibleDays, setVisibleDays] = useState<Date[]>(() => {
-    const today = startOfDay(new Date())
-    const futureDays = Array.from({ length: 30 }, (_, i) => addDays(today, i))
-    return [today, ...futureDays]
-  })
 
   const { data: serviceBays = [] } = useQuery({
     queryKey: ["serviceBays"],
@@ -43,85 +32,89 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
         .order("name")
       
       if (error) throw error
-      return data as ServiceBay[]
+      
+      const bays = data.map(bay => ({
+        id: bay.id,
+        name: bay.name,
+        status: bay.status || 'available',
+        assigned_profile_id: bay.assigned_profile_id,
+        notes: bay.notes
+      })) as ServiceBay[]
+      
+      return bays
     }
   })
 
-  const loadMoreDays = useCallback((direction: 'future') => {
+  useEffect(() => {
+    // Initialize with 30 days
+    const initialDays = Array.from({ length: 30 }, (_, i) => addDays(currentDate, i))
+    setVisibleDays(initialDays)
+  }, [currentDate])
+
+  const loadMoreDays = useCallback(() => {
     const now = Date.now()
     if (isLoading || now - lastLoadTimeRef.current < 500) return
     
+    console.log("Loading more days...")
     setIsLoading(true)
     lastLoadTimeRef.current = now
 
-    setVisibleDays(prevDays => {
-      const lastDay = prevDays[prevDays.length - 1]
-      const newFutureDays = Array.from(
-        { length: DAYS_TO_LOAD }, 
-        (_, i) => addDays(lastDay, i + 1)
-      )
-      return [...prevDays, ...newFutureDays]
-    })
+    // Get the last day from the current visibleDays array
+    const lastDay = visibleDays[visibleDays.length - 1]
+    const newDays = Array.from({ length: 30 }, (_, i) => addDays(lastDay, i + 1))
+
+    // Update visibleDays by appending the new days
+    setVisibleDays(prevDays => [...prevDays, ...newDays])
 
     setTimeout(() => setIsLoading(false), 300)
-  }, [isLoading])
+  }, [isLoading, visibleDays])
 
   const scrollToToday = useCallback(() => {
-    const today = startOfDay(new Date())
-    const todayIndex = visibleDays.findIndex(day => isSameDay(day, today))
+    const today = new Date()
+    const todayIndex = visibleDays.findIndex(day => 
+      day.getDate() === today.getDate() && 
+      day.getMonth() === today.getMonth() && 
+      day.getFullYear() === today.getFullYear()
+    )
     
     if (todayIndex !== -1 && scrollRef.current) {
-      const scrollPosition = todayIndex * CELL_WIDTH
-      scrollRef.current.scrollTo({
-        left: scrollPosition,
-        behavior: 'smooth'
-      })
+      const cellWidth = 68 // width + gap
+      scrollRef.current.scrollLeft = todayIndex * cellWidth
       onDateChange?.(today)
       setVisibleMonth(today)
-    } else {
-      toast.error("Today's date not in view. Reloading calendar...")
-      const today = startOfDay(new Date())
-      const futureDays = Array.from({ length: 30 }, (_, i) => addDays(today, i))
-      setVisibleDays([today, ...futureDays])
-      
-      setTimeout(() => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollTo({
-            left: 0,
-            behavior: 'smooth'
-          })
-        }
-      }, 100)
     }
   }, [visibleDays, onDateChange])
 
+  // Update visible month based on scroll position
   const updateVisibleMonth = useCallback(() => {
     if (!scrollRef.current) return
 
     const scrollElement = scrollRef.current
     const scrollLeft = scrollElement.scrollLeft
     const elementWidth = scrollElement.clientWidth
+    const cellWidth = 68 // width + gap
     
-    // Calculate the center position
-    const centerScrollPosition = scrollLeft + (elementWidth / 2)
-    const centerDayIndex = Math.floor(centerScrollPosition / CELL_WIDTH)
+    // Calculate the center position of the viewport
+    const centerPosition = scrollLeft + (elementWidth / 2)
+    const centerIndex = Math.floor(centerPosition / cellWidth)
     
+    // Ensure we have a valid index and corresponding date
+    if (centerIndex >= 0 && centerIndex < visibleDays.length) {
+      const centerDate = visibleDays[centerIndex]
+      console.log('Center date:', centerDate)
+      onDateChange?.(centerDate)
+      setVisibleMonth(centerDate)
+    }
+
     // Check if we need to load more days
     const { scrollWidth } = scrollElement
     const remainingScroll = scrollWidth - (scrollLeft + elementWidth)
-
-    if (remainingScroll < elementWidth * 0.5) {
-      loadMoreDays('future')
-    }
-
-    // Update visible month and current date
-    if (centerDayIndex >= 0 && centerDayIndex < visibleDays.length) {
-      const centerDate = visibleDays[centerDayIndex]
-      setVisibleMonth(centerDate)
-      onDateChange?.(centerDate)
+    if (remainingScroll < 300) {
+      loadMoreDays()
     }
   }, [visibleDays, loadMoreDays, onDateChange])
 
+  // Add scroll event listener with debounce
   useEffect(() => {
     const currentRef = scrollRef.current
     if (!currentRef) return
@@ -129,21 +122,23 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     let scrollTimeout: NodeJS.Timeout
 
     const handleScroll = () => {
-      if (scrollTimeout) clearTimeout(scrollTimeout)
-      scrollTimeout = setTimeout(updateVisibleMonth, 100)
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout)
+      }
+
+      scrollTimeout = setTimeout(() => {
+        updateVisibleMonth()
+      }, 100)
     }
 
     currentRef.addEventListener('scroll', handleScroll)
     return () => {
       currentRef.removeEventListener('scroll', handleScroll)
-      if (scrollTimeout) clearTimeout(scrollTimeout)
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout)
+      }
     }
   }, [updateVisibleMonth])
-
-  // Initial scroll to today's date
-  useEffect(() => {
-    scrollToToday()
-  }, [scrollToToday])
 
   return (
     <div className="space-y-4">
@@ -158,10 +153,9 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
         visibleDays={visibleDays}
         workOrders={workOrders}
         serviceBays={serviceBays}
-        onScroll={updateVisibleMonth}
+        onScroll={loadMoreDays}
         onDateClick={onDateChange || (() => {})}
         scrollRef={scrollRef}
-        blockedDates={blockedDates}
       />
 
       <MonthPicker

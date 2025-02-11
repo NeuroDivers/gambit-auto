@@ -54,27 +54,23 @@ export function MobileCalendarRow({
 
   return (
     <>
-      <div className="w-[86px] p-2 text-sm font-medium truncate sticky left-0 bg-background z-10 border-r flex items-center">
-        {bayName}
-      </div>
+      <div className="w-[86px] p-2 text-sm font-medium truncate">{bayName}</div>
       {visibleDays.map((day) => {
         const workOrdersForDay = getWorkOrdersForDay(day)
         const blocked = isDateBlocked(day)
-        const dayKey = `${bayId}-${format(day, 'yyyy-MM-dd')}`
-        
         return (
           <div 
-            key={dayKey}
+            key={day.toISOString()}
             className={`relative p-2 border-l h-[80px] min-h-[80px] group hover:bg-muted/50 cursor-pointer ${
-              blocked ? 'bg-destructive/20' : ''
+              blocked ? 'bg-destructive/10' : ''
             }`}
             onClick={(e) => onDateClick(day, e)}
           >
             {workOrdersForDay.map((order) => (
               <WorkOrderCard 
-                key={`${dayKey}-${order.id}`}
+                key={order.id}
                 workOrder={order}
-                className={`work-order-card mb-1 ${blocked ? 'opacity-50' : ''}`}
+                className="work-order-card mb-1"
               />
             ))}
           </div>
