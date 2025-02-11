@@ -1,6 +1,6 @@
 
 import { format } from "date-fns"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { WorkOrder } from "../../types"
 import { MobileCalendarRow } from "./MobileCalendarRow"
 import React, { useState } from "react"
@@ -125,6 +125,7 @@ export function MobileCalendarGrid({
             ))}
           </div>
         </div>
+        <ScrollBar orientation="horizontal" />
       </ScrollArea>
 
       <CreateWorkOrderDialog 
