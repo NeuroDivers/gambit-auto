@@ -3,8 +3,9 @@ import { format } from "date-fns"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { WorkOrder } from "../../types"
 import { MobileCalendarRow } from "./MobileCalendarRow"
-import React, { useState, useRef } from "react"
+import React, { useState } from "react"
 import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
+import { CreateWorkOrderDialog } from "../../CreateWorkOrderDialog"
 
 type MobileCalendarGridProps = {
   visibleDays: Date[]
@@ -20,13 +21,14 @@ export function MobileCalendarGrid({
   workOrders, 
   serviceBays, 
   onScroll, 
-  onDateClick,
   scrollRef 
 }: MobileCalendarGridProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [startX, setStartX] = useState(0)
   const [scrollLeft, setScrollLeft] = useState(0)
   const [dragStartTime, setDragStartTime] = useState(0)
+  const [showWorkOrderDialog, setShowWorkOrderDialog] = useState(false)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true)
@@ -67,6 +69,11 @@ export function MobileCalendarGrid({
     return true // Prevent click events
   }
 
+  const handleDateClick = (date: Date) => {
+    setSelectedDate(date)
+    setShowWorkOrderDialog(true)
+  }
+
   return (
     <div className="overflow-hidden">
       <ScrollArea 
@@ -90,7 +97,7 @@ export function MobileCalendarGrid({
               <div 
                 key={day.toISOString()} 
                 className="text-sm font-medium text-muted-foreground text-center cursor-pointer hover:bg-accent/50 rounded p-1"
-                onClick={() => onDateClick(day)}
+                onClick={() => handleDateClick(day)}
               >
                 {format(day, 'EEE d')}
               </div>
@@ -105,13 +112,19 @@ export function MobileCalendarGrid({
                   bayName={bay.name}
                   visibleDays={visibleDays}
                   workOrders={workOrders}
-                  onDateClick={onDateClick}
+                  onDateClick={handleDateClick}
                 />
               </React.Fragment>
             ))}
           </div>
         </div>
       </ScrollArea>
+
+      <CreateWorkOrderDialog 
+        open={showWorkOrderDialog}
+        onOpenChange={setShowWorkOrderDialog}
+        defaultStartTime={selectedDate || undefined}
+      />
     </div>
   )
 }
