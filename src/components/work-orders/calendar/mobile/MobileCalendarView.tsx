@@ -13,7 +13,7 @@ type MobileCalendarViewProps = {
   onDateChange?: (date: Date) => void
 }
 
-function MobileCalendarContent() {
+function MobileCalendarContent({ workOrders }: { workOrders: WorkOrder[] }) {
   const { 
     visibleMonth,
     visibleDays,
@@ -38,9 +38,9 @@ function MobileCalendarContent() {
 
       <MobileCalendarGrid
         visibleDays={visibleDays}
-        workOrders={[]}  // This will be passed from parent
+        workOrders={workOrders}
         serviceBays={serviceBays}
-        onScroll={() => {}}  // No longer needed as it's handled in provider
+        onScroll={() => {}}
         onDateClick={handleDateChange}
         scrollRef={scrollRef}
         blockedDates={blockedDates}
@@ -63,7 +63,7 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
       workOrders={workOrders}
       onDateChange={onDateChange}
     >
-      <MobileCalendarContent />
+      <MobileCalendarContent workOrders={workOrders} />
     </MobileCalendarProvider>
   )
 }
