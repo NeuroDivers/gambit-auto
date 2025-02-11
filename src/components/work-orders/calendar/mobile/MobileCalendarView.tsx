@@ -1,12 +1,12 @@
 
-import { addDays, startOfMonth } from "date-fns"
+import { addDays } from "date-fns"
+import { WorkOrder } from "../types"
 import React, { useRef, useEffect, useState, useCallback } from "react"
-import { WorkOrder } from "@/components/work-orders/types"
-import { MonthPicker } from "../MonthPicker"
+import { MonthPicker } from "./MonthPicker"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { MobileCalendarHeader } from "./MobileCalendarHeader"
-import { MobileCalendarGrid } from "./MobileCalendarGrid"
+import { MobileCalendarHeader } from "./mobile/MobileCalendarHeader"
+import { MobileCalendarGrid } from "./mobile/MobileCalendarGrid"
 import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
 
 type MobileCalendarViewProps = {
@@ -46,8 +46,10 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
   })
 
   useEffect(() => {
-    // Initialize with 30 days
-    const initialDays = Array.from({ length: 30 }, (_, i) => addDays(currentDate, i))
+    // Initialize with 30 days starting from 15 days before the current date
+    const startDate = new Date(currentDate)
+    startDate.setDate(startDate.getDate() - 15)
+    const initialDays = Array.from({ length: 30 }, (_, i) => addDays(startDate, i))
     setVisibleDays(initialDays)
   }, [currentDate])
 
@@ -79,10 +81,27 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     
     if (todayIndex !== -1 && scrollRef.current) {
       const cellWidth = 68 // width + gap
-      scrollRef.current.scrollLeft = todayIndex * cellWidth
+      const offset = Math.max(0, todayIndex * cellWidth - (window.innerWidth / 2) + (cellWidth / 2))
+      scrollRef.current.scrollLeft = offset
+      onDateChange?.(today)
       setVisibleMonth(today)
+    } else {
+      // If today is not in the visible range, reset the days array to include it
+      const startDate = new Date(today)
+      startDate.setDate(startDate.getDate() - 15)
+      const newDays = Array.from({ length: 30 }, (_, i) => addDays(startDate, i))
+      setVisibleDays(newDays)
+      // Wait for the state update and then scroll
+      setTimeout(() => {
+        if (scrollRef.current) {
+          const centerOffset = Math.max(0, 15 * cellWidth - (window.innerWidth / 2) + (cellWidth / 2))
+          scrollRef.current.scrollLeft = centerOffset
+          onDateChange?.(today)
+          setVisibleMonth(today)
+        }
+      }, 0)
     }
-  }, [visibleDays])
+  }, [visibleDays, onDateChange])
 
   // Update visible month based on scroll position
   const updateVisibleMonth = useCallback(() => {
@@ -97,17 +116,20 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     const centerPosition = scrollLeft + (elementWidth / 2)
     const centerIndex = Math.floor(centerPosition / cellWidth)
     
-    if (visibleDays[centerIndex]) {
-      setVisibleMonth(startOfMonth(visibleDays[centerIndex]))
+    // Ensure we have a valid index and corresponding date
+    if (centerIndex >= 0 && centerIndex < visibleDays.length) {
+      const centerDate = visibleDays[centerIndex]
+      onDateChange?.(centerDate)
+      setVisibleMonth(centerDate)
     }
 
     // Check if we need to load more days
     const { scrollWidth } = scrollElement
     const remainingScroll = scrollWidth - (scrollLeft + elementWidth)
-    if (remainingScroll < 300) {
+    if (remainingScroll < 500) { // Increased threshold for earlier loading
       loadMoreDays()
     }
-  }, [visibleDays, loadMoreDays])
+  }, [visibleDays, loadMoreDays, onDateChange])
 
   // Add scroll event listener with debounce
   useEffect(() => {

@@ -32,7 +32,7 @@ export function MobileCalendarGrid({
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
-  // Handle scroll events for infinite scrolling
+  // Handle scroll events for infinite scrolling with debounce
   useEffect(() => {
     const handleScroll = (e: Event) => {
       const target = e.target as HTMLDivElement
@@ -41,16 +41,29 @@ export function MobileCalendarGrid({
       const { scrollLeft, scrollWidth, clientWidth } = target
       const remainingScroll = scrollWidth - (scrollLeft + clientWidth)
       
-      if (remainingScroll < 300) {
+      if (remainingScroll < 500) { // Increased threshold for earlier loading
         console.log('Loading more days...', { remainingScroll, scrollWidth, scrollLeft, clientWidth })
         onScroll()
       }
     }
 
+    const debouncedHandleScroll = (e: Event) => {
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout)
+      }
+      scrollTimeout = setTimeout(() => handleScroll(e), 100)
+    }
+
+    let scrollTimeout: NodeJS.Timeout
     const currentRef = scrollRef.current
     if (currentRef) {
-      currentRef.addEventListener('scroll', handleScroll)
-      return () => currentRef.removeEventListener('scroll', handleScroll)
+      currentRef.addEventListener('scroll', debouncedHandleScroll)
+      return () => {
+        currentRef.removeEventListener('scroll', debouncedHandleScroll)
+        if (scrollTimeout) {
+          clearTimeout(scrollTimeout)
+        }
+      }
     }
   }, [onScroll, scrollRef])
 
@@ -122,6 +135,7 @@ export function MobileCalendarGrid({
         setShowWorkOrderDialog(true)
       }
     }
+    onDateClick(date)
   }
 
   return (
