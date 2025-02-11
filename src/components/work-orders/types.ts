@@ -1,7 +1,9 @@
 
 import { WorkOrder as BaseWorkOrder } from "@/types"
 
-export type WorkOrder = BaseWorkOrder
+export type WorkOrder = BaseWorkOrder & {
+  assigned_profile_id?: string | null
+}
 
 export type WorkOrderFormProps = {
   workOrder?: WorkOrder
@@ -44,3 +46,4 @@ export type WorkOrderFormValues = {
   assigned_bay_id?: string | null
   assigned_profile_id?: string | null
 }
+
