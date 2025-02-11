@@ -57,33 +57,60 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
 
     const scrollElement = scrollRef.current
     const scrollLeft = scrollElement.scrollLeft
+    const elementWidth = scrollElement.clientWidth
     const cellWidth = 68 // width + gap (64px + 4px)
-    const visibleIndex = Math.floor(scrollLeft / cellWidth)
     
-    if (visibleDays[visibleIndex]) {
-      const newVisibleMonth = startOfMonth(visibleDays[visibleIndex])
-      setVisibleMonth(newVisibleMonth)
+    // Calculate the center position of the viewport
+    const centerPosition = scrollLeft + (elementWidth / 2)
+    const centerIndex = Math.floor(centerPosition / cellWidth)
+    
+    if (visibleDays[centerIndex]) {
+      const newVisibleMonth = startOfMonth(visibleDays[centerIndex])
+      setVisibleMonth(prev => {
+        // Only update if the month has actually changed
+        if (prev.getMonth() !== newVisibleMonth.getMonth() || 
+            prev.getFullYear() !== newVisibleMonth.getFullYear()) {
+          console.log('Updating visible month to:', newVisibleMonth)
+          return newVisibleMonth
+        }
+        return prev
+      })
     }
   }, [visibleDays])
 
-  // Add scroll event listener
+  // Add scroll event listener with debounce
   useEffect(() => {
     const currentRef = scrollRef.current
     if (!currentRef) return
 
-    const handleScroll = () => {
-      updateVisibleMonth()
+    let scrollTimeout: NodeJS.Timeout
 
-      // Check if we need to load more days
-      const { scrollLeft, scrollWidth, clientWidth } = currentRef
-      if (scrollWidth - (scrollLeft + clientWidth) < 300) { // Trigger earlier
-        loadMoreDays()
+    const handleScroll = () => {
+      // Clear the existing timeout
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout)
       }
+
+      // Set a new timeout to update the month
+      scrollTimeout = setTimeout(() => {
+        updateVisibleMonth()
+
+        // Check if we need to load more days
+        const { scrollLeft, scrollWidth, clientWidth } = currentRef
+        if (scrollWidth - (scrollLeft + clientWidth) < 300) {
+          loadMoreDays()
+        }
+      }, 100) // Small debounce delay
     }
 
     currentRef.addEventListener('scroll', handleScroll)
-    return () => currentRef.removeEventListener('scroll', handleScroll)
-  }, [updateVisibleMonth])
+    return () => {
+      currentRef.removeEventListener('scroll', handleScroll)
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout)
+      }
+    }
+  }, [updateVisibleMonth, loadMoreDays])
 
   const loadMoreDays = useCallback(() => {
     const now = Date.now()
