@@ -54,7 +54,7 @@ export function MobileCalendarRow({
 
   return (
     <>
-      <div className="w-[86px] p-2 text-sm font-medium truncate sticky left-0 bg-background z-10 border-r">
+      <div className="w-[86px] p-2 text-sm font-medium truncate sticky left-0 bg-background z-10 border-r flex items-center">
         {bayName}
       </div>
       {visibleDays.map((day) => {
