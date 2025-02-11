@@ -1,4 +1,3 @@
-
 import { format } from "date-fns"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { WorkOrder } from "../../types"
@@ -21,6 +20,7 @@ export function MobileCalendarGrid({
   workOrders, 
   serviceBays, 
   onScroll,
+  onDateClick,
   scrollRef 
 }: MobileCalendarGridProps) {
   const [isDragging, setIsDragging] = useState(false)
@@ -55,21 +55,19 @@ export function MobileCalendarGrid({
     if (!scrollAreaRef.current) return
 
     const { scrollTop, scrollHeight, clientHeight } = scrollAreaRef.current
-    const isAtBottom = scrollHeight - (scrollTop + clientHeight) < 1
+
+    // Check if we're at the top or bottom boundary
+    const isAtBottom = Math.abs(scrollHeight - scrollTop - clientHeight) < 1
     const isAtTop = scrollTop === 0
 
-    // Allow page scrolling only when we're at the boundaries and scrolling in that direction
+    // If we're at a boundary and trying to scroll further in that direction,
+    // allow the event to propagate (enable page scrolling)
     if ((isAtBottom && e.deltaY > 0) || (isAtTop && e.deltaY < 0)) {
-      const element = e.currentTarget as HTMLDivElement
-      element.style.overflowY = 'hidden'
-      setTimeout(() => {
-        if (element) {
-          element.style.overflowY = 'auto'
-        }
-      }, 100)
-    } else {
-      e.stopPropagation()
+      return // Let the event propagate to enable page scrolling
     }
+
+    // Otherwise prevent propagation to keep scrolling within the calendar
+    e.stopPropagation()
   }
 
   const handleMouseDown = (e: React.MouseEvent) => {
