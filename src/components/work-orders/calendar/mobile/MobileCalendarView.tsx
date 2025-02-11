@@ -1,12 +1,12 @@
 
 import { addDays } from "date-fns"
-import { WorkOrder } from "../types"
 import React, { useRef, useEffect, useState, useCallback } from "react"
-import { MonthPicker } from "./MonthPicker"
+import { WorkOrder } from "@/components/work-orders/types"
+import { MonthPicker } from "../MonthPicker"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { MobileCalendarHeader } from "./mobile/MobileCalendarHeader"
-import { MobileCalendarGrid } from "./mobile/MobileCalendarGrid"
+import { MobileCalendarHeader } from "./MobileCalendarHeader"
+import { MobileCalendarGrid } from "./MobileCalendarGrid"
 import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
 
 type MobileCalendarViewProps = {

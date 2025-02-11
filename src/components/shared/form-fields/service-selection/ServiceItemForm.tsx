@@ -89,7 +89,7 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
             value={item.service_id || undefined}
             onValueChange={handleServiceSelect}
           >
-            <SelectTrigger id={serviceId} name={serviceId} autoComplete="off">
+            <SelectTrigger id={serviceId} name={serviceId}>
               <SelectValue placeholder="Select a service" />
             </SelectTrigger>
             <SelectContent>
@@ -108,7 +108,7 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
                 value={item.package_id || undefined}
                 onValueChange={handlePackageSelect}
               >
-                <SelectTrigger id={packageId} name={packageId} autoComplete="off">
+                <SelectTrigger id={packageId} name={packageId}>
                   <SelectValue placeholder="Select a package" />
                 </SelectTrigger>
                 <SelectContent>
