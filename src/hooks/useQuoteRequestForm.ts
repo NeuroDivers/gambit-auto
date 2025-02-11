@@ -44,7 +44,6 @@ export function useQuoteRequestForm(): UseQuoteRequestFormReturn {
     defaultValues: loadSavedFormData()
   })
 
-  // Subscribe to form changes
   form.watch((data) => {
     saveFormData(data)
   })
@@ -52,7 +51,7 @@ export function useQuoteRequestForm(): UseQuoteRequestFormReturn {
   const { uploading, handleImageUpload, handleImageRemove } = useMediaHandling(form)
 
   const selectedServices = form.watch('service_items') || []
-  const totalSteps = selectedServices.length > 0 ? 3 + selectedServices.length : 3
+  const totalSteps = selectedServices.length > 0 ? 2 + selectedServices.length : 2
 
   const onSubmit = async (values: QuoteRequestFormData) => {
     try {
@@ -95,9 +94,8 @@ export function useQuoteRequestForm(): UseQuoteRequestFormReturn {
 
   const getNextStep = (currentStep: number): number => {
     if (currentStep === 1) return 2;
-    if (currentStep === 2) return 3;
     
-    const serviceIndex = currentStep - 3;
+    const serviceIndex = currentStep - 2;
     if (serviceIndex < selectedServices.length) {
       return currentStep + 1;
     }
@@ -112,12 +110,7 @@ export function useQuoteRequestForm(): UseQuoteRequestFormReturn {
 
   const nextStep = () => {
     if (step === 1) {
-      form.trigger(['vehicle_make', 'vehicle_model', 'vehicle_year'])
-        .then((isValid) => {
-          if (isValid) setStep(getNextStep(step))
-        })
-    } else if (step === 2) {
-      form.trigger('service_items')
+      form.trigger(['vehicle_make', 'vehicle_model', 'vehicle_year', 'service_items'])
         .then((isValid) => {
           if (isValid) setStep(getNextStep(step))
         })
