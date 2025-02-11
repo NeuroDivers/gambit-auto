@@ -1079,6 +1079,13 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      reassign_users_and_delete_role: {
+        Args: {
+          role_id_to_delete: string
+          new_role_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "manager" | "sidekick" | "client"

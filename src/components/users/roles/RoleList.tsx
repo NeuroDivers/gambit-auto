@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Pencil, Plus, Trash2, Shield } from "lucide-react";
@@ -8,6 +9,21 @@ import { RoleDialog } from "./RoleDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { RolePermissionsDialog } from "./RolePermissionsDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Role = {
   id: string;
@@ -21,6 +37,8 @@ export const RoleList = () => {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [newRoleId, setNewRoleId] = useState<string>("");
   const { toast } = useToast();
   const { isAdmin } = useAdminStatus();
 
@@ -44,19 +62,30 @@ export const RoleList = () => {
   });
 
   const handleDelete = async (roleId: string) => {
+    if (!newRoleId) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please select a role to reassign users to.",
+      });
+      return;
+    }
+
     try {
-      const { error } = await supabase
-        .from("roles")
-        .delete()
-        .eq("id", roleId);
+      const { error } = await supabase.rpc('reassign_users_and_delete_role', {
+        role_id_to_delete: roleId,
+        new_role_id: newRoleId
+      });
 
       if (error) throw error;
 
       toast({
         title: "Role deleted",
-        description: "The role has been deleted successfully.",
+        description: "The role has been deleted and users have been reassigned.",
       });
 
+      setIsDeleteDialogOpen(false);
+      setNewRoleId("");
       refetch();
     } catch (error: any) {
       console.error("Error deleting role:", error);
@@ -139,7 +168,10 @@ export const RoleList = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleDelete(role.id)}
+                    onClick={() => {
+                      setSelectedRole(role);
+                      setIsDeleteDialogOpen(true);
+                    }}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -170,6 +202,50 @@ export const RoleList = () => {
         open={isPermissionsDialogOpen}
         onOpenChange={setIsPermissionsDialogOpen}
       />
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Role</DialogTitle>
+            <DialogDescription>
+              Please select a new role to assign to users with the {selectedRole?.nicename} role.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <Select
+              value={newRoleId}
+              onValueChange={setNewRoleId}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a role" />
+              </SelectTrigger>
+              <SelectContent>
+                {roles?.filter(role => role.id !== selectedRole?.id).map((role) => (
+                  <SelectItem key={role.id} value={role.id}>
+                    {role.nicename}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => selectedRole && handleDelete(selectedRole.id)}
+            >
+              Delete Role
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
