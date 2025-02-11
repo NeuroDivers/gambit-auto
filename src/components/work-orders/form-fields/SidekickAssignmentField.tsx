@@ -23,7 +23,7 @@ export function SidekickAssignmentField({ form, bayId }: SidekickAssignmentField
       <CardContent className="p-4">
         <FormField
           control={form.control}
-          name="assigned_sidekick_id"
+          name="assigned_profile_id"
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-white/90">Assign User</FormLabel>

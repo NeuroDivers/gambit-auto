@@ -1,3 +1,4 @@
+
 import { WorkOrderFormValues } from "../types"
 import { supabase } from "@/integrations/supabase/client"
 import { useQueryClient } from "@tanstack/react-query"
@@ -61,7 +62,7 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
       estimated_duration: values.estimated_duration ? `${values.estimated_duration} hours` : null,
       end_time: values.end_time?.toISOString(),
       assigned_bay_id: values.assigned_bay_id === "unassigned" ? null : values.assigned_bay_id,
-      assigned_sidekick_id: values.assigned_sidekick_id === "unassigned" ? null : values.assigned_sidekick_id,
+      assigned_profile_id: values.assigned_profile_id === "unassigned" ? null : values.assigned_profile_id,
       updated_at: new Date().toISOString()
     })
     .eq("id", workOrderId)
@@ -71,12 +72,12 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
     throw workOrderError
   }
 
-  // If a bay is assigned, update the bay's assigned sidekick
+  // If a bay is assigned, update the bay's assigned profile
   if (values.assigned_bay_id && values.assigned_bay_id !== "unassigned") {
     const { error: bayError } = await supabase
       .from('service_bays')
       .update({ 
-        assigned_sidekick_id: values.assigned_sidekick_id === "unassigned" ? null : values.assigned_sidekick_id 
+        assigned_profile_id: values.assigned_profile_id === "unassigned" ? null : values.assigned_profile_id 
       })
       .eq('id', values.assigned_bay_id)
 
@@ -139,7 +140,7 @@ async function createWorkOrder(values: WorkOrderFormValues) {
       estimated_duration: values.estimated_duration ? `${values.estimated_duration} hours` : null,
       end_time: values.end_time?.toISOString(),
       assigned_bay_id: values.assigned_bay_id === "unassigned" ? null : values.assigned_bay_id,
-      assigned_sidekick_id: values.assigned_sidekick_id === "unassigned" ? null : values.assigned_sidekick_id,
+      assigned_profile_id: values.assigned_profile_id === "unassigned" ? null : values.assigned_profile_id,
       status: "pending"
     })
     .select()
@@ -150,12 +151,12 @@ async function createWorkOrder(values: WorkOrderFormValues) {
     throw workOrderError
   }
 
-  // If a bay is assigned, update the bay's assigned sidekick
+  // If a bay is assigned, update the bay's assigned profile
   if (values.assigned_bay_id && values.assigned_bay_id !== "unassigned") {
     const { error: bayError } = await supabase
       .from('service_bays')
       .update({ 
-        assigned_sidekick_id: values.assigned_sidekick_id === "unassigned" ? null : values.assigned_sidekick_id 
+        assigned_profile_id: values.assigned_profile_id === "unassigned" ? null : values.assigned_profile_id 
       })
       .eq('id', values.assigned_bay_id)
 

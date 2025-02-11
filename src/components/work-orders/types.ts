@@ -42,5 +42,5 @@ export type WorkOrderFormValues = {
   estimated_duration?: number | null
   end_time?: Date | null
   assigned_bay_id?: string | null
-  assigned_sidekick_id?: string | null
+  assigned_profile_id?: string | null
 }
