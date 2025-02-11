@@ -3,7 +3,7 @@ import { WorkOrder } from "../types"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 import { WorkOrderDetailsDialog } from "./WorkOrderDetailsDialog"
-import { format, parseISO, differenceInDays } from "date-fns"
+import { format } from "date-fns"
 
 type WorkOrderCardProps = {
   workOrder: WorkOrder & {
@@ -61,7 +61,7 @@ export function WorkOrderCard({ workOrder, className }: WorkOrderCardProps) {
             borderWidth: '1px',
             borderStyle: 'solid',
             borderColor: 'rgba(var(--primary), 0.2)',
-            width: isMultiDay ? `calc(${workOrder.duration}00% + ${(workOrder.duration - 1) * 16}px)` // Account for gaps
+            width: isMultiDay && workOrder.duration ? `calc(${workOrder.duration * 100}% + ${(workOrder.duration - 1) * 16}px)` : undefined
           }}
         >
           <div className="truncate font-medium">
