@@ -18,6 +18,8 @@ const formSchema = z.object({
   service_details: z.record(z.any())
 })
 
+const STORAGE_KEY = 'quote_request_form_data'
+
 export function useQuoteRequestForm() {
   const [step, setStep] = useState(1)
   const [uploading, setUploading] = useState(false)
@@ -45,9 +47,18 @@ export function useQuoteRequestForm() {
     }
   })
 
-  const form = useForm<QuoteRequestFormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
+  // Load saved form data from localStorage
+  const loadSavedFormData = () => {
+    const savedData = localStorage.getItem(STORAGE_KEY)
+    if (savedData) {
+      try {
+        return JSON.parse(savedData)
+      } catch (error) {
+        console.error('Error parsing saved form data:', error)
+        localStorage.removeItem(STORAGE_KEY)
+      }
+    }
+    return {
       vehicle_make: "",
       vehicle_model: "",
       vehicle_year: new Date().getFullYear().toString(),
@@ -56,6 +67,21 @@ export function useQuoteRequestForm() {
       description: "",
       service_details: {}
     }
+  }
+
+  const form = useForm<QuoteRequestFormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: loadSavedFormData()
+  })
+
+  // Save form data to localStorage whenever it changes
+  const saveFormData = (data: any) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+  }
+
+  // Subscribe to form changes
+  form.watch((data) => {
+    saveFormData(data)
   })
 
   const selectedServices = form.watch('service_ids')
@@ -146,6 +172,9 @@ export function useQuoteRequestForm() {
 
       if (requestError) throw requestError
 
+      // Clear saved form data after successful submission
+      localStorage.removeItem(STORAGE_KEY)
+      
       toast.success("Quote request submitted successfully")
       form.reset()
       setStep(1)
@@ -208,3 +237,4 @@ export function useQuoteRequestForm() {
     prevStep
   }
 }
+
