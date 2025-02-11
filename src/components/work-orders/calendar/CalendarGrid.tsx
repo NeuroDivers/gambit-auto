@@ -12,7 +12,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { WorkOrderCard } from "../WorkOrderCard"
+import { WorkOrderCard } from "./WorkOrderCard"
 
 type CalendarGridProps = {
   currentDate: Date
