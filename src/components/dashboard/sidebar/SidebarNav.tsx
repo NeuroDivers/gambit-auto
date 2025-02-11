@@ -104,23 +104,25 @@ export function SidebarNav() {
   }, [permissions]);
 
   return (
-    <nav className="flex flex-col gap-2 p-4 flex-1 overflow-y-auto">
-      {allowedItems.map((item) => (
-        <Link
-          key={item.href}
-          to={item.href}
-          className={cn(
-            "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-accent",
-            location.pathname === item.href ? "bg-accent" : "transparent",
-            "text-foreground"
-          )}
-        >
-          <item.icon className="h-5 w-5" />
-          <span>{item.title}</span>
-        </Link>
-      ))}
+    <nav className="flex flex-col gap-2 p-4 flex-1 h-full overflow-y-auto">
+      <div className="space-y-2">
+        {allowedItems.map((item) => (
+          <Link
+            key={item.href}
+            to={item.href}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-accent",
+              location.pathname === item.href ? "bg-accent" : "transparent",
+              "text-foreground"
+            )}
+          >
+            <item.icon className="h-5 w-5" />
+            <span>{item.title}</span>
+          </Link>
+        ))}
+      </div>
 
-      <div className="mt-4 pt-4 border-t">
+      <div className="mt-4 pt-4 border-t space-y-2">
         {allowedSettingsItems.map((item) => (
           <Link
             key={item.href}

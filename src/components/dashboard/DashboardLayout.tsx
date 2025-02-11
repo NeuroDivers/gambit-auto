@@ -39,7 +39,7 @@ export function DashboardLayout({
 
   if (isMobile) {
     return (
-      <div className={cn("min-h-screen w-full bg-background")}>
+      <div className={cn("min-h-screen w-full bg-background flex flex-col")}>
         <header className="border-b p-4 flex items-center justify-between sticky top-0 z-50 bg-background">
           <Sheet>
             <SheetTrigger asChild>
@@ -47,9 +47,12 @@ export function DashboardLayout({
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-72">
+            <SheetContent 
+              side="left" 
+              className="p-0 w-72 flex flex-col"
+            >
               <SidebarProvider>
-                <Sidebar className="border-0">
+                <Sidebar className="border-0 flex-1">
                   {sidebarContent}
                 </Sidebar>
               </SidebarProvider>
