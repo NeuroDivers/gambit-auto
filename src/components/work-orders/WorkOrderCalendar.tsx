@@ -12,12 +12,14 @@ import { BlockedDatesDialog } from "./calendar/BlockedDatesDialog"
 import { BlockedDatesList } from "./calendar/BlockedDatesList"
 import { useAdminStatus } from "@/hooks/useAdminStatus"
 import { Separator } from "@/components/ui/separator"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 export function WorkOrderCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [view, setView] = useState<'month' | 'day'>('month')
   const { data: workOrders = [], isLoading } = useWorkOrderData()
   const { isAdmin } = useAdminStatus()
+  const isMobile = useIsMobile()
 
   const statusCounts = {
     pending: workOrders.filter(wo => wo.status === 'pending').length,
@@ -52,21 +54,19 @@ export function WorkOrderCalendar() {
   return (
     <section className="space-y-6 bg-gradient-to-b from-card/80 to-card rounded-xl shadow-lg border border-border/50 p-8">
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-foreground">Work Order Calendar</h3>
-          <div className="flex items-center gap-4">
-            {isAdmin && <BlockedDatesDialog />}
-            <ToggleGroup type="single" value={view} onValueChange={(value) => value && setView(value as 'month' | 'day')}>
-              <ToggleGroupItem value="month" aria-label="Month view">
-                <CalendarIcon className="h-4 w-4" />
-              </ToggleGroupItem>
-              <ToggleGroupItem value="day" aria-label="Day view">
-                <Clock className="h-4 w-4" />
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
+        <h3 className="text-xl font-semibold text-foreground">Work Order Calendar</h3>
+        <div className="flex items-center justify-end gap-4">
+          {isAdmin && <BlockedDatesDialog />}
+          <ToggleGroup type="single" value={view} onValueChange={(value) => value && setView(value as 'month' | 'day')}>
+            <ToggleGroupItem value="month" aria-label="Month view">
+              <CalendarIcon className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="day" aria-label="Day view">
+              <Clock className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
-        <StatusLegend statusCounts={statusCounts} />
+        {!isMobile && <StatusLegend statusCounts={statusCounts} />}
         <div className="space-y-4">
           {view === 'month' ? (
             <CalendarGrid
