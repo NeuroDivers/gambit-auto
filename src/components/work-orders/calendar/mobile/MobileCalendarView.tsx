@@ -1,12 +1,12 @@
 
 import { addDays } from "date-fns"
-import { WorkOrder } from "../types"
+import { WorkOrder } from "../../types"
 import React, { useRef, useEffect, useState, useCallback } from "react"
-import { MonthPicker } from "./MonthPicker"
+import { MonthPicker } from "../MonthPicker"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { MobileCalendarHeader } from "./mobile/MobileCalendarHeader"
-import { MobileCalendarGrid } from "./mobile/MobileCalendarGrid"
+import { MobileCalendarHeader } from "./MobileCalendarHeader"
+import { MobileCalendarGrid } from "./MobileCalendarGrid"
 import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
 
 type MobileCalendarViewProps = {
@@ -22,6 +22,7 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
   const scrollRef = useRef<HTMLDivElement>(null)
   const [isLoading, setIsLoading] = useState(false)
   const lastLoadTimeRef = useRef<number>(0)
+  const CELL_WIDTH = 68 // width + gap
 
   const { data: serviceBays = [] } = useQuery({
     queryKey: ["serviceBays"],
@@ -80,8 +81,7 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     )
     
     if (todayIndex !== -1 && scrollRef.current) {
-      const cellWidth = 68 // width + gap
-      const offset = Math.max(0, todayIndex * cellWidth - (window.innerWidth / 2) + (cellWidth / 2))
+      const offset = Math.max(0, todayIndex * CELL_WIDTH - (window.innerWidth / 2) + (CELL_WIDTH / 2))
       scrollRef.current.scrollLeft = offset
       onDateChange?.(today)
       setVisibleMonth(today)
@@ -94,7 +94,7 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
       // Wait for the state update and then scroll
       setTimeout(() => {
         if (scrollRef.current) {
-          const centerOffset = Math.max(0, 15 * cellWidth - (window.innerWidth / 2) + (cellWidth / 2))
+          const centerOffset = Math.max(0, 15 * CELL_WIDTH - (window.innerWidth / 2) + (CELL_WIDTH / 2))
           scrollRef.current.scrollLeft = centerOffset
           onDateChange?.(today)
           setVisibleMonth(today)
@@ -110,11 +110,10 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     const scrollElement = scrollRef.current
     const scrollLeft = scrollElement.scrollLeft
     const elementWidth = scrollElement.clientWidth
-    const cellWidth = 68 // width + gap
     
     // Calculate the center position of the viewport
     const centerPosition = scrollLeft + (elementWidth / 2)
-    const centerIndex = Math.floor(centerPosition / cellWidth)
+    const centerIndex = Math.floor(centerPosition / CELL_WIDTH)
     
     // Ensure we have a valid index and corresponding date
     if (centerIndex >= 0 && centerIndex < visibleDays.length) {
