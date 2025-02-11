@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { WorkOrder } from "../../types"
 import { MobileCalendarRow } from "./MobileCalendarRow"
 import React from "react"
-import { ServiceBay } from "@/types"
+import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
 
 type MobileCalendarGridProps = {
   visibleDays: Date[]
@@ -56,3 +56,4 @@ export function MobileCalendarGrid({
     </ScrollArea>
   )
 }
+
