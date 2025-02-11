@@ -60,9 +60,11 @@ export function MobileCalendarRow({
       {visibleDays.map((day) => {
         const workOrdersForDay = getWorkOrdersForDay(day)
         const blocked = isDateBlocked(day)
+        const dayKey = `${bayId}-${format(day, 'yyyy-MM-dd')}`
+        
         return (
           <div 
-            key={day.toISOString()}
+            key={dayKey}
             className={`relative p-2 border-l h-[80px] min-h-[80px] group hover:bg-muted/50 cursor-pointer ${
               blocked ? 'bg-destructive/20' : ''
             }`}
@@ -70,7 +72,7 @@ export function MobileCalendarRow({
           >
             {workOrdersForDay.map((order) => (
               <WorkOrderCard 
-                key={order.id}
+                key={`${dayKey}-${order.id}`}
                 workOrder={order}
                 className={`work-order-card mb-1 ${blocked ? 'opacity-50' : ''}`}
               />

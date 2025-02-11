@@ -19,13 +19,13 @@ export function CalendarGridHeader({ visibleDays, onDateClick, blockedDates = []
   }
 
   return (
-    <div className="grid grid-cols-[86px_repeat(30,64px)] gap-4 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
+    <div className="grid grid-cols-[86px_repeat(30,64px)] gap-0 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
       <div className="text-sm font-medium text-muted-foreground">Bays</div>
       {visibleDays.map((day) => {
         const blocked = isDateBlocked(day)
         return (
           <div 
-            key={day.toISOString()} 
+            key={format(day, 'yyyy-MM-dd')}
             className={`flex flex-col items-center justify-center cursor-pointer hover:bg-accent/50 rounded p-1 ${
               isToday(day) ? 'bg-primary/10 text-primary' : ''
             } ${blocked ? 'bg-destructive/20' : ''}`}
