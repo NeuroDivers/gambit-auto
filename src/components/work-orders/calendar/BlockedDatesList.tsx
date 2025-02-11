@@ -10,7 +10,7 @@ import { useAdminStatus } from "@/hooks/useAdminStatus"
 
 export function BlockedDatesList() {
   const { blockedDates } = useBlockedDates()
-  const { isAdmin } = useAdminStatus()
+  const { isAdmin, isLoading: isAdminLoading } = useAdminStatus()
 
   const handleDelete = async (id: string) => {
     try {
@@ -57,7 +57,7 @@ export function BlockedDatesList() {
               <p className="text-sm text-muted-foreground">{block.reason}</p>
             )}
           </div>
-          {isAdmin && (
+          {!isAdminLoading && isAdmin && (
             <Button
               variant="destructive"
               size="icon"
