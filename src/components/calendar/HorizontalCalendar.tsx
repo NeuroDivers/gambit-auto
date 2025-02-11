@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect, useCallback } from "react"
 import { format, addDays, startOfDay, isToday, isSameDay, parseISO } from "date-fns"
 import { Button } from "@/components/ui/button"
@@ -8,6 +9,7 @@ import { toast } from "sonner"
 import { useServiceBays } from "@/components/service-bays/hooks/useServiceBays"
 import { WorkOrder } from "../work-orders/types"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { WorkOrderDetailsDialog } from "../work-orders/calendar/WorkOrderDetailsDialog"
 
 type HorizontalCalendarProps = {
   onDateSelect?: (date: Date) => void
@@ -20,6 +22,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
   const [days, setDays] = useState<Date[]>([])
   const [currentMonth, setCurrentMonth] = useState(format(new Date(), 'MMMM yyyy'))
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
   const { serviceBays } = useServiceBays()
   const DAYS_TO_LOAD = 14 // Initial load of 14 days
 
@@ -113,6 +116,11 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     return format(parseISO(timeString), 'h:mm a')
   }
 
+  const getWorkOrderSpan = (workOrder: WorkOrder) => {
+    if (!workOrder.estimated_duration) return 1;
+    return parseInt(workOrder.estimated_duration) || 1;
+  }
+
   return (
     <div className={cn("p-4 bg-[#222226] rounded-lg shadow-lg", className)}>
       {/* Header */}
@@ -170,7 +178,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
         <div 
           className="relative"
           style={{
-            width: `${(days.length * 200) + 100}px`, // Dynamic width based on number of days
+            width: `${(days.length * 200) + 100}px`,
             minWidth: 'max-content'
           }}
         >
@@ -198,19 +206,31 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
               <div className="p-4 text-gray-300 sticky left-0 bg-[#222226] z-10 border-b border-gray-700/50">
                 {bay.name}
               </div>
-              {days.map((date) => {
+              {days.map((date, index) => {
                 const workOrder = getWorkOrder(date, bay.id)
-                return (
-                  <div 
-                    key={date.toISOString()}
-                    className={cn(
-                      "p-2 relative flex items-center justify-center border-b border-gray-700/50",
-                      "hover:bg-gray-700/20 transition-colors cursor-pointer",
-                      isToday(date) && "bg-gray-700/20"
-                    )}
-                    onClick={() => onDateSelect?.(date)}
-                  >
-                    {workOrder && (
+                const isStart = workOrder && !getWorkOrder(addDays(date, -1), bay.id)
+                
+                // Only render the work order card if this is the start date
+                if (workOrder && isStart) {
+                  const duration = getWorkOrderSpan(workOrder)
+                  return (
+                    <div 
+                      key={date.toISOString()}
+                      className={cn(
+                        "p-2 relative flex items-center border-b border-gray-700/50",
+                        "hover:bg-gray-700/20 transition-colors cursor-pointer",
+                        isToday(date) && "bg-gray-700/20"
+                      )}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setSelectedWorkOrder(workOrder)
+                      }}
+                      style={{
+                        gridColumn: `span ${duration}`,
+                        marginLeft: index === 0 ? '0' : '-2px',
+                        marginRight: duration > 1 ? '-2px' : '0',
+                      }}
+                    >
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -237,14 +257,41 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
+                    </div>
+                  )
+                }
+                
+                // For continuation days of a work order, render an empty cell
+                if (workOrder && !isStart) {
+                  return <div key={date.toISOString()} className="border-b border-gray-700/50" />
+                }
+
+                // For empty days
+                return (
+                  <div 
+                    key={date.toISOString()}
+                    className={cn(
+                      "p-2 relative flex items-center justify-center border-b border-gray-700/50",
+                      "hover:bg-gray-700/20 transition-colors cursor-pointer",
+                      isToday(date) && "bg-gray-700/20"
                     )}
-                  </div>
+                    onClick={() => onDateSelect?.(date)}
+                  />
                 )
               })}
             </div>
           ))}
         </div>
       </div>
+
+      {/* Work Order Details Dialog */}
+      {selectedWorkOrder && (
+        <WorkOrderDetailsDialog
+          workOrder={selectedWorkOrder}
+          open={!!selectedWorkOrder}
+          onOpenChange={(open) => !open && setSelectedWorkOrder(null)}
+        />
+      )}
     </div>
   )
 }
