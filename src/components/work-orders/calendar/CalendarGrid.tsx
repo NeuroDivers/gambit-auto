@@ -121,7 +121,7 @@ export function CalendarGrid({ currentDate, workOrders, onDateChange }: Calendar
         <ScrollArea className="h-[600px] rounded-md border">
           <div className="min-w-[800px] select-none">
             {/* Header with days */}
-            <div className="grid grid-cols-[120px_repeat(7,1fr)] gap-4 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
+            <div className="grid grid-cols-[120px_repeat(7,64px)] gap-4 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
               <div className="text-sm font-medium text-muted-foreground">Bays</div>
               {mobileDays.map((day) => (
                 <div key={day.toISOString()} className="text-sm font-medium text-muted-foreground text-center">
@@ -131,7 +131,7 @@ export function CalendarGrid({ currentDate, workOrders, onDateChange }: Calendar
             </div>
 
             {/* Grid with bays and time slots */}
-            <div className="grid grid-cols-[120px_repeat(7,1fr)] gap-4">
+            <div className="grid grid-cols-[120px_repeat(7,64px)] gap-4">
               {serviceBays.map((bay) => (
                 <React.Fragment key={bay.id}>
                   <div className="p-2 text-sm font-medium">{bay.name}</div>
@@ -140,7 +140,7 @@ export function CalendarGrid({ currentDate, workOrders, onDateChange }: Calendar
                     return (
                       <div 
                         key={day.toISOString()}
-                        className="relative p-2 border-l min-h-[80px] group hover:bg-muted/50"
+                        className="relative p-2 border-l h-[80px] min-h-[80px] group hover:bg-muted/50"
                       >
                         {workOrdersForDay.map((order) => (
                           <WorkOrderCard 
