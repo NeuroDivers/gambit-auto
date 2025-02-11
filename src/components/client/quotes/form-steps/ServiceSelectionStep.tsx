@@ -4,6 +4,7 @@ import { UseFormReturn } from "react-hook-form"
 import { QuoteRequestFormData } from "./types"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 type ServiceSelectionStepProps = {
   form: UseFormReturn<QuoteRequestFormData>
@@ -17,6 +18,24 @@ export function ServiceSelectionStep({ form, services }: ServiceSelectionStepPro
       ? [...currentValue, serviceId]
       : currentValue.filter((id: string) => id !== serviceId)
     field.onChange(newValue)
+
+    // Initialize or clean up service details when toggling services
+    const currentDetails = form.getValues('service_details')
+    if (checked) {
+      form.setValue(`service_details.${serviceId}`, {})
+    } else {
+      const newDetails = { ...currentDetails }
+      delete newDetails[serviceId]
+      form.setValue('service_details', newDetails)
+    }
+  }
+
+  const handlePackageSelect = (serviceId: string, packageId: string | null) => {
+    const currentDetails = form.getValues(`service_details.${serviceId}`) || {}
+    form.setValue(`service_details.${serviceId}`, {
+      ...currentDetails,
+      package_id: packageId || undefined
+    })
   }
 
   return (
@@ -67,7 +86,33 @@ export function ServiceSelectionStep({ form, services }: ServiceSelectionStepPro
                     </div>
                   </div>
                   
-                  {service.service_packages && service.service_packages.length > 0 && (
+                  {service.service_packages && service.service_packages.length > 0 && field.value?.includes(service.id) && (
+                    <div className="mt-4 space-y-2">
+                      <p className="text-sm font-medium text-muted-foreground">Select Package:</p>
+                      <Select
+                        value={form.getValues(`service_details.${service.id}.package_id`) || ""}
+                        onValueChange={(value) => handlePackageSelect(service.id, value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Choose a package" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {service.service_packages
+                            .filter((pkg: any) => pkg.status === 'active')
+                            .map((pkg: any) => (
+                              <SelectItem key={pkg.id} value={pkg.id}>
+                                <div className="flex justify-between items-center">
+                                  <span>{pkg.name}</span>
+                                  <span className="text-muted-foreground ml-2">${pkg.price}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {service.service_packages && service.service_packages.length > 0 && !field.value?.includes(service.id) && (
                     <div className="mt-4 space-y-2">
                       <p className="text-sm font-medium text-muted-foreground">Available Packages:</p>
                       <div className="space-y-2">

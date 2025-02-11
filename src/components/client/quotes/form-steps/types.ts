@@ -2,6 +2,7 @@
 export type ServiceDetail = {
   description?: string;
   images?: string[];
+  package_id?: string;
 }
 
 export type PPFServiceDetail = ServiceDetail & {

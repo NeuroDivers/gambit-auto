@@ -28,7 +28,16 @@ export function useQuoteRequestForm() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('service_types')
-        .select('*')
+        .select(`
+          *,
+          service_packages (
+            id,
+            name,
+            description,
+            price,
+            status
+          )
+        `)
         .eq('status', 'active')
       
       if (error) throw error
@@ -138,7 +147,6 @@ export function useQuoteRequestForm() {
       if (requestError) throw requestError
 
       toast.success("Quote request submitted successfully")
-      // Only reset form after successful submission
       form.reset()
       setStep(1)
     } catch (error: any) {

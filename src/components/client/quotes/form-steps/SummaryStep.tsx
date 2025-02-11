@@ -11,6 +11,11 @@ type SummaryStepProps = {
 export function SummaryStep({ form, services }: SummaryStepProps) {
   const formValues = form.getValues()
   
+  const getServicePackage = (serviceId: string, packageId: string) => {
+    const service = services.find(s => s.id === serviceId)
+    return service?.service_packages?.find((p: any) => p.id === packageId)
+  }
+  
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -39,11 +44,21 @@ export function SummaryStep({ form, services }: SummaryStepProps) {
               const details = formValues.service_details[serviceId]
               if (!service) return null
 
+              const selectedPackage = details?.package_id 
+                ? getServicePackage(serviceId, details.package_id)
+                : null
+
               return (
                 <div key={serviceId} className="rounded border p-3">
                   <h4 className="font-medium mb-2">{service.name}</h4>
                   {details && (
                     <div className="text-sm space-y-2">
+                      {selectedPackage && (
+                        <p>
+                          <span className="text-muted-foreground">Selected Package:</span>{' '}
+                          {selectedPackage.name} - ${selectedPackage.price}
+                        </p>
+                      )}
                       {'package_type' in details && (
                         <p>
                           <span className="text-muted-foreground">Package:</span>{' '}
