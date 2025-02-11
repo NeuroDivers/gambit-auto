@@ -1,4 +1,3 @@
-
 import { addDays, startOfDay, subDays, isSameDay } from "date-fns"
 import { WorkOrder } from "../../types"
 import React, { useRef, useEffect, useState, useCallback } from "react"
@@ -71,31 +70,35 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     setTimeout(() => setIsLoading(false), 300)
   }, [isLoading])
 
-  const resetVisibleDays = useCallback((centerDate: Date) => {
-    // Set visible days around the center date, with centerDate at index 15
-    const pastDays = Array.from({ length: 15 }, (_, i) => subDays(centerDate, 15 - i))
-    const futureDays = Array.from({ length: 15 }, (_, i) => addDays(centerDate, i))
-    setVisibleDays([...pastDays, ...futureDays])
-  }, [])
-
   const scrollToToday = useCallback(() => {
     const today = startOfDay(new Date())
+    const todayIndex = visibleDays.findIndex(day => isSameDay(day, today))
     
-    // Reset visible days around today
-    resetVisibleDays(today)
-    
-    // Wait for state update then scroll
-    setTimeout(() => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollTo({
-          left: 15 * CELL_WIDTH, // Scroll to center where today should be
-          behavior: 'smooth'
-        })
-      }
+    if (todayIndex !== -1 && scrollRef.current) {
+      const scrollPosition = todayIndex * CELL_WIDTH
+      scrollRef.current.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth'
+      })
       onDateChange?.(today)
       setVisibleMonth(today)
-    }, 100)
-  }, [onDateChange, resetVisibleDays])
+    } else {
+      toast.error("Today's date not in view. Reloading calendar...")
+      // Reset the calendar around today
+      const pastDays = Array.from({ length: 15 }, (_, i) => subDays(today, 15 - i))
+      const futureDays = Array.from({ length: 15 }, (_, i) => addDays(today, i))
+      setVisibleDays([...pastDays, ...futureDays])
+      // Wait for state update then scroll
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTo({
+            left: 15 * CELL_WIDTH,
+            behavior: 'smooth'
+          })
+        }
+      }, 100)
+    }
+  }, [visibleDays, onDateChange])
 
   const updateVisibleMonth = useCallback(() => {
     if (!scrollRef.current) return
@@ -132,15 +135,13 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     setVisibleMonth(date)
     
     // Reset visible days around the new date
-    resetVisibleDays(date)
+    const newDays = Array.from({ length: 30 }, (_, i) => addDays(startOfDay(date), i))
+    setVisibleDays(newDays)
     
-    // Scroll to the center after a short delay to allow for state update
+    // Scroll to the beginning after a short delay to allow for state update
     setTimeout(() => {
       if (scrollRef.current) {
-        scrollRef.current.scrollTo({
-          left: 15 * CELL_WIDTH,
-          behavior: 'smooth'
-        })
+        scrollRef.current.scrollLeft = 0
       }
     }, 100)
   }
