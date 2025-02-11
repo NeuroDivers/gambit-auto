@@ -1,11 +1,16 @@
+
 import { WorkOrder } from "../types"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 import { WorkOrderDetailsDialog } from "./WorkOrderDetailsDialog"
-import { format } from "date-fns"
+import { format, parseISO, differenceInDays } from "date-fns"
 
 type WorkOrderCardProps = {
-  workOrder: WorkOrder
+  workOrder: WorkOrder & {
+    isStart?: boolean
+    isEnd?: boolean
+    duration?: number
+  }
   className?: string
 }
 
@@ -32,16 +37,30 @@ export function WorkOrderCard({ workOrder, className }: WorkOrderCardProps) {
     }
   }
 
+  const isMultiDay = workOrder.duration && workOrder.duration > 1
+
   return (
     <>
       <div 
         className={cn(
-          "relative text-xs p-1.5 rounded-md truncate cursor-pointer transition-colors",
+          "relative text-xs p-1.5 truncate cursor-pointer transition-colors",
           "hover:shadow-md",
           getStatusStyle(workOrder.status),
+          {
+            'rounded-r-none': workOrder.isStart && isMultiDay,
+            'rounded-none border-l-0 border-r-0': !workOrder.isStart && !workOrder.isEnd,
+            'rounded-l-none': workOrder.isEnd && !workOrder.isStart
+          },
           className
         )}
         onClick={handleClick}
+        style={{
+          marginLeft: workOrder.isStart ? '0' : '-2px',
+          marginRight: workOrder.isEnd ? '0' : '-2px',
+          borderWidth: '1px',
+          borderStyle: 'solid',
+          borderColor: 'rgba(var(--primary), 0.2)'
+        }}
       >
         <div className="truncate font-medium">
           {workOrder.first_name} {workOrder.last_name}
