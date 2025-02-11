@@ -1,15 +1,14 @@
 
 import { useRef, useState, useEffect, useCallback } from "react"
-import { format, addDays, startOfDay, isToday, isSameDay, parseISO } from "date-fns"
-import { Button } from "@/components/ui/button"
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, User2 } from "lucide-react"
+import { format, addDays, startOfDay } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useDragScroll } from "./hooks/useDragScroll"
 import { toast } from "sonner"
 import { useServiceBays } from "@/components/service-bays/hooks/useServiceBays"
 import { WorkOrder } from "../work-orders/types"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { WorkOrderDetailsDialog } from "../work-orders/calendar/WorkOrderDetailsDialog"
+import { CalendarControls } from "./components/CalendarControls"
+import { CalendarGrid } from "./components/CalendarGrid"
 
 type HorizontalCalendarProps = {
   onDateSelect?: (date: Date) => void
@@ -24,15 +23,14 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
   const [isLoading, setIsLoading] = useState(false)
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
   const { serviceBays } = useServiceBays()
-  const DAYS_TO_LOAD = 14 // Initial load of 14 days
+  const DAYS_TO_LOAD = 14
 
   const {
     handleMouseDown,
     handleMouseMove,
     handleTouchStart,
     handleTouchMove,
-    stopDragging,
-    isDragging
+    stopDragging
   } = useDragScroll(scrollRef)
 
   useEffect(() => {
@@ -67,7 +65,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
 
   const scrollToToday = useCallback(() => {
     const today = startOfDay(new Date())
-    const todayIndex = days.findIndex(date => isSameDay(date, today))
+    const todayIndex = days.findIndex(date => date.getTime() === today.getTime())
     
     if (todayIndex !== -1 && scrollRef.current) {
       const scrollPosition = todayIndex * 200
@@ -92,108 +90,13 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     })
   }
 
-  const getWorkOrderSpan = (workOrder: WorkOrder, startIndex: number) => {
-    if (!workOrder.estimated_duration) {
-      console.log('No duration specified for work order:', workOrder.id);
-      return 1;
-    }
-    
-    const duration = parseInt(workOrder.estimated_duration);
-    if (isNaN(duration)) {
-      console.log('Invalid duration for work order:', workOrder.id);
-      return 1;
-    }
-    
-    const remainingDays = days.length - startIndex;
-    const span = Math.min(duration, remainingDays);
-    console.log('Work order span calculation:', {
-      workOrderId: workOrder.id,
-      duration,
-      remainingDays,
-      finalSpan: span
-    });
-    return span;
-  }
-
-  const findWorkOrderForDate = (date: Date, bayId: string) => {
-    const workOrder = workOrders.find(order => {
-      if (!order.start_time || order.assigned_bay_id !== bayId) return false;
-      
-      const orderStartDate = startOfDay(new Date(order.start_time));
-      const duration = order.estimated_duration ? parseInt(order.estimated_duration) : 1;
-      const orderEndDate = addDays(orderStartDate, duration - 1);
-      
-      const isWithinRange = date >= orderStartDate && date <= orderEndDate;
-      
-      if (isWithinRange) {
-        console.log('Found work order for date:', {
-          date: date.toISOString(),
-          workOrderId: order.id,
-          startDate: orderStartDate.toISOString(),
-          endDate: orderEndDate.toISOString(),
-          duration
-        });
-      }
-      
-      return isWithinRange;
-    });
-
-    return workOrder;
-  }
-
-  const isWorkOrderStart = (date: Date, workOrder: WorkOrder) => {
-    if (!workOrder.start_time) return false;
-    const isStart = isSameDay(startOfDay(new Date(workOrder.start_time)), startOfDay(date));
-    if (isStart) {
-      console.log('Work order starts on:', {
-        date: date.toISOString(),
-        workOrderId: workOrder.id,
-        startTime: workOrder.start_time
-      });
-    }
-    return isStart;
-  }
-
-  const formatTime = (timeString: string | null | undefined) => {
-    if (!timeString) return '';
-    return format(parseISO(timeString), 'h:mm a');
-  }
-
   return (
     <div className={cn("p-4 bg-[#222226] rounded-lg shadow-lg", className)}>
-      <div className="flex items-center justify-between px-2 mb-6">
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => navigateMonth('prev')}
-            className="hover:bg-accent/50 text-white"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="font-semibold min-w-[120px] text-center text-white">
-            {currentMonth}
-          </span>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => navigateMonth('next')}
-            className="hover:bg-accent/50 text-white"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        <Button 
-          variant="ghost" 
-          size="sm"
-          onClick={scrollToToday}
-          className="text-sm flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white"
-        >
-          <CalendarIcon className="w-4 h-4" />
-          Today
-        </Button>
-      </div>
+      <CalendarControls
+        currentMonth={currentMonth}
+        onNavigateMonth={navigateMonth}
+        onScrollToToday={scrollToToday}
+      />
 
       <div
         ref={scrollRef}
@@ -218,106 +121,13 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
             minWidth: 'max-content'
           }}
         >
-          {/* Days header */}
-          <div className="grid" style={{ gridTemplateColumns: `100px repeat(${days.length}, 200px)` }}>
-            <div className="p-4 text-gray-400 font-medium sticky left-0 bg-[#222226] z-10">Bay</div>
-            {days.map((date) => (
-              <div 
-                key={date.toISOString()}
-                className="p-4 text-gray-400 font-medium text-center border-b border-gray-700/50"
-              >
-                <div>{format(date, 'EEE')}</div>
-                <div>{format(date, 'd')}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Bays and events grid */}
-          {serviceBays?.map((bay) => (
-            <div 
-              key={bay.id}
-              className="grid"
-              style={{ gridTemplateColumns: `100px repeat(${days.length}, 200px)` }}
-            >
-              <div className="p-4 text-gray-300 sticky left-0 bg-[#222226] z-10 border-b border-gray-700/50">
-                {bay.name}
-              </div>
-              {days.map((date, index) => {
-                const workOrder = findWorkOrderForDate(date, bay.id);
-                
-                if (workOrder && isWorkOrderStart(date, workOrder)) {
-                  const span = getWorkOrderSpan(workOrder, index);
-                  console.log('Rendering work order:', {
-                    workOrderId: workOrder.id,
-                    date: date.toISOString(),
-                    span,
-                    name: `${workOrder.first_name} ${workOrder.last_name}`
-                  });
-                  
-                  return (
-                    <div 
-                      key={date.toISOString()}
-                      className={cn(
-                        "p-2 relative flex items-center border-b border-gray-700/50",
-                        "hover:bg-gray-700/20 transition-colors cursor-pointer",
-                        isToday(date) && "bg-gray-700/20"
-                      )}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedWorkOrder(workOrder);
-                      }}
-                      style={{
-                        gridColumn: `span ${span}`,
-                      }}
-                    >
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="bg-[#1F2937] p-2 rounded-lg border border-[#50D091]/20 w-full">
-                              <div className="text-xs text-white truncate">
-                                {workOrder.first_name} {workOrder.last_name}
-                              </div>
-                              <div className="text-xs text-[#50D091] mt-1 flex items-center gap-1">
-                                <User2 className="w-3 h-3" />
-                                <span>{formatTime(workOrder.start_time)}</span>
-                              </div>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <div className="space-y-1">
-                              <p className="font-medium">{workOrder.first_name} {workOrder.last_name}</p>
-                              <p className="text-sm text-gray-400">
-                                {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
-                              </p>
-                              <p className="text-sm text-[#50D091]">
-                                {formatTime(workOrder.start_time)} ({workOrder.estimated_duration} day{parseInt(workOrder.estimated_duration || '1') !== 1 ? 's' : ''})
-                              </p>
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                  );
-                }
-
-                if (workOrder && !isWorkOrderStart(date, workOrder)) {
-                  return null;
-                }
-
-                return (
-                  <div 
-                    key={date.toISOString()}
-                    className={cn(
-                      "p-2 relative flex items-center justify-center border-b border-gray-700/50",
-                      "hover:bg-gray-700/20 transition-colors cursor-pointer",
-                      isToday(date) && "bg-gray-700/20"
-                    )}
-                    onClick={() => onDateSelect?.(date)}
-                  />
-                );
-              })}
-            </div>
-          ))}
+          <CalendarGrid
+            days={days}
+            serviceBays={serviceBays}
+            workOrders={workOrders}
+            onDateSelect={onDateSelect}
+            onWorkOrderSelect={setSelectedWorkOrder}
+          />
         </div>
       </div>
 
@@ -329,5 +139,5 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
         />
       )}
     </div>
-  );
+  )
 }
