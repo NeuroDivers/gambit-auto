@@ -33,7 +33,7 @@ export function DashboardLayout({
         role={role}
         onLogout={onLogout}
       />
-      <SidebarNav />
+      <SidebarNav className="flex-1" />
     </SidebarContent>
   )
 

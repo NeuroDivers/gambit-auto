@@ -71,7 +71,11 @@ const settingsItems: NavItem[] = [
   },
 ]
 
-export function SidebarNav() {
+interface SidebarNavProps {
+  className?: string;
+}
+
+export function SidebarNav({ className }: SidebarNavProps) {
   const location = useLocation()
   const { permissions } = usePermissions()
   const [allowedItems, setAllowedItems] = useState<NavItem[]>([])
@@ -104,7 +108,7 @@ export function SidebarNav() {
   }, [permissions]);
 
   return (
-    <nav className="flex flex-col gap-2 p-4 flex-1 h-full overflow-y-auto">
+    <nav className={cn("flex flex-col gap-2 p-4 h-full overflow-y-auto", className)}>
       <div className="space-y-2">
         {allowedItems.map((item) => (
           <Link
