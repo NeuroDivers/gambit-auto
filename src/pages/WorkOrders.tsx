@@ -10,17 +10,16 @@ export default function WorkOrders() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
-      <div className="container mx-auto py-6 sm:py-12 px-0 lg:px-8">
-        <div className="px-0 sm:px-6">
-          <div className="mb-8 flex justify-end">
-            <Button 
-              onClick={() => setIsCreateDialogOpen(true)}
-              className="flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Create Work Order
-            </Button>
-          </div>
+      <div className="container mx-auto py-6 sm:py-12 px-4 lg:px-8">
+        <div className="sticky top-4 z-10 mb-8">
+          <Button 
+            onClick={() => setIsCreateDialogOpen(true)}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 shadow-lg"
+            size="lg"
+          >
+            <Plus className="w-4 h-4" />
+            Create Work Order
+          </Button>
         </div>
         <div className="max-w-[1600px] mx-auto">
           <WorkOrderList />
