@@ -23,7 +23,7 @@ export function CalendarGrid({
 }: CalendarGridProps) {
   return (
     <>
-      <div className="grid" style={{ gridTemplateColumns: `100px repeat(${days.length}, 200px)` }}>
+      <div className="grid" style={{ gridTemplateColumns: `100px repeat(${days.length}, 80px)` }}>
         <div className="p-4 text-gray-400 font-medium sticky left-0 bg-[#222226] z-10">Bay</div>
         {days.map((date) => (
           <div 
@@ -40,7 +40,7 @@ export function CalendarGrid({
         <div 
           key={bay.id}
           className="grid"
-          style={{ gridTemplateColumns: `100px repeat(${days.length}, 200px)` }}
+          style={{ gridTemplateColumns: `100px repeat(${days.length}, 80px)` }}
         >
           <div className="p-4 text-gray-300 sticky left-0 bg-[#222226] z-10 border-b border-gray-700/50">
             {bay.name}
