@@ -4,6 +4,7 @@ import { format, addDays, startOfDay, isToday, isSameDay } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useDragScroll } from "./hooks/useDragScroll"
 import { toast } from "sonner"
 
 type HorizontalCalendarProps = {
@@ -18,6 +19,15 @@ export function HorizontalCalendar({ onDateSelect, className }: HorizontalCalend
   const [isLoading, setIsLoading] = useState(false)
   const CELL_WIDTH = 100 // Width of each day cell in pixels
   const DAYS_TO_LOAD = 20 // Number of days to load in each batch
+
+  const {
+    handleMouseDown,
+    handleMouseMove,
+    handleTouchStart,
+    handleTouchMove,
+    stopDragging,
+    isDragging
+  } = useDragScroll(scrollRef)
 
   // Initialize calendar with current date and next 20 days
   useEffect(() => {
@@ -81,6 +91,18 @@ export function HorizontalCalendar({ onDateSelect, className }: HorizontalCalend
     })
   }
 
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (scrollRef.current) {
+        handleScroll()
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [handleScroll])
+
   return (
     <div className={cn("space-y-4 p-4 bg-gradient-to-b from-background/50 to-background rounded-lg shadow-lg", className)}>
       {/* Header */}
@@ -122,7 +144,17 @@ export function HorizontalCalendar({ onDateSelect, className }: HorizontalCalend
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="overflow-x-auto snap-x snap-mandatory scroll-smooth"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={stopDragging}
+        onMouseLeave={stopDragging}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={stopDragging}
+        className={cn(
+          "overflow-x-auto snap-x snap-mandatory scroll-smooth",
+          isDragging ? "cursor-grabbing" : "cursor-grab"
+        )}
         style={{
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
@@ -137,12 +169,17 @@ export function HorizontalCalendar({ onDateSelect, className }: HorizontalCalend
             <div
               key={date.toISOString()}
               className={cn(
-                "flex-none w-[100px] p-4 border-r border-border snap-start cursor-pointer",
+                "flex-none w-[100px] h-[100px] p-4 border-r border-border snap-start",
                 "hover:bg-accent/50 transition-colors",
                 "first:rounded-l-lg last:rounded-r-lg last:border-r-0",
-                isToday(date) && "bg-primary/10 font-semibold"
+                isToday(date) && "bg-primary/10 font-semibold",
+                !isDragging && "cursor-pointer"
               )}
-              onClick={() => onDateSelect?.(date)}
+              onClick={(e) => {
+                if (!stopDragging(e)) {
+                  onDateSelect?.(date)
+                }
+              }}
             >
               <div className="text-sm text-muted-foreground">
                 {format(date, 'EEE')}
