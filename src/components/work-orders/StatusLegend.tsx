@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge"
 
 type StatusCount = {
@@ -13,7 +14,7 @@ type StatusLegendProps = {
 
 export function StatusLegend({ statusCounts }: StatusLegendProps) {
   return (
-    <div className="flex flex-wrap gap-2 items-center mb-4 p-4 rounded-lg">
+    <div className="hidden md:flex md:flex-wrap gap-2 items-center mb-4 p-4 rounded-lg">
       <span className="text-sm font-medium mr-2">Status Legend:</span>
       <Badge className="border text-muted-foreground bg-muted/40 border-muted/40">
         pending ({statusCounts.pending})
