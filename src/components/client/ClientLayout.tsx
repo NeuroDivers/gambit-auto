@@ -31,7 +31,7 @@ export function ClientLayout({
         role={role}
         onLogout={onLogout}
       />
-      <ClientSidebarNav />
+      <ClientSidebarNav onNavigate={() => setIsMobileMenuOpen(false)} />
     </SidebarContent>
   )
 

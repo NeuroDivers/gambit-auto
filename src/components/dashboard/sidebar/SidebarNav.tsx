@@ -73,9 +73,10 @@ const settingsItems: NavItem[] = [
 
 interface SidebarNavProps {
   className?: string;
+  onNavigate?: () => void;
 }
 
-export function SidebarNav({ className }: SidebarNavProps) {
+export function SidebarNav({ className, onNavigate }: SidebarNavProps) {
   const location = useLocation()
   const { permissions } = usePermissions()
   const [allowedItems, setAllowedItems] = useState<NavItem[]>([])
@@ -133,6 +134,7 @@ export function SidebarNav({ className }: SidebarNavProps) {
           <Link
             key={item.href}
             to={item.href}
+            onClick={onNavigate}
             className={cn(
               "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-accent",
               location.pathname === item.href ? "bg-accent" : "transparent",
@@ -150,6 +152,7 @@ export function SidebarNav({ className }: SidebarNavProps) {
           <Link
             key={item.href}
             to={item.href}
+            onClick={onNavigate}
             className={cn(
               "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-accent",
               location.pathname === item.href ? "bg-accent" : "transparent",

@@ -34,7 +34,7 @@ export function DashboardLayout({
         role={role}
         onLogout={onLogout}
       />
-      <SidebarNav className="flex-1" />
+      <SidebarNav className="flex-1" onNavigate={() => setIsMobileMenuOpen(false)} />
     </SidebarContent>
   )
 
@@ -63,7 +63,7 @@ export function DashboardLayout({
           "fixed inset-0 bg-background z-40 transform transition-transform duration-300 ease-in-out",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}>
-          <div className="h-screen pt-16"> {/* Add padding for header and ensure full height */}
+          <div className="h-screen pt-16">
             {sidebarContent}
           </div>
         </div>
@@ -90,4 +90,3 @@ export function DashboardLayout({
     </SidebarProvider>
   )
 }
-

@@ -32,7 +32,11 @@ const items = [
   },
 ]
 
-export function ClientSidebarNav() {
+interface ClientSidebarNavProps {
+  onNavigate?: () => void;
+}
+
+export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
   const location = useLocation()
 
   return (
@@ -41,6 +45,7 @@ export function ClientSidebarNav() {
         <Link
           key={item.href}
           to={item.href}
+          onClick={onNavigate}
           className={cn(
             "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
             location.pathname === item.href ? "bg-accent text-accent-foreground" : "text-foreground"
