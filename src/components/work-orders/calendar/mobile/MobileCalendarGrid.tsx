@@ -48,21 +48,14 @@ export function MobileCalendarGrid({
     }
 
     const debouncedHandleScroll = (e: Event) => {
-      if (scrollTimeout) {
-        clearTimeout(scrollTimeout)
-      }
-      scrollTimeout = setTimeout(() => handleScroll(e), 100)
+      handleScroll(e)
     }
 
-    let scrollTimeout: NodeJS.Timeout
     const currentRef = scrollRef.current
     if (currentRef) {
       currentRef.addEventListener('scroll', debouncedHandleScroll)
       return () => {
         currentRef.removeEventListener('scroll', debouncedHandleScroll)
-        if (scrollTimeout) {
-          clearTimeout(scrollTimeout)
-        }
       }
     }
   }, [onScroll, scrollRef])
