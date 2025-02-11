@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 type CalendarGridProps = {
   currentDate: Date
@@ -92,10 +93,10 @@ export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
           </Button>
         </div>
 
-        <div className="overflow-x-auto">
+        <ScrollArea className="h-[calc(100vh-12rem)]">
           <div className="min-w-[800px]">
             {/* Header with days */}
-            <div className="grid grid-cols-[120px_repeat(7,1fr)] gap-4 bg-muted/50 p-2 rounded-t-lg">
+            <div className="grid grid-cols-[120px_repeat(7,1fr)] gap-4 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
               <div className="text-sm font-medium text-muted-foreground">Bays</div>
               {mobileDays.map((day) => (
                 <div key={day.toISOString()} className="text-sm font-medium text-muted-foreground text-center">
@@ -141,7 +142,7 @@ export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
               ))}
             </div>
           </div>
-        </div>
+        </ScrollArea>
 
         <Dialog open={showMonthPicker} onOpenChange={setShowMonthPicker}>
           <DialogContent>
@@ -185,3 +186,4 @@ export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
     </div>
   )
 }
+
