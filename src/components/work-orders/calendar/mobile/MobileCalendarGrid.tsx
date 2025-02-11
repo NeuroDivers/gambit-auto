@@ -6,8 +6,6 @@ import { MobileCalendarRow } from "./MobileCalendarRow"
 import React, { useState, useEffect, useRef } from "react"
 import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
 import { CreateWorkOrderDialog } from "../../CreateWorkOrderDialog"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "lucide-react"
 
 type MobileCalendarGridProps = {
   visibleDays: Date[]
@@ -43,7 +41,6 @@ export function MobileCalendarGrid({
       const { scrollLeft, scrollWidth, clientWidth } = target
       const remainingScroll = scrollWidth - (scrollLeft + clientWidth)
       
-      // Load more when within 300px of the end
       if (remainingScroll < 300) {
         console.log('Loading more days...', { remainingScroll, scrollWidth, scrollLeft, clientWidth })
         onScroll()
@@ -127,87 +124,64 @@ export function MobileCalendarGrid({
     }
   }
 
-  const scrollToToday = () => {
-    const today = new Date()
-    const todayElement = visibleDays.findIndex(day => isToday(day))
-    if (todayElement !== -1 && scrollRef.current) {
-      const cellWidth = 68 // width + gap
-      scrollRef.current.scrollLeft = todayElement * cellWidth
-    }
-  }
-
   return (
-    <div className="relative">
-      <div className="mb-4 flex justify-end">
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={scrollToToday}
-          className="text-sm"
-        >
-          <Calendar className="w-4 h-4 mr-2" />
-          Today
-        </Button>
-      </div>
-
-      <ScrollArea 
-        ref={scrollAreaRef}
-        className="rounded-md border"
-        onWheel={handleWheel}
+    <ScrollArea 
+      ref={scrollAreaRef}
+      className="rounded-md border"
+      onWheel={handleWheel}
+    >
+      <div 
+        className="w-max overflow-x-auto"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={stopDragging}
+        onMouseLeave={stopDragging}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={stopDragging}
+        ref={scrollRef}
       >
-        <div 
-          className="w-max overflow-x-auto"
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={stopDragging}
-          onMouseLeave={stopDragging}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={stopDragging}
-          ref={scrollRef}
-        >
-          <div className="grid grid-cols-[86px_repeat(30,64px)] gap-4 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
-            <div className="text-sm font-medium text-muted-foreground">Bays</div>
-            {visibleDays.map((day) => (
-              <div 
-                key={day.toISOString()} 
-                className={`flex flex-col items-center justify-center cursor-pointer hover:bg-accent/50 rounded p-1 ${
-                  isToday(day) ? 'bg-primary/10 text-primary' : ''
-                }`}
-                onClick={(e) => handleDateClick(day, e)}
-              >
-                <span className="text-sm font-medium text-muted-foreground">
-                  {format(day, 'EEE')}
-                </span>
-                <span className={`text-sm font-bold ${isToday(day) ? 'text-primary' : ''}`}>
-                  {format(day, 'd')}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-[86px_repeat(30,64px)] gap-4">
-            {serviceBays.map((bay) => (
-              <React.Fragment key={bay.id}>
-                <MobileCalendarRow
-                  bayId={bay.id}
-                  bayName={bay.name}
-                  visibleDays={visibleDays}
-                  workOrders={workOrders}
-                  onDateClick={handleDateClick}
-                />
-              </React.Fragment>
-            ))}
-          </div>
+        <div className="grid grid-cols-[86px_repeat(30,64px)] gap-4 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
+          <div className="text-sm font-medium text-muted-foreground">Bays</div>
+          {visibleDays.map((day) => (
+            <div 
+              key={day.toISOString()} 
+              className={`flex flex-col items-center justify-center cursor-pointer hover:bg-accent/50 rounded p-1 ${
+                isToday(day) ? 'bg-primary/10 text-primary' : ''
+              }`}
+              onClick={(e) => handleDateClick(day, e)}
+            >
+              <span className="text-sm font-medium text-muted-foreground">
+                {format(day, 'EEE')}
+              </span>
+              <span className={`text-sm font-bold ${isToday(day) ? 'text-primary' : ''}`}>
+                {format(day, 'd')}
+              </span>
+            </div>
+          ))}
         </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+
+        <div className="grid grid-cols-[86px_repeat(30,64px)] gap-4">
+          {serviceBays.map((bay) => (
+            <React.Fragment key={bay.id}>
+              <MobileCalendarRow
+                bayId={bay.id}
+                bayName={bay.name}
+                visibleDays={visibleDays}
+                workOrders={workOrders}
+                onDateClick={handleDateClick}
+              />
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+      <ScrollBar orientation="horizontal" />
 
       <CreateWorkOrderDialog 
         open={showWorkOrderDialog}
         onOpenChange={setShowWorkOrderDialog}
         defaultStartTime={selectedDate || undefined}
       />
-    </div>
+    </ScrollArea>
   )
 }

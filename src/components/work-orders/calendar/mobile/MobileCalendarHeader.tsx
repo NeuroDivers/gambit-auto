@@ -1,15 +1,21 @@
 
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { Calendar, ChevronLeft, ChevronRight } from "lucide-react"
 
 type MobileCalendarHeaderProps = {
   currentDate: Date
   onDateChange: (date: Date) => void
   onMonthPickerOpen: () => void
+  onTodayClick: () => void
 }
 
-export function MobileCalendarHeader({ currentDate, onDateChange, onMonthPickerOpen }: MobileCalendarHeaderProps) {
+export function MobileCalendarHeader({ 
+  currentDate, 
+  onDateChange, 
+  onMonthPickerOpen,
+  onTodayClick 
+}: MobileCalendarHeaderProps) {
   const handlePreviousMonth = () => {
     const prevMonth = new Date(currentDate)
     prevMonth.setMonth(prevMonth.getMonth() - 1)
@@ -23,7 +29,7 @@ export function MobileCalendarHeader({ currentDate, onDateChange, onMonthPickerO
   }
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
         <Button 
           variant="outline" 
@@ -47,6 +53,16 @@ export function MobileCalendarHeader({ currentDate, onDateChange, onMonthPickerO
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
+      
+      <Button 
+        variant="outline" 
+        size="sm"
+        onClick={onTodayClick}
+        className="text-sm"
+      >
+        <Calendar className="w-4 h-4 mr-2" />
+        Today
+      </Button>
     </div>
   )
 }

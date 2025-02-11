@@ -6,7 +6,7 @@ import { MonthPicker } from "../MonthPicker"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { MobileCalendarHeader } from "./MobileCalendarHeader"
-import { MobileCalendarGrid } from "./MobileCalendarGrid"
+import { MobileCalendarGrid } from "./mobile/MobileCalendarGrid"
 import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
 
 type MobileCalendarViewProps = {
@@ -69,6 +69,21 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     setTimeout(() => setIsLoading(false), 300)
   }, [isLoading, visibleDays])
 
+  const scrollToToday = useCallback(() => {
+    const today = new Date()
+    const todayIndex = visibleDays.findIndex(day => 
+      day.getDate() === today.getDate() && 
+      day.getMonth() === today.getMonth() && 
+      day.getFullYear() === today.getFullYear()
+    )
+    
+    if (todayIndex !== -1 && scrollRef.current) {
+      const cellWidth = 68 // width + gap
+      scrollRef.current.scrollLeft = todayIndex * cellWidth
+      setVisibleMonth(today)
+    }
+  }, [visibleDays])
+
   // Update visible month based on scroll position
   const updateVisibleMonth = useCallback(() => {
     if (!scrollRef.current) return
@@ -76,25 +91,23 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     const scrollElement = scrollRef.current
     const scrollLeft = scrollElement.scrollLeft
     const elementWidth = scrollElement.clientWidth
-    const cellWidth = 68 // width + gap (64px + 4px)
+    const cellWidth = 68 // width + gap
     
     // Calculate the center position of the viewport
     const centerPosition = scrollLeft + (elementWidth / 2)
     const centerIndex = Math.floor(centerPosition / cellWidth)
     
     if (visibleDays[centerIndex]) {
-      const newVisibleMonth = startOfMonth(visibleDays[centerIndex])
-      setVisibleMonth(prev => {
-        // Only update if the month has actually changed
-        if (prev.getMonth() !== newVisibleMonth.getMonth() || 
-            prev.getFullYear() !== newVisibleMonth.getFullYear()) {
-          console.log('Updating visible month to:', newVisibleMonth)
-          return newVisibleMonth
-        }
-        return prev
-      })
+      setVisibleMonth(startOfMonth(visibleDays[centerIndex]))
     }
-  }, [visibleDays])
+
+    // Check if we need to load more days
+    const { scrollWidth } = scrollElement
+    const remainingScroll = scrollWidth - (scrollLeft + elementWidth)
+    if (remainingScroll < 300) {
+      loadMoreDays()
+    }
+  }, [visibleDays, loadMoreDays])
 
   // Add scroll event listener with debounce
   useEffect(() => {
@@ -104,15 +117,13 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     let scrollTimeout: NodeJS.Timeout
 
     const handleScroll = () => {
-      // Clear the existing timeout
       if (scrollTimeout) {
         clearTimeout(scrollTimeout)
       }
 
-      // Set a new timeout to update the month
       scrollTimeout = setTimeout(() => {
         updateVisibleMonth()
-      }, 100) // Small debounce delay
+      }, 100)
     }
 
     currentRef.addEventListener('scroll', handleScroll)
@@ -130,6 +141,7 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
         currentDate={visibleMonth}
         onDateChange={onDateChange || (() => {})}
         onMonthPickerOpen={() => setShowMonthPicker(true)}
+        onTodayClick={scrollToToday}
       />
 
       <MobileCalendarGrid
