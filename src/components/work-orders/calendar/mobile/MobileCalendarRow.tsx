@@ -39,7 +39,7 @@ export function MobileCalendarRow({ bayId, bayName, visibleDays, workOrders, onD
   return (
     <>
       <div className="w-[86px] p-2 text-sm font-medium truncate">{bayName}</div>
-      {visibleDays.slice(0, 30).map((day) => {
+      {visibleDays.map((day) => {
         const workOrdersForDay = getWorkOrdersForDay(day)
         return (
           <div 

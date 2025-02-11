@@ -59,14 +59,15 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     setIsLoading(true)
     lastLoadTimeRef.current = now
 
-    setVisibleDays(prev => {
-      const lastDay = prev[prev.length - 1]
-      const newDays = Array.from({ length: 30 }, (_, i) => addDays(lastDay, i + 1))
-      return [...prev, ...newDays]
-    })
+    // Get the last day from the current visibleDays array
+    const lastDay = visibleDays[visibleDays.length - 1]
+    const newDays = Array.from({ length: 30 }, (_, i) => addDays(lastDay, i + 1))
+
+    // Update visibleDays by appending the new days
+    setVisibleDays(prevDays => [...prevDays, ...newDays])
 
     setTimeout(() => setIsLoading(false), 300)
-  }, [isLoading])
+  }, [isLoading, visibleDays])
 
   // Update visible month based on scroll position
   const updateVisibleMonth = useCallback(() => {
