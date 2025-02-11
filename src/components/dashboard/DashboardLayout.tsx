@@ -70,7 +70,7 @@ export function DashboardLayout({
 
         {/* Main Content */}
         <main className={cn(
-          "flex-1 p-4 transition-all duration-300 ease-in-out",
+          "flex-1 transition-all duration-300 ease-in-out",
           isMobileMenuOpen ? "opacity-50" : "opacity-100"
         )}>
           {children}
