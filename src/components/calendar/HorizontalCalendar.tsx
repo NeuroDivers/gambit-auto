@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect, useCallback } from "react"
 import { format, addDays, startOfDay, isToday, isSameDay, parseISO } from "date-fns"
 import { Button } from "@/components/ui/button"
@@ -92,28 +93,65 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
   }
 
   const getWorkOrderSpan = (workOrder: WorkOrder, startIndex: number) => {
-    if (!workOrder.estimated_duration) return 1;
+    if (!workOrder.estimated_duration) {
+      console.log('No duration specified for work order:', workOrder.id);
+      return 1;
+    }
+    
     const duration = parseInt(workOrder.estimated_duration);
-    if (isNaN(duration)) return 1;
+    if (isNaN(duration)) {
+      console.log('Invalid duration for work order:', workOrder.id);
+      return 1;
+    }
     
     const remainingDays = days.length - startIndex;
-    return Math.min(duration, remainingDays);
+    const span = Math.min(duration, remainingDays);
+    console.log('Work order span calculation:', {
+      workOrderId: workOrder.id,
+      duration,
+      remainingDays,
+      finalSpan: span
+    });
+    return span;
   }
 
   const findWorkOrderForDate = (date: Date, bayId: string) => {
-    return workOrders.find(order => {
+    const workOrder = workOrders.find(order => {
       if (!order.start_time || order.assigned_bay_id !== bayId) return false;
       
       const orderStartDate = startOfDay(new Date(order.start_time));
-      const orderEndDate = addDays(orderStartDate, parseInt(order.estimated_duration || '1') - 1);
+      const duration = order.estimated_duration ? parseInt(order.estimated_duration) : 1;
+      const orderEndDate = addDays(orderStartDate, duration - 1);
       
-      return date >= orderStartDate && date <= orderEndDate;
+      const isWithinRange = date >= orderStartDate && date <= orderEndDate;
+      
+      if (isWithinRange) {
+        console.log('Found work order for date:', {
+          date: date.toISOString(),
+          workOrderId: order.id,
+          startDate: orderStartDate.toISOString(),
+          endDate: orderEndDate.toISOString(),
+          duration
+        });
+      }
+      
+      return isWithinRange;
     });
+
+    return workOrder;
   }
 
   const isWorkOrderStart = (date: Date, workOrder: WorkOrder) => {
     if (!workOrder.start_time) return false;
-    return isSameDay(startOfDay(new Date(workOrder.start_time)), startOfDay(date));
+    const isStart = isSameDay(startOfDay(new Date(workOrder.start_time)), startOfDay(date));
+    if (isStart) {
+      console.log('Work order starts on:', {
+        date: date.toISOString(),
+        workOrderId: workOrder.id,
+        startTime: workOrder.start_time
+      });
+    }
+    return isStart;
   }
 
   const formatTime = (timeString: string | null | undefined) => {
@@ -180,6 +218,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
             minWidth: 'max-content'
           }}
         >
+          {/* Days header */}
           <div className="grid" style={{ gridTemplateColumns: `100px repeat(${days.length}, 200px)` }}>
             <div className="p-4 text-gray-400 font-medium sticky left-0 bg-[#222226] z-10">Bay</div>
             {days.map((date) => (
@@ -193,6 +232,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
             ))}
           </div>
 
+          {/* Bays and events grid */}
           {serviceBays?.map((bay) => (
             <div 
               key={bay.id}
@@ -207,6 +247,12 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
                 
                 if (workOrder && isWorkOrderStart(date, workOrder)) {
                   const span = getWorkOrderSpan(workOrder, index);
+                  console.log('Rendering work order:', {
+                    workOrderId: workOrder.id,
+                    date: date.toISOString(),
+                    span,
+                    name: `${workOrder.first_name} ${workOrder.last_name}`
+                  });
                   
                   return (
                     <div 
@@ -244,7 +290,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
                                 {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
                               </p>
                               <p className="text-sm text-[#50D091]">
-                                {formatTime(workOrder.start_time)}
+                                {formatTime(workOrder.start_time)} ({workOrder.estimated_duration} day{parseInt(workOrder.estimated_duration || '1') !== 1 ? 's' : ''})
                               </p>
                             </div>
                           </TooltipContent>
@@ -252,7 +298,9 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
                       </TooltipProvider>
                     </div>
                   );
-                } else if (workOrder && !isWorkOrderStart(date, workOrder)) {
+                }
+
+                if (workOrder && !isWorkOrderStart(date, workOrder)) {
                   return null;
                 }
 
@@ -281,5 +329,5 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
         />
       )}
     </div>
-  )
+  );
 }
