@@ -1,3 +1,4 @@
+
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -31,7 +32,9 @@ export function CustomerInfoFields({
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="customerFirstName">First Name</Label>
+          <Label htmlFor="customerFirstName">
+            First Name <span className="text-red-500">*</span>
+          </Label>
           <Input
             id="customerFirstName"
             value={customerFirstName}
@@ -41,7 +44,9 @@ export function CustomerInfoFields({
           />
         </div>
         <div>
-          <Label htmlFor="customerLastName">Last Name</Label>
+          <Label htmlFor="customerLastName">
+            Last Name <span className="text-red-500">*</span>
+          </Label>
           <Input
             id="customerLastName"
             value={customerLastName}
@@ -52,7 +57,9 @@ export function CustomerInfoFields({
         </div>
       </div>
       <div>
-        <Label htmlFor="customerEmail">Customer Email</Label>
+        <Label htmlFor="customerEmail">
+          Customer Email <span className="text-red-500">*</span>
+        </Label>
         <Input
           id="customerEmail"
           type="email"
@@ -63,13 +70,16 @@ export function CustomerInfoFields({
         />
       </div>
       <div>
-        <Label htmlFor="customerPhone">Customer Phone</Label>
+        <Label htmlFor="customerPhone">
+          Customer Phone <span className="text-red-500">*</span>
+        </Label>
         <Input
           id="customerPhone"
           type="tel"
           value={customerPhone || ''}
           onChange={(e) => setCustomerPhone(e.target.value)}
           placeholder="Enter customer phone..."
+          required
         />
       </div>
       <div>

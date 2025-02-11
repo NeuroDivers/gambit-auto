@@ -40,7 +40,9 @@ export function VehicleInfoFields({
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="vehicleMake">Vehicle Make</Label>
+          <Label htmlFor="vehicleMake">
+            Vehicle Make <span className="text-red-500">*</span>
+          </Label>
           <div className="relative">
             <Input
               id="vehicleMake"
@@ -57,7 +59,9 @@ export function VehicleInfoFields({
           </div>
         </div>
         <div>
-          <Label htmlFor="vehicleModel">Vehicle Model</Label>
+          <Label htmlFor="vehicleModel">
+            Vehicle Model <span className="text-red-500">*</span>
+          </Label>
           <div className="relative">
             <Input
               id="vehicleModel"
@@ -76,7 +80,9 @@ export function VehicleInfoFields({
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="vehicleYear">Vehicle Year</Label>
+          <Label htmlFor="vehicleYear">
+            Vehicle Year <span className="text-red-500">*</span>
+          </Label>
           <div className="relative">
             <Input
               id="vehicleYear"
@@ -95,7 +101,7 @@ export function VehicleInfoFields({
         </div>
         <div>
           <Label htmlFor="vehicleVin">
-            Vehicle VIN
+            Vehicle VIN <span className="text-red-500">*</span>
             <span className="text-xs text-muted-foreground ml-2">(Auto-fills vehicle info)</span>
           </Label>
           <Input
