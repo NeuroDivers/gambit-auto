@@ -51,6 +51,23 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     setVisibleDays(initialDays)
   }, [currentDate])
 
+  const loadMoreDays = useCallback(() => {
+    const now = Date.now()
+    if (isLoading || now - lastLoadTimeRef.current < 500) return
+    
+    console.log("Loading more days...")
+    setIsLoading(true)
+    lastLoadTimeRef.current = now
+
+    setVisibleDays(prev => {
+      const lastDay = prev[prev.length - 1]
+      const newDays = Array.from({ length: 30 }, (_, i) => addDays(lastDay, i + 1))
+      return [...prev, ...newDays]
+    })
+
+    setTimeout(() => setIsLoading(false), 300)
+  }, [isLoading])
+
   // Update visible month based on scroll position
   const updateVisibleMonth = useCallback(() => {
     if (!scrollRef.current) return
@@ -111,23 +128,6 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
       }
     }
   }, [updateVisibleMonth, loadMoreDays])
-
-  const loadMoreDays = useCallback(() => {
-    const now = Date.now()
-    if (isLoading || now - lastLoadTimeRef.current < 500) return
-    
-    console.log("Loading more days...")
-    setIsLoading(true)
-    lastLoadTimeRef.current = now
-
-    setVisibleDays(prev => {
-      const lastDay = prev[prev.length - 1]
-      const newDays = Array.from({ length: 30 }, (_, i) => addDays(lastDay, i + 1))
-      return [...prev, ...newDays]
-    })
-
-    setTimeout(() => setIsLoading(false), 300)
-  }, [isLoading])
 
   return (
     <div className="space-y-4">
