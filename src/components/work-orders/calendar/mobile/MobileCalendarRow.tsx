@@ -64,7 +64,7 @@ export function MobileCalendarRow({
         return (
           <div 
             key={format(day, 'yyyy-MM-dd')}
-            className={`relative p-2 border-l h-[80px] min-h-[80px] group hover:bg-muted/50 cursor-pointer ${
+            className={`relative p-2 border-l border-border h-[80px] min-h-[80px] group hover:bg-muted/50 cursor-pointer ${
               blocked ? 'bg-destructive/10' : ''
             }`}
             onClick={(e) => onDateClick(day, e)}
