@@ -52,7 +52,7 @@ export function WorkOrderCalendar() {
   }
 
   return (
-    <section className="space-y-6 bg-gradient-to-b from-card/80 to-card rounded-xl shadow-lg border border-border/50 p-8">
+    <section className="space-y-6 bg-gradient-to-b from-card/80 to-card rounded-xl shadow-lg border border-border/50 p-0">
       <div className="space-y-6">
         <h3 className="text-xl font-semibold text-foreground">Work Order Calendar</h3>
         <div className="flex items-center justify-end gap-4">
