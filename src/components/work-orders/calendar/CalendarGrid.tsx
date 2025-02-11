@@ -2,8 +2,9 @@
 import { WorkOrder } from "../types"
 import { useBlockedDates } from "./hooks/useBlockedDates"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { MobileCalendarView } from "@/components/work-orders/calendar/mobile/MobileCalendarView"  // Fixed import path
+import { MobileCalendarView } from "@/components/work-orders/calendar/mobile/MobileCalendarView"
 import { DesktopCalendarView } from "./DesktopCalendarView"
+import { startOfToday } from "date-fns"
 
 type CalendarGridProps = {
   currentDate: Date
@@ -14,11 +15,15 @@ type CalendarGridProps = {
 export function CalendarGrid({ currentDate, workOrders, onDateChange }: CalendarGridProps) {
   const isMobile = useIsMobile()
   const { blockedDates } = useBlockedDates()
+  
+  // Ensure currentDate is not in the past
+  const today = startOfToday()
+  const effectiveDate = currentDate < today ? today : currentDate
 
   if (isMobile) {
     return (
       <MobileCalendarView
-        currentDate={currentDate}
+        currentDate={effectiveDate}
         workOrders={workOrders}
         onDateChange={onDateChange}
       />
@@ -27,7 +32,7 @@ export function CalendarGrid({ currentDate, workOrders, onDateChange }: Calendar
 
   return (
     <DesktopCalendarView
-      currentDate={currentDate}
+      currentDate={effectiveDate}
       workOrders={workOrders}
       onDateChange={onDateChange}
       blockedDates={blockedDates}

@@ -1,4 +1,3 @@
-
 import { addDays, startOfDay, subDays, isSameDay } from "date-fns"
 import { WorkOrder } from "../../types"
 import React, { useRef, useEffect, useState, useCallback } from "react"
@@ -27,12 +26,11 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
   const DAYS_TO_LOAD = 30
   const CELL_WIDTH = 64 // width of each day cell
 
-  // Initialize visible days with past and future dates around the current date
+  // Initialize visible days with only future dates
   const [visibleDays, setVisibleDays] = useState<Date[]>(() => {
     const initialDate = startOfDay(currentDate)
-    const pastDays = Array.from({ length: 15 }, (_, i) => subDays(initialDate, 15 - i))
-    const futureDays = Array.from({ length: 15 }, (_, i) => addDays(initialDate, i))
-    return [...pastDays, ...futureDays]
+    const futureDays = Array.from({ length: 30 }, (_, i) => addDays(initialDate, i))
+    return futureDays
   })
 
   const { data: serviceBays = [] } = useQuery({
@@ -57,12 +55,8 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
 
     setVisibleDays(prevDays => {
       if (direction === 'past') {
-        const firstDay = prevDays[0]
-        const newPastDays = Array.from(
-          { length: DAYS_TO_LOAD }, 
-          (_, i) => subDays(firstDay, DAYS_TO_LOAD - i)
-        )
-        return [...newPastDays, ...prevDays]
+        // Don't load past days
+        return prevDays
       } else {
         const lastDay = prevDays[prevDays.length - 1]
         const newFutureDays = Array.from(
