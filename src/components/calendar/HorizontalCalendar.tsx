@@ -91,27 +91,29 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     })
   }
 
-  const getWorkOrderSpan = (workOrder: WorkOrder) => {
+  const getWorkOrderSpan = (workOrder: WorkOrder, startIndex: number) => {
     if (!workOrder.estimated_duration) return 1;
-    const duration = parseInt(workOrder.estimated_duration)
-    return isNaN(duration) ? 1 : duration;
+    const duration = parseInt(workOrder.estimated_duration);
+    if (isNaN(duration)) return 1;
+    
+    const remainingDays = days.length - startIndex;
+    return Math.min(duration, remainingDays);
   }
 
-  const shouldDisplayWorkOrder = (date: Date, bayId: string) => {
-    const workOrder = workOrders?.find(order => {
+  const findWorkOrderForDate = (date: Date, bayId: string) => {
+    return workOrders.find(order => {
       if (!order.start_time || order.assigned_bay_id !== bayId) return false;
-      const startDate = startOfDay(new Date(order.start_time));
-      const duration = getWorkOrderSpan(order);
-      const endDate = addDays(startDate, duration - 1);
-      return date >= startDate && date <= endDate;
+      
+      const orderStartDate = startOfDay(new Date(order.start_time));
+      const orderEndDate = addDays(orderStartDate, parseInt(order.estimated_duration || '1') - 1);
+      
+      return date >= orderStartDate && date <= orderEndDate;
     });
-
-    return workOrder;
   }
 
   const isWorkOrderStart = (date: Date, workOrder: WorkOrder) => {
     if (!workOrder.start_time) return false;
-    return isSameDay(new Date(workOrder.start_time), date);
+    return isSameDay(startOfDay(new Date(workOrder.start_time)), startOfDay(date));
   }
 
   const formatTime = (timeString: string | null | undefined) => {
@@ -201,12 +203,10 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
                 {bay.name}
               </div>
               {days.map((date, index) => {
-                const workOrder = shouldDisplayWorkOrder(date, bay.id);
+                const workOrder = findWorkOrderForDate(date, bay.id);
                 
                 if (workOrder && isWorkOrderStart(date, workOrder)) {
-                  const duration = getWorkOrderSpan(workOrder);
-                  const remainingDays = days.length - index;
-                  const actualSpan = Math.min(duration, remainingDays);
+                  const span = getWorkOrderSpan(workOrder, index);
                   
                   return (
                     <div 
@@ -221,9 +221,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
                         setSelectedWorkOrder(workOrder);
                       }}
                       style={{
-                        gridColumn: `span ${actualSpan}`,
-                        marginLeft: index === 0 ? '0' : '-2px',
-                        marginRight: actualSpan > 1 ? '-2px' : '0',
+                        gridColumn: `span ${span}`,
                       }}
                     >
                       <TooltipProvider>
@@ -255,7 +253,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
                     </div>
                   );
                 } else if (workOrder && !isWorkOrderStart(date, workOrder)) {
-                  return <div key={date.toISOString()} className="border-b border-gray-700/50" />;
+                  return null;
                 }
 
                 return (
