@@ -3,6 +3,7 @@ import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameM
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
+import { X } from "lucide-react"
 
 type MonthPickerProps = {
   currentDate: Date
@@ -24,8 +25,18 @@ export function MonthPicker({ currentDate, open, onOpenChange, onDateChange }: M
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px] p-0">
-        <ScrollArea className="h-[600px]">
+      <DialogContent className="w-screen h-screen max-w-none m-0 rounded-none p-0">
+        <div className="flex items-center justify-between border-b p-4">
+          <h2 className="text-xl font-semibold">Jump to a date</h2>
+          <button 
+            onClick={() => onOpenChange(false)}
+            className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+          >
+            <X className="h-6 w-6" />
+            <span className="sr-only">Close</span>
+          </button>
+        </div>
+        <ScrollArea className="h-[calc(100vh-73px)]">
           <div className="p-4 space-y-8">
             {months.map(({ date, days }) => (
               <div key={date.toISOString()} className="space-y-4">
