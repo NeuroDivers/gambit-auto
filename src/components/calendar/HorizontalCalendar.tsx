@@ -1,13 +1,13 @@
-
 import { useRef, useState, useEffect, useCallback } from "react"
-import { format, addDays, startOfDay, isToday, isSameDay } from "date-fns"
+import { format, addDays, startOfDay, isToday, isSameDay, parseISO } from "date-fns"
 import { Button } from "@/components/ui/button"
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react"
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, User2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useDragScroll } from "./hooks/useDragScroll"
 import { toast } from "sonner"
 import { useServiceBays } from "@/components/service-bays/hooks/useServiceBays"
 import { WorkOrder } from "../work-orders/types"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 type HorizontalCalendarProps = {
   onDateSelect?: (date: Date) => void
@@ -101,6 +101,18 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     )
   }
 
+  const getWorkOrder = (date: Date, bayId: string) => {
+    return workOrders?.find(order => 
+      order.assigned_bay_id === bayId && 
+      isSameDay(new Date(order.start_time || ''), date)
+    )
+  }
+
+  const formatTime = (timeString: string | null | undefined) => {
+    if (!timeString) return ''
+    return format(parseISO(timeString), 'h:mm a')
+  }
+
   return (
     <div className={cn("p-4 bg-[#222226] rounded-lg shadow-lg", className)}>
       {/* Header */}
@@ -186,21 +198,49 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
               <div className="p-4 text-gray-300 sticky left-0 bg-[#222226] z-10 border-b border-gray-700/50">
                 {bay.name}
               </div>
-              {days.map((date) => (
-                <div 
-                  key={date.toISOString()}
-                  className={cn(
-                    "p-4 relative flex items-center justify-center border-b border-gray-700/50",
-                    "hover:bg-gray-700/20 transition-colors cursor-pointer",
-                    isToday(date) && "bg-gray-700/20"
-                  )}
-                  onClick={() => onDateSelect?.(date)}
-                >
-                  {hasWorkOrder(date, bay.id) && (
-                    <div className="w-3 h-3 rounded-full bg-[#50D091]" />
-                  )}
-                </div>
-              ))}
+              {days.map((date) => {
+                const workOrder = getWorkOrder(date, bay.id)
+                return (
+                  <div 
+                    key={date.toISOString()}
+                    className={cn(
+                      "p-2 relative flex items-center justify-center border-b border-gray-700/50",
+                      "hover:bg-gray-700/20 transition-colors cursor-pointer",
+                      isToday(date) && "bg-gray-700/20"
+                    )}
+                    onClick={() => onDateSelect?.(date)}
+                  >
+                    {workOrder && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="bg-[#1F2937] p-2 rounded-lg border border-[#50D091]/20 w-full">
+                              <div className="text-xs text-white truncate">
+                                {workOrder.first_name} {workOrder.last_name}
+                              </div>
+                              <div className="text-xs text-[#50D091] mt-1 flex items-center gap-1">
+                                <User2 className="w-3 h-3" />
+                                <span>{formatTime(workOrder.start_time)}</span>
+                              </div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="space-y-1">
+                              <p className="font-medium">{workOrder.first_name} {workOrder.last_name}</p>
+                              <p className="text-sm text-gray-400">
+                                {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
+                              </p>
+                              <p className="text-sm text-[#50D091]">
+                                {formatTime(workOrder.start_time)}
+                              </p>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           ))}
         </div>
