@@ -21,7 +21,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
   const [currentMonth, setCurrentMonth] = useState(format(new Date(), 'MMMM yyyy'))
   const [isLoading, setIsLoading] = useState(false)
   const { serviceBays } = useServiceBays()
-  const DAYS_TO_LOAD = 14 // Increased initial load
+  const DAYS_TO_LOAD = 14 // Initial load of 14 days
 
   const {
     handleMouseDown,
@@ -45,7 +45,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     if (!scrollRef.current || isLoading) return
 
     const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
-    const scrollEndThreshold = scrollWidth - clientWidth - 400 // Increased threshold
+    const scrollEndThreshold = scrollWidth - clientWidth - 400
 
     if (scrollLeft >= scrollEndThreshold) {
       setIsLoading(true)
@@ -149,16 +149,26 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={stopDragging}
-        className="overflow-x-auto scrollbar-none"
+        className="overflow-x-auto scrollbar-none relative"
+        style={{ 
+          maxWidth: '100%',
+          WebkitOverflowScrolling: 'touch'
+        }}
       >
-        <div className="min-w-max">
+        <div 
+          className="relative"
+          style={{
+            width: `${(days.length * 200) + 100}px`, // Dynamic width based on number of days
+            minWidth: 'max-content'
+          }}
+        >
           {/* Days header */}
-          <div className="grid grid-cols-[100px_repeat(14,200px)] border-b border-gray-700/50">
-            <div className="p-4 text-gray-400 font-medium">Bay</div>
+          <div className="grid" style={{ gridTemplateColumns: `100px repeat(${days.length}, 200px)` }}>
+            <div className="p-4 text-gray-400 font-medium sticky left-0 bg-[#222226] z-10">Bay</div>
             {days.map((date) => (
               <div 
                 key={date.toISOString()}
-                className="p-4 text-gray-400 font-medium text-center"
+                className="p-4 text-gray-400 font-medium text-center border-b border-gray-700/50"
               >
                 <div>{format(date, 'EEE')}</div>
                 <div>{format(date, 'd')}</div>
@@ -170,14 +180,17 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
           {serviceBays?.map((bay) => (
             <div 
               key={bay.id}
-              className="grid grid-cols-[100px_repeat(14,200px)] border-b border-gray-700/50 last:border-b-0"
+              className="grid"
+              style={{ gridTemplateColumns: `100px repeat(${days.length}, 200px)` }}
             >
-              <div className="p-4 text-gray-300">{bay.name}</div>
+              <div className="p-4 text-gray-300 sticky left-0 bg-[#222226] z-10 border-b border-gray-700/50">
+                {bay.name}
+              </div>
               {days.map((date) => (
                 <div 
                   key={date.toISOString()}
                   className={cn(
-                    "p-4 relative flex items-center justify-center",
+                    "p-4 relative flex items-center justify-center border-b border-gray-700/50",
                     "hover:bg-gray-700/20 transition-colors cursor-pointer",
                     isToday(date) && "bg-gray-700/20"
                   )}
