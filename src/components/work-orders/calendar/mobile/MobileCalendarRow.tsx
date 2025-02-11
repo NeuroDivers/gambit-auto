@@ -62,7 +62,7 @@ export function MobileCalendarRow({
           <div 
             key={day.toISOString()}
             className={`relative p-2 border-l h-[80px] min-h-[80px] group hover:bg-muted/50 cursor-pointer ${
-              blocked ? 'bg-destructive/10' : ''
+              blocked ? 'bg-destructive/20' : ''
             }`}
             onClick={(e) => onDateClick(day, e)}
           >
@@ -70,7 +70,7 @@ export function MobileCalendarRow({
               <WorkOrderCard 
                 key={order.id}
                 workOrder={order}
-                className="work-order-card mb-1"
+                className={`work-order-card mb-1 ${blocked ? 'opacity-50' : ''}`}
               />
             ))}
           </div>
