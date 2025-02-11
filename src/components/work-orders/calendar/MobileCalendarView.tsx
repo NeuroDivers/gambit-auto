@@ -43,22 +43,23 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
   })
 
   useEffect(() => {
-    // Initialize with 20 days
-    const initialDays = Array.from({ length: 20 }, (_, i) => addDays(currentDate, i))
+    // Initialize with 30 days
+    const initialDays = Array.from({ length: 30 }, (_, i) => addDays(currentDate, i))
     setVisibleDays(initialDays)
   }, [currentDate])
 
   const loadMoreDays = () => {
     const lastDay = visibleDays[visibleDays.length - 1]
     const nextDays = Array.from({ length: 10 }, (_, i) => addDays(lastDay, i + 1))
-    setVisibleDays([...visibleDays, ...nextDays])
+    setVisibleDays(prev => [...prev, ...nextDays])
   }
 
   const handleScroll = () => {
     if (!scrollRef.current) return
     
     const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
-    if (scrollWidth - (scrollLeft + clientWidth) < 200) {
+    // Load more days when user scrolls near the end
+    if (scrollWidth - (scrollLeft + clientWidth) < 300) {
       loadMoreDays()
     }
   }
