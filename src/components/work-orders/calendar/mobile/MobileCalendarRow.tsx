@@ -1,7 +1,8 @@
 
-import { format, parseISO, isSameDay, differenceInDays } from "date-fns"
+import { format, parseISO, isSameDay, differenceInDays, isWithinInterval } from "date-fns"
 import { WorkOrder } from "../../types"
 import { WorkOrderCard } from "../WorkOrderCard"
+import { BlockedDate } from "../types"
 
 type MobileCalendarRowProps = {
   bayId: string
@@ -9,9 +10,17 @@ type MobileCalendarRowProps = {
   visibleDays: Date[]
   workOrders: WorkOrder[]
   onDateClick: (date: Date, e?: React.MouseEvent) => void
+  blockedDates?: BlockedDate[]
 }
 
-export function MobileCalendarRow({ bayId, bayName, visibleDays, workOrders, onDateClick }: MobileCalendarRowProps) {
+export function MobileCalendarRow({ 
+  bayId, 
+  bayName, 
+  visibleDays, 
+  workOrders, 
+  onDateClick,
+  blockedDates = []
+}: MobileCalendarRowProps) {
   const getWorkOrdersForDay = (date: Date) => {
     return workOrders.filter(workOrder => {
       if (!workOrder.start_time || workOrder.assigned_bay_id !== bayId) return false
@@ -36,15 +45,26 @@ export function MobileCalendarRow({ bayId, bayName, visibleDays, workOrders, onD
     }))
   }
 
+  const isDateBlocked = (date: Date) => {
+    return blockedDates.some(blockedDate => {
+      const start = parseISO(blockedDate.start_date)
+      const end = parseISO(blockedDate.end_date)
+      return isWithinInterval(date, { start, end })
+    })
+  }
+
   return (
     <>
       <div className="w-[86px] p-2 text-sm font-medium truncate">{bayName}</div>
       {visibleDays.map((day) => {
         const workOrdersForDay = getWorkOrdersForDay(day)
+        const blocked = isDateBlocked(day)
         return (
           <div 
             key={day.toISOString()}
-            className="relative p-2 border-l h-[80px] min-h-[80px] group hover:bg-muted/50 cursor-pointer"
+            className={`relative p-2 border-l h-[80px] min-h-[80px] group hover:bg-muted/50 cursor-pointer ${
+              blocked ? 'bg-destructive/5' : ''
+            }`}
             onClick={(e) => onDateClick(day, e)}
           >
             {workOrdersForDay.map((order) => (

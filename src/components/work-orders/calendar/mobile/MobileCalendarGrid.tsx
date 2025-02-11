@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { WorkOrder } from "../../types"
@@ -7,6 +6,8 @@ import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
 import { CreateWorkOrderDialog } from "../../CreateWorkOrderDialog"
 import { CalendarGridHeader } from "./grid/CalendarGridHeader"
 import { useDragScroll } from "./hooks/useDragScroll"
+import { BlockedDate } from "../types"
+import { parseISO, isWithinInterval } from "date-fns"
 
 type MobileCalendarGridProps = {
   visibleDays: Date[]
@@ -15,6 +16,7 @@ type MobileCalendarGridProps = {
   onScroll: () => void
   onDateClick: (date: Date) => void
   scrollRef: React.RefObject<HTMLDivElement>
+  blockedDates?: BlockedDate[]
 }
 
 export function MobileCalendarGrid({ 
@@ -23,7 +25,8 @@ export function MobileCalendarGrid({
   serviceBays, 
   onScroll,
   onDateClick,
-  scrollRef 
+  scrollRef,
+  blockedDates = []
 }: MobileCalendarGridProps) {
   const [showWorkOrderDialog, setShowWorkOrderDialog] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -68,7 +71,17 @@ export function MobileCalendarGrid({
     e.stopPropagation()
   }
 
+  const isDateBlocked = (date: Date) => {
+    return blockedDates.some(blockedDate => {
+      const start = parseISO(blockedDate.start_date)
+      const end = parseISO(blockedDate.end_date)
+      return isWithinInterval(date, { start, end })
+    })
+  }
+
   const handleDateClick = (date: Date, e?: React.MouseEvent) => {
+    if (isDateBlocked(date)) return // Prevent creating work orders on blocked dates
+    
     if (e?.target instanceof HTMLElement) {
       const isWorkOrderClick = e.target.closest('.work-order-card')
       if (!isWorkOrderClick) {
@@ -99,6 +112,7 @@ export function MobileCalendarGrid({
         <CalendarGridHeader 
           visibleDays={visibleDays}
           onDateClick={handleDateClick}
+          blockedDates={blockedDates}
         />
 
         <div className="grid grid-cols-[86px_repeat(30,64px)] gap-4">
@@ -110,6 +124,7 @@ export function MobileCalendarGrid({
                 visibleDays={visibleDays}
                 workOrders={workOrders}
                 onDateClick={handleDateClick}
+                blockedDates={blockedDates}
               />
             </React.Fragment>
           ))}

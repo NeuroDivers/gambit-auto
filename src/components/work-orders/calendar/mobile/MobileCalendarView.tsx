@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { MobileCalendarHeader } from "./MobileCalendarHeader"
 import { MobileCalendarGrid } from "./MobileCalendarGrid"
 import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
+import { useBlockedDates } from "../hooks/useBlockedDates"
 
 type MobileCalendarViewProps = {
   currentDate: Date
@@ -23,6 +24,8 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
   const [isLoading, setIsLoading] = useState(false)
   const lastLoadTimeRef = useRef<number>(0)
   const CELL_WIDTH = 68 // width + gap
+
+  const { blockedDates } = useBlockedDates()
 
   const { data: serviceBays = [] } = useQuery({
     queryKey: ["serviceBays"],
@@ -91,7 +94,6 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     }, 0)
   }, [onDateChange])
 
-  // Update visible month based on scroll position
   const updateVisibleMonth = useCallback(() => {
     if (!scrollRef.current) return
 
@@ -164,6 +166,7 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
         onScroll={loadMoreDays}
         onDateClick={onDateChange || (() => {})}
         scrollRef={scrollRef}
+        blockedDates={blockedDates}
       />
 
       <MonthPicker
