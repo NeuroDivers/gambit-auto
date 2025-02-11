@@ -3,7 +3,7 @@ import { format, isToday } from "date-fns"
 import { WorkOrder } from "@/components/work-orders/types"
 import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
 import { cn } from "@/lib/utils"
-import { findWorkOrderForDate, isWorkOrderStart } from "../utils/dateUtils"
+import { findWorkOrderForDate, isWorkOrderStart, getWorkOrderSpan } from "../utils/dateUtils"
 import { WorkOrderCard } from "./WorkOrderCard"
 
 interface CalendarGridProps {
@@ -45,7 +45,7 @@ export function CalendarGrid({
           <div className="p-4 text-gray-300 sticky left-0 bg-[#222226] z-10 border-b border-gray-700/50">
             {bay.name}
           </div>
-          {days.map((date) => {
+          {days.map((date, index) => {
             const workOrder = findWorkOrderForDate(date, bay.id, workOrders);
             
             if (workOrder && isWorkOrderStart(date, workOrder)) {
@@ -55,11 +55,14 @@ export function CalendarGrid({
                 name: `${workOrder.first_name} ${workOrder.last_name}`
               });
               
+              const span = getWorkOrderSpan(workOrder, index, days.length);
+              
               return (
                 <WorkOrderCard
                   key={date.toISOString()}
                   workOrder={workOrder}
                   date={date}
+                  span={span}
                   onClick={() => onWorkOrderSelect(workOrder)}
                 />
               );

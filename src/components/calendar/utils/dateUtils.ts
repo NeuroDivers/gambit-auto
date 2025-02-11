@@ -1,49 +1,49 @@
 
-import { startOfDay, isSameDay, parseISO, format, addDays } from "date-fns"
+import { startOfDay, isSameDay, parseISO, format, addDays, isWithinInterval } from "date-fns"
 import { WorkOrder } from "../../work-orders/types"
 
 export const getWorkOrderSpan = (workOrder: WorkOrder, startIndex: number, totalDays: number) => {
-  if (!workOrder.estimated_duration) {
-    console.log('No duration specified for work order:', workOrder.id);
+  if (!workOrder.start_time || !workOrder.end_time) {
+    console.log('Missing start or end time for work order:', workOrder.id);
     return 1;
   }
   
-  const duration = parseInt(workOrder.estimated_duration);
-  if (isNaN(duration)) {
-    console.log('Invalid duration for work order:', workOrder.id);
-    return 1;
-  }
+  const startDate = new Date(workOrder.start_time);
+  const endDate = new Date(workOrder.end_time);
+  const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
   
   const remainingDays = totalDays - startIndex;
-  const span = Math.min(duration, remainingDays);
+  const span = Math.min(daysDiff, remainingDays);
+  
   console.log('Work order span calculation:', {
     workOrderId: workOrder.id,
-    duration,
+    startDate,
+    endDate,
+    daysDiff,
     remainingDays,
     finalSpan: span,
     startIndex,
     totalDays
   });
-  return span;
+  
+  return Math.max(1, span);
 }
 
 export const findWorkOrderForDate = (date: Date, bayId: string, workOrders: WorkOrder[]) => {
   const workOrder = workOrders.find(order => {
-    if (!order.start_time || order.assigned_bay_id !== bayId) return false;
+    if (!order.start_time || !order.end_time || order.assigned_bay_id !== bayId) return false;
     
-    const orderStartDate = startOfDay(new Date(order.start_time));
-    const duration = order.estimated_duration ? parseInt(order.estimated_duration) : 1;
-    const orderEndDate = addDays(orderStartDate, duration - 1);
+    const orderStartDate = new Date(order.start_time);
+    const orderEndDate = new Date(order.end_time);
     
-    const isWithinRange = date >= orderStartDate && date <= orderEndDate;
+    const isWithinRange = isWithinInterval(date, { start: startOfDay(orderStartDate), end: startOfDay(orderEndDate) });
     
     if (isWithinRange) {
       console.log('Found work order for date:', {
         date: date.toISOString(),
         workOrderId: order.id,
         startDate: orderStartDate.toISOString(),
-        endDate: orderEndDate.toISOString(),
-        duration
+        endDate: orderEndDate.toISOString()
       });
     }
     

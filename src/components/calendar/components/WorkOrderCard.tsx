@@ -9,10 +9,11 @@ import { isToday } from "date-fns"
 interface WorkOrderCardProps {
   workOrder: WorkOrder
   date: Date
+  span: number
   onClick: () => void
 }
 
-export function WorkOrderCard({ workOrder, date, onClick }: WorkOrderCardProps) {
+export function WorkOrderCard({ workOrder, date, span, onClick }: WorkOrderCardProps) {
   return (
     <div 
       className={cn(
@@ -21,6 +22,9 @@ export function WorkOrderCard({ workOrder, date, onClick }: WorkOrderCardProps) 
         isToday(date) && "bg-gray-700/20"
       )}
       onClick={onClick}
+      style={{
+        gridColumn: `span ${span}`
+      }}
     >
       <TooltipProvider>
         <Tooltip>
@@ -42,7 +46,7 @@ export function WorkOrderCard({ workOrder, date, onClick }: WorkOrderCardProps) 
                 {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
               </p>
               <p className="text-sm text-[#50D091]">
-                {formatTime(workOrder.start_time)} ({workOrder.estimated_duration} day{parseInt(workOrder.estimated_duration || '1') !== 1 ? 's' : ''})
+                {formatTime(workOrder.start_time)} - {formatTime(workOrder.end_time)}
               </p>
             </div>
           </TooltipContent>
