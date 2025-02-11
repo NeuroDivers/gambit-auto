@@ -28,13 +28,11 @@ export function MobileCalendarRow({
       const startDate = parseISO(workOrder.start_time)
       const endDate = workOrder.end_time ? parseISO(workOrder.end_time) : startDate
       
-      const isWithinDuration = (
+      return (
         isSameDay(date, startDate) || 
         isSameDay(date, endDate) ||
         (date > startDate && date < endDate)
       )
-      
-      return isWithinDuration
     }).map(order => ({
       ...order,
       isStart: isSameDay(date, parseISO(order.start_time)),

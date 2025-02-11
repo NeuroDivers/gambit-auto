@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from "react"
+
+import React from "react"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { WorkOrder } from "../../types"
 import { MobileCalendarRow } from "./MobileCalendarRow"
@@ -33,30 +34,6 @@ export function MobileCalendarGrid({
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const dragControls = useDragScroll(scrollRef)
 
-  // Handle scroll events for infinite scrolling
-  useEffect(() => {
-    const handleScroll = (e: Event) => {
-      const target = e.target as HTMLDivElement
-      if (!target) return
-
-      const { scrollLeft, scrollWidth, clientWidth } = target
-      const remainingScroll = scrollWidth - (scrollLeft + clientWidth)
-      
-      if (remainingScroll < 500) {
-        console.log('Loading more days...', { remainingScroll, scrollWidth, scrollLeft, clientWidth })
-        onScroll()
-      }
-    }
-
-    const currentRef = scrollRef.current
-    if (currentRef) {
-      currentRef.addEventListener('scroll', handleScroll)
-      return () => {
-        currentRef.removeEventListener('scroll', handleScroll)
-      }
-    }
-  }, [onScroll, scrollRef])
-
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     if (!scrollAreaRef.current) return
 
@@ -80,7 +57,7 @@ export function MobileCalendarGrid({
   }
 
   const handleDateClick = (date: Date, e?: React.MouseEvent) => {
-    if (isDateBlocked(date)) return // Prevent creating work orders on blocked dates
+    if (isDateBlocked(date)) return
     
     if (e?.target instanceof HTMLElement) {
       const isWorkOrderClick = e.target.closest('.work-order-card')
