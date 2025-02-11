@@ -18,7 +18,7 @@ type MobileCalendarViewProps = {
 
 export function MobileCalendarView({ currentDate, workOrders, onDateChange }: MobileCalendarViewProps) {
   const [showMonthPicker, setShowMonthPicker] = useState(false)
-  const [visibleMonth, setVisibleMonth] = useState(currentDate)
+  const [visibleMonth, setVisibleMonth] = useState(startOfDay(new Date()))
   const scrollRef = useRef<HTMLDivElement>(null)
   const [isLoading, setIsLoading] = useState(false)
   const lastLoadTimeRef = useRef<number>(0)
@@ -26,11 +26,11 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
   const DAYS_TO_LOAD = 30
   const CELL_WIDTH = 64 // width of each day cell
 
-  // Initialize visible days with past and future dates around the current date
+  // Initialize visible days with today as the center point
   const [visibleDays, setVisibleDays] = useState<Date[]>(() => {
-    const initialDate = startOfDay(currentDate)
-    const pastDays = Array.from({ length: 15 }, (_, i) => subDays(initialDate, 15 - i))
-    const futureDays = Array.from({ length: 15 }, (_, i) => addDays(initialDate, i))
+    const today = startOfDay(new Date())
+    const pastDays = Array.from({ length: 15 }, (_, i) => subDays(today, 15 - i))
+    const futureDays = Array.from({ length: 15 }, (_, i) => addDays(today, i))
     return [...pastDays, ...futureDays]
   })
 
@@ -153,13 +153,22 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     }
   }, [updateVisibleMonth])
 
-  // Initial scroll to center the calendar
+  // Initial scroll to center on today's date
   useEffect(() => {
     if (scrollRef.current) {
-      const initialScrollPosition = 15 * CELL_WIDTH // Scroll to the middle of the initial range
-      scrollRef.current.scrollLeft = initialScrollPosition
+      const today = startOfDay(new Date())
+      const todayIndex = visibleDays.findIndex(day => isSameDay(day, today))
+      if (todayIndex !== -1) {
+        const scrollPosition = todayIndex * CELL_WIDTH
+        scrollRef.current.scrollLeft = scrollPosition
+      }
     }
-  }, [])
+  }, [visibleDays])
+
+  // Call scrollToToday when component mounts
+  useEffect(() => {
+    scrollToToday()
+  }, [scrollToToday])
 
   return (
     <div className="space-y-4">
