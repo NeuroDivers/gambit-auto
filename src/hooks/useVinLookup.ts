@@ -19,11 +19,23 @@ export function useVinLookup(vin: string) {
       }
 
       try {
-        // First check our local cache
+        // First clear any existing cached error for this VIN
+        const { error: deleteError } = await supabase
+          .from('vin_lookups')
+          .delete()
+          .eq('vin', vin)
+          .eq('success', false)
+
+        if (deleteError) {
+          console.error('Error clearing cached error:', deleteError)
+        }
+
+        // Then check our local cache for successful lookups
         const { data: cachedData, error: cacheError } = await supabase
           .from('vin_lookups')
           .select('*')
           .eq('vin', vin)
+          .eq('success', true)
           .maybeSingle()
 
         if (cacheError) {
@@ -32,11 +44,7 @@ export function useVinLookup(vin: string) {
         }
 
         if (cachedData) {
-          console.log('Found cached VIN data:', cachedData)
-          if (!cachedData.success) {
-            console.log('Using cached error response:', cachedData.error_message)
-            return { error: cachedData.error_message || 'Failed to decode VIN' }
-          }
+          console.log('Found cached successful VIN data:', cachedData)
           return {
             make: cachedData.make,
             model: cachedData.model,
@@ -60,14 +68,14 @@ export function useVinLookup(vin: string) {
           return { error }
         }
 
-        // Find the make, model, and year from the results
-        const makeResult = results.find((r: any) => r.Variable === 'Make')
-        const modelResult = results.find((r: any) => r.Variable === 'Model')
-        const yearResult = results.find((r: any) => r.Variable === 'Model Year')
-
         // Log the entire results array for debugging
         console.log('NHTSA API complete response:', results)
         
+        // Find the make, model, and year from the results
+        const makeResult = results.find((r: any) => r.Variable === 'Make' && r.Value && r.Value !== 'null')
+        const modelResult = results.find((r: any) => r.Variable === 'Model' && r.Value && r.Value !== 'null')
+        const yearResult = results.find((r: any) => r.Variable === 'Model Year' && r.Value && r.Value !== 'null')
+
         // Log specific fields we're looking for
         console.log('Make result:', makeResult)
         console.log('Model result:', modelResult)
@@ -80,22 +88,19 @@ export function useVinLookup(vin: string) {
         // Log the extracted values
         console.log('Extracted values:', { make, model, year })
 
-        if (!make || make === '' || make === 'null') {
-          console.log('Make is missing or invalid')
+        if (!make) {
           const error = 'Could not decode VIN - make information missing'
           await cacheErrorResult(vin, error)
           return { error }
         }
 
-        if (!model || model === '' || model === 'null') {
-          console.log('Model is missing or invalid')
+        if (!model) {
           const error = 'Could not decode VIN - model information missing'
           await cacheErrorResult(vin, error)
           return { error }
         }
 
         if (!year) {
-          console.log('Year is missing or invalid')
           const error = 'Could not decode VIN - year information missing'
           await cacheErrorResult(vin, error)
           return { error }
