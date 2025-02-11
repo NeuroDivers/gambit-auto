@@ -1,6 +1,7 @@
-import { useQueryClient } from "@tanstack/react-query"
+
+import { useQueryClient, useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { WorkOrdersSection } from "./sections/WorkOrdersSection"
 import { MobileCalendarView } from "./mobile/MobileCalendarView"
 import { toast } from "sonner"
@@ -10,6 +11,20 @@ import { CalendarClock } from "lucide-react"
 
 export const WorkOrderCalendar = () => {
   const queryClient = useQueryClient()
+  const [currentDate] = useState(new Date())
+
+  const { data: workOrders = [] } = useQuery({
+    queryKey: ["workOrders"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("work_orders")
+        .select("*")
+        .order("created_at", { ascending: false })
+
+      if (error) throw error
+      return data
+    }
+  })
 
   useEffect(() => {
     const channel = supabase
@@ -59,7 +74,11 @@ export const WorkOrderCalendar = () => {
         <CreateWorkOrderDialog />
       </div>
       <div className="space-y-20">
-        <MobileCalendarView />
+        <MobileCalendarView
+          currentDate={currentDate}
+          workOrders={workOrders}
+          onDateChange={(date) => console.log("Date changed:", date)}
+        />
         <Alert>
           <CalendarClock className="h-4 w-4" />
           <AlertTitle>Unscheduled Work Orders</AlertTitle>

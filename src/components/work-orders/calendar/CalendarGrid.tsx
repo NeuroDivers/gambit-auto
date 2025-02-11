@@ -2,7 +2,7 @@
 import { WorkOrder } from "../types"
 import { useBlockedDates } from "./hooks/useBlockedDates"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { MobileCalendarView } from "./MobileCalendarView"
+import { MobileCalendarView } from "@/components/work-orders/calendar/mobile/MobileCalendarView"  // Fixed import path
 import { DesktopCalendarView } from "./DesktopCalendarView"
 
 type CalendarGridProps = {
