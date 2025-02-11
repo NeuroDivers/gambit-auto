@@ -1,7 +1,6 @@
 
 import { useState } from "react"
 import { addMonths, subMonths, startOfDay, endOfDay } from "date-fns"
-import { CalendarDay } from "./calendar/CalendarDay"
 import { CalendarGrid } from "./calendar/CalendarGrid"
 import { CalendarHeader } from "./calendar/CalendarHeader"
 import { useWorkOrderData } from "./calendar/useWorkOrderData"
@@ -27,12 +26,8 @@ export function WorkOrderCalendar() {
     completed: workOrders.filter(wo => wo.status === 'completed').length
   }
 
-  const handlePrevMonth = () => {
-    setCurrentDate(prev => subMonths(prev, 1))
-  }
-
-  const handleNextMonth = () => {
-    setCurrentDate(prev => addMonths(prev, 1))
+  const handleDateChange = (date: Date) => {
+    setCurrentDate(date)
   }
 
   const getWorkOrdersForDay = () => {
@@ -73,15 +68,11 @@ export function WorkOrderCalendar() {
         </div>
         <StatusLegend statusCounts={statusCounts} />
         <div className="space-y-4">
-          <CalendarHeader
-            currentDate={currentDate}
-            onPrevMonth={handlePrevMonth}
-            onNextMonth={handleNextMonth}
-          />
           {view === 'month' ? (
             <CalendarGrid
               currentDate={currentDate}
               workOrders={workOrders}
+              onDateChange={handleDateChange}
             />
           ) : (
             <CalendarDayView

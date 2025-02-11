@@ -13,10 +13,12 @@ import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { WorkOrderCard } from "./WorkOrderCard"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 type CalendarGridProps = {
   currentDate: Date
   workOrders: WorkOrder[]
+  onDateChange?: (date: Date) => void
 }
 
 type ServiceBay = {
@@ -24,7 +26,7 @@ type ServiceBay = {
   name: string
 }
 
-export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
+export function CalendarGrid({ currentDate, workOrders, onDateChange }: CalendarGridProps) {
   const isMobile = useIsMobile()
   const [showMonthPicker, setShowMonthPicker] = useState(false)
   const { blockedDates } = useBlockedDates()
@@ -43,15 +45,21 @@ export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
     }
   })
 
-  const monthStart = startOfMonth(currentDate)
-  const monthEnd = endOfMonth(monthStart)
-  const calendarStart = startOfWeek(monthStart)
-  const calendarEnd = endOfWeek(monthEnd)
+  const handlePreviousMonth = () => {
+    if (onDateChange) {
+      const prevMonth = new Date(currentDate)
+      prevMonth.setMonth(prevMonth.getMonth() - 1)
+      onDateChange(prevMonth)
+    }
+  }
 
-  const days = eachDayOfInterval({
-    start: calendarStart,
-    end: calendarEnd,
-  })
+  const handleNextMonth = () => {
+    if (onDateChange) {
+      const nextMonth = new Date(currentDate)
+      nextMonth.setMonth(nextMonth.getMonth() + 1)
+      onDateChange(nextMonth)
+    }
+  }
 
   const getWorkOrdersForDay = (date: Date, bayId: string) => {
     return workOrders.filter(workOrder => {
@@ -85,17 +93,33 @@ export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            onClick={() => setShowMonthPicker(true)}
-            className="font-semibold"
-          >
-            {format(currentDate, 'MMMM yyyy')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={handlePreviousMonth}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              onClick={() => setShowMonthPicker(true)}
+              className="font-semibold"
+            >
+              {format(currentDate, 'MMMM yyyy')}
+            </Button>
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={handleNextMonth}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
-        <ScrollArea className="h-[600px]">
-          <div className="min-w-[800px] select-none cursor-grab active:cursor-grabbing">
+        <ScrollArea className="h-[600px] rounded-md border">
+          <div className="min-w-[800px] select-none">
             {/* Header with days */}
             <div className="grid grid-cols-[120px_repeat(7,1fr)] gap-4 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
               <div className="text-sm font-medium text-muted-foreground">Bays</div>
@@ -107,7 +131,7 @@ export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
             </div>
 
             {/* Grid with bays and time slots */}
-            <div className="grid grid-cols-[120px_repeat(7,1fr)] gap-4 bg-card/50">
+            <div className="grid grid-cols-[120px_repeat(7,1fr)] gap-4">
               {serviceBays.map((bay) => (
                 <React.Fragment key={bay.id}>
                   <div className="p-2 text-sm font-medium">{bay.name}</div>
@@ -116,7 +140,7 @@ export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
                     return (
                       <div 
                         key={day.toISOString()}
-                        className="p-2 border-l min-h-[80px]"
+                        className="relative p-2 border-l min-h-[80px] group hover:bg-muted/50"
                       >
                         {workOrdersForDay.map((order) => (
                           <WorkOrderCard 
@@ -142,6 +166,7 @@ export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
               onSelect={(date) => {
                 if (date) {
                   setShowMonthPicker(false)
+                  if (onDateChange) onDateChange(date)
                 }
               }}
               initialFocus
@@ -153,8 +178,43 @@ export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
     )
   }
 
+  const monthStart = startOfMonth(currentDate)
+  const monthEnd = endOfMonth(monthStart)
+  const calendarStart = startOfWeek(monthStart)
+  const calendarEnd = endOfWeek(monthEnd)
+
+  const days = eachDayOfInterval({
+    start: calendarStart,
+    end: calendarEnd,
+  })
+
   return (
     <div className="rounded-lg bg-card/50 p-4">
+      <div className="flex items-center justify-between mb-4">
+        <Button 
+          variant="ghost" 
+          onClick={() => setShowMonthPicker(true)}
+          className="font-semibold"
+        >
+          {format(currentDate, 'MMMM yyyy')}
+        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={handlePreviousMonth}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={handleNextMonth}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
       <div className="grid grid-cols-7 gap-4">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
           <div key={day} className="text-sm font-medium text-muted-foreground text-center py-2">
@@ -167,7 +227,15 @@ export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
             date={day}
             workOrders={workOrders.filter(wo => {
               if (!wo.start_time) return false
-              return isSameDay(parseISO(wo.start_time), day)
+              
+              const startDate = parseISO(wo.start_time)
+              const endDate = wo.end_time ? parseISO(wo.end_time) : startDate
+              
+              return (
+                isSameDay(day, startDate) || 
+                isSameDay(day, endDate) ||
+                (day > startDate && day < endDate)
+              )
             })}
             isCurrentMonth={isSameMonth(day, currentDate)}
             blockedDates={blockedDates}
