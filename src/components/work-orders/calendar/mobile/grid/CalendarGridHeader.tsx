@@ -19,8 +19,11 @@ export function CalendarGridHeader({ visibleDays, onDateClick, blockedDates = []
   }
 
   return (
-    <div className="grid grid-cols-[86px_repeat(30,64px)] gap-0 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
-      <div className="text-sm font-medium text-muted-foreground">Bays</div>
+    <div className="grid" style={{ 
+      gridTemplateColumns: `86px repeat(${visibleDays.length}, 64px)`,
+      gap: '0px'
+    }}>
+      <div className="text-sm font-medium text-muted-foreground p-2">Bays</div>
       {visibleDays.map((day) => {
         const blocked = isDateBlocked(day)
         return (

@@ -76,7 +76,7 @@ export function MobileCalendarGrid({
       onWheel={handleWheel}
     >
       <div 
-        className="w-max overflow-x-auto"
+        className="w-max overflow-x-auto bg-muted/50"
         onMouseDown={dragControls.handleMouseDown}
         onMouseMove={dragControls.handleMouseMove}
         onMouseUp={dragControls.stopDragging}
