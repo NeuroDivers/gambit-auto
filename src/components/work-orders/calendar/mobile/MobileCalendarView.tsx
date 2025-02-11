@@ -53,18 +53,6 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
 
       <ScrollArea className="w-full border border-border rounded-lg">
         <div className="min-w-[800px]">
-          {/* Bay Headers */}
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 p-4 bg-muted/50">
-            {serviceBays?.map(bay => (
-              <div 
-                key={bay.id} 
-                className="font-medium text-sm"
-              >
-                {bay.name}
-              </div>
-            ))}
-          </div>
-
           {/* Bay Content */}
           <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 p-4">
             {serviceBays?.map(bay => (
