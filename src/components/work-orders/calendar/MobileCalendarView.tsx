@@ -1,4 +1,5 @@
-import { addDays, startOfDay, subDays, isSameDay } from "date-fns"
+
+import { addDays, startOfDay, isSameDay } from "date-fns"
 import { WorkOrder } from "@/components/work-orders/types"
 import React, { useRef, useEffect, useState, useCallback } from "react"
 import { MonthPicker } from "./MonthPicker"
@@ -26,12 +27,11 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
   const DAYS_TO_LOAD = 30
   const CELL_WIDTH = 64 // width of each day cell
 
-  // Initialize visible days with today as the center point
+  // Initialize visible days with today and future dates only
   const [visibleDays, setVisibleDays] = useState<Date[]>(() => {
     const today = startOfDay(new Date())
-    const pastDays = Array.from({ length: 15 }, (_, i) => subDays(today, 15 - i))
-    const futureDays = Array.from({ length: 15 }, (_, i) => addDays(today, i + 1))
-    return [...pastDays, today, ...futureDays]
+    const futureDays = Array.from({ length: 30 }, (_, i) => addDays(today, i))
+    return [today, ...futureDays]
   })
 
   const { data: serviceBays = [] } = useQuery({
@@ -47,7 +47,7 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     }
   })
 
-  const loadMoreDays = useCallback((direction: 'past' | 'future') => {
+  const loadMoreDays = useCallback((direction: 'future') => {
     const now = Date.now()
     if (isLoading || now - lastLoadTimeRef.current < 500) return
     
@@ -55,21 +55,12 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     lastLoadTimeRef.current = now
 
     setVisibleDays(prevDays => {
-      if (direction === 'past') {
-        const firstDay = prevDays[0]
-        const newPastDays = Array.from(
-          { length: DAYS_TO_LOAD }, 
-          (_, i) => subDays(firstDay, DAYS_TO_LOAD - i)
-        )
-        return [...newPastDays, ...prevDays]
-      } else {
-        const lastDay = prevDays[prevDays.length - 1]
-        const newFutureDays = Array.from(
-          { length: DAYS_TO_LOAD }, 
-          (_, i) => addDays(lastDay, i + 1)
-        )
-        return [...prevDays, ...newFutureDays]
-      }
+      const lastDay = prevDays[prevDays.length - 1]
+      const newFutureDays = Array.from(
+        { length: DAYS_TO_LOAD }, 
+        (_, i) => addDays(lastDay, i + 1)
+      )
+      return [...prevDays, ...newFutureDays]
     })
 
     setTimeout(() => setIsLoading(false), 300)
@@ -89,16 +80,14 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
       setVisibleMonth(today)
     } else {
       toast.error("Today's date not in view. Reloading calendar...")
-      // Reset the calendar around today
-      const pastDays = Array.from({ length: 15 }, (_, i) => subDays(today, 15 - i))
-      const futureDays = Array.from({ length: 15 }, (_, i) => addDays(today, i + 1))
-      setVisibleDays([...pastDays, today, ...futureDays])
+      const today = startOfDay(new Date())
+      const futureDays = Array.from({ length: 30 }, (_, i) => addDays(today, i))
+      setVisibleDays([today, ...futureDays])
       
-      // Wait for state update then scroll
       setTimeout(() => {
         if (scrollRef.current) {
           scrollRef.current.scrollTo({
-            left: 15 * CELL_WIDTH,
+            left: 0,
             behavior: 'smooth'
           })
         }
@@ -120,11 +109,8 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     // Check if we need to load more days
     const { scrollWidth } = scrollElement
     const remainingScroll = scrollWidth - (scrollLeft + elementWidth)
-    const scrolledPercent = scrollLeft / scrollWidth
 
-    if (scrolledPercent < 0.2) {
-      loadMoreDays('past')
-    } else if (remainingScroll < elementWidth * 0.5) {
+    if (remainingScroll < elementWidth * 0.5) {
       loadMoreDays('future')
     }
 
@@ -154,7 +140,7 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     }
   }, [updateVisibleMonth])
 
-  // Initial scroll to center on today's date
+  // Initial scroll to today's date
   useEffect(() => {
     scrollToToday()
   }, [scrollToToday])
