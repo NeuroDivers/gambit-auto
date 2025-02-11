@@ -1,6 +1,6 @@
 
 import { useCallback } from "react"
-import { startOfDay, isSameDay } from "date-fns"
+import { startOfDay, isSameDay, isBefore } from "date-fns"
 import { toast } from "sonner"
 
 interface UseCalendarScrollProps {
@@ -25,21 +25,20 @@ export const useCalendarScroll = ({
     const todayIndex = visibleDays.findIndex(day => isSameDay(day, today))
     
     if (todayIndex !== -1 && scrollRef.current) {
-      const scrollPosition = todayIndex * CELL_WIDTH
       scrollRef.current.scrollTo({
-        left: scrollPosition,
+        left: todayIndex * CELL_WIDTH,
         behavior: 'smooth'
       })
       onDateChange?.(today)
       setVisibleMonth(today)
     } else {
-      toast.error("Today's date not in view. Reloading calendar...")
+      toast.message("Scrolling to today's date...")
       resetAroundToday()
       // Wait for state update then scroll
       setTimeout(() => {
         if (scrollRef.current) {
           scrollRef.current.scrollTo({
-            left: 15 * CELL_WIDTH,
+            left: 0, // Scroll to the beginning since today will be the first day
             behavior: 'smooth'
           })
         }

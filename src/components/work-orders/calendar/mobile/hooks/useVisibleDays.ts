@@ -1,15 +1,18 @@
 
 import { useState, useCallback } from "react"
-import { addDays, startOfDay, subDays } from "date-fns"
+import { addDays, startOfDay, isBefore } from "date-fns"
 
 export const useVisibleDays = (currentDate: Date, DAYS_TO_LOAD = 30) => {
   const [isLoading, setIsLoading] = useState(false)
   const lastLoadTimeRef = { current: 0 }
+  const today = startOfDay(new Date())
 
-  // Initialize visible days with only future dates
+  // Initialize visible days with only future dates starting from today
   const [visibleDays, setVisibleDays] = useState<Date[]>(() => {
     const initialDate = startOfDay(currentDate)
-    const futureDays = Array.from({ length: 30 }, (_, i) => addDays(initialDate, i))
+    // If currentDate is in the past, use today instead
+    const startDate = isBefore(initialDate, today) ? today : initialDate
+    const futureDays = Array.from({ length: 30 }, (_, i) => addDays(startDate, i))
     return futureDays
   })
 
@@ -38,16 +41,15 @@ export const useVisibleDays = (currentDate: Date, DAYS_TO_LOAD = 30) => {
   }, [isLoading])
 
   const resetVisibleDays = useCallback((date: Date) => {
-    const newDays = Array.from({ length: 30 }, (_, i) => addDays(startOfDay(date), i))
+    const startDate = isBefore(date, today) ? today : date
+    const newDays = Array.from({ length: 30 }, (_, i) => addDays(startDate, i))
     setVisibleDays(newDays)
-  }, [])
+  }, [today])
 
   const resetAroundToday = useCallback(() => {
-    const today = startOfDay(new Date())
-    const pastDays = Array.from({ length: 15 }, (_, i) => subDays(today, 15 - i))
-    const futureDays = Array.from({ length: 15 }, (_, i) => addDays(today, i))
-    setVisibleDays([...pastDays, ...futureDays])
-  }, [])
+    const newDays = Array.from({ length: 30 }, (_, i) => addDays(today, i))
+    setVisibleDays(newDays)
+  }, [today])
 
   return {
     visibleDays,
