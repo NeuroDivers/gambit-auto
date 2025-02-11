@@ -1,3 +1,4 @@
+
 import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
 import { Card, CardContent } from "@/components/ui/card"
@@ -70,7 +71,7 @@ export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
             <Card className="border-border/5 bg-[#1A1F2C]/80">
               <CardContent className="p-4">
                 <div className="flex justify-between items-center mb-4">
-                  <FormLabel className="text-lg font-semibold text-white/90">
+                  <FormLabel htmlFor="service_items_list" className="text-lg font-semibold text-white/90">
                     Services
                   </FormLabel>
                   <Button
@@ -79,13 +80,20 @@ export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
                     size="sm"
                     onClick={handleAddService}
                     className="flex items-center gap-2"
+                    id="add_service_button"
+                    name="add_service"
                   >
                     <Plus className="w-4 h-4" />
                     Add Service
                   </Button>
                 </div>
                 
-                <div className="space-y-4">
+                <div 
+                  className="space-y-4"
+                  id="service_items_list"
+                  role="list"
+                  aria-label="Service items list"
+                >
                   {serviceItems.map((item: ServiceItemType, index: number) => (
                     <ServiceItemForm
                       key={index}

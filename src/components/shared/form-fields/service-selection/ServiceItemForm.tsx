@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -62,6 +63,11 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
     return service?.service_packages?.filter((pkg: any) => pkg.status === 'active') || []
   }
 
+  const serviceId = `service_${index}`
+  const quantityId = `quantity_${index}`
+  const priceId = `price_${index}`
+  const packageId = `package_${index}`
+
   return (
     <div className="space-y-4 p-4 border rounded-lg relative">
       <Button
@@ -70,18 +76,20 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
         size="icon"
         onClick={onRemove}
         className="absolute right-2 top-2"
+        id={`remove_service_${index}`}
+        aria-label={`Remove service ${index + 1}`}
       >
         <X className="h-4 w-4" />
       </Button>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Service</Label>
+          <Label htmlFor={serviceId}>Service</Label>
           <Select
             value={item.service_id || undefined}
             onValueChange={handleServiceSelect}
           >
-            <SelectTrigger>
+            <SelectTrigger id={serviceId} name={serviceId} autoComplete="off">
               <SelectValue placeholder="Select a service" />
             </SelectTrigger>
             <SelectContent>
@@ -95,12 +103,12 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
 
           {item.service_id && getAvailablePackages().length > 0 && (
             <div className="mt-2">
-              <Label>Package</Label>
+              <Label htmlFor={packageId}>Package</Label>
               <Select
                 value={item.package_id || undefined}
                 onValueChange={handlePackageSelect}
               >
-                <SelectTrigger>
+                <SelectTrigger id={packageId} name={packageId} autoComplete="off">
                   <SelectValue placeholder="Select a package" />
                 </SelectTrigger>
                 <SelectContent>
@@ -116,20 +124,26 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
         </div>
 
         <div className="space-y-2">
-          <Label>Quantity</Label>
+          <Label htmlFor={quantityId}>Quantity</Label>
           <Input
             type="number"
+            id={quantityId}
+            name={quantityId}
             value={item.quantity}
             onChange={(e) => onUpdate(index, "quantity", parseInt(e.target.value) || 0)}
+            autoComplete="off"
           />
         </div>
 
         <div className="space-y-2">
-          <Label>Unit Price</Label>
+          <Label htmlFor={priceId}>Unit Price</Label>
           <Input
             type="number"
+            id={priceId}
+            name={priceId}
             value={item.unit_price}
             onChange={(e) => onUpdate(index, "unit_price", parseFloat(e.target.value) || 0)}
+            autoComplete="off"
           />
         </div>
       </div>
