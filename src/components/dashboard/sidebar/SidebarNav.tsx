@@ -84,6 +84,13 @@ export function SidebarNav({ className }: SidebarNavProps) {
   useEffect(() => {
     console.log("Current permissions:", permissions)
 
+    // For administrators, show all items
+    if (permissions?.some(p => p.roles?.name === 'administrator')) {
+      setAllowedItems(allItems)
+      setAllowedSettingsItems(settingsItems)
+      return
+    }
+
     const filteredItems = allItems.filter((item) => {
       if (!item.requiredPermission) return true
       if (!permissions) return false
@@ -119,7 +126,7 @@ export function SidebarNav({ className }: SidebarNavProps) {
   }, [permissions])
 
   return (
-    <nav className={cn("flex flex-col gap-2 p-4 h-full overflow-y-auto", className)}>
+    <nav className={cn("flex flex-col gap-2 p-4", className)}>
       <div className="space-y-2">
         {allowedItems.map((item) => (
           <Link
@@ -156,4 +163,3 @@ export function SidebarNav({ className }: SidebarNavProps) {
     </nav>
   )
 }
-
