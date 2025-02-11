@@ -1,14 +1,13 @@
-
 import { addDays, startOfDay, subDays, isSameDay } from "date-fns"
 import { WorkOrder } from "@/components/work-orders/types"
 import React, { useRef, useEffect, useState, useCallback } from "react"
-import { MonthPicker } from "../MonthPicker"
+import { MonthPicker } from "../../calendar/MonthPicker"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { MobileCalendarHeader } from "./MobileCalendarHeader"
 import { MobileCalendarGrid } from "./MobileCalendarGrid"
 import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
-import { useBlockedDates } from "../hooks/useBlockedDates"
+import { useBlockedDates } from "../../calendar/hooks/useBlockedDates"
 import { toast } from "sonner"
 
 type MobileCalendarViewProps = {
