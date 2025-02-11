@@ -1,3 +1,4 @@
+
 export type WorkOrder = {
   id: string
   first_name: string
@@ -20,5 +21,5 @@ export type WorkOrder = {
   estimated_duration?: string | null
   end_time?: string | null
   assigned_bay_id?: string | null
-  assigned_sidekick_id?: string | null
+  assigned_profile_id?: string | null
 }

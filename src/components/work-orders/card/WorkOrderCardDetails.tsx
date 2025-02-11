@@ -1,3 +1,4 @@
+
 import { WorkOrder } from "../types"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -20,20 +21,20 @@ export function WorkOrderCardDetails({ request }: WorkOrderCardDetailsProps) {
     queryFn: async () => {
       if (!request.assigned_bay_id) return null
       
-      // First get the bay to get the sidekick ID
+      // First get the bay to get the profile ID
       const { data: bay } = await supabase
         .from("service_bays")
-        .select("assigned_sidekick_id, name")
+        .select("assigned_profile_id, name")
         .eq("id", request.assigned_bay_id)
         .maybeSingle()
 
-      if (!bay?.assigned_sidekick_id) return { profile: null, bayName: bay?.name }
+      if (!bay?.assigned_profile_id) return { profile: null, bayName: bay?.name }
 
-      // Then get the profile data for that sidekick
+      // Then get the profile data
       const { data: profile } = await supabase
         .from("profiles")
         .select("first_name, last_name")
-        .eq("id", bay.assigned_sidekick_id)
+        .eq("id", bay.assigned_profile_id)
         .maybeSingle()
 
       return { 
