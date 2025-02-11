@@ -6,17 +6,23 @@ import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-reac
 import { cn } from "@/lib/utils"
 import { useDragScroll } from "./hooks/useDragScroll"
 import { toast } from "sonner"
+import { useServiceBays } from "@/components/service-bays/hooks/useServiceBays"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { WorkOrderCard } from "../work-orders/WorkOrderCard"
+import { WorkOrder } from "../work-orders/types"
 
 type HorizontalCalendarProps = {
   onDateSelect?: (date: Date) => void
   className?: string
+  workOrders?: WorkOrder[]
 }
 
-export function HorizontalCalendar({ onDateSelect, className }: HorizontalCalendarProps) {
+export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }: HorizontalCalendarProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [days, setDays] = useState<Date[]>([])
   const [currentMonth, setCurrentMonth] = useState(format(new Date(), 'MMMM yyyy'))
   const [isLoading, setIsLoading] = useState(false)
+  const { serviceBays } = useServiceBays()
   const CELL_WIDTH = 100 // Width of each day cell in pixels
   const DAYS_TO_LOAD = 20 // Number of days to load in each batch
 
@@ -36,6 +42,14 @@ export function HorizontalCalendar({ onDateSelect, className }: HorizontalCalend
     )
     setDays(initialDays)
   }, [])
+
+  const getWorkOrdersForBay = (bayId: string | null, date: Date) => {
+    return workOrders.filter(order => {
+      const orderDate = startOfDay(new Date(order.start_time || ''))
+      const targetDate = startOfDay(date)
+      return order.assigned_bay_id === bayId && orderDate.getTime() === targetDate.getTime()
+    })
+  }
 
   // Handle scroll to detect when we need to load more days
   const handleScroll = useCallback(() => {
@@ -141,59 +155,49 @@ export function HorizontalCalendar({ onDateSelect, className }: HorizontalCalend
       </div>
 
       {/* Calendar Grid */}
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={stopDragging}
-        onMouseLeave={stopDragging}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={stopDragging}
-        className={cn(
-          "overflow-x-auto snap-x snap-mandatory scroll-smooth",
-          isDragging ? "cursor-grabbing" : "cursor-grab"
-        )}
-        style={{
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          WebkitOverflowScrolling: 'touch'
-        }}
-      >
-        <div 
-          className="flex" 
-          style={{ minWidth: `${days.length * CELL_WIDTH}px` }}
-        >
-          {days.map((date) => (
-            <div
-              key={date.toISOString()}
-              className={cn(
-                "flex-none w-[100px] h-[100px] p-4 border-r border-border snap-start",
-                "hover:bg-accent/50 transition-colors",
-                "first:rounded-l-lg last:rounded-r-lg last:border-r-0",
-                isToday(date) && "bg-primary/10 font-semibold",
-                !isDragging && "cursor-pointer"
-              )}
-              onClick={(e) => {
-                if (!stopDragging(e)) {
-                  onDateSelect?.(date)
-                }
-              }}
-            >
-              <div className="text-sm text-muted-foreground">
-                {format(date, 'EEE')}
+      <ScrollArea className="w-full border border-border rounded-lg">
+        <div className="min-w-[800px]">
+          {/* Headers with days */}
+          <div className="grid grid-cols-[200px_repeat(7,1fr)] gap-4 p-4 bg-muted/50">
+            <div className="font-medium text-sm">Bay Name</div>
+            {days.slice(0, 7).map(day => (
+              <div 
+                key={day.toISOString()} 
+                className="font-medium text-sm text-center"
+              >
+                {day.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' })}
               </div>
-              <div className={cn(
-                "text-2xl",
-                isToday(date) && "text-primary"
-              )}>
-                {format(date, 'd')}
+            ))}
+          </div>
+
+          {/* Rows for each bay */}
+          <div className="divide-y divide-border">
+            {serviceBays?.map(bay => (
+              <div 
+                key={bay.id} 
+                className="grid grid-cols-[200px_repeat(7,1fr)] gap-4 p-4"
+              >
+                <div className="font-medium text-sm">{bay.name}</div>
+                {days.slice(0, 7).map(day => (
+                  <div 
+                    key={day.toISOString()} 
+                    className="min-h-[100px]"
+                    onClick={() => onDateSelect?.(day)}
+                  >
+                    {getWorkOrdersForBay(bay.id, day).map(order => (
+                      <WorkOrderCard
+                        key={order.id}
+                        request={order}
+                        className="bg-card mb-2"
+                      />
+                    ))}
+                  </div>
+                ))}
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      </ScrollArea>
     </div>
   )
 }
