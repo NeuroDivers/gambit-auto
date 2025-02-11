@@ -92,7 +92,7 @@ export function MobileCalendarGrid({
           blockedDates={blockedDates}
         />
 
-        <div className="grid grid-cols-[86px_repeat(30,64px)] gap-4">
+        <div className="grid grid-cols-[86px_repeat(30,64px)]">
           {serviceBays.map((bay) => (
             <React.Fragment key={bay.id}>
               <MobileCalendarRow
