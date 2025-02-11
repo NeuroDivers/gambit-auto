@@ -52,7 +52,6 @@ const allItems: NavItem[] = [
   },
 ]
 
-// Settings items don't require permission checks except for developer settings
 const settingsItems: NavItem[] = [
   {
     title: "Business Settings",
@@ -81,7 +80,6 @@ export function SidebarNav() {
   useEffect(() => {
     if (!permissions) return;
 
-    // Filter items based on permissions
     const filteredItems = allItems.filter((item) => {
       if (!item.requiredPermission) return true;
       return permissions.some(
@@ -93,7 +91,6 @@ export function SidebarNav() {
     });
     setAllowedItems(filteredItems);
 
-    // Filter settings items
     const filteredSettingsItems = settingsItems.filter((item) => {
       if (!item.requiredPermission) return true;
       return permissions.some(
@@ -107,34 +104,38 @@ export function SidebarNav() {
   }, [permissions]);
 
   return (
-    <div className="flex flex-col gap-0.5 p-1">
+    <nav className="flex flex-col gap-2 p-4">
       {allowedItems.map((item) => (
         <Link
           key={item.href}
           to={item.href}
           className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent",
-            location.pathname === item.href ? "bg-accent" : "transparent"
+            "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-accent",
+            location.pathname === item.href ? "bg-accent" : "transparent",
+            "text-foreground"
           )}
         >
-          <item.icon className="h-4 w-4" />
+          <item.icon className="h-5 w-5" />
           <span>{item.title}</span>
         </Link>
       ))}
 
-      {allowedSettingsItems.map((item) => (
-        <Link
-          key={item.href}
-          to={item.href}
-          className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent",
-            location.pathname === item.href ? "bg-accent" : "transparent"
-          )}
-        >
-          <item.icon className="h-4 w-4" />
-          <span>{item.title}</span>
-        </Link>
-      ))}
-    </div>
-  )
+      <div className="mt-4 pt-4 border-t">
+        {allowedSettingsItems.map((item) => (
+          <Link
+            key={item.href}
+            to={item.href}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-accent",
+              location.pathname === item.href ? "bg-accent" : "transparent",
+              "text-foreground"
+            )}
+          >
+            <item.icon className="h-5 w-5" />
+            <span>{item.title}</span>
+          </Link>
+        ))}
+      </div>
+    </nav>
+  );
 }

@@ -27,7 +27,7 @@ export function DashboardLayout({
   const isMobile = useIsMobile()
 
   const sidebarContent = (
-    <SidebarContent>
+    <SidebarContent className="h-full">
       <SidebarHeader 
         firstName={firstName}
         role={role}
@@ -40,7 +40,7 @@ export function DashboardLayout({
   if (isMobile) {
     return (
       <div className={cn("min-h-screen w-full")}>
-        <header className="border-b p-4 flex items-center justify-between">
+        <header className="border-b p-4 flex items-center justify-between bg-background">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -49,7 +49,7 @@ export function DashboardLayout({
             </SheetTrigger>
             <SheetContent side="left" className="p-0 w-72">
               <SidebarProvider>
-                <Sidebar className="border-0">
+                <Sidebar className="border-0 h-full">
                   {sidebarContent}
                 </Sidebar>
               </SidebarProvider>
@@ -75,4 +75,3 @@ export function DashboardLayout({
     </SidebarProvider>
   )
 }
-
