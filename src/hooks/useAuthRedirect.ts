@@ -38,9 +38,9 @@ export const useAuthRedirect = () => {
 
           // Redirect based on role
           if ((profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase() === 'client') {
-            navigate("/client");
+            navigate("/client", { replace: true });
           } else {
-            navigate("/");
+            navigate("/", { replace: true });
           }
         }
       } catch (error: any) {
@@ -53,6 +53,8 @@ export const useAuthRedirect = () => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state changed:", event, session);
+        
         if (event === 'SIGNED_IN' && session) {
           // Get user role
           const { data: profileData } = await supabase
@@ -69,12 +71,12 @@ export const useAuthRedirect = () => {
 
           // Redirect based on role
           if ((profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase() === 'client') {
-            navigate("/client");
+            navigate("/client", { replace: true });
           } else {
-            navigate("/");
+            navigate("/", { replace: true });
           }
         } else if (event === 'SIGNED_OUT') {
-          navigate("/auth");
+          navigate("/auth", { replace: true });
         }
       }
     );
