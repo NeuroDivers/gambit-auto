@@ -60,15 +60,11 @@ export function DashboardLayout({
 
         {/* Mobile Menu */}
         <div className={cn(
-          "fixed inset-0 bg-background z-40 transition-transform duration-300 ease-in-out transform",
+          "fixed inset-0 bg-background z-40 transform transition-transform duration-300 ease-in-out",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}>
-          <div className="pt-16"> {/* Add padding to account for header */}
-            <SidebarProvider>
-              <Sidebar className="border-0">
-                {sidebarContent}
-              </Sidebar>
-            </SidebarProvider>
+          <div className="h-screen pt-16"> {/* Add padding for header and ensure full height */}
+            {sidebarContent}
           </div>
         </div>
 
@@ -94,3 +90,4 @@ export function DashboardLayout({
     </SidebarProvider>
   )
 }
+

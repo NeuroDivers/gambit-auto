@@ -86,6 +86,7 @@ export function SidebarNav({ className }: SidebarNavProps) {
 
     // For administrators, show all items
     if (permissions?.some(p => p.role?.name === 'administrator')) {
+      console.log("User is admin, showing all items")
       setAllowedItems(allItems)
       setAllowedSettingsItems(settingsItems)
       return
