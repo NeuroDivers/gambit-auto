@@ -28,7 +28,7 @@ export function CalendarGridHeader({ visibleDays, onDateClick, blockedDates = []
             key={day.toISOString()} 
             className={`flex flex-col items-center justify-center cursor-pointer hover:bg-accent/50 rounded p-1 ${
               isToday(day) ? 'bg-primary/10 text-primary' : ''
-            } ${blocked ? 'bg-destructive/10' : ''}`}
+            } ${blocked ? 'bg-destructive/20' : ''}`}
             onClick={(e) => onDateClick(day, e)}
           >
             <span className={`text-sm font-medium ${blocked ? 'text-destructive' : 'text-muted-foreground'}`}>
