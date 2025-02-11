@@ -134,7 +134,7 @@ export function CalendarGrid({ currentDate, workOrders, onDateChange }: Calendar
             <div className="grid grid-cols-[120px_repeat(7,64px)] gap-4">
               {serviceBays.map((bay) => (
                 <React.Fragment key={bay.id}>
-                  <div className="p-2 text-sm font-medium">{bay.name}</div>
+                  <div className="w-[120px] p-2 text-sm font-medium truncate">{bay.name}</div>
                   {mobileDays.map((day) => {
                     const workOrdersForDay = getWorkOrdersForDay(day, bay.id)
                     return (
