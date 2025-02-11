@@ -85,7 +85,7 @@ export function SidebarNav({ className }: SidebarNavProps) {
     console.log("Current permissions:", permissions)
 
     // For administrators, show all items
-    if (permissions?.some(p => p.roles?.name === 'administrator')) {
+    if (permissions?.some(p => p.role?.name === 'administrator')) {
       setAllowedItems(allItems)
       setAllowedSettingsItems(settingsItems)
       return
