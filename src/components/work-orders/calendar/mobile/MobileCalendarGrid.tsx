@@ -1,11 +1,13 @@
 
-import { format } from "date-fns"
+import { format, isToday } from "date-fns"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { WorkOrder } from "../../types"
 import { MobileCalendarRow } from "./MobileCalendarRow"
 import React, { useState, useEffect, useRef } from "react"
 import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
 import { CreateWorkOrderDialog } from "../../CreateWorkOrderDialog"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "lucide-react"
 
 type MobileCalendarGridProps = {
   visibleDays: Date[]
@@ -39,10 +41,11 @@ export function MobileCalendarGrid({
       if (!target) return
 
       const { scrollLeft, scrollWidth, clientWidth } = target
-      const scrollThreshold = scrollWidth - clientWidth - 100 // Load more when within 100px of the end
-
-      if (scrollLeft >= scrollThreshold) {
-        console.log('Loading more days...')
+      const remainingScroll = scrollWidth - (scrollLeft + clientWidth)
+      
+      // Load more when within 300px of the end
+      if (remainingScroll < 300) {
+        console.log('Loading more days...', { remainingScroll, scrollWidth, scrollLeft, clientWidth })
         onScroll()
       }
     }
@@ -124,8 +127,29 @@ export function MobileCalendarGrid({
     }
   }
 
+  const scrollToToday = () => {
+    const today = new Date()
+    const todayElement = visibleDays.findIndex(day => isToday(day))
+    if (todayElement !== -1 && scrollRef.current) {
+      const cellWidth = 68 // width + gap
+      scrollRef.current.scrollLeft = todayElement * cellWidth
+    }
+  }
+
   return (
     <div className="relative">
+      <div className="mb-4 flex justify-end">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={scrollToToday}
+          className="text-sm"
+        >
+          <Calendar className="w-4 h-4 mr-2" />
+          Today
+        </Button>
+      </div>
+
       <ScrollArea 
         ref={scrollAreaRef}
         className="rounded-md border"
@@ -147,10 +171,17 @@ export function MobileCalendarGrid({
             {visibleDays.map((day) => (
               <div 
                 key={day.toISOString()} 
-                className="text-sm font-medium text-muted-foreground text-center cursor-pointer hover:bg-accent/50 rounded p-1"
+                className={`flex flex-col items-center justify-center cursor-pointer hover:bg-accent/50 rounded p-1 ${
+                  isToday(day) ? 'bg-primary/10 text-primary' : ''
+                }`}
                 onClick={(e) => handleDateClick(day, e)}
               >
-                {format(day, 'EEE d')}
+                <span className="text-sm font-medium text-muted-foreground">
+                  {format(day, 'EEE')}
+                </span>
+                <span className={`text-sm font-bold ${isToday(day) ? 'text-primary' : ''}`}>
+                  {format(day, 'd')}
+                </span>
               </div>
             ))}
           </div>

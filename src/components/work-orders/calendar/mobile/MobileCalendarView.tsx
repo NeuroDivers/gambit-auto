@@ -112,12 +112,6 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
       // Set a new timeout to update the month
       scrollTimeout = setTimeout(() => {
         updateVisibleMonth()
-
-        // Check if we need to load more days
-        const { scrollLeft, scrollWidth, clientWidth } = currentRef
-        if (scrollWidth - (scrollLeft + clientWidth) < 300) {
-          loadMoreDays()
-        }
       }, 100) // Small debounce delay
     }
 
@@ -128,7 +122,7 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
         clearTimeout(scrollTimeout)
       }
     }
-  }, [updateVisibleMonth, loadMoreDays])
+  }, [updateVisibleMonth])
 
   return (
     <div className="space-y-4">
