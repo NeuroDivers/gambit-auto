@@ -96,7 +96,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
 
   const hasWorkOrder = (date: Date, bayId: string) => {
     return workOrders?.some(order => 
-      order.bay_id === bayId && 
+      order.assigned_bay_id === bayId && 
       isSameDay(new Date(order.start_time || ''), date)
     )
   }
