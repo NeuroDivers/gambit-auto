@@ -8,13 +8,15 @@ type MobileCalendarHeaderProps = {
   onDateChange: (date: Date) => void
   onMonthPickerOpen: () => void
   onTodayClick: () => void
+  scrollRef?: React.RefObject<HTMLDivElement>
 }
 
 export function MobileCalendarHeader({ 
   currentDate, 
   onDateChange, 
   onMonthPickerOpen,
-  onTodayClick 
+  onTodayClick,
+  scrollRef
 }: MobileCalendarHeaderProps) {
   const handlePreviousMonth = () => {
     const prevMonth = new Date(currentDate)
@@ -26,6 +28,12 @@ export function MobileCalendarHeader({
     const nextMonth = new Date(currentDate)
     nextMonth.setMonth(currentDate.getMonth() + 1, 1) // Set to first day of next month
     onDateChange(nextMonth)
+  }
+
+  const handleResetScroll = () => {
+    if (scrollRef?.current) {
+      scrollRef.current.scrollLeft = 0
+    }
   }
 
   return (
@@ -54,15 +62,25 @@ export function MobileCalendarHeader({
         </Button>
       </div>
       
-      <Button 
-        variant="outline" 
-        size="sm"
-        onClick={onTodayClick}
-        className="text-sm"
-      >
-        <Calendar className="w-4 h-4 mr-2" />
-        Today
-      </Button>
+      <div className="flex gap-2">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={onTodayClick}
+          className="text-sm"
+        >
+          <Calendar className="w-4 h-4 mr-2" />
+          Today
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleResetScroll}
+          className="text-sm"
+        >
+          Reset Scroll
+        </Button>
+      </div>
     </div>
   )
 }
