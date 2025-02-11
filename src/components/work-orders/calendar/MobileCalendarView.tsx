@@ -97,8 +97,11 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     const centerPosition = scrollLeft + (elementWidth / 2)
     const centerIndex = Math.floor(centerPosition / cellWidth)
     
-    if (visibleDays[centerIndex]) {
-      setVisibleMonth(startOfMonth(visibleDays[centerIndex]))
+    // Ensure we have a valid index and corresponding date
+    if (centerIndex >= 0 && centerIndex < visibleDays.length) {
+      const centerDate = visibleDays[centerIndex]
+      console.log('Center date:', centerDate)
+      setVisibleMonth(centerDate)
     }
 
     // Check if we need to load more days
