@@ -18,6 +18,7 @@ type MobileCalendarViewProps = {
 export function MobileCalendarView({ currentDate, workOrders, onDateChange }: MobileCalendarViewProps) {
   const [showMonthPicker, setShowMonthPicker] = useState(false)
   const [visibleDays, setVisibleDays] = useState<Date[]>([])
+  const [visibleMonth, setVisibleMonth] = useState(currentDate)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [isLoading, setIsLoading] = useState(false)
   const lastLoadTimeRef = useRef<number>(0)
@@ -52,25 +53,95 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
 
   const loadMoreDays = useCallback(() => {
     const now = Date.now()
-    // Prevent multiple calls within 500ms
     if (isLoading || now - lastLoadTimeRef.current < 500) return
     
+    console.log("Loading more days...")
     setIsLoading(true)
     lastLoadTimeRef.current = now
 
+    // Get the last day from the current visibleDays array
     const lastDay = visibleDays[visibleDays.length - 1]
-    const nextDays = Array.from({ length: 10 }, (_, i) => addDays(lastDay, i + 1))
+    const newDays = Array.from({ length: 30 }, (_, i) => addDays(lastDay, i + 1))
+
+    // Update visibleDays by appending the new days
+    setVisibleDays(prevDays => [...prevDays, ...newDays])
+
+    setTimeout(() => setIsLoading(false), 300)
+  }, [isLoading, visibleDays])
+
+  const scrollToToday = useCallback(() => {
+    const today = new Date()
+    const todayIndex = visibleDays.findIndex(day => 
+      day.getDate() === today.getDate() && 
+      day.getMonth() === today.getMonth() && 
+      day.getFullYear() === today.getFullYear()
+    )
     
-    setVisibleDays(prev => [...prev, ...nextDays])
-    setTimeout(() => setIsLoading(false), 100) // Small delay to prevent rapid consecutive calls
-  }, [visibleDays, isLoading])
+    if (todayIndex !== -1 && scrollRef.current) {
+      const cellWidth = 68 // width + gap
+      scrollRef.current.scrollLeft = todayIndex * cellWidth
+      setVisibleMonth(today)
+    }
+  }, [visibleDays])
+
+  // Update visible month based on scroll position
+  const updateVisibleMonth = useCallback(() => {
+    if (!scrollRef.current) return
+
+    const scrollElement = scrollRef.current
+    const scrollLeft = scrollElement.scrollLeft
+    const elementWidth = scrollElement.clientWidth
+    const cellWidth = 68 // width + gap
+    
+    // Calculate the center position of the viewport
+    const centerPosition = scrollLeft + (elementWidth / 2)
+    const centerIndex = Math.floor(centerPosition / cellWidth)
+    
+    if (visibleDays[centerIndex]) {
+      setVisibleMonth(startOfMonth(visibleDays[centerIndex]))
+    }
+
+    // Check if we need to load more days
+    const { scrollWidth } = scrollElement
+    const remainingScroll = scrollWidth - (scrollLeft + elementWidth)
+    if (remainingScroll < 300) {
+      loadMoreDays()
+    }
+  }, [visibleDays, loadMoreDays])
+
+  // Add scroll event listener with debounce
+  useEffect(() => {
+    const currentRef = scrollRef.current
+    if (!currentRef) return
+
+    let scrollTimeout: NodeJS.Timeout
+
+    const handleScroll = () => {
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout)
+      }
+
+      scrollTimeout = setTimeout(() => {
+        updateVisibleMonth()
+      }, 100)
+    }
+
+    currentRef.addEventListener('scroll', handleScroll)
+    return () => {
+      currentRef.removeEventListener('scroll', handleScroll)
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout)
+      }
+    }
+  }, [updateVisibleMonth])
 
   return (
     <div className="space-y-4">
       <MobileCalendarHeader
-        currentDate={currentDate}
+        currentDate={visibleMonth}
         onDateChange={onDateChange || (() => {})}
         onMonthPickerOpen={() => setShowMonthPicker(true)}
+        onTodayClick={scrollToToday}
       />
 
       <MobileCalendarGrid
@@ -85,7 +156,7 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
       <MonthPicker
         open={showMonthPicker}
         onOpenChange={setShowMonthPicker}
-        currentDate={currentDate}
+        currentDate={visibleMonth}
         onDateChange={onDateChange || (() => {})}
       />
     </div>

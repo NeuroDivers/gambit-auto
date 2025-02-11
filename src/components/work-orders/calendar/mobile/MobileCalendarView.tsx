@@ -1,12 +1,12 @@
 
-import { addDays, startOfMonth, isWithinInterval, endOfMonth } from "date-fns"
+import { addDays, startOfMonth } from "date-fns"
 import React, { useRef, useEffect, useState, useCallback } from "react"
 import { WorkOrder } from "@/components/work-orders/types"
 import { MonthPicker } from "../MonthPicker"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { MobileCalendarHeader } from "./MobileCalendarHeader"
-import { MobileCalendarGrid } from "./mobile/MobileCalendarGrid"
+import { MobileCalendarGrid } from "./MobileCalendarGrid"
 import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
 
 type MobileCalendarViewProps = {
