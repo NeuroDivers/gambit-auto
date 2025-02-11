@@ -39,17 +39,17 @@ export function SummaryStep({ form, services }: SummaryStepProps) {
         <div>
           <h3 className="text-lg font-semibold mb-2">Selected Services</h3>
           <div className="space-y-4">
-            {formValues.service_ids.map((serviceId) => {
-              const service = services.find(s => s.id === serviceId)
-              const details = formValues.service_details[serviceId]
+            {formValues.service_items.map((item) => {
+              const service = services.find(s => s.id === item.service_id)
+              const details = formValues.service_details[item.service_id]
               if (!service) return null
 
               const selectedPackage = details?.package_id 
-                ? getServicePackage(serviceId, details.package_id)
+                ? getServicePackage(item.service_id, details.package_id)
                 : null
 
               return (
-                <div key={serviceId} className="rounded border p-3">
+                <div key={item.service_id} className="rounded border p-3">
                   <h4 className="font-medium mb-2">{service.name}</h4>
                   {details && (
                     <div className="text-sm space-y-2">

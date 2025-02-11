@@ -39,13 +39,13 @@ export function MultiStepQuoteRequestForm() {
                   <VehicleInfoStep form={form} />
                 )}
                 {step === 2 && (
-                  <ServiceSelectionStep form={form} services={services} />
+                  <ServiceSelectionStep form={form} />
                 )}
-                {step > 2 && step < totalSteps && (
+                {step > 2 && step < totalSteps && selectedServices[step - 3] && (
                   <ServiceDetailsStep 
                     form={form}
                     services={services}
-                    serviceId={selectedServices[step - 3]}
+                    serviceId={selectedServices[step - 3].service_id}
                     onImageUpload={handleImageUpload}
                     onImageRemove={handleImageRemove}
                   />
