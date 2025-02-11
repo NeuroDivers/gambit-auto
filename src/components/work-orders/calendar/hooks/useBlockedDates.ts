@@ -15,7 +15,12 @@ export function useBlockedDates() {
         .select("*")
         .order("start_date", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching blocked dates:", error);
+        throw error;
+      }
+
+      console.log("Fetched blocked dates:", data);
       return data as BlockedDate[];
     },
   });

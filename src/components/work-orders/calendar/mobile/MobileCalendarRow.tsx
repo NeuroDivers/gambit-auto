@@ -46,6 +46,7 @@ export function MobileCalendarRow({
 
   const isDateBlocked = (date: Date) => {
     return blockedDates.some(blockedDate => {
+      if (!blockedDate.start_date || !blockedDate.end_date) return false;
       const start = parseISO(blockedDate.start_date)
       const end = parseISO(blockedDate.end_date)
       return isWithinInterval(date, { start, end })
@@ -54,13 +55,15 @@ export function MobileCalendarRow({
 
   return (
     <>
-      <div className="w-[86px] p-2 text-sm font-medium truncate">{bayName}</div>
+      <div className="sticky left-0 z-20 w-[86px] bg-background p-2 text-sm font-medium truncate border-r shadow-sm">
+        {bayName}
+      </div>
       {visibleDays.map((day) => {
         const workOrdersForDay = getWorkOrdersForDay(day)
         const blocked = isDateBlocked(day)
         return (
           <div 
-            key={day.toISOString()}
+            key={format(day, 'yyyy-MM-dd')}
             className={`relative p-2 border-l h-[80px] min-h-[80px] group hover:bg-muted/50 cursor-pointer ${
               blocked ? 'bg-destructive/10' : ''
             }`}
