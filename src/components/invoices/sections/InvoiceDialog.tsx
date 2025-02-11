@@ -1,4 +1,5 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { InvoiceView } from "../InvoiceView"
 
 type InvoiceDialogProps = {
@@ -16,6 +17,9 @@ export function InvoiceDialog({ open, onOpenChange, invoiceId, onClose }: Invoic
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>Edit Invoice</DialogTitle>
+          <DialogDescription>
+            Make changes to your invoice details and items.
+          </DialogDescription>
         </DialogHeader>
         <InvoiceView 
           invoiceId={invoiceId} 
