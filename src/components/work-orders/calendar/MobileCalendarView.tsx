@@ -80,9 +80,10 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     if (todayIndex !== -1 && scrollRef.current) {
       const cellWidth = 68 // width + gap
       scrollRef.current.scrollLeft = todayIndex * cellWidth
+      onDateChange?.(today)
       setVisibleMonth(today)
     }
-  }, [visibleDays])
+  }, [visibleDays, onDateChange])
 
   // Update visible month based on scroll position
   const updateVisibleMonth = useCallback(() => {
@@ -101,6 +102,7 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     if (centerIndex >= 0 && centerIndex < visibleDays.length) {
       const centerDate = visibleDays[centerIndex]
       console.log('Center date:', centerDate)
+      onDateChange?.(centerDate)
       setVisibleMonth(centerDate)
     }
 
@@ -110,7 +112,7 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     if (remainingScroll < 300) {
       loadMoreDays()
     }
-  }, [visibleDays, loadMoreDays])
+  }, [visibleDays, loadMoreDays, onDateChange])
 
   // Add scroll event listener with debounce
   useEffect(() => {
