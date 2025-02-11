@@ -12,6 +12,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { WorkOrderCard } from "../WorkOrderCard"
 
 type CalendarGridProps = {
   currentDate: Date
@@ -93,8 +94,8 @@ export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
           </Button>
         </div>
 
-        <ScrollArea className="h-[600px]" type="hover">
-          <div className="min-w-[800px] cursor-grab active:cursor-grabbing">
+        <ScrollArea className="h-[600px]">
+          <div className="min-w-[800px] select-none cursor-grab active:cursor-grabbing">
             {/* Header with days */}
             <div className="grid grid-cols-[120px_repeat(7,1fr)] gap-4 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
               <div className="text-sm font-medium text-muted-foreground">Bays</div>
@@ -110,34 +111,23 @@ export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
               {serviceBays.map((bay) => (
                 <React.Fragment key={bay.id}>
                   <div className="p-2 text-sm font-medium">{bay.name}</div>
-                  {mobileDays.map((day) => (
-                    <div 
-                      key={day.toISOString()}
-                      className="p-2 border-l min-h-[80px]"
-                    >
-                      {getWorkOrdersForDay(day, bay.id).map((order) => (
-                        <div 
-                          key={order.id}
-                          className={`text-xs p-1 bg-primary/10 rounded mb-1 ${
-                            order.isStart && order.duration > 1 ? 'rounded-r-none' : ''
-                          } ${
-                            !order.isStart && !order.isEnd ? 'rounded-none border-l-0 border-r-0' : ''
-                          } ${
-                            order.isEnd && !order.isStart ? 'rounded-l-none' : ''
-                          }`}
-                          style={{
-                            marginLeft: order.isStart ? '0' : '-2px',
-                            marginRight: order.isEnd ? '0' : '-2px',
-                            borderWidth: '1px',
-                            borderStyle: 'solid',
-                            borderColor: 'rgba(var(--primary), 0.2)'
-                          }}
-                        >
-                          {order.first_name} {order.last_name}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
+                  {mobileDays.map((day) => {
+                    const workOrdersForDay = getWorkOrdersForDay(day, bay.id)
+                    return (
+                      <div 
+                        key={day.toISOString()}
+                        className="p-2 border-l min-h-[80px]"
+                      >
+                        {workOrdersForDay.map((order) => (
+                          <WorkOrderCard 
+                            key={order.id}
+                            workOrder={order}
+                            className="mb-1"
+                          />
+                        ))}
+                      </div>
+                    )
+                  })}
                 </React.Fragment>
               ))}
             </div>
@@ -154,6 +144,7 @@ export function CalendarGrid({ currentDate, workOrders }: CalendarGridProps) {
                   setShowMonthPicker(false)
                 }
               }}
+              initialFocus
               className="rounded-md border"
             />
           </DialogContent>
