@@ -41,7 +41,7 @@ export function MobileCalendarGrid({
     if (!isDragging || !scrollRef.current) return
     e.preventDefault()
     const x = e.pageX - (scrollRef.current.offsetLeft || 0)
-    const walk = (x - startX) * 2 // Multiply by 2 to increase scroll speed
+    const walk = (x - startX) * 3 // Increased scroll speed multiplier
     scrollRef.current.scrollLeft = scrollLeft - walk
   }
 
@@ -56,7 +56,7 @@ export function MobileCalendarGrid({
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging || !scrollRef.current) return
     const x = e.touches[0].pageX - scrollRef.current.offsetLeft
-    const walk = (x - startX) * 2 // Multiply by 2 to increase scroll speed
+    const walk = (x - startX) * 3 // Increased scroll speed multiplier
     scrollRef.current.scrollLeft = scrollLeft - walk
   }
 
@@ -89,7 +89,7 @@ export function MobileCalendarGrid({
         onScroll={onScroll}
       >
         <div 
-          className="min-w-[800px] select-none touch-pan-x"
+          className="min-w-[2000px] select-none touch-pan-x"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={stopDragging}
@@ -98,9 +98,9 @@ export function MobileCalendarGrid({
           onTouchMove={handleTouchMove}
           onTouchEnd={stopDragging}
         >
-          <div className="grid grid-cols-[86px_repeat(7,64px)] gap-4 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
+          <div className="grid grid-cols-[86px_repeat(30,64px)] gap-4 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
             <div className="text-sm font-medium text-muted-foreground">Bays</div>
-            {visibleDays.slice(0, 7).map((day) => (
+            {visibleDays.slice(0, 30).map((day) => (
               <div 
                 key={day.toISOString()} 
                 className="text-sm font-medium text-muted-foreground text-center cursor-pointer hover:bg-accent/50 rounded p-1"
@@ -111,7 +111,7 @@ export function MobileCalendarGrid({
             ))}
           </div>
 
-          <div className="grid grid-cols-[86px_repeat(7,64px)] gap-4">
+          <div className="grid grid-cols-[86px_repeat(30,64px)] gap-4">
             {serviceBays.map((bay) => (
               <React.Fragment key={bay.id}>
                 <MobileCalendarRow
