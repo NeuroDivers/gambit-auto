@@ -28,12 +28,12 @@ export function MultiStepQuoteRequestForm() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-4">
         <CardTitle>Request a Quote</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="relative">
               <AnimatePresence mode="wait">
                 {step === 1 && (
@@ -41,7 +41,7 @@ export function MultiStepQuoteRequestForm() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
+                    className="space-y-4"
                   >
                     <VehicleInfoStep form={form} />
                     <ServiceSelectionField form={form} />
