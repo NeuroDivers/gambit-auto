@@ -1,5 +1,5 @@
 
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth } from "date-fns"
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { WorkOrder } from "../types"
@@ -84,11 +84,7 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blo
             workOrders={workOrders.filter(wo => {
               if (!wo.start_time) return false
               const startDate = new Date(wo.start_time)
-              const endDate = wo.end_time ? new Date(wo.end_time) : startDate
-              return (
-                isSameMonth(day, startDate) || 
-                isSameMonth(day, endDate)
-              )
+              return isSameDay(day, startDate)
             })}
             isCurrentMonth={isSameMonth(day, currentDate)}
             blockedDates={blockedDates}
@@ -105,3 +101,4 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blo
     </div>
   )
 }
+
