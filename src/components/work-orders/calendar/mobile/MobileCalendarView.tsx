@@ -1,12 +1,8 @@
 
 import { WorkOrder } from "../../types"
-import React from "react"
-import { MonthPicker } from "../MonthPicker"
-import { MobileCalendarHeader } from "./MobileCalendarHeader"
-import { MobileCalendarGrid } from "./MobileCalendarGrid"
-import { useBlockedDates } from "../hooks/useBlockedDates"
-import { MobileCalendarProvider, useMobileCalendar } from "./MobileCalendarProvider"
+import React, { useState } from "react"
 import { HorizontalCalendar } from "@/components/calendar"
+import { CreateWorkOrderDialog } from "../../CreateWorkOrderDialog"
 
 type MobileCalendarViewProps = {
   currentDate: Date
@@ -14,58 +10,28 @@ type MobileCalendarViewProps = {
   onDateChange?: (date: Date) => void
 }
 
-function MobileCalendarContent({ workOrders }: { workOrders: WorkOrder[] }) {
-  const { 
-    visibleMonth,
-    visibleDays,
-    serviceBays,
-    scrollRef,
-    showMonthPicker,
-    handleDateChange,
-    setShowMonthPicker,
-    scrollToToday
-  } = useMobileCalendar()
+export function MobileCalendarView({ currentDate, workOrders, onDateChange }: MobileCalendarViewProps) {
+  const [showWorkOrderDialog, setShowWorkOrderDialog] = useState(false)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
-  const { blockedDates } = useBlockedDates()
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date)
+    setShowWorkOrderDialog(true)
+    onDateChange?.(date)
+  }
 
   return (
     <div className="space-y-4">
-      <MobileCalendarHeader
-        currentDate={visibleMonth}
-        onDateChange={handleDateChange}
-        onMonthPickerOpen={() => setShowMonthPicker(true)}
-        onTodayClick={scrollToToday}
-        scrollRef={scrollRef}
+      <HorizontalCalendar 
+        onDateSelect={handleDateSelect}
+        className="border border-border"
       />
 
-      <MobileCalendarGrid
-        visibleDays={visibleDays}
-        workOrders={workOrders}
-        serviceBays={serviceBays}
-        onScroll={() => {}}
-        onDateClick={handleDateChange}
-        scrollRef={scrollRef}
-        blockedDates={blockedDates}
-      />
-
-      <MonthPicker
-        open={showMonthPicker}
-        onOpenChange={setShowMonthPicker}
-        currentDate={visibleMonth}
-        onDateChange={handleDateChange}
+      <CreateWorkOrderDialog 
+        open={showWorkOrderDialog}
+        onOpenChange={setShowWorkOrderDialog}
+        defaultStartTime={selectedDate || undefined}
       />
     </div>
-  )
-}
-
-export function MobileCalendarView({ currentDate, workOrders, onDateChange }: MobileCalendarViewProps) {
-  return (
-    <MobileCalendarProvider 
-      currentDate={currentDate}
-      workOrders={workOrders}
-      onDateChange={onDateChange}
-    >
-      <MobileCalendarContent workOrders={workOrders} />
-    </MobileCalendarProvider>
   )
 }
