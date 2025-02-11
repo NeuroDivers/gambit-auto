@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { MobileCalendarHeader } from "./mobile/MobileCalendarHeader"
 import { MobileCalendarGrid } from "./mobile/MobileCalendarGrid"
+import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
 
 type MobileCalendarViewProps = {
   currentDate: Date
@@ -24,11 +25,20 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_bays")
-        .select("id, name")
+        .select("*")
         .order("name")
       
       if (error) throw error
-      return data
+      
+      const bays = data.map(bay => ({
+        id: bay.id,
+        name: bay.name,
+        status: bay.status || 'available',
+        assigned_profile_id: bay.assigned_profile_id,
+        notes: bay.notes
+      })) as ServiceBay[]
+      
+      return bays
     }
   })
 
