@@ -20,7 +20,9 @@ export const getWorkOrderSpan = (workOrder: WorkOrder, startIndex: number, total
     workOrderId: workOrder.id,
     duration,
     remainingDays,
-    finalSpan: span
+    finalSpan: span,
+    startIndex,
+    totalDays
   });
   return span;
 }

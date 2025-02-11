@@ -23,7 +23,7 @@ export function WorkOrderCard({ workOrder, date, span, onClick }: WorkOrderCardP
       )}
       onClick={onClick}
       style={{
-        gridColumn: `span ${span}`,
+        gridColumn: `span ${Math.max(1, Math.min(span, 7))}`, // Limit span to maximum of 7 days
       }}
     >
       <TooltipProvider>
