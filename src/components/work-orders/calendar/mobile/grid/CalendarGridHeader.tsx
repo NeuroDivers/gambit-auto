@@ -1,6 +1,6 @@
 
-import { format, isToday, parseISO, isWithinInterval } from "date-fns"
 import React from "react"
+import { format, isToday, parseISO, isWithinInterval } from "date-fns"
 import { BlockedDate } from "../../types"
 
 type CalendarGridHeaderProps = {

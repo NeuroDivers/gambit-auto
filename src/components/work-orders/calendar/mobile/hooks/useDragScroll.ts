@@ -1,5 +1,4 @@
-
-import { useState, RefObject } from "react"
+import { useState, useRef, RefObject } from "react"
 
 export function useDragScroll(scrollRef: RefObject<HTMLDivElement>) {
   const [isDragging, setIsDragging] = useState(false)
