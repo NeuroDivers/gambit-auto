@@ -1,7 +1,8 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export interface AuthFormData {
   email: string;
@@ -15,6 +16,25 @@ export const useAuthForm = () => {
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Handle URL error parameters
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get("error");
+    const errorDescription = params.get("error_description");
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: errorDescription?.replace(/\+/g, ' ') || "An error occurred during authentication",
+      });
+      // Clean up URL
+      navigate("/auth", { replace: true });
+    }
+  }, [location, toast, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -28,6 +48,9 @@ export const useAuthForm = () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth`
+        }
       });
       if (error) throw error;
     } catch (error: any) {
