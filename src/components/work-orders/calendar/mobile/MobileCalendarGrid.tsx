@@ -3,7 +3,7 @@ import { format } from "date-fns"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { WorkOrder } from "../../types"
 import { MobileCalendarRow } from "./MobileCalendarRow"
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
 import { CreateWorkOrderDialog } from "../../CreateWorkOrderDialog"
 
@@ -29,20 +29,47 @@ export function MobileCalendarGrid({
   const [dragStartTime, setDragStartTime] = useState(0)
   const [showWorkOrderDialog, setShowWorkOrderDialog] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
 
-  // Check scroll position and trigger onScroll
+  // Check scroll position and trigger onScroll for horizontal scrolling
   useEffect(() => {
-    const handleScroll = () => {
-      if (!scrollRef.current) return
-      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
-      if (scrollWidth - (scrollLeft + clientWidth) < 300) {
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLDivElement
+      if (!target) return
+
+      const { scrollLeft, scrollWidth, clientWidth } = target
+      if (scrollWidth - (scrollLeft + clientWidth) < 200) {
         onScroll()
       }
     }
 
-    scrollRef.current?.addEventListener('scroll', handleScroll)
-    return () => scrollRef.current?.removeEventListener('scroll', handleScroll)
-  }, [onScroll])
+    const currentRef = scrollRef.current
+    if (currentRef) {
+      currentRef.addEventListener('scroll', handleScroll)
+      return () => currentRef.removeEventListener('scroll', handleScroll)
+    }
+  }, [onScroll, scrollRef])
+
+  // Handle vertical scrolling at boundaries
+  const handleWheel = (e: React.WheelEvent) => {
+    if (!scrollAreaRef.current) return
+
+    const { scrollTop, scrollHeight, clientHeight } = scrollAreaRef.current
+    const isAtBottom = scrollHeight - (scrollTop + clientHeight) < 1
+    const isAtTop = scrollTop === 0
+
+    // Allow page scrolling only when we're at the boundaries and scrolling in that direction
+    if ((isAtBottom && e.deltaY > 0) || (isAtTop && e.deltaY < 0)) {
+      e.currentTarget.style.overflowY = 'hidden'
+      setTimeout(() => {
+        if (e.currentTarget) {
+          e.currentTarget.style.overflowY = 'auto'
+        }
+      }, 100)
+    } else {
+      e.stopPropagation()
+    }
+  }
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!scrollRef.current) return
@@ -50,14 +77,14 @@ export function MobileCalendarGrid({
     setStartX(e.pageX)
     setScrollLeft(scrollRef.current.scrollLeft)
     setDragStartTime(Date.now())
-    e.preventDefault() // Prevent text selection while dragging
+    e.preventDefault()
   }
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging || !scrollRef.current) return
     e.preventDefault()
     const x = e.pageX
-    const walk = (startX - x) * 2 // Adjusted multiplier for smoother scrolling
+    const walk = (startX - x) * 2
     scrollRef.current.scrollLeft = scrollLeft + walk
   }
 
@@ -81,11 +108,11 @@ export function MobileCalendarGrid({
     setIsDragging(false)
 
     if (dragDuration < 150) {
-      return false // Allow click events to propagate
+      return false
     }
     
     if (e) {
-      e.preventDefault() // Prevent click events after drag
+      e.preventDefault()
     }
     return true
   }
@@ -103,8 +130,9 @@ export function MobileCalendarGrid({
   return (
     <div className="overflow-hidden">
       <ScrollArea 
-        ref={scrollRef} 
+        ref={scrollAreaRef}
         className="h-[600px] rounded-md border"
+        onWheel={handleWheel}
       >
         <div 
           className="min-w-[2000px] select-none touch-pan-x"
@@ -115,6 +143,7 @@ export function MobileCalendarGrid({
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={stopDragging}
+          ref={scrollRef}
         >
           <div className="grid grid-cols-[86px_repeat(30,64px)] gap-4 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
             <div className="text-sm font-medium text-muted-foreground">Bays</div>
@@ -152,5 +181,5 @@ export function MobileCalendarGrid({
         defaultStartTime={selectedDate || undefined}
       />
     </div>
-  );
+  )
 }

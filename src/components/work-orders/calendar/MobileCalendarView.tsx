@@ -20,6 +20,7 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
   const [visibleDays, setVisibleDays] = useState<Date[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const lastLoadTimeRef = useRef<number>(0)
 
   const { data: serviceBays = [] } = useQuery({
     queryKey: ["serviceBays"],
@@ -50,14 +51,18 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
   }, [currentDate])
 
   const loadMoreDays = useCallback(() => {
-    if (isLoading) return
-
+    const now = Date.now()
+    // Prevent multiple calls within 500ms
+    if (isLoading || now - lastLoadTimeRef.current < 500) return
+    
     setIsLoading(true)
+    lastLoadTimeRef.current = now
+
     const lastDay = visibleDays[visibleDays.length - 1]
     const nextDays = Array.from({ length: 10 }, (_, i) => addDays(lastDay, i + 1))
     
     setVisibleDays(prev => [...prev, ...nextDays])
-    setIsLoading(false)
+    setTimeout(() => setIsLoading(false), 100) // Small delay to prevent rapid consecutive calls
   }, [visibleDays, isLoading])
 
   return (
