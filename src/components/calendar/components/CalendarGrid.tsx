@@ -1,7 +1,7 @@
 
 import { format, isToday } from "date-fns"
 import { WorkOrder } from "@/components/work-orders/types"
-import { ServiceBay } from "@/components/service-bays/types"
+import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
 import { cn } from "@/lib/utils"
 import { findWorkOrderForDate, getWorkOrderSpan, isWorkOrderStart } from "../utils/dateUtils"
 import { WorkOrderCard } from "./WorkOrderCard"
