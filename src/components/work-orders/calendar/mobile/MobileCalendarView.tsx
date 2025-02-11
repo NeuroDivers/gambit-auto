@@ -130,6 +130,22 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     }
   }, [visibleDays, loadMoreDays, onDateChange])
 
+  const handleDateChange = (date: Date) => {
+    onDateChange?.(date)
+    setVisibleMonth(date)
+    
+    // Reset visible days around the new date
+    const newDays = Array.from({ length: 30 }, (_, i) => addDays(startOfDay(date), i))
+    setVisibleDays(newDays)
+    
+    // Scroll to the beginning after a short delay to allow for state update
+    setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollLeft = 0
+      }
+    }, 100)
+  }
+
   useEffect(() => {
     const currentRef = scrollRef.current
     if (!currentRef) return
@@ -160,7 +176,7 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     <div className="space-y-4">
       <MobileCalendarHeader
         currentDate={visibleMonth}
-        onDateChange={onDateChange || (() => {})}
+        onDateChange={handleDateChange}
         onMonthPickerOpen={() => setShowMonthPicker(true)}
         onTodayClick={scrollToToday}
       />

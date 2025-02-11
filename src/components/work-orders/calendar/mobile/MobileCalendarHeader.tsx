@@ -18,13 +18,13 @@ export function MobileCalendarHeader({
 }: MobileCalendarHeaderProps) {
   const handlePreviousMonth = () => {
     const prevMonth = new Date(currentDate)
-    prevMonth.setMonth(prevMonth.getMonth() - 1)
+    prevMonth.setMonth(currentDate.getMonth() - 1, 1) // Set to first day of previous month
     onDateChange(prevMonth)
   }
 
   const handleNextMonth = () => {
     const nextMonth = new Date(currentDate)
-    nextMonth.setMonth(nextMonth.getMonth() + 1)
+    nextMonth.setMonth(currentDate.getMonth() + 1, 1) // Set to first day of next month
     onDateChange(nextMonth)
   }
 
