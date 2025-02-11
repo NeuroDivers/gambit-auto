@@ -41,39 +41,42 @@ export function WorkOrderCard({ workOrder, className }: WorkOrderCardProps) {
 
   return (
     <>
-      <div 
-        className={cn(
-          "relative text-xs p-1.5 truncate cursor-pointer transition-colors",
-          "hover:shadow-md",
-          getStatusStyle(workOrder.status),
-          {
-            'rounded-r-none': workOrder.isStart && isMultiDay,
-            'rounded-none border-l-0 border-r-0': !workOrder.isStart && !workOrder.isEnd,
-            'rounded-l-none': workOrder.isEnd && !workOrder.isStart
-          },
-          className
-        )}
-        onClick={handleClick}
-        style={{
-          marginLeft: workOrder.isStart ? '0' : '-2px',
-          marginRight: workOrder.isEnd ? '0' : '-2px',
-          borderWidth: '1px',
-          borderStyle: 'solid',
-          borderColor: 'rgba(var(--primary), 0.2)'
-        }}
-      >
-        <div className="truncate font-medium">
-          {workOrder.first_name} {workOrder.last_name}
-        </div>
-        <div className="text-[10px] opacity-80 truncate">
-          {workOrder.vehicle_make} {workOrder.vehicle_model}
-        </div>
-        {workOrder.start_time && (
-          <div className="text-[10px] opacity-70">
-            {format(new Date(workOrder.start_time), 'h:mm a')}
+      {(workOrder.isStart || !isMultiDay) && (
+        <div 
+          className={cn(
+            "relative text-xs p-1.5 truncate cursor-pointer transition-colors",
+            "hover:shadow-md",
+            getStatusStyle(workOrder.status),
+            {
+              'rounded-r-none border-r-0': workOrder.isStart && isMultiDay,
+              'rounded-l-none border-l-0': workOrder.isEnd && !workOrder.isStart,
+              'rounded-none border-l-0 border-r-0': !workOrder.isStart && !workOrder.isEnd,
+            },
+            className
+          )}
+          onClick={handleClick}
+          style={{
+            marginLeft: workOrder.isStart ? '0' : '-2px',
+            marginRight: workOrder.isEnd ? '0' : '-2px',
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderColor: 'rgba(var(--primary), 0.2)',
+            width: isMultiDay ? `calc(${workOrder.duration}00% + ${(workOrder.duration - 1) * 16}px)` // Account for gaps
+          }}
+        >
+          <div className="truncate font-medium">
+            {workOrder.first_name} {workOrder.last_name}
           </div>
-        )}
-      </div>
+          <div className="text-[10px] opacity-80 truncate">
+            {workOrder.vehicle_make} {workOrder.vehicle_model}
+          </div>
+          {workOrder.start_time && (
+            <div className="text-[10px] opacity-70">
+              {format(new Date(workOrder.start_time), 'h:mm a')}
+            </div>
+          )}
+        </div>
+      )}
       <WorkOrderDetailsDialog
         workOrder={workOrder}
         open={showDetails}
