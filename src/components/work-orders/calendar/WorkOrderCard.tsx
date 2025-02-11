@@ -41,14 +41,14 @@ export function WorkOrderCard({ workOrder, className }: WorkOrderCardProps) {
 
   return (
     <>
-      {(workOrder.isStart || !isMultiDay) && (
+      {workOrder.isStart && (
         <div 
           className={cn(
             "relative text-xs p-1.5 truncate cursor-pointer transition-colors",
             "hover:shadow-md",
             getStatusStyle(workOrder.status),
             {
-              'rounded-r-none border-r-0': workOrder.isStart && isMultiDay,
+              'rounded-r-none border-r-0': isMultiDay,
               'rounded-l-none border-l-0': workOrder.isEnd && !workOrder.isStart,
               'rounded-none border-l-0 border-r-0': !workOrder.isStart && !workOrder.isEnd,
             },
