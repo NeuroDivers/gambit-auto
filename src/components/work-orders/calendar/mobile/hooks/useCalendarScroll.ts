@@ -26,13 +26,23 @@ export const useCalendarScroll = ({
     
     const scrollToPosition = (position: number) => {
       if (scrollRef.current) {
-        // Force a reflow to ensure the scroll position updates
-        scrollRef.current.scrollLeft = scrollRef.current.scrollLeft
-        setTimeout(() => {
+        // First reset the scroll position
+        scrollRef.current.scrollLeft = 0
+        // Force layout recalculation
+        void scrollRef.current.offsetWidth
+        // Then set the new position
+        requestAnimationFrame(() => {
           if (scrollRef.current) {
+            scrollRef.current.style.scrollBehavior = 'auto'
             scrollRef.current.scrollLeft = position
+            // Reset scroll behavior after the scroll
+            setTimeout(() => {
+              if (scrollRef.current) {
+                scrollRef.current.style.scrollBehavior = 'smooth'
+              }
+            }, 0)
           }
-        }, 0)
+        })
       }
     }
     
