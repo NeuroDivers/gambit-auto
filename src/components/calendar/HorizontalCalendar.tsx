@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect, useCallback } from "react"
 import { format, addDays, startOfDay, isToday, isSameDay, parseISO } from "date-fns"
 import { Button } from "@/components/ui/button"
@@ -92,49 +91,32 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     })
   }
 
-  const hasWorkOrder = (date: Date, bayId: string) => {
-    return workOrders?.some(order => 
-      order.assigned_bay_id === bayId && 
-      isSameDay(new Date(order.start_time || ''), date)
-    )
+  const getWorkOrderSpan = (workOrder: WorkOrder) => {
+    if (!workOrder.estimated_duration) return 1;
+    const duration = parseInt(workOrder.estimated_duration)
+    return isNaN(duration) ? 1 : duration;
   }
 
-  const getWorkOrder = (date: Date, bayId: string) => {
-    return workOrders?.find(order => 
-      order.assigned_bay_id === bayId && 
-      isSameDay(new Date(order.start_time || ''), date)
-    )
+  const shouldDisplayWorkOrder = (date: Date, bayId: string) => {
+    const workOrder = workOrders?.find(order => {
+      if (!order.start_time || order.assigned_bay_id !== bayId) return false;
+      const startDate = startOfDay(new Date(order.start_time));
+      const duration = getWorkOrderSpan(order);
+      const endDate = addDays(startDate, duration - 1);
+      return date >= startDate && date <= endDate;
+    });
+
+    return workOrder;
+  }
+
+  const isWorkOrderStart = (date: Date, workOrder: WorkOrder) => {
+    if (!workOrder.start_time) return false;
+    return isSameDay(new Date(workOrder.start_time), date);
   }
 
   const formatTime = (timeString: string | null | undefined) => {
-    if (!timeString) return ''
-    return format(parseISO(timeString), 'h:mm a')
-  }
-
-  const getWorkOrderSpan = (workOrder: WorkOrder) => {
-    if (!workOrder.estimated_duration) return 1;
-    return parseInt(workOrder.estimated_duration) || 1;
-  }
-
-  const isWorkOrderContinuation = (date: Date, bayId: string) => {
-    for (let i = 1; i <= 7; i++) {
-      const prevDate = addDays(date, -i)
-      const workOrder = workOrders?.find(order => 
-        order.assigned_bay_id === bayId && 
-        isSameDay(new Date(order.start_time || ''), prevDate)
-      )
-      
-      if (workOrder) {
-        const duration = getWorkOrderSpan(workOrder)
-        const startDate = new Date(workOrder.start_time || '')
-        const endDate = addDays(startDate, duration - 1)
-        
-        if (date >= startDate && date <= endDate) {
-          return workOrder
-        }
-      }
-    }
-    return null
+    if (!timeString) return '';
+    return format(parseISO(timeString), 'h:mm a');
   }
 
   return (
@@ -219,13 +201,12 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
                 {bay.name}
               </div>
               {days.map((date, index) => {
-                const workOrder = getWorkOrder(date, bay.id)
-                const continuedWorkOrder = isWorkOrderContinuation(date, bay.id)
+                const workOrder = shouldDisplayWorkOrder(date, bay.id);
                 
-                if (workOrder) {
-                  const duration = getWorkOrderSpan(workOrder)
-                  const remainingDays = days.length - index
-                  const actualSpan = Math.min(duration, remainingDays)
+                if (workOrder && isWorkOrderStart(date, workOrder)) {
+                  const duration = getWorkOrderSpan(workOrder);
+                  const remainingDays = days.length - index;
+                  const actualSpan = Math.min(duration, remainingDays);
                   
                   return (
                     <div 
@@ -236,8 +217,8 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
                         isToday(date) && "bg-gray-700/20"
                       )}
                       onClick={(e) => {
-                        e.stopPropagation()
-                        setSelectedWorkOrder(workOrder)
+                        e.stopPropagation();
+                        setSelectedWorkOrder(workOrder);
                       }}
                       style={{
                         gridColumn: `span ${actualSpan}`,
@@ -272,11 +253,9 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
                         </Tooltip>
                       </TooltipProvider>
                     </div>
-                  )
-                }
-                
-                if (continuedWorkOrder) {
-                  return <div key={date.toISOString()} className="border-b border-gray-700/50" />
+                  );
+                } else if (workOrder && !isWorkOrderStart(date, workOrder)) {
+                  return <div key={date.toISOString()} className="border-b border-gray-700/50" />;
                 }
 
                 return (
@@ -289,7 +268,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
                     )}
                     onClick={() => onDateSelect?.(date)}
                   />
-                )
+                );
               })}
             </div>
           ))}
