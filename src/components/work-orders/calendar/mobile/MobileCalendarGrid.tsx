@@ -32,14 +32,17 @@ export function MobileCalendarGrid({
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
-  // Handle scroll events for both horizontal and vertical scrolling
+  // Handle scroll events for infinite scrolling
   useEffect(() => {
     const handleScroll = (e: Event) => {
       const target = e.target as HTMLDivElement
       if (!target) return
 
       const { scrollLeft, scrollWidth, clientWidth } = target
-      if (scrollWidth - (scrollLeft + clientWidth) < 200) {
+      const scrollThreshold = scrollWidth - clientWidth - 100 // Load more when within 100px of the end
+
+      if (scrollLeft >= scrollThreshold) {
+        console.log('Loading more days...')
         onScroll()
       }
     }
@@ -58,12 +61,10 @@ export function MobileCalendarGrid({
     const isAtBottom = scrollHeight - scrollTop <= clientHeight
     const isAtTop = scrollTop === 0
 
-    // Allow page scrolling when at boundaries
     if ((isAtBottom && e.deltaY > 0) || (isAtTop && e.deltaY < 0)) {
-      return // Let the event propagate to enable page scrolling
+      return
     }
 
-    // Otherwise, prevent propagation to keep scrolling within the calendar
     e.stopPropagation()
   }
 
@@ -124,14 +125,14 @@ export function MobileCalendarGrid({
   }
 
   return (
-    <div className="overflow-hidden">
+    <div className="relative">
       <ScrollArea 
         ref={scrollAreaRef}
-        className="rounded-md border scrollbar-hide"
+        className="rounded-md border"
         onWheel={handleWheel}
       >
         <div 
-          className="min-w-[2000px] select-none touch-pan-x overflow-x-auto scrollbar-hide"
+          className="w-max overflow-x-auto"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={stopDragging}
@@ -168,6 +169,7 @@ export function MobileCalendarGrid({
             ))}
           </div>
         </div>
+        <ScrollBar orientation="horizontal" />
       </ScrollArea>
 
       <CreateWorkOrderDialog 
@@ -176,6 +178,5 @@ export function MobileCalendarGrid({
         defaultStartTime={selectedDate || undefined}
       />
     </div>
-  );
+  )
 }
-
