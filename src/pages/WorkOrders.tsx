@@ -10,8 +10,8 @@ export default function WorkOrders() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
-      <div className="container mx-auto py-6 sm:py-12 px-4 lg:px-8">
-        <div className="sticky top-4 z-10 mb-8">
+      <div className="container mx-auto py-4 px-4 lg:px-8">
+        <div className="sticky top-4 z-10">
           <Button 
             onClick={() => setIsCreateDialogOpen(true)}
             className="w-full sm:w-auto flex items-center justify-center gap-2 shadow-lg"

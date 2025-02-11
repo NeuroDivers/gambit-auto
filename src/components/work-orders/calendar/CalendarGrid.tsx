@@ -1,11 +1,10 @@
 
-import React from "react"
-import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, format, addDays, parseISO, isSameDay, differenceInDays } from "date-fns"
+import React, { useRef, useEffect, useState } from "react"
+import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, format, addDays, parseISO, isSameDay, differenceInDays, addMonths } from "date-fns"
 import { CalendarDay } from "./CalendarDay"
 import { WorkOrder } from "../types"
 import { useBlockedDates } from "./hooks/useBlockedDates"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { useState } from "react"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -30,6 +29,9 @@ export function CalendarGrid({ currentDate, workOrders, onDateChange }: Calendar
   const isMobile = useIsMobile()
   const [showMonthPicker, setShowMonthPicker] = useState(false)
   const { blockedDates } = useBlockedDates()
+  const [visibleDays, setVisibleDays] = useState<Date[]>([])
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [loadedMonths, setLoadedMonths] = useState<Date[]>([currentDate])
 
   // Fetch service bays
   const { data: serviceBays = [] } = useQuery({
@@ -44,6 +46,31 @@ export function CalendarGrid({ currentDate, workOrders, onDateChange }: Calendar
       return data as ServiceBay[]
     }
   })
+
+  useEffect(() => {
+    if (isMobile) {
+      // Initialize with 20 days
+      const initialDays = Array.from({ length: 20 }, (_, i) => addDays(currentDate, i))
+      setVisibleDays(initialDays)
+    }
+  }, [currentDate, isMobile])
+
+  const loadMoreDays = () => {
+    if (isMobile) {
+      const lastDay = visibleDays[visibleDays.length - 1]
+      const nextDays = Array.from({ length: 10 }, (_, i) => addDays(lastDay, i + 1))
+      setVisibleDays([...visibleDays, ...nextDays])
+    }
+  }
+
+  const handleScroll = () => {
+    if (!scrollRef.current) return
+    
+    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
+    if (scrollWidth - (scrollLeft + clientWidth) < 200) {
+      loadMoreDays()
+    }
+  }
 
   const handlePreviousMonth = () => {
     if (onDateChange) {
@@ -87,9 +114,6 @@ export function CalendarGrid({ currentDate, workOrders, onDateChange }: Calendar
   }
 
   if (isMobile) {
-    // Show 7 days starting from current date for mobile view
-    const mobileDays = Array.from({ length: 7 }, (_, i) => addDays(currentDate, i))
-
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -118,12 +142,16 @@ export function CalendarGrid({ currentDate, workOrders, onDateChange }: Calendar
           </div>
         </div>
 
-        <ScrollArea className="h-[600px] rounded-md border">
+        <ScrollArea 
+          ref={scrollRef} 
+          className="h-[600px] rounded-md border"
+          onScroll={handleScroll}
+        >
           <div className="min-w-[800px] select-none">
             {/* Header with days */}
             <div className="grid grid-cols-[86px_repeat(7,64px)] gap-4 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
               <div className="text-sm font-medium text-muted-foreground">Bays</div>
-              {mobileDays.map((day) => (
+              {visibleDays.slice(0, 7).map((day) => (
                 <div key={day.toISOString()} className="text-sm font-medium text-muted-foreground text-center">
                   {format(day, 'EEE d')}
                 </div>
@@ -135,12 +163,13 @@ export function CalendarGrid({ currentDate, workOrders, onDateChange }: Calendar
               {serviceBays.map((bay) => (
                 <React.Fragment key={bay.id}>
                   <div className="w-[86px] p-2 text-sm font-medium truncate">{bay.name}</div>
-                  {mobileDays.map((day) => {
+                  {visibleDays.slice(0, 7).map((day) => {
                     const workOrdersForDay = getWorkOrdersForDay(day, bay.id)
                     return (
                       <div 
                         key={day.toISOString()}
-                        className="relative p-2 border-l h-[80px] min-h-[80px] group hover:bg-muted/50"
+                        className="relative p-2 border-l h-[80px] min-h-[80px] group hover:bg-muted/50 cursor-pointer"
+                        onClick={() => onDateChange?.(day)}
                       >
                         {workOrdersForDay.map((order) => (
                           <WorkOrderCard 
@@ -159,19 +188,24 @@ export function CalendarGrid({ currentDate, workOrders, onDateChange }: Calendar
         </ScrollArea>
 
         <Dialog open={showMonthPicker} onOpenChange={setShowMonthPicker}>
-          <DialogContent>
-            <Calendar
-              mode="single"
-              selected={currentDate}
-              onSelect={(date) => {
-                if (date) {
-                  setShowMonthPicker(false)
-                  if (onDateChange) onDateChange(date)
-                }
-              }}
-              initialFocus
-              className="rounded-md border"
-            />
+          <DialogContent className="sm:max-w-[400px] p-0">
+            <ScrollArea className="h-[400px]">
+              <div className="p-4 space-y-4">
+                {Array.from({ length: 12 }, (_, i) => addMonths(currentDate, i)).map((date) => (
+                  <Button
+                    key={date.toISOString()}
+                    variant="ghost"
+                    className="w-full justify-start text-left font-normal"
+                    onClick={() => {
+                      if (onDateChange) onDateChange(date)
+                      setShowMonthPicker(false)
+                    }}
+                  >
+                    {format(date, 'MMMM yyyy')}
+                  </Button>
+                ))}
+              </div>
+            </ScrollArea>
           </DialogContent>
         </Dialog>
       </div>
