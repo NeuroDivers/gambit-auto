@@ -58,7 +58,6 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     const now = Date.now()
     if (isLoading || now - lastLoadTimeRef.current < 500) return
     
-    console.log("Loading more days...")
     setIsLoading(true)
     lastLoadTimeRef.current = now
 
@@ -74,34 +73,23 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
 
   const scrollToToday = useCallback(() => {
     const today = new Date()
-    const todayIndex = visibleDays.findIndex(day => 
-      day.getDate() === today.getDate() && 
-      day.getMonth() === today.getMonth() && 
-      day.getFullYear() === today.getFullYear()
-    )
+    // Reset the days array to start from today
+    const startDate = new Date(today)
+    startDate.setDate(startDate.getDate() - 15)
+    const newDays = Array.from({ length: 30 }, (_, i) => addDays(startDate, i))
+    setVisibleDays(newDays)
     
-    if (todayIndex !== -1 && scrollRef.current) {
-      const offset = Math.max(0, todayIndex * CELL_WIDTH - (window.innerWidth / 2) + (CELL_WIDTH / 2))
-      scrollRef.current.scrollLeft = offset
-      onDateChange?.(today)
-      setVisibleMonth(today)
-    } else {
-      // If today is not in the visible range, reset the days array to include it
-      const startDate = new Date(today)
-      startDate.setDate(startDate.getDate() - 15)
-      const newDays = Array.from({ length: 30 }, (_, i) => addDays(startDate, i))
-      setVisibleDays(newDays)
-      // Wait for the state update and then scroll
-      setTimeout(() => {
-        if (scrollRef.current) {
-          const centerOffset = Math.max(0, 15 * CELL_WIDTH - (window.innerWidth / 2) + (CELL_WIDTH / 2))
-          scrollRef.current.scrollLeft = centerOffset
-          onDateChange?.(today)
-          setVisibleMonth(today)
-        }
-      }, 0)
-    }
-  }, [visibleDays, onDateChange])
+    // Wait for the state update and then scroll to center
+    setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollLeft = 0 // Reset to start
+        const centerOffset = 15 * CELL_WIDTH // Position "today" at the start
+        scrollRef.current.scrollLeft = centerOffset
+        onDateChange?.(today)
+        setVisibleMonth(today)
+      }
+    }, 0)
+  }, [onDateChange])
 
   // Update visible month based on scroll position
   const updateVisibleMonth = useCallback(() => {
@@ -111,9 +99,13 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     const scrollLeft = scrollElement.scrollLeft
     const elementWidth = scrollElement.clientWidth
     
-    // Calculate the center position of the viewport
-    const centerPosition = scrollLeft + (elementWidth / 2)
-    const centerIndex = Math.floor(centerPosition / CELL_WIDTH)
+    // Calculate the leftmost visible date index
+    const leftmostIndex = Math.floor(scrollLeft / CELL_WIDTH)
+    // Calculate the rightmost visible date index
+    const rightmostIndex = Math.floor((scrollLeft + elementWidth) / CELL_WIDTH)
+    
+    // Get the date in the middle of the visible range
+    const centerIndex = Math.floor((leftmostIndex + rightmostIndex) / 2)
     
     // Ensure we have a valid index and corresponding date
     if (centerIndex >= 0 && centerIndex < visibleDays.length) {
@@ -125,7 +117,7 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     // Check if we need to load more days
     const { scrollWidth } = scrollElement
     const remainingScroll = scrollWidth - (scrollLeft + elementWidth)
-    if (remainingScroll < 500) { // Increased threshold for earlier loading
+    if (remainingScroll < 500) {
       loadMoreDays()
     }
   }, [visibleDays, loadMoreDays, onDateChange])
