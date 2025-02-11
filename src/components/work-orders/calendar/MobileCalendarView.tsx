@@ -30,8 +30,8 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
   const [visibleDays, setVisibleDays] = useState<Date[]>(() => {
     const today = startOfDay(new Date())
     const pastDays = Array.from({ length: 15 }, (_, i) => subDays(today, 15 - i))
-    const futureDays = Array.from({ length: 15 }, (_, i) => addDays(today, i))
-    return [...pastDays, ...futureDays]
+    const futureDays = Array.from({ length: 15 }, (_, i) => addDays(today, i + 1))
+    return [...pastDays, today, ...futureDays]
   })
 
   const { data: serviceBays = [] } = useQuery({
@@ -91,8 +91,9 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
       toast.error("Today's date not in view. Reloading calendar...")
       // Reset the calendar around today
       const pastDays = Array.from({ length: 15 }, (_, i) => subDays(today, 15 - i))
-      const futureDays = Array.from({ length: 15 }, (_, i) => addDays(today, i))
-      setVisibleDays([...pastDays, ...futureDays])
+      const futureDays = Array.from({ length: 15 }, (_, i) => addDays(today, i + 1))
+      setVisibleDays([...pastDays, today, ...futureDays])
+      
       // Wait for state update then scroll
       setTimeout(() => {
         if (scrollRef.current) {
@@ -154,18 +155,6 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
   }, [updateVisibleMonth])
 
   // Initial scroll to center on today's date
-  useEffect(() => {
-    if (scrollRef.current) {
-      const today = startOfDay(new Date())
-      const todayIndex = visibleDays.findIndex(day => isSameDay(day, today))
-      if (todayIndex !== -1) {
-        const scrollPosition = todayIndex * CELL_WIDTH
-        scrollRef.current.scrollLeft = scrollPosition
-      }
-    }
-  }, [visibleDays])
-
-  // Call scrollToToday when component mounts
   useEffect(() => {
     scrollToToday()
   }, [scrollToToday])
