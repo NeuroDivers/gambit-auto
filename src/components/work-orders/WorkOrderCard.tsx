@@ -4,12 +4,18 @@ import { WorkOrder } from "./types"
 import { WorkOrderCardHeader } from "./card/WorkOrderCardHeader"
 import { WorkOrderCardDetails } from "./card/WorkOrderCardDetails"
 import { WorkOrderCardActions } from "./card/WorkOrderCardActions"
+import { cn } from "@/lib/utils"
 
-export function WorkOrderCard({ request }: { request: WorkOrder }) {
+type WorkOrderCardProps = {
+  request: WorkOrder
+  className?: string
+}
+
+export function WorkOrderCard({ request, className }: WorkOrderCardProps) {
   if (!request) return null;
 
   return (
-    <Card className="group transition-all duration-200 hover:shadow-xl bg-gradient-to-br from-card to-card/95 border-border/50 hover:border-primary/30">
+    <Card className={cn("group transition-all duration-200 hover:shadow-xl bg-gradient-to-br from-card to-card/95 border-border/50 hover:border-primary/30", className)}>
       <CardHeader className="pb-4">
         <WorkOrderCardHeader request={request} />
       </CardHeader>
