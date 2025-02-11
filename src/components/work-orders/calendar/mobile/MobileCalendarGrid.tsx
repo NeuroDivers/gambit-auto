@@ -51,7 +51,7 @@ export function MobileCalendarGrid({
   }, [onScroll, scrollRef])
 
   // Handle vertical scrolling at boundaries
-  const handleWheel = (e: React.WheelEvent) => {
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     if (!scrollAreaRef.current) return
 
     const { scrollTop, scrollHeight, clientHeight } = scrollAreaRef.current
@@ -60,10 +60,11 @@ export function MobileCalendarGrid({
 
     // Allow page scrolling only when we're at the boundaries and scrolling in that direction
     if ((isAtBottom && e.deltaY > 0) || (isAtTop && e.deltaY < 0)) {
-      e.currentTarget.style.overflowY = 'hidden'
+      const element = e.currentTarget as HTMLDivElement
+      element.style.overflowY = 'hidden'
       setTimeout(() => {
-        if (e.currentTarget) {
-          e.currentTarget.style.overflowY = 'auto'
+        if (element) {
+          element.style.overflowY = 'auto'
         }
       }, 100)
     } else {
