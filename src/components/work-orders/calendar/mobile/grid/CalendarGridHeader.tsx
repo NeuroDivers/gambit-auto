@@ -20,7 +20,7 @@ export function CalendarGridHeader({ visibleDays, onDateClick, blockedDates = []
   }
 
   return (
-    <div className="grid grid-cols-[64px_repeat(30,64px)] bg-muted/50 rounded-t-lg sticky top-0 z-10">
+    <div className="grid grid-cols-[86px_repeat(30,64px)] bg-muted/50 rounded-t-lg sticky top-0 z-10">
       <div className="sticky left-0 z-20 bg-muted/50 text-sm font-medium text-muted-foreground">Bays</div>
       {visibleDays.map((day) => {
         const blocked = isDateBlocked(day)
