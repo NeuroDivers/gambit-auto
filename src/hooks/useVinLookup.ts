@@ -60,29 +60,45 @@ export function useVinLookup(vin: string) {
           return { error }
         }
 
-        const make = results.find((r: any) => r.Variable === 'Make')?.Value
-        const model = results.find((r: any) => r.Variable === 'Model')?.Value
-        const yearResult = results.find((r: any) => r.Variable === 'ModelYear')?.Value
-        const year = yearResult ? parseInt(yearResult) : undefined
+        // Find the make, model, and year from the results
+        const makeResult = results.find((r: any) => r.Variable === 'Make')
+        const modelResult = results.find((r: any) => r.Variable === 'Model')
+        const yearResult = results.find((r: any) => r.Variable === 'Model Year')
 
-        console.log('NHTSA API response parsed values:', { 
-          make, 
-          model, 
-          year,
-          makeResult: results.find((r: any) => r.Variable === 'Make'),
-          modelResult: results.find((r: any) => r.Variable === 'Model'),
-          yearResult: results.find((r: any) => r.Variable === 'ModelYear')
-        })
+        // Log the entire results array for debugging
+        console.log('NHTSA API complete response:', results)
+        
+        // Log specific fields we're looking for
+        console.log('Make result:', makeResult)
+        console.log('Model result:', modelResult)
+        console.log('Year result:', yearResult)
 
-        if (!make || !model || !year) {
-          const errorMessage = 'Could not decode VIN - incomplete vehicle information returned'
-          console.log('Missing required vehicle information:', {
-            hasMake: !!make,
-            hasModel: !!model,
-            hasYear: !!year
-          })
-          await cacheErrorResult(vin, errorMessage)
-          return { error: errorMessage }
+        const make = makeResult?.Value
+        const model = modelResult?.Value
+        const year = yearResult?.Value ? parseInt(yearResult.Value) : undefined
+
+        // Log the extracted values
+        console.log('Extracted values:', { make, model, year })
+
+        if (!make || make === '' || make === 'null') {
+          console.log('Make is missing or invalid')
+          const error = 'Could not decode VIN - make information missing'
+          await cacheErrorResult(vin, error)
+          return { error }
+        }
+
+        if (!model || model === '' || model === 'null') {
+          console.log('Model is missing or invalid')
+          const error = 'Could not decode VIN - model information missing'
+          await cacheErrorResult(vin, error)
+          return { error }
+        }
+
+        if (!year) {
+          console.log('Year is missing or invalid')
+          const error = 'Could not decode VIN - year information missing'
+          await cacheErrorResult(vin, error)
+          return { error }
         }
 
         const timestamp = new Date().toISOString()
