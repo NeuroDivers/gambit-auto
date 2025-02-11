@@ -35,9 +35,8 @@ export function MobileCalendarGrid({
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging || !scrollRef.current) return
-    e.preventDefault()
     const x = e.pageX - (scrollRef.current.offsetLeft || 0)
-    const walk = (x - startX) * 2 // Increased scrolling speed
+    const walk = (x - startX) * 3
     scrollRef.current.scrollLeft = scrollLeft - walk
   }
 
@@ -51,19 +50,11 @@ export function MobileCalendarGrid({
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging || !scrollRef.current) return
     const x = e.touches[0].pageX - scrollRef.current.offsetLeft
-    const walk = (x - startX) * 2 // Increased scrolling speed
+    const walk = (x - startX) * 3
     scrollRef.current.scrollLeft = scrollLeft - walk
   }
 
-  const handleMouseUp = () => {
-    setIsDragging(false)
-  }
-
-  const handleMouseLeave = () => {
-    setIsDragging(false)
-  }
-
-  const handleTouchEnd = () => {
+  const stopDragging = () => {
     setIsDragging(false)
   }
 
@@ -71,18 +62,18 @@ export function MobileCalendarGrid({
     <div className="overflow-hidden">
       <ScrollArea 
         ref={scrollRef} 
-        className="h-[600px] rounded-md border cursor-grab active:cursor-grabbing"
+        className="h-[600px] rounded-md border"
         onScroll={onScroll}
       >
         <div 
-          className="min-w-[800px] select-none"
+          className="min-w-[800px] select-none touch-pan-x"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseLeave}
+          onMouseUp={stopDragging}
+          onMouseLeave={stopDragging}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
+          onTouchEnd={stopDragging}
         >
           <div className="grid grid-cols-[86px_repeat(7,64px)] gap-4 bg-muted/50 p-2 rounded-t-lg sticky top-0 z-10">
             <div className="text-sm font-medium text-muted-foreground">Bays</div>
