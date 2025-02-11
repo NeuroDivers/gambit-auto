@@ -109,12 +109,14 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
         name="duration"
         render={({ field }) => (
           <FormItem>
-            <FormLabel htmlFor="service_duration" className="text-white/[0.87]">Duration in minutes (optional)</FormLabel>
+            <FormLabel htmlFor="service_duration" className="text-white/[0.87]">Duration in hours (optional)</FormLabel>
             <FormControl>
               <Input
                 id="service_duration"
                 {...field}
                 type="number"
+                step="0.5"
+                min="0"
                 className="bg-[#242424] border-white/10 text-white/[0.87]"
               />
             </FormControl>
