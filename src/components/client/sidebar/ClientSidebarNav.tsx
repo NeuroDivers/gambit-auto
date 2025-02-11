@@ -36,21 +36,22 @@ export function ClientSidebarNav() {
   const location = useLocation()
 
   return (
-    <nav className="flex flex-col gap-0.5 p-1">
+    <nav className="flex flex-col gap-2 p-4">
       {items.map((item) => (
         <Link
           key={item.href}
           to={item.href}
           className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent",
+            "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-accent",
             location.pathname === item.href ? "bg-accent" : "transparent",
             "text-foreground"
           )}
         >
-          <item.icon className="h-4 w-4" />
+          <item.icon className="h-5 w-5" />
           <span>{item.title}</span>
         </Link>
       ))}
     </nav>
   );
 }
+
