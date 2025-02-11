@@ -1,3 +1,4 @@
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
@@ -21,7 +22,7 @@ export function SidekickAssignment({ bayId, currentSidekickId }: SidekickAssignm
       
       const { error } = await supabase
         .from("service_bays")
-        .update({ assigned_sidekick_id: sidekickId })
+        .update({ assigned_profile_id: sidekickId })
         .eq("id", bayId)
 
       if (error) {
