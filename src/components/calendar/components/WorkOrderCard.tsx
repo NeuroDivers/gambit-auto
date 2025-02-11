@@ -9,11 +9,10 @@ import { isToday } from "date-fns"
 interface WorkOrderCardProps {
   workOrder: WorkOrder
   date: Date
-  span: number
   onClick: () => void
 }
 
-export function WorkOrderCard({ workOrder, date, span, onClick }: WorkOrderCardProps) {
+export function WorkOrderCard({ workOrder, date, onClick }: WorkOrderCardProps) {
   return (
     <div 
       className={cn(
@@ -22,9 +21,6 @@ export function WorkOrderCard({ workOrder, date, span, onClick }: WorkOrderCardP
         isToday(date) && "bg-gray-700/20"
       )}
       onClick={onClick}
-      style={{
-        gridColumn: `span ${Math.max(1, Math.min(span, 7))}`, // Limit span to maximum of 7 days
-      }}
     >
       <TooltipProvider>
         <Tooltip>
