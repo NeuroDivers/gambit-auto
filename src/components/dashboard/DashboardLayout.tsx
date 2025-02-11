@@ -47,9 +47,9 @@ export function DashboardLayout({
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-72 h-full">
+            <SheetContent side="left" className="p-0 w-72">
               <SidebarProvider>
-                <Sidebar className="border-0 h-full">
+                <Sidebar className="border-0">
                   {sidebarContent}
                 </Sidebar>
               </SidebarProvider>
@@ -59,7 +59,7 @@ export function DashboardLayout({
             {firstName ? `Welcome, ${firstName}` : 'Welcome'}
           </div>
         </header>
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main className="flex-1 overflow-auto p-4">{children}</main>
       </div>
     )
   }
@@ -70,7 +70,7 @@ export function DashboardLayout({
         <Sidebar>
           {sidebarContent}
         </Sidebar>
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main className="flex-1 overflow-auto p-4">{children}</main>
       </div>
     </SidebarProvider>
   )
