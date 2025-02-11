@@ -54,7 +54,9 @@ export function MobileCalendarRow({
 
   return (
     <>
-      <div className="w-[86px] p-2 text-sm font-medium truncate">{bayName}</div>
+      <div className="w-[86px] p-2 text-sm font-medium truncate sticky left-0 bg-background z-10 border-r">
+        {bayName}
+      </div>
       {visibleDays.map((day) => {
         const workOrdersForDay = getWorkOrdersForDay(day)
         const blocked = isDateBlocked(day)
