@@ -20,26 +20,36 @@ export function MobileCalendarHeader({
 }: MobileCalendarHeaderProps) {
   const handlePreviousMonth = () => {
     const prevMonth = new Date(currentDate)
-    prevMonth.setMonth(currentDate.getMonth() - 1, 1) // Set to first day of previous month
+    prevMonth.setMonth(currentDate.getMonth() - 1, 1)
     onDateChange(prevMonth)
   }
 
   const handleNextMonth = () => {
     const nextMonth = new Date(currentDate)
-    nextMonth.setMonth(currentDate.getMonth() + 1, 1) // Set to first day of next month
+    nextMonth.setMonth(currentDate.getMonth() + 1, 1)
     onDateChange(nextMonth)
   }
 
-  const handleResetScroll = () => {
-    // First go to today's date
+  // Modified reset scroll handler with improved timing
+  const handleResetScroll = async () => {
+    // Navigate to today first
     onTodayClick()
     
-    // Then reset scroll after a short delay to ensure state updates have processed
-    setTimeout(() => {
-      if (scrollRef?.current) {
-        scrollRef.current.scrollLeft = 0
-      }
-    }, 100)
+    // Use a Promise to ensure better timing control
+    await new Promise(resolve => setTimeout(resolve, 100))
+    
+    // Reset scroll position
+    if (scrollRef?.current) {
+      scrollRef.current.style.scrollBehavior = 'auto'
+      scrollRef.current.scrollLeft = 0
+      
+      // Restore smooth scrolling
+      setTimeout(() => {
+        if (scrollRef?.current) {
+          scrollRef.current.style.scrollBehavior = 'smooth'
+        }
+      }, 50)
+    }
   }
 
   return (
@@ -82,7 +92,7 @@ export function MobileCalendarHeader({
           variant="outline"
           size="sm"
           onClick={handleResetScroll}
-          className="text-sm"
+          className="text-sm whitespace-nowrap"
         >
           Reset Scroll
         </Button>
