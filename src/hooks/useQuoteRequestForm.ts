@@ -7,13 +7,19 @@ import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { useQuery } from "@tanstack/react-query"
 import { QuoteRequestFormData } from "@/components/client/quotes/form-steps/types"
+import { ServiceItemType } from "@/components/work-orders/types"
 
 const formSchema = z.object({
   vehicle_make: z.string().min(1, "Vehicle make is required"),
   vehicle_model: z.string().min(1, "Vehicle model is required"),
   vehicle_year: z.string().min(4, "Valid year required"),
   vehicle_vin: z.string().optional(),
-  service_ids: z.array(z.string()).min(1, "Please select at least one service"),
+  service_items: z.array(z.object({
+    service_id: z.string(),
+    service_name: z.string(),
+    quantity: z.number(),
+    unit_price: z.number()
+  })).min(1, "Please select at least one service"),
   description: z.string().optional(),
   service_details: z.record(z.any())
 })
@@ -63,7 +69,7 @@ export function useQuoteRequestForm() {
       vehicle_model: "",
       vehicle_year: new Date().getFullYear().toString(),
       vehicle_vin: "",
-      service_ids: [],
+      service_items: [],
       description: "",
       service_details: {}
     }
@@ -84,7 +90,7 @@ export function useQuoteRequestForm() {
     saveFormData(data)
   })
 
-  const selectedServices = form.watch('service_ids')
+  const selectedServices = form.watch('service_items') || []
   const totalSteps = selectedServices.length > 0 ? 3 + selectedServices.length : 3
 
   const handleImageUpload = async (files: FileList, serviceId: string) => {
@@ -157,6 +163,12 @@ export function useQuoteRequestForm() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("No user found")
       
+      const serviceItems = values.service_items.map((item: ServiceItemType) => ({
+        service_id: item.service_id,
+        quantity: item.quantity,
+        unit_price: item.unit_price
+      }))
+      
       const { error: requestError } = await supabase
         .from('quote_requests')
         .insert([{
@@ -166,7 +178,7 @@ export function useQuoteRequestForm() {
           vehicle_model: values.vehicle_model,
           vehicle_year: parseInt(values.vehicle_year),
           vehicle_vin: values.vehicle_vin || null,
-          service_ids: values.service_ids,
+          service_items: serviceItems,
           service_details: values.service_details
         }])
 
@@ -211,7 +223,7 @@ export function useQuoteRequestForm() {
           if (isValid) setStep(getNextStep(step))
         })
     } else if (step === 2) {
-      form.trigger('service_ids')
+      form.trigger('service_items')
         .then((isValid) => {
           if (isValid) setStep(getNextStep(step))
         })
@@ -237,4 +249,3 @@ export function useQuoteRequestForm() {
     prevStep
   }
 }
-

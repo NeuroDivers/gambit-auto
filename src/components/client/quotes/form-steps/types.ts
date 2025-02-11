@@ -26,7 +26,12 @@ export type QuoteRequestFormData = {
   vehicle_model: string;
   vehicle_year: string;
   vehicle_vin: string;
-  service_ids: string[];
+  service_items: Array<{
+    service_id: string;
+    service_name: string;
+    quantity: number;
+    unit_price: number;
+  }>;
   description: string;
   service_details: ServiceDetails;
 }
