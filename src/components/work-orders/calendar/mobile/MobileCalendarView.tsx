@@ -1,6 +1,6 @@
 
 import { addDays, startOfDay, subDays, isSameDay } from "date-fns"
-import { WorkOrder } from "../../types"
+import { WorkOrder } from "@/components/work-orders/types"
 import React, { useRef, useEffect, useState, useCallback } from "react"
 import { MonthPicker } from "../MonthPicker"
 import { useQuery } from "@tanstack/react-query"
