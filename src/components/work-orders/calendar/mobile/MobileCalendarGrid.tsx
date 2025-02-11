@@ -127,7 +127,7 @@ export function MobileCalendarGrid({
     <div className="overflow-hidden">
       <ScrollArea 
         ref={scrollAreaRef}
-        className="max-h-[600px] rounded-md border scrollbar-hide"
+        className="rounded-md border scrollbar-hide"
         onWheel={handleWheel}
       >
         <div 
@@ -176,5 +176,6 @@ export function MobileCalendarGrid({
         defaultStartTime={selectedDate || undefined}
       />
     </div>
-  )
+  );
 }
+
