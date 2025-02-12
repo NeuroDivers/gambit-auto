@@ -1,5 +1,5 @@
 
-import { useRef, useState, useEffect, useCallback } from "react"
+import { useRef, useState, useCallback } from "react"
 import { format, addDays, startOfDay } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useDragScroll } from "./hooks/useDragScroll"
@@ -20,6 +20,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
   const scrollRef = useRef<HTMLDivElement>(null)
   const [days, setDays] = useState<Date[]>([])
   const [currentMonth, setCurrentMonth] = useState(format(new Date(), 'MMMM yyyy'))
+  const [currentDate, setCurrentDate] = useState(new Date())
   const [isLoading, setIsLoading] = useState(false)
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
   const { serviceBays } = useServiceBays()
@@ -60,6 +61,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     const visibleDate = days[visibleIndex]
     if (visibleDate) {
       setCurrentMonth(format(visibleDate, 'MMMM yyyy'))
+      setCurrentDate(visibleDate)
     }
   }, [days, isLoading])
 
@@ -90,12 +92,29 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     })
   }
 
+  const handleDateChange = (date: Date) => {
+    setCurrentDate(date)
+    onDateSelect?.(date)
+    
+    // Find the index of the selected date in the days array
+    const dateIndex = days.findIndex(d => d.getTime() === startOfDay(date).getTime())
+    if (dateIndex !== -1 && scrollRef.current) {
+      const scrollPosition = dateIndex * 200
+      scrollRef.current.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth'
+      })
+    }
+  }
+
   return (
     <div className={cn("p-4 bg-[#222226] rounded-lg shadow-lg", className)}>
       <CalendarControls
         currentMonth={currentMonth}
         onNavigateMonth={navigateMonth}
         onScrollToToday={scrollToToday}
+        currentDate={currentDate}
+        onDateChange={handleDateChange}
       />
 
       <div
