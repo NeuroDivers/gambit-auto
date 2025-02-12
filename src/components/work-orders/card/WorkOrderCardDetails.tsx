@@ -49,26 +49,26 @@ export function WorkOrderCardDetails({ request }: WorkOrderCardDetailsProps) {
     <div className="space-y-4">
       <div className="grid gap-2">
         <div className="text-sm">
-          <span className="text-white/50">Vehicle:</span>{" "}
-          <span className="text-white">
+          <span className="text-muted-foreground">Vehicle:</span>{" "}
+          <span className="text-foreground">
             {request.vehicle_year} {request.vehicle_make} {request.vehicle_model}
           </span>
         </div>
         <div className="text-sm">
-          <span className="text-white/50">VIN:</span>{" "}
-          <span className="text-white">{request.vehicle_serial}</span>
+          <span className="text-muted-foreground">VIN:</span>{" "}
+          <span className="text-foreground">{request.vehicle_serial}</span>
         </div>
         {request.start_time && (
           <div className="text-sm">
-            <span className="text-white/50">Scheduled for:</span>{" "}
-            <span className="text-white">
+            <span className="text-muted-foreground">Scheduled for:</span>{" "}
+            <span className="text-foreground">
               {format(parseISO(request.start_time), "PPp")}
             </span>
           </div>
         )}
         {request.assigned_bay_id && (
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-white/50">Assignment:</span>
+            <span className="text-muted-foreground">Assignment:</span>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-emerald-400 border-emerald-400/20 bg-emerald-400/10">
                 {assignedSidekick?.bayName || 'Bay assigned'}
