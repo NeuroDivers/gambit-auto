@@ -38,6 +38,20 @@ export function CalendarContent({
             const workOrder = findWorkOrderForDate(date, bay.id, workOrders);
             const blocked = isDateBlocked(date)
             
+            // If the date is blocked and there's no work order, show blocked cell
+            if (blocked && !workOrder) {
+              return (
+                <div 
+                  key={date.toISOString()}
+                  className={cn(
+                    "p-2 relative flex items-center justify-center border-b border-r border-gray-700/50",
+                    "bg-red-900/20 cursor-not-allowed"
+                  )}
+                />
+              );
+            }
+            
+            // If there's a work order spanning multiple days, show it only at start
             if (workOrder && !isWorkOrderStart(date, workOrder)) {
               return null;
             }
@@ -56,6 +70,7 @@ export function CalendarContent({
               );
             }
 
+            // Default empty cell
             return (
               <div 
                 key={date.toISOString()}
