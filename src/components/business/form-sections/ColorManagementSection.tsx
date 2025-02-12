@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 type ColorSettings = {
   background: string
@@ -15,16 +16,32 @@ type ColorSettings = {
   primary_hover: string
   accent_color: string
   accent_hover: string
+  theme_mode: 'light' | 'dark'
 }
 
-export function ColorManagementSection() {
-  const [colors, setColors] = useState<ColorSettings>({
+const THEME_PRESETS = {
+  light: {
+    background: '#FFFFFF',
+    foreground: '#000000',
+    primary_color: '#6366F1',
+    primary_hover: '#4F46E5',
+    accent_color: '#8B5CF6',
+    accent_hover: '#7C3AED'
+  },
+  dark: {
     background: '#121212',
     foreground: '#FFFFFF',
     primary_color: '#9b87f5',
     primary_hover: '#7E69AB',
     accent_color: '#D6BCFA',
     accent_hover: '#6E59A5'
+  }
+}
+
+export function ColorManagementSection() {
+  const [colors, setColors] = useState<ColorSettings>({
+    ...THEME_PRESETS.dark,
+    theme_mode: 'dark'
   })
 
   const { data: siteColors, refetch } = useQuery({
@@ -41,7 +58,6 @@ export function ColorManagementSection() {
     }
   })
 
-  // Update colors when data is fetched
   useEffect(() => {
     if (siteColors) {
       setColors({
@@ -50,13 +66,22 @@ export function ColorManagementSection() {
         primary_color: siteColors.primary_color,
         primary_hover: siteColors.primary_hover,
         accent_color: siteColors.accent_color,
-        accent_hover: siteColors.accent_hover
+        accent_hover: siteColors.accent_hover,
+        theme_mode: siteColors.theme_mode
       })
     }
   }, [siteColors])
 
   const handleColorChange = (key: keyof ColorSettings, value: string) => {
     setColors(prev => ({ ...prev, [key]: value }))
+  }
+
+  const handleThemeChange = (theme: 'light' | 'dark') => {
+    setColors(prev => ({
+      ...prev,
+      ...THEME_PRESETS[theme],
+      theme_mode: theme
+    }))
   }
 
   const handleSave = async () => {
@@ -114,6 +139,42 @@ export function ColorManagementSection() {
       </CardHeader>
       <CardContent>
         <div className="grid gap-6">
+          <div className="space-y-4">
+            <h3 className="font-medium">Theme Mode</h3>
+            <RadioGroup
+              value={colors.theme_mode}
+              onValueChange={(value: 'light' | 'dark') => handleThemeChange(value)}
+              className="grid grid-cols-2 gap-4"
+            >
+              <div>
+                <RadioGroupItem
+                  value="light"
+                  id="light"
+                  className="peer sr-only"
+                />
+                <Label
+                  htmlFor="light"
+                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-100 peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                >
+                  <span className="text-sm font-medium">Light Theme</span>
+                </Label>
+              </div>
+              <div>
+                <RadioGroupItem
+                  value="dark"
+                  id="dark"
+                  className="peer sr-only"
+                />
+                <Label
+                  htmlFor="dark"
+                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-gray-950 p-4 hover:bg-gray-900 peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                >
+                  <span className="text-sm font-medium text-white">Dark Theme</span>
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+
           <div className="grid gap-4">
             <h3 className="font-medium">Theme Colors</h3>
             <div className="grid gap-4">
