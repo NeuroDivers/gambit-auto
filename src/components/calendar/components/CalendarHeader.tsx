@@ -9,8 +9,8 @@ type CalendarHeaderProps = {
 
 export function CalendarHeader({ days, isDateBlocked }: CalendarHeaderProps) {
   return (
-    <div className="grid" style={{ gridTemplateColumns: `100px repeat(${days.length}, 80px)` }}>
-      <div className="p-4 text-gray-400 font-medium sticky left-0 bg-[#222226] z-10 border-r border-gray-700/50">
+    <div className="grid" style={{ gridTemplateColumns: `80px repeat(${days.length}, 60px)` }}>
+      <div className="p-2 text-gray-400 font-medium sticky left-0 bg-[#222226] z-10 border-r border-gray-700/50 text-sm">
         Bay
       </div>
       {days.map((date) => {
@@ -19,7 +19,7 @@ export function CalendarHeader({ days, isDateBlocked }: CalendarHeaderProps) {
           <div 
             key={date.toISOString()}
             className={cn(
-              "p-4 text-gray-400 font-medium text-center border-b border-r border-gray-700/50",
+              "p-2 text-gray-400 font-medium text-center border-b border-r border-gray-700/50 text-sm",
               blocked && "bg-red-900/20 cursor-not-allowed"
             )}
           >
