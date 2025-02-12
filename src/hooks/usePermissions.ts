@@ -1,7 +1,17 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { PermissionType } from "@/types/permissions";
+
+interface RolePermission {
+  id: string;
+  role_id: string;
+  resource_name: string;
+  permission_type: 'page_access' | 'feature_access';
+  is_active: boolean;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 interface Role {
   id: string;
@@ -40,7 +50,7 @@ export const usePermissions = () => {
 
   const checkPermission = async (
     resource: string,
-    type: PermissionType
+    type: 'page_access' | 'feature_access'
   ): Promise<boolean> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -95,4 +105,3 @@ export const usePermissions = () => {
     checkPermission,
   };
 };
-
