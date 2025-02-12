@@ -46,7 +46,7 @@ export function WorkOrdersSection() {
 
   return (
     <section 
-      className="bg-card/50 backdrop-blur-sm rounded-xl shadow-lg border border-white/5 p-0 relative" 
+      className="bg-card/50 backdrop-blur-sm rounded-xl border border-white/5 p-0 relative" 
       style={{ zIndex: 0, position: 'relative' }}
     >
       <div className="space-y-6">
