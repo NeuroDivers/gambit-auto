@@ -142,7 +142,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={stopDragging}
-        className="overflow-x-auto scrollbar-none relative"
+        className="overflow-x-auto relative [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-500/40 [&::-webkit-scrollbar-track]:bg-gray-500/10"
         style={{ 
           maxWidth: '100%',
           WebkitOverflowScrolling: 'touch'
