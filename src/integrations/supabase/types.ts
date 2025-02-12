@@ -838,6 +838,42 @@ export type Database = {
         }
         Relationships: []
       }
+      site_colors: {
+        Row: {
+          accent_color: string
+          accent_hover: string
+          background: string
+          created_at: string
+          foreground: string
+          id: string
+          primary_color: string
+          primary_hover: string
+          updated_at: string
+        }
+        Insert: {
+          accent_color?: string
+          accent_hover?: string
+          background?: string
+          created_at?: string
+          foreground?: string
+          id?: string
+          primary_color?: string
+          primary_hover?: string
+          updated_at?: string
+        }
+        Update: {
+          accent_color?: string
+          accent_hover?: string
+          background?: string
+          created_at?: string
+          foreground?: string
+          id?: string
+          primary_color?: string
+          primary_hover?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       vin_lookups: {
         Row: {
           created_at: string | null
