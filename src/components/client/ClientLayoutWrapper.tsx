@@ -13,16 +13,23 @@ export function ClientLayoutWrapper() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: session, isLoading: sessionLoading } = useQuery({
+  const { data: session, isLoading: sessionLoading, error: sessionError } = useQuery({
     queryKey: ["session"],
     queryFn: async () => {
       const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) throw error;
+      if (error) {
+        console.error("Session error:", error);
+        throw error;
+      }
+      if (!session) {
+        throw new Error("No session found");
+      }
       return session;
     },
+    retry: false
   });
 
-  const { data: profile, isLoading: profileLoading } = useQuery({
+  const { data: profile, isLoading: profileLoading, error: profileError } = useQuery({
     queryKey: ["profile", session?.user?.id],
     enabled: !!session?.user?.id,
     queryFn: async () => {
@@ -43,6 +50,7 @@ export function ClientLayoutWrapper() {
       if (profileError) throw profileError;
       return profileData;
     },
+    retry: false
   });
 
   const handleLogout = async () => {
@@ -64,24 +72,26 @@ export function ClientLayoutWrapper() {
     }
   };
 
+  // If there's a session error or no session, redirect to auth
+  if (sessionError || (!sessionLoading && !session)) {
+    console.log("No session found, redirecting to auth");
+    return <Navigate to="/auth" replace />;
+  }
+
   // Show loading screen while checking initial session
   if (sessionLoading) {
     return <LoadingScreen />;
   }
 
-  // Redirect to auth if no session
-  if (!session) {
+  // Redirect to auth if no profile
+  if (profileError || (!profileLoading && !profile)) {
+    console.log("No profile found or error, redirecting to auth");
     return <Navigate to="/auth" replace />;
   }
 
   // Show loading while fetching profile
   if (profileLoading) {
     return <LoadingScreen />;
-  }
-
-  // Redirect to auth if no profile
-  if (!profile) {
-    return <Navigate to="/auth" replace />;
   }
 
   return (
