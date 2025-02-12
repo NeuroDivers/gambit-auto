@@ -25,6 +25,8 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
   const { serviceBays } = useServiceBays()
   const DAYS_TO_LOAD = 14
+  const CELL_WIDTH = 80 // Width of each day cell
+  const BAY_COLUMN_WIDTH = 100 // Width of the bay column
 
   const {
     handleMouseDown,
@@ -45,7 +47,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     if (!scrollRef.current || isLoading) return
 
     const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
-    const scrollEndThreshold = scrollWidth - clientWidth - 400
+    const scrollEndThreshold = scrollWidth - clientWidth - (CELL_WIDTH * 2)
 
     if (scrollLeft >= scrollEndThreshold) {
       setIsLoading(true)
@@ -57,7 +59,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
       setIsLoading(false)
     }
 
-    const visibleIndex = Math.floor(scrollLeft / 200)
+    const visibleIndex = Math.floor(scrollLeft / CELL_WIDTH)
     const visibleDate = days[visibleIndex]
     if (visibleDate) {
       setCurrentMonth(format(visibleDate, 'MMMM yyyy'))
@@ -70,7 +72,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     const todayIndex = days.findIndex(date => date.getTime() === today.getTime())
     
     if (todayIndex !== -1 && scrollRef.current) {
-      const scrollPosition = todayIndex * 200
+      const scrollPosition = todayIndex * CELL_WIDTH
       scrollRef.current.scrollTo({
         left: scrollPosition,
         behavior: 'smooth'
@@ -84,7 +86,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     
     const currentPosition = scrollRef.current.scrollLeft
     const daysToScroll = direction === 'next' ? 7 : -7
-    const newPosition = currentPosition + (200 * daysToScroll)
+    const newPosition = currentPosition + (CELL_WIDTH * daysToScroll)
     
     scrollRef.current.scrollTo({
       left: newPosition,
@@ -96,16 +98,17 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     setCurrentDate(date)
     onDateSelect?.(date)
     
-    // Find the index of the selected date in the days array
     const dateIndex = days.findIndex(d => d.getTime() === startOfDay(date).getTime())
     if (dateIndex !== -1 && scrollRef.current) {
-      const scrollPosition = dateIndex * 200
+      const scrollPosition = dateIndex * CELL_WIDTH
       scrollRef.current.scrollTo({
         left: scrollPosition,
         behavior: 'smooth'
       })
     }
   }
+
+  const totalWidth = BAY_COLUMN_WIDTH + (days.length * CELL_WIDTH)
 
   return (
     <div className={cn("p-4 bg-[#222226] rounded-lg shadow-lg", className)}>
@@ -136,7 +139,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
         <div 
           className="relative"
           style={{
-            width: `${(days.length * 200) + 100}px`,
+            width: `${totalWidth}px`,
             minWidth: 'max-content'
           }}
         >
