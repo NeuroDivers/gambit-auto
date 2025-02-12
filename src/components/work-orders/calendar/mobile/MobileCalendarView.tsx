@@ -5,6 +5,9 @@ import { HorizontalCalendar } from "@/components/calendar"
 import { CreateWorkOrderDialog } from "../../CreateWorkOrderDialog"
 import { startOfDay, isWithinInterval, parseISO } from "date-fns"
 import { useBlockedDates } from "../hooks/useBlockedDates"
+import { format } from "date-fns"
+import { Button } from "@/components/ui/button"
+import { MonthPicker } from "@/components/work-orders/calendar/MonthPicker"
 
 type MobileCalendarViewProps = {
   currentDate: Date
@@ -15,6 +18,7 @@ type MobileCalendarViewProps = {
 export function MobileCalendarView({ currentDate, workOrders, onDateChange }: MobileCalendarViewProps) {
   const [showWorkOrderDialog, setShowWorkOrderDialog] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [showMonthPicker, setShowMonthPicker] = useState(false)
   const { blockedDates } = useBlockedDates()
 
   const handleDateSelect = (date: Date) => {
@@ -34,6 +38,14 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
 
   return (
     <div className="space-y-4">
+      <Button 
+        variant="ghost"
+        onClick={() => setShowMonthPicker(true)}
+        className="text-lg font-semibold hover:bg-accent/50"
+      >
+        {format(currentDate, 'MMMM yyyy')}
+      </Button>
+
       <HorizontalCalendar 
         onDateSelect={handleDateSelect}
         className="border border-border"
@@ -44,6 +56,16 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
         open={showWorkOrderDialog}
         onOpenChange={setShowWorkOrderDialog}
         defaultStartTime={selectedDate || undefined}
+      />
+
+      <MonthPicker
+        currentDate={currentDate}
+        open={showMonthPicker}
+        onOpenChange={setShowMonthPicker}
+        onDateChange={(date) => {
+          onDateChange?.(date)
+          setShowMonthPicker(false)
+        }}
       />
     </div>
   )
