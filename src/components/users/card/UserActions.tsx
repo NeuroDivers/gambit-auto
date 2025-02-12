@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Edit2, Trash2 } from "lucide-react";
 
@@ -13,7 +14,7 @@ export const UserActions = ({ onEdit, onDelete }: UserActionsProps) => {
         variant="ghost"
         size="icon"
         onClick={onEdit}
-        className="text-white/60 hover:text-white/[0.87] hover:bg-white/[0.08]"
+        className="text-muted-foreground hover:text-foreground hover:bg-accent"
       >
         <Edit2 className="h-4 w-4" />
       </Button>
@@ -21,7 +22,7 @@ export const UserActions = ({ onEdit, onDelete }: UserActionsProps) => {
         variant="ghost"
         size="icon"
         onClick={onDelete}
-        className="text-white/60 hover:text-red-500 hover:bg-white/[0.08]"
+        className="text-muted-foreground hover:text-destructive hover:bg-accent"
       >
         <Trash2 className="h-4 w-4" />
       </Button>
