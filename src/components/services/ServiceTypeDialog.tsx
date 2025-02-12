@@ -137,9 +137,9 @@ export const ServiceTypeDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#1E1E1E] border-white/10 max-w-3xl">
+      <DialogContent className="bg-background border-border max-w-3xl">
         <DialogHeader>
-          <DialogTitle className="text-white/[0.87]">
+          <DialogTitle>
             {isEditing ? "Edit Service Type" : "Create Service Type"}
           </DialogTitle>
         </DialogHeader>
@@ -160,13 +160,12 @@ export const ServiceTypeDialog = ({
                     type="button"
                     variant="outline"
                     onClick={() => onOpenChange(false)}
-                    className="border-white/10 text-white/[0.87] hover:bg-[#242424] hover:text-white"
                   >
                     Cancel
                   </Button>
                   <Button
                     type="submit"
-                    className="bg-[#BB86FC] hover:bg-[#BB86FC]/90 text-white"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
                   >
                     {isEditing ? "Update" : "Create"}
                   </Button>
