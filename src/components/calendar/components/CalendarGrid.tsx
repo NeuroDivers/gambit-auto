@@ -48,6 +48,11 @@ export function CalendarGrid({
           {days.map((date, index) => {
             const workOrder = findWorkOrderForDate(date, bay.id, workOrders);
             
+            // Skip rendering empty cells if we're in the middle of a work order span
+            if (workOrder && !isWorkOrderStart(date, workOrder)) {
+              return null;
+            }
+            
             if (workOrder && isWorkOrderStart(date, workOrder)) {
               console.log('Rendering work order:', {
                 workOrderId: workOrder.id,
