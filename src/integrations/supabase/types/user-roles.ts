@@ -2,7 +2,7 @@
 import { Json } from './json';
 import { Database } from './database';
 
-// This interface now represents the roles table instead of user_roles
+// This interface represents the roles table
 export interface RolesTable {
   Row: {
     id: string
@@ -35,4 +35,26 @@ export interface RolesTable {
     updated_at?: string
   }
   Relationships: []
+}
+
+// Export a type for role permissions
+export interface RolePermission {
+  id: string;
+  role_id: string;
+  resource_name: string;
+  permission_type: 'page_access' | 'feature_access';
+  is_active: boolean;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Export a type for profiles with roles
+export interface ProfileWithRole {
+  id: string;
+  role: {
+    id: string;
+    name: string;
+    nicename: string;
+  };
 }
