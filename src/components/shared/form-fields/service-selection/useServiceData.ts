@@ -17,6 +17,7 @@ export function useServiceData() {
             name,
             description,
             price,
+            sale_price,
             status
           )
         `)

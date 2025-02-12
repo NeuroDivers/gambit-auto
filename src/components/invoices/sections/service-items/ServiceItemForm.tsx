@@ -1,3 +1,4 @@
+
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -24,6 +25,26 @@ export function ServiceItemForm({ item, index, onUpdate, onRemove, readOnly }: S
       onUpdate(index, "service_name", serviceName)
       onUpdate(index, "unit_price", selectedService.price || 0)
     }
+  }
+
+  const handlePackageSelect = (packageId: string) => {
+    const selectedService = services?.find(service => 
+      service.service_packages?.some(pkg => pkg.id === packageId)
+    )
+    
+    if (selectedService) {
+      const selectedPackage = selectedService.service_packages.find(pkg => pkg.id === packageId)
+      if (selectedPackage) {
+        onUpdate(index, "service_name", selectedPackage.name)
+        onUpdate(index, "unit_price", selectedPackage.price || selectedPackage.sale_price || 0)
+      }
+    }
+  }
+
+  const getAvailablePackages = () => {
+    // Find the service that matches the currently selected service name
+    const selectedService = services?.find(service => service.name === item.service_name)
+    return selectedService?.service_packages?.filter(pkg => pkg.status === 'active') || []
   }
 
   if (readOnly) {
@@ -82,6 +103,24 @@ export function ServiceItemForm({ item, index, onUpdate, onRemove, readOnly }: S
             </SelectContent>
           </Select>
         </div>
+
+        {item.service_name && getAvailablePackages().length > 0 && (
+          <div>
+            <Label>Package</Label>
+            <Select onValueChange={handlePackageSelect}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a package" />
+              </SelectTrigger>
+              <SelectContent>
+                {getAvailablePackages().map((pkg) => (
+                  <SelectItem key={pkg.id} value={pkg.id}>
+                    {pkg.name} - ${(pkg.price || pkg.sale_price || 0).toFixed(2)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div>
           <Label>Description</Label>
