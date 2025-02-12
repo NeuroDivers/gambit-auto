@@ -38,20 +38,22 @@ export function ColorManagementSection() {
 
       if (error) throw error
       return data
-    },
-    onSuccess: (data) => {
-      if (data) {
-        setColors({
-          background: data.background,
-          foreground: data.foreground,
-          primary_color: data.primary_color,
-          primary_hover: data.primary_hover,
-          accent_color: data.accent_color,
-          accent_hover: data.accent_hover
-        })
-      }
     }
   })
+
+  // Update colors when data is fetched
+  useEffect(() => {
+    if (siteColors) {
+      setColors({
+        background: siteColors.background,
+        foreground: siteColors.foreground,
+        primary_color: siteColors.primary_color,
+        primary_hover: siteColors.primary_hover,
+        accent_color: siteColors.accent_color,
+        accent_hover: siteColors.accent_hover
+      })
+    }
+  }, [siteColors])
 
   const handleColorChange = (key: keyof ColorSettings, value: string) => {
     setColors(prev => ({ ...prev, [key]: value }))
