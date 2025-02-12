@@ -40,7 +40,7 @@ export const RoleStatsCard = ({ role, count, onRoleSelect }: RoleStatsCardProps)
 
   return (
     <Card 
-      className="bg-card/50 backdrop-blur-sm border-white/[0.08] hover:border-primary/50 transition-all duration-200 cursor-pointer hover:bg-card/70"
+      className="bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-200 cursor-pointer hover:bg-card/70"
       onClick={handleClick}
     >
       <div className="p-6">
@@ -49,10 +49,10 @@ export const RoleStatsCard = ({ role, count, onRoleSelect }: RoleStatsCardProps)
             <Shield className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <p className="text-lg font-semibold capitalize text-white/[0.87]">
+            <p className="text-lg font-semibold capitalize text-card-foreground">
               {displayName}
             </p>
-            <p className="text-sm text-white/60">
+            <p className="text-sm text-muted-foreground">
               {count} {count === 1 ? 'user' : 'users'}
             </p>
           </div>
