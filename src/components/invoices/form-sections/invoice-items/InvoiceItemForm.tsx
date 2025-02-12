@@ -18,6 +18,13 @@ type InvoiceItemFormProps = {
 export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItemFormProps) {
   const { data: services = [] } = useServiceData()
 
+  const getSelectedService = () => {
+    return services?.find(service => 
+      service.name === item.service_name || 
+      service.service_packages?.some(pkg => pkg.name === item.service_name)
+    )
+  }
+
   const handleServiceSelect = (serviceId: string) => {
     const selectedService = services?.find(service => service.id === serviceId)
     if (selectedService) {
@@ -27,13 +34,9 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
     }
   }
 
-  const getSelectedService = () => {
-    return services?.find(service => service.name === item.service_name)
-  }
-
   const getServicePackages = () => {
-    const service = getSelectedService()
-    return service?.service_packages?.filter(pkg => pkg.status === 'active') || []
+    const selectedService = getSelectedService()
+    return selectedService?.service_packages?.filter(pkg => pkg.status === 'active') || []
   }
 
   const handlePackageSelect = (packageId: string) => {
@@ -83,7 +86,10 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
         {getServicePackages().length > 0 && (
           <div>
             <Label>Package</Label>
-            <Select onValueChange={handlePackageSelect}>
+            <Select
+              value={getServicePackages().find(pkg => pkg.name === item.service_name)?.id}
+              onValueChange={handlePackageSelect}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select a package" />
               </SelectTrigger>
