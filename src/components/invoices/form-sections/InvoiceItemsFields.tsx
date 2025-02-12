@@ -1,6 +1,9 @@
+
 import { InvoiceItemForm } from "./invoice-items/InvoiceItemForm"
 import { InvoiceItemsHeader } from "./invoice-items/InvoiceItemsHeader"
 import { InvoiceItem } from "../types"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 type InvoiceItemsFieldsProps = {
   items: InvoiceItem[]
@@ -34,19 +37,29 @@ export function InvoiceItemsFields({ items, setItems }: InvoiceItemsFieldsProps)
   }
 
   return (
-    <div className="space-y-4">
-      <InvoiceItemsHeader onAddItem={addItem} />
-      <div className="space-y-6">
-        {items.map((item, index) => (
-          <InvoiceItemForm
-            key={index}
-            item={item}
-            index={index}
-            onUpdate={updateItem}
-            onRemove={removeItem}
-          />
-        ))}
-      </div>
-    </div>
+    <ScrollArea className="h-[calc(100vh-20rem)]">
+      <Card className="border-border/5 bg-card">
+        <CardHeader>
+          <CardTitle>Services</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4">
+          <InvoiceItemsHeader onAddItem={addItem} />
+          <div className="space-y-6 mt-4">
+            {items.map((item, index) => (
+              <InvoiceItemForm
+                key={index}
+                item={item}
+                index={index}
+                onUpdate={updateItem}
+                onRemove={removeItem}
+              />
+            ))}
+            {items.length === 0 && (
+              <p className="text-muted-foreground">No services added</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </ScrollArea>
   )
 }
