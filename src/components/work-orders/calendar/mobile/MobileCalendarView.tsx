@@ -43,7 +43,7 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
     <div className="space-y-4">
       <HorizontalCalendar 
         onDateSelect={handleDateSelect}
-        className="border border-border"
+        className="border border-gray-200 bg-white shadow-sm rounded-lg"
         workOrders={workOrders}
       />
 

@@ -123,7 +123,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
   const totalWidth = BAY_COLUMN_WIDTH + (days.length * CELL_WIDTH)
 
   return (
-    <div className={cn("p-4 bg-[#222226] rounded-lg shadow-lg", className)}>
+    <div className={cn("p-4 bg-white rounded-lg", className)}>
       <CalendarControls
         currentMonth={currentMonth}
         onNavigateMonth={navigateMonth}
@@ -142,7 +142,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={stopDragging}
-        className="overflow-x-auto relative [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-500/40 [&::-webkit-scrollbar-track]:bg-gray-500/10"
+        className="overflow-x-auto relative [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-gray-100"
         style={{ 
           maxWidth: '100%',
           WebkitOverflowScrolling: 'touch'

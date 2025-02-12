@@ -10,7 +10,7 @@ type CalendarHeaderProps = {
 export function CalendarHeader({ days, isDateBlocked }: CalendarHeaderProps) {
   return (
     <div className="grid" style={{ gridTemplateColumns: `80px repeat(${days.length}, 60px)` }}>
-      <div className="p-2 text-gray-400 font-medium sticky left-0 bg-[#222226] z-10 border-r border-gray-700/50 text-sm">
+      <div className="p-2 text-gray-600 font-medium sticky left-0 bg-white z-10 border-r border-gray-200 text-sm">
         Bay
       </div>
       {days.map((date) => {
@@ -19,8 +19,8 @@ export function CalendarHeader({ days, isDateBlocked }: CalendarHeaderProps) {
           <div 
             key={date.toISOString()}
             className={cn(
-              "p-2 text-gray-400 font-medium text-center border-b border-r border-gray-700/50 text-sm",
-              blocked && "bg-red-900/20 cursor-not-allowed"
+              "p-2 text-gray-600 font-medium text-center border-b border-r border-gray-200 text-sm",
+              blocked && "bg-red-50 cursor-not-allowed"
             )}
           >
             <div>{format(date, 'EEE')}</div>
