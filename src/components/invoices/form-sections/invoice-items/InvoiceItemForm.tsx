@@ -22,26 +22,27 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
     const selectedService = services?.find(service => service.name === serviceName)
     if (selectedService) {
       onUpdate(index, "service_name", serviceName)
-      onUpdate(index, "description", serviceName)
+      onUpdate(index, "description", selectedService.name)
       onUpdate(index, "unit_price", selectedService.price || 0)
     }
   }
 
   const getServicePackages = (serviceName: string) => {
     const service = services?.find(s => s.name === serviceName)
-    return service?.service_packages || []
+    return service?.service_packages?.filter(pkg => pkg.status === 'active') || []
   }
 
   const handlePackageSelect = (packageId: string) => {
     const selectedService = services?.find(service => 
       service.service_packages?.some(pkg => pkg.id === packageId)
     )
+    
     if (selectedService) {
       const selectedPackage = selectedService.service_packages?.find(pkg => pkg.id === packageId)
       if (selectedPackage) {
         onUpdate(index, "service_name", selectedPackage.name)
-        onUpdate(index, "description", selectedPackage.description || selectedPackage.name)
-        onUpdate(index, "unit_price", selectedPackage.price || 0)
+        onUpdate(index, "description", selectedPackage.description || '')
+        onUpdate(index, "unit_price", selectedPackage.price || selectedPackage.sale_price || 0)
       }
     }
   }
@@ -88,7 +89,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
               <SelectContent>
                 {getServicePackages(item.service_name).map((pkg) => (
                   <SelectItem key={pkg.id} value={pkg.id}>
-                    {pkg.name} - ${pkg.price}
+                    {pkg.name} - ${pkg.price || pkg.sale_price || 0}
                   </SelectItem>
                 ))}
               </SelectContent>
