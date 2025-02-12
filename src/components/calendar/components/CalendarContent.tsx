@@ -37,14 +37,27 @@ export function CalendarContent({
           {days.map((date, index) => {
             const blocked = isDateBlocked(date);
             const workOrder = findWorkOrderForDate(date, bay.id, workOrders);
+
+            // Always render a blocked cell if the date is blocked
+            if (blocked) {
+              return (
+                <div 
+                  key={date.toISOString()}
+                  className={cn(
+                    "p-2 relative flex items-center justify-center border-b border-r border-gray-700/50",
+                    "bg-red-900/20 cursor-not-allowed"
+                  )}
+                />
+              );
+            }
             
-            // If we're in the middle of a work order span and it's not blocked
-            if (!blocked && workOrder && !isWorkOrderStart(date, workOrder)) {
+            // If we're in the middle of a work order span
+            if (workOrder && !isWorkOrderStart(date, workOrder)) {
               return null;
             }
             
-            // If it's the start of a work order and it's not blocked
-            if (!blocked && workOrder && isWorkOrderStart(date, workOrder)) {
+            // If it's the start of a work order
+            if (workOrder && isWorkOrderStart(date, workOrder)) {
               const span = getWorkOrderSpan(workOrder, index, days.length);
               
               return (
@@ -58,18 +71,16 @@ export function CalendarContent({
               );
             }
             
-            // Render blocked or empty cell
+            // Render empty cell
             return (
               <div 
                 key={date.toISOString()}
                 className={cn(
                   "p-2 relative flex items-center justify-center border-b border-r border-gray-700/50",
-                  "transition-colors",
-                  !blocked && "hover:bg-gray-700/20 cursor-pointer",
-                  blocked && "bg-red-900/20 cursor-not-allowed",
+                  "transition-colors hover:bg-gray-700/20 cursor-pointer",
                   isToday(date) && "bg-gray-700/20"
                 )}
-                onClick={() => !blocked && onDateSelect?.(date)}
+                onClick={() => onDateSelect?.(date)}
               />
             );
           })}
