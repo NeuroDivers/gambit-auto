@@ -28,12 +28,11 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
         name="name"
         render={({ field }) => (
           <FormItem>
-            <FormLabel htmlFor="service_name" className="text-white/[0.87]">Name</FormLabel>
+            <FormLabel>Name</FormLabel>
             <FormControl>
               <Input 
                 id="service_name"
                 {...field} 
-                className="bg-[#242424] border-white/10 text-white/[0.87]" 
               />
             </FormControl>
             <FormMessage />
@@ -46,19 +45,19 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
         name="status"
         render={({ field }) => (
           <FormItem>
-            <FormLabel htmlFor="service_status" className="text-white/[0.87]">Status</FormLabel>
+            <FormLabel>Status</FormLabel>
             <Select
               onValueChange={field.onChange}
               defaultValue={field.value}
             >
               <FormControl>
-                <SelectTrigger id="service_status" className="bg-[#242424] border-white/10 text-white/[0.87]">
+                <SelectTrigger id="service_status">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
               </FormControl>
-              <SelectContent className="bg-[#242424] border-white/10">
-                <SelectItem value="active" className="text-white/[0.87]">Active</SelectItem>
-                <SelectItem value="inactive" className="text-white/[0.87]">Inactive</SelectItem>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />
@@ -71,12 +70,11 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel htmlFor="service_description" className="text-white/[0.87]">Description</FormLabel>
+            <FormLabel>Description</FormLabel>
             <FormControl>
               <Textarea 
                 id="service_description"
                 {...field} 
-                className="bg-[#242424] border-white/10 text-white/[0.87]" 
               />
             </FormControl>
             <FormMessage />
@@ -89,14 +87,13 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
         name="price"
         render={({ field }) => (
           <FormItem>
-            <FormLabel htmlFor="service_price" className="text-white/[0.87]">Price (optional)</FormLabel>
+            <FormLabel>Price (optional)</FormLabel>
             <FormControl>
               <Input
                 id="service_price"
                 {...field}
                 type="number"
                 step="0.01"
-                className="bg-[#242424] border-white/10 text-white/[0.87]"
               />
             </FormControl>
             <FormMessage />
@@ -109,7 +106,7 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
         name="duration"
         render={({ field }) => (
           <FormItem>
-            <FormLabel htmlFor="service_duration" className="text-white/[0.87]">Duration in hours (optional)</FormLabel>
+            <FormLabel>Duration in hours (optional)</FormLabel>
             <FormControl>
               <Input
                 id="service_duration"
@@ -117,7 +114,6 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
                 type="number"
                 step="0.5"
                 min="0"
-                className="bg-[#242424] border-white/10 text-white/[0.87]"
               />
             </FormControl>
             <FormMessage />
