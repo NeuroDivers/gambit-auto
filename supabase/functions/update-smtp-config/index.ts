@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -22,14 +23,19 @@ serve(async (req) => {
     )
     if (authError) throw authError
 
-    // Check if user is admin
-    const { data: roleData } = await supabaseClient
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user?.id)
+    // Check if user is admin using profiles table
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select(`
+        role:role_id (
+          name
+        )
+      `)
+      .eq('id', user?.id)
       .single()
 
-    if (roleData?.role !== 'admin') {
+    // Check if role name contains "admin" (case insensitive)
+    if (!profile?.role?.name || !profile.role.name.toLowerCase().includes('admin')) {
       throw new Error('Unauthorized')
     }
 
