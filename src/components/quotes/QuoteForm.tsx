@@ -33,9 +33,9 @@ export function QuoteForm({ quote, onSuccess }: QuoteFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle>Customer Information</CardTitle>
           </CardHeader>
           <CardContent>
@@ -44,7 +44,7 @@ export function QuoteForm({ quote, onSuccess }: QuoteFormProps) {
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle>Vehicle Information</CardTitle>
           </CardHeader>
           <CardContent>
@@ -57,7 +57,7 @@ export function QuoteForm({ quote, onSuccess }: QuoteFormProps) {
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle>Services</CardTitle>
           </CardHeader>
           <CardContent>
