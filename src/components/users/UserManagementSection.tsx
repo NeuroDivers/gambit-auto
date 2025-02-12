@@ -23,8 +23,8 @@ export const UserManagementSection = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-xl font-semibold mb-2 text-white/[0.87]">Users</h3>
-              <p className="text-sm text-white/60">View and manage system users</p>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">Users</h3>
+              <p className="text-sm text-muted-foreground">View and manage system users</p>
             </div>
             {isAdmin && (
               <Button onClick={() => setIsCreateUserOpen(true)} className="gap-2">
