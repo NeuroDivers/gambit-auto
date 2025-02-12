@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -73,6 +72,16 @@ const applyColorStyles = (colors: ColorSettings) => {
     root.style.setProperty('--border', '240 3.7% 15.9%')
     root.style.setProperty('--input', '240 3.7% 15.9%')
     root.style.setProperty('--ring', '240 4.9% 83.9%')
+    
+    // Dark mode sidebar colors
+    root.style.setProperty('--sidebar-background', '240 10% 3.9%')
+    root.style.setProperty('--sidebar-foreground', '0 0% 98%')
+    root.style.setProperty('--sidebar-primary', hexToHSL(colors.primary_color))
+    root.style.setProperty('--sidebar-primary-foreground', '0 0% 98%')
+    root.style.setProperty('--sidebar-accent', hexToHSL(colors.accent_color))
+    root.style.setProperty('--sidebar-accent-foreground', '0 0% 98%')
+    root.style.setProperty('--sidebar-border', '240 3.7% 15.9%')
+    root.style.setProperty('--sidebar-ring', '240 4.9% 83.9%')
   } else {
     root.style.setProperty('--card', '0 0% 100%')
     root.style.setProperty('--card-foreground', '240 10% 3.9%')
@@ -87,6 +96,16 @@ const applyColorStyles = (colors: ColorSettings) => {
     root.style.setProperty('--border', '240 5.9% 90%')
     root.style.setProperty('--input', '240 5.9% 90%')
     root.style.setProperty('--ring', '240 5.9% 10%')
+    
+    // Light mode sidebar colors
+    root.style.setProperty('--sidebar-background', '0 0% 100%')
+    root.style.setProperty('--sidebar-foreground', '240 10% 3.9%')
+    root.style.setProperty('--sidebar-primary', hexToHSL(colors.primary_color))
+    root.style.setProperty('--sidebar-primary-foreground', '240 5.9% 10%')
+    root.style.setProperty('--sidebar-accent', hexToHSL(colors.accent_color))
+    root.style.setProperty('--sidebar-accent-foreground', '240 5.9% 10%')
+    root.style.setProperty('--sidebar-border', '240 5.9% 90%')
+    root.style.setProperty('--sidebar-ring', '240 5.9% 10%')
   }
 }
 
