@@ -5,8 +5,6 @@ import { HorizontalCalendar } from "@/components/calendar"
 import { CreateWorkOrderDialog } from "../../CreateWorkOrderDialog"
 import { startOfDay, isWithinInterval, parseISO } from "date-fns"
 import { useBlockedDates } from "../hooks/useBlockedDates"
-import { format } from "date-fns"
-import { Button } from "@/components/ui/button"
 import { MonthPicker } from "@/components/work-orders/calendar/MonthPicker"
 
 type MobileCalendarViewProps = {
@@ -38,14 +36,6 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
 
   return (
     <div className="space-y-4">
-      <Button 
-        variant="ghost"
-        onClick={() => setShowMonthPicker(true)}
-        className="text-lg font-semibold hover:bg-accent/50"
-      >
-        {format(currentDate, 'MMMM yyyy')}
-      </Button>
-
       <HorizontalCalendar 
         onDateSelect={handleDateSelect}
         className="border border-border"
