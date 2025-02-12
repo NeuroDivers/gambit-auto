@@ -50,7 +50,7 @@ export const UserCard = ({ user }: UserCardProps) => {
 
   return (
     <>
-      <div className="bg-[#242424] border border-white/12 rounded-lg p-6 transition-all duration-200 hover:border-[#BB86FC]/50">
+      <div className="bg-card border border-border rounded-lg p-6 transition-all duration-200 hover:border-primary/50">
         <div className="flex items-start justify-between">
           <UserAvatar
             displayName={displayName}

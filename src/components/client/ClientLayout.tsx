@@ -37,7 +37,7 @@ export function ClientLayout({
 
   if (isMobile) {
     return (
-      <div className={cn("min-h-screen w-full bg-background")}>
+      <div className={cn("min-h-screen w-full bg-background text-foreground")}>
         <header className="border-b p-4 flex items-center justify-between sticky top-0 z-50 bg-background">
           <Button 
             variant="ghost" 
@@ -55,7 +55,6 @@ export function ClientLayout({
           </div>
         </header>
 
-        {/* Mobile Menu */}
         <div className={cn(
           "fixed inset-0 bg-background z-40 transform transition-transform duration-300 ease-in-out",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
@@ -65,9 +64,8 @@ export function ClientLayout({
           </div>
         </div>
 
-        {/* Main Content */}
         <main className={cn(
-          "flex-1 p-4 transition-all duration-300 ease-in-out",
+          "flex-1 p-4 transition-all duration-300 ease-in-out bg-background",
           isMobileMenuOpen ? "opacity-50" : "opacity-100"
         )}>
           {children}
@@ -78,11 +76,11 @@ export function ClientLayout({
 
   return (
     <SidebarProvider>
-      <div className={cn("flex h-screen w-full overflow-hidden")}>
+      <div className={cn("flex h-screen w-full overflow-hidden bg-background")}>
         <Sidebar>
           {sidebarContent}
         </Sidebar>
-        <main className="flex-1 overflow-auto p-4">{children}</main>
+        <main className="flex-1 overflow-auto p-4 bg-background">{children}</main>
       </div>
     </SidebarProvider>
   )
