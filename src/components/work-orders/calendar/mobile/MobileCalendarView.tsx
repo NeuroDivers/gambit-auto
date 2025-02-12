@@ -6,6 +6,7 @@ import { CreateWorkOrderDialog } from "../../CreateWorkOrderDialog"
 import { startOfDay, isWithinInterval, parseISO } from "date-fns"
 import { useBlockedDates } from "../hooks/useBlockedDates"
 import { MonthPicker } from "@/components/work-orders/calendar/MonthPicker"
+import { toast } from "sonner"
 
 type MobileCalendarViewProps = {
   currentDate: Date
@@ -20,14 +21,18 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
   const { blockedDates } = useBlockedDates()
 
   const handleDateSelect = (date: Date) => {
+    // Check if the selected date is blocked
     const isBlocked = blockedDates?.some(blocked => 
-      isWithinInterval(date, {
+      isWithinInterval(startOfDay(date), {
         start: parseISO(blocked.start_date),
         end: parseISO(blocked.end_date)
       })
     )
 
-    if (isBlocked) return
+    if (isBlocked) {
+      toast.error("This date is blocked and unavailable for bookings")
+      return
+    }
 
     setSelectedDate(date)
     setShowWorkOrderDialog(true)
