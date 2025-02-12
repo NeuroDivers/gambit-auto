@@ -18,13 +18,38 @@ type ServiceItemFormProps = {
 }
 
 export function ServiceItemForm({ item, index, onUpdate, onRemove, readOnly }: ServiceItemFormProps) {
-  const { data: services } = useServiceData()
+  const { data: services = [] } = useServiceData()
 
-  const handleServiceSelect = (serviceName: string) => {
-    const selectedService = services?.find(service => service.name === serviceName)
+  const getSelectedService = () => {
+    return services?.find(service => 
+      service.name === item.service_name || 
+      service.service_packages?.some(pkg => pkg.name === item.service_name)
+    )
+  }
+
+  const handleServiceSelect = (serviceId: string) => {
+    const selectedService = services?.find(service => service.id === serviceId)
     if (selectedService) {
-      onUpdate(index, "service_name", serviceName)
+      onUpdate(index, "service_name", selectedService.name)
+      onUpdate(index, "description", selectedService.name)
       onUpdate(index, "unit_price", selectedService.price || 0)
+    }
+  }
+
+  const getServicePackages = () => {
+    const selectedService = getSelectedService()
+    return selectedService?.service_packages?.filter(pkg => pkg.status === 'active') || []
+  }
+
+  const handlePackageSelect = (packageId: string) => {
+    const selectedService = getSelectedService()
+    if (selectedService) {
+      const selectedPackage = selectedService.service_packages?.find(pkg => pkg.id === packageId)
+      if (selectedPackage) {
+        onUpdate(index, "service_name", selectedPackage.name)
+        onUpdate(index, "description", selectedPackage.description || '')
+        onUpdate(index, "unit_price", selectedPackage.price || selectedPackage.sale_price || 0)
+      }
     }
   }
 
@@ -69,8 +94,7 @@ export function ServiceItemForm({ item, index, onUpdate, onRemove, readOnly }: S
         <div>
           <Label>Service</Label>
           <Select
-            defaultValue={item.service_name}
-            value={item.service_name}
+            value={getSelectedService()?.id}
             onValueChange={handleServiceSelect}
           >
             <SelectTrigger>
@@ -78,13 +102,34 @@ export function ServiceItemForm({ item, index, onUpdate, onRemove, readOnly }: S
             </SelectTrigger>
             <SelectContent>
               {services?.map((service) => (
-                <SelectItem key={service.id} value={service.name}>
+                <SelectItem key={service.id} value={service.id}>
                   {service.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
+
+        {getServicePackages().length > 0 && (
+          <div>
+            <Label>Package</Label>
+            <Select 
+              value={getServicePackages().find(pkg => pkg.name === item.service_name)?.id}
+              onValueChange={handlePackageSelect}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a package" />
+              </SelectTrigger>
+              <SelectContent>
+                {getServicePackages().map((pkg) => (
+                  <SelectItem key={pkg.id} value={pkg.id}>
+                    {pkg.name} - ${pkg.price || pkg.sale_price || 0}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div>
           <Label>Description</Label>
