@@ -8,8 +8,8 @@ export const getWorkOrderSpan = (workOrder: WorkOrder, startIndex: number, total
     return 1;
   }
   
-  const startDate = new Date(workOrder.start_time);
-  const endDate = new Date(workOrder.end_time);
+  const startDate = startOfDay(new Date(workOrder.start_time));
+  const endDate = startOfDay(new Date(workOrder.end_time));
   const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
   
   const remainingDays = totalDays - startIndex;
@@ -30,17 +30,19 @@ export const getWorkOrderSpan = (workOrder: WorkOrder, startIndex: number, total
 }
 
 export const findWorkOrderForDate = (date: Date, bayId: string, workOrders: WorkOrder[]) => {
+  const targetDate = startOfDay(date);
+  
   const workOrder = workOrders.find(order => {
     if (!order.start_time || !order.end_time || order.assigned_bay_id !== bayId) return false;
     
-    const orderStartDate = new Date(order.start_time);
-    const orderEndDate = new Date(order.end_time);
+    const orderStartDate = startOfDay(new Date(order.start_time));
+    const orderEndDate = startOfDay(new Date(order.end_time));
     
-    const isWithinRange = isWithinInterval(date, { start: startOfDay(orderStartDate), end: startOfDay(orderEndDate) });
+    const isWithinRange = isWithinInterval(targetDate, { start: orderStartDate, end: orderEndDate });
     
     if (isWithinRange) {
       console.log('Found work order for date:', {
-        date: date.toISOString(),
+        date: targetDate.toISOString(),
         workOrderId: order.id,
         startDate: orderStartDate.toISOString(),
         endDate: orderEndDate.toISOString()

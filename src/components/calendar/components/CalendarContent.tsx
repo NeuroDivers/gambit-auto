@@ -35,16 +35,16 @@ export function CalendarContent({
             {bay.name}
           </div>
           {days.map((date, index) => {
+            const blocked = isDateBlocked(date);
             const workOrder = findWorkOrderForDate(date, bay.id, workOrders);
-            const blocked = isDateBlocked(date)
             
-            // Skip rendering empty cells if we're in the middle of a work order span
-            if (workOrder && !isWorkOrderStart(date, workOrder)) {
+            // If we're in the middle of a work order span and it's not blocked
+            if (!blocked && workOrder && !isWorkOrderStart(date, workOrder)) {
               return null;
             }
             
-            // If it's the start of a work order, render the work order card
-            if (workOrder && isWorkOrderStart(date, workOrder)) {
+            // If it's the start of a work order and it's not blocked
+            if (!blocked && workOrder && isWorkOrderStart(date, workOrder)) {
               const span = getWorkOrderSpan(workOrder, index, days.length);
               
               return (
