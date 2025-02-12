@@ -1,6 +1,6 @@
 
 import { useRef, useState, useCallback, useEffect } from "react"
-import { format, addDays, startOfDay, isWithinInterval, parseISO } from "date-fns"
+import { format, addDays, startOfDay, isWithinInterval, parseISO, isToday } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useDragScroll } from "./hooks/useDragScroll"
 import { toast } from "sonner"
@@ -8,8 +8,9 @@ import { useServiceBays } from "@/components/service-bays/hooks/useServiceBays"
 import { WorkOrder } from "../work-orders/types"
 import { WorkOrderDetailsDialog } from "../work-orders/calendar/WorkOrderDetailsDialog"
 import { CalendarControls } from "./components/CalendarControls"
-import { CalendarGrid } from "./components/CalendarGrid"
 import { useBlockedDates } from "@/components/work-orders/calendar/hooks/useBlockedDates"
+import { WorkOrderCard } from "./components/WorkOrderCard"
+import { findWorkOrderForDate, isWorkOrderStart, getWorkOrderSpan } from "./utils/dateUtils"
 
 type HorizontalCalendarProps = {
   onDateSelect?: (date: Date) => void
@@ -200,7 +201,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
                       workOrder={workOrder}
                       date={date}
                       span={span}
-                      onClick={() => onWorkOrderSelect(workOrder)}
+                      onClick={() => setSelectedWorkOrder(workOrder)}
                     />
                   );
                 }
