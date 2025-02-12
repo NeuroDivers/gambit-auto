@@ -44,9 +44,12 @@ export function CalendarContent({
                 <div 
                   key={date.toISOString()}
                   className={cn(
-                    "p-2 relative flex items-center justify-center border-b border-r border-gray-700/50",
+                    "h-full w-full border-b border-r border-gray-700/50",
                     "bg-red-900/20 cursor-not-allowed"
                   )}
+                  style={{
+                    gridColumn: `${index + 2}`,
+                  }}
                 />
               );
             }
@@ -76,8 +79,8 @@ export function CalendarContent({
               <div 
                 key={date.toISOString()}
                 className={cn(
-                  "p-2 relative flex items-center justify-center border-b border-r border-gray-700/50",
-                  "transition-colors hover:bg-gray-700/20 cursor-pointer",
+                  "h-full w-full border-b border-r border-gray-700/50",
+                  "transition-colors hover:bg-gray-700/20 cursor-pointer p-2",
                   isToday(date) && "bg-gray-700/20"
                 )}
                 onClick={() => onDateSelect?.(date)}
