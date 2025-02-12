@@ -12,6 +12,7 @@ import { useReactToPrint } from 'react-to-print'
 import { LoadingState } from "./sections/LoadingState"
 import { PublicView } from "./sections/PublicView"
 import { AdminView } from "./sections/AdminView"
+import { ProfileWithRole } from "@/integrations/supabase/types/user-roles"
 
 type InvoiceViewProps = {
   invoiceId?: string
@@ -44,7 +45,7 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
             )
           `)
           .eq("id", user.id)
-          .maybeSingle()
+          .maybeSingle() as { data: ProfileWithRole | null, error: any }
         
         if (profileError) {
           console.error('Error fetching user role:', profileError)
