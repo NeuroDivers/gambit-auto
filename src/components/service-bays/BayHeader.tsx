@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 
@@ -14,7 +15,7 @@ export function BayHeader({ onAddBay }: BayHeaderProps) {
       </div>
       <Button
         onClick={onAddBay}
-        className="bg-[#BB86FC] hover:bg-[#BB86FC]/90 text-white transition-colors duration-200"
+        className="bg-primary hover:bg-primary/90 text-primary-foreground"
       >
         <Plus className="w-4 h-4 mr-2" />
         Add Service Bay
