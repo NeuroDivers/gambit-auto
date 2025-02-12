@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form"
 import { EditInvoiceForm } from './sections/EditInvoiceForm'
 import { InvoiceFormValues } from "./types"
@@ -32,17 +33,22 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return null
       
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .single()
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select(`
+          role:role_id (
+            id,
+            name
+          )
+        `)
+        .eq("id", user.id)
+        .maybeSingle()
       
-      return roleData?.role
+      return profileData?.role?.name
     }
   })
 
-  const isAdmin = userRole === 'admin'
+  const isAdmin = userRole === 'administrator'
 
   // Fetch business profile data
   const { data: businessProfile, isLoading: isBusinessLoading } = useQuery({
