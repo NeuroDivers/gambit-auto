@@ -38,55 +38,49 @@ export function CalendarContent({
             const workOrder = findWorkOrderForDate(date, bay.id, workOrders);
             const blocked = isDateBlocked(date);
 
-            // Handle work order spans
-            if (workOrder) {
-              // If it's a blocked date, show the blocked cell
-              if (blocked) {
-                return (
-                  <div 
-                    key={date.toISOString()}
-                    className={cn(
-                      "p-2 relative flex items-center justify-center border-b border-r border-gray-700/50",
-                      "bg-red-900/20 cursor-not-allowed"
-                    )}
-                  />
-                );
-              }
+            // Blocked dates always take precedence
+            if (blocked) {
+              return (
+                <div 
+                  key={date.toISOString()}
+                  className={cn(
+                    "p-2 relative flex items-center justify-center border-b border-r border-gray-700/50",
+                    "bg-red-900/20 cursor-not-allowed"
+                  )}
+                />
+              );
+            }
 
-              // If we're in the middle of a work order span
+            // Handle work order spans only if the date is not blocked
+            if (workOrder) {
+              // Skip non-start days of work order
               if (!isWorkOrderStart(date, workOrder)) {
                 return null;
               }
 
-              // If it's the start of a work order
-              if (isWorkOrderStart(date, workOrder)) {
-                const span = getWorkOrderSpan(workOrder, index, days.length);
-                return (
-                  <WorkOrderCard
-                    key={date.toISOString()}
-                    workOrder={workOrder}
-                    date={date}
-                    span={span}
-                    onClick={() => onWorkOrderSelect(workOrder)}
-                  />
-                );
-              }
+              // Show work order card for start day
+              const span = getWorkOrderSpan(workOrder, index, days.length);
+              return (
+                <WorkOrderCard
+                  key={date.toISOString()}
+                  workOrder={workOrder}
+                  date={date}
+                  span={span}
+                  onClick={() => onWorkOrderSelect(workOrder)}
+                />
+              );
             }
 
-            // Handle non-work order cells (either blocked or empty)
+            // Render empty cell
             return (
               <div 
                 key={date.toISOString()}
                 className={cn(
                   "p-2 relative flex items-center justify-center border-b border-r border-gray-700/50",
-                  blocked ? (
-                    "bg-red-900/20 cursor-not-allowed"
-                  ) : (
-                    "transition-colors hover:bg-gray-700/20 cursor-pointer"
-                  ),
+                  "transition-colors hover:bg-gray-700/20 cursor-pointer",
                   isToday(date) && "bg-gray-700/20"
                 )}
-                onClick={() => !blocked && onDateSelect?.(date)}
+                onClick={() => onDateSelect?.(date)}
               />
             );
           })}
