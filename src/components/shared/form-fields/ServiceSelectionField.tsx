@@ -68,10 +68,10 @@ export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
       render={({ field }) => (
         <FormItem>
           <ScrollArea className="h-[calc(100vh-20rem)]">
-            <Card className="border-border/5 bg-[#1A1F2C]/80">
-              <CardContent className="p-4">
+            <Card className="border-border/5">
+              <CardContent className="p-4 bg-card">
                 <div className="flex justify-between items-center mb-4">
-                  <FormLabel htmlFor="service_items_list" className="text-lg font-semibold text-white/90">
+                  <FormLabel htmlFor="service_items_list" className="text-lg font-semibold">
                     Services
                   </FormLabel>
                   <Button
