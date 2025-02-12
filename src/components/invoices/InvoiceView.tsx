@@ -30,21 +30,32 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
   const { data: userRole } = useQuery({
     queryKey: ["user-role"],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return null
-      
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select(`
-          role:role_id (
-            id,
-            name
-          )
-        `)
-        .eq("id", user.id)
-        .maybeSingle()
-      
-      return profileData?.role?.name
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return null
+        
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select(`
+            role:role_id (
+              id,
+              name,
+              nicename
+            )
+          `)
+          .eq("id", user.id)
+          .maybeSingle()
+        
+        if (profileError) {
+          console.error('Error fetching user role:', profileError)
+          return null
+        }
+
+        return profileData?.role?.name || null
+      } catch (error) {
+        console.error('Error in userRole query:', error)
+        return null
+      }
     }
   })
 
