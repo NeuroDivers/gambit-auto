@@ -47,7 +47,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
   }
 
   return (
-    <div className="relative border rounded-lg p-4 space-y-4">
+    <div className="relative border rounded-lg p-4 space-y-4 hover:border-primary/50 transition-colors hover:bg-accent/5">
       <Button
         type="button"
         variant="ghost"
