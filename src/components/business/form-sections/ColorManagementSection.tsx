@@ -38,10 +38,19 @@ const THEME_PRESETS = {
   }
 }
 
+// Helper function to get system theme preference
+const getSystemThemePreference = (): 'light' | 'dark' => {
+  if (typeof window === 'undefined') return 'dark'
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
 export function ColorManagementSection() {
-  const [colors, setColors] = useState<ColorSettings>({
-    ...THEME_PRESETS.dark,
-    theme_mode: 'dark'
+  const [colors, setColors] = useState<ColorSettings>(() => {
+    const systemTheme = getSystemThemePreference()
+    return {
+      ...THEME_PRESETS[systemTheme],
+      theme_mode: systemTheme
+    }
   })
 
   const { data: siteColors, refetch } = useQuery({
@@ -57,6 +66,24 @@ export function ColorManagementSection() {
       return data
     }
   })
+
+  // Listen for system theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleChange = (e: MediaQueryListEvent) => {
+      if (!siteColors) { // Only auto-update if no saved preferences exist
+        const newTheme = e.matches ? 'dark' : 'light'
+        setColors(prev => ({
+          ...prev,
+          ...THEME_PRESETS[newTheme],
+          theme_mode: newTheme
+        }))
+      }
+    }
+
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [siteColors])
 
   useEffect(() => {
     if (siteColors) {
@@ -134,7 +161,7 @@ export function ColorManagementSection() {
         <CardTitle>Site Colors</CardTitle>
         <CardDescription>
           Customize the appearance of your site by adjusting these colors.
-          Changes will affect the entire application.
+          Changes will affect the entire application. The initial theme matches your system preference.
         </CardDescription>
       </CardHeader>
       <CardContent>
