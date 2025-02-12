@@ -48,7 +48,7 @@ export function InvoiceServiceItems({ items, setItems }: InvoiceServiceItemsProp
 
   return (
     <ScrollArea className="h-[calc(100vh-20rem)]">
-      <Card className="border-border/5 bg-[#1A1F2C]/80">
+      <Card className="border-border/5 bg-card">
         <CardContent className="p-4">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-foreground">Services</h2>
