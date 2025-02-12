@@ -136,8 +136,11 @@ export function SidebarNav({ className, onNavigate }: SidebarNavProps) {
             to={item.href}
             onClick={onNavigate}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-accent",
-              location.pathname === item.href ? "bg-primary text-primary-foreground" : "text-foreground hover:text-foreground",
+              "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors",
+              "hover:bg-primary hover:text-primary-foreground",
+              location.pathname === item.href 
+                ? "bg-primary text-primary-foreground" 
+                : "text-foreground"
             )}
           >
             <item.icon className="h-5 w-5" />
@@ -153,8 +156,11 @@ export function SidebarNav({ className, onNavigate }: SidebarNavProps) {
             to={item.href}
             onClick={onNavigate}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-accent",
-              location.pathname === item.href ? "bg-primary text-primary-foreground" : "text-foreground hover:text-foreground",
+              "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors",
+              "hover:bg-primary hover:text-primary-foreground",
+              location.pathname === item.href 
+                ? "bg-primary text-primary-foreground" 
+                : "text-foreground"
             )}
           >
             <item.icon className="h-5 w-5" />
