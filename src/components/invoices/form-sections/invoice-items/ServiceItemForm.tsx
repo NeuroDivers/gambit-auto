@@ -67,10 +67,9 @@ export function ServiceItemForm({ item, index, onUpdate, onRemove, readOnly }: S
 
       <div className="space-y-4">
         <div>
-          <Label>
-            Service <span className="text-red-500">*</span>
-          </Label>
+          <Label>Service</Label>
           <Select
+            defaultValue={item.service_name}
             value={item.service_name}
             onValueChange={handleServiceSelect}
           >
@@ -98,28 +97,22 @@ export function ServiceItemForm({ item, index, onUpdate, onRemove, readOnly }: S
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label>
-              Quantity <span className="text-red-500">*</span>
-            </Label>
+            <Label>Quantity</Label>
             <Input
               type="number"
               min="1"
               value={item.quantity}
               onChange={(e) => onUpdate(index, "quantity", parseInt(e.target.value))}
-              required
             />
           </div>
           <div>
-            <Label>
-              Unit Price <span className="text-red-500">*</span>
-            </Label>
+            <Label>Unit Price</Label>
             <Input
               type="number"
               min="0"
               step="0.01"
               value={item.unit_price}
               onChange={(e) => onUpdate(index, "unit_price", parseFloat(e.target.value))}
-              required
             />
           </div>
         </div>
