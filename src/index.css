@@ -98,5 +98,13 @@
   .text-muted {
     @apply text-muted-foreground;
   }
-}
 
+  /* Fix for headings and text in light mode */
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-foreground;
+  }
+
+  p {
+    @apply text-foreground;
+  }
+}
