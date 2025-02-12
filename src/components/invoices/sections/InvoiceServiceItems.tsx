@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { InvoiceItem } from "../types"
@@ -44,7 +45,7 @@ export function InvoiceServiceItems({ items, setItems }: InvoiceServiceItemsProp
     return (
       <div className="pt-4">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="font-semibold text-white/90">Services / Services</h2>
+          <h2 className="font-semibold text-white/90">Services</h2>
           {setItems && (
             <Button
               type="button"
@@ -54,7 +55,7 @@ export function InvoiceServiceItems({ items, setItems }: InvoiceServiceItemsProp
               className="flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
-              Add Item
+              Add Service
             </Button>
           )}
         </div>
@@ -66,7 +67,7 @@ export function InvoiceServiceItems({ items, setItems }: InvoiceServiceItemsProp
   return (
     <div className="pt-4">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="font-semibold text-white/90">Services / Services</h2>
+        <h2 className="font-semibold text-white/90">Services</h2>
         {setItems && (
           <Button
             type="button"
@@ -76,7 +77,7 @@ export function InvoiceServiceItems({ items, setItems }: InvoiceServiceItemsProp
             className="flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            Add Item
+            Add Service
           </Button>
         )}
       </div>
