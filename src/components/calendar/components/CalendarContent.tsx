@@ -31,7 +31,7 @@ export function CalendarContent({
           className="grid"
           style={{ gridTemplateColumns: `80px repeat(${days.length}, 60px)` }}
         >
-          <div className="p-2 text-gray-300 sticky left-0 bg-[#222226] z-10 border-b border-r border-gray-700/50 text-sm">
+          <div className="p-2 text-gray-600 sticky left-0 bg-white z-10 border-b border-r border-gray-200 text-sm">
             {bay.name}
           </div>
           {days.map((date, index) => {
@@ -44,8 +44,8 @@ export function CalendarContent({
                 <div 
                   key={date.toISOString()}
                   className={cn(
-                    "h-full w-full border-b border-r border-gray-700/50",
-                    "bg-red-900/20 cursor-not-allowed"
+                    "h-full w-full border-b border-r border-gray-200",
+                    "bg-red-50 cursor-not-allowed"
                   )}
                   style={{
                     gridColumn: `${index + 2}`,
@@ -79,9 +79,9 @@ export function CalendarContent({
               <div 
                 key={date.toISOString()}
                 className={cn(
-                  "h-full w-full border-b border-r border-gray-700/50",
-                  "transition-colors hover:bg-gray-700/20 cursor-pointer p-2",
-                  isToday(date) && "bg-gray-700/20"
+                  "h-full w-full border-b border-r border-gray-200",
+                  "transition-colors hover:bg-gray-50 cursor-pointer p-2",
+                  isToday(date) && "bg-gray-50"
                 )}
                 onClick={() => onDateSelect?.(date)}
               />

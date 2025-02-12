@@ -17,9 +17,9 @@ export function WorkOrderCard({ workOrder, date, span, onClick }: WorkOrderCardP
   return (
     <div 
       className={cn(
-        "p-2 relative flex items-center border-b border-gray-700/50",
-        "hover:bg-gray-700/20 transition-colors cursor-pointer",
-        isToday(date) && "bg-gray-700/20"
+        "p-2 relative flex items-center border-b border-r border-gray-200",
+        "hover:bg-[#9b87f5]/90 transition-colors cursor-pointer",
+        isToday(date) && "bg-[#9b87f5]/90"
       )}
       onClick={onClick}
       style={{
@@ -29,11 +29,11 @@ export function WorkOrderCard({ workOrder, date, span, onClick }: WorkOrderCardP
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="bg-[#1F2937] p-2 rounded-lg border border-[#50D091]/20 w-full">
+            <div className="bg-[#9b87f5] p-2 rounded-lg border border-white/20 w-full">
               <div className="text-xs text-white truncate">
                 {workOrder.first_name} {workOrder.last_name}
               </div>
-              <div className="text-xs text-[#50D091] mt-1 flex items-center gap-1">
+              <div className="text-xs text-white/90 mt-1 flex items-center gap-1">
                 <User2 className="w-3 h-3" />
                 <span>{formatTime(workOrder.start_time)}</span>
               </div>
@@ -45,7 +45,7 @@ export function WorkOrderCard({ workOrder, date, span, onClick }: WorkOrderCardP
               <p className="text-sm text-gray-400">
                 {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
               </p>
-              <p className="text-sm text-[#50D091]">
+              <p className="text-sm text-[#9b87f5]">
                 {formatTime(workOrder.start_time)} - {formatTime(workOrder.end_time)}
               </p>
             </div>
