@@ -18,25 +18,26 @@ type InvoiceItemFormProps = {
 export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItemFormProps) {
   const { data: services = [] } = useServiceData()
 
-  const handleServiceSelect = (serviceName: string) => {
-    const selectedService = services?.find(service => service.name === serviceName)
+  const handleServiceSelect = (serviceId: string) => {
+    const selectedService = services?.find(service => service.id === serviceId)
     if (selectedService) {
-      onUpdate(index, "service_name", serviceName)
+      onUpdate(index, "service_name", selectedService.name)
       onUpdate(index, "description", selectedService.name)
       onUpdate(index, "unit_price", selectedService.price || 0)
     }
   }
 
-  const getServicePackages = (serviceName: string) => {
-    const service = services?.find(s => s.name === serviceName)
+  const getSelectedService = () => {
+    return services?.find(service => service.name === item.service_name)
+  }
+
+  const getServicePackages = () => {
+    const service = getSelectedService()
     return service?.service_packages?.filter(pkg => pkg.status === 'active') || []
   }
 
   const handlePackageSelect = (packageId: string) => {
-    const selectedService = services?.find(service => 
-      service.service_packages?.some(pkg => pkg.id === packageId)
-    )
-    
+    const selectedService = getSelectedService()
     if (selectedService) {
       const selectedPackage = selectedService.service_packages?.find(pkg => pkg.id === packageId)
       if (selectedPackage) {
@@ -63,7 +64,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
         <div>
           <Label>Service</Label>
           <Select
-            value={item.service_name}
+            value={getSelectedService()?.id}
             onValueChange={handleServiceSelect}
           >
             <SelectTrigger>
@@ -71,7 +72,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
             </SelectTrigger>
             <SelectContent>
               {services?.map((service) => (
-                <SelectItem key={service.id} value={service.name}>
+                <SelectItem key={service.id} value={service.id}>
                   {service.name}
                 </SelectItem>
               ))}
@@ -79,7 +80,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
           </Select>
         </div>
 
-        {item.service_name && getServicePackages(item.service_name).length > 0 && (
+        {getServicePackages().length > 0 && (
           <div>
             <Label>Package</Label>
             <Select onValueChange={handlePackageSelect}>
@@ -87,9 +88,9 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
                 <SelectValue placeholder="Select a package" />
               </SelectTrigger>
               <SelectContent>
-                {getServicePackages(item.service_name).map((pkg) => (
+                {getServicePackages().map((pkg) => (
                   <SelectItem key={pkg.id} value={pkg.id}>
-                    {pkg.name} - ${pkg.price || pkg.sale_price || 0}
+                    {pkg.name} {pkg.price || pkg.sale_price ? `- $${pkg.price || pkg.sale_price}` : ''}
                   </SelectItem>
                 ))}
               </SelectContent>
