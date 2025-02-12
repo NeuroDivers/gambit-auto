@@ -38,13 +38,13 @@
 
   .dark {
     --background: 0 0% 7%;
-    --foreground: 0 0% 100%;
+    --foreground: 0 0% 98%;
 
     --card: 0 0% 12%;
-    --card-foreground: 0 0% 100%;
+    --card-foreground: 0 0% 98%;
 
     --popover: 0 0% 14%;
-    --popover-foreground: 0 0% 100%;
+    --popover-foreground: 0 0% 98%;
 
     --primary: 262 83.3% 70%;
     --primary-foreground: 0 0% 100%;
@@ -56,7 +56,7 @@
     --muted-foreground: 0 0% 63.9%;
 
     --accent: 262 83.3% 70%;
-    --accent-foreground: 0 0% 100%;
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
@@ -76,8 +76,27 @@
     @apply bg-background text-foreground;
   }
 
-  /* Light mode input text color */
+  /* Ensure proper text color contrast for form elements */
   input, textarea, select {
+    @apply text-foreground bg-background border-input;
+  }
+
+  /* Ensure proper text color contrast for buttons and interactive elements */
+  button {
     @apply text-foreground;
   }
+
+  /* Additional contrast fixes for specific elements */
+  .text-default {
+    @apply text-foreground;
+  }
+  
+  .text-secondary {
+    @apply text-secondary-foreground;
+  }
+  
+  .text-muted {
+    @apply text-muted-foreground;
+  }
 }
+

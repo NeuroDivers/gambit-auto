@@ -63,7 +63,7 @@ export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
           <UserCard key={user.id} user={user} />
         ))}
         {filteredUsers?.length === 0 && (
-          <div className="text-center py-8 text-white/60">
+          <div className="text-center py-8 text-muted-foreground">
             No users found matching your filters.
           </div>
         )}
