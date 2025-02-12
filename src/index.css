@@ -107,4 +107,13 @@
   p {
     @apply text-foreground;
   }
+
+  /* Ensure white text on primary/purple backgrounds */
+  .bg-primary, 
+  .bg-[#9b87f5], 
+  .bg-[#7E69AB], 
+  .bg-[#6E59A5],
+  [class*="bg-primary"] {
+    @apply text-primary-foreground;
+  }
 }
