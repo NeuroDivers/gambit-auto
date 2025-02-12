@@ -40,15 +40,15 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle>Create Invoice</DialogTitle>
+      <DialogContent className="max-w-full h-screen flex flex-col animate-slide-in-right data-[state=closed]:animate-slide-out-right">
+        <DialogHeader className="px-6 pt-6">
+          <DialogTitle className="text-2xl">Create Invoice</DialogTitle>
           <DialogDescription>
             Create a new invoice from scratch or convert an existing work order.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="h-[calc(90vh-8rem)] pr-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <ScrollArea className="flex-1 px-6">
+          <form onSubmit={handleSubmit} className="space-y-6 pb-6">
             <InvoiceFormFields
               {...formData}
               {...setters}
