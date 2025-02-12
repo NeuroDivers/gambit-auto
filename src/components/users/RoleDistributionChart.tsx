@@ -43,11 +43,11 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
   const total = Object.values(roleStats).reduce((acc, curr) => acc + curr, 0);
 
   return (
-    <Card className="bg-card/50 backdrop-blur-sm border-white/[0.08] p-6">
+    <Card className="bg-card border-border/50 p-6">
       <div className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold text-white/[0.87]">Role Distribution</h3>
-          <p className="text-sm text-white/60">Total users: {total}</p>
+          <h3 className="text-lg font-semibold text-card-foreground">Role Distribution</h3>
+          <p className="text-sm text-muted-foreground">Total users: {total}</p>
         </div>
         
         <div className="h-[300px] w-full">
@@ -73,17 +73,17 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
               </Pie>
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: 'rgba(17, 17, 17, 0.95)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  backgroundColor: 'var(--background)',
+                  border: '1px solid var(--border)',
                   borderRadius: '8px',
                   padding: '8px 12px',
-                  color: 'rgba(255, 255, 255, 0.87)'
+                  color: 'var(--foreground)'
                 }}
                 itemStyle={{
-                  color: 'rgba(255, 255, 255, 0.87)'
+                  color: 'var(--foreground)'
                 }}
                 labelStyle={{
-                  color: 'rgba(255, 255, 255, 0.87)'
+                  color: 'var(--foreground)'
                 }}
                 formatter={(value: number, name: string) => [
                   `${value} user${value !== 1 ? 's' : ''}`,
@@ -101,9 +101,7 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
                   return '';
                 }}
                 wrapperStyle={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
+                  color: 'var(--foreground)'
                 }}
               />
             </PieChart>
@@ -113,4 +111,3 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
     </Card>
   );
 };
-

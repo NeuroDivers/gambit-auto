@@ -38,12 +38,12 @@ export const UserFilters = ({
           placeholder="Search by name or email..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="bg-[#242424] border-white/10"
+          className="bg-background text-foreground border-input"
         />
       </div>
       <div className="sm:w-[180px]">
         <Select value={roleFilter} onValueChange={onRoleFilterChange}>
-          <SelectTrigger id="role-filter" name="role-filter" className="w-full bg-[#242424] border-white/10">
+          <SelectTrigger id="role-filter" name="role-filter" className="w-full bg-background text-foreground border-input">
             <SelectValue placeholder="Filter by role" />
           </SelectTrigger>
           <SelectContent>
