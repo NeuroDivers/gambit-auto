@@ -40,16 +40,13 @@ export function VehicleInfoFields({
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="vehicleMake">
-            Vehicle Make <span className="text-red-500">*</span>
-          </Label>
+          <Label htmlFor="vehicleMake">Vehicle Make</Label>
           <div className="relative">
             <Input
               id="vehicleMake"
               value={vehicleMake}
               onChange={(e) => setVehicleMake(e.target.value)}
               placeholder="Enter vehicle make..."
-              required
               autoComplete="off"
               disabled={isLoadingVin}
             />
@@ -59,16 +56,13 @@ export function VehicleInfoFields({
           </div>
         </div>
         <div>
-          <Label htmlFor="vehicleModel">
-            Vehicle Model <span className="text-red-500">*</span>
-          </Label>
+          <Label htmlFor="vehicleModel">Vehicle Model</Label>
           <div className="relative">
             <Input
               id="vehicleModel"
               value={vehicleModel}
               onChange={(e) => setVehicleModel(e.target.value)}
               placeholder="Enter vehicle model..."
-              required
               autoComplete="off"
               disabled={isLoadingVin}
             />
@@ -80,9 +74,7 @@ export function VehicleInfoFields({
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="vehicleYear">
-            Vehicle Year <span className="text-red-500">*</span>
-          </Label>
+          <Label htmlFor="vehicleYear">Vehicle Year</Label>
           <div className="relative">
             <Input
               id="vehicleYear"
@@ -90,7 +82,6 @@ export function VehicleInfoFields({
               value={vehicleYear}
               onChange={(e) => setVehicleYear(parseInt(e.target.value))}
               placeholder="Enter vehicle year..."
-              required
               autoComplete="off"
               disabled={isLoadingVin}
             />
@@ -101,15 +92,14 @@ export function VehicleInfoFields({
         </div>
         <div>
           <Label htmlFor="vehicleVin">
-            Vehicle VIN <span className="text-red-500">*</span>
-            <span className="text-xs text-muted-foreground ml-2">(Auto-fills vehicle info)</span>
+            Vehicle VIN
+            <span className="text-xs text-muted-foreground ml-2">(Optional - Auto-fills vehicle info)</span>
           </Label>
           <Input
             id="vehicleVin"
             value={vehicleVin}
             onChange={(e) => setVehicleVin(e.target.value)}
-            placeholder="Enter vehicle VIN..."
-            required
+            placeholder="Enter vehicle VIN (optional)..."
             autoComplete="off"
           />
         </div>

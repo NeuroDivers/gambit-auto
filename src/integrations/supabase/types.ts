@@ -984,7 +984,7 @@ export type Database = {
           updated_at: string
           vehicle_make: string
           vehicle_model: string
-          vehicle_serial: string
+          vehicle_serial: string | null
           vehicle_year: number
         }
         Insert: {
@@ -1009,7 +1009,7 @@ export type Database = {
           updated_at?: string
           vehicle_make: string
           vehicle_model: string
-          vehicle_serial: string
+          vehicle_serial?: string | null
           vehicle_year: number
         }
         Update: {
@@ -1034,7 +1034,7 @@ export type Database = {
           updated_at?: string
           vehicle_make?: string
           vehicle_model?: string
-          vehicle_serial?: string
+          vehicle_serial?: string | null
           vehicle_year?: number
         }
         Relationships: [

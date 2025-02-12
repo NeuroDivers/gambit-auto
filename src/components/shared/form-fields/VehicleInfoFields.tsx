@@ -101,14 +101,14 @@ export function VehicleInfoFields({ form, isLoadingVin, vinAutoFillEnabled }: Ve
               <FormLabel htmlFor="vehicle_vin">
                 Vehicle VIN
                 {vinAutoFillEnabled && (
-                  <span className="text-xs text-muted-foreground ml-2">(Auto-fills vehicle info)</span>
+                  <span className="text-xs text-muted-foreground ml-2">(Optional - Auto-fills vehicle info)</span>
                 )}
               </FormLabel>
               <FormControl>
                 <Input 
                   id="vehicle_vin"
                   name="vehicle_vin"
-                  placeholder="Enter vehicle VIN"
+                  placeholder="Enter vehicle VIN (optional)"
                   autoComplete="off"
                   {...field}
                 />
