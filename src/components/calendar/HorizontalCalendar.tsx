@@ -1,6 +1,6 @@
 
 import { useRef, useState, useCallback, useEffect } from "react"
-import { format, addDays, startOfDay } from "date-fns"
+import { format, addDays, startOfDay, isWithinInterval, parseISO } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useDragScroll } from "./hooks/useDragScroll"
 import { toast } from "sonner"
@@ -9,6 +9,7 @@ import { WorkOrder } from "../work-orders/types"
 import { WorkOrderDetailsDialog } from "../work-orders/calendar/WorkOrderDetailsDialog"
 import { CalendarControls } from "./components/CalendarControls"
 import { CalendarGrid } from "./components/CalendarGrid"
+import { useBlockedDates } from "@/components/work-orders/calendar/hooks/useBlockedDates"
 
 type HorizontalCalendarProps = {
   onDateSelect?: (date: Date) => void
@@ -24,9 +25,19 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
   const [isLoading, setIsLoading] = useState(false)
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
   const { serviceBays } = useServiceBays()
+  const { blockedDates } = useBlockedDates()
   const DAYS_TO_LOAD = 14
   const CELL_WIDTH = 80 // Width of each day cell
   const BAY_COLUMN_WIDTH = 100 // Width of the bay column
+
+  const isDateBlocked = (date: Date) => {
+    return blockedDates?.some(blocked => 
+      isWithinInterval(startOfDay(date), {
+        start: parseISO(blocked.start_date),
+        end: parseISO(blocked.end_date)
+      })
+    )
+  }
 
   const {
     handleMouseDown,
@@ -143,13 +154,73 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
             minWidth: 'max-content'
           }}
         >
-          <CalendarGrid
-            days={days}
-            serviceBays={serviceBays}
-            workOrders={workOrders}
-            onDateSelect={onDateSelect}
-            onWorkOrderSelect={setSelectedWorkOrder}
-          />
+          <div className="grid" style={{ gridTemplateColumns: `100px repeat(${days.length}, 80px)` }}>
+            <div className="p-4 text-gray-400 font-medium sticky left-0 bg-[#222226] z-10 border-r border-gray-700/50">Bay</div>
+            {days.map((date) => {
+              const blocked = isDateBlocked(date)
+              return (
+                <div 
+                  key={date.toISOString()}
+                  className={cn(
+                    "p-4 text-gray-400 font-medium text-center border-b border-r border-gray-700/50",
+                    blocked && "bg-red-900/20 cursor-not-allowed"
+                  )}
+                >
+                  <div>{format(date, 'EEE')}</div>
+                  <div>{format(date, 'd')}</div>
+                </div>
+              )
+            })}
+          </div>
+
+          {serviceBays?.map((bay) => (
+            <div 
+              key={bay.id}
+              className="grid"
+              style={{ gridTemplateColumns: `100px repeat(${days.length}, 80px)` }}
+            >
+              <div className="p-4 text-gray-300 sticky left-0 bg-[#222226] z-10 border-b border-r border-gray-700/50">
+                {bay.name}
+              </div>
+              {days.map((date, index) => {
+                const workOrder = findWorkOrderForDate(date, bay.id, workOrders);
+                const blocked = isDateBlocked(date)
+                
+                // Skip rendering empty cells if we're in the middle of a work order span
+                if (workOrder && !isWorkOrderStart(date, workOrder)) {
+                  return null;
+                }
+                
+                if (workOrder && isWorkOrderStart(date, workOrder)) {
+                  const span = getWorkOrderSpan(workOrder, index, days.length);
+                  
+                  return (
+                    <WorkOrderCard
+                      key={date.toISOString()}
+                      workOrder={workOrder}
+                      date={date}
+                      span={span}
+                      onClick={() => onWorkOrderSelect(workOrder)}
+                    />
+                  );
+                }
+
+                return (
+                  <div 
+                    key={date.toISOString()}
+                    className={cn(
+                      "p-2 relative flex items-center justify-center border-b border-r border-gray-700/50",
+                      "transition-colors",
+                      !blocked && "hover:bg-gray-700/20 cursor-pointer",
+                      blocked && "bg-red-900/20 cursor-not-allowed",
+                      isToday(date) && "bg-gray-700/20"
+                    )}
+                    onClick={() => !blocked && onDateSelect?.(date)}
+                  />
+                );
+              })}
+            </div>
+          ))}
         </div>
       </div>
 
