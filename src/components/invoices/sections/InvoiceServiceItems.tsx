@@ -2,7 +2,10 @@
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { InvoiceItem } from "../types"
-import { ServiceItemForm } from "./service-items/ServiceItemForm"
+import { ServiceItemForm } from "../form-sections/invoice-items/ServiceItemForm"
+import { useServiceData } from "@/components/shared/form-fields/service-selection/useServiceData"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Card, CardContent } from "@/components/ui/card"
 
 type InvoiceServiceItemsProps = {
   items: InvoiceItem[]
@@ -10,6 +13,8 @@ type InvoiceServiceItemsProps = {
 }
 
 export function InvoiceServiceItems({ items, setItems }: InvoiceServiceItemsProps) {
+  const { data: services = [] } = useServiceData()
+
   const handleAddItem = () => {
     if (setItems) {
       setItems([
@@ -41,58 +46,43 @@ export function InvoiceServiceItems({ items, setItems }: InvoiceServiceItemsProp
     }
   }
 
-  if (!items || items.length === 0) {
-    return (
-      <div className="pt-4">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-semibold text-white/90">Services</h2>
-          {setItems && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAddItem}
-              className="flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Add Service
-            </Button>
-          )}
-        </div>
-        <p className="text-[#8E9196]">No services added</p>
-      </div>
-    )
-  }
-
   return (
-    <div className="pt-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="font-semibold text-white/90">Services</h2>
-        {setItems && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleAddItem}
-            className="flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Add Service
-          </Button>
-        )}
-      </div>
-      <div className="space-y-4">
-        {items.map((item, index) => (
-          <ServiceItemForm
-            key={index}
-            item={item}
-            index={index}
-            onUpdate={handleUpdateItem}
-            onRemove={handleRemoveItem}
-            readOnly={!setItems}
-          />
-        ))}
-      </div>
-    </div>
+    <ScrollArea className="h-[calc(100vh-20rem)]">
+      <Card className="border-border/5 bg-[#1A1F2C]/80">
+        <CardContent className="p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-foreground">Services</h2>
+            {setItems && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddItem}
+                className="flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add Service
+              </Button>
+            )}
+          </div>
+          
+          <div className="space-y-4">
+            {items.map((item, index) => (
+              <ServiceItemForm
+                key={index}
+                item={item}
+                index={index}
+                onUpdate={handleUpdateItem}
+                onRemove={() => handleRemoveItem(index)}
+                readOnly={!setItems}
+              />
+            ))}
+            {items.length === 0 && (
+              <p className="text-muted-foreground">No services added</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </ScrollArea>
   )
 }
