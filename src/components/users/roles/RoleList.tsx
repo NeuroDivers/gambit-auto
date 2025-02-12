@@ -103,11 +103,11 @@ export const RoleList = () => {
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <div>
-            <h3 className="text-lg font-semibold text-white/[0.87]">System Roles</h3>
-            <p className="text-sm text-white/60">Manage application roles and their descriptions</p>
+            <h3 className="text-lg font-semibold text-foreground">System Roles</h3>
+            <p className="text-sm text-muted-foreground">Manage application roles and their descriptions</p>
           </div>
         </div>
-        <Card className="p-4 text-white/60">
+        <Card className="p-4 text-muted-foreground">
           There was an error loading the roles. Please try again later.
         </Card>
       </div>
@@ -118,8 +118,8 @@ export const RoleList = () => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-semibold text-white/[0.87]">System Roles</h3>
-          <p className="text-sm text-white/60">Manage application roles and their descriptions</p>
+          <h3 className="text-lg font-semibold text-foreground">System Roles</h3>
+          <p className="text-sm text-muted-foreground">Manage application roles and their descriptions</p>
         </div>
         {isAdmin && (
           <Button onClick={() => {
@@ -137,10 +137,10 @@ export const RoleList = () => {
           <Card key={role.id} className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-medium text-white/[0.87]">{role.nicename}</h4>
-                <p className="text-sm text-white/60 mt-0.5">{role.name}</p>
+                <h4 className="font-medium text-card-foreground">{role.nicename}</h4>
+                <p className="text-sm text-muted-foreground mt-0.5">{role.name}</p>
                 {role.description && (
-                  <p className="text-sm text-white/60 mt-1">{role.description}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{role.description}</p>
                 )}
               </div>
               {isAdmin && (
@@ -181,7 +181,7 @@ export const RoleList = () => {
           </Card>
         ))}
         {roles?.length === 0 && (
-          <Card className="p-4 text-white/60">
+          <Card className="p-4 text-muted-foreground">
             No roles found. {isAdmin && 'Click "Create Role" to add one.'}
           </Card>
         )}
