@@ -53,7 +53,7 @@ export function CalendarControls({
           variant="ghost" 
           size="sm"
           onClick={onScrollToToday}
-          className="text-sm flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white"
+          className="text-sm flex items-center gap-2 bg-[#9b87f5] hover:bg-[#9b87f5]/90 text-white"
         >
           <CalendarIcon className="w-4 h-4" />
           Today
