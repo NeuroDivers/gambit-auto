@@ -10,8 +10,8 @@ export default function Quotes() {
   return (
     <>
       <Toaster />
-      {/* Single portal container for all quote-related dialogs and selects */}
-      <div id="radix-portal-container" className="fixed top-0 left-0 z-50" />
+      {/* Portal container for select menus and dialogs */}
+      <div id="radix-portal-container" className="fixed top-0 left-0 z-[100]" />
       <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
         <div className="container mx-auto py-12">
           <div className="px-6">
