@@ -29,11 +29,12 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
     console.log('Service selected:', serviceId)
     const selectedService = services?.find(service => service.id === serviceId)
     if (selectedService) {
+      // Update all related fields at once to ensure consistency
       onUpdate(index, "service_id", serviceId)
-      onUpdate(index, "package_id", null) // Reset package when service changes
       onUpdate(index, "service_name", selectedService.name)
       onUpdate(index, "description", selectedService.description || '')
       onUpdate(index, "unit_price", selectedService.price || 0)
+      onUpdate(index, "package_id", null) // Reset package when service changes
     }
   }
 
@@ -41,6 +42,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
     console.log('Package selected:', packageId)
     const selectedPackage = availablePackages.find(pkg => pkg.id === packageId)
     if (selectedPackage) {
+      // Update all related fields at once to ensure consistency
       onUpdate(index, "package_id", packageId)
       onUpdate(index, "service_name", selectedPackage.name)
       onUpdate(index, "description", selectedPackage.description || '')

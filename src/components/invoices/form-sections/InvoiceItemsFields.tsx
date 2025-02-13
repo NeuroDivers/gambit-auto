@@ -28,11 +28,13 @@ export function InvoiceItemsFields({ items, setItems }: InvoiceItemsFieldsProps)
   }
 
   const updateItem = (index: number, field: keyof InvoiceItem, value: string | number | null) => {
+    console.log('Updating item:', { index, field, value })
     const newItems = [...items]
     newItems[index] = {
       ...newItems[index],
       [field]: value,
     }
+    console.log('Updated items:', newItems)
     setItems(newItems)
   }
 
