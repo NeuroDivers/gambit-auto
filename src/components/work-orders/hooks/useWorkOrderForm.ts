@@ -76,7 +76,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
       if (!workOrder?.id) return
 
       try {
-        const { data: services, error } = await supabase
+        const { data: servicesData, error } = await supabase
           .from('work_order_services')
           .select(`
             id,
@@ -95,14 +95,25 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
           return
         }
 
-        if (services) {
-          const formattedServices = (services as WorkOrderService[]).map(service => ({
+        if (servicesData) {
+          // First, validate and transform the data
+          const validServices = servicesData.filter(service => 
+            service && 
+            service.service && 
+            typeof service.service === 'object' && 
+            !Array.isArray(service.service) &&
+            'id' in service.service &&
+            'name' in service.service
+          );
+
+          const formattedServices = validServices.map(service => ({
             service_id: service.service_id,
             service_name: service.service.name,
             quantity: service.quantity,
             unit_price: service.unit_price
-          }))
-          form.setValue('service_items', formattedServices)
+          }));
+
+          form.setValue('service_items', formattedServices);
         }
       } catch (error) {
         console.error('Error in fetchWorkOrderServices:', error)
