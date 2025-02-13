@@ -9,6 +9,7 @@ export type WorkOrderFormProps = {
   workOrder?: WorkOrder
   onSuccess?: () => void
   defaultStartTime?: Date
+  onSubmitting?: (isSubmitting: boolean) => void
 }
 
 export type ServiceItemType = {
