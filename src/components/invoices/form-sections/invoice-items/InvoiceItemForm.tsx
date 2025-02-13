@@ -58,12 +58,12 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
         <div>
           <Label>Service</Label>
           <Select
-            value={item.service_id || ''}
+            value={item.service_id}
             onValueChange={handleServiceSelect}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select a service">
-                {selectedService?.name || "Select a service"}
+              <SelectValue>
+                {item.service_name || "Select a service"}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
