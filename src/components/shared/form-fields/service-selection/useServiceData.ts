@@ -19,7 +19,7 @@ export function useServiceData() {
           sort_order,
           requires_main_service,
           can_be_standalone,
-          sub_services:service_types!service_types_parent_service_id_fkey(
+          sub_services:service_types!parent_service_id(
             id,
             name,
             description,
