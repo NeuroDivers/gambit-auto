@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 
 interface ServiceItemProps {
   index: number;
@@ -16,94 +16,53 @@ interface ServiceItemProps {
 }
 
 export function ServiceItem({ index, services, onRemove, field, form }: ServiceItemProps) {
-  const mounted = useRef(true);
-  const [isOpen, setIsOpen] = useState(false);
-  const [packageOpen, setPackageOpen] = useState(false);
-  
   const selectedService = services.find(service => service.id === field.value?.service_id);
   const availablePackages = selectedService?.service_packages?.filter((pkg: any) => pkg.status === 'active') || [];
 
-  const handleServiceSelect = (serviceId: string) => {
-    if (!mounted.current || !serviceId) return;
+  const updateFormField = (updates: any) => {
+    const currentItems = form.getValues("service_items") || [];
+    const updatedItems = [...currentItems];
+    updatedItems[index] = {
+      ...updatedItems[index],
+      ...updates
+    };
+    form.setValue("service_items", updatedItems, { shouldValidate: true });
+  };
 
+  const handleServiceSelect = (serviceId: string) => {
+    if (!serviceId) return;
+    
     const selectedService = services.find(service => service.id === serviceId);
     if (selectedService) {
-      const currentItems = form.getValues("service_items") || [];
-      const updatedItems = [...currentItems];
-      updatedItems[index] = {
-        ...updatedItems[index],
+      updateFormField({
         service_id: serviceId,
         service_name: selectedService.name,
         unit_price: selectedService.price || 0,
         package_id: null,
         package_name: null,
-      };
-      
-      // Close dropdown before updating state
-      setIsOpen(false);
-      setTimeout(() => {
-        if (mounted.current) {
-          form.setValue("service_items", updatedItems, { shouldValidate: true });
-        }
-      }, 0);
+      });
     }
   };
 
   const handlePackageSelect = (packageId: string) => {
-    if (!mounted.current) return;
-
     const selectedPackage = availablePackages.find(pkg => pkg.id === packageId);
     if (selectedPackage) {
-      const currentItems = form.getValues("service_items") || [];
-      const updatedItems = [...currentItems];
-      updatedItems[index] = {
-        ...updatedItems[index],
+      updateFormField({
         package_id: packageId,
         package_name: selectedPackage.name,
         service_name: selectedPackage.name,
         unit_price: selectedPackage.price || selectedPackage.sale_price || 0,
-      };
-      
-      // Close dropdown before updating state
-      setPackageOpen(false);
-      setTimeout(() => {
-        if (mounted.current) {
-          form.setValue("service_items", updatedItems, { shouldValidate: true });
-        }
-      }, 0);
+      });
     }
   };
 
   const handleQuantityChange = (value: number) => {
-    if (!mounted.current) return;
-    const currentItems = form.getValues("service_items") || [];
-    const updatedItems = [...currentItems];
-    updatedItems[index] = {
-      ...updatedItems[index],
-      quantity: value || 0,
-    };
-    form.setValue("service_items", updatedItems, { shouldValidate: true });
+    updateFormField({ quantity: value || 0 });
   };
 
   const handlePriceChange = (value: number) => {
-    if (!mounted.current) return;
-    const currentItems = form.getValues("service_items") || [];
-    const updatedItems = [...currentItems];
-    updatedItems[index] = {
-      ...updatedItems[index],
-      unit_price: value || 0,
-    };
-    form.setValue("service_items", updatedItems, { shouldValidate: true });
+    updateFormField({ unit_price: value || 0 });
   };
-
-  React.useEffect(() => {
-    return () => {
-      mounted.current = false;
-      // Ensure dropdowns are closed on unmount
-      setIsOpen(false);
-      setPackageOpen(false);
-    };
-  }, []);
 
   return (
     <div className="relative space-y-4 p-4 border rounded-lg bg-card">
@@ -111,11 +70,7 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
         type="button"
         variant="ghost"
         size="icon"
-        onClick={() => {
-          setIsOpen(false);
-          setPackageOpen(false);
-          onRemove(index);
-        }}
+        onClick={() => onRemove(index)}
         className="absolute right-2 top-2"
       >
         <X className="h-4 w-4" />
@@ -124,14 +79,14 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <FormLabel>Service</FormLabel>
-          <Select 
-            value={field.value?.service_id || undefined}
+          <Select
+            defaultValue={field.value?.service_id}
             onValueChange={handleServiceSelect}
-            open={isOpen}
-            onOpenChange={setIsOpen}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select a service" />
+              <SelectValue placeholder="Select a service">
+                {selectedService?.name}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {services.map((service) => (
@@ -146,13 +101,13 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
             <div className="mt-2">
               <FormLabel>Package</FormLabel>
               <Select
-                value={field.value?.package_id || undefined}
+                defaultValue={field.value?.package_id}
                 onValueChange={handlePackageSelect}
-                open={packageOpen}
-                onOpenChange={setPackageOpen}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a package" />
+                  <SelectValue placeholder="Select a package">
+                    {field.value?.package_name}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {availablePackages.map((pkg: any) => (
