@@ -28,6 +28,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
   const handleServiceSelect = (serviceId: string) => {
     const selectedService = services?.find(service => service.id === serviceId)
     if (selectedService) {
+      onUpdate(index, "service_id", selectedService.id)
       onUpdate(index, "service_name", selectedService.name)
       onUpdate(index, "description", selectedService.name)
       onUpdate(index, "unit_price", selectedService.price || 0)
@@ -47,6 +48,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
         onUpdate(index, "service_name", selectedPackage.name)
         onUpdate(index, "description", selectedPackage.description || '')
         onUpdate(index, "unit_price", selectedPackage.price || selectedPackage.sale_price || 0)
+        onUpdate(index, "package_id", selectedPackage.id)
       }
     }
   }
