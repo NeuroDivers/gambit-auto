@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { PackageSelect } from "./PackageSelect"
+import { Label } from "@/components/ui/label"
+import { Card } from "@/components/ui/card"
 
 interface ServiceItemProps {
   index: number;
@@ -18,7 +19,9 @@ interface ServiceItemProps {
 export function ServiceItem({ index, services, onRemove, field, form }: ServiceItemProps) {
   const uniqueId = useId();
   const selectedService = services.find(service => service.id === field.value?.service_id);
-  const availablePackages = selectedService?.service_packages?.filter((pkg: any) => pkg.status === 'active') || [];
+  const availablePackages = selectedService?.service_packages?.filter((pkg: any) => 
+    pkg.status === 'active' && pkg.type === 'standalone'
+  ) || [];
 
   const handleServiceChange = (value: string) => {
     const service = services.find(s => s.id === value);
@@ -32,7 +35,8 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
       service_name: service.name,
       unit_price: service.price || 0,
       package_id: null,
-      package_name: null
+      package_name: null,
+      addons: []
     };
     form.setValue("service_items", updatedItems, { shouldValidate: true });
   };
@@ -43,28 +47,53 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
 
     const currentItems = form.getValues("service_items") || [];
     const updatedItems = [...currentItems];
+    
+    // Get available addons for this package
+    const addons = selectedService?.service_packages?.filter((addon: any) => 
+      addon.status === 'active' && 
+      addon.type === 'addon' && 
+      addon.parent_package_id === pkg.id
+    ) || [];
+
     updatedItems[index] = {
       ...updatedItems[index],
       package_id: value,
       package_name: pkg.name,
       service_name: pkg.name,
-      unit_price: pkg.price || pkg.sale_price || 0
+      unit_price: pkg.price || pkg.sale_price || 0,
+      addons: addons.map(addon => ({
+        id: addon.id,
+        name: addon.name,
+        price: addon.price || addon.sale_price || 0,
+        selected: false
+      }))
     };
     form.setValue("service_items", updatedItems, { shouldValidate: true });
   };
 
-  const handleInputChange = (key: string, value: number) => {
+  const handleAddonToggle = (addonId: string, checked: boolean) => {
     const currentItems = form.getValues("service_items") || [];
     const updatedItems = [...currentItems];
-    updatedItems[index] = {
-      ...updatedItems[index],
-      [key]: value
-    };
+    const itemAddons = updatedItems[index].addons || [];
+    
+    const addonIndex = itemAddons.findIndex(addon => addon.id === addonId);
+    if (addonIndex !== -1) {
+      itemAddons[addonIndex].selected = checked;
+      
+      // Recalculate total price including selected addons
+      const basePrice = updatedItems[index].unit_price;
+      const addonsPrices = itemAddons
+        .filter(addon => addon.selected)
+        .reduce((sum, addon) => sum + (addon.price || 0), 0);
+      
+      updatedItems[index].unit_price = basePrice + addonsPrices;
+    }
+    
     form.setValue("service_items", updatedItems, { shouldValidate: true });
   };
 
   return (
-    <div className="relative space-y-4 p-4 border rounded-lg bg-card">
+    <Card className="relative space-y-4 p-4">
       <Button
         type="button"
         variant="ghost"
@@ -75,59 +104,87 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
         <X className="h-4 w-4" />
       </Button>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid gap-4">
         <div className="space-y-2">
-          <FormItem>
-            <FormLabel>Service</FormLabel>
-            <Select 
-              key={`service-${uniqueId}`}
-              value={field.value?.service_id || ''} 
-              onValueChange={handleServiceChange}
+          <Label>Service</Label>
+          <Select 
+            value={field.value?.service_id || ''} 
+            onValueChange={handleServiceChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select a service" />
+            </SelectTrigger>
+            <SelectContent>
+              {services.map((service) => (
+                <SelectItem key={service.id} value={service.id}>
+                  {service.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {availablePackages.length > 0 && (
+          <div className="space-y-2">
+            <Label>Package</Label>
+            <Select
+              value={field.value?.package_id || ''}
+              onValueChange={handlePackageChange}
             >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a service">
-                    {selectedService?.name || "Select a service"}
-                  </SelectValue>
-                </SelectTrigger>
-              </FormControl>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a package" />
+              </SelectTrigger>
               <SelectContent>
-                {services.map((service) => (
-                  <SelectItem key={service.id} value={service.id}>
-                    {service.name}
+                {availablePackages.map((pkg) => (
+                  <SelectItem key={pkg.id} value={pkg.id}>
+                    {pkg.name} - ${pkg.price || pkg.sale_price || 0}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </FormItem>
+          </div>
+        )}
 
-          {availablePackages.length > 0 && (
-            <div key={`package-container-${uniqueId}-${selectedService?.id}`}>
-              <PackageSelect
-                packages={availablePackages}
-                value={field.value?.package_id || ''}
-                packageName={field.value?.package_name}
-                onValueChange={handlePackageChange}
-              />
+        {field.value?.addons?.length > 0 && (
+          <div className="space-y-2">
+            <Label>Add-ons</Label>
+            <div className="space-y-2">
+              {field.value.addons.map((addon: any) => (
+                <div key={addon.id} className="flex items-center justify-between p-2 rounded-lg border">
+                  <span>{addon.name} - ${addon.price}</span>
+                  <input
+                    type="checkbox"
+                    checked={addon.selected}
+                    onChange={(e) => handleAddonToggle(addon.id, e.target.checked)}
+                    className="ml-2"
+                  />
+                </div>
+              ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-4">
           <FormItem>
             <FormLabel>Quantity</FormLabel>
             <FormControl>
               <Input
                 type="number"
                 min={1}
-                value={field.value?.quantity || 0}
-                onChange={(e) => handleInputChange('quantity', parseInt(e.target.value) || 0)}
+                value={field.value?.quantity || 1}
+                onChange={(e) => {
+                  const currentItems = form.getValues("service_items") || [];
+                  const updatedItems = [...currentItems];
+                  updatedItems[index] = {
+                    ...updatedItems[index],
+                    quantity: parseInt(e.target.value) || 1
+                  };
+                  form.setValue("service_items", updatedItems, { shouldValidate: true });
+                }}
               />
             </FormControl>
           </FormItem>
-        </div>
 
-        <div className="space-y-2">
           <FormItem>
             <FormLabel>Unit Price</FormLabel>
             <FormControl>
@@ -136,12 +193,20 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
                 min={0}
                 step="0.01"
                 value={field.value?.unit_price || 0}
-                onChange={(e) => handleInputChange('unit_price', parseFloat(e.target.value) || 0)}
+                onChange={(e) => {
+                  const currentItems = form.getValues("service_items") || [];
+                  const updatedItems = [...currentItems];
+                  updatedItems[index] = {
+                    ...updatedItems[index],
+                    unit_price: parseFloat(e.target.value) || 0
+                  };
+                  form.setValue("service_items", updatedItems, { shouldValidate: true });
+                }}
               />
             </FormControl>
           </FormItem>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

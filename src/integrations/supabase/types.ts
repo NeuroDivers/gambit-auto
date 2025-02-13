@@ -801,10 +801,13 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          parent_package_id: string | null
           price: number | null
+          requires_parent_service: boolean | null
           sale_price: number | null
           service_id: string
           status: Database["public"]["Enums"]["service_status"] | null
+          type: Database["public"]["Enums"]["package_type"] | null
           updated_at: string
         }
         Insert: {
@@ -812,10 +815,13 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          parent_package_id?: string | null
           price?: number | null
+          requires_parent_service?: boolean | null
           sale_price?: number | null
           service_id: string
           status?: Database["public"]["Enums"]["service_status"] | null
+          type?: Database["public"]["Enums"]["package_type"] | null
           updated_at?: string
         }
         Update: {
@@ -823,13 +829,23 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          parent_package_id?: string | null
           price?: number | null
+          requires_parent_service?: boolean | null
           sale_price?: number | null
           service_id?: string
           status?: Database["public"]["Enums"]["service_status"] | null
+          type?: Database["public"]["Enums"]["package_type"] | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "service_packages_parent_package_id_fkey"
+            columns: ["parent_package_id"]
+            isOneToOne: false
+            referencedRelation: "service_packages"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "service_packages_service_id_fkey"
             columns: ["service_id"]
@@ -1173,6 +1189,7 @@ export type Database = {
       auto_detail_type: "interior" | "exterior" | "both"
       bay_status: "available" | "in_use" | "maintenance"
       contact_preference: "phone" | "email"
+      package_type: "standalone" | "addon"
       permission_type: "page_access" | "feature_access"
       ppf_package_type:
         | "partial_front"
