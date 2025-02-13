@@ -1,11 +1,10 @@
 
-import React, { useRef } from 'react';
+import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Portal } from "@radix-ui/react-portal"
 
 interface ServiceItemProps {
   index: number;
@@ -16,8 +15,6 @@ interface ServiceItemProps {
 }
 
 export function ServiceItem({ index, services, onRemove, field, form }: ServiceItemProps) {
-  const servicePortalRef = useRef<HTMLDivElement>(null);
-  const packagePortalRef = useRef<HTMLDivElement>(null);
   const selectedService = services.find(service => service.id === field.value?.service_id);
   const availablePackages = selectedService?.service_packages?.filter((pkg: any) => pkg.status === 'active') || [];
 
@@ -66,8 +63,6 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
 
   return (
     <div className="relative space-y-4 p-4 border rounded-lg bg-card">
-      <div ref={servicePortalRef} />
-      <div ref={packagePortalRef} />
       <Button
         type="button"
         variant="ghost"
@@ -93,15 +88,13 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
                   </SelectValue>
                 </SelectTrigger>
               </FormControl>
-              <Portal container={servicePortalRef.current}>
-                <SelectContent>
-                  {services.map((service) => (
-                    <SelectItem key={service.id} value={service.id}>
-                      {service.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Portal>
+              <SelectContent>
+                {services.map((service) => (
+                  <SelectItem key={service.id} value={service.id}>
+                    {service.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </FormItem>
 
@@ -119,15 +112,13 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
                     </SelectValue>
                   </SelectTrigger>
                 </FormControl>
-                <Portal container={packagePortalRef.current}>
-                  <SelectContent>
-                    {availablePackages.map((pkg: any) => (
-                      <SelectItem key={pkg.id} value={pkg.id}>
-                        {pkg.name} {pkg.price ? `- $${pkg.price}` : pkg.sale_price ? `- $${pkg.sale_price}` : ''}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Portal>
+                <SelectContent>
+                  {availablePackages.map((pkg: any) => (
+                    <SelectItem key={pkg.id} value={pkg.id}>
+                      {pkg.name} {pkg.price ? `- $${pkg.price}` : pkg.sale_price ? `- $${pkg.sale_price}` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </FormItem>
           )}
