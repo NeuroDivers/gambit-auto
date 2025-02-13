@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { useSubServices } from "@/components/shared/form-fields/service-selection/useServiceData";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 interface ServiceItemProps {
   index: number;
@@ -102,21 +103,27 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
       <div className="grid gap-4">
         <div className="space-y-2">
           <Label>Service</Label>
-          <Select 
-            value={field.value?.service_id || ''} 
-            onValueChange={handleServiceChange}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a service" />
-            </SelectTrigger>
-            <SelectContent>
-              {services.map((service) => (
-                <SelectItem key={service.id} value={service.id}>
-                  {service.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-full justify-start">
+                {field.value?.service_name || "Select a service"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[200px] p-0">
+              <div className="space-y-2">
+                {services.map((service) => (
+                  <Button
+                    key={service.id}
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={() => handleServiceChange(service.id)}
+                  >
+                    {service.name}
+                  </Button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {availablePackages.length > 0 && (

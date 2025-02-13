@@ -65,8 +65,11 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
       const { data: services, error } = await supabase
         .from('work_order_services')
         .select(`
-          *,
-          service:service_types(
+          id,
+          service_id,
+          quantity,
+          unit_price,
+          service:service_types!work_order_services_service_id_fkey (
             id,
             name
           )
@@ -81,7 +84,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
       if (services) {
         const formattedServices = services.map(service => ({
           service_id: service.service_id,
-          service_name: service.service.name,
+          service_name: service.service?.name || '',
           quantity: service.quantity,
           unit_price: service.unit_price
         }))
