@@ -18,8 +18,8 @@ export function useInvoiceData(invoiceId?: string) {
             description,
             quantity,
             unit_price,
-            service_types (*),
-            service_packages (*)
+            service_types!invoice_items_service_id_fkey (*),
+            service_packages!invoice_items_package_id_fkey (*)
           )
         `)
         .eq('id', invoiceId)
