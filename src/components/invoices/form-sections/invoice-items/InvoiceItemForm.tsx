@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,6 +18,9 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
   const { data: services = [] } = useServiceData()
 
   const getSelectedService = () => {
+    if (item.service_id) {
+      return services?.find(service => service.id === item.service_id)
+    }
     return services?.find(service => 
       service.name === item.service_name || 
       service.service_packages?.some(pkg => pkg.name === item.service_name)
@@ -29,6 +31,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
     const selectedService = services?.find(service => service.id === serviceId)
     if (selectedService) {
       onUpdate(index, "service_id", selectedService.id)
+      onUpdate(index, "package_id", null) // Reset package when service changes
       onUpdate(index, "service_name", selectedService.name)
       onUpdate(index, "description", selectedService.name)
       onUpdate(index, "unit_price", selectedService.price || 0)
@@ -45,6 +48,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
     if (selectedService) {
       const selectedPackage = selectedService.service_packages?.find(pkg => pkg.id === packageId)
       if (selectedPackage) {
+        // Keep the current service_id when selecting a package
         onUpdate(index, "service_name", selectedPackage.name)
         onUpdate(index, "description", selectedPackage.description || '')
         onUpdate(index, "unit_price", selectedPackage.price || selectedPackage.sale_price || 0)
@@ -69,7 +73,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
         <div>
           <Label>Service</Label>
           <Select
-            value={getSelectedService()?.id}
+            value={item.service_id}
             onValueChange={handleServiceSelect}
           >
             <SelectTrigger>
@@ -89,7 +93,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
           <div>
             <Label>Package</Label>
             <Select
-              value={getServicePackages().find(pkg => pkg.name === item.service_name)?.id}
+              value={item.package_id || ''}
               onValueChange={handlePackageSelect}
             >
               <SelectTrigger>
