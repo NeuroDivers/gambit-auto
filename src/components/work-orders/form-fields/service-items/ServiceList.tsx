@@ -29,8 +29,7 @@ export function ServiceList({ workOrderServices, onServicesChange, disabled }: S
     onServicesChange([
       ...workOrderServices,
       {
-        main_service_id: "",
-        sub_service_id: null,
+        service_id: "",
         service_name: "",
         quantity: 1,
         unit_price: 0

@@ -1,3 +1,24 @@
+export type ServiceType = {
+  id: string;
+  name: string;
+  price: number;
+  description?: string;
+}
+
+export type ServiceItemType = {
+  service_id: string;
+  service_name: string;
+  quantity: number;
+  unit_price: number;
+  package_id?: string | null;
+  package_name?: string | null;
+  addons?: Array<{
+    id: string;
+    name: string;
+    price: number;
+    selected: boolean;
+  }>;
+}
 
 import { WorkOrder as BaseWorkOrder } from "@/types"
 
@@ -10,15 +31,6 @@ export type WorkOrderFormProps = {
   onSuccess?: () => void
   defaultStartTime?: Date
   onSubmitting?: (isSubmitting: boolean) => void
-}
-
-export type ServiceItemType = {
-  service_id: string
-  service_name: string
-  quantity: number
-  unit_price: number
-  package_id?: string | null
-  package_name?: string | null
 }
 
 export type ServiceListProps = {
@@ -47,4 +59,3 @@ export type WorkOrderFormValues = {
   assigned_bay_id?: string | null
   assigned_profile_id?: string | null
 }
-

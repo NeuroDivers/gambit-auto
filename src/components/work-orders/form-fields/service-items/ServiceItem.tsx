@@ -20,8 +20,8 @@ interface ServiceItemProps {
 
 export function ServiceItem({ index, services, onRemove, field, form }: ServiceItemProps) {
   const uniqueId = useId();
-  const selectedService = services.find(service => service.id === field.value?.main_service_id);
-  const { data: subServices = [] } = useSubServices(field.value?.main_service_id);
+  const selectedService = services.find(service => service.id === field.value?.service_id);
+  const { data: subServices = [] } = useSubServices(field.value?.service_id);
   
   const availablePackages = selectedService?.service_packages?.filter((pkg: any) => 
     pkg.status === 'active' && pkg.type === 'standalone'
@@ -35,28 +35,12 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
     const updatedItems = [...currentItems];
     updatedItems[index] = {
       ...updatedItems[index],
-      main_service_id: value,
-      sub_service_id: null,
+      service_id: value,
       service_name: service.name,
       unit_price: service.price || 0,
       package_id: null,
       package_name: null,
       addons: []
-    };
-    form.setValue("service_items", updatedItems, { shouldValidate: true });
-  };
-
-  const handleSubServiceChange = (value: string) => {
-    const subService = subServices.find(s => s.id === value);
-    if (!subService) return;
-
-    const currentItems = form.getValues("service_items") || [];
-    const updatedItems = [...currentItems];
-    updatedItems[index] = {
-      ...updatedItems[index],
-      sub_service_id: value,
-      service_name: `${selectedService?.name} - ${subService.name}`,
-      unit_price: subService.price || selectedService?.price || 0
     };
     form.setValue("service_items", updatedItems, { shouldValidate: true });
   };
@@ -91,6 +75,21 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
     form.setValue("service_items", updatedItems, { shouldValidate: true });
   };
 
+  const handleAddonToggle = (addonId: string, checked: boolean) => {
+    const currentItems = form.getValues("service_items") || [];
+    const updatedItems = [...currentItems];
+    const currentAddons = updatedItems[index].addons || [];
+    
+    updatedItems[index] = {
+      ...updatedItems[index],
+      addons: currentAddons.map(addon => 
+        addon.id === addonId ? { ...addon, selected: checked } : addon
+      )
+    };
+    
+    form.setValue("service_items", updatedItems, { shouldValidate: true });
+  };
+
   const portalContainer = document.getElementById('service-items-portal');
 
   if (!portalContainer) return null;
@@ -109,11 +108,11 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
 
       <div className="grid gap-4">
         <div className="space-y-2">
-          <Label>Main Service</Label>
+          <Label>Service</Label>
           <Portal container={portalContainer}>
             <div className={`select-root-${uniqueId}`}>
               <Select 
-                value={field.value?.main_service_id || ''} 
+                value={field.value?.service_id || ''} 
                 onValueChange={handleServiceChange}
               >
                 <SelectTrigger>
@@ -131,32 +130,7 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
           </Portal>
         </div>
 
-        {subServices.length > 0 && (
-          <div className="space-y-2">
-            <Label>Sub Service</Label>
-            <Portal container={portalContainer}>
-              <div className={`select-root-${uniqueId}-sub`}>
-                <Select
-                  value={field.value?.sub_service_id || ''}
-                  onValueChange={handleSubServiceChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a sub-service" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subServices.map((service) => (
-                      <SelectItem key={service.id} value={service.id}>
-                        {service.name} {service.price ? `- $${service.price}` : ''}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </Portal>
-          </div>
-        )}
-
-        {availablePackages.length > 0 && !field.value?.sub_service_id && (
+        {availablePackages.length > 0 && (
           <div className="space-y-2">
             <Label>Package</Label>
             <Portal container={portalContainer}>
