@@ -41,21 +41,28 @@ export function useInvoiceMutation(invoiceId?: string) {
 
       // Then insert all items as new
       if (values.invoice_items?.length > 0) {
-        const itemsToInsert = values.invoice_items.map((item: InvoiceItem) => ({
-          invoice_id: invoiceId,
-          service_id: item.service_id,
-          package_id: item.package_id,
-          service_name: item.service_name,
-          description: item.description,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-        }))
+        const itemsToInsert = values.invoice_items
+          .filter(item => item.service_id && item.service_id !== "") // Only insert items with valid service_id
+          .map((item: InvoiceItem) => ({
+            invoice_id: invoiceId,
+            service_id: item.service_id,
+            package_id: item.package_id || null,
+            service_name: item.service_name || "",
+            description: item.description || "",
+            quantity: item.quantity || 1,
+            unit_price: item.unit_price || 0,
+          }))
 
-        const { error: itemsError } = await supabase
-          .from('invoice_items')
-          .insert(itemsToInsert)
+        if (itemsToInsert.length > 0) {
+          const { error: itemsError } = await supabase
+            .from('invoice_items')
+            .insert(itemsToInsert)
 
-        if (itemsError) throw itemsError
+          if (itemsError) {
+            console.error('Error inserting items:', itemsError)
+            throw itemsError
+          }
+        }
       }
     },
     onSuccess: () => {
