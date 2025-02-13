@@ -11,6 +11,7 @@ export default function Quotes() {
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
       <Toaster />
       <div className="container mx-auto py-12">
+        <div id="radix-portal-container" />
         <div className="px-6">
           <div className="mb-8">
             <PageBreadcrumbs />
@@ -35,6 +36,5 @@ export default function Quotes() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-
