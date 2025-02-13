@@ -7,6 +7,7 @@ import { Trash2 } from "lucide-react"
 import { InvoiceItem } from "../../types"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useServiceData } from "@/components/shared/form-fields/service-selection/useServiceData"
+import { useEffect } from "react"
 
 type InvoiceItemFormProps = {
   item: InvoiceItem
@@ -21,27 +22,26 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
   const selectedService = services?.find(service => service.id === item.service_id)
   const availablePackages = selectedService?.service_packages?.filter(pkg => pkg.status === 'active') || []
 
+  // Update the form when a service is selected
   const handleServiceSelect = (serviceId: string) => {
     const selectedService = services?.find(service => service.id === serviceId)
     if (selectedService) {
-      // First update the service ID to trigger any dependent UI updates
       onUpdate(index, "service_id", serviceId)
-      
-      // Then update the related fields
-      onUpdate(index, "package_id", null)
+      onUpdate(index, "package_id", null) // Reset package when service changes
       onUpdate(index, "service_name", selectedService.name)
-      onUpdate(index, "description", selectedService.name)
+      onUpdate(index, "description", selectedService.description || '')
       onUpdate(index, "unit_price", selectedService.price || 0)
     }
   }
 
+  // Update the form when a package is selected
   const handlePackageSelect = (packageId: string) => {
-    const pkg = availablePackages.find(p => p.id === packageId)
-    if (pkg) {
+    const selectedPackage = availablePackages.find(pkg => pkg.id === packageId)
+    if (selectedPackage) {
       onUpdate(index, "package_id", packageId)
-      onUpdate(index, "service_name", pkg.name)
-      onUpdate(index, "description", pkg.description || '')
-      onUpdate(index, "unit_price", pkg.price || pkg.sale_price || 0)
+      onUpdate(index, "service_name", selectedPackage.name)
+      onUpdate(index, "description", selectedPackage.description || '')
+      onUpdate(index, "unit_price", selectedPackage.price || selectedPackage.sale_price || 0)
     }
   }
 
@@ -61,8 +61,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
         <div>
           <Label>Service</Label>
           <Select
-            defaultValue=""
-            value={selectedService?.id}
+            value={item.service_id || undefined}
             onValueChange={handleServiceSelect}
           >
             <SelectTrigger className="w-full">
@@ -82,7 +81,6 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
           <div>
             <Label>Package</Label>
             <Select
-              defaultValue=""
               value={item.package_id || undefined}
               onValueChange={handlePackageSelect}
             >
@@ -92,7 +90,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
               <SelectContent>
                 {availablePackages.map((pkg) => (
                   <SelectItem key={pkg.id} value={pkg.id}>
-                    {pkg.name} {pkg.price || pkg.sale_price ? `- $${pkg.price || pkg.sale_price}` : ''}
+                    {pkg.name} {pkg.price ? `- $${pkg.price}` : pkg.sale_price ? `- $${pkg.sale_price}` : ''}
                   </SelectItem>
                 ))}
               </SelectContent>

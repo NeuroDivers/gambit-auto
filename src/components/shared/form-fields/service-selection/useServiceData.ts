@@ -4,14 +4,12 @@ import { supabase } from "@/integrations/supabase/client"
 
 export function useServiceData() {
   return useQuery({
-    queryKey: ["services-with-packages"],
+    queryKey: ["services"],
     queryFn: async () => {
-      const { data: services, error } = await supabase
+      const { data, error } = await supabase
         .from("service_types")
         .select(`
-          id, 
-          name, 
-          price,
+          *,
           service_packages (
             id,
             name,
@@ -21,10 +19,11 @@ export function useServiceData() {
             status
           )
         `)
-        .eq("status", "active")
-      
+        .eq('status', 'active')
+        .order('name')
+
       if (error) throw error
-      return services
+      return data
     }
   })
 }
