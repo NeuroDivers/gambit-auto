@@ -7,6 +7,19 @@ import { useWorkOrderSubmission } from "./useWorkOrderSubmission"
 import { useEffect } from "react"
 import { supabase } from "@/integrations/supabase/client"
 
+interface ServiceType {
+  id: string;
+  name: string;
+}
+
+interface WorkOrderService {
+  id: string;
+  service_id: string;
+  quantity: number;
+  unit_price: number;
+  service: ServiceType;
+}
+
 const formSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().min(1, "Last name is required"),
@@ -83,15 +96,12 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
         }
 
         if (services) {
-          const formattedServices = services.map(service => {
-            const serviceType = service.service as { id: string; name: string } | null
-            return {
-              service_id: service.service_id,
-              service_name: serviceType?.name || '',
-              quantity: service.quantity,
-              unit_price: service.unit_price
-            }
-          })
+          const formattedServices = (services as WorkOrderService[]).map(service => ({
+            service_id: service.service_id,
+            service_name: service.service.name,
+            quantity: service.quantity,
+            unit_price: service.unit_price
+          }))
           form.setValue('service_items', formattedServices)
         }
       } catch (error) {
