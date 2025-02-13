@@ -19,14 +19,14 @@ export function SidekickAssignmentField({ form, bayId }: SidekickAssignmentField
   if (!bayId) return null
 
   return (
-    <Card className="border-border/5 bg-[#1A1F2C]/80 mt-4">
+    <Card className="border-gray-200 bg-white/80 mt-4 shadow-sm">
       <CardContent className="p-4">
         <FormField
           control={form.control}
           name="assigned_profile_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-white/90">Assign User</FormLabel>
+              <FormLabel className="text-gray-700">Assign User</FormLabel>
               <FormControl>
                 <Select
                   value={field.value || "unassigned"}
@@ -35,18 +35,18 @@ export function SidekickAssignmentField({ form, bayId }: SidekickAssignmentField
                     field.onChange(value === "unassigned" ? null : value)
                   }}
                 >
-                  <SelectTrigger className="w-full bg-[#242424] border-white/10 text-white/[0.87]">
+                  <SelectTrigger className="w-full bg-white border-gray-200 text-gray-900">
                     <SelectValue placeholder="Select a user" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#242424] border-white/10">
-                    <SelectItem value="unassigned" className="text-white/[0.87]">
+                  <SelectContent className="bg-white border-gray-200">
+                    <SelectItem value="unassigned" className="text-gray-700">
                       None
                     </SelectItem>
                     {profiles.map((profile) => (
                       <SelectItem 
                         key={profile.id} 
                         value={profile.id}
-                        className="text-white/[0.87]"
+                        className="text-gray-700"
                       >
                         {`${profile.first_name || ''} ${profile.last_name || ''}`}
                       </SelectItem>
