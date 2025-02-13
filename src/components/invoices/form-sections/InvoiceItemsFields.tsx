@@ -15,11 +15,13 @@ export function InvoiceItemsFields({ items, setItems }: InvoiceItemsFieldsProps)
     setItems([
       ...items,
       {
+        service_id: "", // Add required service_id field
         service_name: "",
         description: "",
         quantity: 1,
         unit_price: 0,
-      },
+        package_id: null // Add optional package_id field
+      }
     ])
   }
 
