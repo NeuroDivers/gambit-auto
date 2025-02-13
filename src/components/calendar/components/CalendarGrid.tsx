@@ -24,11 +24,11 @@ export function CalendarGrid({
   return (
     <>
       <div className="grid" style={{ gridTemplateColumns: `100px repeat(${days.length}, 80px)` }}>
-        <div className="p-4 text-gray-400 font-medium sticky left-0 bg-[#222226] z-10 border-r border-gray-700/50">Bay</div>
+        <div className="p-4 text-gray-600 font-medium sticky left-0 bg-white z-10 border-r border-gray-200">Bay</div>
         {days.map((date) => (
           <div 
             key={date.toISOString()}
-            className="p-4 text-gray-400 font-medium text-center border-b border-r border-gray-700/50"
+            className="p-4 text-gray-600 font-medium text-center border-b border-r border-gray-200"
           >
             <div>{format(date, 'EEE')}</div>
             <div>{format(date, 'd')}</div>
@@ -42,7 +42,7 @@ export function CalendarGrid({
           className="grid"
           style={{ gridTemplateColumns: `100px repeat(${days.length}, 80px)` }}
         >
-          <div className="p-4 text-gray-300 sticky left-0 bg-[#222226] z-10 border-b border-r border-gray-700/50">
+          <div className="p-4 text-gray-600 sticky left-0 bg-white z-10 border-b border-r border-gray-200">
             {bay.name}
           </div>
           {days.map((date, index) => {
@@ -77,9 +77,9 @@ export function CalendarGrid({
               <div 
                 key={date.toISOString()}
                 className={cn(
-                  "p-2 relative flex items-center justify-center border-b border-r border-gray-700/50",
-                  "hover:bg-gray-700/20 transition-colors cursor-pointer",
-                  isToday(date) && "bg-gray-700/20"
+                  "p-2 relative flex items-center justify-center border-b border-r border-gray-200",
+                  "hover:bg-[#E5DEFF] transition-colors cursor-pointer",
+                  isToday(date) && "bg-[#E5DEFF]"
                 )}
                 onClick={() => onDateSelect?.(date)}
               />
