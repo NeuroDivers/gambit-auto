@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,27 +11,20 @@ import { useServiceData } from "@/components/shared/form-fields/service-selectio
 type InvoiceItemFormProps = {
   item: InvoiceItem
   index: number
-  onUpdate: (index: number, field: keyof InvoiceItem, value: string | number) => void
+  onUpdate: (index: number, field: keyof InvoiceItem, value: string | number | null) => void
   onRemove: (index: number) => void
 }
 
 export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItemFormProps) {
   const { data: services = [] } = useServiceData()
 
-  const getSelectedService = () => {
-    if (item.service_id) {
-      return services?.find(service => service.id === item.service_id)
-    }
-    return services?.find(service => 
-      service.name === item.service_name || 
-      service.service_packages?.some(pkg => pkg.name === item.service_name)
-    )
-  }
+  const selectedService = services?.find(service => service.id === item.service_id)
+  const availablePackages = selectedService?.service_packages?.filter(pkg => pkg.status === 'active') || []
 
   const handleServiceSelect = (serviceId: string) => {
     const selectedService = services?.find(service => service.id === serviceId)
     if (selectedService) {
-      onUpdate(index, "service_id", selectedService.id)
+      onUpdate(index, "service_id", serviceId)
       onUpdate(index, "package_id", null) // Reset package when service changes
       onUpdate(index, "service_name", selectedService.name)
       onUpdate(index, "description", selectedService.name)
@@ -38,22 +32,13 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
     }
   }
 
-  const getServicePackages = () => {
-    const selectedService = getSelectedService()
-    return selectedService?.service_packages?.filter(pkg => pkg.status === 'active') || []
-  }
-
   const handlePackageSelect = (packageId: string) => {
-    const selectedService = getSelectedService()
-    if (selectedService) {
-      const selectedPackage = selectedService.service_packages?.find(pkg => pkg.id === packageId)
-      if (selectedPackage) {
-        // Keep the current service_id when selecting a package
-        onUpdate(index, "service_name", selectedPackage.name)
-        onUpdate(index, "description", selectedPackage.description || '')
-        onUpdate(index, "unit_price", selectedPackage.price || selectedPackage.sale_price || 0)
-        onUpdate(index, "package_id", selectedPackage.id)
-      }
+    const pkg = availablePackages.find(p => p.id === packageId)
+    if (pkg) {
+      onUpdate(index, "package_id", packageId)
+      onUpdate(index, "service_name", pkg.name)
+      onUpdate(index, "description", pkg.description || '')
+      onUpdate(index, "unit_price", pkg.price || pkg.sale_price || 0)
     }
   }
 
@@ -73,7 +58,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
         <div>
           <Label>Service</Label>
           <Select
-            value={item.service_id}
+            value={item.service_id || ''}
             onValueChange={handleServiceSelect}
           >
             <SelectTrigger>
@@ -89,7 +74,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
           </Select>
         </div>
 
-        {getServicePackages().length > 0 && (
+        {availablePackages.length > 0 && (
           <div>
             <Label>Package</Label>
             <Select
@@ -100,7 +85,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
                 <SelectValue placeholder="Select a package" />
               </SelectTrigger>
               <SelectContent>
-                {getServicePackages().map((pkg) => (
+                {availablePackages.map((pkg) => (
                   <SelectItem key={pkg.id} value={pkg.id}>
                     {pkg.name} {pkg.price || pkg.sale_price ? `- $${pkg.price || pkg.sale_price}` : ''}
                   </SelectItem>
@@ -113,7 +98,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
         <div>
           <Label>Description</Label>
           <Textarea
-            value={item.description}
+            value={item.description || ''}
             onChange={(e) => onUpdate(index, "description", e.target.value)}
             placeholder="Enter description"
           />
@@ -126,7 +111,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
               type="number"
               min="1"
               value={item.quantity}
-              onChange={(e) => onUpdate(index, "quantity", parseInt(e.target.value))}
+              onChange={(e) => onUpdate(index, "quantity", parseInt(e.target.value) || 1)}
             />
           </div>
           <div>
@@ -136,7 +121,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
               min="0"
               step="0.01"
               value={item.unit_price}
-              onChange={(e) => onUpdate(index, "unit_price", parseFloat(e.target.value))}
+              onChange={(e) => onUpdate(index, "unit_price", parseFloat(e.target.value) || 0)}
             />
           </div>
         </div>

@@ -9,6 +9,8 @@ export function useInvoiceMutation(invoiceId?: string) {
 
   return useMutation({
     mutationFn: async (values: InvoiceFormValues) => {
+      if (!invoiceId) throw new Error("Invoice ID is required")
+
       // First update the invoice details
       const { error: invoiceError } = await supabase
         .from('invoices')
@@ -38,28 +40,32 @@ export function useInvoiceMutation(invoiceId?: string) {
       if (deleteError) throw deleteError
 
       // Then insert all items as new
-      if (values.invoice_items.length > 0) {
-        const { error: itemsError } = await supabase
-          .from('invoice_items')
-          .insert(
-            values.invoice_items.map((item: InvoiceItem) => ({
-              invoice_id: invoiceId,
-              service_id: item.service_id,
-              package_id: item.package_id,
-              quantity: item.quantity,
-              unit_price: item.unit_price,
-            }))
-          )
+      if (values.invoice_items?.length > 0) {
+        const itemsToInsert = values.invoice_items
+          .filter(item => item.service_id) // Only insert items with a valid service_id
+          .map((item: InvoiceItem) => ({
+            invoice_id: invoiceId,
+            service_id: item.service_id,
+            package_id: item.package_id || null,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+          }))
 
-        if (itemsError) throw itemsError
+        if (itemsToInsert.length > 0) {
+          const { error: itemsError } = await supabase
+            .from('invoice_items')
+            .insert(itemsToInsert)
+
+          if (itemsError) throw itemsError
+        }
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] })
       toast.success('Invoice updated successfully')
     },
-    onError: (error) => {
-      toast.error('Failed to update invoice')
+    onError: (error: any) => {
+      toast.error('Failed to update invoice: ' + error.message)
       console.error('Error updating invoice:', error)
     }
   })
