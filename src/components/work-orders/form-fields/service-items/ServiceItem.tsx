@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -15,8 +15,25 @@ interface ServiceItemProps {
 }
 
 export function ServiceItem({ index, services, onRemove, field, form }: ServiceItemProps) {
+  const [showPackages, setShowPackages] = useState(false);
   const selectedService = services.find(service => service.id === field.value?.service_id);
   const availablePackages = selectedService?.service_packages?.filter((pkg: any) => pkg.status === 'active') || [];
+
+  useEffect(() => {
+    // Reset package selection when service changes
+    if (field.value?.package_id && !availablePackages.find(pkg => pkg.id === field.value.package_id)) {
+      const currentItems = form.getValues("service_items") || [];
+      const updatedItems = [...currentItems];
+      updatedItems[index] = {
+        ...updatedItems[index],
+        package_id: null,
+        package_name: null
+      };
+      form.setValue("service_items", updatedItems, { shouldValidate: true });
+    }
+    
+    setShowPackages(availablePackages.length > 0);
+  }, [selectedService?.id]);
 
   const handleServiceChange = (value: string) => {
     const service = services.find(s => s.id === value);
@@ -98,7 +115,7 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
             </Select>
           </FormItem>
 
-          {availablePackages.length > 0 && (
+          {showPackages && (
             <FormItem>
               <FormLabel>Package</FormLabel>
               <Select
