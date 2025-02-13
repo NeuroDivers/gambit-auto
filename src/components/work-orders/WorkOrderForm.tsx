@@ -5,12 +5,17 @@ import { useWorkOrderForm } from "./hooks/useWorkOrderForm"
 import { FormSections } from "./form-sections/FormSections"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
+import { useEffect } from "react"
 
-export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime }: WorkOrderFormProps) {
+export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmitting }: WorkOrderFormProps) {
   const { form, onSubmit } = useWorkOrderForm(workOrder, () => {
     toast.success(workOrder ? "Work order updated successfully" : "Work order created successfully")
     onSuccess?.()
   }, defaultStartTime)
+
+  useEffect(() => {
+    onSubmitting?.(form.formState.isSubmitting)
+  }, [form.formState.isSubmitting, onSubmitting])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -19,6 +24,7 @@ export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime }: WorkOr
       await form.handleSubmit(onSubmit)(e)
     } catch (error) {
       console.error("Form submission error:", error)
+      toast.error("Failed to save work order")
     }
   }
 

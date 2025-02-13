@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { WorkOrder } from "./types"
 import { WorkOrderForm } from "./WorkOrderForm"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
 
 type EditWorkOrderDialogProps = {
   workOrder: WorkOrder
@@ -12,44 +12,45 @@ type EditWorkOrderDialogProps = {
 }
 
 export function EditWorkOrderDialog({ workOrder, open, onOpenChange }: EditWorkOrderDialogProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   const handleSuccess = useCallback(() => {
-    // Ensure we close the dialog after a short delay to allow state updates to complete
-    setTimeout(() => {
+    if (!isSubmitting) {
       onOpenChange(false)
-    }, 100)
-  }, [onOpenChange])
+    }
+  }, [onOpenChange, isSubmitting])
+
+  const handleSubmitting = useCallback((submitting: boolean) => {
+    setIsSubmitting(submitting)
+  }, [])
 
   return (
     <Dialog 
       open={open} 
-      onOpenChange={onOpenChange} 
+      onOpenChange={(newOpen) => {
+        if (!isSubmitting) {
+          onOpenChange(newOpen)
+        }
+      }}
       modal={true}
     >
       <DialogContent 
         className="max-w-3xl max-h-[90vh]"
-        onPointerDownOutside={(e) => {
-          e.preventDefault()
-        }}
-        onEscapeKeyDown={(e) => {
-          e.preventDefault()
-        }}
-        onInteractOutside={(e) => {
-          e.preventDefault()
-        }}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
       >
+        <DialogHeader>
+          <DialogTitle>Edit Work Order</DialogTitle>
+          <DialogDescription>
+            Make changes to the work order details below.
+          </DialogDescription>
+        </DialogHeader>
         <ScrollArea className="h-full max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Work Order</DialogTitle>
-            <DialogDescription>
-              Make changes to the work order details below.
-            </DialogDescription>
-          </DialogHeader>
-          {open && (  // Only render the form when dialog is open
-            <WorkOrderForm 
-              workOrder={workOrder} 
-              onSuccess={handleSuccess}
-            />
-          )}
+          <WorkOrderForm 
+            workOrder={workOrder} 
+            onSuccess={handleSuccess}
+            onSubmitting={handleSubmitting}
+          />
         </ScrollArea>
       </DialogContent>
     </Dialog>
