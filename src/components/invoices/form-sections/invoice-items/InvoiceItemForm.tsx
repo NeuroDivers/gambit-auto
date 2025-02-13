@@ -24,8 +24,11 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
   const handleServiceSelect = (serviceId: string) => {
     const selectedService = services?.find(service => service.id === serviceId)
     if (selectedService) {
+      // First update the service ID to trigger any dependent UI updates
       onUpdate(index, "service_id", serviceId)
-      onUpdate(index, "package_id", null) // Reset package when service changes
+      
+      // Then update the related fields
+      onUpdate(index, "package_id", null)
       onUpdate(index, "service_name", selectedService.name)
       onUpdate(index, "description", selectedService.name)
       onUpdate(index, "unit_price", selectedService.price || 0)
@@ -58,13 +61,12 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
         <div>
           <Label>Service</Label>
           <Select
-            value={item.service_id}
+            defaultValue=""
+            value={selectedService?.id}
             onValueChange={handleServiceSelect}
           >
-            <SelectTrigger>
-              <SelectValue>
-                {item.service_name || "Select a service"}
-              </SelectValue>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a service" />
             </SelectTrigger>
             <SelectContent>
               {services?.map((service) => (
@@ -80,10 +82,11 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
           <div>
             <Label>Package</Label>
             <Select
-              value={item.package_id || ''}
+              defaultValue=""
+              value={item.package_id || undefined}
               onValueChange={handlePackageSelect}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select a package" />
               </SelectTrigger>
               <SelectContent>
