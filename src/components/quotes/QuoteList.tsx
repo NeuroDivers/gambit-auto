@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { Quote } from "./types"
 import { CreateQuoteDialog } from "./CreateQuoteDialog"
@@ -43,7 +44,9 @@ export function QuoteList() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="relative space-y-4">
+      <div id="quote-portal-root" className="absolute top-0 left-0" />
+      
       <QuoteListHeader onCreateClick={() => setCreateDialogOpen(true)} />
 
       <div className="grid gap-4">
@@ -58,12 +61,14 @@ export function QuoteList() {
         ))}
       </div>
 
-      <CreateQuoteDialog 
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-      />
+      {createDialogOpen && (
+        <CreateQuoteDialog 
+          open={createDialogOpen}
+          onOpenChange={setCreateDialogOpen}
+        />
+      )}
 
-      {selectedQuote && (
+      {selectedQuote && editDialogOpen && (
         <EditQuoteDialog
           quote={selectedQuote}
           open={editDialogOpen}
@@ -71,17 +76,19 @@ export function QuoteList() {
         />
       )}
 
-      <DeleteQuoteDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={() => {
-          if (selectedQuote) {
-            deleteQuoteMutation.mutate(selectedQuote.id)
-            setDeleteDialogOpen(false)
-            setSelectedQuote(null)
-          }
-        }}
-      />
+      {deleteDialogOpen && (
+        <DeleteQuoteDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          onConfirm={() => {
+            if (selectedQuote) {
+              deleteQuoteMutation.mutate(selectedQuote.id)
+              setDeleteDialogOpen(false)
+              setSelectedQuote(null)
+            }
+          }}
+        />
+      )}
     </div>
   )
 }

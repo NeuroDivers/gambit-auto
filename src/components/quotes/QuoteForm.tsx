@@ -34,6 +34,8 @@ export function QuoteForm({ quote, onSuccess }: QuoteFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div id="quote-form-portal-root" className="absolute top-0 left-0" />
+        
         <Card>
           <CardHeader className="pb-4">
             <CardTitle>Customer Information</CardTitle>
