@@ -10,7 +10,7 @@ export function useServiceData() {
         .from("service_types")
         .select(`
           *,
-          service_packages (
+          service_packages!service_packages_service_id_fkey (
             id,
             name,
             description,

@@ -21,7 +21,12 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
   const selectedService = services?.find(service => service.id === item.service_id)
   const availablePackages = selectedService?.service_packages?.filter(pkg => pkg.status === 'active') || []
 
+  console.log('Selected Service:', selectedService)
+  console.log('Available Packages:', availablePackages)
+  console.log('Current Item:', item)
+
   const handleServiceSelect = (serviceId: string) => {
+    console.log('Service selected:', serviceId)
     const selectedService = services?.find(service => service.id === serviceId)
     if (selectedService) {
       onUpdate(index, "service_id", serviceId)
@@ -33,6 +38,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
   }
 
   const handlePackageSelect = (packageId: string) => {
+    console.log('Package selected:', packageId)
     const selectedPackage = availablePackages.find(pkg => pkg.id === packageId)
     if (selectedPackage) {
       onUpdate(index, "package_id", packageId)

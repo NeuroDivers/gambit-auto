@@ -41,25 +41,21 @@ export function useInvoiceMutation(invoiceId?: string) {
 
       // Then insert all items as new
       if (values.invoice_items?.length > 0) {
-        const itemsToInsert = values.invoice_items
-          .filter(item => item.service_id) // Only insert items with a valid service_id
-          .map((item: InvoiceItem) => ({
-            invoice_id: invoiceId,
-            service_id: item.service_id,
-            package_id: item.package_id || null,
-            service_name: item.service_name,
-            description: item.description,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-          }))
+        const itemsToInsert = values.invoice_items.map((item: InvoiceItem) => ({
+          invoice_id: invoiceId,
+          service_id: item.service_id,
+          package_id: item.package_id,
+          service_name: item.service_name,
+          description: item.description,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+        }))
 
-        if (itemsToInsert.length > 0) {
-          const { error: itemsError } = await supabase
-            .from('invoice_items')
-            .insert(itemsToInsert)
+        const { error: itemsError } = await supabase
+          .from('invoice_items')
+          .insert(itemsToInsert)
 
-          if (itemsError) throw itemsError
-        }
+        if (itemsError) throw itemsError
       }
     },
     onSuccess: () => {
@@ -67,8 +63,8 @@ export function useInvoiceMutation(invoiceId?: string) {
       toast.success('Invoice updated successfully')
     },
     onError: (error: any) => {
-      toast.error('Failed to update invoice: ' + error.message)
       console.error('Error updating invoice:', error)
+      toast.error('Failed to update invoice: ' + error.message)
     }
   })
 }
