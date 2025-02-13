@@ -9,7 +9,6 @@ import { CustomerInfoFields } from "../form-sections/CustomerInfoFields"
 import { VehicleInfoFields } from "../form-sections/VehicleInfoFields"
 import { InvoiceServiceItems } from "./InvoiceServiceItems"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { SeparatorHorizontal } from "lucide-react"
 
 type EditInvoiceFormProps = {
   form: UseFormReturn<InvoiceFormValues>

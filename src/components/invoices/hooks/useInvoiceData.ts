@@ -18,12 +18,12 @@ export function useInvoiceData(invoiceId?: string) {
             description,
             quantity,
             unit_price,
-            service:service_types (
+            service:service_types!invoice_items_service_id_fkey (
               id,
               name,
               description
             ),
-            package:service_packages (
+            package:service_packages!invoice_items_package_id_fkey (
               id,
               name,
               description
