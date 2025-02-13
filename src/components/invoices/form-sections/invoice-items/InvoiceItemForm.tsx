@@ -62,7 +62,9 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
             onValueChange={handleServiceSelect}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select a service" />
+              <SelectValue placeholder="Select a service">
+                {selectedService?.name || "Select a service"}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {services?.map((service) => (

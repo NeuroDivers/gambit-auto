@@ -2,7 +2,6 @@
 import { InvoiceItemForm } from "./invoice-items/InvoiceItemForm"
 import { InvoiceItemsHeader } from "./invoice-items/InvoiceItemsHeader"
 import { InvoiceItem } from "../types"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 type InvoiceItemsFieldsProps = {
   items: InvoiceItem[]
