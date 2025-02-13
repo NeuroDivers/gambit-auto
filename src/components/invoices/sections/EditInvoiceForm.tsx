@@ -8,6 +8,8 @@ import { InvoiceNotesField } from "../form-sections/InvoiceNotesField"
 import { CustomerInfoFields } from "../form-sections/CustomerInfoFields"
 import { VehicleInfoFields } from "../form-sections/VehicleInfoFields"
 import { InvoiceServiceItems } from "./InvoiceServiceItems"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { SeparatorHorizontal } from "lucide-react"
 
 type EditInvoiceFormProps = {
   form: UseFormReturn<InvoiceFormValues>
@@ -20,9 +22,20 @@ export function EditInvoiceForm({ form, onSubmit, isPending, invoiceId }: EditIn
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[calc(100vh-8rem)] overflow-y-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Invoice Status</CardTitle>
+          </CardHeader>
+          <CardContent>
             <InvoiceStatusField form={form} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Customer Information</CardTitle>
+          </CardHeader>
+          <CardContent>
             <CustomerInfoFields 
               customerFirstName={form.watch('customer_first_name')}
               setCustomerFirstName={(value) => form.setValue('customer_first_name', value)}
@@ -35,8 +48,14 @@ export function EditInvoiceForm({ form, onSubmit, isPending, invoiceId }: EditIn
               customerAddress={form.watch('customer_address')}
               setCustomerAddress={(value) => form.setValue('customer_address', value)}
             />
-          </div>
-          <div className="space-y-6">
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Vehicle Information</CardTitle>
+          </CardHeader>
+          <CardContent>
             <VehicleInfoFields 
               vehicleMake={form.watch('vehicle_make')}
               setVehicleMake={(value) => form.setValue('vehicle_make', value)}
@@ -47,12 +66,26 @@ export function EditInvoiceForm({ form, onSubmit, isPending, invoiceId }: EditIn
               vehicleVin={form.watch('vehicle_vin')}
               setVehicleVin={(value) => form.setValue('vehicle_vin', value)}
             />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
         
-        <InvoiceServiceItems form={form} />
+        <Card>
+          <CardHeader>
+            <CardTitle>Services</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <InvoiceServiceItems form={form} />
+          </CardContent>
+        </Card>
 
-        <InvoiceNotesField form={form} />
+        <Card>
+          <CardHeader>
+            <CardTitle>Notes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <InvoiceNotesField form={form} />
+          </CardContent>
+        </Card>
 
         <div className="flex justify-end gap-4 sticky bottom-0 bg-background py-4 border-t">
           <Button variant="outline" type="button" onClick={() => form.reset()}>
