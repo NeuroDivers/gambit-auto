@@ -96,24 +96,19 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
         }
 
         if (servicesData) {
-          // First, validate and transform the data
-          const validServices = servicesData.filter(service => 
-            service && 
-            service.service && 
-            typeof service.service === 'object' && 
-            !Array.isArray(service.service) &&
-            'id' in service.service &&
-            'name' in service.service
-          );
+          const formattedServices = servicesData
+            .filter(service => {
+              const serviceData = service.service as ServiceType
+              return serviceData && 'id' in serviceData && 'name' in serviceData
+            })
+            .map(service => ({
+              service_id: service.service_id,
+              service_name: (service.service as ServiceType).name,
+              quantity: service.quantity,
+              unit_price: service.unit_price
+            }))
 
-          const formattedServices = validServices.map(service => ({
-            service_id: service.service_id,
-            service_name: service.service.name,
-            quantity: service.quantity,
-            unit_price: service.unit_price
-          }));
-
-          form.setValue('service_items', formattedServices);
+          form.setValue('service_items', formattedServices)
         }
       } catch (error) {
         console.error('Error in fetchWorkOrderServices:', error)
