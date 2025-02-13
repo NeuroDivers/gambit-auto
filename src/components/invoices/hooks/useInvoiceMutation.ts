@@ -47,6 +47,8 @@ export function useInvoiceMutation(invoiceId?: string) {
             invoice_id: invoiceId,
             service_id: item.service_id,
             package_id: item.package_id || null,
+            service_name: item.service_name,
+            description: item.description,
             quantity: item.quantity,
             unit_price: item.unit_price,
           }))

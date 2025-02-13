@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 
@@ -99,6 +100,8 @@ export function useInvoiceFormSubmission({
           .insert(
             invoiceItems.map(item => ({
               invoice_id: invoice,
+              service_id: item.service_id,
+              package_id: item.package_id,
               service_name: item.service_name,
               description: item.description,
               quantity: item.quantity,
