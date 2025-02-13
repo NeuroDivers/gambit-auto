@@ -9,8 +9,9 @@ import {
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { InvoiceFormFields } from "./form-sections/InvoiceFormFields"
-import { useInvoiceFormSubmission } from "./form-sections/useInvoiceFormSubmission"
+import { useInvoiceFormSubmission } from "./hooks/useInvoiceFormSubmission"
 import { useCreateInvoice } from "./hooks/useCreateInvoice"
+import { Card } from "@/components/ui/card"
 
 type CreateInvoiceDialogProps = {
   open: boolean

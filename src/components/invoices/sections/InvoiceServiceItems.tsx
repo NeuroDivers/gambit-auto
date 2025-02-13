@@ -1,11 +1,17 @@
 
-import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
+import { InvoiceItemsFields } from "../form-sections/InvoiceItemsFields"
 import { UseFormReturn } from "react-hook-form"
+import { InvoiceFormValues } from "../types"
 
 type InvoiceServiceItemsProps = {
-  form: UseFormReturn<any>
+  form: UseFormReturn<InvoiceFormValues>
 }
 
 export function InvoiceServiceItems({ form }: InvoiceServiceItemsProps) {
-  return <ServiceSelectionField form={form} />
+  return (
+    <InvoiceItemsFields
+      items={form.watch('invoice_items')}
+      setItems={(items) => form.setValue('invoice_items', items)}
+    />
+  )
 }

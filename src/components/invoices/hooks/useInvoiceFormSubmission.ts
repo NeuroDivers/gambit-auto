@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 
@@ -18,104 +19,103 @@ type UseInvoiceFormSubmissionProps = {
   businessTaxes: any[]
 }
 
-async function createWorkOrder(data: Partial<UseInvoiceFormSubmissionProps>) {
-  const { data: workOrder, error } = await supabase
-    .from("work_orders")
-    .insert({
-      first_name: data.customerFirstName,
-      last_name: data.customerLastName,
-      email: data.customerEmail,
-      phone_number: data.customerPhone,
-      contact_preference: "email",
-      vehicle_make: data.vehicleMake,
-      vehicle_model: data.vehicleModel,
-      vehicle_year: data.vehicleYear,
-      vehicle_serial: data.vehicleVin,
-      status: "completed"
-    })
-    .select()
-    .single()
-
-  if (error) throw error
-  return workOrder
-}
-
-async function createInvoice(workOrderId: string) {
-  const { data: invoice, error } = await supabase
-    .rpc('create_invoice_from_work_order', {
-      work_order_id: workOrderId
-    })
-
-  if (error) throw error
-  return invoice
-}
-
-async function updateInvoice(invoiceId: string, data: Partial<UseInvoiceFormSubmissionProps>) {
-  const { error } = await supabase
-    .from("invoices")
-    .update({
-      customer_first_name: data.customerFirstName,
-      customer_last_name: data.customerLastName,
-      customer_email: data.customerEmail,
-      customer_address: data.customerAddress,
-      vehicle_make: data.vehicleMake,
-      vehicle_model: data.vehicleModel,
-      vehicle_year: data.vehicleYear,
-      vehicle_vin: data.vehicleVin,
-      company_name: data.businessProfile?.company_name || null,
-      company_phone: data.businessProfile?.phone_number || null,
-      company_email: data.businessProfile?.email || null,
-      company_address: data.businessProfile?.address || null,
-      gst_number: data.businessTaxes?.find(tax => tax.tax_type === 'GST')?.tax_number || null,
-      qst_number: data.businessTaxes?.find(tax => tax.tax_type === 'QST')?.tax_number || null,
-    })
-    .eq("id", invoiceId)
-
-  if (error) throw error
-}
-
-async function createInvoiceItems(invoiceId: string, items: any[]) {
-  if (items.length === 0) return
-
-  const { error } = await supabase
-    .from("invoice_items")
-    .insert(
-      items.map(item => ({
-        invoice_id: invoiceId,
-        service_name: item.service_name,
-        description: item.description,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-      }))
-    )
-
-  if (error) throw error
-}
-
-export function useInvoiceFormSubmission(props: UseInvoiceFormSubmissionProps) {
+export function useInvoiceFormSubmission({
+  onSuccess,
+  selectedWorkOrderId,
+  customerFirstName,
+  customerLastName,
+  customerEmail,
+  customerPhone,
+  customerAddress,
+  vehicleMake,
+  vehicleModel,
+  vehicleYear,
+  vehicleVin,
+  invoiceItems,
+  businessProfile,
+  businessTaxes
+}: UseInvoiceFormSubmissionProps) {
   const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     try {
-      let workOrderId = props.selectedWorkOrderId
+      let workOrderId = selectedWorkOrderId
       
       if (!workOrderId) {
-        const workOrder = await createWorkOrder(props)
+        const { data: workOrder, error: workOrderError } = await supabase
+          .from("work_orders")
+          .insert({
+            first_name: customerFirstName,
+            last_name: customerLastName,
+            email: customerEmail,
+            phone_number: customerPhone,
+            contact_preference: "email",
+            vehicle_make: vehicleMake,
+            vehicle_model: vehicleModel,
+            vehicle_year: vehicleYear,
+            vehicle_serial: vehicleVin,
+            status: "completed"
+          })
+          .select()
+          .single()
+
+        if (workOrderError) throw workOrderError
         workOrderId = workOrder.id
       }
 
-      const invoice = await createInvoice(workOrderId)
-      await updateInvoice(invoice, props)
-      await createInvoiceItems(invoice, props.invoiceItems)
+      const { data: invoice, error: invoiceError } = await supabase
+        .rpc('create_invoice_from_work_order', {
+          work_order_id: workOrderId
+        })
+
+      if (invoiceError) throw invoiceError
+
+      const { error: updateError } = await supabase
+        .from("invoices")
+        .update({
+          customer_first_name: customerFirstName,
+          customer_last_name: customerLastName,
+          customer_email: customerEmail,
+          customer_address: customerAddress,
+          vehicle_make: vehicleMake,
+          vehicle_model: vehicleModel,
+          vehicle_year: vehicleYear,
+          vehicle_vin: vehicleVin,
+          company_name: businessProfile?.company_name || null,
+          company_phone: businessProfile?.phone_number || null,
+          company_email: businessProfile?.email || null,
+          company_address: businessProfile?.address || null,
+          gst_number: businessTaxes?.find(tax => tax.tax_type === 'GST')?.tax_number || null,
+          qst_number: businessTaxes?.find(tax => tax.tax_type === 'QST')?.tax_number || null,
+        })
+        .eq("id", invoice)
+
+      if (updateError) throw updateError
+
+      if (invoiceItems.length > 0) {
+        const { error: itemsError } = await supabase
+          .from("invoice_items")
+          .insert(
+            invoiceItems.map(item => ({
+              invoice_id: invoice,
+              service_id: item.service_id,
+              package_id: item.package_id,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+            }))
+          )
+
+        if (itemsError) throw itemsError
+      }
 
       toast({
         title: "Success",
         description: "Invoice created successfully",
       })
 
-      props.onSuccess?.()
+      onSuccess?.()
     } catch (error: any) {
       toast({
         title: "Error",
