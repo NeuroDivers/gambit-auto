@@ -37,31 +37,27 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
       onUpdate(index, "service_id", serviceId)
       onUpdate(index, "service_name", selectedService.name)
       onUpdate(index, "unit_price", selectedService.price || 0)
+      // Reset package selection when changing service
       onUpdate(index, "package_id", null)
+      onUpdate(index, "package_name", null)
     }
   }
 
   const handlePackageSelect = (packageId: string) => {
-    const selectedService = services.find(service => 
-      service.service_packages?.some((pkg: any) => pkg.id === packageId)
-    )
-    
-    if (selectedService) {
+    const selectedService = services.find(service => service.id === item.service_id)
+    if (selectedService && selectedService.service_packages) {
       const selectedPackage = selectedService.service_packages.find((pkg: any) => pkg.id === packageId)
       if (selectedPackage) {
-        onUpdate(index, "service_id", selectedService.id)
-        onUpdate(index, "service_name", selectedPackage.name)
-        onUpdate(index, "unit_price", selectedPackage.price || 0)
         onUpdate(index, "package_id", selectedPackage.id)
+        onUpdate(index, "package_name", selectedPackage.name)
+        onUpdate(index, "service_name", selectedPackage.name)
+        onUpdate(index, "unit_price", selectedPackage.price || selectedPackage.sale_price || 0)
       }
     }
   }
 
-  const getAvailablePackages = () => {
-    if (!item.service_id) return []
-    const service = services.find(s => s.id === item.service_id)
-    return service?.service_packages?.filter((pkg: any) => pkg.status === 'active') || []
-  }
+  const selectedService = services.find(service => service.id === item.service_id)
+  const availablePackages = selectedService?.service_packages?.filter((pkg: any) => pkg.status === 'active') || []
 
   const serviceId = `service_${index}`
   const quantityId = `quantity_${index}`
@@ -69,7 +65,7 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
   const packageId = `package_${index}`
 
   return (
-    <div className="space-y-4 p-4 border rounded-lg relative">
+    <div className="space-y-4 p-4 border rounded-lg relative bg-card">
       <Button
         type="button"
         variant="ghost"
@@ -101,7 +97,7 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
             </SelectContent>
           </Select>
 
-          {item.service_id && getAvailablePackages().length > 0 && (
+          {availablePackages.length > 0 && (
             <div className="mt-2">
               <Label htmlFor={packageId}>Package</Label>
               <Select
@@ -112,9 +108,9 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
                   <SelectValue placeholder="Select a package" />
                 </SelectTrigger>
                 <SelectContent>
-                  {getAvailablePackages().map((pkg: any) => (
+                  {availablePackages.map((pkg: any) => (
                     <SelectItem key={pkg.id} value={pkg.id}>
-                      {pkg.name} - ${pkg.price}
+                      {pkg.name} {pkg.price ? `- $${pkg.price}` : pkg.sale_price ? `- $${pkg.sale_price}` : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>
