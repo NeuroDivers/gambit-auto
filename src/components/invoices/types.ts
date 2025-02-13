@@ -1,5 +1,7 @@
 
 export type InvoiceItem = {
+  service_id: string
+  package_id?: string | null
   service_name: string
   description: string
   quantity: number

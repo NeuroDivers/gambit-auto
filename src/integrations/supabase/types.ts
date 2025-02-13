@@ -188,31 +188,31 @@ export type Database = {
       invoice_items: {
         Row: {
           created_at: string
-          description: string | null
           id: string
           invoice_id: string
+          package_id: string | null
           quantity: number
-          service_name: string
+          service_id: string
           unit_price: number
           updated_at: string
         }
         Insert: {
           created_at?: string
-          description?: string | null
           id?: string
           invoice_id: string
+          package_id?: string | null
           quantity?: number
-          service_name: string
+          service_id: string
           unit_price: number
           updated_at?: string
         }
         Update: {
           created_at?: string
-          description?: string | null
           id?: string
           invoice_id?: string
+          package_id?: string | null
           quantity?: number
-          service_name?: string
+          service_id?: string
           unit_price?: number
           updated_at?: string
         }
@@ -222,6 +222,20 @@ export type Database = {
             columns: ["invoice_id"]
             isOneToOne: false
             referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "service_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
             referencedColumns: ["id"]
           },
         ]

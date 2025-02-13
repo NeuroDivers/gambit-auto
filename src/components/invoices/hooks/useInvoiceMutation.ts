@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
@@ -28,14 +29,6 @@ export function useInvoiceMutation(invoiceId?: string) {
 
       if (invoiceError) throw invoiceError
 
-      // Get existing invoice items to compare
-      const { data: existingItems, error: fetchError } = await supabase
-        .from('invoice_items')
-        .select('id')
-        .eq('invoice_id', invoiceId)
-
-      if (fetchError) throw fetchError
-
       // Delete all existing items first
       const { error: deleteError } = await supabase
         .from('invoice_items')
@@ -51,8 +44,8 @@ export function useInvoiceMutation(invoiceId?: string) {
           .insert(
             values.invoice_items.map((item: InvoiceItem) => ({
               invoice_id: invoiceId,
-              service_name: item.service_name,
-              description: item.description,
+              service_id: item.service_id,
+              package_id: item.package_id,
               quantity: item.quantity,
               unit_price: item.unit_price,
             }))

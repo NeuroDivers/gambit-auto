@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 
@@ -11,16 +12,42 @@ export function useInvoiceData(invoiceId?: string) {
           *,
           invoice_items (
             id,
-            service_name,
-            description,
+            service_id,
+            package_id,
             quantity,
-            unit_price
+            unit_price,
+            service:service_types (
+              id,
+              name,
+              description
+            ),
+            package:service_packages (
+              id,
+              name,
+              description
+            )
           )
         `)
         .eq('id', invoiceId)
         .maybeSingle()
 
       if (error) throw error
+
+      // Transform the data to match our expected format
+      if (data) {
+        return {
+          ...data,
+          invoice_items: data.invoice_items.map((item: any) => ({
+            service_id: item.service_id,
+            package_id: item.package_id,
+            service_name: item.service?.name || '',
+            description: item.package?.description || item.service?.description || '',
+            quantity: item.quantity,
+            unit_price: item.unit_price
+          }))
+        }
+      }
+
       return data
     },
     enabled: !!invoiceId
