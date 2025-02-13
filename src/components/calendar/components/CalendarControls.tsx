@@ -23,41 +23,45 @@ export function CalendarControls({
 
   return (
     <>
-      <div className="flex items-center justify-between px-2 mb-6">
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => onNavigateMonth('prev')}
-            className="hover:bg-accent/50 text-white"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <button
-            onClick={() => setShowMonthPicker(true)}
-            className="font-semibold min-w-[120px] text-center text-white hover:bg-accent/50 px-4 py-2 rounded-md"
-          >
-            {currentMonth}
-          </button>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => onNavigateMonth('next')}
-            className="hover:bg-accent/50 text-white"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex items-center justify-between px-2">
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline"  
+              size="icon"
+              onClick={() => onNavigateMonth('prev')}
+              className="bg-[#9b87f5] hover:bg-[#9b87f5]/90 text-white"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <button
+              onClick={() => setShowMonthPicker(true)}
+              className="font-semibold min-w-[120px] text-center bg-[#9b87f5] hover:bg-[#9b87f5]/90 text-white px-4 py-2 rounded-md"
+            >
+              {currentMonth}
+            </button>
+            <Button 
+              variant="outline"
+              size="icon"
+              onClick={() => onNavigateMonth('next')}
+              className="bg-[#9b87f5] hover:bg-[#9b87f5]/90 text-white"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         
-        <Button 
-          variant="ghost" 
-          size="sm"
-          onClick={onScrollToToday}
-          className="text-sm flex items-center gap-2 bg-[#9b87f5] hover:bg-[#9b87f5]/90 text-white"
-        >
-          <CalendarIcon className="w-4 h-4" />
-          Today
-        </Button>
+        <div className="flex justify-end px-2">
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={onScrollToToday}
+            className="text-sm flex items-center gap-2 bg-[#9b87f5] hover:bg-[#9b87f5]/90 text-white w-full sm:w-auto"
+          >
+            <CalendarIcon className="w-4 h-4" />
+            Today
+          </Button>
+        </div>
       </div>
 
       <MonthPicker
