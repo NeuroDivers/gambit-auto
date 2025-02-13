@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useId } from 'react';
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -16,6 +16,7 @@ interface ServiceItemProps {
 }
 
 export function ServiceItem({ index, services, onRemove, field, form }: ServiceItemProps) {
+  const uniqueId = useId();
   const selectedService = services.find(service => service.id === field.value?.service_id);
   const availablePackages = selectedService?.service_packages?.filter((pkg: any) => pkg.status === 'active') || [];
 
@@ -79,6 +80,7 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
           <FormItem>
             <FormLabel>Service</FormLabel>
             <Select 
+              key={`service-${uniqueId}`}
               value={field.value?.service_id || ''} 
               onValueChange={handleServiceChange}
             >
@@ -99,12 +101,16 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
             </Select>
           </FormItem>
 
-          <PackageSelect
-            packages={availablePackages}
-            value={field.value?.package_id || ''}
-            packageName={field.value?.package_name}
-            onValueChange={handlePackageChange}
-          />
+          {availablePackages.length > 0 && (
+            <div key={`package-container-${uniqueId}-${selectedService?.id}`}>
+              <PackageSelect
+                packages={availablePackages}
+                value={field.value?.package_id || ''}
+                packageName={field.value?.package_name}
+                onValueChange={handlePackageChange}
+              />
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
