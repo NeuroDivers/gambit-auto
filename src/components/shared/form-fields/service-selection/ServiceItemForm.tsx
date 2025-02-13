@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X } from "lucide-react"
 import { ServiceItemType } from "@/components/work-orders/types"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 
 interface ServiceItemFormProps {
   index: number
@@ -17,55 +17,67 @@ interface ServiceItemFormProps {
 }
 
 export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: ServiceItemFormProps) {
+  const mounted = useRef(true);
+
   useEffect(() => {
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mounted.current) return;
+
     if (item.service_name && !item.service_id) {
       const matchingService = services.find(service => 
         service.name === item.service_name || 
         service.service_packages?.some((pkg: any) => pkg.name === item.service_name)
-      )
+      );
       if (matchingService) {
-        onUpdate(index, "service_id", matchingService.id)
+        onUpdate(index, "service_id", matchingService.id);
       }
     }
-  }, [item.service_name, item.service_id, services, index, onUpdate])
+  }, [item.service_name, item.service_id, services, index, onUpdate]);
 
   const handleServiceSelect = (serviceId: string) => {
-    if (!serviceId) return
+    if (!serviceId || !mounted.current) return;
     
-    const selectedService = services.find(service => service.id === serviceId)
+    const selectedService = services.find(service => service.id === serviceId);
     if (selectedService) {
-      onUpdate(index, "service_id", serviceId)
-      onUpdate(index, "service_name", selectedService.name)
-      onUpdate(index, "unit_price", selectedService.price || 0)
+      onUpdate(index, "service_id", serviceId);
+      onUpdate(index, "service_name", selectedService.name);
+      onUpdate(index, "unit_price", selectedService.price || 0);
       // Reset package selection when changing service
-      onUpdate(index, "package_id", null)
-      onUpdate(index, "package_name", null)
+      onUpdate(index, "package_id", null);
+      onUpdate(index, "package_name", null);
     }
-  }
+  };
 
   const handlePackageSelect = (packageId: string) => {
-    const selectedService = services.find(service => service.id === item.service_id)
+    if (!mounted.current) return;
+
+    const selectedService = services.find(service => service.id === item.service_id);
     if (selectedService && selectedService.service_packages) {
-      const selectedPackage = selectedService.service_packages.find((pkg: any) => pkg.id === packageId)
+      const selectedPackage = selectedService.service_packages.find((pkg: any) => pkg.id === packageId);
       if (selectedPackage) {
-        onUpdate(index, "package_id", selectedPackage.id)
-        onUpdate(index, "package_name", selectedPackage.name)
-        onUpdate(index, "service_name", selectedPackage.name)
-        onUpdate(index, "unit_price", selectedPackage.price || selectedPackage.sale_price || 0)
+        onUpdate(index, "package_id", selectedPackage.id);
+        onUpdate(index, "package_name", selectedPackage.name);
+        onUpdate(index, "service_name", selectedPackage.name);
+        onUpdate(index, "unit_price", selectedPackage.price || selectedPackage.sale_price || 0);
       }
     }
-  }
+  };
 
-  const selectedService = services.find(service => service.id === item.service_id)
-  const availablePackages = selectedService?.service_packages?.filter((pkg: any) => pkg.status === 'active') || []
+  const selectedService = services.find(service => service.id === item.service_id);
+  const availablePackages = selectedService?.service_packages?.filter((pkg: any) => pkg.status === 'active') || [];
 
-  const serviceId = `service_${index}`
-  const quantityId = `quantity_${index}`
-  const priceId = `price_${index}`
-  const packageId = `package_${index}`
+  const serviceId = `service_${index}`;
+  const quantityId = `quantity_${index}`;
+  const priceId = `price_${index}`;
+  const packageId = `package_${index}`;
 
   // Find the current package if it exists
-  const currentPackage = selectedService?.service_packages?.find((pkg: any) => pkg.id === item.package_id)
+  const currentPackage = selectedService?.service_packages?.find((pkg: any) => pkg.id === item.package_id);
 
   return (
     <div className="space-y-4 p-4 border rounded-lg relative bg-card">
@@ -133,7 +145,11 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
             id={quantityId}
             name={quantityId}
             value={item.quantity}
-            onChange={(e) => onUpdate(index, "quantity", parseInt(e.target.value) || 0)}
+            onChange={(e) => {
+              if (mounted.current) {
+                onUpdate(index, "quantity", parseInt(e.target.value) || 0);
+              }
+            }}
             autoComplete="off"
           />
         </div>
@@ -145,11 +161,15 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
             id={priceId}
             name={priceId}
             value={item.unit_price}
-            onChange={(e) => onUpdate(index, "unit_price", parseFloat(e.target.value) || 0)}
+            onChange={(e) => {
+              if (mounted.current) {
+                onUpdate(index, "unit_price", parseFloat(e.target.value) || 0);
+              }
+            }}
             autoComplete="off"
           />
         </div>
       </div>
     </div>
-  )
+  );
 }
