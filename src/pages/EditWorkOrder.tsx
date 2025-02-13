@@ -43,7 +43,6 @@ export default function EditWorkOrder() {
   }
 
   const handleSuccess = () => {
-    // Add a small delay to ensure all state updates are complete
     setTimeout(() => {
       navigate("/work-orders");
     }, 100);
@@ -65,6 +64,7 @@ export default function EditWorkOrder() {
             </Button>
           </div>
         </div>
+        <div id="radix-portal-container" />
         <ScrollArea className="h-[calc(100vh-12rem)] px-6">
           <div className="max-w-4xl mx-auto">
             <WorkOrderForm
