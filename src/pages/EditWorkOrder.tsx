@@ -15,14 +15,35 @@ export default function EditWorkOrder() {
   const { data: workOrder, isLoading } = useQuery({
     queryKey: ["workOrder", id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: workOrderData, error: workOrderError } = await supabase
         .from("work_orders")
         .select("*")
         .eq("id", id)
         .single();
 
-      if (error) throw error;
-      return data;
+      if (workOrderError) throw workOrderError;
+
+      // Fetch associated services in a separate query
+      const { data: servicesData, error: servicesError } = await supabase
+        .from("work_order_services")
+        .select(`
+          id,
+          service_id,
+          quantity,
+          unit_price,
+          service:service_types!work_order_services_service_id_fkey (
+            id,
+            name
+          )
+        `)
+        .eq("work_order_id", id);
+
+      if (servicesError) throw servicesError;
+
+      return {
+        ...workOrderData,
+        work_order_services: servicesData
+      };
     },
   });
 
