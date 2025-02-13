@@ -5,43 +5,52 @@ import { useWorkOrderForm } from "./hooks/useWorkOrderForm"
 import { FormSections } from "./form-sections/FormSections"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 
 export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmitting }: WorkOrderFormProps) {
-  const { form, onSubmit } = useWorkOrderForm(workOrder, () => {
-    toast.success(workOrder ? "Work order updated successfully" : "Work order created successfully")
-    if (onSuccess) {
-      // Add a small delay to ensure state updates are complete
-      setTimeout(onSuccess, 100)
-    }
-  }, defaultStartTime)
+  const mounted = useRef(true);
 
   useEffect(() => {
-    if (onSubmitting) {
-      onSubmitting(form.formState.isSubmitting)
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+
+  const { form, onSubmit } = useWorkOrderForm(workOrder, () => {
+    toast.success(workOrder ? "Work order updated successfully" : "Work order created successfully")
+    if (mounted.current && onSuccess) {
+      onSuccess();
+    }
+  }, defaultStartTime);
+
+  useEffect(() => {
+    if (onSubmitting && mounted.current) {
+      onSubmitting(form.formState.isSubmitting);
     }
     
     return () => {
-      if (onSubmitting) {
-        onSubmitting(false)
+      if (onSubmitting && mounted.current) {
+        onSubmitting(false);
       }
-    }
-  }, [form.formState.isSubmitting, onSubmitting])
+    };
+  }, [form.formState.isSubmitting, onSubmitting]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!mounted.current) return;
     
     try {
-      await form.handleSubmit(onSubmit)(e)
+      await form.handleSubmit(onSubmit)(e);
     } catch (error) {
-      console.error("Form submission error:", error)
-      toast.error("Failed to save work order")
-      if (onSubmitting) {
-        onSubmitting(false)
+      console.error("Form submission error:", error);
+      toast.error("Failed to save work order");
+      if (onSubmitting && mounted.current) {
+        onSubmitting(false);
       }
     }
-  }
+  };
 
   return (
     <Form {...form}>
@@ -64,5 +73,5 @@ export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmit
         </div>
       </form>
     </Form>
-  )
+  );
 }
