@@ -191,10 +191,12 @@ export type Database = {
           description: string | null
           id: string
           invoice_id: string
+          main_service_id: string | null
           package_id: string | null
           quantity: number
           service_id: string
           service_name: string | null
+          sub_service_id: string | null
           unit_price: number
           updated_at: string
         }
@@ -203,10 +205,12 @@ export type Database = {
           description?: string | null
           id?: string
           invoice_id: string
+          main_service_id?: string | null
           package_id?: string | null
           quantity?: number
           service_id: string
           service_name?: string | null
+          sub_service_id?: string | null
           unit_price: number
           updated_at?: string
         }
@@ -215,10 +219,12 @@ export type Database = {
           description?: string | null
           id?: string
           invoice_id?: string
+          main_service_id?: string | null
           package_id?: string | null
           quantity?: number
           service_id?: string
           service_name?: string | null
+          sub_service_id?: string | null
           unit_price?: number
           updated_at?: string
         }
@@ -245,6 +251,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "invoice_items_main_service_id_fkey"
+            columns: ["main_service_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "invoice_items_package_id_fkey"
             columns: ["package_id"]
             isOneToOne: false
@@ -254,6 +267,13 @@ export type Database = {
           {
             foreignKeyName: "invoice_items_service_id_fkey"
             columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_sub_service_id_fkey"
+            columns: ["sub_service_id"]
             isOneToOne: false
             referencedRelation: "service_types"
             referencedColumns: ["id"]
@@ -506,9 +526,11 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          main_service_id: string | null
           quantity: number
           quote_id: string
           service_name: string
+          sub_service_id: string | null
           unit_price: number
           updated_at: string
         }
@@ -516,9 +538,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          main_service_id?: string | null
           quantity?: number
           quote_id: string
           service_name: string
+          sub_service_id?: string | null
           unit_price: number
           updated_at?: string
         }
@@ -526,18 +550,34 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          main_service_id?: string | null
           quantity?: number
           quote_id?: string
           service_name?: string
+          sub_service_id?: string | null
           unit_price?: number
           updated_at?: string
         }
         Relationships: [
           {
+            foreignKeyName: "quote_items_main_service_id_fkey"
+            columns: ["main_service_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "quote_items_quote_id_fkey"
             columns: ["quote_id"]
             isOneToOne: false
             referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_items_sub_service_id_fkey"
+            columns: ["sub_service_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
             referencedColumns: ["id"]
           },
         ]
@@ -857,36 +897,65 @@ export type Database = {
       }
       service_types: {
         Row: {
+          can_be_standalone: boolean | null
           created_at: string
           description: string | null
           duration: number | null
+          hierarchy_type:
+            | Database["public"]["Enums"]["service_hierarchy_type"]
+            | null
           id: string
           name: string
+          parent_service_id: string | null
           price: number | null
+          requires_main_service: boolean | null
+          sort_order: number | null
           status: Database["public"]["Enums"]["service_status"]
           updated_at: string
         }
         Insert: {
+          can_be_standalone?: boolean | null
           created_at?: string
           description?: string | null
           duration?: number | null
+          hierarchy_type?:
+            | Database["public"]["Enums"]["service_hierarchy_type"]
+            | null
           id?: string
           name: string
+          parent_service_id?: string | null
           price?: number | null
+          requires_main_service?: boolean | null
+          sort_order?: number | null
           status?: Database["public"]["Enums"]["service_status"]
           updated_at?: string
         }
         Update: {
+          can_be_standalone?: boolean | null
           created_at?: string
           description?: string | null
           duration?: number | null
+          hierarchy_type?:
+            | Database["public"]["Enums"]["service_hierarchy_type"]
+            | null
           id?: string
           name?: string
+          parent_service_id?: string | null
           price?: number | null
+          requires_main_service?: boolean | null
+          sort_order?: number | null
           status?: Database["public"]["Enums"]["service_status"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "service_types_parent_service_id_fkey"
+            columns: ["parent_service_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_colors: {
         Row: {
@@ -970,8 +1039,10 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          main_service_id: string | null
           quantity: number
           service_id: string
+          sub_service_id: string | null
           unit_price: number
           updated_at: string
           work_order_id: string
@@ -979,8 +1050,10 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          main_service_id?: string | null
           quantity?: number
           service_id: string
+          sub_service_id?: string | null
           unit_price: number
           updated_at?: string
           work_order_id: string
@@ -988,16 +1061,32 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          main_service_id?: string | null
           quantity?: number
           service_id?: string
+          sub_service_id?: string | null
           unit_price?: number
           updated_at?: string
           work_order_id?: string
         }
         Relationships: [
           {
+            foreignKeyName: "work_order_services_main_service_id_fkey"
+            columns: ["main_service_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "work_order_services_service_id_fkey"
             columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_services_sub_service_id_fkey"
+            columns: ["sub_service_id"]
             isOneToOne: false
             referencedRelation: "service_types"
             referencedColumns: ["id"]
@@ -1196,6 +1285,7 @@ export type Database = {
         | "full_front"
         | "track_pack"
         | "full_vehicle"
+      service_hierarchy_type: "main" | "sub"
       service_status: "active" | "inactive"
       tax_type: "GST" | "QST" | "HST" | "PST"
       window_tint_type: "two_front" | "front_and_rear" | "complete"
