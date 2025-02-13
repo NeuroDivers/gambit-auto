@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
@@ -49,10 +50,7 @@ export function EditInvoiceForm({ form, onSubmit, isPending, invoiceId }: EditIn
           </div>
         </div>
         
-        <InvoiceServiceItems 
-          items={form.watch('invoice_items')}
-          setItems={(items) => form.setValue('invoice_items', items)}
-        />
+        <InvoiceServiceItems form={form} />
 
         <InvoiceNotesField form={form} />
 
