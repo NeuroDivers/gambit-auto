@@ -39,9 +39,6 @@ export function ServiceList({ workOrderServices, onServicesChange, disabled }: S
 
   return (
     <div className="space-y-4">
-      {/* Portal container specific to this service list */}
-      <div id="service-items-portal" className="fixed top-0 left-0 z-[100]" />
-      
       <div className="space-y-4">
         {workOrderServices.map((service, index) => (
           <ServiceItem
