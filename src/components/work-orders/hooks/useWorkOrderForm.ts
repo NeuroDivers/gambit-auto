@@ -62,33 +62,40 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
     async function fetchWorkOrderServices() {
       if (!workOrder?.id) return
 
-      const { data: services, error } = await supabase
-        .from('work_order_services')
-        .select(`
-          id,
-          service_id,
-          quantity,
-          unit_price,
-          service:service_types!work_order_services_service_id_fkey (
+      try {
+        const { data: services, error } = await supabase
+          .from('work_order_services')
+          .select(`
             id,
-            name
-          )
-        `)
-        .eq('work_order_id', workOrder.id)
+            service_id,
+            quantity,
+            unit_price,
+            service:service_types!work_order_services_service_id_fkey (
+              id,
+              name
+            )
+          `)
+          .eq('work_order_id', workOrder.id)
 
-      if (error) {
-        console.error('Error fetching work order services:', error)
-        return
-      }
+        if (error) {
+          console.error('Error fetching work order services:', error)
+          return
+        }
 
-      if (services) {
-        const formattedServices = services.map(service => ({
-          service_id: service.service_id,
-          service_name: service.service?.name || '',
-          quantity: service.quantity,
-          unit_price: service.unit_price
-        }))
-        form.setValue('service_items', formattedServices)
+        if (services) {
+          const formattedServices = services.map(service => {
+            const serviceType = service.service as { id: string; name: string } | null
+            return {
+              service_id: service.service_id,
+              service_name: serviceType?.name || '',
+              quantity: service.quantity,
+              unit_price: service.unit_price
+            }
+          })
+          form.setValue('service_items', formattedServices)
+        }
+      } catch (error) {
+        console.error('Error in fetchWorkOrderServices:', error)
       }
     }
 

@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { useSubServices } from "@/components/shared/form-fields/service-selection/useServiceData";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface ServiceItemProps {
   index: number;
@@ -19,6 +20,7 @@ interface ServiceItemProps {
 }
 
 export function ServiceItem({ index, services, onRemove, field, form }: ServiceItemProps) {
+  const [isOpen, setIsOpen] = React.useState(false)
   const selectedService = services.find(service => service.id === field.value?.service_id);
   const { data: subServices = [] } = useSubServices(field.value?.service_id);
   
@@ -42,6 +44,7 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
       addons: []
     };
     form.setValue("service_items", updatedItems, { shouldValidate: true });
+    setIsOpen(false);
   };
 
   const handlePackageChange = (value: string) => {
@@ -103,27 +106,29 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
       <div className="grid gap-4">
         <div className="space-y-2">
           <Label>Service</Label>
-          <Popover>
-            <PopoverTrigger asChild>
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
               <Button variant="outline" className="w-full justify-start">
                 {field.value?.service_name || "Select a service"}
               </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[200px] p-0">
-              <div className="space-y-2">
-                {services.map((service) => (
-                  <Button
-                    key={service.id}
-                    variant="ghost"
-                    className="w-full justify-start"
-                    onClick={() => handleServiceChange(service.id)}
-                  >
-                    {service.name}
-                  </Button>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
+            </DialogTrigger>
+            <DialogContent>
+              <ScrollArea className="max-h-[300px]">
+                <div className="space-y-2 p-2">
+                  {services.map((service) => (
+                    <Button
+                      key={service.id}
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => handleServiceChange(service.id)}
+                    >
+                      {service.name}
+                    </Button>
+                  ))}
+                </div>
+              </ScrollArea>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {availablePackages.length > 0 && (
