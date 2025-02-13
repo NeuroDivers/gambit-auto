@@ -7,9 +7,17 @@ import { InvoiceFormValues, InvoiceItem } from "../types"
 export function useInvoiceMutation(invoiceId?: string) {
   const queryClient = useQueryClient()
 
+  const isValidUUID = (uuid: string | null | undefined): boolean => {
+    if (!uuid) return false
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    return uuidRegex.test(uuid)
+  }
+
   return useMutation({
     mutationFn: async (values: InvoiceFormValues) => {
-      if (!invoiceId) throw new Error("Invoice ID is required")
+      if (!invoiceId || !isValidUUID(invoiceId)) {
+        throw new Error("Valid Invoice ID is required")
+      }
 
       // First update the invoice details
       const { error: invoiceError } = await supabase
@@ -42,7 +50,10 @@ export function useInvoiceMutation(invoiceId?: string) {
       // Then insert all items as new
       if (values.invoice_items?.length > 0) {
         const itemsToInsert = values.invoice_items
-          .filter(item => item.service_id && item.service_id !== "") // Only insert items with valid service_id
+          .filter(item => 
+            isValidUUID(item.service_id) && // Ensure service_id is a valid UUID
+            (!item.package_id || isValidUUID(item.package_id)) // If package_id exists, ensure it's a valid UUID
+          )
           .map((item: InvoiceItem) => ({
             invoice_id: invoiceId,
             service_id: item.service_id,
@@ -54,6 +65,7 @@ export function useInvoiceMutation(invoiceId?: string) {
           }))
 
         if (itemsToInsert.length > 0) {
+          console.log('Inserting items:', itemsToInsert)
           const { error: itemsError } = await supabase
             .from('invoice_items')
             .insert(itemsToInsert)
