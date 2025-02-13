@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useRef, useState, useCallback } from "react"
+import { useRef, useState, useCallback, useEffect } from "react"
 
 interface ServiceItemProps {
   index: number;
@@ -16,65 +16,77 @@ interface ServiceItemProps {
 }
 
 export function ServiceItem({ index, services, onRemove, field, form }: ServiceItemProps) {
-  const [isUpdating, setIsUpdating] = useState(false);
-  const selectedService = services.find(service => service.id === field.value?.service_id);
+  const [localServiceId, setLocalServiceId] = useState(field.value?.service_id || '');
+  const [localPackageId, setLocalPackageId] = useState(field.value?.package_id || '');
+  const selectedService = services.find(service => service.id === localServiceId);
   const availablePackages = selectedService?.service_packages?.filter((pkg: any) => pkg.status === 'active') || [];
 
-  const updateFormField = useCallback((updates: any) => {
-    if (isUpdating) return;
-    
-    setIsUpdating(true);
-    try {
-      const currentItems = form.getValues("service_items") || [];
-      const updatedItems = [...currentItems];
-      updatedItems[index] = {
-        ...updatedItems[index],
-        ...updates
-      };
-      form.setValue("service_items", updatedItems, { shouldValidate: true });
-    } finally {
-      setIsUpdating(false);
-    }
-  }, [form, index, isUpdating]);
+  useEffect(() => {
+    setLocalServiceId(field.value?.service_id || '');
+    setLocalPackageId(field.value?.package_id || '');
+  }, [field.value?.service_id, field.value?.package_id]);
 
   const handleServiceSelect = useCallback((serviceId: string) => {
     if (!serviceId) return;
     
+    setLocalServiceId(serviceId);
+    setLocalPackageId('');
+    
     const selectedService = services.find(service => service.id === serviceId);
     if (selectedService) {
-      updateFormField({
+      const currentItems = form.getValues("service_items") || [];
+      const updatedItems = [...currentItems];
+      updatedItems[index] = {
+        ...updatedItems[index],
         service_id: serviceId,
         service_name: selectedService.name,
         unit_price: selectedService.price || 0,
         package_id: null,
         package_name: null,
-      });
+      };
+      form.setValue("service_items", updatedItems, { shouldValidate: true });
     }
-  }, [services, updateFormField]);
+  }, [services, form, index]);
 
   const handlePackageSelect = useCallback((packageId: string) => {
+    setLocalPackageId(packageId);
+    
     const selectedPackage = availablePackages.find(pkg => pkg.id === packageId);
     if (selectedPackage) {
-      updateFormField({
+      const currentItems = form.getValues("service_items") || [];
+      const updatedItems = [...currentItems];
+      updatedItems[index] = {
+        ...updatedItems[index],
         package_id: packageId,
         package_name: selectedPackage.name,
         service_name: selectedPackage.name,
         unit_price: selectedPackage.price || selectedPackage.sale_price || 0,
-      });
+      };
+      form.setValue("service_items", updatedItems, { shouldValidate: true });
     }
-  }, [availablePackages, updateFormField]);
+  }, [availablePackages, form, index]);
 
-  const handleQuantityChange = useCallback((value: number) => {
-    updateFormField({ quantity: value || 0 });
-  }, [updateFormField]);
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    const currentItems = form.getValues("service_items") || [];
+    const updatedItems = [...currentItems];
+    updatedItems[index] = {
+      ...updatedItems[index],
+      quantity: value || 0,
+    };
+    form.setValue("service_items", updatedItems, { shouldValidate: true });
+  };
 
-  const handlePriceChange = useCallback((value: number) => {
-    updateFormField({ unit_price: value || 0 });
-  }, [updateFormField]);
-
-  // Create stable references for Select values
-  const serviceValue = field.value?.service_id || '';
-  const packageValue = field.value?.package_id || '';
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
+    const currentItems = form.getValues("service_items") || [];
+    const updatedItems = [...currentItems];
+    updatedItems[index] = {
+      ...updatedItems[index],
+      unit_price: value || 0,
+    };
+    form.setValue("service_items", updatedItems, { shouldValidate: true });
+  };
 
   return (
     <div className="relative space-y-4 p-4 border rounded-lg bg-card">
@@ -92,7 +104,7 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
         <div className="space-y-2">
           <FormLabel>Service</FormLabel>
           <Select
-            value={serviceValue}
+            value={localServiceId}
             onValueChange={handleServiceSelect}
           >
             <SelectTrigger>
@@ -113,7 +125,7 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
             <div className="mt-2">
               <FormLabel>Package</FormLabel>
               <Select
-                value={packageValue}
+                value={localPackageId}
                 onValueChange={handlePackageSelect}
               >
                 <SelectTrigger>
@@ -139,7 +151,7 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
             type="number"
             min={1}
             value={field.value?.quantity || 0}
-            onChange={(e) => handleQuantityChange(parseInt(e.target.value))}
+            onChange={handleQuantityChange}
           />
         </div>
 
@@ -150,7 +162,7 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
             min={0}
             step="0.01"
             value={field.value?.unit_price || 0}
-            onChange={(e) => handlePriceChange(parseFloat(e.target.value))}
+            onChange={handlePriceChange}
           />
         </div>
       </div>
