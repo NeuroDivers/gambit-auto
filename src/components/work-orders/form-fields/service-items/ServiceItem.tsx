@@ -1,10 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { PackageSelect } from "./PackageSelect"
 
 interface ServiceItemProps {
   index: number;
@@ -15,25 +16,8 @@ interface ServiceItemProps {
 }
 
 export function ServiceItem({ index, services, onRemove, field, form }: ServiceItemProps) {
-  const [showPackages, setShowPackages] = useState(false);
   const selectedService = services.find(service => service.id === field.value?.service_id);
   const availablePackages = selectedService?.service_packages?.filter((pkg: any) => pkg.status === 'active') || [];
-
-  useEffect(() => {
-    // Reset package selection when service changes
-    if (field.value?.package_id && !availablePackages.find(pkg => pkg.id === field.value.package_id)) {
-      const currentItems = form.getValues("service_items") || [];
-      const updatedItems = [...currentItems];
-      updatedItems[index] = {
-        ...updatedItems[index],
-        package_id: null,
-        package_name: null
-      };
-      form.setValue("service_items", updatedItems, { shouldValidate: true });
-    }
-    
-    setShowPackages(availablePackages.length > 0);
-  }, [selectedService?.id]);
 
   const handleServiceChange = (value: string) => {
     const service = services.find(s => s.id === value);
@@ -115,30 +99,12 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
             </Select>
           </FormItem>
 
-          {showPackages && (
-            <FormItem>
-              <FormLabel>Package</FormLabel>
-              <Select
-                value={field.value?.package_id || ''}
-                onValueChange={handlePackageChange}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a package">
-                      {field.value?.package_name || "Select a package"}
-                    </SelectValue>
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {availablePackages.map((pkg: any) => (
-                    <SelectItem key={pkg.id} value={pkg.id}>
-                      {pkg.name} {pkg.price ? `- $${pkg.price}` : pkg.sale_price ? `- $${pkg.sale_price}` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormItem>
-          )}
+          <PackageSelect
+            packages={availablePackages}
+            value={field.value?.package_id || ''}
+            packageName={field.value?.package_name}
+            onValueChange={handlePackageChange}
+          />
         </div>
 
         <div className="space-y-2">
