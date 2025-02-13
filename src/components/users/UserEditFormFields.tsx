@@ -50,13 +50,13 @@ export const UserEditFormFields = ({ form }: UserEditFormFieldsProps) => {
         name="first_name"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-white/[0.87]" htmlFor="first_name">First Name</FormLabel>
+            <FormLabel className="text-gray-700" htmlFor="first_name">First Name</FormLabel>
             <FormControl>
               <Input 
                 id="first_name"
                 placeholder="John" 
                 {...field} 
-                className="bg-[#242424] border-white/10 text-white/[0.87]"
+                className="bg-white border-gray-200 text-gray-900"
               />
             </FormControl>
           </FormItem>
@@ -68,13 +68,13 @@ export const UserEditFormFields = ({ form }: UserEditFormFieldsProps) => {
         name="last_name"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-white/[0.87]" htmlFor="last_name">Last Name</FormLabel>
+            <FormLabel className="text-gray-700" htmlFor="last_name">Last Name</FormLabel>
             <FormControl>
               <Input 
                 id="last_name"
                 placeholder="Doe" 
                 {...field} 
-                className="bg-[#242424] border-white/10 text-white/[0.87]"
+                className="bg-white border-gray-200 text-gray-900"
               />
             </FormControl>
           </FormItem>
@@ -86,21 +86,21 @@ export const UserEditFormFields = ({ form }: UserEditFormFieldsProps) => {
         name="role"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-white/[0.87]" htmlFor="role">Role</FormLabel>
+            <FormLabel className="text-gray-700" htmlFor="role">Role</FormLabel>
             <FormControl>
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}
               >
-                <SelectTrigger id="role" className="bg-[#242424] border-white/10 text-white/[0.87]">
+                <SelectTrigger id="role" className="bg-white border-gray-200 text-gray-900">
                   <SelectValue placeholder="Select a role" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#242424] border-white/10">
+                <SelectContent className="bg-white border-gray-200">
                   {roles?.map((role) => (
                     <SelectItem 
                       key={role.id} 
                       value={role.id} 
-                      className="text-white/[0.87]"
+                      className="text-gray-700"
                     >
                       {role.nicename}
                     </SelectItem>
