@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useRef } from "react"
+import { useRef, useState } from "react"
 
 interface ServiceItemProps {
   index: number;
@@ -17,16 +17,18 @@ interface ServiceItemProps {
 
 export function ServiceItem({ index, services, onRemove, field, form }: ServiceItemProps) {
   const mounted = useRef(true);
+  const [isOpen, setIsOpen] = useState(false);
+  const [packageOpen, setPackageOpen] = useState(false);
+  
   const selectedService = services.find(service => service.id === field.value?.service_id);
   const availablePackages = selectedService?.service_packages?.filter((pkg: any) => pkg.status === 'active') || [];
-  const currentPackage = selectedService?.service_packages?.find((pkg: any) => pkg.id === field.value?.package_id);
 
   const handleServiceSelect = (serviceId: string) => {
     if (!mounted.current || !serviceId) return;
 
     const selectedService = services.find(service => service.id === serviceId);
     if (selectedService) {
-      const currentItems = form.getValues("service_items");
+      const currentItems = form.getValues("service_items") || [];
       const updatedItems = [...currentItems];
       updatedItems[index] = {
         ...updatedItems[index],
@@ -36,7 +38,14 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
         package_id: null,
         package_name: null,
       };
-      form.setValue("service_items", updatedItems, { shouldValidate: true });
+      
+      // Close dropdown before updating state
+      setIsOpen(false);
+      setTimeout(() => {
+        if (mounted.current) {
+          form.setValue("service_items", updatedItems, { shouldValidate: true });
+        }
+      }, 0);
     }
   };
 
@@ -45,7 +54,7 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
 
     const selectedPackage = availablePackages.find(pkg => pkg.id === packageId);
     if (selectedPackage) {
-      const currentItems = form.getValues("service_items");
+      const currentItems = form.getValues("service_items") || [];
       const updatedItems = [...currentItems];
       updatedItems[index] = {
         ...updatedItems[index],
@@ -54,13 +63,20 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
         service_name: selectedPackage.name,
         unit_price: selectedPackage.price || selectedPackage.sale_price || 0,
       };
-      form.setValue("service_items", updatedItems, { shouldValidate: true });
+      
+      // Close dropdown before updating state
+      setPackageOpen(false);
+      setTimeout(() => {
+        if (mounted.current) {
+          form.setValue("service_items", updatedItems, { shouldValidate: true });
+        }
+      }, 0);
     }
   };
 
   const handleQuantityChange = (value: number) => {
     if (!mounted.current) return;
-    const currentItems = form.getValues("service_items");
+    const currentItems = form.getValues("service_items") || [];
     const updatedItems = [...currentItems];
     updatedItems[index] = {
       ...updatedItems[index],
@@ -71,7 +87,7 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
 
   const handlePriceChange = (value: number) => {
     if (!mounted.current) return;
-    const currentItems = form.getValues("service_items");
+    const currentItems = form.getValues("service_items") || [];
     const updatedItems = [...currentItems];
     updatedItems[index] = {
       ...updatedItems[index],
@@ -83,6 +99,9 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
   React.useEffect(() => {
     return () => {
       mounted.current = false;
+      // Ensure dropdowns are closed on unmount
+      setIsOpen(false);
+      setPackageOpen(false);
     };
   }, []);
 
@@ -92,7 +111,11 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
         type="button"
         variant="ghost"
         size="icon"
-        onClick={() => onRemove(index)}
+        onClick={() => {
+          setIsOpen(false);
+          setPackageOpen(false);
+          onRemove(index);
+        }}
         className="absolute right-2 top-2"
       >
         <X className="h-4 w-4" />
@@ -101,9 +124,11 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <FormLabel>Service</FormLabel>
-          <Select
+          <Select 
             value={field.value?.service_id || undefined}
             onValueChange={handleServiceSelect}
+            open={isOpen}
+            onOpenChange={setIsOpen}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select a service" />
@@ -123,6 +148,8 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
               <Select
                 value={field.value?.package_id || undefined}
                 onValueChange={handlePackageSelect}
+                open={packageOpen}
+                onOpenChange={setPackageOpen}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a package" />
