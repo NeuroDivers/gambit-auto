@@ -32,26 +32,39 @@ export function EditWorkOrderDialog({ workOrder, open, onOpenChange }: EditWorkO
           onOpenChange(newOpen)
         }
       }}
-      modal={true}
     >
       <DialogContent 
-        className="max-w-3xl max-h-[90vh]"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
+        className="max-w-3xl max-h-[90vh] p-0"
+        onPointerDownOutside={(e) => {
+          if (isSubmitting) {
+            e.preventDefault()
+          }
+        }}
+        onInteractOutside={(e) => {
+          if (isSubmitting) {
+            e.preventDefault()
+          }
+        }}
       >
-        <DialogHeader>
-          <DialogTitle>Edit Work Order</DialogTitle>
-          <DialogDescription>
-            Make changes to the work order details below.
-          </DialogDescription>
-        </DialogHeader>
-        <ScrollArea className="h-full max-h-[85vh] overflow-y-auto">
-          <WorkOrderForm 
-            workOrder={workOrder} 
-            onSuccess={handleSuccess}
-            onSubmitting={handleSubmitting}
-          />
-        </ScrollArea>
+        <div className="p-6 pb-0">
+          <DialogHeader>
+            <DialogTitle>Edit Work Order</DialogTitle>
+            <DialogDescription>
+              Make changes to the work order details below.
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+        <div className="px-6 pb-6">
+          <ScrollArea className="h-[calc(85vh-8rem)] rounded-md">
+            <div className="pr-4">
+              <WorkOrderForm 
+                workOrder={workOrder} 
+                onSuccess={handleSuccess}
+                onSubmitting={handleSubmitting}
+              />
+            </div>
+          </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   )
