@@ -7,6 +7,7 @@ import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
+import { Portal } from '@radix-ui/react-portal';
 
 interface ServiceItemProps {
   index: number;
@@ -92,6 +93,10 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
     form.setValue("service_items", updatedItems, { shouldValidate: true });
   };
 
+  const portalContainer = document.getElementById('service-items-portal');
+
+  if (!portalContainer) return null;
+
   return (
     <Card className="relative space-y-4 p-4">
       <Button
@@ -107,41 +112,49 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
       <div className="grid gap-4">
         <div className="space-y-2">
           <Label>Service</Label>
-          <Select 
-            value={field.value?.service_id || ''} 
-            onValueChange={handleServiceChange}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a service" />
-            </SelectTrigger>
-            <SelectContent>
-              {services.map((service) => (
-                <SelectItem key={service.id} value={service.id}>
-                  {service.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Portal container={portalContainer}>
+            <div className={`select-root-${uniqueId}`}>
+              <Select 
+                value={field.value?.service_id || ''} 
+                onValueChange={handleServiceChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a service" />
+                </SelectTrigger>
+                <SelectContent>
+                  {services.map((service) => (
+                    <SelectItem key={service.id} value={service.id}>
+                      {service.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </Portal>
         </div>
 
         {availablePackages.length > 0 && (
           <div className="space-y-2">
             <Label>Package</Label>
-            <Select
-              value={field.value?.package_id || ''}
-              onValueChange={handlePackageChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a package" />
-              </SelectTrigger>
-              <SelectContent>
-                {availablePackages.map((pkg) => (
-                  <SelectItem key={pkg.id} value={pkg.id}>
-                    {pkg.name} - ${pkg.price || pkg.sale_price || 0}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Portal container={portalContainer}>
+              <div className={`select-root-${uniqueId}-package`}>
+                <Select
+                  value={field.value?.package_id || ''}
+                  onValueChange={handlePackageChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a package" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availablePackages.map((pkg) => (
+                      <SelectItem key={pkg.id} value={pkg.id}>
+                        {pkg.name} - ${pkg.price || pkg.sale_price || 0}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </Portal>
           </div>
         )}
 
