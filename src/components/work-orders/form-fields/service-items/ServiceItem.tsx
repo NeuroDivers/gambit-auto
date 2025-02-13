@@ -16,7 +16,8 @@ interface ServiceItemProps {
 }
 
 export function ServiceItem({ index, services, onRemove, field, form }: ServiceItemProps) {
-  const portalContainerRef = useRef<HTMLDivElement>(null);
+  const servicePortalRef = useRef<HTMLDivElement>(null);
+  const packagePortalRef = useRef<HTMLDivElement>(null);
   const selectedService = services.find(service => service.id === field.value?.service_id);
   const availablePackages = selectedService?.service_packages?.filter((pkg: any) => pkg.status === 'active') || [];
 
@@ -65,7 +66,8 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
 
   return (
     <div className="relative space-y-4 p-4 border rounded-lg bg-card">
-      <div ref={portalContainerRef} />
+      <div ref={servicePortalRef} />
+      <div ref={packagePortalRef} />
       <Button
         type="button"
         variant="ghost"
@@ -91,7 +93,7 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
                   </SelectValue>
                 </SelectTrigger>
               </FormControl>
-              <Portal container={portalContainerRef.current}>
+              <Portal container={servicePortalRef.current}>
                 <SelectContent>
                   {services.map((service) => (
                     <SelectItem key={service.id} value={service.id}>
@@ -117,7 +119,7 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
                     </SelectValue>
                   </SelectTrigger>
                 </FormControl>
-                <Portal container={portalContainerRef.current}>
+                <Portal container={packagePortalRef.current}>
                   <SelectContent>
                     {availablePackages.map((pkg: any) => (
                       <SelectItem key={pkg.id} value={pkg.id}>
