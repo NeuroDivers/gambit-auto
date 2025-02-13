@@ -44,9 +44,7 @@ export function QuoteList() {
   }
 
   return (
-    <div className="relative space-y-4">
-      <div id="quote-portal-root" className="absolute top-0 left-0" />
-      
+    <div className="space-y-4">
       <QuoteListHeader onCreateClick={() => setCreateDialogOpen(true)} />
 
       <div className="grid gap-4">
