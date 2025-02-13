@@ -64,6 +64,9 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
   const priceId = `price_${index}`
   const packageId = `package_${index}`
 
+  // Find the current package if it exists
+  const currentPackage = selectedService?.service_packages?.find((pkg: any) => pkg.id === item.package_id)
+
   return (
     <div className="space-y-4 p-4 border rounded-lg relative bg-card">
       <Button
@@ -86,7 +89,9 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
             onValueChange={handleServiceSelect}
           >
             <SelectTrigger id={serviceId} name={serviceId}>
-              <SelectValue placeholder="Select a service" />
+              <SelectValue placeholder="Select a service">
+                {selectedService?.name}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {services.map((service) => (
@@ -105,7 +110,9 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
                 onValueChange={handlePackageSelect}
               >
                 <SelectTrigger id={packageId} name={packageId}>
-                  <SelectValue placeholder="Select a package" />
+                  <SelectValue placeholder="Select a package">
+                    {currentPackage?.name}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {availablePackages.map((pkg: any) => (
