@@ -7,7 +7,6 @@ import { Trash2 } from "lucide-react"
 import { InvoiceItem } from "../../types"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useServiceData } from "@/components/shared/form-fields/service-selection/useServiceData"
-import { useEffect } from "react"
 
 type InvoiceItemFormProps = {
   item: InvoiceItem
@@ -22,7 +21,6 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
   const selectedService = services?.find(service => service.id === item.service_id)
   const availablePackages = selectedService?.service_packages?.filter(pkg => pkg.status === 'active') || []
 
-  // Update the form when a service is selected
   const handleServiceSelect = (serviceId: string) => {
     const selectedService = services?.find(service => service.id === serviceId)
     if (selectedService) {
@@ -34,7 +32,6 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: InvoiceItem
     }
   }
 
-  // Update the form when a package is selected
   const handlePackageSelect = (packageId: string) => {
     const selectedPackage = availablePackages.find(pkg => pkg.id === packageId)
     if (selectedPackage) {

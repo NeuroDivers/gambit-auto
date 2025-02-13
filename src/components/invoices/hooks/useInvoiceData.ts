@@ -18,16 +18,8 @@ export function useInvoiceData(invoiceId?: string) {
             description,
             quantity,
             unit_price,
-            service:service_types!invoice_items_service_id_fkey (
-              id,
-              name,
-              description
-            ),
-            package:service_packages!invoice_items_package_id_fkey (
-              id,
-              name,
-              description
-            )
+            service_types (*),
+            service_packages (*)
           )
         `)
         .eq('id', invoiceId)
@@ -42,8 +34,8 @@ export function useInvoiceData(invoiceId?: string) {
           invoice_items: data.invoice_items.map((item: any) => ({
             service_id: item.service_id,
             package_id: item.package_id,
-            service_name: item.service_name || item.service?.name || '',
-            description: item.description || item.service?.description || '',
+            service_name: item.service_name,
+            description: item.description,
             quantity: item.quantity,
             unit_price: item.unit_price
           }))
