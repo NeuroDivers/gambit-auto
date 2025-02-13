@@ -1,3 +1,4 @@
+
 import { Form } from "@/components/ui/form"
 import { WorkOrderFormProps } from "./types"
 import { useWorkOrderForm } from "./hooks/useWorkOrderForm"
@@ -14,8 +15,11 @@ export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime }: WorkOr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    console.log("Form submission started")
-    await form.handleSubmit(onSubmit)(e)
+    try {
+      await form.handleSubmit(onSubmit)(e)
+    } catch (error) {
+      console.error("Form submission error:", error)
+    }
   }
 
   return (
@@ -30,7 +34,6 @@ export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime }: WorkOr
           <Button 
             type="submit" 
             disabled={form.formState.isSubmitting}
-            onClick={(e) => e.stopPropagation()}
           >
             {form.formState.isSubmitting ? 
               (workOrder ? "Updating..." : "Creating...") : 
