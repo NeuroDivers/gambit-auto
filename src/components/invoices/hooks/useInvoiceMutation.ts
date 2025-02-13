@@ -13,6 +13,22 @@ export function useInvoiceMutation(invoiceId?: string) {
     return uuidRegex.test(uuid)
   }
 
+  const sanitizeItem = (item: InvoiceItem, invoiceId: string) => {
+    if (!isValidUUID(item.service_id)) {
+      return null
+    }
+
+    return {
+      invoice_id: invoiceId,
+      service_id: item.service_id,
+      package_id: isValidUUID(item.package_id) ? item.package_id : null,
+      service_name: item.service_name || "",
+      description: item.description || "",
+      quantity: Math.max(1, item.quantity || 1),
+      unit_price: Math.max(0, item.unit_price || 0),
+    }
+  }
+
   return useMutation({
     mutationFn: async (values: InvoiceFormValues) => {
       if (!invoiceId || !isValidUUID(invoiceId)) {
@@ -23,17 +39,17 @@ export function useInvoiceMutation(invoiceId?: string) {
       const { error: invoiceError } = await supabase
         .from('invoices')
         .update({
-          notes: values.notes,
+          notes: values.notes || "",
           status: values.status,
-          customer_first_name: values.customer_first_name,
-          customer_last_name: values.customer_last_name,
-          customer_email: values.customer_email,
-          customer_phone: values.customer_phone,
-          customer_address: values.customer_address,
-          vehicle_make: values.vehicle_make,
-          vehicle_model: values.vehicle_model,
-          vehicle_year: values.vehicle_year,
-          vehicle_vin: values.vehicle_vin
+          customer_first_name: values.customer_first_name || "",
+          customer_last_name: values.customer_last_name || "",
+          customer_email: values.customer_email || "",
+          customer_phone: values.customer_phone || "",
+          customer_address: values.customer_address || "",
+          vehicle_make: values.vehicle_make || "",
+          vehicle_model: values.vehicle_model || "",
+          vehicle_year: values.vehicle_year || 0,
+          vehicle_vin: values.vehicle_vin || ""
         })
         .eq('id', invoiceId)
 
@@ -50,19 +66,8 @@ export function useInvoiceMutation(invoiceId?: string) {
       // Then insert all items as new
       if (values.invoice_items?.length > 0) {
         const itemsToInsert = values.invoice_items
-          .filter(item => 
-            isValidUUID(item.service_id) && // Ensure service_id is a valid UUID
-            (!item.package_id || isValidUUID(item.package_id)) // If package_id exists, ensure it's a valid UUID
-          )
-          .map((item: InvoiceItem) => ({
-            invoice_id: invoiceId,
-            service_id: item.service_id,
-            package_id: item.package_id || null,
-            service_name: item.service_name || "",
-            description: item.description || "",
-            quantity: item.quantity || 1,
-            unit_price: item.unit_price || 0,
-          }))
+          .map(item => sanitizeItem(item, invoiceId))
+          .filter((item): item is NonNullable<typeof item> => item !== null)
 
         if (itemsToInsert.length > 0) {
           console.log('Inserting items:', itemsToInsert)
