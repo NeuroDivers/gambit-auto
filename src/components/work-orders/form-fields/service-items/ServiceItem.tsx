@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useRef, useState, useEffect } from "react"
+import { useRef, useState, useCallback } from "react"
 
 interface ServiceItemProps {
   index: number;
@@ -16,20 +16,28 @@ interface ServiceItemProps {
 }
 
 export function ServiceItem({ index, services, onRemove, field, form }: ServiceItemProps) {
+  const [isUpdating, setIsUpdating] = useState(false);
   const selectedService = services.find(service => service.id === field.value?.service_id);
   const availablePackages = selectedService?.service_packages?.filter((pkg: any) => pkg.status === 'active') || [];
 
-  const updateFormField = (updates: any) => {
-    const currentItems = form.getValues("service_items") || [];
-    const updatedItems = [...currentItems];
-    updatedItems[index] = {
-      ...updatedItems[index],
-      ...updates
-    };
-    form.setValue("service_items", updatedItems, { shouldValidate: true });
-  };
+  const updateFormField = useCallback((updates: any) => {
+    if (isUpdating) return;
+    
+    setIsUpdating(true);
+    try {
+      const currentItems = form.getValues("service_items") || [];
+      const updatedItems = [...currentItems];
+      updatedItems[index] = {
+        ...updatedItems[index],
+        ...updates
+      };
+      form.setValue("service_items", updatedItems, { shouldValidate: true });
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [form, index, isUpdating]);
 
-  const handleServiceSelect = (serviceId: string) => {
+  const handleServiceSelect = useCallback((serviceId: string) => {
     if (!serviceId) return;
     
     const selectedService = services.find(service => service.id === serviceId);
@@ -42,9 +50,9 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
         package_name: null,
       });
     }
-  };
+  }, [services, updateFormField]);
 
-  const handlePackageSelect = (packageId: string) => {
+  const handlePackageSelect = useCallback((packageId: string) => {
     const selectedPackage = availablePackages.find(pkg => pkg.id === packageId);
     if (selectedPackage) {
       updateFormField({
@@ -54,15 +62,19 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
         unit_price: selectedPackage.price || selectedPackage.sale_price || 0,
       });
     }
-  };
+  }, [availablePackages, updateFormField]);
 
-  const handleQuantityChange = (value: number) => {
+  const handleQuantityChange = useCallback((value: number) => {
     updateFormField({ quantity: value || 0 });
-  };
+  }, [updateFormField]);
 
-  const handlePriceChange = (value: number) => {
+  const handlePriceChange = useCallback((value: number) => {
     updateFormField({ unit_price: value || 0 });
-  };
+  }, [updateFormField]);
+
+  // Create stable references for Select values
+  const serviceValue = field.value?.service_id || '';
+  const packageValue = field.value?.package_id || '';
 
   return (
     <div className="relative space-y-4 p-4 border rounded-lg bg-card">
@@ -80,12 +92,12 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
         <div className="space-y-2">
           <FormLabel>Service</FormLabel>
           <Select
-            defaultValue={field.value?.service_id}
+            value={serviceValue}
             onValueChange={handleServiceSelect}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select a service">
-                {selectedService?.name}
+                {selectedService?.name || "Select a service"}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -101,12 +113,12 @@ export function ServiceItem({ index, services, onRemove, field, form }: ServiceI
             <div className="mt-2">
               <FormLabel>Package</FormLabel>
               <Select
-                defaultValue={field.value?.package_id}
+                value={packageValue}
                 onValueChange={handlePackageSelect}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a package">
-                    {field.value?.package_name}
+                    {field.value?.package_name || "Select a package"}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
