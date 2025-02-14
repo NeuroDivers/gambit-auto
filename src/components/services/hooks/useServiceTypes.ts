@@ -32,12 +32,12 @@ export const useServiceTypes = (
   const { data: serviceTypes, refetch } = useQuery({
     queryKey: ["serviceTypes", searchQuery, statusFilter, typeFilter],
     queryFn: async () => {
-      // First, get all services with their parent information
+      // Get all services with their parent information
       const { data: services, error: servicesError } = await supabase
         .from("service_types")
         .select(`
           *,
-          parent:service_types!service_types_parent_service_id_fkey(
+          parent:service_types(
             id,
             name,
             status
@@ -52,7 +52,7 @@ export const useServiceTypes = (
 
       console.log('Raw services data:', services);
 
-      // Then, get all sub-services relationships
+      // Get all sub-services relationships
       const { data: subServices, error: subServicesError } = await supabase
         .from("service_types")
         .select(`
@@ -67,22 +67,26 @@ export const useServiceTypes = (
 
       if (subServicesError) throw subServicesError;
 
-      // Then get bundle relationships
+      // Get bundle relationships
       const { data: bundleRelations, error: bundleError } = await supabase
         .from('bundle_services')
         .select(`
           bundle_id,
           service_id,
-          bundle:service_types!bundle_services_bundle_id_fkey(*),
-          service:service_types!bundle_services_service_id_fkey(*)
+          bundle:service_types(*),
+          service:service_types(*)
         `);
 
       if (bundleError) throw bundleError;
 
       // Transform services to include all relationships
       const servicesWithRelations = services.map(service => {
+        // Get the parent from the parent array (Supabase returns it as an array)
+        const parentService = Array.isArray(service.parent) ? service.parent[0] : service.parent;
+
         return {
           ...service,
+          parent: parentService || null,
           sub_services: subServices.filter(sub => sub.parent_service_id === service.id),
           included_in_bundles: bundleRelations
             .filter(rel => rel.service_id === service.id)
