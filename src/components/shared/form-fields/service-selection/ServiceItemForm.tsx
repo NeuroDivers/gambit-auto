@@ -52,25 +52,18 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
   const mounted = useRef(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [open, setOpen] = useState(false);
-  const [selectedServiceName, setSelectedServiceName] = useState("");
+  const [selectedServiceName, setSelectedServiceName] = useState(item.service_name || "");
 
   useEffect(() => {
     if (item.service_name) {
       setSelectedServiceName(item.service_name);
       setIsExpanded(true);
-      
-      if (!item.service_id) {
-        const service = services.find(s => s.name === item.service_name);
-        if (service) {
-          onUpdate(index, "service_id", service.id);
-        }
-      }
     }
     
     return () => {
       mounted.current = false;
     };
-  }, [item, services, index, onUpdate]);
+  }, [item.service_name]);
 
   const handleServiceSelect = React.useCallback((currentValue: string) => {
     if (!mounted.current) return;
@@ -78,7 +71,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
     const selectedService = services.find(service => service.id === currentValue);
     
     if (selectedService) {
-      console.log('Selected service:', selectedService); // Add logging
+      console.log('Selected service:', selectedService);
       onUpdate(index, "service_id", selectedService.id);
       onUpdate(index, "service_name", selectedService.name);
       if (selectedService.price !== null) {
@@ -89,18 +82,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
       setIsExpanded(true);
       setOpen(false);
     }
-  }, [services, index, onUpdate, mounted]);
-
-  const selectedService = React.useMemo(() => {
-    if (!item.service_id && !item.service_name) return undefined;
-    
-    return services.find(service => {
-      if (item.service_id) {
-        return service.id === item.service_id;
-      }
-      return service.name === item.service_name;
-    });
-  }, [item.service_id, item.service_name, services]);
+  }, [services, index, onUpdate]);
 
   const servicesByType = services.reduce<ServicesByType>((acc, service) => {
     const type = service.hierarchy_type || 'Other';
@@ -161,9 +143,8 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                             {typeServices.map((service) => (
                               <CommandItem
                                 key={service.id}
-                                onSelect={() => {
-                                  handleServiceSelect(service.id);
-                                }}
+                                onSelect={() => handleServiceSelect(service.id)}
+                                className="cursor-pointer"
                               >
                                 <div className="flex items-center justify-between w-full">
                                   <span>{service.name}</span>
@@ -176,7 +157,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                                 <Check
                                   className={cn(
                                     "ml-2 h-4 w-4",
-                                    selectedService?.id === service.id ? "opacity-100" : "opacity-0"
+                                    item.service_id === service.id ? "opacity-100" : "opacity-0"
                                   )}
                                 />
                               </CommandItem>
@@ -191,8 +172,9 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Quantity</Label>
+                  <Label htmlFor={`quantity-${index}`}>Quantity</Label>
                   <Input
+                    id={`quantity-${index}`}
                     type="number"
                     value={item.quantity || 1}
                     onChange={(e) => {
@@ -207,8 +189,9 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                 </div>
 
                 <div>
-                  <Label>Unit Price</Label>
+                  <Label htmlFor={`unit-price-${index}`}>Unit Price</Label>
                   <Input
+                    id={`unit-price-${index}`}
                     type="number"
                     value={item.unit_price || 0}
                     onChange={(e) => {
@@ -224,9 +207,9 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                 </div>
               </div>
 
-              {selectedService?.description && (
+              {services.find(s => s.id === item.service_id)?.description && (
                 <div className="mt-2 text-sm text-muted-foreground">
-                  {selectedService.description}
+                  {services.find(s => s.id === item.service_id)?.description}
                 </div>
               )}
             </div>
