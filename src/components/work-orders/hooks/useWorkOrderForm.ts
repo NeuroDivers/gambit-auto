@@ -66,7 +66,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
       additional_notes: workOrder?.additional_notes || "",
       address: workOrder?.address || "",
       start_time: workOrder?.start_time ? new Date(workOrder.start_time) : defaultStartTime || null,
-      estimated_duration: null,
+      estimated_duration: workOrder?.estimated_duration ? parseInt(workOrder.estimated_duration.toString()) : null,
       end_time: workOrder?.end_time ? new Date(workOrder.end_time) : null,
       assigned_bay_id: workOrder?.assigned_bay_id || null,
       assigned_profile_id: workOrder?.assigned_profile_id || null,
@@ -86,7 +86,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
             service_id,
             quantity,
             unit_price,
-            service:service_types!work_order_services_service_id_fkey (
+            service:service_types (
               id,
               name
             )
