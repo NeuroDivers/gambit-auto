@@ -59,10 +59,13 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
     };
   }, []);
 
-  const handleServiceSelect = (serviceId: string) => {
+  const handleServiceSelect = (value: string) => {
+    console.log("Selected value:", value);
     if (!mounted.current) return;
     
-    const selectedService = services.find(service => service?.id === serviceId);
+    const selectedService = services.find(service => service?.id === value);
+    console.log("Found service:", selectedService);
+    
     if (selectedService) {
       onUpdate(index, "service_id", selectedService.id);
       onUpdate(index, "service_name", selectedService.name);
@@ -135,7 +138,10 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                               <CommandItem
                                 key={service.id}
                                 value={service.id}
-                                onSelect={handleServiceSelect}
+                                onSelect={(currentValue) => {
+                                  console.log("CommandItem selected:", currentValue);
+                                  handleServiceSelect(currentValue);
+                                }}
                                 className="flex items-center justify-between cursor-pointer"
                               >
                                 <div className="flex items-center justify-between w-full">
