@@ -77,12 +77,28 @@ async function updateWorkOrderServices(workOrderId: string, serviceItems: WorkOr
     )
 
     if (validServices.length > 0) {
-      const servicesToInsert = validServices.map(item => ({
-        work_order_id: workOrderId,
-        service_id: item.service_id,
-        quantity: item.quantity,
-        unit_price: item.unit_price
-      }))
+      // Fetch service type details to determine hierarchy
+      const { data: serviceTypes } = await supabase
+        .from('service_types')
+        .select('id, hierarchy_type')
+        .in('id', validServices.map(s => s.service_id))
+
+      const serviceTypesMap = new Map(serviceTypes?.map(st => [st.id, st]) || [])
+      
+      const servicesToInsert = validServices.map(item => {
+        const serviceType = serviceTypesMap.get(item.service_id)
+        const isMainService = serviceType?.hierarchy_type === 'main'
+        const isSubService = serviceType?.hierarchy_type === 'sub'
+
+        return {
+          work_order_id: workOrderId,
+          service_id: item.service_id,
+          main_service_id: isSubService ? item.main_service_id : null,
+          sub_service_id: isSubService ? item.service_id : null,
+          quantity: item.quantity,
+          unit_price: item.unit_price
+        }
+      })
 
       const { error: servicesError } = await supabase
         .from('work_order_services')
