@@ -29,6 +29,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItem
           description,
           price,
           status,
+          hierarchy_type,
           service_type,
           service_packages(
             id,
@@ -47,18 +48,47 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItem
     }
   });
 
+  // Group services by hierarchy type for better organization
+  const servicesByType = services.reduce((acc: { [key: string]: any[] }, service) => {
+    const type = service.hierarchy_type || 'Other'
+    if (!acc[type]) acc[type] = []
+    acc[type].push({
+      ...service,
+      sortKey: service.name.toLowerCase()
+    })
+    return acc
+  }, {})
+
+  // Sort services within each group
+  Object.keys(servicesByType).forEach(type => {
+    servicesByType[type].sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+  })
+
   const selectedService = services?.find(service => service.id === item.service_id);
   const availablePackages = selectedService?.service_packages?.filter(pkg => pkg.status === 'active') || [];
 
-  const serviceOptions: Option[] = (services || []).map(service => ({
-    value: service.id,
-    label: service.name,
-    price: service.price,
-  }));
+  // Create organized options with clear group labels
+  const serviceOptions: Option[] = Object.entries(servicesByType)
+    .sort(([a], [b]) => a.localeCompare(b)) // Sort group headers alphabetically
+    .flatMap(([type, services]) => [
+      // Add a styled group header
+      { 
+        value: `group-${type}`, 
+        label: type.toUpperCase(), 
+        price: null, 
+        disabled: true 
+      },
+      // Add the services in this group
+      ...services.map(service => ({
+        value: service.id,
+        label: `${service.name}${service.price ? ` • $${service.price.toFixed(2)}` : ''}`,
+        price: service.price,
+      }))
+    ]);
 
   const packageOptions: Option[] = availablePackages.map(pkg => ({
     value: pkg.id,
-    label: pkg.name,
+    label: `${pkg.name}${pkg.price ? ` • $${pkg.price.toFixed(2)}` : pkg.sale_price ? ` • $${pkg.sale_price.toFixed(2)}` : ''}`,
     price: pkg.price || pkg.sale_price,
   }));
 
@@ -103,7 +133,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItem
               options={serviceOptions}
               value={item.service_id || ''}
               onValueChange={handleServiceSelect}
-              placeholder={isServicesLoading ? "Loading services..." : "Select a service"}
+              placeholder={isServicesLoading ? "Loading services..." : "Search for a service..."}
               showPrice={true}
               disabled={isServicesLoading}
             />
