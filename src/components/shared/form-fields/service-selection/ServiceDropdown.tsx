@@ -38,12 +38,15 @@ export function ServiceDropdown({
   handleServiceSelect,
   serviceId
 }: ServiceDropdownProps) {
+  const dropdownId = `service-dropdown-${serviceId || 'new'}`
+  
   return (
     <div>
-      <Label>Service</Label>
+      <Label htmlFor={dropdownId}>Service</Label>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
+            id={dropdownId}
             variant="outline"
             role="combobox"
             aria-expanded={open}
@@ -54,38 +57,45 @@ export function ServiceDropdown({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[400px] p-0" align="start" sideOffset={4}>
-          <Command value={serviceId}>
+          <Command>
             <CommandInput placeholder="Search services..." />
             <CommandList>
               <CommandEmpty>No services found.</CommandEmpty>
               {Object.entries(servicesByType).map(([type, services]) => (
                 <CommandGroup key={type} heading={type}>
-                  {services.map((service) => (
-                    <CommandItem
-                      key={service.id}
-                      value={service.name.toLowerCase()}
-                      onSelect={() => {
-                        console.log("Service selected in dropdown:", service.name);
-                        handleServiceSelect(service.id);
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <span>{service.name}</span>
-                        {service.price !== null && service.price !== undefined && (
-                          <span className="text-muted-foreground ml-2">
-                            ${service.price.toFixed(2)}
-                          </span>
-                        )}
-                      </div>
-                      <Check
+                  {services.map((service) => {
+                    const isSelected = service.id === serviceId
+                    return (
+                      <CommandItem
+                        key={service.id}
+                        value={service.name}
+                        onSelect={() => {
+                          console.log("Service selected in dropdown:", service.name);
+                          handleServiceSelect(service.id);
+                          setOpen(false);
+                        }}
                         className={cn(
-                          "ml-2 h-4 w-4",
-                          serviceId === service.id ? "opacity-100" : "opacity-0"
+                          "cursor-pointer",
+                          isSelected && "bg-accent"
                         )}
-                      />
-                    </CommandItem>
-                  ))}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span>{service.name}</span>
+                          {service.price !== null && service.price !== undefined && (
+                            <span className="text-muted-foreground ml-2">
+                              ${service.price.toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                        <Check
+                          className={cn(
+                            "ml-2 h-4 w-4",
+                            isSelected ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                      </CommandItem>
+                    )
+                  })}
                 </CommandGroup>
               ))}
             </CommandList>
