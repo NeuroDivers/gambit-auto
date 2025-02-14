@@ -2,9 +2,39 @@
 import { WorkOrderFormValues } from "../../types"
 import { supabase } from "@/integrations/supabase/client"
 
+async function ensureClientExists(values: WorkOrderFormValues) {
+  // First check if client exists
+  const { data: existingClient } = await supabase
+    .from("clients")
+    .select("id")
+    .eq("email", values.email)
+    .maybeSingle()
+
+  if (!existingClient) {
+    // Create new client if doesn't exist
+    const { error: clientError } = await supabase
+      .from("clients")
+      .insert({
+        first_name: values.first_name,
+        last_name: values.last_name,
+        email: values.email,
+        phone_number: values.phone_number,
+        address: values.address
+      })
+
+    if (clientError) {
+      console.error("Error creating client:", clientError)
+      throw clientError
+    }
+  }
+}
+
 export async function createWorkOrder(values: WorkOrderFormValues) {
   console.log("Creating work order with values:", values)
   
+  // Ensure client exists before creating work order
+  await ensureClientExists(values)
+
   const { data: workOrder, error: workOrderError } = await supabase
     .from("work_orders")
     .insert({
