@@ -107,7 +107,6 @@ async function insertWorkOrderServices(serviceItems: WorkOrderFormValues["servic
       const { error: servicesError } = await supabase
         .from("work_order_services")
         .insert(servicesToInsert)
-        .select()
 
       if (servicesError) {
         console.error("Error inserting work order services:", servicesError)
