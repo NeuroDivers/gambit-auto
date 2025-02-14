@@ -40,15 +40,19 @@ export function useInvoiceMutation(invoiceId?: string) {
         return total + (item.quantity * item.unit_price)
       }, 0)
 
-      // Get tax rate from business_taxes table
-      const { data: taxData } = await supabase
+      // Get tax rates from business_taxes table
+      const { data: taxRates, error: taxError } = await supabase
         .from('business_taxes')
         .select('tax_rate')
-        .single()
 
-      const taxRate = taxData?.tax_rate || 0
-      const taxAmount = subtotal * (taxRate / 100)
-      const total = subtotal + taxAmount
+      if (taxError) throw taxError
+
+      // Calculate total tax amount from all applicable tax rates
+      const totalTaxAmount = taxRates.reduce((total, tax) => {
+        return total + (subtotal * (tax.tax_rate / 100))
+      }, 0)
+
+      const total = subtotal + totalTaxAmount
 
       // First update the invoice details
       const { error: invoiceError } = await supabase
@@ -66,7 +70,7 @@ export function useInvoiceMutation(invoiceId?: string) {
           vehicle_year: values.vehicle_year || 0,
           vehicle_vin: values.vehicle_vin || "",
           subtotal: subtotal,
-          tax_amount: taxAmount,
+          tax_amount: totalTaxAmount,
           total: total
         })
         .eq('id', invoiceId)
