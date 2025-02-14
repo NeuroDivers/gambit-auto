@@ -57,7 +57,7 @@ export const ServiceTypesList = ({
         .select(`
           *,
           sub_services:service_types!parent_service_id(*),
-          parent:service_types(
+          parent:service_types!service_types_parent_service_id_fkey(
             id,
             name,
             status
@@ -66,6 +66,7 @@ export const ServiceTypesList = ({
         .order('name');
       
       if (servicesError) throw servicesError;
+      console.log('Services with parent:', services); // Add this log to debug
 
       const { data: bundleRelations, error: bundleError } = await supabase
         .from('bundle_services')
