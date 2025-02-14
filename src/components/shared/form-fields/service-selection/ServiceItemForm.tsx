@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -130,12 +131,12 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent 
-                    className="w-[400px] p-0 bg-popover z-[9999]" 
+                    className="w-[400px] p-0 bg-card" 
                     align="start"
                     sideOffset={4}
                     side="bottom"
                   >
-                    <Command className="bg-transparent">
+                    <Command className="w-full">
                       <CommandInput placeholder="Search services..." />
                       <CommandList className="max-h-[300px]">
                         <CommandEmpty>No services found.</CommandEmpty>
@@ -144,11 +145,8 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                             {typeServices.map((service) => (
                               <CommandItem
                                 key={service.id}
-                                value={service.name}
-                                onSelect={() => {
-                                  console.log("Service selected:", service);
-                                  handleServiceSelect(service.id);
-                                }}
+                                value={service.id}
+                                onSelect={handleServiceSelect}
                                 className="flex items-center justify-between cursor-pointer hover:bg-accent"
                               >
                                 <div className="flex items-center justify-between w-full">
