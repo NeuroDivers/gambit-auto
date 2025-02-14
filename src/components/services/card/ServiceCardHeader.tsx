@@ -19,6 +19,8 @@ export const ServiceCardHeader = ({
   isExpanded, 
   onToggleExpand 
 }: ServiceCardHeaderProps) => {
+  const isSubService = service.service_type === 'sub_service' && service.parent;
+
   return (
     <CardHeader className="pb-3">
       <div className="flex flex-wrap gap-2 items-start">
@@ -45,9 +47,9 @@ export const ServiceCardHeader = ({
               {service.status}
             </Badge>
             <ServiceTypeBadge type={service.service_type} />
-            {service.service_type === 'sub_service' && service.parent && (
+            {isSubService && (
               <Badge variant="secondary" className="flex items-center gap-1">
-                <span>Part of: </span>
+                <span>Parent: </span>
                 <span className="font-medium">{service.parent.name}</span>
               </Badge>
             )}
