@@ -22,9 +22,9 @@ interface ServiceItemProps {
 export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) {
   const { data: services = [] } = useServiceData()
 
-  // Group services by type for better organization
+  // Group services by hierarchy type for better organization
   const servicesByType = services.reduce((acc: { [key: string]: any[] }, service) => {
-    const type = service.service_type || 'Other'
+    const type = service.hierarchy_type || 'Other'
     if (!acc[type]) acc[type] = []
     acc[type].push(service)
     return acc
@@ -65,15 +65,15 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
     form.setValue("service_items", updatedServices)
   }
 
-  // Create grouped options for the select
-  const serviceOptions: Option[] = Object.entries(servicesByType).map(([type, services]) => ({
-    label: type,
-    options: services.map(service => ({
+  // Create flattened options with group labels
+  const serviceOptions: Option[] = Object.entries(servicesByType).flatMap(([type, services]) => [
+    { value: `group-${type}`, label: type, price: null, disabled: true },
+    ...services.map(service => ({
       value: service.id,
-      label: service.name,
+      label: `${service.name}${service.price ? ` - $${service.price}` : ''}`,
       price: service.price,
     }))
-  }));
+  ]);
 
   return (
     <Card className="relative">
@@ -103,16 +103,6 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
                     onValueChange={handleServiceChange}
                     placeholder="Select a service"
                     showPrice={true}
-                    renderOption={(option) => (
-                      <div className="flex justify-between items-center w-full">
-                        <span>{option.label}</span>
-                        {option.price && (
-                          <span className="text-sm text-muted-foreground">
-                            ${option.price}
-                          </span>
-                        )}
-                      </div>
-                    )}
                   />
                 </div>
 
