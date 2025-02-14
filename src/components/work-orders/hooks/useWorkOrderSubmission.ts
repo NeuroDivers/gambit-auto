@@ -103,9 +103,11 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
     throw deleteError
   }
 
-  // Then insert new services if there are any
-  if (values.service_items && values.service_items.length > 0) {
-    const servicesToInsert = values.service_items.map(item => ({
+  // Then insert new services if there are any valid ones
+  const validServices = values.service_items.filter(item => item.service_id && item.service_id.trim() !== "")
+  
+  if (validServices.length > 0) {
+    const servicesToInsert = validServices.map(item => ({
       work_order_id: workOrderId,
       service_id: item.service_id,
       quantity: item.quantity,
@@ -176,10 +178,12 @@ async function createWorkOrder(values: WorkOrderFormValues) {
   }
 
   // Insert service items
-  if (values.service_items && values.service_items.length > 0) {
-    console.log("Creating services for new work order:", values.service_items)
+  const validServices = values.service_items.filter(item => item.service_id && item.service_id.trim() !== "")
+  
+  if (validServices.length > 0) {
+    console.log("Creating services for new work order:", validServices)
     
-    const servicesToInsert = values.service_items.map(item => ({
+    const servicesToInsert = validServices.map(item => ({
       work_order_id: workOrder.id,
       service_id: item.service_id,
       quantity: item.quantity,
