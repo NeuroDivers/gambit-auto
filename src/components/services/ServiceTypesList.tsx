@@ -79,5 +79,4 @@ export const ServiceTypesList = () => {
       />
     </div>
   );
-};
-
+}

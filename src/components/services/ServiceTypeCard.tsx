@@ -87,4 +87,3 @@ export function ServiceTypeCard({ service, onEdit, onRefetch }: ServiceTypeCardP
     </Card>
   )
 }
-
