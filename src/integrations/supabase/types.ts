@@ -72,6 +72,39 @@ export type Database = {
         }
         Relationships: []
       }
+      bundle_services: {
+        Row: {
+          bundle_id: string
+          created_at: string
+          service_id: string
+        }
+        Insert: {
+          bundle_id: string
+          created_at?: string
+          service_id: string
+        }
+        Update: {
+          bundle_id?: string
+          created_at?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bundle_services_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bundle_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_profile: {
         Row: {
           address: string | null
