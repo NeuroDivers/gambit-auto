@@ -99,8 +99,8 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
     throw deleteError
   }
 
-  // Then insert new services
-  if (values.service_items.length > 0) {
+  // Then insert new services if there are any
+  if (values.service_items && values.service_items.length > 0) {
     const { error: servicesError } = await supabase
       .from('work_order_services')
       .insert(
@@ -167,7 +167,7 @@ async function createWorkOrder(values: WorkOrderFormValues) {
   }
 
   // Insert service items only for new work orders
-  if (values.service_items.length > 0) {
+  if (values.service_items && values.service_items.length > 0) {
     const { error: servicesError } = await supabase
       .from("work_order_services")
       .insert(

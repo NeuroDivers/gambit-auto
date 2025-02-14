@@ -12,15 +12,12 @@ interface ServiceType {
   name: string;
 }
 
-interface RawSupabaseWorkOrderService {
+interface WorkOrderService {
   id: string;
   service_id: string;
   quantity: number;
   unit_price: number;
-  service: {
-    id: string;
-    name: string;
-  };
+  service: ServiceType;
 }
 
 const formSchema = z.object({
@@ -91,7 +88,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
           return
         }
 
-        // Then fetch the services
+        // Then fetch the services with explicit relationship specified
         const { data: servicesData, error: servicesError } = await supabase
           .from('work_order_services')
           .select(`
@@ -99,7 +96,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
             service_id,
             quantity,
             unit_price,
-            service:service_types (
+            service:service_types!work_order_services_service_id_fkey (
               id,
               name
             )
@@ -112,7 +109,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
         }
 
         if (servicesData && Array.isArray(servicesData)) {
-          const formattedServices = servicesData
+          const formattedServices = (servicesData as WorkOrderService[])
             .filter(service => service.service && service.service.id && service.service.name)
             .map(service => ({
               service_id: service.service_id,
