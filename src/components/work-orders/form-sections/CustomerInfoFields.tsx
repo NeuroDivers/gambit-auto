@@ -1,3 +1,4 @@
+
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -76,20 +77,21 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
         name="contact_preference"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Preferred Contact Method</FormLabel>
+            <FormLabel htmlFor="contact_preference">Preferred Contact Method</FormLabel>
             <FormControl>
               <RadioGroup
+                id="contact_preference"
                 onValueChange={field.onChange}
                 defaultValue={field.value}
                 className="flex space-x-4"
               >
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="email" id="email" />
-                  <Label htmlFor="email">Email</Label>
+                  <RadioGroupItem value="email" id="contact_preference_email" />
+                  <Label htmlFor="contact_preference_email">Email</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="phone" id="phone" />
-                  <Label htmlFor="phone">Phone</Label>
+                  <RadioGroupItem value="phone" id="contact_preference_phone" />
+                  <Label htmlFor="contact_preference_phone">Phone</Label>
                 </div>
               </RadioGroup>
             </FormControl>
