@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { X } from "lucide-react"
 import { ServiceItemType } from "@/components/work-orders/types"
 import { useEffect, useRef, useState } from "react"
-import { SearchableSelect, Option } from "@/components/shared/form-fields/searchable-select/SearchableSelect"
+import { SearchableSelect, Option, GroupedOption } from "@/components/shared/form-fields/searchable-select/SearchableSelect"
 import {
   Accordion,
   AccordionContent,
@@ -46,8 +46,8 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
     return acc;
   }, {});
 
-  // Transform grouped services into the correct format for SearchableSelect
-  const searchableSelectOptions = Object.entries(groupedServices).map(([group, options]) => ({
+  // Transform grouped services into the correct format for SearchableSelect with proper typing
+  const searchableSelectOptions: GroupedOption[] = Object.entries(groupedServices).map(([group, options]) => ({
     label: group,
     options: options
   }));
