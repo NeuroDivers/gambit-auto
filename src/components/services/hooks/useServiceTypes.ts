@@ -37,13 +37,12 @@ export const useServiceTypes = (
         .from("service_types")
         .select(`
           *,
-          parent:service_types(
+          parent:service_types!service_types_parent_service_id_fkey(
             id,
             name,
             status
           )
         `)
-        .eq('service_types.parent.id', 'parent_service_id')
         .order('name');
       
       if (servicesError) {
