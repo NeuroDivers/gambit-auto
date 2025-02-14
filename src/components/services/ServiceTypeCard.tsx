@@ -78,35 +78,39 @@ export function ServiceTypeCard({ service, onEdit, onRefetch }: ServiceTypeCardP
   return (
     <Card className="relative">
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
-            <CardTitle className="text-lg">{service.name}</CardTitle>
-            {hasSubServices && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-                onClick={() => setIsExpanded(!isExpanded)}
+        <div className="flex flex-wrap gap-2 items-start">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-lg truncate">{service.name}</CardTitle>
+              {hasSubServices && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                >
+                  {isExpanded ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              <Badge variant={service.status === 'active' ? 'default' : 'secondary'}>
+                {service.status}
+              </Badge>
+              <Badge 
+                variant="outline" 
+                className="flex items-center gap-1"
               >
-                {isExpanded ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </Button>
-            )}
+                {getServiceTypeIcon()}
+                {getServiceTypeLabel()}
+              </Badge>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant={service.status === 'active' ? 'default' : 'secondary'}>
-              {service.status}
-            </Badge>
-            <Badge 
-              variant="outline" 
-              className="flex items-center gap-1"
-            >
-              {getServiceTypeIcon()}
-              {getServiceTypeLabel()}
-            </Badge>
+          <div className="flex gap-1 shrink-0">
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
               <Pencil className="h-4 w-4" />
             </Button>
@@ -124,14 +128,14 @@ export function ServiceTypeCard({ service, onEdit, onRefetch }: ServiceTypeCardP
       <CardContent>
         <div className="space-y-2">
           {service.description && (
-            <p className="text-sm text-muted-foreground">{service.description}</p>
+            <p className="text-sm text-muted-foreground line-clamp-2">{service.description}</p>
           )}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap gap-4 text-sm">
             {service.base_price && (
-              <span className="text-sm">Base Price: ${service.base_price}</span>
+              <span>Base Price: ${service.base_price}</span>
             )}
             {service.duration && (
-              <span className="text-sm">Duration: {service.duration} min</span>
+              <span>Duration: {service.duration} min</span>
             )}
             {service.pricing_model && (
               <Badge variant="outline" className="capitalize">
@@ -149,8 +153,8 @@ export function ServiceTypeCard({ service, onEdit, onRefetch }: ServiceTypeCardP
                     key={subService.id}
                     className="p-2 bg-muted rounded-lg flex justify-between items-center"
                   >
-                    <span className="text-sm">{subService.name}</span>
-                    <Badge variant="secondary" className="text-xs">
+                    <span className="text-sm truncate">{subService.name}</span>
+                    <Badge variant="secondary" className="text-xs ml-2">
                       {subService.status}
                     </Badge>
                   </div>
