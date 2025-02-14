@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -71,11 +72,11 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
     };
   }, [item, services, index, onUpdate]);
 
-  const handleServiceSelect = React.useCallback((selectedValue: string) => {
+  const handleServiceSelect = React.useCallback((currentValue: string) => {
     if (!mounted.current) return;
-    
+
     const selectedService = services.find(service => 
-      service.id.toLowerCase() === selectedValue.toLowerCase()
+      service.id.toLowerCase() === currentValue.toLowerCase()
     );
     
     if (selectedService) {
@@ -151,9 +152,9 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                     sideOffset={4}
                     side="bottom"
                   >
-                    <Command className="w-full">
+                    <Command>
                       <CommandInput placeholder="Search services..." />
-                      <CommandList className="max-h-[300px]">
+                      <CommandList>
                         <CommandEmpty>No services found.</CommandEmpty>
                         {Object.entries(servicesByType).map(([type, typeServices]) => (
                           <CommandGroup key={type} heading={type}>
@@ -161,8 +162,8 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                               <CommandItem
                                 key={service.id}
                                 value={service.id}
-                                onSelect={(value) => handleServiceSelect(value)}
-                                className="flex items-center justify-between cursor-pointer hover:bg-accent"
+                                onSelect={handleServiceSelect}
+                                className="flex items-center justify-between cursor-pointer"
                               >
                                 <div className="flex items-center justify-between w-full">
                                   <span>{service.name}</span>
