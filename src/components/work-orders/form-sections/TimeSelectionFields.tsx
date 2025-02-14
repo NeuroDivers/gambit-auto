@@ -58,7 +58,7 @@ export function TimeSelectionFields({
                 <div className="space-y-4">
                   <Calendar
                     mode="single"
-                    selected={field.value}
+                    selected={field.value || undefined}
                     onSelect={(date) => {
                       if (date) {
                         const currentValue = field.value || new Date()
@@ -110,7 +110,8 @@ export function TimeSelectionFields({
                 min={0}
                 step={0.5}
                 {...field}
-                onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                value={field.value || ''}
+                onChange={(e) => field.onChange(parseFloat(e.target.value) || '')}
               />
             </FormControl>
             <FormMessage />
