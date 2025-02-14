@@ -58,17 +58,18 @@ export function SearchableSelect({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
-        <Command shouldFilter={false}>
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+        <Command shouldFilter={true} className="max-h-[300px] overflow-hidden">
           <CommandInput placeholder={placeholder} />
-          <CommandEmpty>No options found.</CommandEmpty>
-          {safeOptions.length > 0 && (
-            <div className="max-h-[300px] overflow-y-auto">
+          <div className="overflow-y-auto max-h-[200px]">
+            {safeOptions.length === 0 ? (
+              <CommandEmpty>No options found.</CommandEmpty>
+            ) : (
               <CommandGroup>
-                {safeOptions.map((option, index) => (
+                {safeOptions.map((option) => (
                   <CommandItem
-                    key={`${option.value}-${index}`}
-                    value={option.value}
+                    key={option.value}
+                    value={option.label}
                     onSelect={() => {
                       onValueChange(option.value)
                       setOpen(false)
@@ -96,8 +97,8 @@ export function SearchableSelect({
                   </CommandItem>
                 ))}
               </CommandGroup>
-            </div>
-          )}
+            )}
+          </div>
         </Command>
       </PopoverContent>
     </Popover>
