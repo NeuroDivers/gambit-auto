@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -56,8 +55,8 @@ export const ServiceTypesList = ({
         .from("service_types")
         .select(`
           *,
-          sub_services:service_types!parent_service_id(*),
-          parent:service_types!service_types_parent_service_id_fkey(
+          sub_services:service_types!service_types_sub_services_fkey(*),
+          parent:service_types!service_types_parent_service_id_fkey!inner(
             id,
             name,
             status
@@ -66,7 +65,7 @@ export const ServiceTypesList = ({
         .order('name');
       
       if (servicesError) throw servicesError;
-      console.log('Services with parent:', services); // Add this log to debug
+      console.log('Services with parent:', services);
 
       const { data: bundleRelations, error: bundleError } = await supabase
         .from('bundle_services')
@@ -89,6 +88,7 @@ export const ServiceTypesList = ({
           .map(rel => rel.service)
       }));
 
+      console.log('Processed services:', servicesWithBundles);
       return servicesWithBundles;
     }
   });
