@@ -4,6 +4,7 @@ import Auth from "./pages/Auth"
 import Dashboard from "./pages/Dashboard"
 import WorkOrders from "./pages/WorkOrders"
 import EditWorkOrder from "./pages/EditWorkOrder"
+import CreateWorkOrder from "./pages/CreateWorkOrder"
 import ServiceTypes from "./pages/ServiceTypes"
 import ServiceBays from "./pages/ServiceBays"
 import UserManagement from "./pages/UserManagement"
@@ -49,6 +50,14 @@ export const router = createBrowserRouter([
         element: (
           <PermissionGuard resource="work_orders" type="page_access">
             <WorkOrders />
+          </PermissionGuard>
+        ),
+      },
+      {
+        path: "work-orders/create",
+        element: (
+          <PermissionGuard resource="work_orders" type="page_access">
+            <CreateWorkOrder />
           </PermissionGuard>
         ),
       },
