@@ -17,10 +17,23 @@ import {
 interface Service {
   id: string;
   name: string;
+  description?: string;
   price: number | null;
   status: string;
-  service_type: string;
-  description?: string;
+  hierarchy_type: string;
+  parent_service_id?: string | null;
+  sort_order?: number;
+  requires_main_service?: boolean;
+  can_be_standalone?: boolean;
+  sub_services?: Service[];
+  service_packages?: Array<{
+    id: string;
+    name: string;
+    description?: string;
+    price: number | null;
+    sale_price?: number | null;
+    status: string;
+  }>;
 }
 
 interface ServiceItemFormProps {
@@ -31,7 +44,7 @@ interface ServiceItemFormProps {
   onRemove: () => void
 }
 
-export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: ServiceItemFormProps) {
+export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove }: ServiceItemFormProps) {
   const mounted = useRef(true);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -42,8 +55,8 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
   }, []);
 
   // Group services by type for better organization and properly type the options
-  const groupedServices = services.reduce<Record<string, Option[]>>((acc, service) => {
-    const type = service.service_type || 'Other';
+  const groupedServices = (services || []).reduce<Record<string, Option[]>>((acc, service) => {
+    const type = service.hierarchy_type || 'Other';
     const groupName = type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
     if (!acc[groupName]) {
       acc[groupName] = [];
@@ -60,13 +73,13 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
   // Transform grouped services into the correct format for SearchableSelect
   const searchableSelectOptions: GroupedOption[] = Object.entries(groupedServices).map(([group, options]) => ({
     label: group,
-    options: options as Option[]
+    options: options
   }));
 
   const handleServiceSelect = (serviceId: string) => {
     if (!serviceId || !mounted.current) return;
     
-    const selectedService = services.find(service => service.id === serviceId);
+    const selectedService = services?.find(service => service.id === serviceId);
     if (selectedService) {
       onUpdate(index, "service_id", serviceId);
       onUpdate(index, "service_name", selectedService.name);
@@ -79,7 +92,7 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
   const quantityId = `quantity_${index}`;
   const priceId = `price_${index}`;
 
-  const selectedService = services.find(service => service.id === item.service_id);
+  const selectedService = services?.find(service => service.id === item.service_id);
 
   return (
     <div className="space-y-4 p-4 border rounded-lg relative bg-card">
@@ -111,7 +124,7 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
                 <Label htmlFor={serviceId}>Service</Label>
                 <SearchableSelect
                   options={searchableSelectOptions}
-                  value={item.service_id}
+                  value={item.service_id || ''}
                   onValueChange={handleServiceSelect}
                   placeholder="Search for a service..."
                   showPrice={true}
