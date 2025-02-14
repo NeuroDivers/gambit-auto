@@ -58,6 +58,9 @@ export function ServiceItemForm({
       if (selectedService.hierarchy_type !== 'sub') {
         onUpdate(index, "main_service_id", null)
       }
+      
+      // Close the dropdown after selection
+      setOpen(false)
     }
   }
 

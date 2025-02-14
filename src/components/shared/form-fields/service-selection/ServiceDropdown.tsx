@@ -54,7 +54,7 @@ export function ServiceDropdown({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[400px] p-0" align="start" sideOffset={4}>
-          <Command>
+          <Command value={serviceId}>
             <CommandInput placeholder="Search services..." />
             <CommandList>
               <CommandEmpty>No services found.</CommandEmpty>
@@ -63,10 +63,10 @@ export function ServiceDropdown({
                   {services.map((service) => (
                     <CommandItem
                       key={service.id}
-                      value={service.id}
+                      value={service.name.toLowerCase()}
                       onSelect={() => {
-                        handleServiceSelect(service.id)
-                        setOpen(false)
+                        console.log("Service selected in dropdown:", service.name);
+                        handleServiceSelect(service.id);
                       }}
                       className="cursor-pointer"
                     >
