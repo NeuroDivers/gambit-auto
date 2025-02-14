@@ -37,15 +37,21 @@ export const useServiceTypes = (
         .from("service_types")
         .select(`
           *,
-          parent:service_types!parent_service_id (
+          parent:service_types(
             id,
             name,
             status
           )
         `)
+        .eq('service_types.parent.id', 'parent_service_id')
         .order('name');
       
-      if (servicesError) throw servicesError;
+      if (servicesError) {
+        console.error('Services error:', servicesError);
+        throw servicesError;
+      }
+
+      console.log('Raw services data:', services);
 
       // Then, get all sub-services relationships
       const { data: subServices, error: subServicesError } = await supabase
@@ -75,17 +81,19 @@ export const useServiceTypes = (
       if (bundleError) throw bundleError;
 
       // Transform services to ensure parent is an object instead of an array
-      const servicesWithRelations = services.map(service => ({
-        ...service,
-        parent: Array.isArray(service.parent) ? service.parent[0] || null : service.parent,
-        sub_services: subServices.filter(sub => sub.parent_service_id === service.id),
-        included_in_bundles: bundleRelations
-          .filter(rel => rel.service_id === service.id)
-          .map(rel => rel.bundle),
-        bundle_includes: bundleRelations
-          .filter(rel => rel.bundle_id === service.id)
-          .map(rel => rel.service)
-      }));
+      const servicesWithRelations = services.map(service => {
+        console.log('Processing service:', service.name, 'Parent:', service.parent);
+        return {
+          ...service,
+          sub_services: subServices.filter(sub => sub.parent_service_id === service.id),
+          included_in_bundles: bundleRelations
+            .filter(rel => rel.service_id === service.id)
+            .map(rel => rel.bundle),
+          bundle_includes: bundleRelations
+            .filter(rel => rel.bundle_id === service.id)
+            .map(rel => rel.service)
+        };
+      });
 
       return servicesWithRelations;
     }
