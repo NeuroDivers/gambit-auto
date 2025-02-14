@@ -46,10 +46,11 @@ export function SearchableSelect({
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false)
   
-  // Ensure options is always a valid array
+  // Initialize empty arrays for both states to prevent undefined errors
   const safeOptions = Array.isArray(options) ? options : []
   const selectedOption = safeOptions.find((option) => option.value === value)
 
+  // Early return for loading state
   if (disabled) {
     return (
       <Button
@@ -62,6 +63,13 @@ export function SearchableSelect({
       </Button>
     )
   }
+
+  // Pre-populate the initial data for the Command component
+  const commandData = safeOptions.map(option => ({
+    ...option,
+    key: option.value,
+    ref: null
+  }))
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -79,11 +87,11 @@ export function SearchableSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full min-w-[var(--radix-popover-trigger-width)] p-0">
-        <Command>
+        <Command shouldFilter={true}>
           <CommandInput placeholder={`Search ${placeholder.toLowerCase()}...`} className="h-9" />
           <CommandEmpty>{emptyMessage}</CommandEmpty>
           <CommandGroup className="max-h-[300px] overflow-auto">
-            {safeOptions.map((option) => (
+            {commandData.map((option) => (
               <CommandItem
                 key={option.value}
                 value={option.value}
