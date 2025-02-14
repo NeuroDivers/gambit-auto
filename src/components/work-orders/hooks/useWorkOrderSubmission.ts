@@ -103,28 +103,38 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
     throw deleteError
   }
 
-  // Then insert new services if there are any
+  // Then insert new services if there are any valid ones
   if (values.service_items && values.service_items.length > 0) {
-    const servicesToInsert = values.service_items.map(item => ({
-      work_order_id: workOrderId,
-      service_id: item.service_id,
-      quantity: item.quantity,
-      unit_price: item.unit_price
-    }))
+    const validServices = values.service_items.filter(item => 
+      item.service_id && 
+      item.service_id !== "" && 
+      item.service_id !== "unassigned"
+    )
 
-    console.log("Inserting new services:", servicesToInsert)
+    if (validServices.length > 0) {
+      const servicesToInsert = validServices.map(item => ({
+        work_order_id: workOrderId,
+        service_id: item.service_id,
+        quantity: item.quantity,
+        unit_price: item.unit_price
+      }))
 
-    const { data: insertedServices, error: servicesError } = await supabase
-      .from('work_order_services')
-      .insert(servicesToInsert)
-      .select()
+      console.log("Inserting new services:", servicesToInsert)
 
-    if (servicesError) {
-      console.error("Error inserting work order services:", servicesError)
-      throw servicesError
+      const { data: insertedServices, error: servicesError } = await supabase
+        .from('work_order_services')
+        .insert(servicesToInsert)
+        .select()
+
+      if (servicesError) {
+        console.error("Error inserting work order services:", servicesError)
+        throw servicesError
+      }
+
+      console.log("Successfully inserted services:", insertedServices)
+    } else {
+      console.log("No valid services to insert")
     }
-
-    console.log("Successfully inserted services:", insertedServices)
   }
 }
 
@@ -175,27 +185,37 @@ async function createWorkOrder(values: WorkOrderFormValues) {
     }
   }
 
-  // Insert service items
+  // Insert service items if there are any valid ones
   if (values.service_items && values.service_items.length > 0) {
-    console.log("Creating services for new work order:", values.service_items)
-    
-    const servicesToInsert = values.service_items.map(item => ({
-      work_order_id: workOrder.id,
-      service_id: item.service_id,
-      quantity: item.quantity,
-      unit_price: item.unit_price
-    }))
+    const validServices = values.service_items.filter(item => 
+      item.service_id && 
+      item.service_id !== "" && 
+      item.service_id !== "unassigned"
+    )
 
-    const { data: insertedServices, error: servicesError } = await supabase
-      .from("work_order_services")
-      .insert(servicesToInsert)
-      .select()
+    if (validServices.length > 0) {
+      console.log("Creating services for new work order:", validServices)
+      
+      const servicesToInsert = validServices.map(item => ({
+        work_order_id: workOrder.id,
+        service_id: item.service_id,
+        quantity: item.quantity,
+        unit_price: item.unit_price
+      }))
 
-    if (servicesError) {
-      console.error("Error inserting work order services:", servicesError)
-      throw servicesError
+      const { data: insertedServices, error: servicesError } = await supabase
+        .from("work_order_services")
+        .insert(servicesToInsert)
+        .select()
+
+      if (servicesError) {
+        console.error("Error inserting work order services:", servicesError)
+        throw servicesError
+      }
+
+      console.log("Successfully inserted services for new work order:", insertedServices)
+    } else {
+      console.log("No valid services to insert")
     }
-
-    console.log("Successfully inserted services for new work order:", insertedServices)
   }
 }
