@@ -55,17 +55,20 @@ export const useServiceTypes = (
 
       if (parentsError) throw parentsError;
 
-      // Get bundle relationships
+      // Get bundle relationships - now with explicit foreign key references
       const { data: bundleRelations, error: bundleError } = await supabase
         .from('bundle_services')
         .select(`
           bundle_id,
           service_id,
-          bundle:service_types(*),
-          service:service_types(*)
+          bundle:service_types!bundle_services_bundle_id_fkey(*),
+          service:service_types!bundle_services_service_id_fkey(*)
         `);
 
-      if (bundleError) throw bundleError;
+      if (bundleError) {
+        console.error('Bundle error:', bundleError);
+        throw bundleError;
+      }
 
       // Transform services to include all relationships
       const servicesWithRelations = services.map(service => {
