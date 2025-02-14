@@ -102,8 +102,6 @@ export function useInvoiceFormSubmission({
               invoice_id: invoice,
               service_id: item.service_id,
               package_id: item.package_id,
-              service_name: item.service_name,
-              description: item.description,
               quantity: item.quantity,
               unit_price: item.unit_price,
             }))
