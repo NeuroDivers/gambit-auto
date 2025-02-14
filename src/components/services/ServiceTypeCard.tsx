@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -116,7 +117,7 @@ export function ServiceTypeCard({ service, onEdit, onRefetch }: ServiceTypeCardP
               </Badge>
               {service.service_type === 'sub_service' && service.parent && (
                 <Badge variant="secondary" className="flex items-center gap-1">
-                  Part of: {service.parent.name}
+                  {service.parent.name}
                 </Badge>
               )}
             </div>
