@@ -15,9 +15,6 @@ interface ServiceListProps {
 
 export function ServiceList({ workOrderServices, onServicesChange, disabled }: ServiceListProps) {
   const { data: services = [] } = useServiceData();
-  const form = useFieldArray({
-    name: "service_items"
-  });
 
   const handleRemoveService = (index: number) => {
     const updatedServices = [...workOrderServices];
@@ -49,6 +46,7 @@ export function ServiceList({ workOrderServices, onServicesChange, disabled }: S
             form={{
               getValues: () => workOrderServices,
               setValue: (_: string, newServices: ServiceItemType[]) => {
+                console.log("Setting new services:", newServices);
                 onServicesChange(newServices);
               }
             }}
