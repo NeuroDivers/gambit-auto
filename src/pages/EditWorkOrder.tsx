@@ -71,10 +71,10 @@ export default function EditWorkOrder() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
-      <div className="container mx-auto py-12">
+      <div className="container mx-auto py-6">
         <div className="px-6">
           <PageBreadcrumbs />
-          <div className="mb-6">
+          <div className="mb-4">
             <Button
               variant="ghost"
               className="gap-2"
@@ -85,9 +85,8 @@ export default function EditWorkOrder() {
             </Button>
           </div>
         </div>
-        {/* Move the portal container outside of ScrollArea */}
         <div id="radix-portal-container" />
-        <ScrollArea className="h-[calc(100vh-12rem)] px-6">
+        <ScrollArea className="h-[calc(100vh-8rem)] px-6">
           <div className="max-w-4xl mx-auto">
             <WorkOrderForm
               workOrder={workOrder}
