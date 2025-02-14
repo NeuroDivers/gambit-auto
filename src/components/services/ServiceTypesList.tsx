@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ServiceTypeDialog } from "./ServiceTypeDialog";
 import { ServiceTypeCard } from "./ServiceTypeCard";
 import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const ServiceTypesList = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -16,6 +17,8 @@ export const ServiceTypesList = () => {
     description: string | null;
     price: number | null;
     duration: number | null;
+    pricing_model?: 'flat_rate' | 'hourly' | 'variable';
+    base_price?: number | null;
   }>(null);
 
   const { data: serviceTypes, refetch } = useQuery({
@@ -23,8 +26,12 @@ export const ServiceTypesList = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_types")
-        .select("*")
-        .order("name");
+        .select(`
+          *,
+          sub_services:service_types!parent_service_id(*)
+        `)
+        .is('parent_service_id', null)
+        .order('name');
       
       if (error) throw error;
       return data;
@@ -49,20 +56,62 @@ export const ServiceTypesList = () => {
           Add Service Type
         </Button>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {serviceTypes?.map((service) => (
-          <ServiceTypeCard 
-            key={service.id} 
-            service={service} 
-            onEdit={() => {
-              setEditingService(service);
-              setIsDialogOpen(true);
-            }}
-            onRefetch={refetch}
-          />
-        ))}
-      </div>
+
+      <Tabs defaultValue="all" className="w-full">
+        <TabsList>
+          <TabsTrigger value="all">All Services</TabsTrigger>
+          <TabsTrigger value="main">Main Services</TabsTrigger>
+          <TabsTrigger value="sub">Sub Services</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all" className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {serviceTypes?.map((service) => (
+              <ServiceTypeCard 
+                key={service.id} 
+                service={service} 
+                onEdit={() => {
+                  setEditingService(service);
+                  setIsDialogOpen(true);
+                }}
+                onRefetch={refetch}
+              />
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="main" className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {serviceTypes?.filter(s => !s.parent_service_id).map((service) => (
+              <ServiceTypeCard 
+                key={service.id} 
+                service={service} 
+                onEdit={() => {
+                  setEditingService(service);
+                  setIsDialogOpen(true);
+                }}
+                onRefetch={refetch}
+              />
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="sub" className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {serviceTypes?.filter(s => s.parent_service_id).map((service) => (
+              <ServiceTypeCard 
+                key={service.id} 
+                service={service} 
+                onEdit={() => {
+                  setEditingService(service);
+                  setIsDialogOpen(true);
+                }}
+                onRefetch={refetch}
+              />
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       <ServiceTypeDialog 
         open={isDialogOpen} 
