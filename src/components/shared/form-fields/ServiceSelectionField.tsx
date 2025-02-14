@@ -1,119 +1,82 @@
 
-import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { UseFormReturn } from "react-hook-form"
-import { Card, CardContent } from "@/components/ui/card"
+import { ServiceItemForm } from "./service-selection/ServiceItemForm"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import { ServiceItemForm } from "./service-selection/ServiceItemForm"
-import { useServiceData } from "./service-selection/useServiceData"
-import { ServiceItemType } from "@/components/work-orders/types"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { ServiceItemType } from "@/components/work-orders/types"
+import { useServiceData } from "./service-selection/useServiceData"
 
 type ServiceSelectionFieldProps = {
-  form: UseFormReturn<any>
+  services: ServiceItemType[]
+  onServicesChange: (services: ServiceItemType[]) => void
+  disabled?: boolean
 }
 
-export function ServiceSelectionField({ form }: ServiceSelectionFieldProps) {
-  const { data: services = [] } = useServiceData()
-  const serviceItems = form.watch("service_items") || []
+export function ServiceSelectionField({ services, onServicesChange, disabled }: ServiceSelectionFieldProps) {
+  const { data: availableServices = [] } = useServiceData()
+
+  const handleRemoveService = (index: number) => {
+    const updatedServices = [...services];
+    updatedServices.splice(index, 1);
+    onServicesChange(updatedServices);
+  };
+
+  const handleUpdateService = (index: number, field: keyof ServiceItemType, value: any) => {
+    const updatedServices = [...services];
+    updatedServices[index] = {
+      ...updatedServices[index],
+      [field]: value
+    };
+    onServicesChange(updatedServices);
+  };
 
   const handleAddService = () => {
-    const currentItems = form.getValues("service_items") || []
-    form.setValue("service_items", [
-      ...currentItems,
+    onServicesChange([
+      ...services,
       {
         service_id: "",
         service_name: "",
         quantity: 1,
         unit_price: 0
       }
-    ], { shouldValidate: true })
-  }
-
-  const handleRemoveService = (index: number) => {
-    const currentItems = form.getValues("service_items") || []
-    const newItems = [...currentItems]
-    newItems.splice(index, 1)
-    form.setValue("service_items", newItems, { shouldValidate: true })
-  }
-
-  const handleServiceUpdate = (index: number, field: keyof ServiceItemType, value: any) => {
-    const currentItems = form.getValues("service_items") || []
-    const newItems = [...currentItems]
-    
-    if (field === "service_id" && value) {
-      const selectedService = services.find(s => s.id === value)
-      if (selectedService) {
-        newItems[index] = {
-          ...newItems[index],
-          service_id: selectedService.id,
-          service_name: selectedService.name,
-          unit_price: selectedService.price || 0
-        }
-      }
-    } else {
-      newItems[index] = {
-        ...newItems[index],
-        [field]: value
-      }
-    }
-    
-    form.setValue("service_items", newItems, { shouldValidate: true })
-  }
+    ]);
+  };
 
   return (
-    <FormField
-      control={form.control}
-      name="service_items"
-      render={({ field }) => (
-        <FormItem>
-          <ScrollArea className="h-[calc(100vh-20rem)]">
-            <Card className="border-border/5">
-              <CardContent className="p-4 bg-card">
-                <div className="flex justify-between items-center mb-4">
-                  <FormLabel htmlFor="service_items_list" className="text-lg font-semibold">
-                    Services
-                  </FormLabel>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAddService}
-                    className="flex items-center gap-2"
-                    id="add_service_button"
-                    name="add_service"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Service
-                  </Button>
-                </div>
-                
-                <div 
-                  className="space-y-4"
-                  id="service_items_list"
-                  role="list"
-                  aria-label="Service items list"
-                >
-                  {serviceItems.map((item: ServiceItemType, index: number) => (
-                    <ServiceItemForm
-                      key={index}
-                      index={index}
-                      item={item}
-                      services={services}
-                      onUpdate={handleServiceUpdate}
-                      onRemove={() => handleRemoveService(index)}
-                    />
-                  ))}
-                  {serviceItems.length === 0 && (
-                    <p className="text-muted-foreground">No services added</p>
-                  )}
-                </div>
-                <FormMessage />
-              </CardContent>
-            </Card>
-          </ScrollArea>
-        </FormItem>
-      )}
-    />
-  )
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <div className="font-medium">Services</div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleAddService}
+          disabled={disabled}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Service
+        </Button>
+      </div>
+
+      <ScrollArea className="h-[calc(100vh-20rem)]">
+        <div className="space-y-4">
+          {services.map((service, index) => (
+            <ServiceItemForm
+              key={index}
+              index={index}
+              item={service}
+              services={availableServices}
+              onUpdate={handleUpdateService}
+              onRemove={() => handleRemoveService(index)}
+            />
+          ))}
+          {services.length === 0 && (
+            <p className="text-muted-foreground text-center py-4">
+              No services added
+            </p>
+          )}
+        </div>
+      </ScrollArea>
+    </div>
+  );
 }

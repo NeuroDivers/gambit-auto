@@ -61,7 +61,10 @@ export function QuoteForm({ quote, onSuccess }: QuoteFormProps) {
             <CardTitle>Services</CardTitle>
           </CardHeader>
           <CardContent>
-            <ServiceSelectionField form={form} />
+            <ServiceSelectionField 
+              services={form.watch("service_items") || []}
+              onServicesChange={(services) => form.setValue("service_items", services)}
+            />
           </CardContent>
         </Card>
 

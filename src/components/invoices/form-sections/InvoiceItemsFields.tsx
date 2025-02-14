@@ -1,8 +1,8 @@
 
-import { InvoiceItemForm } from "./invoice-items/InvoiceItemForm"
 import { InvoiceItemsHeader } from "./invoice-items/InvoiceItemsHeader"
 import { InvoiceItem } from "../types"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 
 type InvoiceItemsFieldsProps = {
   items: InvoiceItem[]
@@ -10,54 +10,12 @@ type InvoiceItemsFieldsProps = {
 }
 
 export function InvoiceItemsFields({ items, setItems }: InvoiceItemsFieldsProps) {
-  const addItem = () => {
-    setItems([
-      ...items,
-      {
-        service_id: "",
-        package_id: null,
-        service_name: "",
-        description: "",
-        quantity: 1,
-        unit_price: 0
-      }
-    ])
-  }
-
-  const removeItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index))
-  }
-
-  const updateItem = (index: number, field: keyof InvoiceItem, value: string | number | null) => {
-    console.log('Updating item:', { index, field, value })
-    const newItems = [...items]
-    newItems[index] = {
-      ...newItems[index],
-      [field]: value,
-    }
-    console.log('Updated items:', newItems)
-    setItems(newItems)
-  }
-
   return (
     <div className="space-y-4">
-      <InvoiceItemsHeader onAddItem={addItem} />
-      <ScrollArea className="h-[calc(100vh-20rem)]">
-        <div className="space-y-4">
-          {items.map((item, index) => (
-            <InvoiceItemForm
-              key={index}
-              item={item}
-              index={index}
-              onUpdate={updateItem}
-              onRemove={removeItem}
-            />
-          ))}
-          {items.length === 0 && (
-            <p className="text-muted-foreground text-center py-4">No services added</p>
-          )}
-        </div>
-      </ScrollArea>
+      <ServiceSelectionField 
+        services={items}
+        onServicesChange={setItems}
+      />
     </div>
   )
 }
