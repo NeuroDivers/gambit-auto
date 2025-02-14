@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
@@ -152,6 +153,7 @@ export const ServiceTypeDialog = ({
 
         <Tabs defaultValue="details" className="w-full">
           <TabsList>
+            <TabsTrigger value="details">Details</TabsTrigger>
             {isEditing && <TabsTrigger value="packages">Packages</TabsTrigger>}
           </TabsList>
 
