@@ -1,4 +1,5 @@
 
+import React, { useEffect, useState } from "react"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -8,7 +9,6 @@ import { useServiceData } from "@/components/shared/form-fields/service-selectio
 import { ServiceItemType } from "../../types"
 import { SearchableSelect, Option } from "@/components/shared/form-fields/searchable-select/SearchableSelect"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { useEffect, useState } from "react"
 
 interface ServiceItemProps {
   index: number
