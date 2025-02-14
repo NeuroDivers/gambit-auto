@@ -5,12 +5,14 @@ import { useEffect, useState } from "react"
 import { WorkOrdersSection } from "./sections/WorkOrdersSection"
 import { MobileCalendarView } from "./mobile/MobileCalendarView"
 import { toast } from "sonner"
-import { CreateWorkOrderDialog } from "./CreateWorkOrderDialog"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
-import { CalendarClock } from "lucide-react"
+import { CalendarClock, Plus } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { useNavigate } from "react-router-dom"
 
 export const WorkOrderCalendar = () => {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const [currentDate] = useState(new Date())
 
   const { data: workOrders = [] } = useQuery({
@@ -71,7 +73,10 @@ export const WorkOrderCalendar = () => {
   return (
     <div className="space-y-8">
       <div className="flex justify-end px-6">
-        <CreateWorkOrderDialog />
+        <Button onClick={() => navigate("/work-orders/create")}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Work Order
+        </Button>
       </div>
       <div className="space-y-20">
         <MobileCalendarView
