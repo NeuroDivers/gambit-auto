@@ -12,12 +12,16 @@ interface ServiceType {
   name: string;
 }
 
-interface WorkOrderService {
+// Define the shape of the raw data from Supabase
+interface RawWorkOrderService {
   id: string;
   service_id: string;
   quantity: number;
   unit_price: number;
-  service: ServiceType;
+  service: {
+    id: string;
+    name: string;
+  };
 }
 
 const formSchema = z.object({
@@ -109,8 +113,11 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
         }
 
         if (servicesData && Array.isArray(servicesData)) {
-          const formattedServices = (servicesData as WorkOrderService[])
-            .filter(service => service.service && service.service.id && service.service.name)
+          // First cast the raw data to our known shape
+          const rawServices = servicesData as unknown as RawWorkOrderService[]
+          
+          const formattedServices = rawServices
+            .filter(service => service.service && typeof service.service === 'object' && 'id' in service.service && 'name' in service.service)
             .map(service => ({
               service_id: service.service_id,
               service_name: service.service.name,
