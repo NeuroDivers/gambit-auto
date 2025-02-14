@@ -59,7 +59,6 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
     };
   }, []);
 
-  // Update selectedServiceName when item.service_name changes
   useEffect(() => {
     if (mounted.current) {
       setSelectedServiceName(item.service_name || "");
@@ -85,7 +84,6 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
 
   const selectedService = services.find(service => service?.id === item.service_id);
 
-  // Group services by hierarchy type with proper typing
   const servicesByType = services.reduce<ServicesByType>((acc, service) => {
     const type = service.hierarchy_type || 'Other';
     if (!acc[type]) acc[type] = [];
@@ -146,7 +144,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                               <CommandItem
                                 key={service.id}
                                 value={service.id}
-                                onSelect={handleServiceSelect}
+                                onSelect={() => handleServiceSelect(service.id)}
                                 className="flex items-center justify-between cursor-pointer"
                               >
                                 <div className="flex items-center justify-between w-full">
