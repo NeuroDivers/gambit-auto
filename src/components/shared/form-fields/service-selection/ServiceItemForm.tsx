@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -72,7 +71,9 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
 
   // Group services by type for better organization
   const groupedServices = React.useMemo(() => {
-    return (services || []).reduce<Record<string, Service[]>>((acc, service) => {
+    if (!Array.isArray(services)) return {};
+    
+    return services.reduce<Record<string, Service[]>>((acc, service) => {
       if (!service) return acc;
       
       const type = service.hierarchy_type || 'Other';
@@ -97,10 +98,6 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
       setOpen(false);
     }
   };
-
-  const serviceId = `service_${index}`;
-  const quantityId = `quantity_${index}`;
-  const priceId = `price_${index}`;
 
   const selectedService = services?.find(service => service?.id === item.service_id);
 
@@ -131,7 +128,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
           <AccordionContent>
             <div className="space-y-4">
               <div>
-                <Label htmlFor={serviceId}>Service</Label>
+                <Label>Service</Label>
                 <Popover open={open} onOpenChange={setOpen}>
                   <PopoverTrigger asChild>
                     <Button
@@ -144,7 +141,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[400px] p-0">
+                  <PopoverContent className="w-[400px] p-0" align="start">
                     <Command>
                       <CommandInput placeholder="Search for a service..." />
                       <CommandEmpty>No service found.</CommandEmpty>
@@ -153,20 +150,20 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                           {groupServices.map((service) => (
                             <CommandItem
                               key={service.id}
-                              value={service.name}
                               onSelect={() => handleServiceSelect(service.id)}
+                              value={service.id}
                               disabled={service.status === 'inactive'}
                               className="flex justify-between items-center"
                             >
-                              <span>{service.name}</span>
+                              <span className="flex-1">{service.name}</span>
                               {service.price && (
-                                <span className="text-muted-foreground">
+                                <span className="text-muted-foreground ml-2">
                                   ${service.price.toFixed(2)}
                                 </span>
                               )}
                               <Check
                                 className={cn(
-                                  "ml-auto h-4 w-4",
+                                  "ml-2 h-4 w-4 flex-shrink-0",
                                   selectedService?.id === service.id ? "opacity-100" : "opacity-0"
                                 )}
                               />
@@ -181,11 +178,9 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor={quantityId}>Quantity</Label>
+                  <Label>Quantity</Label>
                   <Input
                     type="number"
-                    id={quantityId}
-                    name={quantityId}
                     value={item.quantity || 1}
                     onChange={(e) => {
                       if (mounted.current) {
@@ -199,11 +194,9 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                 </div>
 
                 <div>
-                  <Label htmlFor={priceId}>Unit Price</Label>
+                  <Label>Unit Price</Label>
                   <Input
                     type="number"
-                    id={priceId}
-                    name={priceId}
                     value={item.unit_price || 0}
                     onChange={(e) => {
                       if (mounted.current) {
