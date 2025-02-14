@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -73,11 +74,12 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
   const groupedServices = React.useMemo(() => {
     if (!Array.isArray(services)) return {};
     
-    return services.reduce<Record<string, Service[]>>((acc, service) => {
-      if (!service) return acc;
-      
+    const validServices = services.filter(service => service && typeof service === 'object');
+    
+    return validServices.reduce<Record<string, Service[]>>((acc, service) => {
       const type = service.hierarchy_type || 'Other';
       const groupName = type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
+      
       if (!acc[groupName]) {
         acc[groupName] = [];
       }
@@ -89,7 +91,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
   const handleServiceSelect = (serviceId: string) => {
     if (!serviceId || !mounted.current) return;
     
-    const selectedService = services?.find(service => service?.id === serviceId);
+    const selectedService = services.find(service => service?.id === serviceId);
     if (selectedService) {
       onUpdate(index, "service_id", serviceId);
       onUpdate(index, "service_name", selectedService.name);
@@ -99,7 +101,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
     }
   };
 
-  const selectedService = services?.find(service => service?.id === item.service_id);
+  const selectedService = services.find(service => service?.id === item.service_id);
 
   return (
     <div className="space-y-4 p-4 border rounded-lg relative bg-card">
@@ -109,8 +111,6 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
         size="icon"
         onClick={onRemove}
         className="absolute right-2 top-2"
-        id={`remove_service_${index}`}
-        aria-label={`Remove service ${index + 1}`}
       >
         <X className="h-4 w-4" />
       </Button>
@@ -142,34 +142,36 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[400px] p-0" align="start">
-                    <Command>
+                    <Command shouldFilter={false}>
                       <CommandInput placeholder="Search for a service..." />
                       <CommandEmpty>No service found.</CommandEmpty>
                       {Object.entries(groupedServices).map(([groupName, groupServices]) => (
-                        <CommandGroup key={groupName} heading={groupName}>
-                          {groupServices.map((service) => (
-                            <CommandItem
-                              key={service.id}
-                              onSelect={() => handleServiceSelect(service.id)}
-                              value={service.id}
-                              disabled={service.status === 'inactive'}
-                              className="flex justify-between items-center"
-                            >
-                              <span className="flex-1">{service.name}</span>
-                              {service.price && (
-                                <span className="text-muted-foreground ml-2">
-                                  ${service.price.toFixed(2)}
-                                </span>
-                              )}
-                              <Check
-                                className={cn(
-                                  "ml-2 h-4 w-4 flex-shrink-0",
-                                  selectedService?.id === service.id ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
+                        groupServices.length > 0 ? (
+                          <CommandGroup key={groupName} heading={groupName}>
+                            {groupServices.map((service) => (
+                              <CommandItem
+                                key={service.id}
+                                onSelect={() => handleServiceSelect(service.id)}
+                                value={`${service.id}-${service.name}`}
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <span>{service.name}</span>
+                                  {service.price && (
+                                    <span className="text-muted-foreground ml-2">
+                                      ${service.price.toFixed(2)}
+                                    </span>
+                                  )}
+                                  <Check
+                                    className={cn(
+                                      "ml-2 h-4 w-4",
+                                      selectedService?.id === service.id ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        ) : null
                       ))}
                     </Command>
                   </PopoverContent>
