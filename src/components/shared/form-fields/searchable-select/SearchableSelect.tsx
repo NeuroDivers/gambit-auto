@@ -35,8 +35,8 @@ interface SearchableSelectProps {
 }
 
 export function SearchableSelect({
-  options = [], // Ensure options has a default empty array
-  value = '', // Ensure value has a default empty string
+  options,
+  value = '',
   onValueChange,
   placeholder = "Select an option",
   emptyMessage = "No results found.",
@@ -46,10 +46,22 @@ export function SearchableSelect({
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false)
   
-  // Ensure options is always an array
+  // Ensure options is always a valid array
   const safeOptions = Array.isArray(options) ? options : []
-  
   const selectedOption = safeOptions.find((option) => option.value === value)
+
+  if (disabled) {
+    return (
+      <Button
+        variant="outline"
+        className={cn("w-full justify-between", className)}
+        disabled
+      >
+        <span className="truncate">Loading...</span>
+        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+      </Button>
+    )
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -59,7 +71,6 @@ export function SearchableSelect({
           role="combobox"
           aria-expanded={open}
           className={cn("w-full justify-between", className)}
-          disabled={disabled}
         >
           <span className="truncate">
             {selectedOption ? selectedOption.label : placeholder}

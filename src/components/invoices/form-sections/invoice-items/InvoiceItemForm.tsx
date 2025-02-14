@@ -68,7 +68,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItem
   const availablePackages = selectedService?.service_packages?.filter(pkg => pkg.status === 'active') || [];
 
   // Create organized options with clear group labels
-  const serviceOptions: Option[] = !isServicesLoading ? Object.entries(servicesByType)
+  const serviceOptions: Option[] = Object.entries(servicesByType)
     .sort(([a], [b]) => a.localeCompare(b))
     .flatMap(([type, services]) => [
       { 
@@ -82,7 +82,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItem
         label: `${service.name}${service.price ? ` • $${service.price.toFixed(2)}` : ''}`,
         price: service.price,
       }))
-    ]) : [];
+    ]);
 
   const packageOptions: Option[] = availablePackages.map(pkg => ({
     value: pkg.id,
@@ -91,13 +91,15 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItem
   }));
 
   const handleServiceSelect = (serviceId: string) => {
-    const selectedService = services.find(service => service.id === serviceId);
-    if (selectedService) {
-      onUpdate(index, "service_id", serviceId);
-      onUpdate(index, "service_name", selectedService.name);
-      onUpdate(index, "description", selectedService.description || '');
-      onUpdate(index, "unit_price", selectedService.price || 0);
-      onUpdate(index, "package_id", null);
+    if (!serviceId.startsWith('group-')) {
+      const selectedService = services.find(service => service.id === serviceId);
+      if (selectedService) {
+        onUpdate(index, "service_id", serviceId);
+        onUpdate(index, "service_name", selectedService.name);
+        onUpdate(index, "description", selectedService.description || '');
+        onUpdate(index, "unit_price", selectedService.price || 0);
+        onUpdate(index, "package_id", null);
+      }
     }
   };
 
