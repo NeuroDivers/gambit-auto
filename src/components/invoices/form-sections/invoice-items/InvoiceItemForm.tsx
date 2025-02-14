@@ -18,7 +18,7 @@ type ServiceItemFormProps = {
 }
 
 export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItemFormProps) {
-  const { data: services, isLoading: isServicesLoading } = useQuery({
+  const { data: services = [], isLoading: isServicesLoading } = useQuery({
     queryKey: ["services"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -50,11 +50,11 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItem
   const selectedService = services?.find(service => service.id === item.service_id);
   const availablePackages = selectedService?.service_packages?.filter(pkg => pkg.status === 'active') || [];
 
-  const serviceOptions: Option[] = services?.map(service => ({
+  const serviceOptions: Option[] = (services || []).map(service => ({
     value: service.id,
     label: service.name,
     price: service.price,
-  })) || [];
+  }));
 
   const packageOptions: Option[] = availablePackages.map(pkg => ({
     value: pkg.id,
