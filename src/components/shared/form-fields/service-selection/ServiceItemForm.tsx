@@ -130,11 +130,12 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent 
-                    className="w-[400px] p-0" 
+                    className="w-[400px] p-0 bg-popover z-[9999]" 
                     align="start"
                     sideOffset={4}
+                    side="bottom"
                   >
-                    <Command>
+                    <Command className="bg-transparent">
                       <CommandInput placeholder="Search services..." />
                       <CommandList className="max-h-[300px]">
                         <CommandEmpty>No services found.</CommandEmpty>
