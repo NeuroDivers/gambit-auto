@@ -62,9 +62,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
 
   // Update selectedServiceName when item.service_name changes
   useEffect(() => {
-    if (item.service_name) {
-      setSelectedServiceName(item.service_name);
-    }
+    setSelectedServiceName(item.service_name || "");
   }, [item.service_name]);
 
   const handleServiceSelect = (value: string) => {

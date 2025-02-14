@@ -1,3 +1,4 @@
+
 import {
   Dialog,
   DialogContent,
@@ -23,17 +24,19 @@ export function CreateWorkOrderDialog({ defaultStartTime, open: controlledOpen, 
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-7xl w-[calc(100vw-2rem)] h-[calc(100vh-2rem)] max-h-[calc(100vh-2rem)] overflow-y-auto p-0">
+        <DialogHeader className="p-6 pb-0">
           <DialogTitle>Create Work Order</DialogTitle>
           <DialogDescription>
             Fill out the form below to create a new work order.
           </DialogDescription>
         </DialogHeader>
-        <WorkOrderForm 
-          onSuccess={() => setOpen(false)} 
-          defaultStartTime={defaultStartTime}
-        />
+        <div className="p-6 pt-2">
+          <WorkOrderForm 
+            onSuccess={() => setOpen(false)} 
+            defaultStartTime={defaultStartTime}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   )
