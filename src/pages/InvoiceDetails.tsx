@@ -16,10 +16,14 @@ export default function InvoiceDetails() {
         .from("invoices")
         .select(`
           *,
-          work_order:work_orders (
+          work_order:work_orders!inner (
             *,
             work_order_services (
-              service:service_types (
+              id,
+              quantity,
+              unit_price,
+              service:service_types!work_order_services_service_id_fkey (
+                id,
                 name,
                 price
               )
