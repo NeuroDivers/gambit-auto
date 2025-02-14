@@ -18,7 +18,7 @@ type ServiceItemFormProps = {
 }
 
 export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItemFormProps) {
-  const { data: services } = useQuery({
+  const { data: services, isLoading: isServicesLoading } = useQuery({
     queryKey: ["services"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -43,7 +43,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItem
         .order('name');
 
       if (error) throw error;
-      return data;
+      return data || [];
     }
   });
 
@@ -101,10 +101,11 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItem
             <Label>Service</Label>
             <SearchableSelect
               options={serviceOptions}
-              value={item.service_id}
+              value={item.service_id || ''}
               onValueChange={handleServiceSelect}
-              placeholder="Select a service"
+              placeholder={isServicesLoading ? "Loading services..." : "Select a service"}
               showPrice={true}
+              disabled={isServicesLoading}
             />
           </div>
 
@@ -124,7 +125,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItem
           <div>
             <Label>Description</Label>
             <Textarea
-              value={item.description}
+              value={item.description || ''}
               onChange={(e) => onUpdate(index, "description", e.target.value)}
               placeholder="Enter description"
             />
