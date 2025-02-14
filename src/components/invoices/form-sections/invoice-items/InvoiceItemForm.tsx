@@ -48,38 +48,36 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItem
     }
   });
 
-  // Group services by hierarchy type for better organization, with proper null checks
-  const servicesByType = (services || []).reduce((acc: { [key: string]: any[] }, service) => {
-    const type = service.hierarchy_type || 'Other'
-    if (!acc[type]) acc[type] = []
+  // Group services by hierarchy type for better organization
+  const servicesByType = services.reduce((acc: { [key: string]: any[] }, service) => {
+    const type = service.hierarchy_type || 'Other';
+    if (!acc[type]) acc[type] = [];
     acc[type].push({
       ...service,
       sortKey: service.name?.toLowerCase() || ''
-    })
-    return acc
-  }, {})
+    });
+    return acc;
+  }, {});
 
   // Sort services within each group
   Object.keys(servicesByType).forEach(type => {
-    if (Array.isArray(servicesByType[type])) {
-      servicesByType[type].sort((a, b) => (a.sortKey || '').localeCompare(b.sortKey || ''))
-    }
-  })
+    servicesByType[type].sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+  });
 
-  const selectedService = services?.find(service => service.id === item.service_id);
+  const selectedService = services.find(service => service.id === item.service_id);
   const availablePackages = selectedService?.service_packages?.filter(pkg => pkg.status === 'active') || [];
 
-  // Create organized options with clear group labels, ensuring arrays are defined
+  // Create organized options with clear group labels
   const serviceOptions: Option[] = !isServicesLoading ? Object.entries(servicesByType)
     .sort(([a], [b]) => a.localeCompare(b))
     .flatMap(([type, services]) => [
       { 
         value: `group-${type}`, 
         label: type.toUpperCase(), 
-        price: null, 
-        disabled: true 
+        disabled: true,
+        price: null 
       },
-      ...(Array.isArray(services) ? services : []).map(service => ({
+      ...services.map(service => ({
         value: service.id,
         label: `${service.name}${service.price ? ` • $${service.price.toFixed(2)}` : ''}`,
         price: service.price,
@@ -93,7 +91,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItem
   }));
 
   const handleServiceSelect = (serviceId: string) => {
-    const selectedService = services?.find(service => service.id === serviceId);
+    const selectedService = services.find(service => service.id === serviceId);
     if (selectedService) {
       onUpdate(index, "service_id", serviceId);
       onUpdate(index, "service_name", selectedService.name);
