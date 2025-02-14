@@ -44,7 +44,6 @@ export function ServiceList({ workOrderServices, onServicesChange, disabled }: S
           <ServiceItem
             key={index}
             index={index}
-            services={services}
             onRemove={handleRemoveService}
             field={{ value: service }}
             form={{
