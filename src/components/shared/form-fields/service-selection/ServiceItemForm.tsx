@@ -6,7 +6,15 @@ import { Label } from "@/components/ui/label"
 import { X } from "lucide-react"
 import { ServiceItemType } from "@/components/work-orders/types"
 import { useEffect, useRef, useState } from "react"
-import { SearchableSelect, Option, GroupedOption } from "@/components/shared/form-fields/searchable-select/SearchableSelect"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Accordion,
   AccordionContent,
@@ -56,9 +64,9 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
     };
   }, []);
 
-  // Group services by type for better organization and properly type the options
+  // Group services by type for better organization
   const groupedServices = React.useMemo(() => {
-    return (services || []).reduce<Record<string, Option[]>>((acc, service) => {
+    return (services || []).reduce<Record<string, Service[]>>((acc, service) => {
       if (!service) return acc;
       
       const type = service.hierarchy_type || 'Other';
@@ -66,23 +74,10 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
       if (!acc[groupName]) {
         acc[groupName] = [];
       }
-      acc[groupName].push({
-        value: service.id,
-        label: service.name,
-        price: service.price,
-        disabled: service.status === 'inactive'
-      });
+      acc[groupName].push(service);
       return acc;
     }, {});
   }, [services]);
-
-  // Transform grouped services into the correct format for SearchableSelect
-  const searchableSelectOptions: GroupedOption[] = React.useMemo(() => {
-    return Object.entries(groupedServices).map(([group, options]) => ({
-      label: group,
-      options: options || []
-    }));
-  }, [groupedServices]);
 
   const handleServiceSelect = (serviceId: string) => {
     if (!serviceId || !mounted.current) return;
@@ -130,13 +125,37 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
             <div className="space-y-4">
               <div>
                 <Label htmlFor={serviceId}>Service</Label>
-                <SearchableSelect
-                  options={searchableSelectOptions}
+                <Select
                   value={item.service_id || ''}
                   onValueChange={handleServiceSelect}
-                  placeholder="Search for a service..."
-                  showPrice={true}
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a service" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(groupedServices).map(([groupName, groupServices]) => (
+                      <SelectGroup key={groupName}>
+                        <SelectLabel className="font-semibold">{groupName}</SelectLabel>
+                        {groupServices.map((service) => (
+                          <SelectItem 
+                            key={service.id} 
+                            value={service.id}
+                            disabled={service.status === 'inactive'}
+                          >
+                            <span className="flex justify-between items-center w-full">
+                              <span>{service.name}</span>
+                              {service.price && (
+                                <span className="text-muted-foreground">
+                                  ${service.price.toFixed(2)}
+                                </span>
+                              )}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
