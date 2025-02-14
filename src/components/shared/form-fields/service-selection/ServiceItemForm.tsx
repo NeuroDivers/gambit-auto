@@ -14,10 +14,19 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 
+interface Service {
+  id: string;
+  name: string;
+  price: number | null;
+  status: string;
+  service_type: string;
+  description?: string;
+}
+
 interface ServiceItemFormProps {
   index: number
   item: ServiceItemType
-  services: any[]
+  services: Service[]
   onUpdate: (index: number, field: keyof ServiceItemType, value: any) => void
   onRemove: () => void
 }
@@ -33,10 +42,12 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
   }, []);
 
   // Group services by type for better organization and properly type the options
-  const groupedServices = services.reduce((acc: { [key: string]: Option[] }, service) => {
+  const groupedServices = services.reduce<Record<string, Option[]>>((acc, service) => {
     const type = service.service_type || 'Other';
     const groupName = type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
-    if (!acc[groupName]) acc[groupName] = [];
+    if (!acc[groupName]) {
+      acc[groupName] = [];
+    }
     acc[groupName].push({
       value: service.id,
       label: service.name,
@@ -46,10 +57,10 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
     return acc;
   }, {});
 
-  // Transform grouped services into the correct format for SearchableSelect with proper typing
+  // Transform grouped services into the correct format for SearchableSelect
   const searchableSelectOptions: GroupedOption[] = Object.entries(groupedServices).map(([group, options]) => ({
     label: group,
-    options: options
+    options: options as Option[]
   }));
 
   const handleServiceSelect = (serviceId: string) => {
