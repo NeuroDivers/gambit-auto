@@ -103,14 +103,14 @@ export const ServiceTypesList = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex gap-4 items-center flex-1 max-w-lg">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+        <div className="flex gap-2 items-center w-full sm:w-auto">
           <Input
             type="search"
             placeholder="Search service types..."
             value={searchQuery}
             onChange={(e) => onSearch(e.target.value)}
-            className="bg-background/50 border-input"
+            className="bg-background/50 border-input flex-1 sm:max-w-[300px]"
           />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -178,14 +178,14 @@ export const ServiceTypesList = ({
             setEditingService(null);
             setIsDialogOpen(true);
           }}
-          className="text-white transition-colors duration-200 bg-violet-700 hover:bg-violet-600"
+          className="w-full sm:w-auto text-white transition-colors duration-200 bg-violet-700 hover:bg-violet-600"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Service Type
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredServices?.map(service => (
           <ServiceTypeCard
             key={service.id}
