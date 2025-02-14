@@ -75,9 +75,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
   const handleServiceSelect = React.useCallback((currentValue: string) => {
     if (!mounted.current) return;
 
-    const selectedService = services.find(service => 
-      service.id.toLowerCase() === currentValue.toLowerCase()
-    );
+    const selectedService = services.find(service => service.id === currentValue);
     
     if (selectedService) {
       onUpdate(index, "service_id", selectedService.id);
@@ -95,9 +93,9 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
     
     return services.find(service => {
       if (item.service_id) {
-        return service.id.toLowerCase() === item.service_id.toLowerCase();
+        return service.id === item.service_id;
       }
-      return service.name.toLowerCase() === item.service_name.toLowerCase();
+      return service.name === item.service_name;
     });
   }, [item.service_id, item.service_name, services]);
 
@@ -147,10 +145,9 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent 
-                    className="w-[400px] p-0 bg-card z-[999]" 
+                    className="w-[400px] p-0" 
                     align="start"
                     sideOffset={4}
-                    side="bottom"
                   >
                     <Command>
                       <CommandInput placeholder="Search services..." />
@@ -161,9 +158,9 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                             {typeServices.map((service) => (
                               <CommandItem
                                 key={service.id}
-                                value={service.id}
-                                onSelect={handleServiceSelect}
-                                className="flex items-center justify-between cursor-pointer"
+                                onSelect={() => {
+                                  handleServiceSelect(service.id);
+                                }}
                               >
                                 <div className="flex items-center justify-between w-full">
                                   <span>{service.name}</span>
