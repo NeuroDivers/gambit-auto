@@ -28,78 +28,7 @@ export default function ServiceTypes() {
         <div className="px-6">
           <div className="mb-8">
             <PageBreadcrumbs />
-            <div className="flex flex-col gap-4">
-              <h1 className="text-3xl font-bold">Service Types</h1>
-              <div className="flex gap-4 items-center">
-                <Input
-                  type="search"
-                  placeholder="Search service types..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-background/50 border-input max-w-md"
-                />
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon" className="relative">
-                      <Filter className="h-4 w-4" />
-                      {(statusFilter !== 'all' || typeFilter !== 'all') && (
-                        <span className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full" />
-                      )}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuCheckboxItem
-                      checked={statusFilter === 'all'}
-                      onCheckedChange={() => setStatusFilter('all')}
-                    >
-                      All Statuses
-                    </DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem
-                      checked={statusFilter === 'active'}
-                      onCheckedChange={() => setStatusFilter('active')}
-                    >
-                      Active
-                    </DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem
-                      checked={statusFilter === 'inactive'}
-                      onCheckedChange={() => setStatusFilter('inactive')}
-                    >
-                      Inactive
-                    </DropdownMenuCheckboxItem>
-                    
-                    <DropdownMenuSeparator />
-                    <DropdownMenuLabel>Filter by Type</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuCheckboxItem
-                      checked={typeFilter === 'all'}
-                      onCheckedChange={() => setTypeFilter('all')}
-                    >
-                      All Types
-                    </DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem
-                      checked={typeFilter === 'standalone'}
-                      onCheckedChange={() => setTypeFilter('standalone')}
-                    >
-                      Standalone Services
-                    </DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem
-                      checked={typeFilter === 'bundle'}
-                      onCheckedChange={() => setTypeFilter('bundle')}
-                    >
-                      Service Bundles
-                    </DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem
-                      checked={typeFilter === 'sub_service'}
-                      onCheckedChange={() => setTypeFilter('sub_service')}
-                    >
-                      Sub Services
-                    </DropdownMenuCheckboxItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
+            <h1 className="text-3xl font-bold mb-4">Service Types</h1>
           </div>
         </div>
         <div className="max-w-[1600px] mx-auto">
@@ -107,6 +36,9 @@ export default function ServiceTypes() {
             searchQuery={searchQuery} 
             statusFilter={statusFilter} 
             typeFilter={typeFilter}
+            onSearch={setSearchQuery}
+            onStatusFilter={setStatusFilter}
+            onTypeFilter={setTypeFilter}
           />
         </div>
       </div>
