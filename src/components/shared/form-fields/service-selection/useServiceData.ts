@@ -25,6 +25,7 @@ export function useServiceData() {
             description,
             price,
             status,
+            hierarchy_type,
             requires_main_service,
             can_be_standalone,
             sort_order
@@ -64,6 +65,7 @@ export function useSubServices(mainServiceId: string | null) {
           description,
           price,
           status,
+          hierarchy_type,
           requires_main_service,
           can_be_standalone,
           sort_order
@@ -78,4 +80,3 @@ export function useSubServices(mainServiceId: string | null) {
     }
   })
 }
-
