@@ -52,12 +52,20 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
   const mounted = useRef(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [open, setOpen] = useState(false);
+  const [selectedServiceName, setSelectedServiceName] = useState(item.service_name || "");
 
   useEffect(() => {
     return () => {
       mounted.current = false;
     };
   }, []);
+
+  // Update selectedServiceName when item.service_name changes
+  useEffect(() => {
+    if (item.service_name) {
+      setSelectedServiceName(item.service_name);
+    }
+  }, [item.service_name]);
 
   const handleServiceSelect = (value: string) => {
     console.log("Selected value:", value);
@@ -70,6 +78,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
       onUpdate(index, "service_id", selectedService.id);
       onUpdate(index, "service_name", selectedService.name);
       onUpdate(index, "unit_price", selectedService.price || 0);
+      setSelectedServiceName(selectedService.name);
       setIsExpanded(true);
       setOpen(false);
     }
@@ -105,7 +114,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
       >
         <AccordionItem value="service-details" className="border-none">
           <AccordionTrigger className="py-2">
-            {selectedService?.name || "Select a Service"}
+            {selectedServiceName || "Select a Service"}
           </AccordionTrigger>
           <AccordionContent>
             <div className="space-y-4">
@@ -119,7 +128,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                       aria-expanded={open}
                       className="w-full justify-between"
                     >
-                      {selectedService?.name || "Select a service..."}
+                      {selectedServiceName || "Select a service..."}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
