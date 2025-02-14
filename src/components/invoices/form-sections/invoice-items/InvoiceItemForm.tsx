@@ -79,7 +79,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItem
         disabled: true 
       },
       // Add the services in this group
-      ...services.map(service => ({
+      ...(services || []).map(service => ({  // Add null check here
         value: service.id,
         label: `${service.name}${service.price ? ` • $${service.price.toFixed(2)}` : ''}`,
         price: service.price,
