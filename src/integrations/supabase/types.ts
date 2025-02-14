@@ -1057,6 +1057,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_parent_service"
+            columns: ["parent_service_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "service_types_parent_service_id_fkey"
             columns: ["parent_service_id"]
             isOneToOne: false
