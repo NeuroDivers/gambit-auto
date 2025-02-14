@@ -63,9 +63,10 @@ export function ServiceDropdown({
                   {services.map((service) => (
                     <CommandItem
                       key={service.id}
+                      value={service.id}
                       onSelect={() => {
-                        console.log("Service selected:", service)
                         handleServiceSelect(service.id)
+                        setOpen(false)
                       }}
                       className="cursor-pointer"
                     >

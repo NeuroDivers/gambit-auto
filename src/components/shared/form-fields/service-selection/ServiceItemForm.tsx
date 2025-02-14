@@ -6,7 +6,7 @@ import { ServiceDescription } from "./ServiceDescription"
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 
 interface ServiceItemFormProps {
   index: number
@@ -33,20 +33,32 @@ export function ServiceItemForm({
   const [open, setOpen] = useState(false)
   const mounted = useRef(true)
 
+  useEffect(() => {
+    return () => {
+      mounted.current = false
+    }
+  }, [])
+
   const handleServiceSelect = (serviceId: string) => {
     const selectedService = services.find((s) => s.id === serviceId)
-    if (selectedService) {
-      console.log("Selected service:", selectedService)
+    if (selectedService && mounted.current) {
+      console.log("Updating service with:", {
+        id: selectedService.id,
+        name: selectedService.name,
+        price: selectedService.price
+      })
+      
+      // Update service details
       onUpdate(index, "service_id", selectedService.id)
       onUpdate(index, "service_name", selectedService.name)
       onUpdate(index, "unit_price", selectedService.price || 0)
+      onUpdate(index, "quantity", 1) // Reset quantity to 1 when selecting a new service
       
       // Reset main_service_id if this is not a sub-service
       if (selectedService.hierarchy_type !== 'sub') {
         onUpdate(index, "main_service_id", null)
       }
     }
-    setOpen(false)
   }
 
   // Group services by type for better organization
