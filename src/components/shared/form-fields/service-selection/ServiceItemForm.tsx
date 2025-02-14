@@ -6,7 +6,7 @@ import { ServiceDescription } from "./ServiceDescription"
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { useState } from "react"
+import { useState, useRef } from "react"
 
 interface ServiceItemFormProps {
   index: number
@@ -31,6 +31,7 @@ export function ServiceItemForm({
   onRemove,
 }: ServiceItemFormProps) {
   const [open, setOpen] = useState(false)
+  const mounted = useRef(true)
 
   const handleServiceSelect = (serviceId: string) => {
     const selectedService = services.find((s) => s.id === serviceId)
@@ -89,10 +90,10 @@ export function ServiceItemForm({
         </div>
 
         <ServiceQuantityPrice
-          quantity={item.quantity}
-          unitPrice={item.unit_price}
-          onQuantityChange={(value) => onUpdate(index, "quantity", value)}
-          onUnitPriceChange={(value) => onUpdate(index, "unit_price", value)}
+          index={index}
+          item={item}
+          onUpdate={onUpdate}
+          mounted={mounted}
         />
       </CardContent>
     </Card>
