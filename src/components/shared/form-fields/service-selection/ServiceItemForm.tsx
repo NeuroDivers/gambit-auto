@@ -65,11 +65,11 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
     }
   }, [item.service_name]);
 
-  const handleServiceSelect = (value: string) => {
-    console.log("Selected value:", value);
+  const handleServiceSelect = React.useCallback((selectedValue: string) => {
+    console.log("Selected value:", selectedValue);
     if (!mounted.current) return;
     
-    const selectedService = services.find(service => service?.id === value);
+    const selectedService = services.find(service => service?.id === selectedValue);
     console.log("Found service:", selectedService);
     
     if (selectedService) {
@@ -80,7 +80,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
       setIsExpanded(true);
       setOpen(false);
     }
-  };
+  }, [services, index, onUpdate, mounted]);
 
   const selectedService = services.find(service => service?.id === item.service_id);
 
@@ -144,7 +144,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                               <CommandItem
                                 key={service.id}
                                 value={service.id}
-                                onSelect={() => handleServiceSelect(service.id)}
+                                onSelect={handleServiceSelect}
                                 className="flex items-center justify-between cursor-pointer"
                               >
                                 <div className="flex items-center justify-between w-full">
