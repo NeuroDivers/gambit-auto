@@ -53,10 +53,12 @@ export default function EditWorkOrder() {
           unit_price,
           service:service_types!work_order_services_service_id_fkey (
             id,
-            name
+            name,
+            price
           )
         `)
-        .eq("work_order_id", id);
+        .eq("work_order_id", workOrderData.id)
+        .not('service_id', 'is', null);
 
       if (servicesError) {
         console.error("Error fetching services:", servicesError);
@@ -65,7 +67,7 @@ export default function EditWorkOrder() {
 
       return {
         ...workOrderData,
-        work_order_services: servicesData
+        work_order_services: servicesData || []
       };
     },
     enabled: isValidUUID(id),
