@@ -77,9 +77,10 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
         name="contact_preference"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Preferred Contact Method</FormLabel>
+            <FormLabel htmlFor="contact_preference_group">Preferred Contact Method</FormLabel>
             <FormControl>
               <RadioGroup
+                id="contact_preference_group"
                 onValueChange={field.onChange}
                 defaultValue={field.value}
                 className="flex space-x-4"
