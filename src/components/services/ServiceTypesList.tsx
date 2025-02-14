@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,12 +6,17 @@ import { ServiceTypeDialog } from "./ServiceTypeDialog";
 import { ServiceTypeCard } from "./ServiceTypeCard";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ServiceStatusFilter } from "@/pages/ServiceTypes";
 
 interface ServiceTypesListProps {
   searchQuery?: string;
+  statusFilter?: ServiceStatusFilter;
 }
 
-export const ServiceTypesList = ({ searchQuery = "" }: ServiceTypesListProps) => {
+export const ServiceTypesList = ({ 
+  searchQuery = "", 
+  statusFilter = "all" 
+}: ServiceTypesListProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<null | {
     id: string;
@@ -40,7 +44,6 @@ export const ServiceTypesList = ({ searchQuery = "" }: ServiceTypesListProps) =>
       
       if (servicesError) throw servicesError;
 
-      // Get bundle relationships in a separate query
       const { data: bundleRelations, error: bundleError } = await supabase
         .from('bundle_services')
         .select(`
@@ -52,7 +55,6 @@ export const ServiceTypesList = ({ searchQuery = "" }: ServiceTypesListProps) =>
 
       if (bundleError) throw bundleError;
 
-      // Merge the bundle information into the services
       const servicesWithBundles = services.map(service => ({
         ...service,
         included_in_bundles: bundleRelations
@@ -67,11 +69,16 @@ export const ServiceTypesList = ({ searchQuery = "" }: ServiceTypesListProps) =>
     }
   });
 
-  // Filter services based on search query
-  const filteredServices = serviceTypes?.filter(service => 
-    service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    service.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredServices = serviceTypes?.filter(service => {
+    const matchesSearch = 
+      service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      service.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = 
+      statusFilter === 'all' ? true : service.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="space-y-6">
