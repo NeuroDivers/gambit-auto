@@ -59,41 +59,45 @@ export function SearchableSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
-        <Command>
+        <Command shouldFilter={false}>
           <CommandInput placeholder={placeholder} />
           <CommandEmpty>No options found.</CommandEmpty>
-          <CommandGroup>
-            {safeOptions.map((option, index) => (
-              <CommandItem
-                key={option.value || index}
-                value={option.value}
-                onSelect={() => {
-                  onValueChange(option.value)
-                  setOpen(false)
-                }}
-                disabled={option.disabled}
-                className={cn(
-                  "flex items-center justify-between",
-                  option.disabled && "opacity-50 cursor-not-allowed"
-                )}
-              >
-                <div className="flex items-center">
-                  <Check
+          {safeOptions.length > 0 && (
+            <div className="max-h-[300px] overflow-y-auto">
+              <CommandGroup>
+                {safeOptions.map((option, index) => (
+                  <CommandItem
+                    key={`${option.value}-${index}`}
+                    value={option.value}
+                    onSelect={() => {
+                      onValueChange(option.value)
+                      setOpen(false)
+                    }}
+                    disabled={option.disabled}
                     className={cn(
-                      "mr-2 h-4 w-4",
-                      value === option.value ? "opacity-100" : "opacity-0"
+                      "flex items-center justify-between",
+                      option.disabled && "opacity-50 cursor-not-allowed"
                     )}
-                  />
-                  {option.label}
-                </div>
-                {showPrice && option.price !== null && option.price !== undefined && (
-                  <span className="text-muted-foreground">
-                    ${option.price.toFixed(2)}
-                  </span>
-                )}
-              </CommandItem>
-            ))}
-          </CommandGroup>
+                  >
+                    <div className="flex items-center">
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          value === option.value ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {option.label}
+                    </div>
+                    {showPrice && option.price !== null && option.price !== undefined && (
+                      <span className="text-muted-foreground">
+                        ${option.price.toFixed(2)}
+                      </span>
+                    )}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </div>
+          )}
         </Command>
       </PopoverContent>
     </Popover>
