@@ -1,17 +1,19 @@
 
+```typescript
 import { formatDistanceToNow } from "date-fns"
 import { Invoice } from "../types"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Mail, Printer } from "lucide-react"
+import { ArrowRight, Mail, Printer, PencilIcon } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
 type InvoiceListItemProps = {
   invoice: Invoice
+  onEdit?: (invoice: Invoice) => void
 }
 
-export function InvoiceListItem({ invoice }: InvoiceListItemProps) {
+export function InvoiceListItem({ invoice, onEdit }: InvoiceListItemProps) {
   const navigate = useNavigate()
 
   const getStatusColor = (status: string) => {
@@ -62,6 +64,15 @@ export function InvoiceListItem({ invoice }: InvoiceListItemProps) {
             <Button variant="outline" size="icon">
               <Printer className="h-4 w-4" />
             </Button>
+            {invoice.status === 'draft' && (
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => onEdit?.(invoice)}
+              >
+                <PencilIcon className="h-4 w-4" />
+              </Button>
+            )}
             <Button 
               onClick={() => navigate(`/invoices/${invoice.id}`)}
               className="gap-2"
