@@ -13,6 +13,8 @@ export function useWorkOrderData() {
         .order('created_at', { ascending: false });
 
       if (workOrdersError) throw workOrdersError;
+
+      if (!workOrders?.length) return [];
       
       // Then fetch all work order services with their relationships
       const { data: servicesData, error: servicesError } = await supabase
@@ -39,18 +41,19 @@ export function useWorkOrderData() {
             price
           )
         `)
-        .in('work_order_id', workOrders.map(wo => wo.id));
+        .in('work_order_id', workOrders.map(wo => wo.id))
+        .not('work_order_id', 'is', null);
 
       if (servicesError) throw servicesError;
 
       // Group services by work order ID
-      const servicesByWorkOrder = servicesData.reduce((acc, service) => {
+      const servicesByWorkOrder = (servicesData || []).reduce((acc, service) => {
         if (!acc[service.work_order_id]) {
           acc[service.work_order_id] = [];
         }
         acc[service.work_order_id].push(service);
         return acc;
-      }, {});
+      }, {} as Record<string, typeof servicesData>);
 
       // Merge services into work orders
       return workOrders.map(workOrder => ({

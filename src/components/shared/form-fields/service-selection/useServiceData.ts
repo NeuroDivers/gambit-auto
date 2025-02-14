@@ -45,7 +45,7 @@ export function useServiceData() {
         .order('sort_order')
 
       if (error) throw error
-      return data
+      return data || []
     }
   })
 }
@@ -76,7 +76,7 @@ export function useSubServices(mainServiceId: string | null) {
         .order('sort_order')
 
       if (error) throw error
-      return data
+      return data || []
     }
   })
 }

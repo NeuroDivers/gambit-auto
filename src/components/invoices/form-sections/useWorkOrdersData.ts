@@ -13,6 +13,8 @@ export function useWorkOrdersData() {
         .order("created_at", { ascending: false })
 
       if (workOrdersError) throw workOrdersError
+      
+      if (!workOrders?.length) return []
 
       // Then fetch services with explicit foreign key relationship
       const { data: services, error: servicesError } = await supabase
@@ -30,13 +32,14 @@ export function useWorkOrdersData() {
           )
         `)
         .in('work_order_id', workOrders.map(wo => wo.id))
+        .not('work_order_id', 'is', null);
 
       if (servicesError) throw servicesError
 
       // Combine the data
       return workOrders.map(workOrder => ({
         ...workOrder,
-        work_order_services: services.filter(
+        work_order_services: (services || []).filter(
           service => service.work_order_id === workOrder.id
         )
       }))
