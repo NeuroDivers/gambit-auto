@@ -1,3 +1,4 @@
+
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { InvoiceList } from "@/components/invoices/InvoiceList"
 import { Button } from "@/components/ui/button"
