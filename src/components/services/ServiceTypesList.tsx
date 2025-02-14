@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,17 +6,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { ServiceTypeDialog } from "./ServiceTypeDialog";
 import { ServiceTypeCard } from "./ServiceTypeCard";
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ServiceStatusFilter } from "@/pages/ServiceTypes";
+import { ServiceStatusFilter, ServiceTypeFilter } from "@/pages/ServiceTypes";
 
 interface ServiceTypesListProps {
   searchQuery?: string;
   statusFilter?: ServiceStatusFilter;
+  typeFilter?: ServiceTypeFilter;
 }
 
 export const ServiceTypesList = ({ 
   searchQuery = "", 
-  statusFilter = "all" 
+  statusFilter = "all",
+  typeFilter = "all"
 }: ServiceTypesListProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<null | {
@@ -77,7 +79,10 @@ export const ServiceTypesList = ({
     const matchesStatus = 
       statusFilter === 'all' ? true : service.status === statusFilter;
 
-    return matchesSearch && matchesStatus;
+    const matchesType = 
+      typeFilter === 'all' ? true : service.service_type === typeFilter;
+
+    return matchesSearch && matchesStatus && matchesType;
   });
 
   return (
@@ -99,78 +104,19 @@ export const ServiceTypesList = ({
         </Button>
       </div>
 
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList>
-          <TabsTrigger value="all">All Services</TabsTrigger>
-          <TabsTrigger value="standalone">Standalone Services</TabsTrigger>
-          <TabsTrigger value="bundles">Service Bundles</TabsTrigger>
-          <TabsTrigger value="sub">Sub Services</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="all" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredServices?.map(service => (
-              <ServiceTypeCard
-                key={service.id}
-                service={service}
-                onEdit={() => {
-                  setEditingService(service);
-                  setIsDialogOpen(true);
-                }}
-                onRefetch={refetch}
-              />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="standalone" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredServices?.filter(s => s.service_type === 'standalone').map(service => (
-              <ServiceTypeCard
-                key={service.id}
-                service={service}
-                onEdit={() => {
-                  setEditingService(service);
-                  setIsDialogOpen(true);
-                }}
-                onRefetch={refetch}
-              />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="bundles" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredServices?.filter(s => s.service_type === 'bundle').map(service => (
-              <ServiceTypeCard
-                key={service.id}
-                service={service}
-                onEdit={() => {
-                  setEditingService(service);
-                  setIsDialogOpen(true);
-                }}
-                onRefetch={refetch}
-              />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="sub" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredServices?.filter(s => s.service_type === 'sub_service').map(service => (
-              <ServiceTypeCard
-                key={service.id}
-                service={service}
-                onEdit={() => {
-                  setEditingService(service);
-                  setIsDialogOpen(true);
-                }}
-                onRefetch={refetch}
-              />
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredServices?.map(service => (
+          <ServiceTypeCard
+            key={service.id}
+            service={service}
+            onEdit={() => {
+              setEditingService(service);
+              setIsDialogOpen(true);
+            }}
+            onRefetch={refetch}
+          />
+        ))}
+      </div>
 
       <ServiceTypeDialog
         open={isDialogOpen}

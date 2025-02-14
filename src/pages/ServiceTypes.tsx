@@ -15,10 +15,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export type ServiceStatusFilter = 'all' | 'active' | 'inactive';
+export type ServiceTypeFilter = 'all' | 'standalone' | 'bundle' | 'sub_service';
 
 export default function ServiceTypes() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<ServiceStatusFilter>('all');
+  const [typeFilter, setTypeFilter] = useState<ServiceTypeFilter>('all');
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
@@ -38,18 +40,21 @@ export default function ServiceTypes() {
                 />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon">
+                    <Button variant="outline" size="icon" className="relative">
                       <Filter className="h-4 w-4" />
+                      {(statusFilter !== 'all' || typeFilter !== 'all') && (
+                        <span className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full" />
+                      )}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuCheckboxItem
                       checked={statusFilter === 'all'}
                       onCheckedChange={() => setStatusFilter('all')}
                     >
-                      All
+                      All Statuses
                     </DropdownMenuCheckboxItem>
                     <DropdownMenuCheckboxItem
                       checked={statusFilter === 'active'}
@@ -63,6 +68,34 @@ export default function ServiceTypes() {
                     >
                       Inactive
                     </DropdownMenuCheckboxItem>
+                    
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>Filter by Type</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem
+                      checked={typeFilter === 'all'}
+                      onCheckedChange={() => setTypeFilter('all')}
+                    >
+                      All Types
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={typeFilter === 'standalone'}
+                      onCheckedChange={() => setTypeFilter('standalone')}
+                    >
+                      Standalone Services
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={typeFilter === 'bundle'}
+                      onCheckedChange={() => setTypeFilter('bundle')}
+                    >
+                      Service Bundles
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={typeFilter === 'sub_service'}
+                      onCheckedChange={() => setTypeFilter('sub_service')}
+                    >
+                      Sub Services
+                    </DropdownMenuCheckboxItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -70,7 +103,11 @@ export default function ServiceTypes() {
           </div>
         </div>
         <div className="max-w-[1600px] mx-auto">
-          <ServiceTypesList searchQuery={searchQuery} statusFilter={statusFilter} />
+          <ServiceTypesList 
+            searchQuery={searchQuery} 
+            statusFilter={statusFilter} 
+            typeFilter={typeFilter}
+          />
         </div>
       </div>
     </div>
