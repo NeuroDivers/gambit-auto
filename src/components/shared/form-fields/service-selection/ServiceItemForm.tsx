@@ -144,8 +144,8 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                               <CommandItem
                                 key={service.id}
                                 value={service.id}
-                                onSelect={handleServiceSelect}
-                                className="flex items-center justify-between cursor-pointer"
+                                onSelect={(currentValue) => handleServiceSelect(currentValue)}
+                                className="flex items-center justify-between cursor-pointer hover:bg-accent"
                               >
                                 <div className="flex items-center justify-between w-full">
                                   <span>{service.name}</span>
