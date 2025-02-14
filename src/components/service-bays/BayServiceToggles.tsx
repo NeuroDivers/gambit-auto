@@ -8,7 +8,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/card"
+} from "@/components/ui/accordion"
 import { Search } from "lucide-react"
 
 type ServiceType = {
