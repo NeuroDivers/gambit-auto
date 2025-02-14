@@ -12,15 +12,12 @@ import { useEffect, useState } from "react"
 
 interface ServiceItemProps {
   index: number
-  field: { value: ServiceItemType }
-  form: {
-    getValues: () => ServiceItemType[]
-    setValue: (name: string, value: ServiceItemType[]) => void
-  }
+  service: ServiceItemType
   onRemove: (index: number) => void
+  onUpdate: (service: ServiceItemType) => void
 }
 
-export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) {
+export function ServiceItem({ index, service, onRemove, onUpdate }: ServiceItemProps) {
   const { data: services = [] } = useServiceData()
   const [isAccordionOpen, setIsAccordionOpen] = useState<string>("service-details")
 
@@ -30,7 +27,6 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
     if (!acc[type]) acc[type] = []
     acc[type].push({
       ...service,
-      // Sort by name within each group
       sortKey: service.name.toLowerCase()
     })
     return acc
@@ -47,72 +43,57 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
 
     console.log("Updating service with:", selectedService)
 
-    const currentServices = form.getValues()
-    const updatedServices = [...currentServices]
     const updatedService = {
-      ...updatedServices[index],
+      ...service,
       service_id: selectedService.id,
       service_name: selectedService.name,
       unit_price: selectedService.price || 0,
       quantity: 1
     }
-    updatedServices[index] = updatedService
     
     console.log("Updated service:", updatedService)
-    console.log("Updated services array:", updatedServices)
-    
-    form.setValue("service_items", updatedServices)
+    onUpdate(updatedService)
   }
 
   const handleQuantityChange = (quantity: number) => {
     if (isNaN(quantity) || quantity < 1) return
-    
-    const currentServices = form.getValues()
-    const updatedServices = [...currentServices]
-    updatedServices[index] = {
-      ...updatedServices[index],
+    onUpdate({
+      ...service,
       quantity
-    }
-    form.setValue("service_items", updatedServices)
+    })
   }
 
   const handlePriceChange = (price: number) => {
     if (isNaN(price) || price < 0) return
-    
-    const currentServices = form.getValues()
-    const updatedServices = [...currentServices]
-    updatedServices[index] = {
-      ...updatedServices[index],
+    onUpdate({
+      ...service,
       unit_price: price
-    }
-    form.setValue("service_items", updatedServices)
+    })
   }
 
   // Create organized options with clear group labels and sorted items
   const serviceOptions: Option[] = Object.entries(servicesByType)
-    .sort(([a], [b]) => a.localeCompare(b)) // Sort group headers alphabetically
+    .sort(([a], [b]) => a.localeCompare(b))
     .flatMap(([type, services]) => [
-      // Add a styled group header
       { 
         value: `group-${type}`, 
         label: type.toUpperCase(), 
         price: null, 
         disabled: true 
       },
-      // Add the services in this group
       ...services.map(service => ({
         value: service.id,
         label: service.name,
         price: service.price,
       }))
-    ]);
+    ])
 
   // Effect to automatically open accordion when service is selected
   useEffect(() => {
-    if (field.value.service_id) {
+    if (service.service_id) {
       setIsAccordionOpen("service-details")
     }
-  }, [field.value.service_id])
+  }, [service.service_id])
 
   return (
     <Card className="relative">
@@ -136,7 +117,7 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
         >
           <AccordionItem value="service-details">
             <AccordionTrigger className="text-lg font-medium">
-              {field.value.service_name || "Select a Service"}
+              {service.service_name || "Select a Service"}
             </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-4 pt-2">
@@ -144,7 +125,7 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
                   <Label htmlFor={`service-type-${index}`}>Service Type</Label>
                   <SearchableSelect
                     options={serviceOptions}
-                    value={field.value.service_id || ""}
+                    value={service.service_id || ""}
                     onValueChange={handleServiceChange}
                     placeholder="Search for a service..."
                     showPrice={true}
@@ -159,7 +140,7 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
                       name={`quantity-${index}`}
                       type="number"
                       min={1}
-                      value={field.value.quantity || 1}
+                      value={service.quantity || 1}
                       onChange={(e) => handleQuantityChange(parseInt(e.target.value))}
                       className="mt-1"
                     />
@@ -172,7 +153,7 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
                       type="number"
                       min={0}
                       step="0.01"
-                      value={field.value.unit_price || 0}
+                      value={service.unit_price || 0}
                       onChange={(e) => handlePriceChange(parseFloat(e.target.value))}
                       className="mt-1"
                     />

@@ -3,7 +3,6 @@ import React from 'react';
 import { ServiceItem } from './ServiceItem';
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { useFieldArray } from "react-hook-form";
 import { useServiceData } from "@/components/shared/form-fields/service-selection/useServiceData";
 import { ServiceItemType } from "../../types";
 
@@ -34,6 +33,13 @@ export function ServiceList({ workOrderServices, onServicesChange, disabled }: S
     ]);
   };
 
+  const handleServiceUpdate = (index: number, updatedService: ServiceItemType) => {
+    const updatedServices = [...workOrderServices];
+    updatedServices[index] = updatedService;
+    console.log("Updating services array:", updatedServices);
+    onServicesChange(updatedServices);
+  };
+
   return (
     <div className="space-y-4">
       <div className="space-y-4">
@@ -41,15 +47,9 @@ export function ServiceList({ workOrderServices, onServicesChange, disabled }: S
           <ServiceItem
             key={index}
             index={index}
+            service={service}
             onRemove={handleRemoveService}
-            field={{ value: service }}
-            form={{
-              getValues: () => workOrderServices,
-              setValue: (_: string, newServices: ServiceItemType[]) => {
-                console.log("Setting new services:", newServices);
-                onServicesChange(newServices);
-              }
-            }}
+            onUpdate={(updatedService) => handleServiceUpdate(index, updatedService)}
           />
         ))}
       </div>
