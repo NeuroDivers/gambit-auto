@@ -1,4 +1,5 @@
 
+
 import { Json } from './json';
 import { Database } from './database';
 
@@ -47,3 +48,4 @@ export interface ServiceTypesTable {
   }
   Relationships: []
 }
+

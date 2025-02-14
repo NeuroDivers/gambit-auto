@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -79,3 +80,4 @@ export const ServiceTypesList = () => {
     </div>
   );
 };
+
