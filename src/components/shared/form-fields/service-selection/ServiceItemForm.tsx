@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,6 +11,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command"
 import {
   Popover,
@@ -82,19 +82,6 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
     );
   }, [services, searchTerm]);
 
-  const groupedServices = React.useMemo(() => {
-    return filteredServices.reduce<Record<string, Service[]>>((acc, service) => {
-      const type = service.hierarchy_type || 'Other';
-      const groupName = type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, ' ');
-      
-      if (!acc[groupName]) {
-        acc[groupName] = [];
-      }
-      acc[groupName].push(service);
-      return acc;
-    }, {});
-  }, [filteredServices]);
-
   const handleServiceSelect = (serviceId: string) => {
     if (!serviceId || !mounted.current) return;
     
@@ -152,37 +139,35 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                     <Command>
                       <CommandInput 
                         placeholder="Search services..."
-                        value={searchTerm}
                         onValueChange={setSearchTerm}
                       />
-                      <CommandEmpty>No services found.</CommandEmpty>
-                      <div className="max-h-[300px] overflow-y-auto">
-                        {Object.entries(groupedServices).map(([groupName, services]) => (
-                          <CommandGroup key={groupName} heading={groupName}>
-                            {services.map((service) => (
-                              <CommandItem
-                                key={service.id}
-                                onSelect={() => handleServiceSelect(service.id)}
-                              >
-                                <div className="flex items-center justify-between w-full">
-                                  <span>{service.name}</span>
-                                  {service.price !== null && (
-                                    <span className="text-muted-foreground ml-2">
-                                      ${service.price.toFixed(2)}
-                                    </span>
+                      <CommandList>
+                        <CommandEmpty>No services found.</CommandEmpty>
+                        <CommandGroup>
+                          {filteredServices.map((service) => (
+                            <CommandItem
+                              key={service.id}
+                              value={service.name}
+                              onSelect={() => handleServiceSelect(service.id)}
+                            >
+                              <div className="flex items-center justify-between w-full">
+                                <span>{service.name}</span>
+                                {service.price !== null && (
+                                  <span className="text-muted-foreground ml-2">
+                                    ${service.price.toFixed(2)}
+                                  </span>
+                                )}
+                                <Check
+                                  className={cn(
+                                    "ml-2 h-4 w-4",
+                                    selectedService?.id === service.id ? "opacity-100" : "opacity-0"
                                   )}
-                                  <Check
-                                    className={cn(
-                                      "ml-2 h-4 w-4",
-                                      selectedService?.id === service.id ? "opacity-100" : "opacity-0"
-                                    )}
-                                  />
-                                </div>
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        ))}
-                      </div>
+                                />
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
                     </Command>
                   </PopoverContent>
                 </Popover>
