@@ -23,7 +23,7 @@ interface SearchableSelectProps {
 }
 
 export function SearchableSelect({
-  options = [],
+  options,
   value,
   onValueChange,
   placeholder = "Select an option...",
@@ -32,8 +32,13 @@ export function SearchableSelect({
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false)
 
-  // Ensure options is always an array
-  const safeOptions = Array.isArray(options) ? options : []
+  // Ensure options is always an array and filter out any invalid options
+  const safeOptions = (options || []).filter((option): option is Option => 
+    option && 
+    typeof option === 'object' && 
+    'value' in option && 
+    'label' in option
+  )
 
   const selectedOption = safeOptions.find((option) => option.value === value)
 
@@ -57,39 +62,38 @@ export function SearchableSelect({
         <Command>
           <CommandInput placeholder={placeholder} />
           <CommandEmpty>No options found.</CommandEmpty>
-          <div className="max-h-[300px] overflow-y-auto">
+          <CommandGroup>
             {safeOptions.map((option, index) => (
-              <CommandGroup key={index}>
-                <CommandItem
-                  value={option.value}
-                  onSelect={() => {
-                    onValueChange(option.value)
-                    setOpen(false)
-                  }}
-                  disabled={option.disabled}
-                  className={cn(
-                    "flex items-center justify-between",
-                    option.disabled && "opacity-50 cursor-not-allowed"
-                  )}
-                >
-                  <div className="flex items-center">
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        value === option.value ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    {option.label}
-                  </div>
-                  {showPrice && option.price !== null && option.price !== undefined && (
-                    <span className="text-muted-foreground">
-                      ${option.price.toFixed(2)}
-                    </span>
-                  )}
-                </CommandItem>
-              </CommandGroup>
+              <CommandItem
+                key={option.value || index}
+                value={option.value}
+                onSelect={() => {
+                  onValueChange(option.value)
+                  setOpen(false)
+                }}
+                disabled={option.disabled}
+                className={cn(
+                  "flex items-center justify-between",
+                  option.disabled && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                <div className="flex items-center">
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      value === option.value ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {option.label}
+                </div>
+                {showPrice && option.price !== null && option.price !== undefined && (
+                  <span className="text-muted-foreground">
+                    ${option.price.toFixed(2)}
+                  </span>
+                )}
+              </CommandItem>
             ))}
-          </div>
+          </CommandGroup>
         </Command>
       </PopoverContent>
     </Popover>
