@@ -23,7 +23,7 @@ export type Option = {
   price?: number | null
 }
 
-interface GroupedOption {
+export interface GroupedOption {
   label: string
   options: Option[]
 }
