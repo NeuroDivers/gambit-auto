@@ -14,7 +14,7 @@ export function useWorkOrdersData() {
 
       if (workOrdersError) throw workOrdersError
 
-      // Then fetch services with explicit foreign key relationships
+      // Then fetch services with explicit foreign key relationship
       const { data: services, error: servicesError } = await supabase
         .from("work_order_services")
         .select(`
