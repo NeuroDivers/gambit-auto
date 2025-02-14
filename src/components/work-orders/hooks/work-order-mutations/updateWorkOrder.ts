@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client"
 
 export async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues) {
   console.log("Updating work order with values:", values)
-  console.log("Work Order ID:", workOrderId) // Add logging to verify workOrderId
+  console.log("Work Order ID:", workOrderId)
   
   await updateWorkOrderDetails(workOrderId, values)
   await updateAssignedBay(values)
