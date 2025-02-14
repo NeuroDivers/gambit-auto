@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
@@ -40,16 +41,18 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
       onUpdate(index, "service_id", selectedService.id);
       onUpdate(index, "service_name", selectedService.name);
       
-      // Keep the existing unit price if the selected service has no price
-      if (selectedService.price !== null && selectedService.price !== undefined) {
-        onUpdate(index, "unit_price", selectedService.price);
-      }
+      // Only update the unit price if it exists in the selected service
+      const currentUnitPrice = item.unit_price || 0;
+      const newUnitPrice = selectedService.price !== null && selectedService.price !== undefined 
+        ? selectedService.price 
+        : currentUnitPrice;
       
+      onUpdate(index, "unit_price", newUnitPrice);
       setSelectedServiceName(selectedService.name);
       setIsExpanded(true);
       setOpen(false);
     }
-  }, [services, index, onUpdate]);
+  }, [services, index, onUpdate, item.unit_price]);
 
   const servicesByType = services.reduce<ServicesByType>((acc, service) => {
     const type = service.hierarchy_type || 'Other';
