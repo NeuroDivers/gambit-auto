@@ -27,16 +27,6 @@ export function useWorkOrdersData() {
             id,
             name,
             price
-          ),
-          main_service:service_types!work_order_services_main_service_id_fkey (
-            id,
-            name,
-            price
-          ),
-          sub_service:service_types!work_order_services_sub_service_id_fkey (
-            id,
-            name,
-            price
           )
         `)
         .in('work_order_id', workOrders.map(wo => wo.id))
