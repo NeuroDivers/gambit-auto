@@ -12,8 +12,8 @@ type ServiceSelectionFieldProps = {
   disabled?: boolean
 }
 
-export function ServiceSelectionField({ services, onServicesChange, disabled }: ServiceSelectionFieldProps) {
-  const { data: availableServices = [] } = useServiceData()
+export function ServiceSelectionField({ services = [], onServicesChange, disabled }: ServiceSelectionFieldProps) {
+  const { data: availableServices = [], isLoading } = useServiceData()
 
   const handleRemoveService = (index: number) => {
     const updatedServices = [...services];
@@ -51,7 +51,7 @@ export function ServiceSelectionField({ services, onServicesChange, disabled }: 
           variant="outline"
           size="sm"
           onClick={handleAddService}
-          disabled={disabled}
+          disabled={disabled || isLoading}
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Service
