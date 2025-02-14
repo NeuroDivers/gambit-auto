@@ -32,12 +32,12 @@ export const useServiceTypes = (
   const { data: serviceTypes, refetch } = useQuery({
     queryKey: ["serviceTypes", searchQuery, statusFilter, typeFilter],
     queryFn: async () => {
-      // First, get all services with their parent relationships
+      // First, get all services
       const { data: services, error: servicesError } = await supabase
         .from("service_types")
         .select(`
           *,
-          parent:service_types!service_types_parent_service_id_fkey(
+          parent:service_types(
             id,
             name,
             status
@@ -79,11 +79,16 @@ export const useServiceTypes = (
 
       if (bundleError) throw bundleError;
 
-      // Transform services to ensure parent is an object instead of an array
+      // Transform services to ensure parent is properly structured
       const servicesWithRelations = services.map(service => {
-        console.log('Processing service:', service.name, 'Parent:', service.parent);
+        // Get the parent from the parent array (Supabase returns it as an array)
+        const parentService = Array.isArray(service.parent) && service.parent.length > 0 
+          ? service.parent[0] 
+          : null;
+
         return {
           ...service,
+          parent: parentService,
           sub_services: subServices.filter(sub => sub.parent_service_id === service.id),
           included_in_bundles: bundleRelations
             .filter(rel => rel.service_id === service.id)
