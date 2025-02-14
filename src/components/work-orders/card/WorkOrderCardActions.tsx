@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import { FileText, Trash2, MoreVertical, Edit2 } from "lucide-react"
 import {
@@ -63,23 +62,6 @@ export function WorkOrderCardActions({ workOrder, onDelete }: WorkOrderCardActio
     e.preventDefault()
     e.stopPropagation()
     try {
-      // First check if there are any invoices associated with this work order
-      const { data: invoices, error: invoicesError } = await supabase
-        .from('invoices')
-        .select('id')
-        .eq('work_order_id', workOrder.id)
-        .maybeSingle()
-
-      if (invoicesError) {
-        throw invoicesError
-      }
-
-      if (invoices) {
-        toast.error('Cannot delete work order: it has associated invoices. Please delete the invoices first.')
-        return
-      }
-
-      // If no invoices exist, proceed with deletion
       const { error } = await supabase
         .from('work_orders')
         .delete()
@@ -89,9 +71,9 @@ export function WorkOrderCardActions({ workOrder, onDelete }: WorkOrderCardActio
 
       toast.success('Work order deleted successfully')
       onDelete?.()
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting work order:', error)
-      toast.error('Failed to delete work order: ' + error.message)
+      toast.error('Failed to delete work order')
     }
   }
 

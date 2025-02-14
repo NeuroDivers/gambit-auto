@@ -1,4 +1,3 @@
-
 export type ServiceType = {
   id: string;
   name: string;
@@ -11,7 +10,6 @@ export type ServiceItemType = {
   service_name: string;
   quantity: number;
   unit_price: number;
-  main_service_id?: string | null;
   package_id?: string | null;
   package_name?: string | null;
   addons?: Array<{

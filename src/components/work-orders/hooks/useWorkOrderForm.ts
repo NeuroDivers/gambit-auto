@@ -46,7 +46,7 @@ const formSchema = z.object({
     service_name: z.string(),
     quantity: z.number(),
     unit_price: z.number()
-  })).default([])
+  }))
 })
 
 export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, defaultStartTime?: Date) {

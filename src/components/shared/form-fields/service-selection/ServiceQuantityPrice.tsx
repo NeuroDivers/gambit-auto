@@ -11,15 +11,12 @@ interface ServiceQuantityPriceProps {
 }
 
 export function ServiceQuantityPrice({ index, item, onUpdate, mounted }: ServiceQuantityPriceProps) {
-  const quantityId = `quantity-${index}`
-  const priceId = `unit-price-${index}`
-  
   return (
     <div className="grid grid-cols-2 gap-4">
       <div>
-        <Label htmlFor={quantityId}>Quantity</Label>
+        <Label htmlFor={`quantity-${index}`}>Quantity</Label>
         <Input
-          id={quantityId}
+          id={`quantity-${index}`}
           type="number"
           value={item.quantity || 1}
           onChange={(e) => {
@@ -34,9 +31,9 @@ export function ServiceQuantityPrice({ index, item, onUpdate, mounted }: Service
       </div>
 
       <div>
-        <Label htmlFor={priceId}>Unit Price</Label>
+        <Label htmlFor={`unit-price-${index}`}>Unit Price</Label>
         <Input
-          id={priceId}
+          id={`unit-price-${index}`}
           type="number"
           value={item.unit_price || 0}
           onChange={(e) => {

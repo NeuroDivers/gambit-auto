@@ -1,116 +1,115 @@
 
-import { ServiceItemType } from "@/components/work-orders/types"
+import React from 'react';
+import { Button } from "@/components/ui/button"
+import { X } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { ServiceItemFormProps, ServicesByType } from "./types"
 import { ServiceDropdown } from "./ServiceDropdown"
 import { ServiceQuantityPrice } from "./ServiceQuantityPrice"
 import { ServiceDescription } from "./ServiceDescription"
-import { Button } from "@/components/ui/button"
-import { Trash2 } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
-import { useState, useRef, useEffect } from "react"
 
-interface ServiceItemFormProps {
-  index: number
-  item: ServiceItemType
-  services: Array<{
-    id: string
-    name: string
-    description?: string
-    price?: number
-    hierarchy_type?: string
-    requires_main_service?: boolean
-  }>
-  onUpdate: (index: number, field: keyof ServiceItemType, value: any) => void
-  onRemove: () => void
-}
-
-export function ServiceItemForm({
-  index,
-  item,
-  services,
-  onUpdate,
-  onRemove,
-}: ServiceItemFormProps) {
-  const [open, setOpen] = useState(false)
-  const mounted = useRef(true)
+export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove }: ServiceItemFormProps) {
+  const mounted = useRef(true);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [selectedServiceName, setSelectedServiceName] = useState(item.service_name || "");
 
   useEffect(() => {
+    if (item.service_name) {
+      setSelectedServiceName(item.service_name);
+      setIsExpanded(true);
+    }
+    
     return () => {
-      mounted.current = false
-    }
-  }, [])
+      mounted.current = false;
+    };
+  }, [item.service_name]);
 
-  const handleServiceSelect = (serviceId: string) => {
-    const selectedService = services.find((s) => s.id === serviceId)
-    if (selectedService && mounted.current) {
-      console.log("Updating service with:", {
-        id: selectedService.id,
-        name: selectedService.name,
-        price: selectedService.price
-      })
-      
-      // Update service details
-      onUpdate(index, "service_id", selectedService.id)
-      onUpdate(index, "service_name", selectedService.name)
-      onUpdate(index, "unit_price", selectedService.price || 0)
-      onUpdate(index, "quantity", 1) // Reset quantity to 1 when selecting a new service
-      
-      // Reset main_service_id if this is not a sub-service
-      if (selectedService.hierarchy_type !== 'sub') {
-        onUpdate(index, "main_service_id", null)
-      }
-      
-      // Close the dropdown after selection
-      setOpen(false)
-    }
-  }
+  const handleServiceSelect = React.useCallback((currentValue: string) => {
+    if (!mounted.current) return;
 
-  // Group services by type for better organization
-  const servicesByType = services.reduce((acc: { [key: string]: typeof services }, service) => {
-    const type = service.hierarchy_type === 'sub' ? 'Sub Services' : 'Main Services'
-    if (!acc[type]) acc[type] = []
-    acc[type].push(service)
-    return acc
-  }, {})
+    const selectedService = services.find(service => service.id === currentValue);
+    
+    if (selectedService) {
+      console.log('Selected service:', selectedService);
+      onUpdate(index, "service_id", selectedService.id);
+      onUpdate(index, "service_name", selectedService.name);
+      
+      // Only update the unit price if it exists in the selected service
+      const currentUnitPrice = item.unit_price || 0;
+      const newUnitPrice = selectedService.price !== null && selectedService.price !== undefined 
+        ? selectedService.price 
+        : currentUnitPrice;
+      
+      onUpdate(index, "unit_price", newUnitPrice);
+      setSelectedServiceName(selectedService.name);
+      setIsExpanded(true);
+      setOpen(false);
+    }
+  }, [services, index, onUpdate, item.unit_price]);
+
+  const servicesByType = services.reduce<ServicesByType>((acc, service) => {
+    const type = service.hierarchy_type || 'Other';
+    if (!acc[type]) acc[type] = [];
+    acc[type].push(service);
+    return acc;
+  }, {});
+
+  const selectedService = services.find(s => s.id === item.service_id);
 
   return (
-    <Card>
-      <CardContent className="p-4 space-y-4">
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <ServiceDropdown
-              selectedServiceName={item.service_name || "Select a service..."}
-              servicesByType={servicesByType}
-              open={open}
-              setOpen={setOpen}
-              handleServiceSelect={handleServiceSelect}
-              serviceId={item.service_id}
-            />
-            {item.service_id && (
-              <ServiceDescription
-                description={
-                  services.find((s) => s.id === item.service_id)?.description
-                }
-              />
-            )}
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onRemove}
-            className="ml-2"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
+    <div className="space-y-4 p-4 border rounded-lg relative bg-card">
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={onRemove}
+        className="absolute right-2 top-2"
+      >
+        <X className="h-4 w-4" />
+      </Button>
 
-        <ServiceQuantityPrice
-          index={index}
-          item={item}
-          onUpdate={onUpdate}
-          mounted={mounted}
-        />
-      </CardContent>
-    </Card>
-  )
+      <Accordion
+        type="single"
+        collapsible
+        value={isExpanded ? "service-details" : ""}
+        onValueChange={(value) => setIsExpanded(value === "service-details")}
+      >
+        <AccordionItem value="service-details" className="border-none">
+          <AccordionTrigger className="py-2">
+            {selectedServiceName || "Select a Service"}
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-4">
+              <ServiceDropdown
+                selectedServiceName={selectedServiceName}
+                servicesByType={servicesByType}
+                open={open}
+                setOpen={setOpen}
+                handleServiceSelect={handleServiceSelect}
+                serviceId={item.service_id}
+              />
+
+              <ServiceQuantityPrice
+                index={index}
+                item={item}
+                onUpdate={onUpdate}
+                mounted={mounted}
+              />
+
+              <ServiceDescription 
+                description={selectedService?.description}
+              />
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </div>
+  );
 }
