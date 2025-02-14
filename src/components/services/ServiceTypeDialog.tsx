@@ -28,6 +28,8 @@ interface ServiceTypeDialogProps {
     description: string | null;
     price: number | null;
     duration: number | null;
+    pricing_model?: 'flat_rate' | 'hourly' | 'variable';
+    base_price?: number | null;
   } | null;
   onSuccess: () => void;
 }
@@ -48,7 +50,8 @@ export const ServiceTypeDialog = ({
       name: "",
       status: "active",
       description: "",
-      price: "",
+      pricing_model: "flat_rate",
+      base_price: "",
       duration: "",
     },
   });
@@ -59,7 +62,8 @@ export const ServiceTypeDialog = ({
         name: serviceType.name,
         status: serviceType.status,
         description: serviceType.description || "",
-        price: serviceType.price?.toString() || "",
+        pricing_model: serviceType.pricing_model || "flat_rate",
+        base_price: serviceType.base_price?.toString() || "",
         duration: serviceType.duration?.toString() || "",
       });
       fetchPackages();
@@ -68,7 +72,8 @@ export const ServiceTypeDialog = ({
         name: "",
         status: "active",
         description: "",
-        price: "",
+        pricing_model: "flat_rate",
+        base_price: "",
         duration: "",
       });
       setPackages([]);
@@ -101,7 +106,8 @@ export const ServiceTypeDialog = ({
         name: values.name,
         status: values.status,
         description: values.description || null,
-        price: values.price ? parseFloat(values.price) : null,
+        pricing_model: values.pricing_model,
+        base_price: values.base_price ? parseFloat(values.base_price) : null,
         duration: values.duration ? parseInt(values.duration) : null,
       };
 
@@ -188,4 +194,3 @@ export const ServiceTypeDialog = ({
     </Dialog>
   );
 };
-

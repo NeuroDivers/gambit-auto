@@ -10,7 +10,8 @@ const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   status: z.enum(["active", "inactive"]),
   description: z.string().optional(),
-  price: z.string().optional(),
+  pricing_model: z.enum(["flat_rate", "hourly", "variable"]),
+  base_price: z.string().optional(),
   duration: z.string().optional(),
 });
 
@@ -67,14 +68,43 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
 
       <FormField
         control={form.control}
-        name="description"
+        name="pricing_model"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Description</FormLabel>
+            <FormLabel>Pricing Model</FormLabel>
+            <Select
+              onValueChange={field.onChange}
+              defaultValue={field.value}
+            >
+              <FormControl>
+                <SelectTrigger id="pricing_model">
+                  <SelectValue placeholder="Select pricing model" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="flat_rate">Flat Rate</SelectItem>
+                <SelectItem value="hourly">Hourly</SelectItem>
+                <SelectItem value="variable">Variable</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="base_price"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Base Price</FormLabel>
             <FormControl>
-              <Textarea 
-                id="service_description"
-                {...field} 
+              <Input
+                id="service_base_price"
+                {...field}
+                type="number"
+                step="0.01"
+                min="0"
               />
             </FormControl>
             <FormMessage />
@@ -84,16 +114,14 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
 
       <FormField
         control={form.control}
-        name="price"
+        name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Price (optional)</FormLabel>
+            <FormLabel>Description</FormLabel>
             <FormControl>
-              <Input
-                id="service_price"
-                {...field}
-                type="number"
-                step="0.01"
+              <Textarea 
+                id="service_description"
+                {...field} 
               />
             </FormControl>
             <FormMessage />
@@ -125,4 +153,3 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
 };
 
 export { formSchema };
-

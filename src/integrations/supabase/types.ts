@@ -957,6 +957,7 @@ export type Database = {
       }
       service_types: {
         Row: {
+          base_price: number | null
           can_be_standalone: boolean | null
           created_at: string
           description: string | null
@@ -968,12 +969,16 @@ export type Database = {
           name: string
           parent_service_id: string | null
           price: number | null
+          pricing_model:
+            | Database["public"]["Enums"]["service_pricing_model"]
+            | null
           requires_main_service: boolean | null
           sort_order: number | null
           status: Database["public"]["Enums"]["service_status"]
           updated_at: string
         }
         Insert: {
+          base_price?: number | null
           can_be_standalone?: boolean | null
           created_at?: string
           description?: string | null
@@ -985,12 +990,16 @@ export type Database = {
           name: string
           parent_service_id?: string | null
           price?: number | null
+          pricing_model?:
+            | Database["public"]["Enums"]["service_pricing_model"]
+            | null
           requires_main_service?: boolean | null
           sort_order?: number | null
           status?: Database["public"]["Enums"]["service_status"]
           updated_at?: string
         }
         Update: {
+          base_price?: number | null
           can_be_standalone?: boolean | null
           created_at?: string
           description?: string | null
@@ -1002,6 +1011,9 @@ export type Database = {
           name?: string
           parent_service_id?: string | null
           price?: number | null
+          pricing_model?:
+            | Database["public"]["Enums"]["service_pricing_model"]
+            | null
           requires_main_service?: boolean | null
           sort_order?: number | null
           status?: Database["public"]["Enums"]["service_status"]
