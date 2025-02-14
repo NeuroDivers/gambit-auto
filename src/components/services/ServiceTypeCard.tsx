@@ -116,8 +116,8 @@ export function ServiceTypeCard({ service, onEdit, onRefetch }: ServiceTypeCardP
                 {getServiceTypeLabel()}
               </Badge>
               {service.service_type === 'sub_service' && service.parent && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  {service.parent.name}
+                <Badge variant="secondary" className="flex items-center gap-1 text-secondary-foreground">
+                  Part of: {service.parent.name}
                 </Badge>
               )}
             </div>
