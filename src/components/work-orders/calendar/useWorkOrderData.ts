@@ -6,16 +6,15 @@ export function useWorkOrderData() {
   return useQuery({
     queryKey: ["workOrders"],
     queryFn: async () => {
+      // Fetch work orders first
       const { data: workOrders, error: workOrdersError } = await supabase
         .from("work_orders")
         .select("*")
         .order('created_at', { ascending: false });
 
       if (workOrdersError) throw workOrdersError;
-
-      // Fetch services for all work orders in a single query
-      const workOrderIds = workOrders.map(wo => wo.id);
       
+      // Then fetch all work order services with their relationships
       const { data: servicesData, error: servicesError } = await supabase
         .from("work_order_services")
         .select(`
@@ -26,10 +25,21 @@ export function useWorkOrderData() {
           unit_price,
           service:service_types!work_order_services_service_id_fkey (
             id,
-            name
+            name,
+            price
+          ),
+          main_service:service_types!work_order_services_main_service_id_fkey (
+            id,
+            name,
+            price
+          ),
+          sub_service:service_types!work_order_services_sub_service_id_fkey (
+            id,
+            name,
+            price
           )
         `)
-        .in('work_order_id', workOrderIds);
+        .in('work_order_id', workOrders.map(wo => wo.id));
 
       if (servicesError) throw servicesError;
 

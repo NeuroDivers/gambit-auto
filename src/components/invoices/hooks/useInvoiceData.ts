@@ -10,25 +10,28 @@ export function useInvoiceData(invoiceId: string | undefined) {
     queryFn: async () => {
       if (!invoiceId) throw new Error("Invoice ID is required")
 
-      // First fetch the invoice with basic work order data
+      // First fetch the invoice and work order data
       const { data: invoice, error: invoiceError } = await supabase
         .from("invoices")
         .select(`
           *,
-          work_order:work_orders (
-            *
-          )
+          work_order:work_orders (*)
         `)
         .eq("id", invoiceId)
-        .single()
+        .maybeSingle()
 
       if (invoiceError) throw invoiceError
+      if (!invoice) throw new Error("Invoice not found")
 
-      // Then fetch the work order services separately
+      // Then fetch work order services with their service relationships
       const { data: workOrderServices, error: servicesError } = await supabase
         .from("work_order_services")
         .select(`
-          *,
+          id,
+          work_order_id,
+          service_id,
+          quantity,
+          unit_price,
           service:service_types!work_order_services_service_id_fkey (
             id,
             name,

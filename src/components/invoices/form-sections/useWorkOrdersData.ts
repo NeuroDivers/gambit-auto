@@ -14,11 +14,15 @@ export function useWorkOrdersData() {
 
       if (workOrdersError) throw workOrdersError
 
-      // Then fetch services for all work orders
+      // Then fetch services with explicit foreign key relationships
       const { data: services, error: servicesError } = await supabase
         .from("work_order_services")
         .select(`
-          *,
+          id,
+          work_order_id,
+          service_id,
+          quantity,
+          unit_price,
           service:service_types!work_order_services_service_id_fkey (
             id,
             name,
@@ -35,6 +39,7 @@ export function useWorkOrdersData() {
             price
           )
         `)
+        .in('work_order_id', workOrders.map(wo => wo.id))
 
       if (servicesError) throw servicesError
 
