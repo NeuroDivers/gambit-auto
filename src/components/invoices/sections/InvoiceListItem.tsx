@@ -1,5 +1,4 @@
 
-```typescript
 import { formatDistanceToNow } from "date-fns"
 import { Invoice } from "../types"
 import { Card } from "@/components/ui/card"
