@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -62,7 +61,9 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
 
   // Update selectedServiceName when item.service_name changes
   useEffect(() => {
-    setSelectedServiceName(item.service_name || "");
+    if (mounted.current) {
+      setSelectedServiceName(item.service_name || "");
+    }
   }, [item.service_name]);
 
   const handleServiceSelect = (value: string) => {
@@ -124,7 +125,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                       variant="outline"
                       role="combobox"
                       aria-expanded={open}
-                      className="w-full justify-between"
+                      className="w-full justify-between text-left"
                     >
                       {selectedServiceName || "Select a service..."}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -145,10 +146,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                               <CommandItem
                                 key={service.id}
                                 value={service.id}
-                                onSelect={(currentValue) => {
-                                  console.log("CommandItem selected:", currentValue);
-                                  handleServiceSelect(currentValue);
-                                }}
+                                onSelect={handleServiceSelect}
                                 className="flex items-center justify-between cursor-pointer"
                               >
                                 <div className="flex items-center justify-between w-full">

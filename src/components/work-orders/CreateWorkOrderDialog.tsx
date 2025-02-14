@@ -24,7 +24,7 @@ export function CreateWorkOrderDialog({ defaultStartTime, open: controlledOpen, 
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-7xl w-[calc(100vw-2rem)] h-[calc(100vh-2rem)] max-h-[calc(100vh-2rem)] overflow-y-auto p-0">
+      <DialogContent className="max-w-full w-screen h-screen max-h-screen overflow-y-auto p-0 m-0 rounded-none">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle>Create Work Order</DialogTitle>
           <DialogDescription>
