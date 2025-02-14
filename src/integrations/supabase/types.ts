@@ -1065,47 +1065,6 @@ export type Database = {
           },
         ]
       }
-      services: {
-        Row: {
-          base_price: number | null
-          created_at: string
-          description: string | null
-          id: string
-          name: string
-          parent_service_id: string | null
-          pricing_model: Database["public"]["Enums"]["service_pricing_model"]
-          updated_at: string
-        }
-        Insert: {
-          base_price?: number | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          name: string
-          parent_service_id?: string | null
-          pricing_model?: Database["public"]["Enums"]["service_pricing_model"]
-          updated_at?: string
-        }
-        Update: {
-          base_price?: number | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          name?: string
-          parent_service_id?: string | null
-          pricing_model?: Database["public"]["Enums"]["service_pricing_model"]
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "services_parent_service_id_fkey"
-            columns: ["parent_service_id"]
-            isOneToOne: false
-            referencedRelation: "services"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       site_colors: {
         Row: {
           accent_color: string

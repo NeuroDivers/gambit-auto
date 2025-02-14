@@ -18,27 +18,48 @@ interface ServiceItemProps {
 }
 
 export function ServiceItem({ index, service, onRemove, onUpdate }: ServiceItemProps) {
-  const { data: services = [] } = useServiceData()
+  const { data: services = [], isLoading } = useServiceData()
   const [isAccordionOpen, setIsAccordionOpen] = useState<string>("service-details")
 
-  // Group services by hierarchy type for better organization
-  const servicesByType = services.reduce((acc: { [key: string]: any[] }, service) => {
-    const type = service.hierarchy_type || 'Other'
-    if (!acc[type]) acc[type] = []
-    acc[type].push({
-      ...service,
-      sortKey: service.name.toLowerCase()
-    })
-    return acc
-  }, {})
+  // Create organized options with clear group labels and sorted items
+  const serviceOptions: Option[] = React.useMemo(() => {
+    if (!services || services.length === 0) return []
 
-  // Sort services within each group
-  Object.keys(servicesByType).forEach(type => {
-    servicesByType[type].sort((a, b) => a.sortKey.localeCompare(b.sortKey))
-  })
+    // Group services by hierarchy type for better organization
+    const servicesByType = services.reduce((acc: { [key: string]: any[] }, service) => {
+      const type = service.hierarchy_type || 'Other'
+      if (!acc[type]) acc[type] = []
+      acc[type].push({
+        ...service,
+        sortKey: service.name.toLowerCase()
+      })
+      return acc
+    }, {})
+
+    // Sort services within each group
+    Object.keys(servicesByType).forEach(type => {
+      servicesByType[type].sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+    })
+
+    return Object.entries(servicesByType)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .flatMap(([type, services]) => [
+        { 
+          value: `group-${type}`, 
+          label: type.toUpperCase(), 
+          price: null, 
+          disabled: true 
+        },
+        ...services.map(service => ({
+          value: service.id,
+          label: service.name,
+          price: service.price,
+        }))
+      ])
+  }, [services])
 
   const handleServiceChange = (serviceId: string) => {
-    const selectedService = services.find((s) => s.id === serviceId)
+    const selectedService = services?.find((s) => s.id === serviceId)
     if (!selectedService) return
 
     console.log("Updating service with:", selectedService)
@@ -70,23 +91,6 @@ export function ServiceItem({ index, service, onRemove, onUpdate }: ServiceItemP
       unit_price: price
     })
   }
-
-  // Create organized options with clear group labels and sorted items
-  const serviceOptions: Option[] = Object.entries(servicesByType)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .flatMap(([type, services]) => [
-      { 
-        value: `group-${type}`, 
-        label: type.toUpperCase(), 
-        price: null, 
-        disabled: true 
-      },
-      ...services.map(service => ({
-        value: service.id,
-        label: service.name,
-        price: service.price,
-      }))
-    ])
 
   // Effect to automatically open accordion when service is selected
   useEffect(() => {
@@ -127,8 +131,9 @@ export function ServiceItem({ index, service, onRemove, onUpdate }: ServiceItemP
                     options={serviceOptions}
                     value={service.service_id || ""}
                     onValueChange={handleServiceChange}
-                    placeholder="Search for a service..."
+                    placeholder={isLoading ? "Loading services..." : "Search for a service..."}
                     showPrice={true}
+                    disabled={isLoading}
                   />
                 </div>
 
