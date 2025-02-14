@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -74,7 +73,9 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
       console.log('Selected service:', selectedService);
       onUpdate(index, "service_id", selectedService.id);
       onUpdate(index, "service_name", selectedService.name);
-      if (selectedService.price !== null) {
+      
+      // Keep the existing unit price if the selected service has no price
+      if (selectedService.price !== null && selectedService.price !== undefined) {
         onUpdate(index, "unit_price", selectedService.price);
       }
       
@@ -148,7 +149,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                               >
                                 <div className="flex items-center justify-between w-full">
                                   <span>{service.name}</span>
-                                  {service.price !== null && (
+                                  {service.price !== null && service.price !== undefined && (
                                     <span className="text-muted-foreground ml-2">
                                       ${service.price.toFixed(2)}
                                     </span>
