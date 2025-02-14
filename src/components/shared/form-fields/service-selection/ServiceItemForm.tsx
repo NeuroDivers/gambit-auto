@@ -58,6 +58,11 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
     console.log("ServiceItemForm mounted with item:", item);
     console.log("Available services:", services);
     
+    // Initialize expanded state if we have a selected service
+    if (item.service_id) {
+      setIsExpanded(true);
+    }
+    
     return () => {
       mounted.current = false;
     };
@@ -93,8 +98,15 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
     }
   }, [services, index, onUpdate, mounted]);
 
-  const selectedService = services.find(service => service?.id === item.service_id);
+  // Check both ID and name when finding the selected service
+  const selectedService = services.find(service => 
+    service?.id === item.service_id || service?.name === item.service_name
+  );
+  
+  console.log("Item service_id:", item.service_id);
+  console.log("Item service_name:", item.service_name);
   console.log("Currently selected service:", selectedService);
+  console.log("All services:", services);
 
   const servicesByType = services.reduce<ServicesByType>((acc, service) => {
     const type = service.hierarchy_type || 'Other';
@@ -142,7 +154,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent 
-                    className="w-[400px] p-0 bg-card" 
+                    className="w-[400px] p-0 bg-card z-[999]" 
                     align="start"
                     sideOffset={4}
                     side="bottom"
