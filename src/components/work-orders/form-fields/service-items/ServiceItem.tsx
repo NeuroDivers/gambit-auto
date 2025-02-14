@@ -26,9 +26,18 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
   const servicesByType = services.reduce((acc: { [key: string]: any[] }, service) => {
     const type = service.hierarchy_type || 'Other'
     if (!acc[type]) acc[type] = []
-    acc[type].push(service)
+    acc[type].push({
+      ...service,
+      // Sort by name within each group
+      sortKey: service.name.toLowerCase()
+    })
     return acc
   }, {})
+
+  // Sort services within each group
+  Object.keys(servicesByType).forEach(type => {
+    servicesByType[type].sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+  })
 
   const handleServiceChange = (serviceId: string) => {
     const selectedService = services.find((s) => s.id === serviceId)
@@ -65,15 +74,24 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
     form.setValue("service_items", updatedServices)
   }
 
-  // Create flattened options with group labels
-  const serviceOptions: Option[] = Object.entries(servicesByType).flatMap(([type, services]) => [
-    { value: `group-${type}`, label: type, price: null, disabled: true },
-    ...services.map(service => ({
-      value: service.id,
-      label: `${service.name}${service.price ? ` - $${service.price}` : ''}`,
-      price: service.price,
-    }))
-  ]);
+  // Create organized options with clear group labels and sorted items
+  const serviceOptions: Option[] = Object.entries(servicesByType)
+    .sort(([a], [b]) => a.localeCompare(b)) // Sort group headers alphabetically
+    .flatMap(([type, services]) => [
+      // Add a styled group header
+      { 
+        value: `group-${type}`, 
+        label: type.toUpperCase(), 
+        price: null, 
+        disabled: true 
+      },
+      // Add the services in this group
+      ...services.map(service => ({
+        value: service.id,
+        label: `${service.name}${service.price ? ` • $${service.price.toFixed(2)}` : ''}`,
+        price: service.price,
+      }))
+    ]);
 
   return (
     <Card className="relative">
@@ -101,7 +119,7 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
                     options={serviceOptions}
                     value={field.value.service_id}
                     onValueChange={handleServiceChange}
-                    placeholder="Select a service"
+                    placeholder="Search for a service..."
                     showPrice={true}
                   />
                 </div>
