@@ -37,7 +37,7 @@ export const useServiceTypes = (
         .from("service_types")
         .select(`
           *,
-          parent:service_types!parent_service_id(
+          parent:service_types!parent_service_id (
             id,
             name,
             status
@@ -74,9 +74,10 @@ export const useServiceTypes = (
 
       if (bundleError) throw bundleError;
 
-      // Combine all the data
+      // Transform services to ensure parent is an object instead of an array
       const servicesWithRelations = services.map(service => ({
         ...service,
+        parent: Array.isArray(service.parent) ? service.parent[0] || null : service.parent,
         sub_services: subServices.filter(sub => sub.parent_service_id === service.id),
         included_in_bundles: bundleRelations
           .filter(rel => rel.service_id === service.id)
