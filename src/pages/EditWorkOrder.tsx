@@ -70,10 +70,12 @@ export default function EditWorkOrder() {
     },
     enabled: isValidUUID(id),
     retry: false,
-    onError: (error: Error) => {
-      console.error("Error in work order query:", error);
-      toast.error(error.message);
-      navigate("/work-orders");
+    meta: {
+      onError: (error: Error) => {
+        console.error("Error in work order query:", error);
+        toast.error(error.message);
+        navigate("/work-orders");
+      }
     }
   });
 
