@@ -87,34 +87,44 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
     }
   }
 
-  // Update work order services
-  // First, delete existing services
-  const { error: deleteError } = await supabase
-    .from('work_order_services')
-    .delete()
-    .eq('work_order_id', workOrderId)
-
-  if (deleteError) {
-    console.error("Error deleting work order services:", deleteError)
-    throw deleteError
-  }
-
-  // Then insert new services if there are any
+  // Update work order services if there are valid services
   if (values.service_items && values.service_items.length > 0) {
-    const { error: servicesError } = await supabase
-      .from('work_order_services')
-      .insert(
-        values.service_items.map(item => ({
-          work_order_id: workOrderId,
-          service_id: item.service_id,
-          quantity: item.quantity,
-          unit_price: item.unit_price
-        }))
-      )
+    // First, validate service items
+    const validServices = values.service_items.filter(item => 
+      item.service_id && 
+      item.service_id.trim() !== "" && 
+      item.quantity > 0 &&
+      item.unit_price >= 0
+    )
 
-    if (servicesError) {
-      console.error("Error inserting work order services:", servicesError)
-      throw servicesError
+    if (validServices.length > 0) {
+      // First, delete existing services
+      const { error: deleteError } = await supabase
+        .from('work_order_services')
+        .delete()
+        .eq('work_order_id', workOrderId)
+
+      if (deleteError) {
+        console.error("Error deleting work order services:", deleteError)
+        throw deleteError
+      }
+
+      // Then insert new services
+      const { error: servicesError } = await supabase
+        .from('work_order_services')
+        .insert(
+          validServices.map(item => ({
+            work_order_id: workOrderId,
+            service_id: item.service_id,
+            quantity: item.quantity,
+            unit_price: item.unit_price
+          }))
+        )
+
+      if (servicesError) {
+        console.error("Error inserting work order services:", servicesError)
+        throw servicesError
+      }
     }
   }
 }
@@ -166,22 +176,32 @@ async function createWorkOrder(values: WorkOrderFormValues) {
     }
   }
 
-  // Insert service items only for new work orders
+  // Insert service items if there are valid services
   if (values.service_items && values.service_items.length > 0) {
-    const { error: servicesError } = await supabase
-      .from("work_order_services")
-      .insert(
-        values.service_items.map(item => ({
-          work_order_id: workOrder.id,
-          service_id: item.service_id,
-          quantity: item.quantity,
-          unit_price: item.unit_price
-        }))
-      )
+    // First, validate service items
+    const validServices = values.service_items.filter(item => 
+      item.service_id && 
+      item.service_id.trim() !== "" && 
+      item.quantity > 0 &&
+      item.unit_price >= 0
+    )
 
-    if (servicesError) {
-      console.error("Error inserting work order services:", servicesError)
-      throw servicesError
+    if (validServices.length > 0) {
+      const { error: servicesError } = await supabase
+        .from("work_order_services")
+        .insert(
+          validServices.map(item => ({
+            work_order_id: workOrder.id,
+            service_id: item.service_id,
+            quantity: item.quantity,
+            unit_price: item.unit_price
+          }))
+        )
+
+      if (servicesError) {
+        console.error("Error inserting work order services:", servicesError)
+        throw servicesError
+      }
     }
   }
 }
