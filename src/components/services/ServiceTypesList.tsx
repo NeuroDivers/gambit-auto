@@ -56,16 +56,19 @@ export const ServiceTypesList = ({
         .from("service_types")
         .select(`
           *,
-          sub_services:service_types(
-            *
+          sub_services:service_types!service_types_parent_service_id_fkey(
+            id,
+            name,
+            status,
+            service_type,
+            description
           ),
-          parent:service_types(
+          parent:service_types!service_types_parent_service_id_fkey(
             id,
             name,
             status
           )
         `)
-        .eq('parent_service_id', 'id')
         .order('name');
       
       if (servicesError) throw servicesError;
