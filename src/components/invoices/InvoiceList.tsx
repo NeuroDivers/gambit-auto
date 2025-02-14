@@ -1,51 +1,43 @@
 
-import { useInvoiceList } from "./hooks/useInvoiceList"
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
 import { InvoiceListItem } from "./sections/InvoiceListItem"
-import { Card } from "@/components/ui/card"
-import { useState } from "react"
-import { InvoiceDialog } from "./sections/InvoiceDialog"
-import { Invoice } from "./types"
+import { LoadingState } from "./sections/LoadingState"
 
 export function InvoiceList() {
-  const { data: invoices, isLoading } = useInvoiceList()
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const { data: invoices, isLoading } = useQuery({
+    queryKey: ["invoices"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("*")
+        .order("created_at", { ascending: false })
 
-  const handleEditInvoice = (invoice: Invoice) => {
-    setSelectedInvoice(invoice)
-    setEditDialogOpen(true)
-  }
-
-  const handleCloseDialog = () => {
-    setSelectedInvoice(null)
-    setEditDialogOpen(false)
-  }
+      if (error) throw error
+      return data
+    },
+  })
 
   if (isLoading) {
+    return <LoadingState />
+  }
+
+  if (!invoices?.length) {
     return (
-      <div className="space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <Card key={i} className="w-full h-32 animate-pulse" />
-        ))}
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">No invoices found.</p>
       </div>
     )
   }
 
   return (
     <div className="space-y-4">
-      {invoices?.map((invoice) => (
-        <InvoiceListItem 
-          key={invoice.id} 
-          invoice={invoice} 
-          onEdit={handleEditInvoice}
+      {invoices.map((invoice) => (
+        <InvoiceListItem
+          key={invoice.id}
+          invoice={invoice}
         />
       ))}
-      <InvoiceDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        invoiceId={selectedInvoice?.id || null}
-        onClose={handleCloseDialog}
-      />
     </div>
   )
 }

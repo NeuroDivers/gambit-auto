@@ -1,4 +1,3 @@
-
 import { createBrowserRouter, Navigate } from "react-router-dom"
 import Auth from "./pages/Auth"
 import Dashboard from "./pages/Dashboard"
@@ -11,6 +10,8 @@ import UserManagement from "./pages/UserManagement"
 import Quotes from "./pages/Quotes"
 import Invoices from "./pages/Invoices"
 import InvoiceDetails from "./pages/InvoiceDetails"
+import CreateInvoice from "./pages/CreateInvoice"
+import EditInvoice from "./pages/EditInvoice"
 import PublicInvoiceView from "./pages/PublicInvoiceView"
 import NotFound from "./pages/NotFound"
 import ClientManagement from "./pages/ClientManagement"
@@ -110,6 +111,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "invoices/create",
+        element: (
+          <PermissionGuard resource="invoices" type="page_access">
+            <CreateInvoice />
+          </PermissionGuard>
+        ),
+      },
+      {
         path: "invoices/:id",
         element: (
           <PermissionGuard resource="invoices" type="page_access">
@@ -121,7 +130,7 @@ export const router = createBrowserRouter([
         path: "invoices/:id/edit",
         element: (
           <PermissionGuard resource="invoices" type="page_access">
-            <InvoiceDetails isEditing />
+            <EditInvoice />
           </PermissionGuard>
         ),
       },

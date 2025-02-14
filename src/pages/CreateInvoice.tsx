@@ -1,0 +1,103 @@
+
+import { useForm } from "react-hook-form"
+import { InvoiceFormValues } from "@/components/invoices/types"
+import { EditInvoiceForm } from "@/components/invoices/sections/EditInvoiceForm"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
+import { useNavigate } from "react-router-dom"
+import { toast } from "sonner"
+import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
+
+export default function CreateInvoice() {
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const form = useForm<InvoiceFormValues>({
+    defaultValues: {
+      status: "draft",
+      notes: "",
+      customer_first_name: "",
+      customer_last_name: "",
+      customer_email: "",
+      customer_phone: "",
+      customer_address: "",
+      vehicle_make: "",
+      vehicle_model: "",
+      vehicle_year: 0,
+      vehicle_vin: "",
+      invoice_items: []
+    }
+  })
+
+  const { mutate: createInvoice, isPending } = useMutation({
+    mutationFn: async (values: InvoiceFormValues) => {
+      // First create the invoice
+      const { data: invoice, error: invoiceError } = await supabase
+        .from('invoices')
+        .insert({
+          status: values.status,
+          notes: values.notes,
+          customer_first_name: values.customer_first_name,
+          customer_last_name: values.customer_last_name,
+          customer_email: values.customer_email,
+          customer_phone: values.customer_phone,
+          customer_address: values.customer_address,
+          vehicle_make: values.vehicle_make,
+          vehicle_model: values.vehicle_model,
+          vehicle_year: values.vehicle_year,
+          vehicle_vin: values.vehicle_vin
+        })
+        .select()
+        .single()
+
+      if (invoiceError) throw invoiceError
+
+      // Then create the invoice items
+      if (values.invoice_items?.length > 0) {
+        const { error: itemsError } = await supabase
+          .from('invoice_items')
+          .insert(
+            values.invoice_items.map(item => ({
+              invoice_id: invoice.id,
+              service_id: item.service_id,
+              package_id: item.package_id,
+              service_name: item.service_name,
+              description: item.description,
+              quantity: item.quantity,
+              unit_price: item.unit_price
+            }))
+          )
+
+        if (itemsError) throw itemsError
+      }
+
+      return invoice
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] })
+      toast.success('Invoice created successfully')
+      navigate(`/invoices/${data.id}`)
+    },
+    onError: (error: any) => {
+      console.error('Error creating invoice:', error)
+      toast.error('Failed to create invoice: ' + error.message)
+    }
+  })
+
+  const onSubmit = (values: InvoiceFormValues) => {
+    createInvoice(values)
+  }
+
+  return (
+    <div className="container mx-auto py-6 space-y-6">
+      <PageBreadcrumbs />
+      <div className="max-w-5xl mx-auto">
+        <EditInvoiceForm
+          form={form}
+          onSubmit={onSubmit}
+          isPending={isPending}
+          invoiceId={undefined}
+        />
+      </div>
+    </div>
+  )
+}
