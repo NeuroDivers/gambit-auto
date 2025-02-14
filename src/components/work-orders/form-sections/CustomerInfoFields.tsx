@@ -18,9 +18,9 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
           name="first_name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>First Name</FormLabel>
+              <FormLabel htmlFor="first_name">First Name</FormLabel>
               <FormControl>
-                <Input placeholder="John" {...field} />
+                <Input id="first_name" placeholder="John" autoComplete="given-name" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -32,9 +32,9 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
           name="last_name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Last Name</FormLabel>
+              <FormLabel htmlFor="last_name">Last Name</FormLabel>
               <FormControl>
-                <Input placeholder="Doe" {...field} />
+                <Input id="last_name" placeholder="Doe" autoComplete="family-name" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -48,9 +48,9 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel htmlFor="email">Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="john@example.com" {...field} />
+                <Input id="email" type="email" placeholder="john@example.com" autoComplete="email" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -62,9 +62,9 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
           name="phone_number"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Phone Number</FormLabel>
+              <FormLabel htmlFor="phone_number">Phone Number</FormLabel>
               <FormControl>
-                <Input placeholder="(555) 555-5555" {...field} />
+                <Input id="phone_number" placeholder="(555) 555-5555" autoComplete="tel" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -77,13 +77,13 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
         name="contact_preference"
         render={({ field }) => (
           <FormItem>
-            <FormLabel htmlFor="contact_preference">Preferred Contact Method</FormLabel>
+            <FormLabel>Preferred Contact Method</FormLabel>
             <FormControl>
               <RadioGroup
-                id="contact_preference"
                 onValueChange={field.onChange}
                 defaultValue={field.value}
                 className="flex space-x-4"
+                name="contact_preference"
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="email" id="contact_preference_email" />
@@ -105,9 +105,9 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
         name="address"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Address (Optional)</FormLabel>
+            <FormLabel htmlFor="address">Address (Optional)</FormLabel>
             <FormControl>
-              <Input placeholder="123 Main St" {...field} />
+              <Input id="address" placeholder="123 Main St" autoComplete="street-address" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

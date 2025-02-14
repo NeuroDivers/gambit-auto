@@ -78,9 +78,12 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
     const selectedService = services.find(service => service.id === currentValue);
     
     if (selectedService) {
+      console.log('Selected service:', selectedService); // Add logging
       onUpdate(index, "service_id", selectedService.id);
       onUpdate(index, "service_name", selectedService.name);
-      onUpdate(index, "unit_price", selectedService.price || 0);
+      if (selectedService.price !== null) {
+        onUpdate(index, "unit_price", selectedService.price);
+      }
       
       setSelectedServiceName(selectedService.name);
       setIsExpanded(true);

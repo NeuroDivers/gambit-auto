@@ -1,3 +1,4 @@
+
 import { FormField, FormItem, FormLabel } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useQuery } from "@tanstack/react-query"
@@ -27,12 +28,12 @@ export function BayAssignmentField({ form }: BayAssignmentFieldProps) {
       name="assigned_bay_id"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Assign Service Bay</FormLabel>
+          <FormLabel htmlFor="assigned_bay_select">Assign Service Bay</FormLabel>
           <Select
             value={field.value || "none"}
             onValueChange={(value) => field.onChange(value === "none" ? null : value)}
           >
-            <SelectTrigger>
+            <SelectTrigger id="assigned_bay_select">
               <SelectValue placeholder="Select a service bay..." />
             </SelectTrigger>
             <SelectContent>
