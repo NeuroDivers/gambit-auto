@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,43 +28,18 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 
-interface ServicePackage {
-  id: string;
-  name: string;
-  description?: string | null;
-  price: number | null;
-  sale_price?: number | null;
-  status: string;
-}
-
-interface Service {
-  id: string;
-  name: string;
-  description?: string | null;
-  price: number | null;
-  status: string;
-  hierarchy_type: string;
-  parent_service_id?: string | null;
-  sort_order?: number | null;
-  requires_main_service?: boolean;
-  can_be_standalone?: boolean;
-  sub_services?: Service[];
-  service_packages?: ServicePackage[];
-}
-
 interface ServiceItemFormProps {
-  index: number
-  item: ServiceItemType
-  services: Service[]
-  onUpdate: (index: number, field: keyof ServiceItemType, value: any) => void
-  onRemove: () => void
+  index: number;
+  item: ServiceItemType;
+  services: any[];
+  onUpdate: (index: number, field: keyof ServiceItemType, value: any) => void;
+  onRemove: () => void;
 }
 
 export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove }: ServiceItemFormProps) {
   const mounted = useRef(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [open, setOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     return () => {
@@ -71,23 +47,12 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
     };
   }, []);
 
-  const filteredServices = React.useMemo(() => {
-    if (!Array.isArray(services)) return [];
+  const handleServiceSelect = (serviceName: string) => {
+    if (!mounted.current) return;
     
-    return services.filter(service => 
-      service && 
-      typeof service === 'object' && 
-      service.name &&
-      service.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [services, searchTerm]);
-
-  const handleServiceSelect = (serviceId: string) => {
-    if (!serviceId || !mounted.current) return;
-    
-    const selectedService = services.find(service => service?.id === serviceId);
+    const selectedService = services.find(service => service?.name === serviceName);
     if (selectedService) {
-      onUpdate(index, "service_id", serviceId);
+      onUpdate(index, "service_id", selectedService.id);
       onUpdate(index, "service_name", selectedService.name);
       onUpdate(index, "unit_price", selectedService.price || 0);
       setIsExpanded(true);
@@ -135,20 +100,18 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[400px] p-0">
-                    <Command>
-                      <CommandInput 
-                        placeholder="Search services..."
-                        onValueChange={setSearchTerm}
-                      />
+                  <PopoverContent className="w-[400px] p-0" align="start">
+                    <Command shouldFilter={false}>
+                      <CommandInput placeholder="Search services..." />
                       <CommandList>
                         <CommandEmpty>No services found.</CommandEmpty>
                         <CommandGroup>
-                          {filteredServices.map((service) => (
+                          {services.map((service) => (
                             <CommandItem
                               key={service.id}
+                              onSelect={() => handleServiceSelect(service.name)}
                               value={service.name}
-                              onSelect={() => handleServiceSelect(service.id)}
+                              className="flex items-center justify-between cursor-pointer"
                             >
                               <div className="flex items-center justify-between w-full">
                                 <span>{service.name}</span>
@@ -157,13 +120,13 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                                     ${service.price.toFixed(2)}
                                   </span>
                                 )}
-                                <Check
-                                  className={cn(
-                                    "ml-2 h-4 w-4",
-                                    selectedService?.id === service.id ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
                               </div>
+                              <Check
+                                className={cn(
+                                  "ml-2 h-4 w-4",
+                                  selectedService?.id === service.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
                             </CommandItem>
                           ))}
                         </CommandGroup>
