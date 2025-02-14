@@ -14,26 +14,28 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 
+interface ServicePackage {
+  id: string;
+  name: string;
+  description?: string | null;
+  price: number | null;
+  sale_price?: number | null;
+  status: string;
+}
+
 interface Service {
   id: string;
   name: string;
-  description?: string;
+  description?: string | null;
   price: number | null;
   status: string;
   hierarchy_type: string;
   parent_service_id?: string | null;
-  sort_order?: number;
+  sort_order?: number | null;
   requires_main_service?: boolean;
   can_be_standalone?: boolean;
   sub_services?: Service[];
-  service_packages?: Array<{
-    id: string;
-    name: string;
-    description?: string;
-    price: number | null;
-    sale_price?: number | null;
-    status: string;
-  }>;
+  service_packages?: ServicePackage[];
 }
 
 interface ServiceItemFormProps {
