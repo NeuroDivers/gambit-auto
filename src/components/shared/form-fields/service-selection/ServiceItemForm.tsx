@@ -1,51 +1,17 @@
 import React from 'react';
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { X } from "lucide-react"
-import { ServiceItemType } from "@/components/work-orders/types"
 import { useEffect, useRef, useState } from "react"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { Check, ChevronsUpDown } from "lucide-react"
-import { cn } from "@/lib/utils"
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-
-interface ServiceItemFormProps {
-  index: number;
-  item: ServiceItemType;
-  services: any[];
-  onUpdate: (index: number, field: keyof ServiceItemType, value: any) => void;
-  onRemove: () => void;
-}
-
-interface ServiceType {
-  id: string;
-  name: string;
-  price: number | null;
-  description?: string;
-  hierarchy_type?: string;
-}
-
-type ServicesByType = {
-  [key: string]: ServiceType[];
-}
+import { ServiceItemFormProps, ServicesByType } from "./types"
+import { ServiceDropdown } from "./ServiceDropdown"
+import { ServiceQuantityPrice } from "./ServiceQuantityPrice"
+import { ServiceDescription } from "./ServiceDescription"
 
 export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove }: ServiceItemFormProps) {
   const mounted = useRef(true);
@@ -92,6 +58,8 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
     return acc;
   }, {});
 
+  const selectedService = services.find(s => s.id === item.service_id);
+
   return (
     <div className="space-y-4 p-4 border rounded-lg relative bg-card">
       <Button
@@ -116,103 +84,25 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
           </AccordionTrigger>
           <AccordionContent>
             <div className="space-y-4">
-              <div>
-                <Label>Service</Label>
-                <Popover open={open} onOpenChange={setOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={open}
-                      className="w-full justify-between text-left"
-                    >
-                      {selectedServiceName || "Select a service..."}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent 
-                    className="w-[400px] p-0" 
-                    align="start"
-                    sideOffset={4}
-                  >
-                    <Command>
-                      <CommandInput placeholder="Search services..." />
-                      <CommandList>
-                        <CommandEmpty>No services found.</CommandEmpty>
-                        {Object.entries(servicesByType).map(([type, typeServices]) => (
-                          <CommandGroup key={type} heading={type}>
-                            {typeServices.map((service) => (
-                              <CommandItem
-                                key={service.id}
-                                onSelect={() => handleServiceSelect(service.id)}
-                                className="cursor-pointer"
-                              >
-                                <div className="flex items-center justify-between w-full">
-                                  <span>{service.name}</span>
-                                  {service.price !== null && service.price !== undefined && (
-                                    <span className="text-muted-foreground ml-2">
-                                      ${service.price.toFixed(2)}
-                                    </span>
-                                  )}
-                                </div>
-                                <Check
-                                  className={cn(
-                                    "ml-2 h-4 w-4",
-                                    item.service_id === service.id ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        ))}
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
+              <ServiceDropdown
+                selectedServiceName={selectedServiceName}
+                servicesByType={servicesByType}
+                open={open}
+                setOpen={setOpen}
+                handleServiceSelect={handleServiceSelect}
+                serviceId={item.service_id}
+              />
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor={`quantity-${index}`}>Quantity</Label>
-                  <Input
-                    id={`quantity-${index}`}
-                    type="number"
-                    value={item.quantity || 1}
-                    onChange={(e) => {
-                      if (mounted.current) {
-                        onUpdate(index, "quantity", parseInt(e.target.value) || 1);
-                      }
-                    }}
-                    min={1}
-                    className="mt-1"
-                    autoComplete="off"
-                  />
-                </div>
+              <ServiceQuantityPrice
+                index={index}
+                item={item}
+                onUpdate={onUpdate}
+                mounted={mounted}
+              />
 
-                <div>
-                  <Label htmlFor={`unit-price-${index}`}>Unit Price</Label>
-                  <Input
-                    id={`unit-price-${index}`}
-                    type="number"
-                    value={item.unit_price || 0}
-                    onChange={(e) => {
-                      if (mounted.current) {
-                        onUpdate(index, "unit_price", parseFloat(e.target.value) || 0);
-                      }
-                    }}
-                    min={0}
-                    step="0.01"
-                    className="mt-1"
-                    autoComplete="off"
-                  />
-                </div>
-              </div>
-
-              {services.find(s => s.id === item.service_id)?.description && (
-                <div className="mt-2 text-sm text-muted-foreground">
-                  {services.find(s => s.id === item.service_id)?.description}
-                </div>
-              )}
+              <ServiceDescription 
+                description={selectedService?.description}
+              />
             </div>
           </AccordionContent>
         </AccordionItem>
