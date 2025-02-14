@@ -87,13 +87,12 @@ async function updateWorkOrderServices(workOrderId: string, serviceItems: WorkOr
       
       const servicesToInsert = validServices.map(item => {
         const serviceType = serviceTypesMap.get(item.service_id)
-        const isMainService = serviceType?.hierarchy_type === 'main'
         const isSubService = serviceType?.hierarchy_type === 'sub'
 
         return {
           work_order_id: workOrderId,
           service_id: item.service_id,
-          main_service_id: isSubService ? item.main_service_id : null,
+          main_service_id: isSubService ? item.main_service_id || null : null,
           sub_service_id: isSubService ? item.service_id : null,
           quantity: item.quantity,
           unit_price: item.unit_price
