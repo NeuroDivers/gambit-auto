@@ -8,6 +8,7 @@ import { useServiceData } from "@/components/shared/form-fields/service-selectio
 import { ServiceItemType } from "../../types"
 import { SearchableSelect, Option } from "@/components/shared/form-fields/searchable-select/SearchableSelect"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { useEffect, useState } from "react"
 
 interface ServiceItemProps {
   index: number
@@ -21,6 +22,7 @@ interface ServiceItemProps {
 
 export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) {
   const { data: services = [] } = useServiceData()
+  const [isAccordionOpen, setIsAccordionOpen] = useState<string>("service-details")
 
   // Group services by hierarchy type for better organization
   const servicesByType = services.reduce((acc: { [key: string]: any[] }, service) => {
@@ -47,17 +49,24 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
 
     const currentServices = form.getValues()
     const updatedServices = [...currentServices]
-    updatedServices[index] = {
+    const updatedService = {
       ...updatedServices[index],
       service_id: selectedService.id,
       service_name: selectedService.name,
       unit_price: selectedService.price || 0,
-      quantity: 1 // Reset quantity to 1 when selecting a new service
+      quantity: 1
     }
+    updatedServices[index] = updatedService
+    
+    console.log("Updated service:", updatedService)
+    console.log("Updated services array:", updatedServices)
+    
     form.setValue("service_items", updatedServices)
   }
 
   const handleQuantityChange = (quantity: number) => {
+    if (isNaN(quantity) || quantity < 1) return
+    
     const currentServices = form.getValues()
     const updatedServices = [...currentServices]
     updatedServices[index] = {
@@ -68,6 +77,8 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
   }
 
   const handlePriceChange = (price: number) => {
+    if (isNaN(price) || price < 0) return
+    
     const currentServices = form.getValues()
     const updatedServices = [...currentServices]
     updatedServices[index] = {
@@ -96,6 +107,13 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
       }))
     ]);
 
+  // Effect to automatically open accordion when service is selected
+  useEffect(() => {
+    if (field.value.service_id) {
+      setIsAccordionOpen("service-details")
+    }
+  }, [field.value.service_id])
+
   return (
     <Card className="relative">
       <CardContent className="p-4">
@@ -109,7 +127,13 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
           <Trash2 className="h-4 w-4" />
         </Button>
 
-        <Accordion type="single" collapsible className="w-full">
+        <Accordion 
+          type="single" 
+          collapsible 
+          className="w-full"
+          value={isAccordionOpen}
+          onValueChange={setIsAccordionOpen}
+        >
           <AccordionItem value="service-details">
             <AccordionTrigger className="text-lg font-medium">
               {field.value.service_name || "Select a Service"}
@@ -120,7 +144,7 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
                   <Label htmlFor={`service-type-${index}`}>Service Type</Label>
                   <SearchableSelect
                     options={serviceOptions}
-                    value={field.value.service_id}
+                    value={field.value.service_id || ""}
                     onValueChange={handleServiceChange}
                     placeholder="Search for a service..."
                     showPrice={true}
@@ -135,8 +159,8 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
                       name={`quantity-${index}`}
                       type="number"
                       min={1}
-                      value={field.value.quantity}
-                      onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
+                      value={field.value.quantity || 1}
+                      onChange={(e) => handleQuantityChange(parseInt(e.target.value))}
                       className="mt-1"
                     />
                   </div>
@@ -148,8 +172,8 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
                       type="number"
                       min={0}
                       step="0.01"
-                      value={field.value.unit_price}
-                      onChange={(e) => handlePriceChange(parseFloat(e.target.value) || 0)}
+                      value={field.value.unit_price || 0}
+                      onChange={(e) => handlePriceChange(parseFloat(e.target.value))}
                       className="mt-1"
                     />
                   </div>
