@@ -26,23 +26,40 @@ export const ServiceTypesList = () => {
   const { data: serviceTypes, refetch } = useQuery({
     queryKey: ["serviceTypes"],
     queryFn: async () => {
-      // First get all service types
       const { data: services, error: servicesError } = await supabase
         .from("service_types")
         .select(`
           *,
-          sub_services:service_types!parent_service_id(*),
-          included_in_bundles:bundle_services!bundle_services_service_id_fkey(
-            bundle:service_types(*)
-          ),
-          bundle_includes:bundle_services!bundle_services_bundle_id_fkey(
-            service:service_types(*)
-          )
+          sub_services:service_types!parent_service_id(*)
         `)
         .order('name');
       
       if (servicesError) throw servicesError;
-      return services;
+
+      // Get bundle relationships in a separate query
+      const { data: bundleRelations, error: bundleError } = await supabase
+        .from('bundle_services')
+        .select(`
+          bundle_id,
+          service_id,
+          bundle:service_types!bundle_services_bundle_id_fkey(*),
+          service:service_types!bundle_services_service_id_fkey(*)
+        `);
+
+      if (bundleError) throw bundleError;
+
+      // Merge the bundle information into the services
+      const servicesWithBundles = services.map(service => ({
+        ...service,
+        included_in_bundles: bundleRelations
+          .filter(rel => rel.service_id === service.id)
+          .map(rel => rel.bundle),
+        bundle_includes: bundleRelations
+          .filter(rel => rel.bundle_id === service.id)
+          .map(rel => rel.service)
+      }));
+
+      return servicesWithBundles;
     }
   });
 
