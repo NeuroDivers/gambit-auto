@@ -114,7 +114,7 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
             <AccordionContent>
               <div className="space-y-4 pt-2">
                 <div>
-                  <Label>Service Type</Label>
+                  <Label htmlFor={`service-type-${index}`}>Service Type</Label>
                   <SearchableSelect
                     options={serviceOptions}
                     value={field.value.service_id}
@@ -126,8 +126,10 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>Quantity</Label>
+                    <Label htmlFor={`quantity-${index}`}>Quantity</Label>
                     <Input
+                      id={`quantity-${index}`}
+                      name={`quantity-${index}`}
                       type="number"
                       min={1}
                       value={field.value.quantity}
@@ -136,8 +138,10 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
                     />
                   </div>
                   <div>
-                    <Label>Unit Price</Label>
+                    <Label htmlFor={`unit-price-${index}`}>Unit Price</Label>
                     <Input
+                      id={`unit-price-${index}`}
+                      name={`unit-price-${index}`}
                       type="number"
                       min={0}
                       step="0.01"
