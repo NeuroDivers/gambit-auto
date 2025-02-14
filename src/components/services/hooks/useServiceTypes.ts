@@ -32,17 +32,10 @@ export const useServiceTypes = (
   const { data: serviceTypes, refetch } = useQuery({
     queryKey: ["serviceTypes", searchQuery, statusFilter, typeFilter],
     queryFn: async () => {
-      // Get all services with their parent information
+      // Get all services first
       const { data: services, error: servicesError } = await supabase
         .from("service_types")
-        .select(`
-          *,
-          parent:service_types(
-            id,
-            name,
-            status
-          )
-        `)
+        .select('*')
         .order('name');
       
       if (servicesError) {
@@ -50,22 +43,17 @@ export const useServiceTypes = (
         throw servicesError;
       }
 
-      console.log('Raw services data:', services);
+      // Get parent service information
+      const parentServiceIds = services
+        .filter(s => s.parent_service_id)
+        .map(s => s.parent_service_id);
 
-      // Get all sub-services relationships
-      const { data: subServices, error: subServicesError } = await supabase
+      const { data: parentServices, error: parentsError } = await supabase
         .from("service_types")
-        .select(`
-          id,
-          name,
-          status,
-          service_type,
-          description,
-          parent_service_id
-        `)
-        .not('parent_service_id', 'is', null);
+        .select('id, name, status')
+        .in('id', parentServiceIds);
 
-      if (subServicesError) throw subServicesError;
+      if (parentsError) throw parentsError;
 
       // Get bundle relationships
       const { data: bundleRelations, error: bundleError } = await supabase
@@ -81,13 +69,13 @@ export const useServiceTypes = (
 
       // Transform services to include all relationships
       const servicesWithRelations = services.map(service => {
-        // Get the parent from the parent array (Supabase returns it as an array)
-        const parentService = Array.isArray(service.parent) ? service.parent[0] : service.parent;
+        const parentService = parentServices?.find(p => p.id === service.parent_service_id);
+        const subServices = services.filter(s => s.parent_service_id === service.id);
 
         return {
           ...service,
           parent: parentService || null,
-          sub_services: subServices.filter(sub => sub.parent_service_id === service.id),
+          sub_services: subServices,
           included_in_bundles: bundleRelations
             .filter(rel => rel.service_id === service.id)
             .map(rel => rel.bundle),
