@@ -185,6 +185,66 @@ export type Database = {
         }
         Relationships: []
       }
+      customers: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      employees: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       invoice_items: {
         Row: {
           created_at: string
@@ -957,6 +1017,47 @@ export type Database = {
           },
         ]
       }
+      services: {
+        Row: {
+          base_price: number | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          parent_service_id: string | null
+          pricing_model: Database["public"]["Enums"]["service_pricing_model"]
+          updated_at: string
+        }
+        Insert: {
+          base_price?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          parent_service_id?: string | null
+          pricing_model?: Database["public"]["Enums"]["service_pricing_model"]
+          updated_at?: string
+        }
+        Update: {
+          base_price?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          parent_service_id?: string | null
+          pricing_model?: Database["public"]["Enums"]["service_pricing_model"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_parent_service_id_fkey"
+            columns: ["parent_service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_colors: {
         Row: {
           accent_color: string
@@ -1285,10 +1386,14 @@ export type Database = {
         | "full_front"
         | "track_pack"
         | "full_vehicle"
+      quote_status: "pending" | "approved" | "rejected"
       service_hierarchy_type: "main" | "sub"
+      service_pricing_model: "flat_rate" | "hourly" | "per_unit"
       service_status: "active" | "inactive"
       tax_type: "GST" | "QST" | "HST" | "PST"
+      user_role: "admin" | "technician" | "sales"
       window_tint_type: "two_front" | "front_and_rear" | "complete"
+      work_order_status: "open" | "in_progress" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
