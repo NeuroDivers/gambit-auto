@@ -44,6 +44,7 @@ export function useWorkOrderSubmission() {
 async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues) {
   console.log("Updating work order with values:", values)
   
+  // Update work order
   const { error: workOrderError } = await supabase
     .from("work_orders")
     .update({
@@ -87,45 +88,43 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
     }
   }
 
-  // Update work order services if there are valid services
+  // Handle services update
+  console.log("Handling services update for work order:", workOrderId)
+  console.log("Service items to process:", values.service_items)
+
+  // First, delete existing services
+  const { error: deleteError } = await supabase
+    .from('work_order_services')
+    .delete()
+    .eq('work_order_id', workOrderId)
+
+  if (deleteError) {
+    console.error("Error deleting work order services:", deleteError)
+    throw deleteError
+  }
+
+  // Then insert new services if there are any
   if (values.service_items && values.service_items.length > 0) {
-    // First, validate service items
-    const validServices = values.service_items.filter(item => 
-      item.service_id && 
-      item.service_id.trim() !== "" && 
-      item.quantity > 0 &&
-      item.unit_price >= 0
-    )
+    const servicesToInsert = values.service_items.map(item => ({
+      work_order_id: workOrderId,
+      service_id: item.service_id,
+      quantity: item.quantity,
+      unit_price: item.unit_price
+    }))
 
-    if (validServices.length > 0) {
-      // First, delete existing services
-      const { error: deleteError } = await supabase
-        .from('work_order_services')
-        .delete()
-        .eq('work_order_id', workOrderId)
+    console.log("Inserting new services:", servicesToInsert)
 
-      if (deleteError) {
-        console.error("Error deleting work order services:", deleteError)
-        throw deleteError
-      }
+    const { data: insertedServices, error: servicesError } = await supabase
+      .from('work_order_services')
+      .insert(servicesToInsert)
+      .select()
 
-      // Then insert new services
-      const { error: servicesError } = await supabase
-        .from('work_order_services')
-        .insert(
-          validServices.map(item => ({
-            work_order_id: workOrderId,
-            service_id: item.service_id,
-            quantity: item.quantity,
-            unit_price: item.unit_price
-          }))
-        )
-
-      if (servicesError) {
-        console.error("Error inserting work order services:", servicesError)
-        throw servicesError
-      }
+    if (servicesError) {
+      console.error("Error inserting work order services:", servicesError)
+      throw servicesError
     }
+
+    console.log("Successfully inserted services:", insertedServices)
   }
 }
 
@@ -176,32 +175,27 @@ async function createWorkOrder(values: WorkOrderFormValues) {
     }
   }
 
-  // Insert service items if there are valid services
+  // Insert service items
   if (values.service_items && values.service_items.length > 0) {
-    // First, validate service items
-    const validServices = values.service_items.filter(item => 
-      item.service_id && 
-      item.service_id.trim() !== "" && 
-      item.quantity > 0 &&
-      item.unit_price >= 0
-    )
+    console.log("Creating services for new work order:", values.service_items)
+    
+    const servicesToInsert = values.service_items.map(item => ({
+      work_order_id: workOrder.id,
+      service_id: item.service_id,
+      quantity: item.quantity,
+      unit_price: item.unit_price
+    }))
 
-    if (validServices.length > 0) {
-      const { error: servicesError } = await supabase
-        .from("work_order_services")
-        .insert(
-          validServices.map(item => ({
-            work_order_id: workOrder.id,
-            service_id: item.service_id,
-            quantity: item.quantity,
-            unit_price: item.unit_price
-          }))
-        )
+    const { data: insertedServices, error: servicesError } = await supabase
+      .from("work_order_services")
+      .insert(servicesToInsert)
+      .select()
 
-      if (servicesError) {
-        console.error("Error inserting work order services:", servicesError)
-        throw servicesError
-      }
+    if (servicesError) {
+      console.error("Error inserting work order services:", servicesError)
+      throw servicesError
     }
+
+    console.log("Successfully inserted services for new work order:", insertedServices)
   }
 }
