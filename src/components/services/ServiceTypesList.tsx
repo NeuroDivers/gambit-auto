@@ -57,7 +57,13 @@ export const ServiceTypesList = ({
         .from("service_types")
         .select(`
           *,
-          sub_services:service_types!parent_service_id(*),
+          sub_services:service_types(
+            id,
+            name,
+            status,
+            service_type,
+            description
+          ),
           parent:service_types!service_types_parent_service_id_fkey(
             id,
             name,
