@@ -1,99 +1,77 @@
-import { format } from "date-fns"
-import { MoreHorizontal, Pencil } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Link } from "react-router-dom"
+
+import { formatDistanceToNow } from "date-fns"
 import { Invoice } from "../types"
+import { Card } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { ArrowRight, Mail, Printer } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 type InvoiceListItemProps = {
   invoice: Invoice
-  onEdit: (id: string) => void
-  onStatusChange: (id: string, status: string) => void
 }
 
-export function InvoiceListItem({ invoice, onEdit, onStatusChange }: InvoiceListItemProps) {
+export function InvoiceListItem({ invoice }: InvoiceListItemProps) {
+  const navigate = useNavigate()
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'draft':
+        return 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20'
+      case 'sent':
+        return 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20'
+      case 'paid':
+        return 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
+      case 'overdue':
+        return 'bg-red-500/10 text-red-500 hover:bg-red-500/20'
+      case 'cancelled':
+        return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20'
+      default:
+        return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20'
+    }
+  }
+
   return (
-    <Link 
-      to={`/invoices/${invoice.id}`}
-      className="block"
-    >
-      <Card className="hover:bg-muted/50 transition-colors">
-        <CardContent className="p-6">
-          <div className="flex justify-between items-center">
-            <div className="flex-1">
-              <h3 className="font-semibold">{invoice.invoice_number}</h3>
-              <p className="text-sm text-muted-foreground">
-                {invoice.customer_first_name} {invoice.customer_last_name}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {invoice.customer_email} • {invoice.customer_phone}
-              </p>
-            </div>
-            <div className="text-right flex-1">
-              <p className="font-semibold">${invoice.total}</p>
-              <p className="text-sm text-muted-foreground">
-                {format(new Date(invoice.created_at), "MMM d, yyyy")}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Due: {invoice.due_date ? format(new Date(invoice.due_date), "MMM d, yyyy") : 'Not set'}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 ml-4">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={(e) => {
-                  e.preventDefault()
-                  onEdit(invoice.id)
-                }}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={(e) => e.preventDefault()}
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={(e) => {
-                    e.preventDefault()
-                    onStatusChange(invoice.id, "draft")
-                  }}>
-                    Set as Draft
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={(e) => {
-                    e.preventDefault()
-                    onStatusChange(invoice.id, "pending")
-                  }}>
-                    Set as Pending
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={(e) => {
-                    e.preventDefault()
-                    onStatusChange(invoice.id, "paid")
-                  }}>
-                    Set as Paid
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+    <Card className="p-6 hover:border-primary/50 transition-colors">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="space-y-1 flex-1">
+          <div className="flex items-center gap-3">
+            <h3 className="text-lg font-semibold">{invoice.invoice_number}</h3>
+            <Badge className={getStatusColor(invoice.status)} variant="secondary">
+              {invoice.status}
+            </Badge>
           </div>
-        </CardContent>
-      </Card>
-    </Link>
+          <p className="text-muted-foreground">
+            {invoice.customer_first_name} {invoice.customer_last_name}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Created {formatDistanceToNow(new Date(invoice.created_at))} ago
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <div className="text-right mr-4">
+            <p className="text-sm text-muted-foreground">Amount</p>
+            <p className="text-lg font-semibold">${invoice.total?.toFixed(2)}</p>
+          </div>
+          
+          <div className="flex gap-2">
+            <Button variant="outline" size="icon">
+              <Mail className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon">
+              <Printer className="h-4 w-4" />
+            </Button>
+            <Button 
+              onClick={() => navigate(`/invoices/${invoice.id}`)}
+              className="gap-2"
+            >
+              View
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Card>
   )
 }
