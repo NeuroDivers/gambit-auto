@@ -35,7 +35,7 @@ interface SearchableSelectProps {
 }
 
 export function SearchableSelect({
-  options,
+  options = [], // Provide default empty array
   value = '',
   onValueChange,
   placeholder = "Select an option",
@@ -45,9 +45,8 @@ export function SearchableSelect({
   showPrice = false,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false)
-  const [search, setSearch] = useState("")
   
-  // Initialize empty arrays for both states to prevent undefined errors
+  // Ensure options is always an array
   const safeOptions = Array.isArray(options) ? options : []
   const selectedOption = safeOptions.find((option) => option.value === value)
 
@@ -81,18 +80,16 @@ export function SearchableSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full min-w-[var(--radix-popover-trigger-width)] p-0">
-        <Command value={search} onValueChange={setSearch}>
+        <Command>
           <CommandInput 
-            value={search}
-            onValueChange={setSearch}
-            placeholder={`Search ${placeholder.toLowerCase()}...`} 
+            placeholder={`Search ${placeholder.toLowerCase()}...`}
           />
           <CommandEmpty>{emptyMessage}</CommandEmpty>
           <CommandGroup className="max-h-[300px] overflow-auto">
             {safeOptions.map((option) => (
               <CommandItem
                 key={option.value}
-                value={option.label}
+                value={option.label || ''} // Ensure value is never undefined
                 onSelect={() => {
                   onValueChange(option.value)
                   setOpen(false)
