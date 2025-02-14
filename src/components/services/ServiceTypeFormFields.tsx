@@ -5,6 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
 import * as z from "zod";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -14,6 +16,7 @@ const formSchema = z.object({
   base_price: z.string().optional(),
   duration: z.string().optional(),
   service_type: z.enum(["standalone", "sub_service", "bundle"]),
+  parent_service_id: z.string().optional()
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -23,6 +26,21 @@ interface ServiceTypeFormFieldsProps {
 }
 
 export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
+  const { data: standaloneServices } = useQuery({
+    queryKey: ["standaloneServices"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_types")
+        .select("id, name")
+        .eq("service_type", "standalone")
+        .order("name");
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: form.watch("service_type") === "sub_service"
+  });
+
   return (
     <div className="space-y-4">
       <FormField
@@ -67,6 +85,36 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
           </FormItem>
         )}
       />
+
+      {form.watch("service_type") === "sub_service" && (
+        <FormField
+          control={form.control}
+          name="parent_service_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Parent Service</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger id="parent_service">
+                    <SelectValue placeholder="Select parent service" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {standaloneServices?.map(service => (
+                    <SelectItem key={service.id} value={service.id}>
+                      {service.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       <FormField
         control={form.control}
