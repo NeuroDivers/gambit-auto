@@ -55,25 +55,35 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
   const [selectedServiceName, setSelectedServiceName] = useState(item.service_name || "");
 
   useEffect(() => {
+    console.log("ServiceItemForm mounted with item:", item);
+    console.log("Available services:", services);
+    
     return () => {
       mounted.current = false;
     };
-  }, []);
+  }, [item, services]);
 
   useEffect(() => {
     if (mounted.current) {
+      console.log("Service name updated:", item.service_name);
       setSelectedServiceName(item.service_name || "");
     }
   }, [item.service_name]);
 
   const handleServiceSelect = React.useCallback((selectedValue: string) => {
-    console.log("Selected value:", selectedValue);
+    console.log("Service selection triggered with value:", selectedValue);
     if (!mounted.current) return;
     
     const selectedService = services.find(service => service?.id === selectedValue);
     console.log("Found service:", selectedService);
     
     if (selectedService) {
+      console.log("Updating service with:", {
+        id: selectedService.id,
+        name: selectedService.name,
+        price: selectedService.price
+      });
+      
       onUpdate(index, "service_id", selectedService.id);
       onUpdate(index, "service_name", selectedService.name);
       onUpdate(index, "unit_price", selectedService.price || 0);
@@ -84,6 +94,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
   }, [services, index, onUpdate, mounted]);
 
   const selectedService = services.find(service => service?.id === item.service_id);
+  console.log("Currently selected service:", selectedService);
 
   const servicesByType = services.reduce<ServicesByType>((acc, service) => {
     const type = service.hierarchy_type || 'Other';
