@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { X } from "lucide-react"
 import { ServiceItemType } from "@/components/work-orders/types"
 import { useEffect, useRef, useState } from "react"
-import { SearchableSelect } from "@/components/shared/form-fields/searchable-select/SearchableSelect"
+import { SearchableSelect, Option } from "@/components/shared/form-fields/searchable-select/SearchableSelect"
 import {
   Accordion,
   AccordionContent,
@@ -32,8 +32,8 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
     };
   }, []);
 
-  // Group services by type for better organization
-  const groupedServices = services.reduce((acc: { [key: string]: any[] }, service) => {
+  // Group services by type for better organization and properly type the options
+  const groupedServices = services.reduce((acc: { [key: string]: Option[] }, service) => {
     const type = service.service_type || 'Other';
     const groupName = type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
     if (!acc[groupName]) acc[groupName] = [];
@@ -41,10 +41,16 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
       value: service.id,
       label: service.name,
       price: service.price,
-      description: service.description
+      disabled: service.status === 'inactive'
     });
     return acc;
   }, {});
+
+  // Transform grouped services into the correct format for SearchableSelect
+  const searchableSelectOptions = Object.entries(groupedServices).map(([group, options]) => ({
+    label: group,
+    options: options
+  }));
 
   const handleServiceSelect = (serviceId: string) => {
     if (!serviceId || !mounted.current) return;
@@ -93,10 +99,7 @@ export function ServiceItemForm({ index, item, services, onUpdate, onRemove }: S
               <div>
                 <Label htmlFor={serviceId}>Service</Label>
                 <SearchableSelect
-                  options={Object.entries(groupedServices).map(([group, options]) => ({
-                    label: group,
-                    options: options
-                  }))}
+                  options={searchableSelectOptions}
                   value={item.service_id}
                   onValueChange={handleServiceSelect}
                   placeholder="Search for a service..."
