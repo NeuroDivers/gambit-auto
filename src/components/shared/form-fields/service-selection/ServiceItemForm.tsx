@@ -57,31 +57,37 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
   }, []);
 
   // Group services by type for better organization and properly type the options
-  const groupedServices = (services || []).reduce<Record<string, Option[]>>((acc, service) => {
-    const type = service.hierarchy_type || 'Other';
-    const groupName = type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
-    if (!acc[groupName]) {
-      acc[groupName] = [];
-    }
-    acc[groupName].push({
-      value: service.id,
-      label: service.name,
-      price: service.price,
-      disabled: service.status === 'inactive'
-    });
-    return acc;
-  }, {});
+  const groupedServices = React.useMemo(() => {
+    return (services || []).reduce<Record<string, Option[]>>((acc, service) => {
+      if (!service) return acc;
+      
+      const type = service.hierarchy_type || 'Other';
+      const groupName = type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
+      if (!acc[groupName]) {
+        acc[groupName] = [];
+      }
+      acc[groupName].push({
+        value: service.id,
+        label: service.name,
+        price: service.price,
+        disabled: service.status === 'inactive'
+      });
+      return acc;
+    }, {});
+  }, [services]);
 
   // Transform grouped services into the correct format for SearchableSelect
-  const searchableSelectOptions: GroupedOption[] = Object.entries(groupedServices).map(([group, options]) => ({
-    label: group,
-    options: options
-  }));
+  const searchableSelectOptions: GroupedOption[] = React.useMemo(() => {
+    return Object.entries(groupedServices).map(([group, options]) => ({
+      label: group,
+      options: options || []
+    }));
+  }, [groupedServices]);
 
   const handleServiceSelect = (serviceId: string) => {
     if (!serviceId || !mounted.current) return;
     
-    const selectedService = services?.find(service => service.id === serviceId);
+    const selectedService = services?.find(service => service?.id === serviceId);
     if (selectedService) {
       onUpdate(index, "service_id", serviceId);
       onUpdate(index, "service_name", selectedService.name);
@@ -94,7 +100,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
   const quantityId = `quantity_${index}`;
   const priceId = `price_${index}`;
 
-  const selectedService = services?.find(service => service.id === item.service_id);
+  const selectedService = services?.find(service => service?.id === item.service_id);
 
   return (
     <div className="space-y-4 p-4 border rounded-lg relative bg-card">
@@ -140,10 +146,10 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                     type="number"
                     id={quantityId}
                     name={quantityId}
-                    value={item.quantity}
+                    value={item.quantity || 1}
                     onChange={(e) => {
                       if (mounted.current) {
-                        onUpdate(index, "quantity", parseInt(e.target.value) || 0);
+                        onUpdate(index, "quantity", parseInt(e.target.value) || 1);
                       }
                     }}
                     min={1}
@@ -158,7 +164,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                     type="number"
                     id={priceId}
                     name={priceId}
-                    value={item.unit_price}
+                    value={item.unit_price || 0}
                     onChange={(e) => {
                       if (mounted.current) {
                         onUpdate(index, "unit_price", parseFloat(e.target.value) || 0);
