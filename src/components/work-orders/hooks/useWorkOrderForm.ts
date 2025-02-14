@@ -100,7 +100,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
             service_id,
             quantity,
             unit_price,
-            service:service_types!work_order_services_service_id_fkey (
+            service:service_types!inner (
               id,
               name
             )
