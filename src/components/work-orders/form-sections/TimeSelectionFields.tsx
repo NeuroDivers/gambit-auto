@@ -34,11 +34,12 @@ export function TimeSelectionFields({
         name="start_time"
         render={({ field }) => (
           <FormItem className="flex flex-col">
-            <FormLabel>Start Time</FormLabel>
+            <FormLabel htmlFor="start_time_button">Start Time</FormLabel>
             <Dialog>
               <DialogTrigger asChild>
                 <FormControl>
                   <Button
+                    id="start_time_button"
                     variant="outline"
                     className="w-full justify-start text-left font-normal"
                   >
@@ -70,8 +71,10 @@ export function TimeSelectionFields({
                     initialFocus
                   />
                   <div className="pt-4 border-t">
-                    <FormLabel>Time</FormLabel>
+                    <FormLabel htmlFor="time_input">Time</FormLabel>
                     <Input
+                      id="time_input"
+                      name="time_input"
                       type="time"
                       className="mt-2"
                       onChange={(e) => {
@@ -103,9 +106,11 @@ export function TimeSelectionFields({
         name="estimated_duration"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Estimated Duration (hours)</FormLabel>
+            <FormLabel htmlFor="estimated_duration">Estimated Duration (hours)</FormLabel>
             <FormControl>
               <Input
+                id="estimated_duration"
+                name="estimated_duration"
                 type="number"
                 min={0}
                 step={0.5}
@@ -124,9 +129,11 @@ export function TimeSelectionFields({
         name="end_time"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Estimated End Time</FormLabel>
+            <FormLabel htmlFor="end_time">Estimated End Time</FormLabel>
             <FormControl>
               <Input
+                id="end_time"
+                name="end_time"
                 value={field.value ? format(field.value, 'PPP HH:mm') : ''}
                 disabled
                 className="bg-muted"
