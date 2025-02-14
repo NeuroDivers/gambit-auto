@@ -26,19 +26,23 @@ export const ServiceTypesList = () => {
   const { data: serviceTypes, refetch } = useQuery({
     queryKey: ["serviceTypes"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get all service types
+      const { data: services, error: servicesError } = await supabase
         .from("service_types")
         .select(`
           *,
           sub_services:service_types!parent_service_id(*),
-          bundle_services!bundle_services_bundle_id_fkey(
+          included_in_bundles:bundle_services!bundle_services_service_id_fkey(
+            bundle:service_types(*)
+          ),
+          bundle_includes:bundle_services!bundle_services_bundle_id_fkey(
             service:service_types(*)
           )
         `)
         .order('name');
       
-      if (error) throw error;
-      return data;
+      if (servicesError) throw servicesError;
+      return services;
     }
   });
 
