@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -55,13 +56,16 @@ export const ServiceTypesList = ({
         .from("service_types")
         .select(`
           *,
-          sub_services:service_types!fk_parent_service(*),
+          sub_services:service_types(
+            *
+          ),
           parent:service_types(
             id,
             name,
             status
           )
         `)
+        .eq('parent_service_id', 'id')
         .order('name');
       
       if (servicesError) throw servicesError;
