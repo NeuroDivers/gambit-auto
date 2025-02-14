@@ -49,7 +49,14 @@ export default function EditInvoice() {
         vehicle_model: data.vehicle_model || "",
         vehicle_year: data.vehicle_year || 0,
         vehicle_vin: data.vehicle_vin || "",
-        invoice_items: data.invoice_items || []
+        invoice_items: data.invoice_items?.map(item => ({
+          service_id: item.service_id,
+          package_id: item.package_id,
+          service_name: item.service_name,
+          description: item.description,
+          quantity: item.quantity,
+          unit_price: item.unit_price
+        })) || []
       })
 
       return data

@@ -35,6 +35,21 @@ export function useInvoiceMutation(invoiceId?: string) {
         throw new Error("Valid Invoice ID is required")
       }
 
+      // Calculate subtotal from invoice items
+      const subtotal = values.invoice_items.reduce((total, item) => {
+        return total + (item.quantity * item.unit_price)
+      }, 0)
+
+      // Get tax rate from business_taxes table
+      const { data: taxData } = await supabase
+        .from('business_taxes')
+        .select('tax_rate')
+        .single()
+
+      const taxRate = taxData?.tax_rate || 0
+      const taxAmount = subtotal * (taxRate / 100)
+      const total = subtotal + taxAmount
+
       // First update the invoice details
       const { error: invoiceError } = await supabase
         .from('invoices')
@@ -49,7 +64,10 @@ export function useInvoiceMutation(invoiceId?: string) {
           vehicle_make: values.vehicle_make || "",
           vehicle_model: values.vehicle_model || "",
           vehicle_year: values.vehicle_year || 0,
-          vehicle_vin: values.vehicle_vin || ""
+          vehicle_vin: values.vehicle_vin || "",
+          subtotal: subtotal,
+          tax_amount: taxAmount,
+          total: total
         })
         .eq('id', invoiceId)
 
