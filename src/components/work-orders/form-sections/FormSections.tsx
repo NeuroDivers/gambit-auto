@@ -91,7 +91,10 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ServiceSelectionField form={form} />
+          <ServiceSelectionField 
+            services={form.watch("service_items") || []}
+            onServicesChange={(services) => form.setValue("service_items", services)}
+          />
         </CardContent>
       </Card>
     </div>

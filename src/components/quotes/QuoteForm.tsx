@@ -31,6 +31,25 @@ export function QuoteForm({ quote, onSuccess }: QuoteFormProps) {
     }
   }, [vinData, form, vin])
 
+  const mapItemsToServiceItems = (items: any[]) => {
+    return items.map(item => ({
+      service_id: item.service_id,
+      service_name: item.service_name,
+      quantity: item.quantity,
+      unit_price: item.unit_price
+    }))
+  }
+
+  const mapServiceItemsToItems = (services: any[]) => {
+    return services.map(service => ({
+      service_id: service.service_id,
+      service_name: service.service_name,
+      description: service.service_name, // Using service_name as description for now
+      quantity: service.quantity,
+      unit_price: service.unit_price
+    }))
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -62,8 +81,10 @@ export function QuoteForm({ quote, onSuccess }: QuoteFormProps) {
           </CardHeader>
           <CardContent>
             <ServiceSelectionField 
-              services={form.watch("service_items") || []}
-              onServicesChange={(services) => form.setValue("service_items", services)}
+              services={mapItemsToServiceItems(form.watch("service_items") || [])}
+              onServicesChange={(services) => 
+                form.setValue("service_items", mapServiceItemsToItems(services))
+              }
             />
           </CardContent>
         </Card>

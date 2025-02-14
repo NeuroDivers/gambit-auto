@@ -1,4 +1,5 @@
 export type QuoteItem = {
+  service_id: string
   service_name: string
   description: string
   quantity: number

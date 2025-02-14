@@ -44,7 +44,10 @@ export function MultiStepQuoteRequestForm() {
                     className="space-y-4"
                   >
                     <VehicleInfoStep form={form} />
-                    <ServiceSelectionField form={form} />
+                    <ServiceSelectionField 
+                      services={form.watch('service_items') || []}
+                      onServicesChange={(services) => form.setValue('service_items', services)}
+                    />
                   </motion.div>
                 )}
                 {step > 1 && step < totalSteps && selectedServices[step - 2] && (
