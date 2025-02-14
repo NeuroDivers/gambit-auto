@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { ServiceType } from "../hooks/useServiceTypes"
-import { ServiceTypeBadge } from "./ServiceTypeBadge"
+import { ServiceTypeBadge } from "../card/ServiceTypeBadge"
 
 interface ServiceCardHeaderProps {
   service: ServiceType;
