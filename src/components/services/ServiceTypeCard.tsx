@@ -35,6 +35,7 @@ export function ServiceTypeCard({ service, onEdit, onRefetch }: ServiceTypeCardP
   const hasSubServices = service.sub_services && service.sub_services.length > 0
 
   console.log('Service in card:', service);
+  console.log('Parent service:', service.parent);
 
   const handleDelete = async () => {
     try {
@@ -116,8 +117,9 @@ export function ServiceTypeCard({ service, onEdit, onRefetch }: ServiceTypeCardP
                 {getServiceTypeLabel()}
               </Badge>
               {service.service_type === 'sub_service' && service.parent && (
-                <Badge variant="secondary" className="flex items-center gap-1 text-secondary-foreground">
-                  Part of: {service.parent.name}
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <span>Part of: </span>
+                  <span className="font-medium">{service.parent.name}</span>
                 </Badge>
               )}
             </div>
