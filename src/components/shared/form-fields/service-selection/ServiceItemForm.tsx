@@ -63,6 +63,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
   const mounted = useRef(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     return () => {
@@ -74,7 +75,12 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
   const groupedServices = React.useMemo(() => {
     if (!Array.isArray(services)) return {};
     
-    const validServices = services.filter(service => service && typeof service === 'object');
+    const validServices = services.filter(service => 
+      service && 
+      typeof service === 'object' && 
+      service.name &&
+      (!search || service.name.toLowerCase().includes(search.toLowerCase()))
+    );
     
     return validServices.reduce<Record<string, Service[]>>((acc, service) => {
       const type = service.hierarchy_type || 'Other';
@@ -86,7 +92,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
       acc[groupName].push(service);
       return acc;
     }, {});
-  }, [services]);
+  }, [services, search]);
 
   const handleServiceSelect = (serviceId: string) => {
     if (!serviceId || !mounted.current) return;
@@ -141,38 +147,44 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[400px] p-0" align="start">
-                    <Command shouldFilter={false}>
-                      <CommandInput placeholder="Search for a service..." />
-                      <CommandEmpty>No service found.</CommandEmpty>
-                      {Object.entries(groupedServices).map(([groupName, groupServices]) => (
-                        groupServices.length > 0 ? (
-                          <CommandGroup key={groupName} heading={groupName}>
-                            {groupServices.map((service) => (
-                              <CommandItem
-                                key={service.id}
-                                onSelect={() => handleServiceSelect(service.id)}
-                                value={`${service.id}-${service.name}`}
-                              >
-                                <div className="flex items-center justify-between w-full">
-                                  <span>{service.name}</span>
-                                  {service.price && (
-                                    <span className="text-muted-foreground ml-2">
-                                      ${service.price.toFixed(2)}
-                                    </span>
-                                  )}
-                                  <Check
-                                    className={cn(
-                                      "ml-2 h-4 w-4",
-                                      selectedService?.id === service.id ? "opacity-100" : "opacity-0"
+                  <PopoverContent className="w-[400px] p-0">
+                    <Command>
+                      <CommandInput 
+                        placeholder="Search for a service..." 
+                        value={search}
+                        onValueChange={setSearch}
+                      />
+                      <CommandEmpty>No services found.</CommandEmpty>
+                      <div className="max-h-[300px] overflow-y-auto">
+                        {Object.entries(groupedServices).map(([groupName, groupServices]) => (
+                          groupServices.length > 0 && (
+                            <CommandGroup key={groupName} heading={groupName}>
+                              {groupServices.map((service) => (
+                                <CommandItem
+                                  key={service.id}
+                                  value={service.name}
+                                  onSelect={() => handleServiceSelect(service.id)}
+                                >
+                                  <div className="flex items-center justify-between w-full">
+                                    <span>{service.name}</span>
+                                    {service.price !== null && (
+                                      <span className="text-muted-foreground ml-2">
+                                        ${service.price.toFixed(2)}
+                                      </span>
                                     )}
-                                  />
-                                </div>
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        ) : null
-                      ))}
+                                    <Check
+                                      className={cn(
+                                        "ml-2 h-4 w-4",
+                                        selectedService?.id === service.id ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          )
+                        ))}
+                      </div>
                     </Command>
                   </PopoverContent>
                 </Popover>
