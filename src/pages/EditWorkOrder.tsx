@@ -7,23 +7,43 @@ import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
 
 export default function EditWorkOrder() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // Validate UUID format
+  const isValidUUID = (uuid: string | undefined): boolean => {
+    if (!uuid) return false;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(uuid);
+  };
+
   const { data: workOrder, isLoading } = useQuery({
     queryKey: ["workOrder", id],
     queryFn: async () => {
+      if (!isValidUUID(id)) {
+        throw new Error("Invalid work order ID");
+      }
+
+      // First fetch work order details
       const { data: workOrderData, error: workOrderError } = await supabase
         .from("work_orders")
         .select("*")
         .eq("id", id)
         .single();
 
-      if (workOrderError) throw workOrderError;
+      if (workOrderError) {
+        console.error("Error fetching work order:", workOrderError);
+        throw workOrderError;
+      }
 
-      // Fetch associated services in a separate query
+      if (!workOrderData) {
+        throw new Error("Work order not found");
+      }
+
+      // Then fetch associated services with explicit relationship
       const { data: servicesData, error: servicesError } = await supabase
         .from("work_order_services")
         .select(`
@@ -38,13 +58,23 @@ export default function EditWorkOrder() {
         `)
         .eq("work_order_id", id);
 
-      if (servicesError) throw servicesError;
+      if (servicesError) {
+        console.error("Error fetching services:", servicesError);
+        throw servicesError;
+      }
 
       return {
         ...workOrderData,
         work_order_services: servicesData
       };
     },
+    enabled: isValidUUID(id),
+    retry: false,
+    onError: (error: Error) => {
+      console.error("Error in work order query:", error);
+      toast.error(error.message);
+      navigate("/work-orders");
+    }
   });
 
   if (isLoading) {
