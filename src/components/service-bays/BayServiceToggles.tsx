@@ -10,6 +10,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { Search } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 type ServiceType = {
   id: string
@@ -51,6 +52,22 @@ export function BayServiceToggles({ availableServices, activeServices, onToggleS
     return acc
   }, {})
 
+  const handleSelectAll = (services: ServiceType[]) => {
+    services.forEach(service => {
+      if (!activeServices.some(s => s.service_id === service.id)) {
+        onToggleService(service.id, true)
+      }
+    })
+  }
+
+  const handleDeselectAll = (services: ServiceType[]) => {
+    services.forEach(service => {
+      if (activeServices.some(s => s.service_id === service.id)) {
+        onToggleService(service.id, false)
+      }
+    })
+  }
+
   return (
     <div className="space-y-4">
       <Label className="text-lg font-medium">Available Services</Label>
@@ -73,7 +90,25 @@ export function BayServiceToggles({ availableServices, activeServices, onToggleS
             className="border rounded-lg bg-card/50 px-4"
           >
             <AccordionTrigger className="text-sm font-medium hover:no-underline">
-              {type}
+              <div className="flex items-center justify-between w-full pr-4">
+                <span>{type}</span>
+                <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleSelectAll(services)}
+                  >
+                    Select All
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleDeselectAll(services)}
+                  >
+                    Deselect All
+                  </Button>
+                </div>
+              </div>
             </AccordionTrigger>
             <AccordionContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2">
