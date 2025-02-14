@@ -85,6 +85,7 @@ export default function EditWorkOrder() {
             </Button>
           </div>
         </div>
+        {/* Move the portal container outside of ScrollArea */}
         <div id="radix-portal-container" />
         <ScrollArea className="h-[calc(100vh-12rem)] px-6">
           <div className="max-w-4xl mx-auto">
