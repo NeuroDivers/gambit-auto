@@ -12,12 +12,12 @@ interface ServiceType {
   name: string;
 }
 
-interface WorkOrderService {
+interface SupabaseWorkOrderService {
   id: string;
   service_id: string;
   quantity: number;
   unit_price: number;
-  service: ServiceType;
+  service: ServiceType | null;
 }
 
 const formSchema = z.object({
@@ -96,14 +96,11 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
         }
 
         if (servicesData) {
-          const formattedServices = servicesData
-            .filter(service => {
-              const serviceData = service.service as ServiceType
-              return serviceData && 'id' in serviceData && 'name' in serviceData
-            })
+          const formattedServices = (servicesData as SupabaseWorkOrderService[])
+            .filter(service => service.service && 'id' in service.service && 'name' in service.service)
             .map(service => ({
               service_id: service.service_id,
-              service_name: (service.service as ServiceType).name,
+              service_name: service.service?.name || '',
               quantity: service.quantity,
               unit_price: service.unit_price
             }))
