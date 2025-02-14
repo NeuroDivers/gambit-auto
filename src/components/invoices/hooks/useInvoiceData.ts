@@ -15,7 +15,21 @@ export function useInvoiceData(invoiceId: string | undefined) {
         .from("invoices")
         .select(`
           *,
-          work_order:work_orders (*)
+          work_order:work_orders (
+            *,
+            work_order_services (
+              id,
+              work_order_id,
+              service_id,
+              quantity,
+              unit_price,
+              service:service_types!work_order_services_service_id_fkey (
+                id,
+                name,
+                price
+              )
+            )
+          )
         `)
         .eq("id", invoiceId)
         .maybeSingle()
@@ -23,43 +37,7 @@ export function useInvoiceData(invoiceId: string | undefined) {
       if (invoiceError) throw invoiceError
       if (!invoice) throw new Error("Invoice not found")
 
-      // Then fetch work order services with their service relationships
-      const { data: workOrderServices, error: servicesError } = await supabase
-        .from("work_order_services")
-        .select(`
-          id,
-          work_order_id,
-          service_id,
-          quantity,
-          unit_price,
-          service:service_types!work_order_services_service_id_fkey (
-            id,
-            name,
-            price
-          ),
-          main_service:service_types!work_order_services_main_service_id_fkey (
-            id,
-            name,
-            price
-          ),
-          sub_service:service_types!work_order_services_sub_service_id_fkey (
-            id,
-            name,
-            price
-          )
-        `)
-        .eq("work_order_id", invoice.work_order.id)
-
-      if (servicesError) throw servicesError
-
-      // Combine the data
-      return {
-        ...invoice,
-        work_order: {
-          ...invoice.work_order,
-          work_order_services: workOrderServices
-        }
-      } as Invoice
+      return invoice as Invoice
     }
   })
 }
