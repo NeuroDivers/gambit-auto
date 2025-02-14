@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,7 +51,6 @@ export const ServiceTypesList = ({
   const { data: serviceTypes, refetch } = useQuery({
     queryKey: ["serviceTypes"],
     queryFn: async () => {
-      // First, get all services with their relationships
       const { data: services, error: servicesError } = await supabase
         .from("service_types")
         .select(`
@@ -64,7 +62,7 @@ export const ServiceTypesList = ({
             service_type,
             description
           ),
-          parent:service_types(
+          parent:service_types!service_types_parent_service_id_fkey(
             id,
             name,
             status
@@ -98,7 +96,6 @@ export const ServiceTypesList = ({
           .map(rel => rel.service)
       }));
 
-      console.log('Processed services:', servicesWithBundles);
       return servicesWithBundles;
     }
   });
