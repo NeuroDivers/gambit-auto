@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -21,7 +22,15 @@ export function useCreateInvoice() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("work_orders")
-        .select("*, work_order_services(service_id, quantity, unit_price, service_types(name))")
+        .select(`
+          *,
+          work_order_services(
+            service_id,
+            quantity,
+            unit_price,
+            service:service_types!work_order_services_service_id_fkey(name)
+          )
+        `)
         .order("created_at", { ascending: false })
       
       if (error) throw error
@@ -72,8 +81,8 @@ export function useCreateInvoice() {
       setNotes(workOrder.additional_notes || "")
       
       const items = workOrder.work_order_services.map((service: any) => ({
-        service_name: service.service_types.name,
-        description: service.service_types.name,
+        service_name: service.service.name,
+        description: service.service.name,
         quantity: service.quantity,
         unit_price: service.unit_price,
       }))
