@@ -43,13 +43,16 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
     const selectedService = services.find((s) => s.id === serviceId)
     if (!selectedService) return
 
+    console.log("Updating service with:", selectedService)
+
     const currentServices = form.getValues()
     const updatedServices = [...currentServices]
     updatedServices[index] = {
       ...updatedServices[index],
       service_id: selectedService.id,
       service_name: selectedService.name,
-      unit_price: selectedService.price || 0
+      unit_price: selectedService.price || 0,
+      quantity: 1 // Reset quantity to 1 when selecting a new service
     }
     form.setValue("service_items", updatedServices)
   }
@@ -88,7 +91,7 @@ export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) 
       // Add the services in this group
       ...services.map(service => ({
         value: service.id,
-        label: `${service.name}${service.price ? ` • $${service.price.toFixed(2)}` : ''}`,
+        label: service.name,
         price: service.price,
       }))
     ]);
