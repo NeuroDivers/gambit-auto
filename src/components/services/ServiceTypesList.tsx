@@ -52,24 +52,35 @@ export const ServiceTypesList = ({
   const { data: serviceTypes, refetch } = useQuery({
     queryKey: ["serviceTypes"],
     queryFn: async () => {
+      // First, get all services with their parent relationships
       const { data: services, error: servicesError } = await supabase
         .from("service_types")
         .select(`
           *,
-          sub_services:service_types(
+          parent:service_types!parent_service_id(
             id,
             name,
-            status,
-            service_type,
-            description
-          ),
-          parent:service_types(id, name, status)
+            status
+          )
         `)
-        .eq('sub_services.parent_service_id', 'id')
         .order('name');
       
       if (servicesError) throw servicesError;
-      console.log('Services with parent:', services);
+
+      // Then, get all sub-services relationships
+      const { data: subServices, error: subServicesError } = await supabase
+        .from("service_types")
+        .select(`
+          id,
+          name,
+          status,
+          service_type,
+          description,
+          parent_service_id
+        `)
+        .not('parent_service_id', 'is', null);
+
+      if (subServicesError) throw subServicesError;
 
       // Then get bundle relationships
       const { data: bundleRelations, error: bundleError } = await supabase
@@ -77,15 +88,16 @@ export const ServiceTypesList = ({
         .select(`
           bundle_id,
           service_id,
-          bundle:service_types!bundle_services_bundle_id_fkey(*),
-          service:service_types!bundle_services_service_id_fkey(*)
+          bundle:service_types(*),
+          service:service_types(*)
         `);
 
       if (bundleError) throw bundleError;
 
-      // Combine the data
-      const servicesWithBundles = services.map(service => ({
+      // Combine all the data
+      const servicesWithRelations = services.map(service => ({
         ...service,
+        sub_services: subServices.filter(sub => sub.parent_service_id === service.id),
         included_in_bundles: bundleRelations
           .filter(rel => rel.service_id === service.id)
           .map(rel => rel.bundle),
@@ -94,7 +106,8 @@ export const ServiceTypesList = ({
           .map(rel => rel.service)
       }));
 
-      return servicesWithBundles;
+      console.log('Services with relations:', servicesWithRelations);
+      return servicesWithRelations;
     }
   });
 
