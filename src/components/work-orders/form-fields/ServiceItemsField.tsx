@@ -1,6 +1,6 @@
 
 import { ServiceItemType } from "../types"
-import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
+import { ServiceList } from "./service-items/ServiceList"
 
 export type ServiceItemsFieldProps = {
   services: ServiceItemType[]
@@ -11,8 +11,8 @@ export type ServiceItemsFieldProps = {
 export function ServiceItemsField({ services, onServicesChange, disabled }: ServiceItemsFieldProps) {
   return (
     <div className="space-y-4">
-      <ServiceSelectionField
-        services={services}
+      <ServiceList
+        workOrderServices={services}
         onServicesChange={onServicesChange}
         disabled={disabled}
       />
