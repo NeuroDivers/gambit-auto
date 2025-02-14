@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client"
 
 export async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues) {
   console.log("Updating work order with values:", values)
+  console.log("Work Order ID:", workOrderId) // Add logging to verify workOrderId
   
   await updateWorkOrderDetails(workOrderId, values)
   await updateAssignedBay(values)
@@ -57,6 +58,9 @@ async function updateAssignedBay(values: WorkOrderFormValues) {
 }
 
 async function updateWorkOrderServices(workOrderId: string, serviceItems: WorkOrderFormValues["service_items"]) {
+  console.log("Updating services for work order:", workOrderId)
+  console.log("Service items to update:", serviceItems)
+
   // First, delete existing services
   const { error: deleteError } = await supabase
     .from('work_order_services')
@@ -76,12 +80,21 @@ async function updateWorkOrderServices(workOrderId: string, serviceItems: WorkOr
       item.service_id !== "unassigned"
     )
 
+    console.log("Valid services to insert:", validServices)
+
     if (validServices.length > 0) {
       // Fetch service type details to determine hierarchy
-      const { data: serviceTypes } = await supabase
+      const { data: serviceTypes, error: serviceTypesError } = await supabase
         .from('service_types')
         .select('id, hierarchy_type')
         .in('id', validServices.map(s => s.service_id))
+
+      if (serviceTypesError) {
+        console.error("Error fetching service types:", serviceTypesError)
+        throw serviceTypesError
+      }
+
+      console.log("Retrieved service types:", serviceTypes)
 
       const serviceTypesMap = new Map(serviceTypes?.map(st => [st.id, st]) || [])
       
@@ -89,7 +102,7 @@ async function updateWorkOrderServices(workOrderId: string, serviceItems: WorkOr
         const serviceType = serviceTypesMap.get(item.service_id)
         const isSubService = serviceType?.hierarchy_type === 'sub'
 
-        return {
+        const serviceData = {
           work_order_id: workOrderId,
           service_id: item.service_id,
           main_service_id: isSubService ? item.main_service_id || null : null,
@@ -97,16 +110,22 @@ async function updateWorkOrderServices(workOrderId: string, serviceItems: WorkOr
           quantity: item.quantity,
           unit_price: item.unit_price
         }
+
+        console.log("Creating service entry:", serviceData)
+        return serviceData
       })
 
-      const { error: servicesError } = await supabase
+      const { data: insertedServices, error: servicesError } = await supabase
         .from('work_order_services')
         .insert(servicesToInsert)
+        .select()
 
       if (servicesError) {
         console.error("Error inserting work order services:", servicesError)
         throw servicesError
       }
+
+      console.log("Successfully inserted services:", insertedServices)
     }
   }
 }
