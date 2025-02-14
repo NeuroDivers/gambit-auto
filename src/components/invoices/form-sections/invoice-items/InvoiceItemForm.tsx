@@ -48,43 +48,43 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItem
     }
   });
 
-  // Group services by hierarchy type for better organization
-  const servicesByType = services.reduce((acc: { [key: string]: any[] }, service) => {
+  // Group services by hierarchy type for better organization, with proper null checks
+  const servicesByType = (services || []).reduce((acc: { [key: string]: any[] }, service) => {
     const type = service.hierarchy_type || 'Other'
     if (!acc[type]) acc[type] = []
     acc[type].push({
       ...service,
-      sortKey: service.name.toLowerCase()
+      sortKey: service.name?.toLowerCase() || ''
     })
     return acc
   }, {})
 
   // Sort services within each group
   Object.keys(servicesByType).forEach(type => {
-    servicesByType[type].sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+    if (Array.isArray(servicesByType[type])) {
+      servicesByType[type].sort((a, b) => (a.sortKey || '').localeCompare(b.sortKey || ''))
+    }
   })
 
   const selectedService = services?.find(service => service.id === item.service_id);
   const availablePackages = selectedService?.service_packages?.filter(pkg => pkg.status === 'active') || [];
 
-  // Create organized options with clear group labels
-  const serviceOptions: Option[] = Object.entries(servicesByType)
-    .sort(([a], [b]) => a.localeCompare(b)) // Sort group headers alphabetically
+  // Create organized options with clear group labels, ensuring arrays are defined
+  const serviceOptions: Option[] = !isServicesLoading ? Object.entries(servicesByType)
+    .sort(([a], [b]) => a.localeCompare(b))
     .flatMap(([type, services]) => [
-      // Add a styled group header
       { 
         value: `group-${type}`, 
         label: type.toUpperCase(), 
         price: null, 
         disabled: true 
       },
-      // Add the services in this group
-      ...(services || []).map(service => ({  // Add null check here
+      ...(Array.isArray(services) ? services : []).map(service => ({
         value: service.id,
         label: `${service.name}${service.price ? ` • $${service.price.toFixed(2)}` : ''}`,
         price: service.price,
       }))
-    ]);
+    ]) : [];
 
   const packageOptions: Option[] = availablePackages.map(pkg => ({
     value: pkg.id,
