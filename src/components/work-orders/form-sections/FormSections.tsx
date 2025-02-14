@@ -17,8 +17,6 @@ type FormSectionsProps = {
 }
 
 export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProps) {
-  const bayId = form.watch("assigned_bay_id")
-
   return (
     <div className="space-y-8">
       <Card>
@@ -78,7 +76,7 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <SidekickAssignmentField form={form} bayId={bayId} />
+            <SidekickAssignmentField form={form} />
           </CardContent>
         </Card>
       </div>

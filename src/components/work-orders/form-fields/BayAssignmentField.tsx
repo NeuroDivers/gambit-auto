@@ -1,5 +1,5 @@
 
-import { FormField, FormItem, FormLabel } from "@/components/ui/form"
+import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -28,23 +28,25 @@ export function BayAssignmentField({ form }: BayAssignmentFieldProps) {
       name="assigned_bay_id"
       render={({ field }) => (
         <FormItem>
-          <FormLabel htmlFor="assigned_bay_select">Assign Service Bay</FormLabel>
-          <Select
-            value={field.value || "none"}
-            onValueChange={(value) => field.onChange(value === "none" ? null : value)}
-          >
-            <SelectTrigger id="assigned_bay_select">
-              <SelectValue placeholder="Select a service bay..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              {serviceBays?.map((bay) => (
-                <SelectItem key={bay.id} value={bay.id}>
-                  {bay.name} ({bay.status})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FormLabel>Assign Service Bay</FormLabel>
+          <FormControl>
+            <Select
+              value={field.value || "none"}
+              onValueChange={(value) => field.onChange(value === "none" ? null : value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a service bay..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {serviceBays?.map((bay) => (
+                  <SelectItem key={bay.id} value={bay.id}>
+                    {bay.name} ({bay.status})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormControl>
         </FormItem>
       )}
     />
