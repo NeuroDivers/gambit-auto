@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -55,15 +54,10 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
   const [selectedServiceName, setSelectedServiceName] = useState("");
 
   useEffect(() => {
-    console.log("ServiceItemForm mounted with item:", item);
-    console.log("Available services:", services);
-    
-    // Initialize state from item if it has values
     if (item.service_name) {
       setSelectedServiceName(item.service_name);
       setIsExpanded(true);
       
-      // If we have a name but no ID, try to find the service and update the ID
       if (!item.service_id) {
         const service = services.find(s => s.name === item.service_name);
         if (service) {
@@ -78,56 +72,33 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
   }, [item, services, index, onUpdate]);
 
   const handleServiceSelect = React.useCallback((selectedValue: string) => {
-    console.log("Service selection triggered with value:", selectedValue);
     if (!mounted.current) return;
     
-    const selectedService = services.find(service => service?.id === selectedValue);
-    console.log("Found service:", selectedService);
+    const selectedService = services.find(service => 
+      service.id.toLowerCase() === selectedValue.toLowerCase()
+    );
     
     if (selectedService) {
-      console.log("Updating service with:", {
-        id: selectedService.id,
-        name: selectedService.name,
-        price: selectedService.price
-      });
-      
-      // Update both local state and parent
-      setSelectedServiceName(selectedService.name);
-      setIsExpanded(true);
-      setOpen(false);
-      
-      // Update parent state
       onUpdate(index, "service_id", selectedService.id);
       onUpdate(index, "service_name", selectedService.name);
       onUpdate(index, "unit_price", selectedService.price || 0);
+      
+      setSelectedServiceName(selectedService.name);
+      setIsExpanded(true);
+      setOpen(false);
     }
   }, [services, index, onUpdate, mounted]);
 
-  // Enhanced service finding logic with detailed logging
   const selectedService = React.useMemo(() => {
     if (!item.service_id && !item.service_name) return undefined;
     
-    console.log("Looking for service with:", {
-      service_id: item.service_id,
-      service_name: item.service_name
-    });
-    
-    const foundService = services.find(service => {
+    return services.find(service => {
       if (item.service_id) {
-        return service.id === item.service_id;
+        return service.id.toLowerCase() === item.service_id.toLowerCase();
       }
-      return service.name === item.service_name;
+      return service.name.toLowerCase() === item.service_name.toLowerCase();
     });
-    
-    console.log("Found service:", foundService);
-    return foundService;
   }, [item.service_id, item.service_name, services]);
-
-  console.log("Final selected service state:", {
-    selectedService: selectedService,
-    selectedServiceName: selectedServiceName,
-    item: item
-  });
 
   const servicesByType = services.reduce<ServicesByType>((acc, service) => {
     const type = service.hierarchy_type || 'Other';
@@ -190,7 +161,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                               <CommandItem
                                 key={service.id}
                                 value={service.id}
-                                onSelect={handleServiceSelect}
+                                onSelect={(value) => handleServiceSelect(value)}
                                 className="flex items-center justify-between cursor-pointer hover:bg-accent"
                               >
                                 <div className="flex items-center justify-between w-full">
