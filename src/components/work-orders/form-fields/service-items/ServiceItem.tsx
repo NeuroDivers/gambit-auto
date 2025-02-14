@@ -1,219 +1,115 @@
 
-import React from 'react';
-import { FormItem, FormLabel, FormControl } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { X } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Card } from "@/components/ui/card"
-import { useSubServices } from "@/components/shared/form-fields/service-selection/useServiceData";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Trash2 } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { useServiceData } from "@/components/shared/form-fields/service-selection/useServiceData"
+import { ServiceItemType } from "../../types"
+import { SearchableSelect, Option } from "@/components/shared/form-fields/searchable-select/SearchableSelect"
 
 interface ServiceItemProps {
-  index: number;
-  services: any[];
-  onRemove: (index: number) => void;
-  field: any;
-  form: any;
+  index: number
+  field: { value: ServiceItemType }
+  form: {
+    getValues: () => ServiceItemType[]
+    setValue: (name: string, value: ServiceItemType[]) => void
+  }
+  onRemove: (index: number) => void
 }
 
-export function ServiceItem({ index, services, onRemove, field, form }: ServiceItemProps) {
-  const [isOpen, setIsOpen] = React.useState(false)
-  const selectedService = services.find(service => service.id === field.value?.service_id);
-  const { data: subServices = [] } = useSubServices(field.value?.service_id);
-  
-  const availablePackages = selectedService?.service_packages?.filter((pkg: any) => 
-    pkg.status === 'active' && pkg.type === 'standalone'
-  ) || [];
+export function ServiceItem({ index, field, form, onRemove }: ServiceItemProps) {
+  const { data: services = [] } = useServiceData()
 
-  const handleServiceChange = (value: string) => {
-    const service = services.find(s => s.id === value);
-    if (!service) return;
+  const handleServiceChange = (serviceId: string) => {
+    const selectedService = services.find((s) => s.id === serviceId)
+    if (!selectedService) return
 
-    const currentItems = form.getValues("service_items") || [];
-    const updatedItems = [...currentItems];
-    updatedItems[index] = {
-      ...updatedItems[index],
-      service_id: value,
-      service_name: service.name,
-      unit_price: service.price || 0,
-      package_id: null,
-      package_name: null,
-      addons: []
-    };
-    form.setValue("service_items", updatedItems, { shouldValidate: true });
-    setIsOpen(false);
-  };
+    const currentServices = form.getValues()
+    const updatedServices = [...currentServices]
+    updatedServices[index] = {
+      ...updatedServices[index],
+      service_id: selectedService.id,
+      service_name: selectedService.name,
+      unit_price: selectedService.price || 0
+    }
+    form.setValue("service_items", updatedServices)
+  }
 
-  const handlePackageChange = (value: string) => {
-    const pkg = availablePackages.find(p => p.id === value);
-    if (!pkg) return;
+  const handleQuantityChange = (quantity: number) => {
+    const currentServices = form.getValues()
+    const updatedServices = [...currentServices]
+    updatedServices[index] = {
+      ...updatedServices[index],
+      quantity
+    }
+    form.setValue("service_items", updatedServices)
+  }
 
-    const currentItems = form.getValues("service_items") || [];
-    const updatedItems = [...currentItems];
-    
-    const addons = selectedService?.service_packages?.filter((addon: any) => 
-      addon.status === 'active' && 
-      addon.type === 'addon' && 
-      addon.parent_package_id === pkg.id
-    ) || [];
+  const handlePriceChange = (price: number) => {
+    const currentServices = form.getValues()
+    const updatedServices = [...currentServices]
+    updatedServices[index] = {
+      ...updatedServices[index],
+      unit_price: price
+    }
+    form.setValue("service_items", updatedServices)
+  }
 
-    updatedItems[index] = {
-      ...updatedItems[index],
-      package_id: value,
-      package_name: pkg.name,
-      service_name: pkg.name,
-      unit_price: pkg.price || pkg.sale_price || 0,
-      addons: addons.map(addon => ({
-        id: addon.id,
-        name: addon.name,
-        price: addon.price || addon.sale_price || 0,
-        selected: false
-      }))
-    };
-    form.setValue("service_items", updatedItems, { shouldValidate: true });
-  };
-
-  const handleAddonToggle = (addonId: string, checked: boolean) => {
-    const currentItems = form.getValues("service_items") || [];
-    const updatedItems = [...currentItems];
-    const currentAddons = updatedItems[index].addons || [];
-    
-    updatedItems[index] = {
-      ...updatedItems[index],
-      addons: currentAddons.map(addon => 
-        addon.id === addonId ? { ...addon, selected: checked } : addon
-      )
-    };
-    
-    form.setValue("service_items", updatedItems, { shouldValidate: true });
-  };
+  const serviceOptions: Option[] = services.map(service => ({
+    value: service.id,
+    label: service.name,
+    price: service.price,
+  }));
 
   return (
-    <Card className="relative space-y-4 p-4">
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        onClick={() => onRemove(index)}
-        className="absolute right-2 top-2"
-      >
-        <X className="h-4 w-4" />
-      </Button>
+    <Card className="relative">
+      <CardContent className="p-4 space-y-4">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => onRemove(index)}
+          className="absolute top-2 right-2"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
 
-      <div className="grid gap-4">
-        <div className="space-y-2">
-          <Label>Service</Label>
-          <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="w-full justify-start">
-                {field.value?.service_name || "Select a service"}
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <ScrollArea className="max-h-[300px]">
-                <div className="space-y-2 p-2">
-                  {services.map((service) => (
-                    <Button
-                      key={service.id}
-                      variant="ghost"
-                      className="w-full justify-start"
-                      onClick={() => handleServiceChange(service.id)}
-                    >
-                      {service.name}
-                    </Button>
-                  ))}
-                </div>
-              </ScrollArea>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {availablePackages.length > 0 && (
-          <div className="space-y-2">
-            <Label>Package</Label>
-            <Select
-              value={field.value?.package_id || ''}
-              onValueChange={handlePackageChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a package" />
-              </SelectTrigger>
-              <SelectContent>
-                {availablePackages.map((pkg) => (
-                  <SelectItem key={pkg.id} value={pkg.id}>
-                    {pkg.name} - ${pkg.price || pkg.sale_price || 0}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="space-y-4">
+          <div>
+            <Label>Service</Label>
+            <SearchableSelect
+              options={serviceOptions}
+              value={field.value.service_id}
+              onValueChange={handleServiceChange}
+              placeholder="Select a service"
+              showPrice={true}
+            />
           </div>
-        )}
 
-        {field.value?.addons?.length > 0 && (
-          <div className="space-y-2">
-            <Label>Add-ons</Label>
-            <div className="space-y-2">
-              {field.value.addons.map((addon: any) => (
-                <div key={addon.id} className="flex items-center justify-between p-2 rounded-lg border">
-                  <span>{addon.name} - ${addon.price}</span>
-                  <input
-                    type="checkbox"
-                    checked={addon.selected}
-                    onChange={(e) => handleAddonToggle(addon.id, e.target.checked)}
-                    className="ml-2"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormItem>
-            <FormLabel>Quantity</FormLabel>
-            <FormControl>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Quantity</Label>
               <Input
                 type="number"
                 min={1}
-                value={field.value?.quantity || 1}
-                onChange={(e) => {
-                  const currentItems = form.getValues("service_items") || [];
-                  const updatedItems = [...currentItems];
-                  updatedItems[index] = {
-                    ...updatedItems[index],
-                    quantity: parseInt(e.target.value) || 1
-                  };
-                  form.setValue("service_items", updatedItems, { shouldValidate: true });
-                }}
+                value={field.value.quantity}
+                onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
               />
-            </FormControl>
-          </FormItem>
-
-          <FormItem>
-            <FormLabel>Unit Price</FormLabel>
-            <FormControl>
+            </div>
+            <div>
+              <Label>Unit Price</Label>
               <Input
                 type="number"
                 min={0}
                 step="0.01"
-                value={field.value?.unit_price || 0}
-                onChange={(e) => {
-                  const currentItems = form.getValues("service_items") || [];
-                  const updatedItems = [...currentItems];
-                  updatedItems[index] = {
-                    ...updatedItems[index],
-                    unit_price: parseFloat(e.target.value) || 0
-                  };
-                  form.setValue("service_items", updatedItems, { shouldValidate: true });
-                }}
+                value={field.value.unit_price}
+                onChange={(e) => handlePriceChange(parseFloat(e.target.value) || 0)}
               />
-            </FormControl>
-          </FormItem>
+            </div>
+          </div>
         </div>
-      </div>
+      </CardContent>
     </Card>
-  );
+  )
 }

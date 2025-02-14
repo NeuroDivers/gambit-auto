@@ -1,15 +1,14 @@
 
 import { Card, CardContent } from "@/components/ui/card"
-import { FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { InvoiceItem } from "../../types"
+import { SearchableSelect, Option } from "@/components/shared/form-fields/searchable-select/SearchableSelect"
 
 type ServiceItemFormProps = {
   item: InvoiceItem
@@ -31,13 +30,6 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItem
           price,
           status,
           service_type,
-          sub_services:service_types!parent_service_id(
-            id,
-            name,
-            description,
-            price,
-            status
-          ),
           service_packages(
             id,
             name,
@@ -58,6 +50,18 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItem
   const selectedService = services?.find(service => service.id === item.service_id);
   const availablePackages = selectedService?.service_packages?.filter(pkg => pkg.status === 'active') || [];
 
+  const serviceOptions: Option[] = services?.map(service => ({
+    value: service.id,
+    label: service.name,
+    price: service.price,
+  })) || [];
+
+  const packageOptions: Option[] = availablePackages.map(pkg => ({
+    value: pkg.id,
+    label: pkg.name,
+    price: pkg.price || pkg.sale_price,
+  }));
+
   const handleServiceSelect = (serviceId: string) => {
     const selectedService = services?.find(service => service.id === serviceId);
     if (selectedService) {
@@ -65,7 +69,7 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItem
       onUpdate(index, "service_name", selectedService.name);
       onUpdate(index, "description", selectedService.description || '');
       onUpdate(index, "unit_price", selectedService.price || 0);
-      onUpdate(index, "package_id", null); // Reset package when service changes
+      onUpdate(index, "package_id", null);
     }
   };
 
@@ -95,41 +99,25 @@ export function InvoiceItemForm({ item, index, onUpdate, onRemove }: ServiceItem
         <div className="grid gap-4">
           <div>
             <Label>Service</Label>
-            <Select
+            <SearchableSelect
+              options={serviceOptions}
               value={item.service_id}
               onValueChange={handleServiceSelect}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a service" />
-              </SelectTrigger>
-              <SelectContent>
-                {services?.map((service) => (
-                  <SelectItem key={service.id} value={service.id}>
-                    {service.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="Select a service"
+              showPrice={true}
+            />
           </div>
 
-          {availablePackages.length > 0 && (
+          {packageOptions.length > 0 && (
             <div>
               <Label>Package</Label>
-              <Select
-                value={item.package_id || undefined}
+              <SearchableSelect
+                options={packageOptions}
+                value={item.package_id || ''}
                 onValueChange={handlePackageSelect}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a package" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availablePackages.map((pkg) => (
-                    <SelectItem key={pkg.id} value={pkg.id}>
-                      {pkg.name} {pkg.price ? `- $${pkg.price}` : pkg.sale_price ? `- $${pkg.sale_price}` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Select a package"
+                showPrice={true}
+              />
             </div>
           )}
 
