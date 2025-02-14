@@ -2,6 +2,7 @@
 import { InvoiceItemForm } from "./invoice-items/InvoiceItemForm"
 import { InvoiceItemsHeader } from "./invoice-items/InvoiceItemsHeader"
 import { InvoiceItem } from "../types"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 type InvoiceItemsFieldsProps = {
   items: InvoiceItem[]
@@ -41,20 +42,22 @@ export function InvoiceItemsFields({ items, setItems }: InvoiceItemsFieldsProps)
   return (
     <div className="space-y-4">
       <InvoiceItemsHeader onAddItem={addItem} />
-      <div className="space-y-4">
-        {items.map((item, index) => (
-          <InvoiceItemForm
-            key={index}
-            item={item}
-            index={index}
-            onUpdate={updateItem}
-            onRemove={removeItem}
-          />
-        ))}
-        {items.length === 0 && (
-          <p className="text-muted-foreground text-center py-4">No services added</p>
-        )}
-      </div>
+      <ScrollArea className="h-[calc(100vh-20rem)]">
+        <div className="space-y-4">
+          {items.map((item, index) => (
+            <InvoiceItemForm
+              key={index}
+              item={item}
+              index={index}
+              onUpdate={updateItem}
+              onRemove={removeItem}
+            />
+          ))}
+          {items.length === 0 && (
+            <p className="text-muted-foreground text-center py-4">No services added</p>
+          )}
+        </div>
+      </ScrollArea>
     </div>
   )
 }
