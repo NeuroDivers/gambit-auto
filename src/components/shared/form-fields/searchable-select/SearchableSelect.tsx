@@ -64,13 +64,6 @@ export function SearchableSelect({
     )
   }
 
-  // Pre-populate the initial data for the Command component
-  const commandData = safeOptions.map(option => ({
-    ...option,
-    key: option.value,
-    ref: null
-  }))
-
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -87,35 +80,35 @@ export function SearchableSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full min-w-[var(--radix-popover-trigger-width)] p-0">
-        <Command shouldFilter={true}>
-          <CommandInput placeholder={`Search ${placeholder.toLowerCase()}...`} className="h-9" />
+        <Command>
+          <CommandInput placeholder={`Search ${placeholder.toLowerCase()}...`} />
           <CommandEmpty>{emptyMessage}</CommandEmpty>
-          <CommandGroup className="max-h-[300px] overflow-auto">
-            {commandData.map((option) => (
+          <CommandGroup>
+            {safeOptions.map((option) => (
               <CommandItem
                 key={option.value}
-                value={option.value}
                 onSelect={() => {
                   onValueChange(option.value)
                   setOpen(false)
                 }}
                 disabled={option.disabled}
-                className="flex items-center justify-between"
               >
-                <div className="flex items-center">
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === option.value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {option.label}
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center">
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value === option.value ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    <span>{option.label}</span>
+                  </div>
+                  {showPrice && option.price !== null && option.price !== undefined && (
+                    <span className="text-muted-foreground">
+                      ${option.price.toFixed(2)}
+                    </span>
+                  )}
                 </div>
-                {showPrice && option.price !== null && option.price !== undefined && (
-                  <span className="text-muted-foreground">
-                    ${option.price.toFixed(2)}
-                  </span>
-                )}
               </CommandItem>
             ))}
           </CommandGroup>
