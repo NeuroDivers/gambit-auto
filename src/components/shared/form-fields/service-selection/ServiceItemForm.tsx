@@ -98,15 +98,33 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
     }
   }, [services, index, onUpdate, mounted]);
 
-  // Check both ID and name when finding the selected service
-  const selectedService = services.find(service => 
-    service?.id === item.service_id || service?.name === item.service_name
-  );
-  
-  console.log("Item service_id:", item.service_id);
-  console.log("Item service_name:", item.service_name);
-  console.log("Currently selected service:", selectedService);
-  console.log("All services:", services);
+  // Enhanced service finding logic with detailed logging
+  const selectedService = React.useMemo(() => {
+    console.log("Looking for service with:", {
+      service_id: item.service_id,
+      service_name: item.service_name
+    });
+    
+    const foundService = services.find(service => {
+      const idMatch = service?.id === item.service_id;
+      const nameMatch = service?.name === item.service_name;
+      console.log("Checking service:", {
+        service: service,
+        idMatch: idMatch,
+        nameMatch: nameMatch
+      });
+      return idMatch || nameMatch;
+    });
+    
+    console.log("Found service:", foundService);
+    return foundService;
+  }, [item.service_id, item.service_name, services]);
+
+  console.log("Final selected service state:", {
+    selectedService: selectedService,
+    selectedServiceName: selectedServiceName,
+    item: item
+  });
 
   const servicesByType = services.reduce<ServicesByType>((acc, service) => {
     const type = service.hierarchy_type || 'Other';
