@@ -1,8 +1,9 @@
+
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { Mail } from "lucide-react"
-import { toast } from "sonner"
 
 type EmailVerificationProps = {
   correctEmail: string | null
@@ -11,51 +12,51 @@ type EmailVerificationProps = {
 
 export function EmailVerification({ correctEmail, onVerified }: EmailVerificationProps) {
   const [email, setEmail] = useState("")
+  const [error, setError] = useState("")
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
     if (email.toLowerCase() === correctEmail?.toLowerCase()) {
-      toast.success("Email verified successfully")
       onVerified()
     } else {
-      toast.error("Invalid email address")
+      setError("Email does not match our records")
     }
   }
 
   return (
-    <div className="max-w-md mx-auto mt-8">
-      <div className="bg-card p-8 rounded-lg border border-border shadow-lg space-y-6">
-        <div className="space-y-2 text-center">
-          <h2 className="text-xl font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Verify Invoice Access
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Please enter the email address associated with this invoice to view it
+    <div className="max-w-md mx-auto mt-12">
+      <Card className="p-6">
+        <div className="flex flex-col items-center gap-4 text-center mb-6">
+          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+            <Mail className="h-6 w-6 text-primary" />
+          </div>
+          <h2 className="text-2xl font-semibold">Verify Your Email</h2>
+          <p className="text-muted-foreground">
+            Please enter your email address to view this invoice
           </p>
         </div>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
             <Input
               type="email"
               placeholder="Enter your email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-background border-border"
-              required
+              onChange={(e) => {
+                setEmail(e.target.value)
+                setError("")
+              }}
+              className={error ? "border-red-500" : ""}
             />
+            {error && (
+              <p className="text-sm text-red-500 mt-1">{error}</p>
+            )}
           </div>
-          
-          <Button 
-            type="submit" 
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
-          >
-            <Mail className="h-4 w-4" />
+          <Button type="submit" className="w-full">
             Verify Email
           </Button>
         </form>
-      </div>
+      </Card>
     </div>
   )
 }
