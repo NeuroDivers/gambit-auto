@@ -8,7 +8,11 @@ import { ServiceTypeCard } from "./ServiceTypeCard";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export const ServiceTypesList = () => {
+interface ServiceTypesListProps {
+  searchQuery?: string;
+}
+
+export const ServiceTypesList = ({ searchQuery = "" }: ServiceTypesListProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<null | {
     id: string;
@@ -63,6 +67,12 @@ export const ServiceTypesList = () => {
     }
   });
 
+  // Filter services based on search query
+  const filteredServices = serviceTypes?.filter(service => 
+    service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    service.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-8">
@@ -92,7 +102,7 @@ export const ServiceTypesList = () => {
 
         <TabsContent value="all" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {serviceTypes?.map(service => (
+            {filteredServices?.map(service => (
               <ServiceTypeCard
                 key={service.id}
                 service={service}
@@ -108,7 +118,7 @@ export const ServiceTypesList = () => {
 
         <TabsContent value="standalone" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {serviceTypes?.filter(s => s.service_type === 'standalone').map(service => (
+            {filteredServices?.filter(s => s.service_type === 'standalone').map(service => (
               <ServiceTypeCard
                 key={service.id}
                 service={service}
@@ -124,7 +134,7 @@ export const ServiceTypesList = () => {
 
         <TabsContent value="bundles" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {serviceTypes?.filter(s => s.service_type === 'bundle').map(service => (
+            {filteredServices?.filter(s => s.service_type === 'bundle').map(service => (
               <ServiceTypeCard
                 key={service.id}
                 service={service}
@@ -140,7 +150,7 @@ export const ServiceTypesList = () => {
 
         <TabsContent value="sub" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {serviceTypes?.filter(s => s.service_type === 'sub_service').map(service => (
+            {filteredServices?.filter(s => s.service_type === 'sub_service').map(service => (
               <ServiceTypeCard
                 key={service.id}
                 service={service}
