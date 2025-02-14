@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Pencil, Trash2, ChevronDown, ChevronUp } from "lucide-react"
+import { Pencil, Trash2, ChevronDown, ChevronUp, Package, Boxes, CircleDot } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { useState } from "react"
@@ -17,6 +17,7 @@ type ServiceTypeCardProps = {
     status: 'active' | 'inactive'
     pricing_model?: 'flat_rate' | 'hourly' | 'variable'
     base_price?: number | null
+    service_type: 'standalone' | 'sub_service' | 'bundle'
     sub_services?: any[]
   }
   onEdit: () => void
@@ -52,6 +53,28 @@ export function ServiceTypeCard({ service, onEdit, onRefetch }: ServiceTypeCardP
     }
   }
 
+  const getServiceTypeIcon = () => {
+    switch (service.service_type) {
+      case 'bundle':
+        return <Package className="h-4 w-4" />;
+      case 'sub_service':
+        return <CircleDot className="h-4 w-4" />;
+      default:
+        return <Boxes className="h-4 w-4" />;
+    }
+  }
+
+  const getServiceTypeLabel = () => {
+    switch (service.service_type) {
+      case 'bundle':
+        return 'Bundle';
+      case 'sub_service':
+        return 'Sub Service';
+      default:
+        return 'Standalone';
+    }
+  }
+
   return (
     <Card className="relative">
       <CardHeader className="pb-3">
@@ -76,6 +99,13 @@ export function ServiceTypeCard({ service, onEdit, onRefetch }: ServiceTypeCardP
           <div className="flex items-center gap-2">
             <Badge variant={service.status === 'active' ? 'default' : 'secondary'}>
               {service.status}
+            </Badge>
+            <Badge 
+              variant="outline" 
+              className="flex items-center gap-1"
+            >
+              {getServiceTypeIcon()}
+              {getServiceTypeLabel()}
             </Badge>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
               <Pencil className="h-4 w-4" />

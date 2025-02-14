@@ -973,6 +973,7 @@ export type Database = {
             | Database["public"]["Enums"]["service_pricing_model"]
             | null
           requires_main_service: boolean | null
+          service_type: string | null
           sort_order: number | null
           status: Database["public"]["Enums"]["service_status"]
           updated_at: string
@@ -994,6 +995,7 @@ export type Database = {
             | Database["public"]["Enums"]["service_pricing_model"]
             | null
           requires_main_service?: boolean | null
+          service_type?: string | null
           sort_order?: number | null
           status?: Database["public"]["Enums"]["service_status"]
           updated_at?: string
@@ -1015,6 +1017,7 @@ export type Database = {
             | Database["public"]["Enums"]["service_pricing_model"]
             | null
           requires_main_service?: boolean | null
+          service_type?: string | null
           sort_order?: number | null
           status?: Database["public"]["Enums"]["service_status"]
           updated_at?: string

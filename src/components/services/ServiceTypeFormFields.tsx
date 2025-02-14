@@ -13,6 +13,7 @@ const formSchema = z.object({
   pricing_model: z.enum(["flat_rate", "hourly", "variable"]),
   base_price: z.string().optional(),
   duration: z.string().optional(),
+  service_type: z.enum(["standalone", "sub_service", "bundle"]),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -36,6 +37,32 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
                 {...field} 
               />
             </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="service_type"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Service Type</FormLabel>
+            <Select
+              onValueChange={field.onChange}
+              defaultValue={field.value}
+            >
+              <FormControl>
+                <SelectTrigger id="service_type">
+                  <SelectValue placeholder="Select service type" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="standalone">Standalone Service</SelectItem>
+                <SelectItem value="sub_service">Sub Service</SelectItem>
+                <SelectItem value="bundle">Service Bundle</SelectItem>
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )}
@@ -134,13 +161,13 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
         name="duration"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Duration in hours (optional)</FormLabel>
+            <FormLabel>Duration in minutes (optional)</FormLabel>
             <FormControl>
               <Input
                 id="service_duration"
                 {...field}
                 type="number"
-                step="0.5"
+                step="1"
                 min="0"
               />
             </FormControl>

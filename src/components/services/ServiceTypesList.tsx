@@ -19,6 +19,7 @@ export const ServiceTypesList = () => {
     duration: number | null;
     pricing_model?: 'flat_rate' | 'hourly' | 'variable';
     base_price?: number | null;
+    service_type: 'standalone' | 'sub_service' | 'bundle';
   }>(null);
 
   const { data: serviceTypes, refetch } = useQuery({
@@ -60,7 +61,8 @@ export const ServiceTypesList = () => {
       <Tabs defaultValue="all" className="w-full">
         <TabsList>
           <TabsTrigger value="all">All Services</TabsTrigger>
-          <TabsTrigger value="main">Main Services</TabsTrigger>
+          <TabsTrigger value="standalone">Standalone Services</TabsTrigger>
+          <TabsTrigger value="bundles">Service Bundles</TabsTrigger>
           <TabsTrigger value="sub">Sub Services</TabsTrigger>
         </TabsList>
 
@@ -80,9 +82,25 @@ export const ServiceTypesList = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="main" className="mt-6">
+        <TabsContent value="standalone" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {serviceTypes?.filter(s => !s.parent_service_id).map((service) => (
+            {serviceTypes?.filter(s => s.service_type === 'standalone').map((service) => (
+              <ServiceTypeCard 
+                key={service.id} 
+                service={service} 
+                onEdit={() => {
+                  setEditingService(service);
+                  setIsDialogOpen(true);
+                }}
+                onRefetch={refetch}
+              />
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="bundles" className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {serviceTypes?.filter(s => s.service_type === 'bundle').map((service) => (
               <ServiceTypeCard 
                 key={service.id} 
                 service={service} 
@@ -98,7 +116,7 @@ export const ServiceTypesList = () => {
 
         <TabsContent value="sub" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {serviceTypes?.filter(s => s.parent_service_id).map((service) => (
+            {serviceTypes?.filter(s => s.service_type === 'sub_service').map((service) => (
               <ServiceTypeCard 
                 key={service.id} 
                 service={service} 
