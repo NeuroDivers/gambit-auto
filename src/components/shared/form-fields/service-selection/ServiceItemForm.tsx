@@ -52,28 +52,30 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
   const mounted = useRef(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [open, setOpen] = useState(false);
-  const [selectedServiceName, setSelectedServiceName] = useState(item.service_name || "");
+  const [selectedServiceName, setSelectedServiceName] = useState("");
 
   useEffect(() => {
     console.log("ServiceItemForm mounted with item:", item);
     console.log("Available services:", services);
     
-    // Initialize expanded state if we have a selected service
-    if (item.service_id) {
+    // Initialize state from item if it has values
+    if (item.service_name) {
+      setSelectedServiceName(item.service_name);
       setIsExpanded(true);
+      
+      // If we have a name but no ID, try to find the service and update the ID
+      if (!item.service_id) {
+        const service = services.find(s => s.name === item.service_name);
+        if (service) {
+          onUpdate(index, "service_id", service.id);
+        }
+      }
     }
     
     return () => {
       mounted.current = false;
     };
-  }, [item, services]);
-
-  useEffect(() => {
-    if (mounted.current) {
-      console.log("Service name updated:", item.service_name);
-      setSelectedServiceName(item.service_name || "");
-    }
-  }, [item.service_name]);
+  }, [item, services, index, onUpdate]);
 
   const handleServiceSelect = React.useCallback((selectedValue: string) => {
     console.log("Service selection triggered with value:", selectedValue);
@@ -89,31 +91,32 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
         price: selectedService.price
       });
       
-      onUpdate(index, "service_id", selectedService.id);
-      onUpdate(index, "service_name", selectedService.name);
-      onUpdate(index, "unit_price", selectedService.price || 0);
+      // Update both local state and parent
       setSelectedServiceName(selectedService.name);
       setIsExpanded(true);
       setOpen(false);
+      
+      // Update parent state
+      onUpdate(index, "service_id", selectedService.id);
+      onUpdate(index, "service_name", selectedService.name);
+      onUpdate(index, "unit_price", selectedService.price || 0);
     }
   }, [services, index, onUpdate, mounted]);
 
   // Enhanced service finding logic with detailed logging
   const selectedService = React.useMemo(() => {
+    if (!item.service_id && !item.service_name) return undefined;
+    
     console.log("Looking for service with:", {
       service_id: item.service_id,
       service_name: item.service_name
     });
     
     const foundService = services.find(service => {
-      const idMatch = service?.id === item.service_id;
-      const nameMatch = service?.name === item.service_name;
-      console.log("Checking service:", {
-        service: service,
-        idMatch: idMatch,
-        nameMatch: nameMatch
-      });
-      return idMatch || nameMatch;
+      if (item.service_id) {
+        return service.id === item.service_id;
+      }
+      return service.name === item.service_name;
     });
     
     console.log("Found service:", foundService);
