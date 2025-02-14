@@ -30,6 +30,7 @@ interface ServiceTypeDialogProps {
     duration: number | null;
     pricing_model?: 'flat_rate' | 'hourly' | 'variable';
     base_price?: number | null;
+    service_type?: 'standalone' | 'sub_service' | 'bundle';
   } | null;
   onSuccess: () => void;
 }
@@ -53,6 +54,7 @@ export const ServiceTypeDialog = ({
       pricing_model: "flat_rate",
       base_price: "",
       duration: "",
+      service_type: "standalone",
     },
   });
 
@@ -65,6 +67,7 @@ export const ServiceTypeDialog = ({
         pricing_model: serviceType.pricing_model || "flat_rate",
         base_price: serviceType.base_price?.toString() || "",
         duration: serviceType.duration?.toString() || "",
+        service_type: serviceType.service_type || "standalone",
       });
       fetchPackages();
     } else {
@@ -75,6 +78,7 @@ export const ServiceTypeDialog = ({
         pricing_model: "flat_rate",
         base_price: "",
         duration: "",
+        service_type: "standalone",
       });
       setPackages([]);
     }
@@ -109,6 +113,7 @@ export const ServiceTypeDialog = ({
         pricing_model: values.pricing_model,
         base_price: values.base_price ? parseFloat(values.base_price) : null,
         duration: values.duration ? parseInt(values.duration) : null,
+        service_type: values.service_type,
       };
 
       if (isEditing && serviceType) {
