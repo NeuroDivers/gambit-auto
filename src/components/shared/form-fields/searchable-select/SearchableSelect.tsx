@@ -45,6 +45,7 @@ export function SearchableSelect({
   showPrice = false,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState("")
   
   // Initialize empty arrays for both states to prevent undefined errors
   const safeOptions = Array.isArray(options) ? options : []
@@ -80,13 +81,18 @@ export function SearchableSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full min-w-[var(--radix-popover-trigger-width)] p-0">
-        <Command>
-          <CommandInput placeholder={`Search ${placeholder.toLowerCase()}...`} />
+        <Command value={search} onValueChange={setSearch}>
+          <CommandInput 
+            value={search}
+            onValueChange={setSearch}
+            placeholder={`Search ${placeholder.toLowerCase()}...`} 
+          />
           <CommandEmpty>{emptyMessage}</CommandEmpty>
-          <CommandGroup>
+          <CommandGroup className="max-h-[300px] overflow-auto">
             {safeOptions.map((option) => (
               <CommandItem
                 key={option.value}
+                value={option.label}
                 onSelect={() => {
                   onValueChange(option.value)
                   setOpen(false)
