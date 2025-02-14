@@ -79,7 +79,20 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
       if (!workOrder?.id) return
 
       try {
-        const { data: servicesData, error } = await supabase
+        // First verify if the work order exists and the ID is valid
+        const { data: workOrderExists, error: workOrderError } = await supabase
+          .from('work_orders')
+          .select('id')
+          .eq('id', workOrder.id)
+          .maybeSingle()
+
+        if (workOrderError || !workOrderExists) {
+          console.error('Error verifying work order:', workOrderError)
+          return
+        }
+
+        // Then fetch the services
+        const { data: servicesData, error: servicesError } = await supabase
           .from('work_order_services')
           .select(`
             id,
@@ -93,17 +106,14 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
           `)
           .eq('work_order_id', workOrder.id)
 
-        if (error) {
-          console.error('Error fetching work order services:', error)
+        if (servicesError) {
+          console.error('Error fetching work order services:', servicesError)
           return
         }
 
-        if (servicesData) {
-          // First cast to unknown, then to our known type
-          const typedServicesData = servicesData as unknown as RawSupabaseWorkOrderService[]
-          
-          const formattedServices = typedServicesData
-            .filter(service => service.service && 'id' in service.service && 'name' in service.service)
+        if (servicesData && Array.isArray(servicesData)) {
+          const formattedServices = servicesData
+            .filter(service => service.service && service.service.id && service.service.name)
             .map(service => ({
               service_id: service.service_id,
               service_name: service.service.name,
