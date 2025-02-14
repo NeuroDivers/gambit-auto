@@ -7,11 +7,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { ServiceTypeFormFields, formSchema } from "./ServiceTypeFormFields";
-import { ServicePackageList } from "./ServicePackageList";
-import { ServicePackage } from "@/integrations/supabase/types/service-types";
 import * as z from "zod";
-import { useEffect, useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect } from "react";
 
 interface ServiceTypeDialogProps {
   open: boolean;
@@ -39,7 +36,6 @@ export const ServiceTypeDialog = ({
 }: ServiceTypeDialogProps) => {
   const { toast } = useToast();
   const isEditing = !!serviceType;
-  const [packages, setPackages] = useState<ServicePackage[]>([]);
 
   const defaultValues = {
     name: "",
@@ -68,31 +64,10 @@ export const ServiceTypeDialog = ({
         service_type: serviceType.service_type || "standalone",
         parent_service_id: serviceType.parent_service_id || undefined
       });
-      fetchPackages();
     } else {
       form.reset(defaultValues);
-      setPackages([]);
     }
   }, [serviceType, form]);
-
-  const fetchPackages = async () => {
-    if (!serviceType?.id) return;
-    const { data, error } = await supabase
-      .from("service_packages")
-      .select("*")
-      .eq("service_id", serviceType.id)
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      setPackages(data);
-    }
-  };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -151,39 +126,20 @@ export const ServiceTypeDialog = ({
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="details" className="w-full">
-          <TabsList>
-            <TabsTrigger value="details">Details</TabsTrigger>
-            {isEditing && <TabsTrigger value="packages">Packages</TabsTrigger>}
-          </TabsList>
-
-          <TabsContent value="details">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <ServiceTypeFormFields form={form} />
-                
-                <div className="flex justify-end space-x-2">
-                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                    {isEditing ? "Update" : "Create"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </TabsContent>
-
-          {isEditing && (
-            <TabsContent value="packages">
-              <ServicePackageList 
-                serviceId={serviceType.id} 
-                packages={packages} 
-                onPackagesChange={fetchPackages} 
-              />
-            </TabsContent>
-          )}
-        </Tabs>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <ServiceTypeFormFields form={form} />
+            
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                {isEditing ? "Update" : "Create"}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
