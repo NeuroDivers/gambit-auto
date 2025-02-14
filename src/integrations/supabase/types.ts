@@ -1403,7 +1403,7 @@ export type Database = {
         | "full_vehicle"
       quote_status: "pending" | "approved" | "rejected"
       service_hierarchy_type: "main" | "sub"
-      service_pricing_model: "flat_rate" | "hourly" | "per_unit"
+      service_pricing_model: "flat_rate" | "hourly" | "per_unit" | "variable"
       service_status: "active" | "inactive"
       tax_type: "GST" | "QST" | "HST" | "PST"
       user_role: "admin" | "technician" | "sales"
