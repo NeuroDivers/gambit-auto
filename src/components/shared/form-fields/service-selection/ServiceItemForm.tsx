@@ -7,14 +7,19 @@ import { X } from "lucide-react"
 import { ServiceItemType } from "@/components/work-orders/types"
 import { useEffect, useRef, useState } from "react"
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Check, ChevronsUpDown } from "lucide-react"
+import { cn } from "@/lib/utils"
 import {
   Accordion,
   AccordionContent,
@@ -57,6 +62,7 @@ interface ServiceItemFormProps {
 export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove }: ServiceItemFormProps) {
   const mounted = useRef(true);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -88,6 +94,7 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
       onUpdate(index, "service_name", selectedService.name);
       onUpdate(index, "unit_price", selectedService.price || 0);
       setIsExpanded(true);
+      setOpen(false);
     }
   };
 
@@ -125,37 +132,51 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
             <div className="space-y-4">
               <div>
                 <Label htmlFor={serviceId}>Service</Label>
-                <Select
-                  value={item.service_id || ''}
-                  onValueChange={handleServiceSelect}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a service" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(groupedServices).map(([groupName, groupServices]) => (
-                      <SelectGroup key={groupName}>
-                        <SelectLabel className="font-semibold">{groupName}</SelectLabel>
-                        {groupServices.map((service) => (
-                          <SelectItem 
-                            key={service.id} 
-                            value={service.id}
-                            disabled={service.status === 'inactive'}
-                          >
-                            <span className="flex justify-between items-center w-full">
+                <Popover open={open} onOpenChange={setOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={open}
+                      className="w-full justify-between"
+                    >
+                      {selectedService?.name || "Select a service..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[400px] p-0">
+                    <Command>
+                      <CommandInput placeholder="Search for a service..." />
+                      <CommandEmpty>No service found.</CommandEmpty>
+                      {Object.entries(groupedServices).map(([groupName, groupServices]) => (
+                        <CommandGroup key={groupName} heading={groupName}>
+                          {groupServices.map((service) => (
+                            <CommandItem
+                              key={service.id}
+                              value={service.name}
+                              onSelect={() => handleServiceSelect(service.id)}
+                              disabled={service.status === 'inactive'}
+                              className="flex justify-between items-center"
+                            >
                               <span>{service.name}</span>
                               {service.price && (
                                 <span className="text-muted-foreground">
                                   ${service.price.toFixed(2)}
                                 </span>
                               )}
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    ))}
-                  </SelectContent>
-                </Select>
+                              <Check
+                                className={cn(
+                                  "ml-auto h-4 w-4",
+                                  selectedService?.id === service.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      ))}
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
