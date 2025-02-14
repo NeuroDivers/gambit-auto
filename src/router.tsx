@@ -118,6 +118,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "invoices/:id/edit",
+        element: (
+          <PermissionGuard resource="invoices" type="page_access">
+            <InvoiceDetails isEditing />
+          </PermissionGuard>
+        ),
+      },
+      {
         path: "clients",
         element: (
           <PermissionGuard resource="clients" type="page_access">

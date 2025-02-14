@@ -9,10 +9,9 @@ import { useNavigate } from "react-router-dom"
 
 type InvoiceListItemProps = {
   invoice: Invoice
-  onEdit?: (invoice: Invoice) => void
 }
 
-export function InvoiceListItem({ invoice, onEdit }: InvoiceListItemProps) {
+export function InvoiceListItem({ invoice }: InvoiceListItemProps) {
   const navigate = useNavigate()
 
   const getStatusColor = (status: string) => {
@@ -67,7 +66,7 @@ export function InvoiceListItem({ invoice, onEdit }: InvoiceListItemProps) {
               <Button 
                 variant="outline" 
                 size="icon"
-                onClick={() => onEdit?.(invoice)}
+                onClick={() => navigate(`/invoices/${invoice.id}/edit`)}
               >
                 <PencilIcon className="h-4 w-4" />
               </Button>
