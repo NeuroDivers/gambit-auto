@@ -19,6 +19,11 @@ type ServiceTypeCardProps = {
     base_price?: number | null
     service_type: 'standalone' | 'sub_service' | 'bundle'
     sub_services?: any[]
+    parent?: {
+      id: string
+      name: string
+      status: 'active' | 'inactive'
+    } | null
   }
   onEdit: () => void
   onRefetch: () => void
@@ -108,6 +113,11 @@ export function ServiceTypeCard({ service, onEdit, onRefetch }: ServiceTypeCardP
                 {getServiceTypeIcon()}
                 {getServiceTypeLabel()}
               </Badge>
+              {service.service_type === 'sub_service' && service.parent && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  Part of: {service.parent.name}
+                </Badge>
+              )}
             </div>
           </div>
           <div className="flex gap-1 shrink-0">
