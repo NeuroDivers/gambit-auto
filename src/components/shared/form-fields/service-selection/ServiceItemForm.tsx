@@ -143,8 +143,11 @@ export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove
                             {typeServices.map((service) => (
                               <CommandItem
                                 key={service.id}
-                                value={service.id}
-                                onSelect={(currentValue) => handleServiceSelect(currentValue)}
+                                value={service.name}
+                                onSelect={() => {
+                                  console.log("Service selected:", service);
+                                  handleServiceSelect(service.id);
+                                }}
                                 className="flex items-center justify-between cursor-pointer hover:bg-accent"
                               >
                                 <div className="flex items-center justify-between w-full">
