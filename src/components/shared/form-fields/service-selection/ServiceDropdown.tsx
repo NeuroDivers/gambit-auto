@@ -16,15 +16,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { ServiceType, ServicesByType, ServiceItemType } from "./types"
 
 interface ServiceDropdownProps {
-  selectedServiceName: string;
-  servicesByType: ServicesByType;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  handleServiceSelect: (value: string) => void;
-  serviceId: string;
+  selectedServiceName: string
+  servicesByType: Record<string, Array<{
+    id: string
+    name: string
+    price?: number
+  }>>
+  open: boolean
+  setOpen: (open: boolean) => void
+  handleServiceSelect: (serviceId: string) => void
+  serviceId: string
 }
 
 export function ServiceDropdown({
@@ -46,25 +49,24 @@ export function ServiceDropdown({
             aria-expanded={open}
             className="w-full justify-between text-left"
           >
-            {selectedServiceName || "Select a service..."}
+            {selectedServiceName}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent 
-          className="w-[400px] p-0" 
-          align="start"
-          sideOffset={4}
-        >
+        <PopoverContent className="w-[400px] p-0" align="start" sideOffset={4}>
           <Command>
             <CommandInput placeholder="Search services..." />
             <CommandList>
               <CommandEmpty>No services found.</CommandEmpty>
-              {Object.entries(servicesByType).map(([type, typeServices]) => (
+              {Object.entries(servicesByType).map(([type, services]) => (
                 <CommandGroup key={type} heading={type}>
-                  {typeServices.map((service) => (
+                  {services.map((service) => (
                     <CommandItem
                       key={service.id}
-                      onSelect={() => handleServiceSelect(service.id)}
+                      onSelect={() => {
+                        console.log("Service selected:", service)
+                        handleServiceSelect(service.id)
+                      }}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center justify-between w-full">
@@ -90,5 +92,5 @@ export function ServiceDropdown({
         </PopoverContent>
       </Popover>
     </div>
-  );
+  )
 }
