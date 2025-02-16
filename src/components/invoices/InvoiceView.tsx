@@ -169,14 +169,8 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
           onPrint={handlePrint}
         />
       )}
-      <div ref={printRef}>
-        <InvoicePrintPreview 
-          invoice={invoice} 
-          businessProfile={businessProfile}
-        />
-      </div>
 
-      {isPublic && (
+      {isPublic ? (
         <PublicView
           invoice={invoice}
           businessProfile={businessProfile}
@@ -184,7 +178,15 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
           setIsVerified={setIsVerified}
           isAdmin={isAdmin}
           onPrint={handlePrint}
+          printRef={printRef}
         />
+      ) : (
+        <div ref={printRef}>
+          <InvoicePrintPreview 
+            invoice={invoice} 
+            businessProfile={businessProfile}
+          />
+        </div>
       )}
     </div>
   )

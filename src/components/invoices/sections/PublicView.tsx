@@ -13,6 +13,7 @@ type PublicViewProps = {
   setIsVerified: (value: boolean) => void
   isAdmin: boolean
   onPrint: () => void
+  printRef: React.RefObject<HTMLDivElement>
 }
 
 export function PublicView({ 
@@ -21,7 +22,8 @@ export function PublicView({
   isVerified, 
   setIsVerified, 
   isAdmin,
-  onPrint 
+  onPrint,
+  printRef 
 }: PublicViewProps) {
   if (!isAdmin && !isVerified) {
     return (
@@ -39,7 +41,7 @@ export function PublicView({
           <PrintButton onPrint={onPrint} />
         </div>
       )}
-      <div>
+      <div ref={printRef}>
         <InvoicePrintPreview invoice={invoice} businessProfile={businessProfile} />
       </div>
       {(isVerified || isAdmin) && invoice && (
