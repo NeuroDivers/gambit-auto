@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { WorkOrder } from "../types"
 import { format } from "date-fns"
@@ -19,7 +20,7 @@ export function WorkOrderDetailsDialog({ workOrder, open, onOpenChange }: WorkOr
         .from('work_order_services')
         .select(`
           *,
-          service:service_types(
+          service:service_types!work_order_services_service_id_fkey(
             name,
             price
           )
