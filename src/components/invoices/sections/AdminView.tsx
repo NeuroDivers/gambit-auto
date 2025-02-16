@@ -1,7 +1,5 @@
 
 import { InvoiceActions } from "./InvoiceActions"
-import { InvoicePrintPreview } from "./InvoicePrintPreview"
-import { PaymentSection } from "./PaymentSection"
 import { Invoice } from "../types"
 import { Tables } from "@/integrations/supabase/types"
 
@@ -13,8 +11,6 @@ type AdminViewProps = {
 }
 
 export function AdminView({ 
-  invoice, 
-  businessProfile, 
   invoiceId,
   onPrint 
 }: AdminViewProps) {
@@ -24,10 +20,6 @@ export function AdminView({
         invoiceId={invoiceId}
         onPrint={onPrint}
       />
-      <div>
-        <InvoicePrintPreview invoice={invoice} businessProfile={businessProfile} />
-      </div>
-      {invoice && <PaymentSection invoice={invoice} />}
     </div>
   )
 }
