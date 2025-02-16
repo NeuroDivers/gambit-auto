@@ -31,7 +31,7 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
   const [selectedService, setSelectedService] = React.useState<any>(
     services.find(s => s.id === item.service_id)
   );
-  const [priceInput, setPriceInput] = React.useState(item.unit_price?.toString() || '');
+  const [priceInput, setPriceInput] = React.useState('0');
 
   useEffect(() => {
     if (item.service_name) {
@@ -50,7 +50,10 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
   }, [item.service_id, services]);
 
   useEffect(() => {
-    setPriceInput(item.unit_price?.toString() || '');
+    // Update price input when item.unit_price changes
+    if (item.unit_price !== undefined) {
+      setPriceInput(item.unit_price.toString());
+    }
   }, [item.unit_price]);
 
   const handleServiceSelect = React.useCallback((currentValue: string) => {
@@ -87,11 +90,17 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     
     const value = e.target.value;
     
-    // Update the input state immediately
+    // Always update the input state first
     setPriceInput(value);
     
-    // Convert to number and update the item state
-    const numericValue = value === '' ? 0 : parseFloat(value);
+    // Handle empty input or just a decimal point
+    if (value === '' || value === '.') {
+      onUpdate(index, { unit_price: 0 });
+      return;
+    }
+    
+    // Convert to number and validate
+    const numericValue = parseFloat(value);
     if (!isNaN(numericValue)) {
       console.log('Updating price to:', numericValue);
       onUpdate(index, { unit_price: numericValue });
