@@ -11,6 +11,7 @@ export function useWorkOrderSubmission() {
   const submitWorkOrder = async (values: WorkOrderFormValues, workOrderId?: string) => {
     try {
       console.log("Submitting work order with values:", values)
+      console.log("Service items to submit:", values.service_items)
       
       if (workOrderId) {
         await updateWorkOrder(workOrderId, values)
@@ -116,17 +117,14 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
 
     console.log("Inserting new services:", servicesToInsert)
 
-    const { data: insertedServices, error: servicesError } = await supabase
+    const { error: servicesError } = await supabase
       .from('work_order_services')
       .insert(servicesToInsert)
-      .select()
 
     if (servicesError) {
       console.error("Error inserting work order services:", servicesError)
       throw servicesError
     }
-
-    console.log("Successfully inserted services:", insertedServices)
   }
 }
 
@@ -190,16 +188,15 @@ async function createWorkOrder(values: WorkOrderFormValues) {
       unit_price: item.unit_price
     }))
 
-    const { data: insertedServices, error: servicesError } = await supabase
+    const { error: servicesError } = await supabase
       .from("work_order_services")
       .insert(servicesToInsert)
-      .select()
 
     if (servicesError) {
       console.error("Error inserting work order services:", servicesError)
       throw servicesError
     }
 
-    console.log("Successfully inserted services for new work order:", insertedServices)
+    console.log("Successfully inserted services for new work order")
   }
 }
