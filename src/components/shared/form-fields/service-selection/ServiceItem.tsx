@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -40,10 +41,11 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     };
   }, [item.service_name]);
 
-  // Update selected service when item changes
   useEffect(() => {
     const service = services.find(s => s.id === item.service_id);
-    setSelectedService(service);
+    if (service) {
+      setSelectedService(service);
+    }
   }, [item.service_id, services]);
 
   const handleServiceSelect = React.useCallback((currentValue: string) => {
@@ -54,42 +56,46 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     if (newSelectedService) {
       console.log('Selected service:', newSelectedService);
 
-      // Keep the current price if it exists, otherwise use the service price or 0
-      const currentPrice = item.unit_price > 0 ? item.unit_price : (newSelectedService.price || 0);
-
-      // Update local state first
       setSelectedService(newSelectedService);
 
-      // Update parent state
-      onUpdate(index, {
+      const updates: Partial<ServiceItemType> = {
         service_id: newSelectedService.id,
         service_name: newSelectedService.name,
-        unit_price: currentPrice,
-        quantity: item.quantity || 1
-      });
+        quantity: 1
+      };
 
+      // Only set the unit_price if there isn't one already or if the current one is 0
+      if (!item.unit_price || item.unit_price === 0) {
+        updates.unit_price = newSelectedService.price || 0;
+      }
+
+      onUpdate(index, updates);
       setIsExpanded(true);
-
-      console.log('Updated service fields:', {
-        service_id: newSelectedService.id,
-        service_name: newSelectedService.name,
-        unit_price: currentPrice,
-        quantity: item.quantity || 1
-      });
     }
-  }, [services, index, onUpdate, item.unit_price, item.quantity]);
+  }, [services, index, onUpdate, item.unit_price]);
 
   const handleQuantityChange = (value: number) => {
     if (!mounted.current) return;
     onUpdate(index, { quantity: value });
   };
 
-  const handlePriceChange = (value: number) => {
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!mounted.current) return;
-    onUpdate(index, { unit_price: value });
+    
+    const value = e.target.value;
+    
+    // Allow empty input for price
+    if (value === '') {
+      onUpdate(index, { unit_price: 0 });
+      return;
+    }
+
+    const numericValue = parseFloat(value);
+    if (!isNaN(numericValue)) {
+      onUpdate(index, { unit_price: numericValue });
+    }
   };
 
-  // Group services by hierarchy type for better organization
   const servicesByType = services.reduce<ServicesByType>((acc, service) => {
     const type = service.hierarchy_type || 'Other';
     if (!acc[type]) acc[type] = [];
@@ -97,7 +103,6 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     return acc;
   }, {});
 
-  // Sort services within each type by name
   Object.keys(servicesByType).forEach(type => {
     servicesByType[type].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
   });
@@ -152,10 +157,10 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
                   <Input
                     id={`price-${index}`}
                     type="number"
-                    min={0}
+                    min="0"
                     step="0.01"
-                    value={item.unit_price || ""}
-                    onChange={(e) => handlePriceChange(parseFloat(e.target.value) || 0)}
+                    value={item.unit_price || ''}
+                    onChange={handlePriceChange}
                     className="mt-1"
                   />
                 </div>
