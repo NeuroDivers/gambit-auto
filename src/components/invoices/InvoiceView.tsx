@@ -13,6 +13,7 @@ import { LoadingState } from "./sections/LoadingState"
 import { PublicView } from "./sections/PublicView"
 import { AdminView } from "./sections/AdminView"
 import { ProfileWithRole } from "@/integrations/supabase/types/user-roles"
+import { InvoicePrintPreview } from "./sections/print-preview/InvoicePrintPreview"
 
 type InvoiceViewProps = {
   invoiceId?: string
@@ -25,7 +26,7 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
   const [isVerified, setIsVerified] = useState(false)
   const { data: invoice, isLoading: isInvoiceLoading } = useInvoiceData(invoiceId)
   const updateInvoiceMutation = useInvoiceMutation(invoiceId)
-  const printRef = useRef<HTMLDivElement>(null)
+  const printComponentRef = useRef<HTMLDivElement>(null)
 
   // Check if user is admin
   const { data: userRole } = useQuery({
@@ -78,11 +79,11 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
   })
 
   const handlePrint = useReactToPrint({
+    content: () => printComponentRef.current,
     documentTitle: `Invoice-${invoice?.invoice_number || 'draft'}`,
     onAfterPrint: () => toast.success("Invoice printed successfully"),
     onPrintError: () => toast.error("Failed to print invoice"),
-    pageStyle: "@page { size: auto; margin: 20mm; }",
-    contentRef: printRef,
+    removeAfterPrint: true
   })
 
   const form = useForm<InvoiceFormValues>({
@@ -162,12 +163,18 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
     )
   }
 
-  const printContainer = <div ref={printRef}>{/* This will be populated by react-to-print */}</div>
+  return (
+    <>
+      <div style={{ display: 'none' }}>
+        <div ref={printComponentRef}>
+          <InvoicePrintPreview 
+            invoice={invoice} 
+            businessProfile={businessProfile}
+          />
+        </div>
+      </div>
 
-  if (isPublic) {
-    return (
-      <>
-        {printContainer}
+      {isPublic ? (
         <PublicView
           invoice={invoice}
           businessProfile={businessProfile}
@@ -176,19 +183,14 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
           isAdmin={isAdmin}
           onPrint={handlePrint}
         />
-      </>
-    )
-  }
-
-  return (
-    <>
-      {printContainer}
-      <AdminView
-        invoice={invoice}
-        businessProfile={businessProfile}
-        invoiceId={invoiceId}
-        onPrint={handlePrint}
-      />
+      ) : (
+        <AdminView
+          invoice={invoice}
+          businessProfile={businessProfile}
+          invoiceId={invoiceId}
+          onPrint={handlePrint}
+        />
+      )}
     </>
   )
 }
