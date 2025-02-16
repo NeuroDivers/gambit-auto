@@ -44,7 +44,7 @@ interface ServiceItemProps {
   onRemove: () => void;
 }
 
-export const ServiceItem = memo(function ServiceItem({ index, item, services = [], onUpdate, onRemove }: ServiceItemProps) {
+const ServiceItemComponent = ({ index, item, services = [], onUpdate, onRemove }: ServiceItemProps) => {
   const mounted = useRef(true);
   const [open, setOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<any>(
@@ -180,4 +180,8 @@ export const ServiceItem = memo(function ServiceItem({ index, item, services = [
       </div>
     </div>
   );
-});
+};
+
+ServiceItemComponent.displayName = 'ServiceItem';
+
+export const ServiceItem = memo(ServiceItemComponent);
