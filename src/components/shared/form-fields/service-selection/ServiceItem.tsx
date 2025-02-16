@@ -4,12 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { X } from "lucide-react"
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
 import { ServiceItemType } from "@/components/work-orders/types"
 import { ServiceDropdown } from "./ServiceDropdown"
 import { ServiceDescription } from "./ServiceDescription"
@@ -50,9 +44,8 @@ interface ServiceItemProps {
   onRemove: () => void;
 }
 
-export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: ServiceItemProps) {
+export const ServiceItem = memo(function ServiceItem({ index, item, services = [], onUpdate, onRemove }: ServiceItemProps) {
   const mounted = useRef(true);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [open, setOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<any>(
     services.find(s => s.id === item.service_id)
@@ -61,13 +54,10 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
   const [localPrice, setLocalPrice] = useState(item.unit_price?.toString() || "0");
 
   useEffect(() => {
-    if (item.service_name) {
-      setIsExpanded(true);
-    }
     return () => {
       mounted.current = false;
     };
-  }, [item.service_name]);
+  }, []);
 
   useEffect(() => {
     const service = services.find(s => s.id === item.service_id);
@@ -93,8 +83,6 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
         quantity: item.quantity || 1,
         unit_price: newSelectedService.price || 0
       });
-      
-      setIsExpanded(true);
     }
   }, [services, index, onUpdate, item.quantity]);
 
@@ -153,53 +141,43 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
         <X className="h-4 w-4" />
       </Button>
 
-      <Accordion
-        type="single"
-        collapsible
-        value={isExpanded ? "service-details" : ""}
-        onValueChange={(value) => setIsExpanded(value === "service-details")}
-      >
-        <AccordionItem value="service-details" className="border-none">
-          <AccordionTrigger className="py-2">
-            {item.service_name || "Select a Service"}
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="space-y-4">
-              <ServiceDropdown
-                selectedServiceName={item.service_name || ""}
-                servicesByType={servicesByType}
-                open={open}
-                setOpen={setOpen}
-                handleServiceSelect={handleServiceSelect}
-                serviceId={item.service_id}
-              />
+      <div className="space-y-4">
+        <div className="font-medium text-lg">
+          {item.service_name || "Select a Service"}
+        </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <ServiceItemInput
-                  id={`quantity-${index}`}
-                  label="Quantity"
-                  value={localQuantity}
-                  onChange={handleQuantityChange}
-                  onBlur={handleQuantityBlur}
-                  type="numeric"
-                />
-                <ServiceItemInput
-                  id={`price-${index}`}
-                  label="Unit Price"
-                  value={localPrice}
-                  onChange={handlePriceChange}
-                  onBlur={handlePriceBlur}
-                  type="decimal"
-                />
-              </div>
+        <ServiceDropdown
+          selectedServiceName={item.service_name || ""}
+          servicesByType={servicesByType}
+          open={open}
+          setOpen={setOpen}
+          handleServiceSelect={handleServiceSelect}
+          serviceId={item.service_id}
+        />
 
-              <ServiceDescription 
-                description={selectedService?.description}
-              />
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+        <div className="grid grid-cols-2 gap-4">
+          <ServiceItemInput
+            id={`quantity-${index}`}
+            label="Quantity"
+            value={localQuantity}
+            onChange={handleQuantityChange}
+            onBlur={handleQuantityBlur}
+            type="numeric"
+          />
+          <ServiceItemInput
+            id={`price-${index}`}
+            label="Unit Price"
+            value={localPrice}
+            onChange={handlePriceChange}
+            onBlur={handlePriceBlur}
+            type="decimal"
+          />
+        </div>
+
+        <ServiceDescription 
+          description={selectedService?.description}
+        />
+      </div>
     </div>
   );
-}
+});
