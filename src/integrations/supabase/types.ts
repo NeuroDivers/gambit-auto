@@ -386,17 +386,18 @@ export type Database = {
           customer_last_name: string | null
           customer_phone: string | null
           due_date: string | null
+          gst_amount: number
           gst_number: string | null
           id: string
           invoice_number: string
           is_archived: boolean | null
           notes: string | null
           payment_status: string
+          qst_amount: number
           qst_number: string | null
           status: string
           stripe_customer_id: string | null
           subtotal: number
-          tax_amount: number
           total: number
           updated_at: string
           vehicle_make: string | null
@@ -417,17 +418,18 @@ export type Database = {
           customer_last_name?: string | null
           customer_phone?: string | null
           due_date?: string | null
+          gst_amount?: number
           gst_number?: string | null
           id?: string
           invoice_number: string
           is_archived?: boolean | null
           notes?: string | null
           payment_status?: string
+          qst_amount?: number
           qst_number?: string | null
           status?: string
           stripe_customer_id?: string | null
           subtotal: number
-          tax_amount: number
           total: number
           updated_at?: string
           vehicle_make?: string | null
@@ -448,17 +450,18 @@ export type Database = {
           customer_last_name?: string | null
           customer_phone?: string | null
           due_date?: string | null
+          gst_amount?: number
           gst_number?: string | null
           id?: string
           invoice_number?: string
           is_archived?: boolean | null
           notes?: string | null
           payment_status?: string
+          qst_amount?: number
           qst_number?: string | null
           status?: string
           stripe_customer_id?: string | null
           subtotal?: number
-          tax_amount?: number
           total?: number
           updated_at?: string
           vehicle_make?: string | null

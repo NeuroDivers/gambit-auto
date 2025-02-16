@@ -58,7 +58,8 @@ serve(async (req) => {
     // Use the calculated values from the invoice record
     const total = invoice.total || 0
     const subtotal = invoice.subtotal || 0
-    const taxAmount = invoice.tax_amount || 0
+    const gstAmount = invoice.gst_amount || 0
+    const qstAmount = invoice.qst_amount || 0
 
     // Create email content
     const publicInvoiceUrl = `${Deno.env.get('PUBLIC_APP_URL')}/i/${invoiceId}`
@@ -68,7 +69,8 @@ serve(async (req) => {
       <p>Please find your invoice attached below:</p>
       <p><a href="${publicInvoiceUrl}">View Invoice</a></p>
       <p>Subtotal: $${subtotal.toFixed(2)}</p>
-      <p>Taxes: $${taxAmount.toFixed(2)}</p>
+      <p>GST (${invoice.gst_number}): $${gstAmount.toFixed(2)}</p>
+      <p>QST (${invoice.qst_number}): $${qstAmount.toFixed(2)}</p>
       <p>Total Amount: $${total.toFixed(2)}</p>
       <p>If you have any questions, please don't hesitate to contact us.</p>
       <p>Best regards,<br>${businessProfile?.company_name || 'The Team'}</p>
