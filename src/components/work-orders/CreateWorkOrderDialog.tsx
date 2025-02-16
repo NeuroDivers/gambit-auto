@@ -4,11 +4,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-  DialogDescription,
 } from "@/components/ui/dialog"
-import { WorkOrderForm } from "./WorkOrderForm"
 import { useState } from "react"
+import { WorkOrderForm } from "./WorkOrderForm"
 
 type CreateWorkOrderDialogProps = {
   defaultStartTime?: Date
@@ -22,19 +20,19 @@ export function CreateWorkOrderDialog({ defaultStartTime, open: controlledOpen, 
   const open = controlledOpen ?? uncontrolledOpen
   const setOpen = onOpenChange ?? setUncontrolledOpen
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-full w-screen h-screen max-h-screen overflow-y-auto p-0 m-0 rounded-none">
-        <DialogHeader className="p-6 pb-0">
+      <DialogContent className="max-w-4xl h-[90vh] overflow-y-auto">
+        <DialogHeader>
           <DialogTitle>Create Work Order</DialogTitle>
-          <DialogDescription>
-            Fill out the form below to create a new work order.
-          </DialogDescription>
         </DialogHeader>
-        <div className="p-6 pt-2">
+        <div className="py-4">
           <WorkOrderForm 
             onSuccess={() => setOpen(false)} 
             defaultStartTime={defaultStartTime}
+            onSubmitting={setIsSubmitting}
           />
         </div>
       </DialogContent>
