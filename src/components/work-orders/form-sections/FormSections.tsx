@@ -21,7 +21,10 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
 
   const handleServicesChange = (updatedServices: any[]) => {
     console.log('Updating services in form:', updatedServices);
-    replace(updatedServices);
+    replace(updatedServices.map(service => ({
+      ...service,
+      id: service.id || crypto.randomUUID()
+    })));
   };
 
   return (
