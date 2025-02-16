@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form"
 import { EditInvoiceForm } from './sections/EditInvoiceForm'
 import { InvoiceFormValues } from "./types"
@@ -12,7 +13,6 @@ import { LoadingState } from "./sections/LoadingState"
 import { PublicView } from "./sections/PublicView"
 import { AdminView } from "./sections/AdminView"
 import { ProfileWithRole } from "@/integrations/supabase/types/user-roles"
-import { InvoicePrintPreview } from "./sections/print-preview/InvoicePrintPreview"
 
 type InvoiceViewProps = {
   invoiceId?: string
@@ -25,8 +25,9 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
   const [isVerified, setIsVerified] = useState(false)
   const { data: invoice, isLoading: isInvoiceLoading } = useInvoiceData(invoiceId)
   const updateInvoiceMutation = useInvoiceMutation(invoiceId)
-  const printComponentRef = useRef<HTMLDivElement>(null)
+  const printRef = useRef<HTMLDivElement>(null)
 
+  // Check if user is admin
   const { data: userRole } = useQuery({
     queryKey: ["user-role"],
     queryFn: async () => {
@@ -61,6 +62,7 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
 
   const isAdmin = userRole === 'administrator'
 
+  // Fetch business profile data
   const { data: businessProfile, isLoading: isBusinessLoading } = useQuery({
     queryKey: ["business-profile"],
     queryFn: async () => {
@@ -76,10 +78,11 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
   })
 
   const handlePrint = useReactToPrint({
-    contentRef: printComponentRef,
     documentTitle: `Invoice-${invoice?.invoice_number || 'draft'}`,
     onAfterPrint: () => toast.success("Invoice printed successfully"),
-    onPrintError: () => toast.error("Failed to print invoice")
+    onPrintError: () => toast.error("Failed to print invoice"),
+    pageStyle: "@page { size: auto; margin: 20mm; }",
+    contentRef: printRef,
   })
 
   const form = useForm<InvoiceFormValues>({
@@ -101,6 +104,7 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
 
   useEffect(() => {
     if (invoice) {
+      // Fetch invoice items
       const fetchInvoiceItems = async () => {
         const { data: items, error } = await supabase
           .from('invoice_items')
@@ -112,6 +116,7 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
           return
         }
 
+        // Reset form with all invoice data including items
         form.reset({
           notes: invoice.notes || '',
           status: invoice.status || 'draft',
@@ -157,18 +162,12 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
     )
   }
 
-  return (
-    <>
-      <div style={{ display: 'none' }}>
-        <div ref={printComponentRef}>
-          <InvoicePrintPreview 
-            invoice={invoice} 
-            businessProfile={businessProfile}
-          />
-        </div>
-      </div>
+  const printContainer = <div ref={printRef}>{/* This will be populated by react-to-print */}</div>
 
-      {isPublic ? (
+  if (isPublic) {
+    return (
+      <>
+        {printContainer}
         <PublicView
           invoice={invoice}
           businessProfile={businessProfile}
@@ -177,14 +176,19 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
           isAdmin={isAdmin}
           onPrint={handlePrint}
         />
-      ) : (
-        <AdminView
-          invoice={invoice}
-          businessProfile={businessProfile}
-          invoiceId={invoiceId}
-          onPrint={handlePrint}
-        />
-      )}
+      </>
+    )
+  }
+
+  return (
+    <>
+      {printContainer}
+      <AdminView
+        invoice={invoice}
+        businessProfile={businessProfile}
+        invoiceId={invoiceId}
+        onPrint={handlePrint}
+      />
     </>
   )
 }
