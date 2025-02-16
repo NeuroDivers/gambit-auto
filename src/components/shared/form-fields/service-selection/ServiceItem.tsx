@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -55,6 +54,9 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     if (newSelectedService) {
       console.log('Selected service:', newSelectedService);
 
+      // Keep the current price if it exists, otherwise use the service price or 0
+      const currentPrice = item.unit_price > 0 ? item.unit_price : (newSelectedService.price || 0);
+
       // Update local state first
       setSelectedService(newSelectedService);
 
@@ -62,8 +64,8 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
       onUpdate(index, {
         service_id: newSelectedService.id,
         service_name: newSelectedService.name,
-        unit_price: newSelectedService.price || 0,
-        quantity: 1
+        unit_price: currentPrice,
+        quantity: item.quantity || 1
       });
 
       setIsExpanded(true);
@@ -71,11 +73,11 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
       console.log('Updated service fields:', {
         service_id: newSelectedService.id,
         service_name: newSelectedService.name,
-        unit_price: newSelectedService.price || 0,
-        quantity: 1
+        unit_price: currentPrice,
+        quantity: item.quantity || 1
       });
     }
-  }, [services, index, onUpdate]);
+  }, [services, index, onUpdate, item.unit_price, item.quantity]);
 
   const handleQuantityChange = (value: number) => {
     if (!mounted.current) return;
@@ -152,7 +154,7 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
                     type="number"
                     min={0}
                     step="0.01"
-                    value={item.unit_price}
+                    value={item.unit_price || ""}
                     onChange={(e) => handlePriceChange(parseFloat(e.target.value) || 0)}
                     className="mt-1"
                   />
