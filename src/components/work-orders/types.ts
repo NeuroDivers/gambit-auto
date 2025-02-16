@@ -55,4 +55,6 @@ export interface WorkOrderFormValues {
 export interface WorkOrderFormProps {
   workOrder?: WorkOrder;
   onSuccess?: () => void;
+  defaultStartTime?: Date;
+  onSubmitting?: (submitting: boolean) => void;
 }
