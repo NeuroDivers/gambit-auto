@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import { FileText, Trash2, MoreVertical, Edit2 } from "lucide-react"
 import {
@@ -40,7 +41,7 @@ export function WorkOrderCardActions({ workOrder, onDelete }: WorkOrderCardActio
       }
 
       // Create invoice using the RPC function
-      const { data, error } = await supabase
+      const { data: invoiceId, error } = await supabase
         .rpc('create_invoice_from_work_order', {
           work_order_id: workOrder.id
         })
@@ -51,7 +52,7 @@ export function WorkOrderCardActions({ workOrder, onDelete }: WorkOrderCardActio
       }
 
       toast.success('Invoice created successfully')
-      navigate(`/invoices/${data}`)
+      navigate(`/invoices/${invoiceId}`)
     } catch (error) {
       console.error('Error creating invoice:', error)
       toast.error('Failed to create invoice')
