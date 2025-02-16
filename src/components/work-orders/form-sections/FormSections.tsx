@@ -45,7 +45,8 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
       />
 
       <TimeSelectionFields 
-        control={form.control}
+        form={form}
+        disabled={isSubmitting}
       />
     </div>
   );

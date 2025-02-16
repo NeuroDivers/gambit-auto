@@ -10,11 +10,12 @@ import { Input } from "@/components/ui/input"
 import { useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
-export function TimeSelectionFields({
-  form,
-}: {
+type TimeSelectionFieldsProps = {
   form: UseFormReturn<WorkOrderFormValues>
-}) {
+  disabled?: boolean
+}
+
+export function TimeSelectionFields({ form, disabled }: TimeSelectionFieldsProps) {
   // Calculate end time when start time or duration changes
   useEffect(() => {
     const startTime = form.getValues("start_time")
@@ -42,6 +43,7 @@ export function TimeSelectionFields({
                     id="start_time_button"
                     variant="outline"
                     className="w-full justify-start text-left font-normal"
+                    disabled={disabled}
                   >
                     {field.value ? (
                       format(field.value, "PPP HH:mm")
@@ -91,6 +93,7 @@ export function TimeSelectionFields({
                         }
                       }}
                       value={field.value ? format(field.value, 'HH:mm') : ''}
+                      disabled={disabled}
                     />
                   </div>
                 </div>
@@ -117,6 +120,7 @@ export function TimeSelectionFields({
                 {...field}
                 value={field.value || ''}
                 onChange={(e) => field.onChange(parseFloat(e.target.value) || '')}
+                disabled={disabled}
               />
             </FormControl>
             <FormMessage />
