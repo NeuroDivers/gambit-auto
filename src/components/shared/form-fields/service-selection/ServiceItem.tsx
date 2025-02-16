@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -53,9 +54,9 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
         quantity: 1
       });
 
-      // Keep accordion expanded but allow dropdown to be toggled
       setIsExpanded(true);
-      
+      setOpen(false);
+
       // Log final state for verification
       console.log('Updated service fields:', {
         service_id: selectedService.id,
@@ -74,12 +75,6 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
   const handlePriceChange = (value: number) => {
     if (!mounted.current) return;
     onUpdate(index, { unit_price: value });
-  };
-
-  const handleOpenChange = (newOpen: boolean) => {
-    if (mounted.current) {
-      setOpen(newOpen);
-    }
   };
 
   // Group services by hierarchy type for better organization
@@ -125,7 +120,7 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
                 selectedServiceName={item.service_name || ""}
                 servicesByType={servicesByType}
                 open={open}
-                setOpen={handleOpenChange}
+                setOpen={setOpen}
                 handleServiceSelect={handleServiceSelect}
                 serviceId={item.service_id}
               />
