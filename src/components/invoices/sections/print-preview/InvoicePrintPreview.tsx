@@ -43,22 +43,48 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
       <style>
         {`
           @media print {
-            body * {
-              visibility: hidden;
+            @page {
+              margin: 20mm;
+              size: auto;
             }
-            .print-only, .print-only * {
-              visibility: visible;
+            
+            body {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
             }
-            .print-only {
-              position: absolute;
-              left: 0;
-              top: 0;
-              width: 100%;
+
+            /* Hide all other elements */
+            body > *:not(.print-section) {
+              display: none !important;
+            }
+
+            /* Show only the invoice content */
+            .print-section {
+              display: block !important;
+              position: relative !important;
+              background: white !important;
+              height: auto !important;
+              width: 100% !important;
+              padding: 0 !important;
+              margin: 0 !important;
+            }
+
+            /* Ensure text colors are preserved */
+            * {
+              color-adjust: exact !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            /* Ensure backgrounds are printed */
+            .print-section * {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
             }
           }
         `}
       </style>
-      <div className="print-only">
+      <div className="print-section">
         <div className="flex flex-col md:flex-row justify-between items-start gap-6">
           <InvoiceBusinessInfo businessProfile={businessProfile} />
           <InvoiceHeader invoice={invoice} />
