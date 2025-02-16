@@ -3,98 +3,49 @@ import { UseFormReturn } from "react-hook-form"
 import { WorkOrderFormValues } from "../types"
 import { CustomerInfoFields } from "./CustomerInfoFields"
 import { VehicleInfoFields } from "./VehicleInfoFields"
+import { ServiceItemsField } from "../form-fields/ServiceItemsField"
 import { TimeSelectionFields } from "./TimeSelectionFields"
-import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
-import { BayAssignmentField } from "../form-fields/BayAssignmentField"
-import { SidekickAssignmentField } from "../form-fields/SidekickAssignmentField"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { SeparatorHorizontal } from "lucide-react"
+import { useFieldArray } from "react-hook-form"
 
-type FormSectionsProps = {
+interface FormSectionsProps {
   form: UseFormReturn<WorkOrderFormValues>
   isSubmitting: boolean
   isEditing: boolean
 }
 
 export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProps) {
+  const { fields: serviceItems, replace } = useFieldArray({
+    control: form.control,
+    name: "service_items"
+  });
+
+  const handleServicesChange = (updatedServices: any[]) => {
+    console.log('Updating services in form:', updatedServices);
+    replace(updatedServices);
+  };
+
   return (
-    <div className="space-y-8">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <span>Customer Information</span>
-            <SeparatorHorizontal className="h-4 w-4 text-muted-foreground" />
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <CustomerInfoFields form={form} />
-        </CardContent>
-      </Card>
+    <div className="space-y-6">
+      <CustomerInfoFields 
+        control={form.control} 
+        disabled={isSubmitting}
+      />
+      
+      <VehicleInfoFields 
+        control={form.control} 
+        disabled={isSubmitting}
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <span>Vehicle Information</span>
-            <SeparatorHorizontal className="h-4 w-4 text-muted-foreground" />
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <VehicleInfoFields form={form} />
-        </CardContent>
-      </Card>
+      <ServiceItemsField
+        services={serviceItems}
+        onServicesChange={handleServicesChange}
+        disabled={isSubmitting}
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <span>Time Selection</span>
-            <SeparatorHorizontal className="h-4 w-4 text-muted-foreground" />
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <TimeSelectionFields form={form} />
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <span>Bay Assignment</span>
-              <SeparatorHorizontal className="h-4 w-4 text-muted-foreground" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <BayAssignmentField form={form} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <span>User Assignment</span>
-              <SeparatorHorizontal className="h-4 w-4 text-muted-foreground" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SidekickAssignmentField form={form} />
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <span>Services</span>
-            <SeparatorHorizontal className="h-4 w-4 text-muted-foreground" />
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ServiceSelectionField 
-            services={form.watch("service_items") || []}
-            onServicesChange={(services) => form.setValue("service_items", services)}
-          />
-        </CardContent>
-      </Card>
+      <TimeSelectionFields 
+        control={form.control}
+        disabled={isSubmitting}
+      />
     </div>
-  )
+  );
 }

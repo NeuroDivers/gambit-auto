@@ -1,10 +1,10 @@
 
-import { ServiceItemForm } from "./service-selection/ServiceItemForm"
+import { ServiceItemType } from "@/components/work-orders/types"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ServiceItemType } from "@/components/work-orders/types"
 import { useServiceData } from "./service-selection/useServiceData"
+import { ServiceItem } from "./service-selection/ServiceItem"
 
 type ServiceSelectionFieldProps = {
   services: ServiceItemType[]
@@ -28,6 +28,15 @@ export function ServiceSelectionField({ services = [], onServicesChange, disable
       [field]: value
     };
     onServicesChange(updatedServices);
+
+    // Log the update for debugging
+    console.log('Service update:', {
+      index,
+      field,
+      value,
+      updatedService: updatedServices[index],
+      allServices: updatedServices
+    });
   };
 
   const handleAddService = () => {
@@ -61,7 +70,7 @@ export function ServiceSelectionField({ services = [], onServicesChange, disable
       <ScrollArea className="h-[calc(100vh-20rem)]">
         <div className="space-y-4">
           {services.map((service, index) => (
-            <ServiceItemForm
+            <ServiceItem
               key={index}
               index={index}
               item={service}
