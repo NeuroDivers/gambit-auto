@@ -28,10 +28,13 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
   const [open, setOpen] = React.useState(false);
 
   useEffect(() => {
+    if (item.service_name) {
+      setIsExpanded(true);
+    }
     return () => {
       mounted.current = false;
     };
-  }, []);
+  }, [item.service_name]);
 
   const handleServiceSelect = React.useCallback((currentValue: string) => {
     if (!mounted.current) return;
@@ -41,17 +44,18 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     if (selectedService) {
       console.log('Selected service:', selectedService);
 
-      // Update service_id first
-      onUpdate(index, 'service_id', selectedService.id);
+      // Batch update all fields
+      const updates = [
+        { field: 'service_id', value: selectedService.id },
+        { field: 'service_name', value: selectedService.name },
+        { field: 'unit_price', value: selectedService.price || 0 },
+        { field: 'quantity', value: 1 }
+      ];
 
-      // Update service_name
-      onUpdate(index, 'service_name', selectedService.name);
-
-      // Update price
-      onUpdate(index, 'unit_price', selectedService.price || 0);
-
-      // Set initial quantity
-      onUpdate(index, 'quantity', 1);
+      // Apply all updates synchronously
+      updates.forEach(({ field, value }) => {
+        onUpdate(index, field as keyof ServiceItemType, value);
+      });
 
       setIsExpanded(true);
       setOpen(false);
