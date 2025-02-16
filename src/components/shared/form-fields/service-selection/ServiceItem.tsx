@@ -49,10 +49,6 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     }
   }, [item.service_id, services]);
 
-  useEffect(() => {
-    setPriceInput(item.unit_price?.toString() || '');
-  }, [item.unit_price]);
-
   const handleServiceSelect = React.useCallback((currentValue: string) => {
     if (!mounted.current) return;
 
@@ -62,23 +58,20 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
       console.log('Selected service:', newSelectedService);
 
       setSelectedService(newSelectedService);
+      setOpen(false);
 
       const updates: Partial<ServiceItemType> = {
         service_id: newSelectedService.id,
         service_name: newSelectedService.name,
-        quantity: 1
+        quantity: 1,
+        unit_price: newSelectedService.price || 0
       };
 
-      // Only set the unit_price if there isn't one already or if the current one is 0
-      if (!item.unit_price || item.unit_price === 0) {
-        updates.unit_price = newSelectedService.price || 0;
-        setPriceInput((newSelectedService.price || 0).toString());
-      }
-
+      setPriceInput((newSelectedService.price || 0).toString());
       onUpdate(index, updates);
       setIsExpanded(true);
     }
-  }, [services, index, onUpdate, item.unit_price]);
+  }, [services, index, onUpdate, setOpen]);
 
   const handleQuantityChange = (value: number) => {
     if (!mounted.current) return;
@@ -91,7 +84,7 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     const value = e.target.value;
     setPriceInput(value);
     
-    if (value === '' || value === '.') {
+    if (value === '') {
       onUpdate(index, { unit_price: 0 });
       return;
     }

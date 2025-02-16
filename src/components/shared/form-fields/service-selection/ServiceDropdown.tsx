@@ -64,7 +64,7 @@ export function ServiceDropdown({
                   {typeServices.map((service) => (
                     <CommandItem
                       key={service.id}
-                      value={service.name.toLowerCase()}
+                      value={service.id}
                       onSelect={() => {
                         handleServiceSelect(service.id);
                         setOpen(false);
