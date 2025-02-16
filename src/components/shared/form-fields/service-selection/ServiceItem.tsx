@@ -55,8 +55,9 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
       });
 
       setIsExpanded(true);
-      setOpen(false);
-
+      // Don't automatically close the dropdown
+      // This allows users to make another selection if needed
+      
       // Log final state for verification
       console.log('Updated service fields:', {
         service_id: selectedService.id,
