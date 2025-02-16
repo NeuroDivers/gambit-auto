@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -25,13 +25,13 @@ interface ServiceItemProps {
 
 export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: ServiceItemProps) {
   const mounted = useRef(true);
-  const [isExpanded, setIsExpanded] = React.useState(false);
-  const [open, setOpen] = React.useState(false);
-  const [selectedService, setSelectedService] = React.useState<any>(
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<any>(
     services.find(s => s.id === item.service_id)
   );
-  const [localQuantity, setLocalQuantity] = React.useState(item.quantity?.toString() || "1");
-  const [localPrice, setLocalPrice] = React.useState(item.unit_price?.toString() || "0");
+  const [localQuantity, setLocalQuantity] = useState(item.quantity?.toString() || "1");
+  const [localPrice, setLocalPrice] = useState(item.unit_price?.toString() || "0");
 
   useEffect(() => {
     if (item.service_name) {
@@ -48,14 +48,6 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
       setSelectedService(service);
     }
   }, [item.service_id, services]);
-
-  useEffect(() => {
-    setLocalQuantity(item.quantity?.toString() || "1");
-  }, [item.quantity]);
-
-  useEffect(() => {
-    setLocalPrice(item.unit_price?.toString() || "0");
-  }, [item.unit_price]);
 
   const handleServiceSelect = React.useCallback((currentValue: string) => {
     if (!mounted.current) return;
@@ -88,7 +80,6 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
   const handleQuantityBlur = () => {
     if (!mounted.current) return;
     const value = parseInt(localQuantity) || 1;
-    setLocalQuantity(value.toString());
     if (value !== item.quantity) {
       console.log('Quantity changed to:', value);
       onUpdate(index, { quantity: value });
@@ -104,7 +95,6 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
   const handlePriceBlur = () => {
     if (!mounted.current) return;
     const value = parseFloat(localPrice) || 0;
-    setLocalPrice(value.toFixed(2));
     if (value !== item.unit_price) {
       console.log('Price changed to:', value);
       onUpdate(index, { unit_price: value });
