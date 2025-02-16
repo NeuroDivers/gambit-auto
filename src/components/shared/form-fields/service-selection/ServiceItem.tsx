@@ -1,116 +1,141 @@
-import React from 'react';
-import { FormField, FormItem, FormControl, FormLabel } from "@/components/ui/form"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { ServiceItemType } from "@/components/work-orders/types"
-import { UseFormReturn } from "react-hook-form"
 
-type ServiceItemProps = {
-  form: UseFormReturn<any>
-  service: {
-    id: string
-    name: string
-    price: number | null
-  }
-  field: any
+import React, { useRef, useEffect } from 'react';
+import { Button } from "@/components/ui/button"
+import { X } from "lucide-react"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { ServiceItemType } from "@/components/work-orders/types"
+import { ServiceDropdown } from "./ServiceDropdown"
+import { ServiceQuantityPrice } from "./ServiceQuantityPrice"
+import { ServiceDescription } from "./ServiceDescription"
+import { ServicesByType } from "./types"
+
+interface ServiceItemProps {
+  index: number;
+  item: ServiceItemType;
+  services: any[];
+  onUpdate: (index: number, field: keyof ServiceItemType, value: any) => void;
+  onRemove: () => void;
 }
 
-export function ServiceItem({ form, service, field }: ServiceItemProps) {
-  const serviceItems = field.value || []
-  const isSelected = serviceItems.some(
-    (item: any) => item.service_name === service.name
-  )
+export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: ServiceItemProps) {
+  const mounted = useRef(true);
+  const [isExpanded, setIsExpanded] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
+  const [selectedServiceName, setSelectedServiceName] = React.useState(item.service_name || "");
 
-  const selectedItem = serviceItems.find(
-    (item: any) => item.service_name === service.name
-  )
+  useEffect(() => {
+    if (item.service_name) {
+      setSelectedServiceName(item.service_name);
+      setIsExpanded(true);
+    }
+    
+    return () => {
+      mounted.current = false;
+    };
+  }, [item.service_name]);
+
+  const handleServiceSelect = React.useCallback((currentValue: string) => {
+    if (!mounted.current) return;
+
+    const selectedService = services.find(service => service.id === currentValue);
+    
+    if (selectedService) {
+      console.log('Selected service:', selectedService);
+
+      // Update all relevant fields
+      onUpdate(index, "service_id", selectedService.id);
+      onUpdate(index, "service_name", selectedService.name);
+      
+      // Update the unit price if it exists in the selected service
+      const currentUnitPrice = item.unit_price || 0;
+      const newUnitPrice = selectedService.price !== null && selectedService.price !== undefined 
+        ? selectedService.price 
+        : currentUnitPrice;
+      
+      onUpdate(index, "unit_price", newUnitPrice);
+
+      // Update the quantity if not set
+      if (!item.quantity) {
+        onUpdate(index, "quantity", 1);
+      }
+
+      setSelectedServiceName(selectedService.name);
+      setIsExpanded(true);
+      setOpen(false);
+    }
+  }, [services, index, onUpdate, item.unit_price, item.quantity]);
+
+  // Group services by hierarchy type for better organization
+  const servicesByType = services.reduce<ServicesByType>((acc, service) => {
+    const type = service.hierarchy_type || 'Other';
+    if (!acc[type]) acc[type] = [];
+    acc[type].push({
+      ...service,
+      // Sort by name within each group
+      sortKey: service.name.toLowerCase()
+    });
+    return acc;
+  }, {});
+
+  // Sort services within each group
+  Object.keys(servicesByType).forEach(type => {
+    servicesByType[type].sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+  });
+
+  const selectedService = services.find(s => s.id === item.service_id);
 
   return (
-    <div className="space-y-2">
-      <FormField
-        control={form.control}
-        name="quote_items"
-        render={() => (
-          <FormItem
-            className="flex flex-col space-y-3 rounded-md border border-border/5 p-3 bg-[#221F26]/60 hover:bg-[#2A2732]/60 transition-colors"
-          >
-            <div className="flex items-center space-x-3">
-              <FormControl>
-                <Checkbox
-                  id={`service-${service.id}`}
-                  checked={isSelected}
-                  onCheckedChange={(checked) => {
-                    const currentItems = field.value || []
-                    if (checked) {
-                      field.onChange([
-                        ...currentItems,
-                        {
-                          service_name: service.name,
-                          quantity: 1,
-                          unit_price: service.price || 0
-                        }
-                      ])
-                    } else {
-                      field.onChange(
-                        currentItems.filter(
-                          (item: any) => item.service_name !== service.name
-                        )
-                      )
-                    }
-                  }}
-                  className="border-primary/50 data-[state=checked]:bg-primary/70 data-[state=checked]:text-primary-foreground"
-                />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel htmlFor={`service-${service.id}`} className="text-white/80">
-                  {service.name}
-                </FormLabel>
-              </div>
+    <div className="space-y-4 p-4 border rounded-lg relative bg-card">
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={onRemove}
+        className="absolute right-2 top-2"
+      >
+        <X className="h-4 w-4" />
+      </Button>
+
+      <Accordion
+        type="single"
+        collapsible
+        value={isExpanded ? "service-details" : ""}
+        onValueChange={(value) => setIsExpanded(value === "service-details")}
+      >
+        <AccordionItem value="service-details" className="border-none">
+          <AccordionTrigger className="py-2">
+            {selectedServiceName || "Select a Service"}
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-4">
+              <ServiceDropdown
+                selectedServiceName={selectedServiceName}
+                servicesByType={servicesByType}
+                open={open}
+                setOpen={setOpen}
+                handleServiceSelect={handleServiceSelect}
+                serviceId={item.service_id}
+              />
+
+              <ServiceQuantityPrice
+                index={index}
+                item={item}
+                onUpdate={onUpdate}
+                mounted={mounted}
+              />
+
+              <ServiceDescription 
+                description={selectedService?.description}
+              />
             </div>
-            {isSelected && (
-              <div className="pl-7 space-y-2">
-                <Input
-                  id={`quantity-${service.id}`}
-                  type="number"
-                  min="1"
-                  value={selectedItem?.quantity || 1}
-                  onChange={(e) => {
-                    const quantity = parseInt(e.target.value)
-                    const currentItems = field.value || []
-                    const updatedItems = currentItems.map((item: any) =>
-                      item.service_name === service.name
-                        ? { ...item, quantity }
-                        : item
-                    )
-                    field.onChange(updatedItems)
-                  }}
-                  className="w-32"
-                  placeholder="Quantity"
-                />
-                <Input
-                  id={`price-${service.id}`}
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={selectedItem?.unit_price || service.price || 0}
-                  onChange={(e) => {
-                    const unit_price = parseFloat(e.target.value)
-                    const currentItems = field.value || []
-                    const updatedItems = currentItems.map((item: any) =>
-                      item.service_name === service.name
-                        ? { ...item, unit_price }
-                        : item
-                    )
-                    field.onChange(updatedItems)
-                  }}
-                  className="w-32"
-                  placeholder="Price"
-                />
-              </div>
-            )}
-          </FormItem>
-        )}
-      />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
-  )
+  );
 }
