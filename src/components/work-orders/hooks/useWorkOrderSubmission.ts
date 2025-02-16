@@ -1,11 +1,14 @@
+
 import { WorkOrderFormValues } from "../types"
 import { supabase } from "@/integrations/supabase/client"
 import { useQueryClient } from "@tanstack/react-query"
 import { useToast } from "@/hooks/use-toast"
+import { useNavigate } from "react-router-dom"
 
 export function useWorkOrderSubmission() {
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   const submitWorkOrder = async (values: WorkOrderFormValues, workOrderId?: string) => {
     try {
@@ -54,6 +57,8 @@ export function useWorkOrderSubmission() {
         description: workOrderId ? "Work order updated successfully" : "Work order created successfully",
       })
 
+      // Navigate back to work orders page after successful submission
+      navigate("/work-orders")
       return true
     } catch (error: any) {
       console.error("Error saving work order:", error)

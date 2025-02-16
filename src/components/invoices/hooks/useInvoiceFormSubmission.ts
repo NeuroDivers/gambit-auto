@@ -1,129 +1,153 @@
 
-import { useToast } from "@/hooks/use-toast"
+import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
-
-type UseInvoiceFormSubmissionProps = {
-  onSuccess?: () => void
-  selectedWorkOrderId: string
-  customerFirstName: string
-  customerLastName: string
-  customerEmail: string
-  customerPhone: string
-  customerAddress: string
-  vehicleMake: string
-  vehicleModel: string
-  vehicleYear: number
-  vehicleVin: string
-  invoiceItems: any[]
-  businessProfile: any
-  businessTaxes: any[]
-}
+import { useToast } from "@/hooks/use-toast"
+import { useQueryClient } from "@tanstack/react-query"
+import { useNavigate } from "react-router-dom"
 
 export function useInvoiceFormSubmission({
-  onSuccess,
-  selectedWorkOrderId,
-  customerFirstName,
-  customerLastName,
-  customerEmail,
-  customerPhone,
-  customerAddress,
-  vehicleMake,
-  vehicleModel,
-  vehicleYear,
-  vehicleVin,
+  invoiceId,
+  customerInfo,
+  vehicleInfo,
   invoiceItems,
+  notes,
+  status,
+  workOrderId,
+  setWorkOrderId,
   businessProfile,
-  businessTaxes
-}: UseInvoiceFormSubmissionProps) {
+  businessTaxes,
+  onSuccess,
+}: any) {
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsSubmitting(true)
 
     try {
-      let workOrderId = selectedWorkOrderId
-      
-      if (!workOrderId) {
-        const { data: workOrder, error: workOrderError } = await supabase
-          .from("work_orders")
-          .insert({
-            first_name: customerFirstName,
-            last_name: customerLastName,
-            email: customerEmail,
-            phone_number: customerPhone,
-            contact_preference: "email",
-            vehicle_make: vehicleMake,
-            vehicle_model: vehicleModel,
-            vehicle_year: vehicleYear,
-            vehicle_serial: vehicleVin,
-            status: "completed"
-          })
-          .select()
-          .single()
+      const subtotal = invoiceItems.reduce((acc: number, item: any) => {
+        return acc + (item.quantity * item.unit_price)
+      }, 0)
 
-        if (workOrderError) throw workOrderError
-        workOrderId = workOrder.id
+      const taxes = businessTaxes.reduce((acc: number, tax: any) => {
+        return acc + (subtotal * (tax.rate / 100))
+      }, 0)
+
+      const total = subtotal + taxes
+
+      const invoiceData = {
+        customer_first_name: customerInfo.firstName,
+        customer_last_name: customerInfo.lastName,
+        customer_email: customerInfo.email,
+        customer_phone: customerInfo.phone,
+        customer_address: customerInfo.address,
+        vehicle_make: vehicleInfo.make,
+        vehicle_model: vehicleInfo.model,
+        vehicle_year: vehicleInfo.year,
+        vehicle_vin: vehicleInfo.vin,
+        subtotal,
+        tax: taxes,
+        total,
+        notes,
+        status,
+        work_order_id: workOrderId,
+        business_profile_id: businessProfile?.id,
       }
 
-      const { data: invoice, error: invoiceError } = await supabase
-        .rpc('create_invoice_from_work_order', {
-          work_order_id: workOrderId
-        })
+      if (invoiceId) {
+        // Update existing invoice
+        const { error: updateError } = await supabase
+          .from("invoices")
+          .update(invoiceData)
+          .eq("id", invoiceId)
 
-      if (invoiceError) throw invoiceError
+        if (updateError) throw updateError
 
-      const { error: updateError } = await supabase
-        .from("invoices")
-        .update({
-          customer_first_name: customerFirstName,
-          customer_last_name: customerLastName,
-          customer_email: customerEmail,
-          customer_address: customerAddress,
-          vehicle_make: vehicleMake,
-          vehicle_model: vehicleModel,
-          vehicle_year: vehicleYear,
-          vehicle_vin: vehicleVin,
-          company_name: businessProfile?.company_name || null,
-          company_phone: businessProfile?.phone_number || null,
-          company_email: businessProfile?.email || null,
-          company_address: businessProfile?.address || null,
-          gst_number: businessTaxes?.find(tax => tax.tax_type === 'GST')?.tax_number || null,
-          qst_number: businessTaxes?.find(tax => tax.tax_type === 'QST')?.tax_number || null,
-        })
-        .eq("id", invoice)
+        // Update invoice items
+        await supabase
+          .from("invoice_items")
+          .delete()
+          .eq("invoice_id", invoiceId)
 
-      if (updateError) throw updateError
-
-      if (invoiceItems.length > 0) {
         const { error: itemsError } = await supabase
           .from("invoice_items")
           .insert(
-            invoiceItems.map(item => ({
-              invoice_id: invoice,
+            invoiceItems.map((item: any) => ({
+              invoice_id: invoiceId,
               service_id: item.service_id,
               package_id: item.package_id,
+              service_name: item.service_name,
+              description: item.description,
               quantity: item.quantity,
               unit_price: item.unit_price,
             }))
           )
 
         if (itemsError) throw itemsError
+
+        toast({
+          title: "Success",
+          description: "Invoice updated successfully",
+        })
+      } else {
+        // Create new invoice
+        const { data: invoice, error: createError } = await supabase
+          .from("invoices")
+          .insert(invoiceData)
+          .select()
+          .single()
+
+        if (createError) throw createError
+
+        const { error: itemsError } = await supabase
+          .from("invoice_items")
+          .insert(
+            invoiceItems.map((item: any) => ({
+              invoice_id: invoice.id,
+              service_id: item.service_id,
+              package_id: item.package_id,
+              service_name: item.service_name,
+              description: item.description,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+            }))
+          )
+
+        if (itemsError) throw itemsError
+
+        toast({
+          title: "Success",
+          description: "Invoice created successfully",
+        })
       }
 
-      toast({
-        title: "Success",
-        description: "Invoice created successfully",
-      })
+      // Invalidate queries
+      await queryClient.invalidateQueries({ queryKey: ["invoices"] })
+      
+      if (workOrderId) {
+        setWorkOrderId("")
+      }
 
-      onSuccess?.()
+      if (onSuccess) {
+        onSuccess()
+      }
+
+      // Navigate back to invoices page after successful submission
+      navigate("/invoices")
     } catch (error: any) {
+      console.error("Error saving invoice:", error)
       toast({
-        title: "Error",
-        description: error.message,
         variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to save invoice",
       })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
-  return { handleSubmit }
+  return { handleSubmit, isSubmitting }
 }
