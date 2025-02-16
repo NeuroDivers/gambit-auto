@@ -1,3 +1,4 @@
+
 import { Invoice } from '../types'
 import { Tables } from '@/integrations/supabase/types'
 import { useQuery } from '@tanstack/react-query'
@@ -40,7 +41,27 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
   return (
     <div className="w-full bg-white p-4 md:p-8 rounded-lg shadow-sm space-y-6 md:space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start gap-6">
-        <InvoiceBusinessInfo businessProfile={businessProfile} />
+        <div className="flex items-start gap-6 w-full md:w-auto">
+          {businessProfile.logo_url && (
+            <div className="flex-shrink-0">
+              <img 
+                src={businessProfile.logo_url} 
+                alt="Business Logo" 
+                className="h-24 w-24 md:h-32 md:w-32 object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+          <div className="space-y-1 flex-grow md:flex-grow-0">
+            <h1 className="text-2xl md:text-3xl font-bold text-purple-600">{businessProfile.company_name}</h1>
+            <p className="text-sm md:text-base text-gray-600 whitespace-pre-wrap max-w-[300px]">{businessProfile.address}</p>
+            <p className="text-sm md:text-base text-gray-600">{businessProfile.phone_number}</p>
+            <p className="text-sm md:text-base text-gray-600 break-words">{businessProfile.email}</p>
+          </div>
+        </div>
         <InvoiceHeader invoice={invoice} />
       </div>
 
