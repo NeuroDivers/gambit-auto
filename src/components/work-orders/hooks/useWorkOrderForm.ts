@@ -93,7 +93,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
           return
         }
 
-        // Then fetch the services with explicit relationship specified
+        // Then fetch the services with the correct relationship specified
         const { data: servicesData, error: servicesError } = await supabase
           .from('work_order_services')
           .select(`
@@ -101,7 +101,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
             service_id,
             quantity,
             unit_price,
-            service:service_types!inner (
+            service:service_types!work_order_services_service_id_fkey (
               id,
               name,
               price
@@ -142,7 +142,13 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
 
   const onSubmit = async (values: WorkOrderFormValues) => {
     console.log("Submitting work order with values:", values)
-    const success = await submitWorkOrder(values, workOrder?.id)
+    // Filter out any service items with empty service_id
+    const validServiceItems = values.service_items.filter(item => item.service_id && item.service_id.trim() !== "")
+    const valuesToSubmit = {
+      ...values,
+      service_items: validServiceItems
+    }
+    const success = await submitWorkOrder(valuesToSubmit, workOrder?.id)
     if (success) {
       onSuccess?.()
     }
