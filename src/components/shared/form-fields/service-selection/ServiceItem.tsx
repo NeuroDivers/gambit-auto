@@ -31,7 +31,7 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
   const [selectedService, setSelectedService] = React.useState<any>(
     services.find(s => s.id === item.service_id)
   );
-  const [priceInput, setPriceInput] = React.useState('0');
+  const [priceInput, setPriceInput] = React.useState(item.unit_price?.toString() || '0');
 
   useEffect(() => {
     if (item.service_name) {
@@ -50,7 +50,6 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
   }, [item.service_id, services]);
 
   useEffect(() => {
-    // Update price input when item.unit_price changes
     if (item.unit_price !== undefined) {
       setPriceInput(item.unit_price.toString());
     }
@@ -67,14 +66,19 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
       setSelectedService(newSelectedService);
       setOpen(false);
 
+      // Create updates object
       const updates: Partial<ServiceItemType> = {
         service_id: newSelectedService.id,
         service_name: newSelectedService.name,
-        quantity: 1,
-        unit_price: newSelectedService.price || 0
+        quantity: 1
       };
 
-      setPriceInput((newSelectedService.price || 0).toString());
+      // Only update price if it exists in the selected service
+      if (newSelectedService.price !== null && newSelectedService.price !== undefined) {
+        updates.unit_price = newSelectedService.price;
+        setPriceInput(newSelectedService.price.toString());
+      }
+
       onUpdate(index, updates);
       setIsExpanded(true);
     }
