@@ -4,12 +4,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogClose
 } from "@/components/ui/dialog"
 import { useState } from "react"
 import { WorkOrderForm } from "./WorkOrderForm"
-import { X } from "lucide-react"
-import { Button } from "@/components/ui/button"
 
 type CreateWorkOrderDialogProps = {
   defaultStartTime?: Date
@@ -27,13 +24,7 @@ export function CreateWorkOrderDialog({ defaultStartTime, open: controlledOpen, 
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-4xl h-[90vh] overflow-y-auto">
-        <DialogClose className="fixed top-4 right-4 z-[200] rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-          <Button variant="destructive" size="icon">
-            <X className="h-5 w-5" />
-            <span className="sr-only">Close</span>
-          </Button>
-        </DialogClose>
+      <DialogContent className="max-w-4xl h-[90vh] overflow-y-auto relative">
         <DialogHeader>
           <DialogTitle>Create Work Order</DialogTitle>
         </DialogHeader>
