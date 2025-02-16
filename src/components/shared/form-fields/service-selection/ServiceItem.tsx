@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/accordion"
 import { ServiceItemType } from "@/components/work-orders/types"
 import { ServiceDropdown } from "./ServiceDropdown"
-import { ServiceQuantityPrice } from "./ServiceQuantityPrice"
 import { ServiceDescription } from "./ServiceDescription"
 import { ServicesByType } from "./types"
 
@@ -31,6 +30,8 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
   const [selectedService, setSelectedService] = React.useState<any>(
     services.find(s => s.id === item.service_id)
   );
+  const [localQuantity, setLocalQuantity] = React.useState(item.quantity?.toString() || "1");
+  const [localPrice, setLocalPrice] = React.useState(item.unit_price?.toString() || "0");
 
   useEffect(() => {
     if (item.service_name) {
@@ -47,6 +48,14 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
       setSelectedService(service);
     }
   }, [item.service_id, services]);
+
+  useEffect(() => {
+    setLocalQuantity(item.quantity?.toString() || "1");
+  }, [item.quantity]);
+
+  useEffect(() => {
+    setLocalPrice(item.unit_price?.toString() || "0");
+  }, [item.unit_price]);
 
   const handleServiceSelect = React.useCallback((currentValue: string) => {
     if (!mounted.current) return;
@@ -72,18 +81,34 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!mounted.current) return;
-    const value = parseInt(e.target.value) || 1;
-    console.log('Quantity changed to:', value);
-    onUpdate(index, { quantity: value });
+    const value = e.target.value;
+    setLocalQuantity(value);
+  };
+
+  const handleQuantityBlur = () => {
+    if (!mounted.current) return;
+    const value = parseInt(localQuantity) || 1;
+    setLocalQuantity(value.toString());
+    if (value !== item.quantity) {
+      console.log('Quantity changed to:', value);
+      onUpdate(index, { quantity: value });
+    }
   };
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!mounted.current) return;
-    
     const value = e.target.value;
-    const numericValue = parseFloat(value) || 0;
-    console.log('Price input changed to:', numericValue);
-    onUpdate(index, { unit_price: numericValue });
+    setLocalPrice(value);
+  };
+
+  const handlePriceBlur = () => {
+    if (!mounted.current) return;
+    const value = parseFloat(localPrice) || 0;
+    setLocalPrice(value.toFixed(2));
+    if (value !== item.unit_price) {
+      console.log('Price changed to:', value);
+      onUpdate(index, { unit_price: value });
+    }
   };
 
   const servicesByType = services.reduce<ServicesByType>((acc, service) => {
@@ -135,10 +160,12 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
                   <Label htmlFor={`quantity-${index}`}>Quantity</Label>
                   <Input
                     id={`quantity-${index}`}
-                    type="number"
-                    min={1}
-                    value={item.quantity || 1}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={localQuantity}
                     onChange={handleQuantityChange}
+                    onBlur={handleQuantityBlur}
                     className="mt-1"
                   />
                 </div>
@@ -146,11 +173,12 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
                   <Label htmlFor={`price-${index}`}>Unit Price</Label>
                   <Input
                     id={`price-${index}`}
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    value={item.unit_price || 0}
+                    type="text"
+                    inputMode="decimal"
+                    pattern="[0-9]*\.?[0-9]*"
+                    value={localPrice}
                     onChange={handlePriceChange}
+                    onBlur={handlePriceBlur}
                     className="mt-1"
                   />
                 </div>
