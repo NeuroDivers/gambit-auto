@@ -26,18 +26,12 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
   const mounted = useRef(true);
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [open, setOpen] = React.useState(false);
-  const [selectedServiceName, setSelectedServiceName] = React.useState(item.service_name || "");
 
   useEffect(() => {
-    if (item.service_name) {
-      setSelectedServiceName(item.service_name);
-      setIsExpanded(true);
-    }
-    
     return () => {
       mounted.current = false;
     };
-  }, [item.service_name]);
+  }, []);
 
   const handleServiceSelect = React.useCallback((currentValue: string) => {
     if (!mounted.current) return;
@@ -47,30 +41,30 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     if (selectedService) {
       console.log('Selected service:', selectedService);
 
-      // Create an updated service object
-      const updatedService = {
-        ...item,
-        service_id: selectedService.id,
-        service_name: selectedService.name,
-        unit_price: selectedService.price || 0,
-        quantity: 1
-      };
+      // Update service_id first
+      onUpdate(index, 'service_id', selectedService.id);
 
-      // Update all fields at once to maintain consistency
-      Object.entries(updatedService).forEach(([key, value]) => {
-        if (key !== 'id') { // Skip the id field
-          onUpdate(index, key as keyof ServiceItemType, value);
-        }
-      });
+      // Update service_name
+      onUpdate(index, 'service_name', selectedService.name);
 
-      setSelectedServiceName(selectedService.name);
+      // Update price
+      onUpdate(index, 'unit_price', selectedService.price || 0);
+
+      // Set initial quantity
+      onUpdate(index, 'quantity', 1);
+
       setIsExpanded(true);
       setOpen(false);
 
       // Log final state for verification
-      console.log('Updated service fields:', updatedService);
+      console.log('Updated service fields:', {
+        service_id: selectedService.id,
+        service_name: selectedService.name,
+        unit_price: selectedService.price || 0,
+        quantity: 1
+      });
     }
-  }, [services, index, onUpdate, item]);
+  }, [services, index, onUpdate]);
 
   // Group services by hierarchy type for better organization
   const servicesByType = services.reduce<ServicesByType>((acc, service) => {
@@ -107,12 +101,12 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
       >
         <AccordionItem value="service-details" className="border-none">
           <AccordionTrigger className="py-2">
-            {selectedServiceName || "Select a Service"}
+            {item.service_name || "Select a Service"}
           </AccordionTrigger>
           <AccordionContent>
             <div className="space-y-4">
               <ServiceDropdown
-                selectedServiceName={selectedServiceName}
+                selectedServiceName={item.service_name || ""}
                 servicesByType={servicesByType}
                 open={open}
                 setOpen={setOpen}
