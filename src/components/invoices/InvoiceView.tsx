@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form"
 import { EditInvoiceForm } from './sections/EditInvoiceForm'
 import { InvoiceFormValues } from "./types"
@@ -28,7 +27,6 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
   const updateInvoiceMutation = useInvoiceMutation(invoiceId)
   const printRef = useRef<HTMLDivElement>(null)
 
-  // Check if user is admin
   const { data: userRole } = useQuery({
     queryKey: ["user-role"],
     queryFn: async () => {
@@ -63,7 +61,6 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
 
   const isAdmin = userRole === 'administrator'
 
-  // Fetch business profile data
   const { data: businessProfile, isLoading: isBusinessLoading } = useQuery({
     queryKey: ["business-profile"],
     queryFn: async () => {
@@ -83,7 +80,7 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
     onAfterPrint: () => toast.success("Invoice printed successfully"),
     onPrintError: () => toast.error("Failed to print invoice"),
     pageStyle: "@page { size: auto; margin: 20mm; }",
-    content: () => printRef.current,
+    contentRef: printRef,
   })
 
   const form = useForm<InvoiceFormValues>({
@@ -105,7 +102,6 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
 
   useEffect(() => {
     if (invoice) {
-      // Fetch invoice items
       const fetchInvoiceItems = async () => {
         const { data: items, error } = await supabase
           .from('invoice_items')
@@ -117,7 +113,6 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
           return
         }
 
-        // Reset form with all invoice data including items
         form.reset({
           notes: invoice.notes || '',
           status: invoice.status || 'draft',
