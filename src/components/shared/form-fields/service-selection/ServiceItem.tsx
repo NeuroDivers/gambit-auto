@@ -47,44 +47,37 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     if (selectedService) {
       console.log('Selected service:', selectedService);
 
-      // Update all relevant fields
-      onUpdate(index, "service_id", selectedService.id);
-      onUpdate(index, "service_name", selectedService.name);
-      
-      // Update the unit price if it exists in the selected service
-      const currentUnitPrice = item.unit_price || 0;
-      const newUnitPrice = selectedService.price !== null && selectedService.price !== undefined 
-        ? selectedService.price 
-        : currentUnitPrice;
-      
-      onUpdate(index, "unit_price", newUnitPrice);
+      const serviceData = {
+        service_id: selectedService.id,
+        service_name: selectedService.name,
+        unit_price: selectedService.price || 0,
+        quantity: 1
+      };
 
-      // Update the quantity if not set
-      if (!item.quantity) {
-        onUpdate(index, "quantity", 1);
-      }
+      // Update all fields at once
+      Object.entries(serviceData).forEach(([field, value]) => {
+        onUpdate(index, field as keyof ServiceItemType, value);
+      });
 
       setSelectedServiceName(selectedService.name);
       setIsExpanded(true);
       setOpen(false);
+
+      console.log('Updated service data:', serviceData);
     }
-  }, [services, index, onUpdate, item.unit_price, item.quantity]);
+  }, [services, index, onUpdate]);
 
   // Group services by hierarchy type for better organization
   const servicesByType = services.reduce<ServicesByType>((acc, service) => {
     const type = service.hierarchy_type || 'Other';
     if (!acc[type]) acc[type] = [];
-    acc[type].push({
-      ...service,
-      // Sort by name within each group
-      sortKey: service.name.toLowerCase()
-    });
+    acc[type].push(service);
     return acc;
   }, {});
 
-  // Sort services within each group
+  // Sort services within each type by name
   Object.keys(servicesByType).forEach(type => {
-    servicesByType[type].sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+    servicesByType[type].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
   });
 
   const selectedService = services.find(s => s.id === item.service_id);

@@ -12,11 +12,28 @@ export function useWorkOrderSubmission() {
     try {
       console.log("Submitting work order with values:", values)
       console.log("Service items to submit:", values.service_items)
+
+      // Validate service items
+      const validServices = values.service_items.filter(item => 
+        item.service_id && 
+        item.service_id.trim() !== "" && 
+        item.service_name && 
+        item.service_name.trim() !== ""
+      );
+
+      if (validServices.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Please select at least one service",
+        })
+        return false;
+      }
       
       if (workOrderId) {
-        await updateWorkOrder(workOrderId, values)
+        await updateWorkOrder(workOrderId, { ...values, service_items: validServices })
       } else {
-        await createWorkOrder(values)
+        await createWorkOrder({ ...values, service_items: validServices })
       }
 
       await queryClient.invalidateQueries({ queryKey: ["workOrder", workOrderId] })
