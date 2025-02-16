@@ -47,27 +47,30 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     if (selectedService) {
       console.log('Selected service:', selectedService);
 
-      // First update service_id and service_name together
-      onUpdate(index, 'service_id', selectedService.id);
-      onUpdate(index, 'service_name', selectedService.name);
-      
-      // Then update price and quantity
-      onUpdate(index, 'unit_price', selectedService.price || 0);
-      onUpdate(index, 'quantity', 1);
+      // Create an updated service object
+      const updatedService = {
+        ...item,
+        service_id: selectedService.id,
+        service_name: selectedService.name,
+        unit_price: selectedService.price || 0,
+        quantity: 1
+      };
+
+      // Update all fields at once to maintain consistency
+      Object.entries(updatedService).forEach(([key, value]) => {
+        if (key !== 'id') { // Skip the id field
+          onUpdate(index, key as keyof ServiceItemType, value);
+        }
+      });
 
       setSelectedServiceName(selectedService.name);
       setIsExpanded(true);
       setOpen(false);
 
       // Log final state for verification
-      console.log('Updated service fields:', {
-        service_id: selectedService.id,
-        service_name: selectedService.name,
-        unit_price: selectedService.price || 0,
-        quantity: 1
-      });
+      console.log('Updated service fields:', updatedService);
     }
-  }, [services, index, onUpdate]);
+  }, [services, index, onUpdate, item]);
 
   // Group services by hierarchy type for better organization
   const servicesByType = services.reduce<ServicesByType>((acc, service) => {
