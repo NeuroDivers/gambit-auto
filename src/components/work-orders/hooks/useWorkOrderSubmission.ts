@@ -1,4 +1,3 @@
-
 import { WorkOrderFormValues } from "../types"
 import { supabase } from "@/integrations/supabase/client"
 import { useQueryClient } from "@tanstack/react-query"
@@ -13,13 +12,24 @@ export function useWorkOrderSubmission() {
       console.log("Submitting work order with values:", values)
       console.log("Service items to submit:", values.service_items)
 
-      // Validate service items
-      const validServices = values.service_items.filter(item => 
-        item.service_id && 
-        item.service_id.trim() !== "" && 
-        item.service_name && 
-        item.service_name.trim() !== ""
-      );
+      // Create a copy of service items and sanitize them
+      const validServices = values.service_items
+        .map(item => ({
+          ...item,
+          // Ensure we keep the original service_id if it exists
+          service_id: item.service_id || '',
+          service_name: item.service_name || '',
+          quantity: item.quantity || 1,
+          unit_price: item.unit_price || 0
+        }))
+        .filter(item => 
+          item.service_id && 
+          item.service_id.trim() !== "" && 
+          item.service_name && 
+          item.service_name.trim() !== ""
+        );
+
+      console.log("Sanitized valid services:", validServices);
 
       if (validServices.length === 0) {
         toast({
