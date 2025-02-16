@@ -10,23 +10,18 @@ export function useInvoiceData(invoiceId: string | undefined) {
     queryFn: async () => {
       if (!invoiceId) throw new Error("Invoice ID is required")
 
-      // First fetch the invoice data with all related information
       const { data: invoice, error: invoiceError } = await supabase
         .from("invoices")
         .select(`
           *,
-          work_order:work_orders!inner (
-            *,
-            work_order_services (
-              id,
-              quantity,
-              unit_price,
-              service:service_types!work_order_services_service_id_fkey (
-                id,
-                name,
-                price
-              )
-            )
+          invoice_items (
+            id,
+            service_id,
+            package_id,
+            service_name,
+            description,
+            quantity,
+            unit_price
           )
         `)
         .eq("id", invoiceId)
