@@ -43,16 +43,20 @@ export function useInvoiceMutation(invoiceId?: string) {
       // Get tax rates from business_taxes table
       const { data: taxRates, error: taxError } = await supabase
         .from('business_taxes')
-        .select('tax_rate')
+        .select('tax_type, tax_rate')
 
       if (taxError) throw taxError
 
-      // Calculate total tax amount from all applicable tax rates
-      const totalTaxAmount = taxRates.reduce((total, tax) => {
-        return total + (subtotal * (tax.tax_rate / 100))
-      }, 0)
+      // Find GST and QST rates
+      const gstRate = taxRates.find(tax => tax.tax_type === 'GST')?.tax_rate || 0
+      const qstRate = taxRates.find(tax => tax.tax_type === 'QST')?.tax_rate || 0
 
-      const total = subtotal + totalTaxAmount
+      // Calculate GST and QST amounts
+      const gstAmount = subtotal * (gstRate / 100)
+      const qstAmount = subtotal * (qstRate / 100)
+
+      // Calculate total including both taxes
+      const total = subtotal + gstAmount + qstAmount
 
       // First update the invoice details
       const { error: invoiceError } = await supabase
@@ -70,7 +74,8 @@ export function useInvoiceMutation(invoiceId?: string) {
           vehicle_year: values.vehicle_year || 0,
           vehicle_vin: values.vehicle_vin || "",
           subtotal: subtotal,
-          tax_amount: totalTaxAmount,
+          gst_amount: gstAmount,
+          qst_amount: qstAmount,
           total: total
         })
         .eq('id', invoiceId)
