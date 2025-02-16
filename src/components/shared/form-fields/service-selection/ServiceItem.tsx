@@ -47,28 +47,25 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     if (selectedService) {
       console.log('Selected service:', selectedService);
 
-      const updates = [
-        { field: 'service_id' as keyof ServiceItemType, value: selectedService.id },
-        { field: 'service_name' as keyof ServiceItemType, value: selectedService.name },
-        { field: 'unit_price' as keyof ServiceItemType, value: selectedService.price || 0 },
-        { field: 'quantity' as keyof ServiceItemType, value: 1 }
-      ];
+      // Batch update all service-related fields together
+      const updates = {
+        service_id: selectedService.id,
+        service_name: selectedService.name,
+        unit_price: selectedService.price || 0,
+        quantity: 1
+      };
+
+      // Log the updates we're about to make
+      console.log('Updating service with:', updates);
 
       // Apply all updates in order
-      updates.forEach(update => {
-        onUpdate(index, update.field, update.value);
+      Object.entries(updates).forEach(([field, value]) => {
+        onUpdate(index, field as keyof ServiceItemType, value);
       });
 
       setSelectedServiceName(selectedService.name);
       setIsExpanded(true);
       setOpen(false);
-
-      console.log('Updated service item:', {
-        service_id: selectedService.id,
-        service_name: selectedService.name,
-        unit_price: selectedService.price || 0,
-        quantity: 1
-      });
     }
   }, [services, index, onUpdate]);
 
