@@ -64,7 +64,11 @@ export function ServiceDropdown({
                   {typeServices.map((service) => (
                     <CommandItem
                       key={service.id}
-                      onSelect={() => handleServiceSelect(service.id)}
+                      value={service.id}
+                      onSelect={() => {
+                        handleServiceSelect(service.id);
+                        setOpen(false);
+                      }}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center justify-between w-full">
