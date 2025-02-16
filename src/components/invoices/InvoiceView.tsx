@@ -79,7 +79,7 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
   })
 
   const handlePrint = useReactToPrint({
-    content: () => printComponentRef.current,
+    contentRef: printComponentRef,
     documentTitle: `Invoice-${invoice?.invoice_number || 'draft'}`,
     onAfterPrint: () => toast.success("Invoice printed successfully"),
     onPrintError: () => toast.error("Failed to print invoice"),
