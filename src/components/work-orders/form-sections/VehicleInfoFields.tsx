@@ -5,12 +5,14 @@ import { UseFormReturn } from "react-hook-form"
 import { useVinLookup } from "@/hooks/useVinLookup"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
+import { WorkOrderFormValues } from "../types"
 
 type VehicleInfoFieldsProps = {
-  form: UseFormReturn<any>
+  form: UseFormReturn<WorkOrderFormValues>
+  disabled?: boolean
 }
 
-export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
+export function VehicleInfoFields({ form, disabled }: VehicleInfoFieldsProps) {
   const vin = form.watch('vehicle_serial')
   const { data: vinData, isLoading: isLoadingVin } = useVinLookup(vin)
 
@@ -38,7 +40,7 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
                     placeholder="Enter vehicle make" 
                     {...field}
                     autoComplete="off"
-                    disabled={isLoadingVin}
+                    disabled={isLoadingVin || disabled}
                   />
                   {isLoadingVin && (
                     <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
@@ -62,7 +64,7 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
                     placeholder="Enter vehicle model" 
                     {...field}
                     autoComplete="off"
-                    disabled={isLoadingVin}
+                    disabled={isLoadingVin || disabled}
                   />
                   {isLoadingVin && (
                     <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
@@ -90,7 +92,7 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
                     {...field}
                     onChange={e => field.onChange(parseInt(e.target.value))}
                     autoComplete="off"
-                    disabled={isLoadingVin}
+                    disabled={isLoadingVin || disabled}
                   />
                   {isLoadingVin && (
                     <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
@@ -116,6 +118,7 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
                   placeholder="Enter vehicle VIN" 
                   {...field}
                   autoComplete="off"
+                  disabled={disabled}
                 />
               </FormControl>
               <FormMessage />

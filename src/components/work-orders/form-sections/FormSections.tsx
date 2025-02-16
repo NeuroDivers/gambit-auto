@@ -27,12 +27,12 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
   return (
     <div className="space-y-6">
       <CustomerInfoFields 
-        control={form.control} 
+        form={form}
         disabled={isSubmitting}
       />
       
       <VehicleInfoFields 
-        control={form.control} 
+        form={form}
         disabled={isSubmitting}
       />
 
@@ -43,7 +43,7 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
       />
 
       <TimeSelectionFields 
-        control={form.control}
+        form={form}
         disabled={isSubmitting}
       />
     </div>

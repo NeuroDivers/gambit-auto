@@ -4,12 +4,14 @@ import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { UseFormReturn } from "react-hook-form"
 import { Label } from "@/components/ui/label"
+import { WorkOrderFormValues } from "../types"
 
 type CustomerInfoFieldsProps = {
-  form: UseFormReturn<any>
+  form: UseFormReturn<WorkOrderFormValues>
+  disabled?: boolean
 }
 
-export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
+export function CustomerInfoFields({ form, disabled }: CustomerInfoFieldsProps) {
   return (
     <div className="grid gap-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -20,7 +22,7 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
             <FormItem>
               <FormLabel htmlFor="first_name">First Name</FormLabel>
               <FormControl>
-                <Input id="first_name" placeholder="John" autoComplete="given-name" {...field} />
+                <Input id="first_name" placeholder="John" autoComplete="given-name" {...field} disabled={disabled} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -34,7 +36,7 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
             <FormItem>
               <FormLabel htmlFor="last_name">Last Name</FormLabel>
               <FormControl>
-                <Input id="last_name" placeholder="Doe" autoComplete="family-name" {...field} />
+                <Input id="last_name" placeholder="Doe" autoComplete="family-name" {...field} disabled={disabled} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -50,7 +52,7 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
             <FormItem>
               <FormLabel htmlFor="email">Email</FormLabel>
               <FormControl>
-                <Input id="email" type="email" placeholder="john@example.com" autoComplete="email" {...field} />
+                <Input id="email" type="email" placeholder="john@example.com" autoComplete="email" {...field} disabled={disabled} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -64,7 +66,7 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
             <FormItem>
               <FormLabel htmlFor="phone_number">Phone Number</FormLabel>
               <FormControl>
-                <Input id="phone_number" placeholder="(555) 555-5555" autoComplete="tel" {...field} />
+                <Input id="phone_number" placeholder="(555) 555-5555" autoComplete="tel" {...field} disabled={disabled} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -85,6 +87,7 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
                 defaultValue={field.value}
                 className="flex space-x-4"
                 name="contact_preference"
+                disabled={disabled}
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="email" id="contact_preference_email" />
@@ -108,7 +111,7 @@ export function CustomerInfoFields({ form }: CustomerInfoFieldsProps) {
           <FormItem>
             <FormLabel htmlFor="address">Address (Optional)</FormLabel>
             <FormControl>
-              <Input id="address" placeholder="123 Main St" autoComplete="street-address" {...field} />
+              <Input id="address" placeholder="123 Main St" autoComplete="street-address" {...field} disabled={disabled} />
             </FormControl>
             <FormMessage />
           </FormItem>
