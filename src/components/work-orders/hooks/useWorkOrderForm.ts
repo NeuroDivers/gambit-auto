@@ -45,8 +45,8 @@ const formSchema = z.object({
   service_items: z.array(z.object({
     service_id: z.string(),
     service_name: z.string(),
-    quantity: z.number(),
-    unit_price: z.number()
+    quantity: z.number().min(1),
+    unit_price: z.number().min(0)
   }))
 })
 
@@ -130,7 +130,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
             }))
 
           console.log('Formatted services for form:', formattedServices)
-          form.setValue('service_items', formattedServices)
+          form.setValue('service_items', formattedServices, { shouldDirty: true })
         }
       } catch (error) {
         console.error('Error in fetchWorkOrderServices:', error)
@@ -141,14 +141,29 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
   }, [workOrder?.id, form])
 
   const onSubmit = async (values: WorkOrderFormValues) => {
-    console.log("Submitting work order with values:", values)
+    console.log("Form values before submission:", values)
+    
+    if (!values.service_items || values.service_items.length === 0) {
+      values.service_items = []
+    }
+
+    console.log("Service items before submission:", values.service_items)
+
     // Filter out any service items with empty service_id
-    const validServiceItems = values.service_items.filter(item => item.service_id && item.service_id.trim() !== "")
-    const valuesToSubmit = {
+    const validServiceItems = values.service_items.filter(item => 
+      item.service_id && 
+      item.service_id.trim() !== "" && 
+      item.service_name && 
+      item.service_name.trim() !== ""
+    )
+
+    console.log("Valid service items:", validServiceItems)
+
+    const success = await submitWorkOrder({
       ...values,
       service_items: validServiceItems
-    }
-    const success = await submitWorkOrder(valuesToSubmit, workOrder?.id)
+    }, workOrder?.id)
+
     if (success) {
       onSuccess?.()
     }
