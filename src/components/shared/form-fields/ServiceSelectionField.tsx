@@ -21,22 +21,13 @@ export function ServiceSelectionField({ services = [], onServicesChange, disable
     onServicesChange(updatedServices);
   };
 
-  const handleUpdateService = (index: number, field: keyof ServiceItemType, value: any) => {
+  const handleUpdateService = (index: number, updates: Partial<ServiceItemType>) => {
     const updatedServices = [...services];
     updatedServices[index] = {
       ...updatedServices[index],
-      [field]: value
+      ...updates
     };
     onServicesChange(updatedServices);
-
-    // Log the update for debugging
-    console.log('Service update:', {
-      index,
-      field,
-      value,
-      updatedService: updatedServices[index],
-      allServices: updatedServices
-    });
   };
 
   const handleAddService = () => {

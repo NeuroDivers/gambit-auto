@@ -18,7 +18,7 @@ interface ServiceItemProps {
   index: number;
   item: ServiceItemType;
   services: any[];
-  onUpdate: (index: number, field: keyof ServiceItemType, value: any) => void;
+  onUpdate: (index: number, updates: Partial<ServiceItemType>) => void;
   onRemove: () => void;
 }
 
@@ -44,17 +44,12 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     if (selectedService) {
       console.log('Selected service:', selectedService);
 
-      // Batch update all fields
-      const updates = [
-        { field: 'service_id', value: selectedService.id },
-        { field: 'service_name', value: selectedService.name },
-        { field: 'unit_price', value: selectedService.price || 0 },
-        { field: 'quantity', value: 1 }
-      ];
-
-      // Apply all updates synchronously
-      updates.forEach(({ field, value }) => {
-        onUpdate(index, field as keyof ServiceItemType, value);
+      // Update all fields at once
+      onUpdate(index, {
+        service_id: selectedService.id,
+        service_name: selectedService.name,
+        unit_price: selectedService.price || 0,
+        quantity: 1
       });
 
       setIsExpanded(true);
@@ -69,6 +64,16 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
       });
     }
   }, [services, index, onUpdate]);
+
+  const handleQuantityChange = (value: number) => {
+    if (!mounted.current) return;
+    onUpdate(index, { quantity: value });
+  };
+
+  const handlePriceChange = (value: number) => {
+    if (!mounted.current) return;
+    onUpdate(index, { unit_price: value });
+  };
 
   // Group services by hierarchy type for better organization
   const servicesByType = services.reduce<ServicesByType>((acc, service) => {
@@ -118,12 +123,31 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
                 serviceId={item.service_id}
               />
 
-              <ServiceQuantityPrice
-                index={index}
-                item={item}
-                onUpdate={onUpdate}
-                mounted={mounted}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor={`quantity-${index}`}>Quantity</Label>
+                  <Input
+                    id={`quantity-${index}`}
+                    type="number"
+                    min={1}
+                    value={item.quantity}
+                    onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor={`price-${index}`}>Unit Price</Label>
+                  <Input
+                    id={`price-${index}`}
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={item.unit_price}
+                    onChange={(e) => handlePriceChange(parseFloat(e.target.value) || 0)}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
 
               <ServiceDescription 
                 description={selectedService?.description}
