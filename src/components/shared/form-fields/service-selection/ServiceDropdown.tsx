@@ -38,7 +38,7 @@ export function ServiceDropdown({
   return (
     <div>
       <Label>Service</Label>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={setOpen} modal={true}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -54,6 +54,7 @@ export function ServiceDropdown({
           className="w-[400px] p-0" 
           align="start"
           sideOffset={4}
+          style={{ zIndex: 1000 }}
         >
           <Command>
             <CommandInput placeholder="Search services..." />
