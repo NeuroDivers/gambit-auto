@@ -21,6 +21,7 @@ interface RawWorkOrderService {
   service: {
     id: string;
     name: string;
+    price: number | null;
   };
 }
 
@@ -100,9 +101,10 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
             service_id,
             quantity,
             unit_price,
-            service:service_types!work_order_services_service_id_fkey (
+            service:service_types!inner (
               id,
-              name
+              name,
+              price
             )
           `)
           .eq('work_order_id', workOrder.id)
@@ -112,19 +114,22 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
           return
         }
 
+        console.log('Fetched services:', servicesData)
+
         if (servicesData && Array.isArray(servicesData)) {
           // First cast the raw data to our known shape
           const rawServices = servicesData as unknown as RawWorkOrderService[]
           
           const formattedServices = rawServices
-            .filter(service => service.service && typeof service.service === 'object' && 'id' in service.service && 'name' in service.service)
+            .filter(service => service.service && service.service.id)
             .map(service => ({
-              service_id: service.service_id,
+              service_id: service.service.id,
               service_name: service.service.name,
               quantity: service.quantity,
-              unit_price: service.unit_price
+              unit_price: service.unit_price || service.service.price || 0
             }))
 
+          console.log('Formatted services for form:', formattedServices)
           form.setValue('service_items', formattedServices)
         }
       } catch (error) {
