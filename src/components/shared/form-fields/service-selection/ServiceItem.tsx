@@ -31,7 +31,6 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
   const [selectedService, setSelectedService] = React.useState<any>(
     services.find(s => s.id === item.service_id)
   );
-  const [priceInput, setPriceInput] = React.useState(item.unit_price?.toString() || '0');
 
   useEffect(() => {
     if (item.service_name) {
@@ -49,12 +48,6 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     }
   }, [item.service_id, services]);
 
-  useEffect(() => {
-    if (item.unit_price !== undefined) {
-      setPriceInput(item.unit_price.toString());
-    }
-  }, [item.unit_price]);
-
   const handleServiceSelect = React.useCallback((currentValue: string) => {
     if (!mounted.current) return;
 
@@ -66,15 +59,13 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
       setSelectedService(newSelectedService);
       setOpen(false);
 
-      const updates: Partial<ServiceItemType> = {
+      onUpdate(index, {
         service_id: newSelectedService.id,
         service_name: newSelectedService.name,
         quantity: item.quantity || 1,
         unit_price: newSelectedService.price || 0
-      };
-
-      setPriceInput((newSelectedService.price || 0).toString());
-      onUpdate(index, updates);
+      });
+      
       setIsExpanded(true);
     }
   }, [services, index, onUpdate, item.quantity]);
@@ -90,20 +81,9 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     if (!mounted.current) return;
     
     const value = e.target.value;
-    console.log('Price input changed to:', value);
-    
-    setPriceInput(value);
-    
-    if (value === '' || value === '.') {
-      onUpdate(index, { unit_price: 0 });
-      return;
-    }
-    
-    const numericValue = parseFloat(value);
-    if (!isNaN(numericValue)) {
-      console.log('Updating price to:', numericValue);
-      onUpdate(index, { unit_price: numericValue });
-    }
+    const numericValue = parseFloat(value) || 0;
+    console.log('Price input changed to:', numericValue);
+    onUpdate(index, { unit_price: numericValue });
   };
 
   const servicesByType = services.reduce<ServicesByType>((acc, service) => {
@@ -166,10 +146,10 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
                   <Label htmlFor={`price-${index}`}>Unit Price</Label>
                   <Input
                     id={`price-${index}`}
-                    type="text"
-                    inputMode="decimal"
-                    pattern="[0-9]*\.?[0-9]*"
-                    value={priceInput}
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={item.unit_price || 0}
                     onChange={handlePriceChange}
                     className="mt-1"
                   />

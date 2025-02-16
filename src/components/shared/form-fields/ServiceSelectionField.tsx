@@ -13,7 +13,7 @@ type ServiceSelectionFieldProps = {
 }
 
 export function ServiceSelectionField({ services = [], onServicesChange, disabled }: ServiceSelectionFieldProps) {
-  const { data: availableServices = [], isLoading } = useServiceData()
+  const { data: availableServices = [], isLoading } = useServiceData();
 
   const handleRemoveService = (index: number) => {
     const updatedServices = [...services];
@@ -25,21 +25,21 @@ export function ServiceSelectionField({ services = [], onServicesChange, disable
     const updatedServices = [...services];
     updatedServices[index] = {
       ...updatedServices[index],
-      ...updates
+      ...updates,
+      id: updatedServices[index].id || crypto.randomUUID()
     };
     onServicesChange(updatedServices);
   };
 
   const handleAddService = () => {
-    onServicesChange([
-      ...services,
-      {
-        service_id: "",
-        service_name: "",
-        quantity: 1,
-        unit_price: 0
-      }
-    ]);
+    const newService: ServiceItemType = {
+      service_id: "",
+      service_name: "",
+      quantity: 1,
+      unit_price: 0,
+      id: crypto.randomUUID()
+    };
+    onServicesChange([...services, newService]);
   };
 
   return (
@@ -62,7 +62,7 @@ export function ServiceSelectionField({ services = [], onServicesChange, disable
         <div className="space-y-4">
           {services.map((service, index) => (
             <ServiceItem
-              key={index}
+              key={service.id || index}
               index={index}
               item={service}
               services={availableServices}
