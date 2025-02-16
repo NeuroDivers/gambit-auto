@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form"
 import { EditInvoiceForm } from './sections/EditInvoiceForm'
 import { InvoiceFormValues } from "./types"
@@ -159,7 +160,15 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
   }
 
   return (
-    <>
+    <div className="space-y-6">
+      {!isPublic && (
+        <AdminView
+          invoice={invoice}
+          businessProfile={businessProfile}
+          invoiceId={invoiceId}
+          onPrint={handlePrint}
+        />
+      )}
       <div ref={printRef}>
         <InvoicePrintPreview 
           invoice={invoice} 
@@ -167,7 +176,7 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
         />
       </div>
 
-      {isPublic ? (
+      {isPublic && (
         <PublicView
           invoice={invoice}
           businessProfile={businessProfile}
@@ -176,14 +185,7 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
           isAdmin={isAdmin}
           onPrint={handlePrint}
         />
-      ) : (
-        <AdminView
-          invoice={invoice}
-          businessProfile={businessProfile}
-          invoiceId={invoiceId}
-          onPrint={handlePrint}
-        />
       )}
-    </>
+    </div>
   )
 }
