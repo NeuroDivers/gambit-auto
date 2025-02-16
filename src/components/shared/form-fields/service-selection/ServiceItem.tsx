@@ -49,6 +49,10 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     }
   }, [item.service_id, services]);
 
+  useEffect(() => {
+    setPriceInput(item.unit_price?.toString() || '');
+  }, [item.unit_price]);
+
   const handleServiceSelect = React.useCallback((currentValue: string) => {
     if (!mounted.current) return;
 
@@ -82,15 +86,14 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     if (!mounted.current) return;
     
     const value = e.target.value;
+    
+    // Update the input state immediately
     setPriceInput(value);
     
-    if (value === '') {
-      onUpdate(index, { unit_price: 0 });
-      return;
-    }
-
-    const numericValue = parseFloat(value);
+    // Convert to number and update the item state
+    const numericValue = value === '' ? 0 : parseFloat(value);
     if (!isNaN(numericValue)) {
+      console.log('Updating price to:', numericValue);
       onUpdate(index, { unit_price: numericValue });
     }
   };
