@@ -1,34 +1,36 @@
 
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { UseFormReturn } from "react-hook-form"
+import { Control, UseFormWatch, UseFormSetValue } from "react-hook-form"
 import { useVinLookup } from "@/hooks/useVinLookup"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { WorkOrderFormValues } from "../types"
 
 type VehicleInfoFieldsProps = {
-  form: UseFormReturn<WorkOrderFormValues>
+  control: Control<WorkOrderFormValues>
+  watch: UseFormWatch<WorkOrderFormValues>
+  setValue: UseFormSetValue<WorkOrderFormValues>
   disabled?: boolean
 }
 
-export function VehicleInfoFields({ form, disabled }: VehicleInfoFieldsProps) {
-  const vin = form.watch('vehicle_serial')
+export function VehicleInfoFields({ control, watch, setValue, disabled }: VehicleInfoFieldsProps) {
+  const vin = watch('vehicle_serial')
   const { data: vinData, isLoading: isLoadingVin } = useVinLookup(vin)
 
   useEffect(() => {
     if (vinData && !vinData.error) {
-      if (vinData.make) form.setValue('vehicle_make', vinData.make)
-      if (vinData.model) form.setValue('vehicle_model', vinData.model)
-      if (vinData.year) form.setValue('vehicle_year', vinData.year)
+      if (vinData.make) setValue('vehicle_make', vinData.make)
+      if (vinData.model) setValue('vehicle_model', vinData.model)
+      if (vinData.year) setValue('vehicle_year', vinData.year)
     }
-  }, [vinData, form])
+  }, [vinData, setValue])
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
-          control={form.control}
+          control={control}
           name="vehicle_make"
           render={({ field }) => (
             <FormItem>
@@ -52,7 +54,7 @@ export function VehicleInfoFields({ form, disabled }: VehicleInfoFieldsProps) {
           )}
         />
         <FormField
-          control={form.control}
+          control={control}
           name="vehicle_model"
           render={({ field }) => (
             <FormItem>
@@ -78,7 +80,7 @@ export function VehicleInfoFields({ form, disabled }: VehicleInfoFieldsProps) {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
-          control={form.control}
+          control={control}
           name="vehicle_year"
           render={({ field }) => (
             <FormItem>
@@ -104,7 +106,7 @@ export function VehicleInfoFields({ form, disabled }: VehicleInfoFieldsProps) {
           )}
         />
         <FormField
-          control={form.control}
+          control={control}
           name="vehicle_serial"
           render={({ field }) => (
             <FormItem>

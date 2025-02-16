@@ -2,21 +2,21 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { UseFormReturn } from "react-hook-form"
+import { Control } from "react-hook-form"
 import { Label } from "@/components/ui/label"
 import { WorkOrderFormValues } from "../types"
 
 type CustomerInfoFieldsProps = {
-  form: UseFormReturn<WorkOrderFormValues>
+  control: Control<WorkOrderFormValues>
   disabled?: boolean
 }
 
-export function CustomerInfoFields({ form, disabled }: CustomerInfoFieldsProps) {
+export function CustomerInfoFields({ control, disabled }: CustomerInfoFieldsProps) {
   return (
     <div className="grid gap-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
-          control={form.control}
+          control={control}
           name="first_name"
           render={({ field }) => (
             <FormItem>
@@ -30,7 +30,7 @@ export function CustomerInfoFields({ form, disabled }: CustomerInfoFieldsProps) 
         />
 
         <FormField
-          control={form.control}
+          control={control}
           name="last_name"
           render={({ field }) => (
             <FormItem>
@@ -46,7 +46,7 @@ export function CustomerInfoFields({ form, disabled }: CustomerInfoFieldsProps) 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
-          control={form.control}
+          control={control}
           name="email"
           render={({ field }) => (
             <FormItem>
@@ -60,7 +60,7 @@ export function CustomerInfoFields({ form, disabled }: CustomerInfoFieldsProps) 
         />
 
         <FormField
-          control={form.control}
+          control={control}
           name="phone_number"
           render={({ field }) => (
             <FormItem>
@@ -75,7 +75,7 @@ export function CustomerInfoFields({ form, disabled }: CustomerInfoFieldsProps) 
       </div>
 
       <FormField
-        control={form.control}
+        control={control}
         name="contact_preference"
         render={({ field }) => (
           <FormItem>
@@ -105,7 +105,7 @@ export function CustomerInfoFields({ form, disabled }: CustomerInfoFieldsProps) 
       />
 
       <FormField
-        control={form.control}
+        control={control}
         name="address"
         render={({ field }) => (
           <FormItem>
