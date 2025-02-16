@@ -31,6 +31,7 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
   const [selectedService, setSelectedService] = React.useState<any>(
     services.find(s => s.id === item.service_id)
   );
+  const [priceInput, setPriceInput] = React.useState(item.unit_price?.toString() || '');
 
   useEffect(() => {
     if (item.service_name) {
@@ -47,6 +48,10 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
       setSelectedService(service);
     }
   }, [item.service_id, services]);
+
+  useEffect(() => {
+    setPriceInput(item.unit_price?.toString() || '');
+  }, [item.unit_price]);
 
   const handleServiceSelect = React.useCallback((currentValue: string) => {
     if (!mounted.current) return;
@@ -67,6 +72,7 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
       // Only set the unit_price if there isn't one already or if the current one is 0
       if (!item.unit_price || item.unit_price === 0) {
         updates.unit_price = newSelectedService.price || 0;
+        setPriceInput((newSelectedService.price || 0).toString());
       }
 
       onUpdate(index, updates);
@@ -83,9 +89,9 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     if (!mounted.current) return;
     
     const value = e.target.value;
+    setPriceInput(value);
     
-    // Allow empty input for price
-    if (value === '') {
+    if (value === '' || value === '.') {
       onUpdate(index, { unit_price: 0 });
       return;
     }
@@ -156,10 +162,10 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
                   <Label htmlFor={`price-${index}`}>Unit Price</Label>
                   <Input
                     id={`price-${index}`}
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={item.unit_price || ''}
+                    type="text"
+                    inputMode="decimal"
+                    pattern="[0-9]*\.?[0-9]*"
+                    value={priceInput}
                     onChange={handlePriceChange}
                     className="mt-1"
                   />
