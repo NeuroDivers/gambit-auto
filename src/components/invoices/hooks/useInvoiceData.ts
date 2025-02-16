@@ -14,7 +14,7 @@ export function useInvoiceData(invoiceId: string | undefined) {
         .from("invoices")
         .select(`
           *,
-          invoice_items (
+          invoice_items!inner (
             id,
             service_id,
             package_id,
@@ -30,6 +30,7 @@ export function useInvoiceData(invoiceId: string | undefined) {
       if (invoiceError) throw invoiceError
       if (!invoice) throw new Error("Invoice not found")
 
+      console.log('Fetched invoice with items:', invoice) // Debug log
       return invoice as Invoice
     }
   })
