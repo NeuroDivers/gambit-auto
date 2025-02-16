@@ -70,15 +70,13 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
       const updates: Partial<ServiceItemType> = {
         service_id: newSelectedService.id,
         service_name: newSelectedService.name,
-        quantity: 1
+        quantity: 1,
+        // Set initial price from service, but allow it to be editable
+        unit_price: newSelectedService.price || 0
       };
 
-      // Only update price if it exists in the selected service
-      if (newSelectedService.price !== null && newSelectedService.price !== undefined) {
-        updates.unit_price = newSelectedService.price;
-        setPriceInput(newSelectedService.price.toString());
-      }
-
+      // Update the price input to match the initial service price
+      setPriceInput((newSelectedService.price || 0).toString());
       onUpdate(index, updates);
       setIsExpanded(true);
     }
@@ -93,6 +91,7 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     if (!mounted.current) return;
     
     const value = e.target.value;
+    console.log('Price input changed to:', value);
     
     // Always update the input state first
     setPriceInput(value);
