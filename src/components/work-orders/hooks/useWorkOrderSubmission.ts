@@ -122,14 +122,19 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
   }
 
   // Then insert new services if there are any valid ones
-  const validServices = values.service_items.filter(item => item.service_id && item.service_id.trim() !== "")
+  const validServices = values.service_items.filter(item => 
+    item.service_id && 
+    item.service_id.trim() !== "" && 
+    item.service_name && 
+    item.service_name.trim() !== ""
+  );
   
   if (validServices.length > 0) {
     const servicesToInsert = validServices.map(item => ({
       work_order_id: workOrderId,
       service_id: item.service_id,
-      quantity: item.quantity,
-      unit_price: item.unit_price
+      quantity: item.quantity || 1,
+      unit_price: item.unit_price || 0
     }))
 
     console.log("Inserting new services:", servicesToInsert)
@@ -193,7 +198,12 @@ async function createWorkOrder(values: WorkOrderFormValues) {
   }
 
   // Insert service items
-  const validServices = values.service_items.filter(item => item.service_id && item.service_id.trim() !== "")
+  const validServices = values.service_items.filter(item => 
+    item.service_id && 
+    item.service_id.trim() !== "" && 
+    item.service_name && 
+    item.service_name.trim() !== ""
+  );
   
   if (validServices.length > 0) {
     console.log("Creating services for new work order:", validServices)
@@ -201,8 +211,8 @@ async function createWorkOrder(values: WorkOrderFormValues) {
     const servicesToInsert = validServices.map(item => ({
       work_order_id: workOrder.id,
       service_id: item.service_id,
-      quantity: item.quantity,
-      unit_price: item.unit_price
+      quantity: item.quantity || 1,
+      unit_price: item.unit_price || 0
     }))
 
     const { error: servicesError } = await supabase
