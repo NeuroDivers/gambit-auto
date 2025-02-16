@@ -62,28 +62,27 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     
     if (newSelectedService) {
       console.log('Selected service:', newSelectedService);
-
+      
       setSelectedService(newSelectedService);
       setOpen(false);
 
-      // Create updates object
       const updates: Partial<ServiceItemType> = {
         service_id: newSelectedService.id,
         service_name: newSelectedService.name,
-        quantity: 1,
-        // Set initial price from service, but allow it to be editable
+        quantity: item.quantity || 1,
         unit_price: newSelectedService.price || 0
       };
 
-      // Update the price input to match the initial service price
       setPriceInput((newSelectedService.price || 0).toString());
       onUpdate(index, updates);
       setIsExpanded(true);
     }
-  }, [services, index, onUpdate, setOpen]);
+  }, [services, index, onUpdate, item.quantity]);
 
-  const handleQuantityChange = (value: number) => {
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!mounted.current) return;
+    const value = parseInt(e.target.value) || 1;
+    console.log('Quantity changed to:', value);
     onUpdate(index, { quantity: value });
   };
 
@@ -93,16 +92,13 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     const value = e.target.value;
     console.log('Price input changed to:', value);
     
-    // Always update the input state first
     setPriceInput(value);
     
-    // Handle empty input or just a decimal point
     if (value === '' || value === '.') {
       onUpdate(index, { unit_price: 0 });
       return;
     }
     
-    // Convert to number and validate
     const numericValue = parseFloat(value);
     if (!isNaN(numericValue)) {
       console.log('Updating price to:', numericValue);
@@ -161,8 +157,8 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
                     id={`quantity-${index}`}
                     type="number"
                     min={1}
-                    value={item.quantity}
-                    onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
+                    value={item.quantity || 1}
+                    onChange={handleQuantityChange}
                     className="mt-1"
                   />
                 </div>
