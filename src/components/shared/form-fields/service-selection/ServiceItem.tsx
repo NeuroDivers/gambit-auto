@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, memo } from 'react';
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -14,6 +14,33 @@ import { ServiceItemType } from "@/components/work-orders/types"
 import { ServiceDropdown } from "./ServiceDropdown"
 import { ServiceDescription } from "./ServiceDescription"
 import { ServicesByType } from "./types"
+
+interface ServiceItemInputProps {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur: () => void;
+  type: "numeric" | "decimal";
+}
+
+const ServiceItemInput = memo(({ id, label, value, onChange, onBlur, type }: ServiceItemInputProps) => (
+  <div>
+    <Label htmlFor={id}>{label}</Label>
+    <Input
+      id={id}
+      type="text"
+      inputMode={type === "numeric" ? "numeric" : "decimal"}
+      pattern={type === "numeric" ? "[0-9]*" : "[0-9]*\\.?[0-9]*"}
+      value={value}
+      onChange={onChange}
+      onBlur={onBlur}
+      className="mt-1"
+    />
+  </div>
+));
+
+ServiceItemInput.displayName = 'ServiceItemInput';
 
 interface ServiceItemProps {
   index: number;
@@ -73,8 +100,7 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!mounted.current) return;
-    const value = e.target.value;
-    setLocalQuantity(value);
+    setLocalQuantity(e.target.value);
   };
 
   const handleQuantityBlur = () => {
@@ -88,8 +114,7 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!mounted.current) return;
-    const value = e.target.value;
-    setLocalPrice(value);
+    setLocalPrice(e.target.value);
   };
 
   const handlePriceBlur = () => {
@@ -101,16 +126,20 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     }
   };
 
-  const servicesByType = services.reduce<ServicesByType>((acc, service) => {
-    const type = service.hierarchy_type || 'Other';
-    if (!acc[type]) acc[type] = [];
-    acc[type].push(service);
-    return acc;
-  }, {});
+  const servicesByType = React.useMemo(() => {
+    const grouped = services.reduce<ServicesByType>((acc, service) => {
+      const type = service.hierarchy_type || 'Other';
+      if (!acc[type]) acc[type] = [];
+      acc[type].push(service);
+      return acc;
+    }, {});
 
-  Object.keys(servicesByType).forEach(type => {
-    servicesByType[type].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
-  });
+    Object.keys(grouped).forEach(type => {
+      grouped[type].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+    });
+
+    return grouped;
+  }, [services]);
 
   return (
     <div className="space-y-4 p-4 border rounded-lg relative bg-card">
@@ -146,32 +175,22 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
               />
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor={`quantity-${index}`}>Quantity</Label>
-                  <Input
-                    id={`quantity-${index}`}
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={localQuantity}
-                    onChange={handleQuantityChange}
-                    onBlur={handleQuantityBlur}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor={`price-${index}`}>Unit Price</Label>
-                  <Input
-                    id={`price-${index}`}
-                    type="text"
-                    inputMode="decimal"
-                    pattern="[0-9]*\.?[0-9]*"
-                    value={localPrice}
-                    onChange={handlePriceChange}
-                    onBlur={handlePriceBlur}
-                    className="mt-1"
-                  />
-                </div>
+                <ServiceItemInput
+                  id={`quantity-${index}`}
+                  label="Quantity"
+                  value={localQuantity}
+                  onChange={handleQuantityChange}
+                  onBlur={handleQuantityBlur}
+                  type="numeric"
+                />
+                <ServiceItemInput
+                  id={`price-${index}`}
+                  label="Unit Price"
+                  value={localPrice}
+                  onChange={handlePriceChange}
+                  onBlur={handlePriceBlur}
+                  type="decimal"
+                />
               </div>
 
               <ServiceDescription 
