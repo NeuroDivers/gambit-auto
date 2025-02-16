@@ -28,6 +28,9 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
   const mounted = useRef(true);
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [open, setOpen] = React.useState(false);
+  const [selectedService, setSelectedService] = React.useState<any>(
+    services.find(s => s.id === item.service_id)
+  );
 
   useEffect(() => {
     if (item.service_name) {
@@ -38,30 +41,37 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
     };
   }, [item.service_name]);
 
+  // Update selected service when item changes
+  useEffect(() => {
+    const service = services.find(s => s.id === item.service_id);
+    setSelectedService(service);
+  }, [item.service_id, services]);
+
   const handleServiceSelect = React.useCallback((currentValue: string) => {
     if (!mounted.current) return;
 
-    const selectedService = services.find(service => service.id === currentValue);
+    const newSelectedService = services.find(service => service.id === currentValue);
     
-    if (selectedService) {
-      console.log('Selected service:', selectedService);
+    if (newSelectedService) {
+      console.log('Selected service:', newSelectedService);
 
-      // Update all fields at once
+      // Update local state first
+      setSelectedService(newSelectedService);
+
+      // Update parent state
       onUpdate(index, {
-        service_id: selectedService.id,
-        service_name: selectedService.name,
-        unit_price: selectedService.price || 0,
+        service_id: newSelectedService.id,
+        service_name: newSelectedService.name,
+        unit_price: newSelectedService.price || 0,
         quantity: 1
       });
 
       setIsExpanded(true);
-      setOpen(false);
 
-      // Log final state for verification
       console.log('Updated service fields:', {
-        service_id: selectedService.id,
-        service_name: selectedService.name,
-        unit_price: selectedService.price || 0,
+        service_id: newSelectedService.id,
+        service_name: newSelectedService.name,
+        unit_price: newSelectedService.price || 0,
         quantity: 1
       });
     }
@@ -89,8 +99,6 @@ export function ServiceItem({ index, item, services = [], onUpdate, onRemove }: 
   Object.keys(servicesByType).forEach(type => {
     servicesByType[type].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
   });
-
-  const selectedService = services.find(s => s.id === item.service_id);
 
   return (
     <div className="space-y-4 p-4 border rounded-lg relative bg-card">
