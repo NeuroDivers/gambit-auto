@@ -79,15 +79,16 @@ interface SidebarNavProps {
 
 export function SidebarNav({ className, onNavigate }: SidebarNavProps) {
   const location = useLocation()
-  const { permissions } = usePermissions()
+  const { permissions, currentUserRole } = usePermissions()
   const [allowedItems, setAllowedItems] = useState<NavItem[]>([])
   const [allowedSettingsItems, setAllowedSettingsItems] = useState<NavItem[]>([])
 
   useEffect(() => {
     console.log("Current permissions:", permissions)
+    console.log("Current user role:", currentUserRole)
 
     // For administrators, show all items
-    if (permissions?.some(p => p.role?.name === 'administrator')) {
+    if (currentUserRole?.name?.toLowerCase() === 'administrator') {
       console.log("User is admin, showing all items")
       setAllowedItems(allItems)
       setAllowedSettingsItems(settingsItems)
@@ -126,7 +127,7 @@ export function SidebarNav({ className, onNavigate }: SidebarNavProps) {
     
     console.log("Filtered settings items:", filteredSettingsItems)
     setAllowedSettingsItems(filteredSettingsItems)
-  }, [permissions])
+  }, [permissions, currentUserRole])
 
   return (
     <nav className={cn("flex flex-col gap-2 p-4", className)}>

@@ -18,6 +18,12 @@ interface RolePermission {
   };
 }
 
+interface UserRole {
+  id: string;
+  name: string;
+  nicename: string;
+}
+
 export const usePermissions = () => {
   // Get current user's role and permissions
   const { data: currentUserRole } = useQuery({
@@ -39,7 +45,7 @@ export const usePermissions = () => {
         .single();
 
       if (error) throw error;
-      return data?.role;
+      return data?.role as UserRole;
     },
     staleTime: Infinity,
   });
