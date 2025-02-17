@@ -375,6 +375,7 @@ export type Database = {
       }
       invoices: {
         Row: {
+          client_id: string | null
           company_address: string | null
           company_email: string | null
           company_name: string | null
@@ -407,6 +408,7 @@ export type Database = {
           work_order_id: string
         }
         Insert: {
+          client_id?: string | null
           company_address?: string | null
           company_email?: string | null
           company_name?: string | null
@@ -439,6 +441,7 @@ export type Database = {
           work_order_id: string
         }
         Update: {
+          client_id?: string | null
           company_address?: string | null
           company_email?: string | null
           company_name?: string | null
@@ -471,6 +474,13 @@ export type Database = {
           work_order_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "invoices_work_order_id_fkey"
             columns: ["work_order_id"]

@@ -30,7 +30,36 @@ export default function CreateInvoice() {
 
   const { mutate: createInvoice, isPending } = useMutation({
     mutationFn: async (values: InvoiceFormValues) => {
-      // First create the invoice
+      // First check if a client exists with this email
+      const { data: existingClient, error: clientLookupError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('email', values.customer_email)
+        .maybeSingle()
+
+      if (clientLookupError) throw clientLookupError
+
+      let clientId: string | null = existingClient?.id
+
+      // If no client exists, create one
+      if (!clientId) {
+        const { data: newClient, error: createClientError } = await supabase
+          .from('clients')
+          .insert({
+            first_name: values.customer_first_name,
+            last_name: values.customer_last_name,
+            email: values.customer_email,
+            phone_number: values.customer_phone,
+            address: values.customer_address
+          })
+          .select()
+          .single()
+
+        if (createClientError) throw createClientError
+        clientId = newClient.id
+      }
+
+      // Create the invoice with client_id
       const { data: invoice, error: invoiceError } = await supabase
         .from('invoices')
         .insert({
@@ -44,7 +73,8 @@ export default function CreateInvoice() {
           vehicle_make: values.vehicle_make,
           vehicle_model: values.vehicle_model,
           vehicle_year: values.vehicle_year,
-          vehicle_vin: values.vehicle_vin
+          vehicle_vin: values.vehicle_vin,
+          client_id: clientId
         })
         .select()
         .single()
