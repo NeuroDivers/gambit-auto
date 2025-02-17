@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { ServiceItemType } from "@/components/work-orders/types"
 import { Input } from "@/components/ui/input"
 import { ServiceTypesTable } from "@/integrations/supabase/types/service-types"
+import { useLocation } from "react-router-dom"
 
 type ServiceType = ServiceTypesTable['Row']
 
@@ -21,6 +22,9 @@ export function ServiceSelectionField({
   onServicesChange,
   disabled 
 }: ServiceSelectionFieldProps) {
+  const location = useLocation()
+  const isClientQuote = location.pathname.includes('client/quotes')
+
   const { data: serviceTypes } = useQuery({
     queryKey: ["service-types"],
     queryFn: async () => {
@@ -114,7 +118,7 @@ export function ServiceSelectionField({
                     >
                       <div className="flex w-full justify-between items-center">
                         <span className="font-medium">{service.name}</span>
-                        {service.price && (
+                        {!isClientQuote && service.price && (
                           <span className="text-sm text-muted-foreground">
                             ${service.price.toFixed(2)}
                           </span>
@@ -127,7 +131,7 @@ export function ServiceSelectionField({
                       )}
                     </Toggle>
 
-                    {isSelected && (
+                    {isSelected && !isClientQuote && (
                       <div className="grid grid-cols-2 gap-4 px-4">
                         <div className="space-y-2">
                           <Label htmlFor={`quantity-${service.id}`} className="text-sm">
