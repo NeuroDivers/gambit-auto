@@ -67,7 +67,7 @@ export const usePermissions = () => {
           )
         `)
         .eq('id', user.id)
-        .maybeSingle();
+        .single();
 
       if (profileError) {
         console.error('Profile fetch error:', profileError);
