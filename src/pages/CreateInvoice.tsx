@@ -28,8 +28,8 @@ export default function CreateInvoice() {
     }
   })
 
-  // Fetch clients for the dropdown with proper error handling
-  const { data: clients = [], isLoading: isLoadingClients } = useQuery({
+  // Initialize with an empty array while loading
+  const { data: clients = [], isLoading: isLoadingClients, isError } = useQuery({
     queryKey: ['clients'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -37,19 +37,20 @@ export default function CreateInvoice() {
         .select('*')
         .order('first_name')
       
-      if (error) {
-        console.error('Error fetching clients:', error)
-        throw error
-      }
-      
+      if (error) throw error
       return data || []
     },
-    initialData: [] // Provide initial empty array to prevent undefined
+    // Set a smaller stale time to ensure fresh data
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    // Initialize with empty array
+    initialData: [],
+    // Retry a few times in case of temporary issues
+    retry: 3,
   })
 
   // Handle client selection
   const handleClientSelect = (clientId: string) => {
-    const selectedClient = clients?.find(client => client.id === clientId)
+    const selectedClient = clients.find(client => client.id === clientId)
     if (selectedClient) {
       form.setValue('customer_first_name', selectedClient.first_name)
       form.setValue('customer_last_name', selectedClient.last_name)
