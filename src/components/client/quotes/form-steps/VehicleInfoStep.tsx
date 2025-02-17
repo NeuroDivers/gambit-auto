@@ -2,7 +2,7 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { UseFormReturn } from "react-hook-form"
-import { QuoteRequestFormData } from "./types"
+import { QuoteRequestFormData } from "@/hooks/quote-request/formSchema"
 import { motion } from "framer-motion"
 import { useVinLookup } from "@/hooks/useVinLookup"
 import { useEffect } from "react"
@@ -13,14 +13,14 @@ type VehicleInfoStepProps = {
 }
 
 export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
-  const vin = form.watch('vehicle_vin')
+  const vin = form.watch('vehicleInfo.vin')
   const { data: vinData, isLoading: isLoadingVin } = useVinLookup(vin)
 
   useEffect(() => {
     if (vinData && !vinData.error) {
-      if (vinData.make) form.setValue('vehicle_make', vinData.make)
-      if (vinData.model) form.setValue('vehicle_model', vinData.model)
-      if (vinData.year) form.setValue('vehicle_year', vinData.year.toString())
+      if (vinData.make) form.setValue('vehicleInfo.make', vinData.make)
+      if (vinData.model) form.setValue('vehicleInfo.model', vinData.model)
+      if (vinData.year) form.setValue('vehicleInfo.year', Number(vinData.year))
     }
   }, [vinData, form])
 
@@ -34,17 +34,15 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
-          name="vehicle_make"
+          name="vehicleInfo.make"
           render={({ field }) => (
             <FormItem>
-              <FormLabel htmlFor="quote_vehicle_make">Vehicle Make</FormLabel>
+              <FormLabel>Vehicle Make</FormLabel>
               <FormControl>
                 <div className="relative">
                   <Input 
-                    id="quote_vehicle_make"
                     placeholder="e.g. Toyota" 
                     {...field}
-                    autoComplete="off"
                     disabled={isLoadingVin}
                   />
                   {isLoadingVin && (
@@ -59,17 +57,15 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
 
         <FormField
           control={form.control}
-          name="vehicle_model"
+          name="vehicleInfo.model"
           render={({ field }) => (
             <FormItem>
-              <FormLabel htmlFor="quote_vehicle_model">Vehicle Model</FormLabel>
+              <FormLabel>Vehicle Model</FormLabel>
               <FormControl>
                 <div className="relative">
                   <Input 
-                    id="quote_vehicle_model"
                     placeholder="e.g. Camry" 
                     {...field}
-                    autoComplete="off"
                     disabled={isLoadingVin}
                   />
                   {isLoadingVin && (
@@ -84,17 +80,16 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
 
         <FormField
           control={form.control}
-          name="vehicle_year"
+          name="vehicleInfo.year"
           render={({ field }) => (
             <FormItem>
-              <FormLabel htmlFor="quote_vehicle_year">Vehicle Year</FormLabel>
+              <FormLabel>Vehicle Year</FormLabel>
               <FormControl>
                 <div className="relative">
                   <Input 
-                    id="quote_vehicle_year"
                     type="number" 
                     {...field}
-                    autoComplete="off"
+                    onChange={(e) => field.onChange(Number(e.target.value))}
                     disabled={isLoadingVin}
                   />
                   {isLoadingVin && (
@@ -109,16 +104,15 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
 
         <FormField
           control={form.control}
-          name="vehicle_vin"
+          name="vehicleInfo.vin"
           render={({ field }) => (
             <FormItem>
-              <FormLabel htmlFor="quote_vehicle_vin">
+              <FormLabel>
                 Vehicle VIN
                 <span className="text-xs text-muted-foreground ml-2">(Auto-fills vehicle info)</span>
               </FormLabel>
               <FormControl>
                 <Input 
-                  id="quote_vehicle_vin"
                   {...field}
                   autoComplete="off"
                 />
