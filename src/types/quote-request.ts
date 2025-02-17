@@ -18,3 +18,4 @@ export type QuoteRequest = {
   created_at: string
   media_urls: string[] | null
 }
+
