@@ -28,8 +28,8 @@ export function QuoteRequestCard({
   onImageRemove
 }: QuoteRequestCardProps) {
   const inputId = `image-upload-${request.id}`
-  const totalEstimate = request.quote_items?.reduce((sum, item) => 
-    sum + (item.quantity * item.unit_price), 0) || 0
+  const service_details = request.service_details || {}
+  const serviceIds = Object.keys(service_details)
 
   return (
     <Card className={cn(
@@ -50,11 +50,14 @@ export function QuoteRequestCard({
         <div className="mb-4">
           <h4 className="text-sm font-semibold mb-1">Requested Services:</h4>
           <div className="flex flex-wrap gap-2">
-            {request.quote_items?.map((item) => (
-              <Badge key={item.id} variant="secondary">
-                {item.service_name}
-              </Badge>
-            ))}
+            {serviceIds.map((serviceId) => {
+              const service = services.find(s => s.id === serviceId)
+              return service && (
+                <Badge key={serviceId} variant="secondary">
+                  {service.name}
+                </Badge>
+              )
+            })}
           </div>
         </div>
 
@@ -89,17 +92,20 @@ export function QuoteRequestCard({
           </div>
         )}
         
-        {request.quote_items && request.quote_items.length > 0 && (
+        {request.estimated_amount !== null && (
           <div className="mt-2">
             <h4 className="text-sm font-semibold mb-1">Service Estimates (before taxes):</h4>
-            {request.quote_items.map((item) => (
-              <p key={item.id} className="text-sm">
-                {item.service_name}: ${(item.quantity * item.unit_price).toFixed(2)}
-                {item.quantity > 1 && ` (${item.quantity} x $${item.unit_price.toFixed(2)})`}
-              </p>
-            ))}
+            {Object.entries(service_details).map(([serviceId, details]) => {
+              const service = services.find(s => s.id === serviceId)
+              const amount = details.estimated_amount || 0
+              return service && (
+                <p key={serviceId} className="text-sm">
+                  {service.name}: ${amount.toFixed(2)}
+                </p>
+              )
+            })}
             <p className="mt-2 text-lg font-semibold">
-              Total Estimate: ${totalEstimate.toFixed(2)}
+              Total Estimate: ${request.estimated_amount.toFixed(2)}
             </p>
           </div>
         )}
