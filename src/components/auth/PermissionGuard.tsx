@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect, useState } from "react"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Navigate } from "react-router-dom"
@@ -25,11 +24,7 @@ interface ProfileData {
 
 interface SupabaseProfileResponse {
   id: string
-  role: {
-    id: string
-    name: string
-    nicename: string
-  }
+  role: UserRole[]
 }
 
 export function PermissionGuard({ children, resource, type }: PermissionGuardProps) {
@@ -59,16 +54,19 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
       // Transform the data to match our expected type
       if (data) {
         const supabaseData = data as SupabaseProfileResponse
-        const transformedData: ProfileData = {
-          id: supabaseData.id,
-          role: {
-            id: supabaseData.role.id,
-            name: supabaseData.role.name,
-            nicename: supabaseData.role.nicename
+        // Since role is an array, take the first role (assuming there's only one)
+        if (supabaseData.role && supabaseData.role.length > 0) {
+          const transformedData: ProfileData = {
+            id: supabaseData.id,
+            role: {
+              id: supabaseData.role[0].id,
+              name: supabaseData.role[0].name,
+              nicename: supabaseData.role[0].nicename
+            }
           }
+          console.log('Transformed profile data:', transformedData)
+          return transformedData
         }
-        console.log('Transformed profile data:', transformedData)
-        return transformedData
       }
       return null
     }
