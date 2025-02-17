@@ -11,6 +11,11 @@ import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSe
 import { motion } from "framer-motion"
 import { QuoteRequestFormData, ServiceItemType } from "@/hooks/quote-request/formSchema"
 
+type QuoteRequestFormProps = {
+  form: UseFormReturn<QuoteRequestFormData>
+  services: any[]
+}
+
 export function MultiStepQuoteRequestForm() {
   const {
     form,
@@ -27,7 +32,7 @@ export function MultiStepQuoteRequestForm() {
     prevStep
   } = useQuoteRequestForm()
 
-  const serviceItems = form.watch('service_items') || []
+  const serviceItems = (form.watch('service_items') || []) as ServiceItemType[]
 
   return (
     <Card>
@@ -56,14 +61,14 @@ export function MultiStepQuoteRequestForm() {
                 {step > 1 && step < totalSteps && selectedServices[step - 2] && (
                   <ServiceDetailsStep 
                     form={form}
-                    services={services}
+                    services={services || []}
                     serviceId={selectedServices[step - 2].service_id}
                     onImageUpload={handleImageUpload}
                     onImageRemove={handleImageRemove}
                   />
                 )}
                 {step === totalSteps && (
-                  <SummaryStep form={form} services={services} />
+                  <SummaryStep form={form} services={services || []} />
                 )}
               </AnimatePresence>
             </div>
