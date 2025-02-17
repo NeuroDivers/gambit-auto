@@ -1,4 +1,3 @@
-
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -160,7 +159,7 @@ export default function ClientDashboard() {
                     <Tooltip 
                       formatter={(value) => formatCurrency(value as number)}
                     />
-                    <Bar dataKey="amount" fill="var(--primary)" />
+                    <Bar dataKey="amount" fill="#9b87f5" />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
