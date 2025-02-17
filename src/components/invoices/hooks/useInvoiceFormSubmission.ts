@@ -38,30 +38,27 @@ export function useInvoiceFormSubmission({
 
       const total = subtotal + taxes
 
-      const invoiceData = {
-        customer_first_name: customerInfo.firstName,
-        customer_last_name: customerInfo.lastName,
-        customer_email: customerInfo.email,
-        customer_phone: customerInfo.phone,
-        customer_address: customerInfo.address,
-        vehicle_make: vehicleInfo.make,
-        vehicle_model: vehicleInfo.model,
-        vehicle_year: vehicleInfo.year,
-        vehicle_vin: vehicleInfo.vin,
-        subtotal,
-        tax_amount: taxes,
-        total,
-        notes,
-        status,
-        work_order_id: workOrderId || null,
-        business_profile_id: businessProfile?.id
-      }
-
       if (invoiceId) {
         // Update existing invoice
         const { error: updateError } = await supabase
           .from("invoices")
-          .update(invoiceData)
+          .update({
+            customer_first_name: customerInfo.firstName,
+            customer_last_name: customerInfo.lastName,
+            customer_email: customerInfo.email,
+            customer_phone: customerInfo.phone,
+            customer_address: customerInfo.address,
+            vehicle_make: vehicleInfo.make,
+            vehicle_model: vehicleInfo.model,
+            vehicle_year: vehicleInfo.year,
+            vehicle_vin: vehicleInfo.vin,
+            subtotal,
+            tax_amount: taxes,
+            total,
+            notes,
+            status,
+            business_profile_id: businessProfile?.id
+          })
           .eq("id", invoiceId)
 
         if (updateError) throw updateError
@@ -93,23 +90,28 @@ export function useInvoiceFormSubmission({
           description: "Invoice updated successfully",
         })
       } else {
-        // Create new invoice with RPC call
-        const { data: response, error: createError } = await supabase
-          .rpc('create_invoice_from_work_order', {
-            work_order_id: workOrderId || null
+        // Create new invoice using the new database function
+        const { data: newInvoiceId, error: createError } = await supabase
+          .rpc('create_new_invoice', {
+            p_work_order_id: workOrderId || null,
+            p_customer_first_name: customerInfo.firstName,
+            p_customer_last_name: customerInfo.lastName,
+            p_customer_email: customerInfo.email,
+            p_customer_phone: customerInfo.phone,
+            p_customer_address: customerInfo.address,
+            p_vehicle_make: vehicleInfo.make,
+            p_vehicle_model: vehicleInfo.model,
+            p_vehicle_year: vehicleInfo.year,
+            p_vehicle_vin: vehicleInfo.vin,
+            p_subtotal: subtotal,
+            p_tax_amount: taxes,
+            p_total: total,
+            p_notes: notes,
+            p_status: status,
+            p_business_profile_id: businessProfile?.id
           })
 
         if (createError) throw createError
-
-        const newInvoiceId = response
-
-        // Update the invoice with the rest of the data
-        const { error: updateError } = await supabase
-          .from("invoices")
-          .update(invoiceData)
-          .eq("id", newInvoiceId)
-
-        if (updateError) throw updateError
 
         // Insert invoice items
         const { error: itemsError } = await supabase

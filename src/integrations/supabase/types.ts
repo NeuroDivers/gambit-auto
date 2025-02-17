@@ -1308,6 +1308,27 @@ export type Database = {
         }
         Returns: string
       }
+      create_new_invoice: {
+        Args: {
+          p_work_order_id?: string
+          p_customer_first_name?: string
+          p_customer_last_name?: string
+          p_customer_email?: string
+          p_customer_phone?: string
+          p_customer_address?: string
+          p_vehicle_make?: string
+          p_vehicle_model?: string
+          p_vehicle_year?: number
+          p_vehicle_vin?: string
+          p_subtotal?: number
+          p_tax_amount?: number
+          p_total?: number
+          p_notes?: string
+          p_status?: string
+          p_business_profile_id?: string
+        }
+        Returns: string
+      }
       generate_invoice_number: {
         Args: Record<PropertyKey, never>
         Returns: string
