@@ -1115,6 +1115,66 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicles: {
+        Row: {
+          client_id: string | null
+          color: string | null
+          created_at: string
+          id: string
+          is_primary: boolean | null
+          license_plate: string | null
+          make: string
+          model: string
+          notes: string | null
+          updated_at: string
+          vin: string | null
+          year: number
+        }
+        Insert: {
+          client_id?: string | null
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_primary?: boolean | null
+          license_plate?: string | null
+          make: string
+          model: string
+          notes?: string | null
+          updated_at?: string
+          vin?: string | null
+          year: number
+        }
+        Update: {
+          client_id?: string | null
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_primary?: boolean | null
+          license_plate?: string | null
+          make?: string
+          model?: string
+          notes?: string | null
+          updated_at?: string
+          vin?: string | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicles_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vin_lookups: {
         Row: {
           created_at: string | null
