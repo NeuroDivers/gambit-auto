@@ -1,7 +1,7 @@
 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 type CustomerInfoFieldsProps = {
   customerFirstName: string
@@ -32,70 +32,78 @@ export function CustomerInfoFields({
   setCustomerAddress,
   clients = [],
   isLoadingClients = false,
-  onClientSelect,
+  onClientSelect
 }: CustomerInfoFieldsProps) {
   return (
     <div className="space-y-4">
+      {clients.length > 0 && onClientSelect && (
+        <div>
+          <Label>Select Existing Client</Label>
+          <Select onValueChange={onClientSelect}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a client..." />
+            </SelectTrigger>
+            <SelectContent>
+              {clients.map((client) => (
+                <SelectItem key={client.id} value={client.id}>
+                  {client.first_name} {client.last_name} - {client.email}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="customerFirstName">
-            First Name <span className="text-red-500">*</span>
-          </Label>
+          <Label htmlFor="customerFirstName">First Name</Label>
           <Input
             id="customerFirstName"
             value={customerFirstName}
             onChange={(e) => setCustomerFirstName(e.target.value)}
             placeholder="Enter first name..."
-            required
           />
         </div>
         <div>
-          <Label htmlFor="customerLastName">
-            Last Name <span className="text-red-500">*</span>
-          </Label>
+          <Label htmlFor="customerLastName">Last Name</Label>
           <Input
             id="customerLastName"
             value={customerLastName}
             onChange={(e) => setCustomerLastName(e.target.value)}
             placeholder="Enter last name..."
-            required
           />
         </div>
       </div>
+
       <div>
-        <Label htmlFor="customerEmail">
-          Customer Email <span className="text-red-500">*</span>
-        </Label>
+        <Label htmlFor="customerEmail">Email</Label>
         <Input
           id="customerEmail"
           type="email"
           value={customerEmail}
           onChange={(e) => setCustomerEmail(e.target.value)}
-          placeholder="Enter customer email..."
-          required
+          placeholder="Enter email..."
         />
       </div>
+
       <div>
-        <Label htmlFor="customerPhone">
-          Customer Phone <span className="text-red-500">*</span>
-        </Label>
+        <Label htmlFor="customerPhone">Phone</Label>
         <Input
           id="customerPhone"
           type="tel"
-          value={customerPhone || ''}
+          value={customerPhone}
           onChange={(e) => setCustomerPhone(e.target.value)}
-          placeholder="Enter customer phone..."
-          required
+          placeholder="Enter phone number..."
         />
       </div>
+
       <div>
-        <Label htmlFor="customerAddress">Customer Address</Label>
-        <Textarea
+        <Label htmlFor="customerAddress">Address</Label>
+        <Input
           id="customerAddress"
           value={customerAddress}
           onChange={(e) => setCustomerAddress(e.target.value)}
-          placeholder="Enter customer address..."
-          className="min-h-[80px]"
+          placeholder="Enter address..."
         />
       </div>
     </div>
