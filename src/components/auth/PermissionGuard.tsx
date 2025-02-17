@@ -19,6 +19,7 @@ interface UserRole {
 }
 
 interface ProfileData {
+  id: string
   role: UserRole
 }
 
@@ -36,6 +37,7 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
       const { data } = await supabase
         .from('profiles')
         .select(`
+          id,
           role:role_id (
             id,
             name,
@@ -45,6 +47,7 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
         .eq('id', user.id)
         .single()
 
+      console.log('Profile data:', data)
       return data as ProfileData
     }
   })
