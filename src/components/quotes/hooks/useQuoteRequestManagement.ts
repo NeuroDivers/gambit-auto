@@ -81,12 +81,12 @@ export function useQuoteRequestManagement() {
     }
   })
 
-  const handleEstimateSubmit = (id: string) => {
-    if (!Object.keys(estimateAmount).length) {
+  const handleEstimateSubmit = (id: string, estimates: Record<string, string>) => {
+    if (!Object.keys(estimates).length) {
       toast.error("Please enter estimates for all services")
       return
     }
-    submitEstimateMutation.mutate({ id, estimates: estimateAmount })
+    submitEstimateMutation.mutate({ id, estimates })
     setEstimateAmount({})
   }
 
@@ -98,6 +98,7 @@ export function useQuoteRequestManagement() {
     selectedQuoteId,
     setSelectedQuoteId,
     handleImageRemove,
-    handleEstimateSubmit
+    handleEstimateSubmit,
+    isSubmittingEstimate: submitEstimateMutation.isPending
   }
 }

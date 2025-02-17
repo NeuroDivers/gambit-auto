@@ -1,128 +1,164 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Eye, Upload, X } from "lucide-react"
+import { useState } from "react"
 import { ImageGallery } from "@/components/client/quotes/ImageGallery"
-import { getServiceNames, getStatusBadgeVariant } from "./utils"
-import { Trash2 } from "lucide-react"
-import { QuoteRequest } from "@/hooks/useQuoteRequests"
+import { EstimateForm } from "./EstimateForm"
+import type { QuoteRequest } from "@/types/quote-request"
 
-type QuoteRequestCardProps = {
+interface QuoteRequestCardProps {
   request: QuoteRequest
   services: any[]
-  estimateAmount: Record<string, string>
-  setEstimateAmount: (value: Record<string, string>) => void
-  onEstimateSubmit: (id: string) => void
-  onImageRemove?: (url: string) => void
-  onStatusChange?: (id: string, status: QuoteRequest['status']) => void
-  onDelete?: (id: string) => void
+  onUploadImages: (event: React.ChangeEvent<HTMLInputElement>, quoteId: string, currentUrls: string[]) => void
+  uploading: boolean
+  onImageRemove: (quoteId: string, urlToRemove: string, currentUrls: string[]) => void
+  onEstimateSubmit: (id: string, estimates: Record<string, string>) => void
+  isSubmitting?: boolean
 }
 
-export function QuoteRequestCard({ 
-  request, 
-  services, 
-  estimateAmount, 
-  setEstimateAmount, 
-  onEstimateSubmit,
+export function QuoteRequestCard({
+  request,
+  services,
+  onUploadImages,
+  uploading,
   onImageRemove,
-  onStatusChange,
-  onDelete
+  onEstimateSubmit,
+  isSubmitting = false
 }: QuoteRequestCardProps) {
-  const service_details = request.service_details || {}
-  const totalEstimate = request.estimated_amount || 0
+  const [uploadKey, setUploadKey] = useState(0)
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    onUploadImages(event, request.id, request.media_urls || [])
+    setUploadKey(prev => prev + 1)
+  }
+
+  const statusVariant = {
+    pending: "secondary",
+    estimated: "default",
+    accepted: "outline",
+    rejected: "destructive"
+  } as const
 
   return (
-    <Card className={cn(
-      "transition-colors",
-      request.status === "accepted" && !request.client_response && "border-primary"
-    )}>
+    <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-medium">
-          {request.vehicle_make} {request.vehicle_model} ({request.vehicle_year})
-        </CardTitle>
-        <div className="flex items-center gap-2">
-          {onStatusChange ? (
-            <Select
-              value={request.status}
-              onValueChange={(value) => onStatusChange(request.id, value as QuoteRequest['status'])}
-            >
-              <SelectTrigger className="w-[140px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="estimated">Estimated</SelectItem>
-                <SelectItem value="accepted">Accepted</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-                <SelectItem value="converted">Converted</SelectItem>
-              </SelectContent>
-            </Select>
-          ) : (
-            <Badge variant={getStatusBadgeVariant(request.status)}>
-              {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-            </Badge>
-          )}
-          {onDelete && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onDelete(request.id)}
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
+        <div className="space-y-1">
+          <h3 className="font-semibold">
+            {request.vehicle_make} {request.vehicle_model} ({request.vehicle_year})
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Submitted on {new Date(request.created_at).toLocaleDateString()}
+          </p>
         </div>
+        <Badge variant={statusVariant[request.status as keyof typeof statusVariant]}>
+          {request.status}
+        </Badge>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground mb-2">{request.description}</p>
-        
-        <div className="mb-4">
-          <h4 className="text-sm font-semibold mb-1">Requested Services:</h4>
-          <div className="flex flex-wrap gap-2">
-            {getServiceNames(request.service_ids, services).map((serviceName, index) => (
-              <Badge key={index} variant="secondary">
-                {serviceName}
-              </Badge>
-            ))}
+        <div className="flex flex-col space-y-4">
+          {/* Preview of services */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium">Requested Services:</h4>
+            <div className="flex flex-wrap gap-2">
+              {request.service_ids.map((serviceId) => {
+                const service = services?.find(s => s.id === serviceId)
+                return service ? (
+                  <Badge key={serviceId} variant="outline">
+                    {service.name}
+                  </Badge>
+                ) : null
+              })}
+            </div>
           </div>
-        </div>
 
-        {request.media_urls && request.media_urls.length > 0 && (
-          <ImageGallery
-            mediaUrls={request.media_urls}
-            status={request.status}
-            onImageRemove={onImageRemove || (() => {})}
-          />
-        )}
-        
-        {totalEstimate > 0 && (
-          <div className="mt-2">
-            <h4 className="text-sm font-semibold mb-1">Service Estimates (before taxes):</h4>
-            {Object.entries(service_details).map(([serviceId, details]: [string, any]) => {
-              const service = services?.find(s => s.id === serviceId)
-              const amount = details.estimated_amount || 0
-              return service && (
-                <p key={serviceId} className="text-sm">
-                  {service.name}: ${amount.toFixed(2)}
-                </p>
-              )
-            })}
-            <p className="mt-2 text-lg font-semibold">
-              Total Estimate: ${totalEstimate.toFixed(2)}
-            </p>
+          {/* Description if available */}
+          {request.description && (
+            <div>
+              <h4 className="text-sm font-medium">Additional Details:</h4>
+              <p className="text-sm text-muted-foreground">{request.description}</p>
+            </div>
+          )}
+
+          {/* Images */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-sm font-medium">Images</h4>
+              <Button variant="outline" size="sm" asChild>
+                <label className="cursor-pointer">
+                  <input
+                    key={uploadKey}
+                    type="file"
+                    className="hidden"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploading}
+                  />
+                  <Upload className="h-4 w-4 mr-2" />
+                  Add Images
+                </label>
+              </Button>
+            </div>
+            {request.media_urls && request.media_urls.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {request.media_urls.map((url, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={url}
+                      alt={`Image ${index + 1}`}
+                      className="rounded-md object-cover w-full aspect-video"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => onImageRemove(request.id, url, request.media_urls || [])}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No images uploaded</p>
+            )}
           </div>
-        )}
 
-        <div className="mt-2 text-xs text-muted-foreground">
-          <p>VIN: {request.vehicle_vin}</p>
-          <p>Submitted: {new Date(request.created_at).toLocaleDateString()}</p>
-          {request.client_response && (
-            <p className="mt-1">
-              Client response: <span className="font-semibold">{request.client_response}</span>
-            </p>
+          {/* Estimate Form for pending requests */}
+          {request.status === "pending" && (
+            <EstimateForm
+              quoteRequest={request}
+              services={services}
+              onSubmit={(estimates) => onEstimateSubmit(request.id, estimates)}
+              isSubmitting={isSubmitting}
+            />
+          )}
+
+          {/* Show estimate details if already estimated */}
+          {request.status === "estimated" && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Estimate Details:</h4>
+              {Object.entries(request.service_estimates || {}).map(([serviceId, amount]) => {
+                const service = services?.find(s => s.id === serviceId)
+                return service && (
+                  <div key={serviceId} className="flex justify-between text-sm">
+                    <span>{service.name}</span>
+                    <span className="font-medium">${amount}</span>
+                  </div>
+                )
+              })}
+              <div className="flex justify-between text-base font-semibold pt-2 border-t">
+                <span>Total Estimate:</span>
+                <span>${request.estimated_amount}</span>
+              </div>
+              {request.client_response && (
+                <Badge variant={request.client_response === "accepted" ? "outline" : "destructive"}>
+                  {request.client_response === "accepted" ? "Accepted" : "Rejected"}
+                </Badge>
+              )}
+            </div>
           )}
         </div>
       </CardContent>
