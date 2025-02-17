@@ -7,6 +7,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Outlet, Navigate } from "react-router-dom"
 import { ClientLayout } from "./ClientLayout"
 import { LoadingScreen } from "../shared/LoadingScreen"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 
 export function ClientLayoutWrapper() {
   const navigate = useNavigate();
@@ -53,6 +55,25 @@ export function ClientLayoutWrapper() {
     retry: false
   });
 
+  // Check if user has an associated client record
+  const { data: clientData, isLoading: clientLoading, error: clientError } = useQuery({
+    queryKey: ["client-check", session?.user?.id],
+    enabled: !!session?.user?.id,
+    queryFn: async () => {
+      if (!session?.user) return null;
+      
+      const { data, error } = await supabase
+        .from("clients")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    retry: false
+  });
+
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -79,7 +100,7 @@ export function ClientLayoutWrapper() {
   }
 
   // Show loading screen while checking initial session
-  if (sessionLoading) {
+  if (sessionLoading || profileLoading || clientLoading) {
     return <LoadingScreen />;
   }
 
@@ -89,9 +110,18 @@ export function ClientLayoutWrapper() {
     return <Navigate to="/auth" replace />;
   }
 
-  // Show loading while fetching profile
-  if (profileLoading) {
-    return <LoadingScreen />;
+  // If we have a profile but no client record, show an error message
+  if (!clientLoading && !clientData && !clientError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Alert variant="destructive" className="max-w-lg">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            No client account found. Please contact support to set up your client account.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
   return (
