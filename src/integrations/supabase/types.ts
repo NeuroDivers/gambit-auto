@@ -607,6 +607,7 @@ export type Database = {
       quote_items: {
         Row: {
           created_at: string
+          description: string | null
           details: Json | null
           id: string
           quantity: number
@@ -619,6 +620,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          description?: string | null
           details?: Json | null
           id?: string
           quantity?: number
@@ -631,6 +633,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          description?: string | null
           details?: Json | null
           id?: string
           quantity?: number
