@@ -53,12 +53,12 @@ export function SearchableSelect({
   const [inputValue, setInputValue] = useState("")
 
   // Ensure we have a valid array and flatten it
-  const safeOptions = (options || []).reduce<Option[]>((acc, curr) => {
+  const safeOptions = Array.isArray(options) ? options.reduce<Option[]>((acc, curr) => {
     if ('options' in curr && Array.isArray(curr.options)) {
       return [...acc, ...curr.options]
     }
     return [...acc, curr as Option]
-  }, [])
+  }, []) : []
 
   // Filter options based on input value
   const filteredOptions = !inputValue ? safeOptions : 
@@ -99,7 +99,7 @@ export function SearchableSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full min-w-[var(--radix-popover-trigger-width)] p-0">
-        <Command>
+        <Command shouldFilter={false}>
           <CommandInput 
             placeholder={`Search ${placeholder.toLowerCase()}...`}
             value={inputValue}
