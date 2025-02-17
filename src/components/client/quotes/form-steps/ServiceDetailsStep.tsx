@@ -1,4 +1,3 @@
-
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Textarea } from "@/components/ui/textarea"
 import { UseFormReturn } from "react-hook-form"
@@ -32,18 +31,15 @@ export function ServiceDetailsStep({
 
   const handleFilesUpload = async (files: FileList) => {
     try {
-      await onImageUpload(files, serviceId)
       // Get the current service details
       const currentDetails = form.getValues(`service_details.${serviceId}`) || {}
       const currentImages = currentDetails.images || []
       
-      // Create URLs for the new files
-      const newImageUrls = Array.from(files).map(file => URL.createObjectURL(file))
+      await onImageUpload(files, serviceId)
       
       // Update the form with the new images
       form.setValue(`service_details.${serviceId}.images`, [
-        ...currentImages,
-        ...newImageUrls
+        ...currentImages
       ], { shouldValidate: true })
     } catch (error) {
       console.error('Error uploading images:', error)

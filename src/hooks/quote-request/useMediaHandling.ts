@@ -2,10 +2,8 @@
 import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
-import { UseFormReturn } from "react-hook-form"
-import { QuoteRequestFormData } from "@/components/client/quotes/form-steps/types"
 
-export function useMediaHandling(form: UseFormReturn<QuoteRequestFormData>) {
+export function useMediaHandling() {
   const [uploading, setUploading] = useState(false)
 
   const handleImageUpload = async (files: FileList, serviceId: string) => {
@@ -30,44 +28,33 @@ export function useMediaHandling(form: UseFormReturn<QuoteRequestFormData>) {
         newUrls.push(publicUrl)
       }
 
-      const currentDetails = form.getValues(`service_details.${serviceId}`) || {}
-      const currentImages = currentDetails.images || []
-      
-      form.setValue(`service_details.${serviceId}`, {
-        ...currentDetails,
-        images: [...currentImages, ...newUrls]
-      })
-
-      toast.success(`Successfully uploaded ${files.length} image${files.length > 1 ? 's' : ''}`)
+      return newUrls
     } catch (error: any) {
-      toast.error('Error uploading image: ' + error.message)
+      console.error('Error uploading image:', error)
+      toast.error('Failed to upload image: ' + error.message)
+      throw error
     } finally {
       setUploading(false)
     }
   }
 
-  const handleImageRemove = async (url: string, serviceId: string) => {
+  const handleImageRemove = async (url: string) => {
     try {
-      const urlPath = url.split('/').pop()
-      if (!urlPath) return
+      // Extract the file path from the public URL
+      const filePath = url.split('/').pop()
+      if (!filePath) throw new Error('Invalid file URL')
 
-      const { error: deleteError } = await supabase.storage
+      const { error } = await supabase.storage
         .from('quote-request-media')
-        .remove([urlPath])
+        .remove([filePath])
 
-      if (deleteError) throw deleteError
-
-      const currentDetails = form.getValues(`service_details.${serviceId}`)
-      const currentImages = currentDetails?.images || []
-      
-      form.setValue(`service_details.${serviceId}`, {
-        ...currentDetails,
-        images: currentImages.filter((image: string) => image !== url)
-      })
+      if (error) throw error
 
       toast.success('Image removed successfully')
     } catch (error: any) {
-      toast.error('Error removing image: ' + error.message)
+      console.error('Error removing image:', error)
+      toast.error('Failed to remove image: ' + error.message)
+      throw error
     }
   }
 
