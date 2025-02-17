@@ -9,7 +9,10 @@ import { AddPaymentMethodForm } from "./payment-methods/AddPaymentMethodForm"
 import { PaymentMethodCard } from "./payment-methods/PaymentMethodCard"
 import { usePaymentMethods } from "./payment-methods/usePaymentMethods"
 
-const stripePromise = loadStripe('pk_test_51OpAcWB1FxNNsOFNKJ6RCR2pVvq79iBDqTz3mwYPUEQa8j7G26zfFn3KOVjwV1Fmw6wdpBz4wxjlZwTZrLxgZu0h00Yh1AOwag')
+// Initialize Stripe only if the key is available
+const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY ? 
+  loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY) : 
+  null;
 
 export function ManagePaymentMethods({ customerId }: { customerId?: string }) {
   const [showAddForm, setShowAddForm] = useState(false)
@@ -27,6 +30,22 @@ export function ManagePaymentMethods({ customerId }: { customerId?: string }) {
       <div className="flex items-center justify-center p-4">
         <Loader2 className="h-6 w-6 animate-spin" />
       </div>
+    )
+  }
+
+  if (!stripePromise) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Payment Methods
+          </CardTitle>
+          <CardDescription>
+            Payment processing is not configured
+          </CardDescription>
+        </CardHeader>
+      </Card>
     )
   }
 
