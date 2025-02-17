@@ -11,7 +11,7 @@ type InvoiceTaxSummaryProps = {
   onTotalCalculated?: (subtotal: number, gst: number, qst: number, total: number) => void
 }
 
-export function InvoiceTaxSummary({ items, onTotalCalculated }: InvoiceTaxSummaryProps) {
+export function InvoiceTaxSummary({ items = [], onTotalCalculated }: InvoiceTaxSummaryProps) {
   // Fetch tax rates
   const { data: taxRates } = useQuery({
     queryKey: ['business-taxes'],
@@ -25,12 +25,14 @@ export function InvoiceTaxSummary({ items, onTotalCalculated }: InvoiceTaxSummar
     }
   })
 
-  // Calculate subtotal
-  const subtotal = items.reduce((acc, item) => {
-    return acc + (Number(item.quantity) * Number(item.unit_price))
-  }, 0)
+  // Calculate subtotal with null check
+  const subtotal = items?.reduce((acc, item) => {
+    const quantity = Number(item?.quantity) || 0
+    const unitPrice = Number(item?.unit_price) || 0
+    return acc + (quantity * unitPrice)
+  }, 0) || 0
 
-  // Get tax rates
+  // Get tax rates with null checks
   const gstRate = taxRates?.find(tax => tax.tax_type === 'GST')?.tax_rate || 0
   const qstRate = taxRates?.find(tax => tax.tax_type === 'QST')?.tax_rate || 0
 
