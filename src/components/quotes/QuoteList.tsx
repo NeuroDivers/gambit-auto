@@ -3,10 +3,11 @@ import { useState } from "react"
 import { Quote } from "./types"
 import { CreateQuoteDialog } from "./CreateQuoteDialog"
 import { EditQuoteDialog } from "./EditQuoteDialog"
-import { QuoteListHeader } from "./list/QuoteListHeader"
 import { QuoteCard } from "./list/QuoteCard"
 import { DeleteQuoteDialog } from "./list/DeleteQuoteDialog"
 import { useQuoteListData } from "./hooks/useQuoteListData"
+import { Card } from "../ui/card"
+import { Loader2 } from "lucide-react"
 
 export function QuoteList() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
@@ -40,24 +41,32 @@ export function QuoteList() {
   }
 
   if (isLoading) {
-    return <div>Loading quotes...</div>
+    return (
+      <div className="flex justify-center items-center h-[200px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!quotes?.length) {
+    return (
+      <Card className="p-6">
+        <p className="text-center text-muted-foreground">No quotes found.</p>
+      </Card>
+    )
   }
 
   return (
     <div className="space-y-4">
-      <QuoteListHeader onCreateClick={() => setCreateDialogOpen(true)} />
-
-      <div className="grid gap-4">
-        {quotes.map((quote) => (
-          <QuoteCard
-            key={quote.id}
-            quote={quote}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onConvertToWorkOrder={handleConvertToWorkOrder}
-          />
-        ))}
-      </div>
+      {quotes.map((quote) => (
+        <QuoteCard
+          key={quote.id}
+          quote={quote}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onConvertToWorkOrder={handleConvertToWorkOrder}
+        />
+      ))}
 
       {createDialogOpen && (
         <CreateQuoteDialog 

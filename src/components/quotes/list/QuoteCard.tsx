@@ -1,8 +1,10 @@
-import { Quote } from "../types"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Pencil, Trash2, ClipboardList } from "lucide-react"
-import { QuoteStatusSelect } from "../QuoteStatusSelect"
+import { Card, CardContent } from "@/components/ui/card"
+import { Eye, Calendar, Trash2, ClipboardList } from "lucide-react"
+import type { Quote } from "../types"
+import { useNavigate } from "react-router-dom"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 
 type QuoteCardProps = {
@@ -18,35 +20,70 @@ export function QuoteCard({
   onDelete, 
   onConvertToWorkOrder 
 }: QuoteCardProps) {
+  const navigate = useNavigate()
   const canConvert = quote.status === 'approved'
+
+  const statusVariant = {
+    draft: "secondary",
+    sent: "default",
+    approved: "outline",
+    rejected: "destructive",
+    converted: "outline"
+  } as const
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex justify-between items-center">
-          <span>{quote.quote_number}</span>
-          <div className="flex items-center gap-4">
-            <QuoteStatusSelect 
-              status={quote.status} 
-              quoteId={quote.id}
-            />
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-4">
+          {/* Left Section */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="font-medium truncate">
+                {quote.customer_first_name} {quote.customer_last_name}
+              </h3>
+              <Badge variant={statusVariant[quote.status]}>
+                {quote.status}
+              </Badge>
+              <span className="text-sm font-medium text-muted-foreground">
+                ${quote.total.toLocaleString()}
+              </span>
+            </div>
+            
+            <div className="flex items-center text-sm text-muted-foreground gap-2 mb-2">
+              <Calendar className="h-4 w-4" />
+              <span>{new Date(quote.created_at).toLocaleDateString()}</span>
+            </div>
+            
+            <p className="text-sm text-muted-foreground truncate">
+              {quote.vehicle_year} {quote.vehicle_make} {quote.vehicle_model}
+            </p>
+          </div>
+
+          {/* Right Section - Actions */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/quotes/${quote.id}`)}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              View
+            </Button>
             <HoverCard>
               <HoverCardTrigger asChild>
                 <div>
                   <Button
                     variant="outline"
-                    size="icon"
+                    size="sm"
                     onClick={() => onConvertToWorkOrder(quote.id)}
                     disabled={!canConvert || quote.status === 'converted'}
-                    title="Convert to Work Order"
                   >
                     <ClipboardList className="h-4 w-4" />
                   </Button>
                 </div>
               </HoverCardTrigger>
               {!canConvert && quote.status !== 'converted' && (
-                <HoverCardContent className="w-64 border-l-2 border-l-destructive">
-                  <h4 className="font-semibold text-destructive mb-1">Warning</h4>
+                <HoverCardContent className="w-64">
                   <p className="text-sm text-muted-foreground">
                     This quote must be approved before converting to a work order.
                   </p>
@@ -55,34 +92,11 @@ export function QuoteCard({
             </HoverCard>
             <Button
               variant="ghost"
-              size="icon"
-              onClick={() => onEdit(quote)}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
+              size="sm"
               onClick={() => onDelete(quote)}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
-          </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          <div>
-            <span className="font-semibold">Customer: </span>
-            {quote.customer_first_name} {quote.customer_last_name}
-          </div>
-          <div>
-            <span className="font-semibold">Vehicle: </span>
-            {quote.vehicle_year} {quote.vehicle_make} {quote.vehicle_model}
-          </div>
-          <div>
-            <span className="font-semibold">Total: </span>
-            ${quote.total.toFixed(2)}
           </div>
         </div>
       </CardContent>
