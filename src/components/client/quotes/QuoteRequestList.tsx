@@ -9,9 +9,6 @@ type QuoteRequestListProps = {
   isLoading: boolean
   onAcceptEstimate: (id: string) => void
   onRejectEstimate: (id: string) => void
-  onUploadImages: (event: React.ChangeEvent<HTMLInputElement>, quoteId: string, currentUrls: string[]) => void
-  uploading: boolean
-  onImageRemove: (quoteId: string, urlToRemove: string, currentUrls: string[]) => void
 }
 
 export function QuoteRequestList({
@@ -20,9 +17,6 @@ export function QuoteRequestList({
   isLoading,
   onAcceptEstimate,
   onRejectEstimate,
-  onUploadImages,
-  uploading,
-  onImageRemove
 }: QuoteRequestListProps) {
   if (isLoading) {
     return (
@@ -41,9 +35,6 @@ export function QuoteRequestList({
           services={services || []}
           onAcceptEstimate={onAcceptEstimate}
           onRejectEstimate={onRejectEstimate}
-          onUploadImages={onUploadImages}
-          uploading={uploading}
-          onImageRemove={onImageRemove}
         />
       ))}
       {quoteRequests?.length === 0 && (
