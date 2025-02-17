@@ -61,39 +61,42 @@ export function ClientCard({ client, actions, onEdit }: ClientCardProps) {
         onClick={() => setShowDetails(true)}
       >
         <CardContent className="p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-4">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                {client.user_id ? (
-                  <UserCheck className="h-5 w-5 text-primary" />
-                ) : (
-                  <User className="h-5 w-5" />
-                )}
-              </div>
-              <div>
-                <h3 className="font-semibold">
-                  {client.first_name} {client.last_name}
-                  {client.user_id && (
-                    <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                      Has Account
-                    </span>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-4">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  {client.user_id ? (
+                    <UserCheck className="h-5 w-5 text-primary" />
+                  ) : (
+                    <User className="h-5 w-5" />
                   )}
-                </h3>
-                <p className="text-sm text-muted-foreground">{client.email}</p>
-                {client.phone_number && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {client.phone_number}
-                  </p>
-                )}
-                {client.address && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {client.address}
-                  </p>
-                )}
+                </div>
+                <div>
+                  <h3 className="font-semibold">
+                    {client.first_name} {client.last_name}
+                    {client.user_id && (
+                      <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                        Has Account
+                      </span>
+                    )}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">{client.email}</p>
+                  {client.phone_number && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {client.phone_number}
+                    </p>
+                  )}
+                  {client.address && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {client.address}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
+            
             <div 
-              className="flex gap-2"
+              className="flex gap-2 mt-auto"
               onClick={(e) => e.stopPropagation()} // Prevent card click when clicking buttons
             >
               <Button
