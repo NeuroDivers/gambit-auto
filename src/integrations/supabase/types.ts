@@ -448,6 +448,13 @@ export type Database = {
             foreignKeyName: "invoices_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "client_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
@@ -721,6 +728,13 @@ export type Database = {
             foreignKeyName: "quote_requests_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "client_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
@@ -795,8 +809,22 @@ export type Database = {
             foreignKeyName: "quotes_client_email_fkey"
             columns: ["customer_email"]
             isOneToOne: false
+            referencedRelation: "client_statistics"
+            referencedColumns: ["email"]
+          },
+          {
+            foreignKeyName: "quotes_client_email_fkey"
+            columns: ["customer_email"]
+            isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["email"]
+          },
+          {
+            foreignKeyName: "quotes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_statistics"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "quotes_client_id_fkey"
@@ -1279,8 +1307,22 @@ export type Database = {
             foreignKeyName: "work_orders_client_email_fkey"
             columns: ["email"]
             isOneToOne: false
+            referencedRelation: "client_statistics"
+            referencedColumns: ["email"]
+          },
+          {
+            foreignKeyName: "work_orders_client_email_fkey"
+            columns: ["email"]
+            isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["email"]
+          },
+          {
+            foreignKeyName: "work_orders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_statistics"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "work_orders_client_id_fkey"
@@ -1293,7 +1335,31 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      client_statistics: {
+        Row: {
+          email: string | null
+          first_name: string | null
+          id: string | null
+          last_invoice_date: string | null
+          last_name: string | null
+          last_work_order_date: string | null
+          total_invoices: number | null
+          total_spent: number | null
+          total_work_orders: number | null
+        }
+        Relationships: []
+      }
+      revenue_statistics: {
+        Row: {
+          collected_revenue: number | null
+          month: string | null
+          paid_invoices: number | null
+          total_invoices: number | null
+          total_revenue: number | null
+          unpaid_invoices: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       convert_quote_to_work_order: {
