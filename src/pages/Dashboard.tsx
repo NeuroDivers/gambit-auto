@@ -8,6 +8,16 @@ import { WorkOrderCalendar } from "@/components/work-orders/WorkOrderCalendar";
 import { WorkOrdersSection } from "@/components/work-orders/sections/WorkOrdersSection";
 import { useToast } from "@/hooks/use-toast";
 
+interface UserRole {
+  id: string;
+  name: string;
+  nicename: string;
+}
+
+interface UserProfile {
+  role: UserRole;
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -20,8 +30,8 @@ export default function Dashboard() {
     },
   });
 
-  // Fetch user role
-  const { data: profile, isLoading: profileLoading } = useQuery({
+  // Fetch user role with proper typing
+  const { data: profile, isLoading: profileLoading } = useQuery<UserProfile>({
     queryKey: ["profile", session?.user?.id],
     enabled: !!session?.user?.id,
     queryFn: async () => {
@@ -38,7 +48,7 @@ export default function Dashboard() {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as UserProfile;
     },
   });
 
