@@ -36,7 +36,8 @@ const Auth = () => {
 
       toast.success("Password reset email sent! Please check your inbox.");
     } catch (error: any) {
-      toast.error(error.message);
+      console.error("Password reset error:", error);
+      toast.error(error.message || "Failed to send reset password email");
     }
   };
 
