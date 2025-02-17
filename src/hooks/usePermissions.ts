@@ -75,9 +75,11 @@ export const usePermissions = () => {
       }
 
       const userRole = (profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase();
+      console.log("Current role:", profileData?.role);
       
-      // Full access roles - administrator and king should always have full access
-      if (userRole === 'administrator' || userRole === 'king') {
+      // Full access roles - administrator should always have full access
+      if (userRole === 'administrator') {
+        console.log("User is administrator, granting full access");
         return true;
       }
 
