@@ -45,7 +45,8 @@ export const usePermissions = () => {
         .single();
 
       if (error) throw error;
-      return data?.role as UserRole;
+      // Ensure we return the role object directly, not as an array
+      return data?.role as UserRole | null;
     },
     staleTime: Infinity,
   });

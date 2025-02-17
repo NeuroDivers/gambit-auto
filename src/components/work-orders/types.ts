@@ -25,7 +25,7 @@ export type WorkOrder = {
   assigned_bay?: {
     name: string
   } | null
-  assigned_profile?: {
+  assigned_to?: {
     first_name: string
     last_name: string
   } | null
