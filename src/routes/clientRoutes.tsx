@@ -2,6 +2,7 @@
 import { ClientLayoutWrapper } from "@/components/client/ClientLayoutWrapper"
 import ClientDashboard from "@/pages/client/Dashboard"
 import ClientQuoteRequests from "@/pages/client/QuoteRequests"
+import QuoteRequestDetails from "@/pages/client/QuoteRequestDetails"
 import ClientVehicles from "@/pages/client/Vehicles"
 import Invoices from "@/pages/Invoices"
 import PublicInvoiceView from "@/pages/PublicInvoiceView"
@@ -18,6 +19,10 @@ export const clientRoutes: RouteObject = {
     {
       path: "quotes",
       element: <ClientQuoteRequests />,
+    },
+    {
+      path: "quotes/:id",
+      element: <QuoteRequestDetails />,
     },
     {
       path: "invoices",

@@ -6,6 +6,7 @@ import { Eye, Upload, X } from "lucide-react"
 import { useState } from "react"
 import { QuoteRequestDetailsDialog } from "./QuoteRequestDetailsDialog"
 import type { QuoteRequest } from "@/types/quote-request"
+import { useNavigate } from "react-router-dom"
 
 interface QuoteRequestCardProps {
   request: QuoteRequest
@@ -28,6 +29,7 @@ export function QuoteRequestCard({
 }: QuoteRequestCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [uploadKey, setUploadKey] = useState(0)
+  const navigate = useNavigate()
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     onUploadImages(event, request.id, request.media_urls || [])
@@ -79,7 +81,7 @@ export function QuoteRequestCard({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setDialogOpen(true)}
+                onClick={() => navigate(`/client/quotes/${request.id}`)}
               >
                 <Eye className="h-4 w-4 mr-2" />
                 View Details
