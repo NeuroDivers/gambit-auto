@@ -1,64 +1,69 @@
-
-import { ReactNode, useEffect, useState } from "react";
-import { usePermissions } from "@/hooks/usePermissions";
-import { PermissionType } from "@/types/permissions";
-import { useNavigate } from "react-router-dom";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Shield } from "lucide-react";
+import { ReactNode, useEffect, useState } from "react"
+import { usePermissions } from "@/hooks/usePermissions"
+import { Navigate } from "react-router-dom"
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
+import { LoadingScreen } from "../shared/LoadingScreen"
 
 interface PermissionGuardProps {
-  children: ReactNode;
-  resource: string;
-  type: PermissionType;
-  fallback?: ReactNode;
+  children: ReactNode
+  resource: string
+  type: 'page_access' | 'feature_access'
 }
 
-export const PermissionGuard = ({
-  children,
-  resource,
-  type,
-  fallback
-}: PermissionGuardProps) => {
-  const { checkPermission } = usePermissions();
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const navigate = useNavigate();
+export function PermissionGuard({ children, resource, type }: PermissionGuardProps) {
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null)
+  const { checkPermission } = usePermissions()
+
+  // Get current user's role
+  const { data: profile, isLoading: isLoadingProfile } = useQuery({
+    queryKey: ['current-user-role'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return null
+
+      const { data } = await supabase
+        .from('profiles')
+        .select(`
+          role:role_id (
+            id,
+            name,
+            nicename
+          )
+        `)
+        .eq('id', user.id)
+        .single()
+
+      return data
+    }
+  })
 
   useEffect(() => {
     const checkAccess = async () => {
-      const allowed = await checkPermission(resource, type);
-      setHasPermission(allowed);
-
-      if (!allowed && type === 'page_access') {
-        navigate('/unauthorized');
+      // If user is administrator, grant immediate access
+      if (profile?.role?.name?.toLowerCase() === 'administrator') {
+        console.log('User is admin, granting access')
+        setHasPermission(true)
+        return
       }
-    };
 
-    checkAccess();
-  }, [resource, type, checkPermission, navigate]);
+      // Otherwise check specific permission
+      const result = await checkPermission(resource, type)
+      setHasPermission(result)
+    }
 
-  if (hasPermission === null) {
-    return null; // Loading state
+    if (profile) {
+      checkAccess()
+    }
+  }, [profile, resource, type, checkPermission])
+
+  if (isLoadingProfile || hasPermission === null) {
+    return <LoadingScreen />
   }
 
   if (!hasPermission) {
-    if (fallback) {
-      return <>{fallback}</>;
-    }
-
-    if (type === 'feature_access') {
-      return (
-        <Alert variant="destructive">
-          <Shield className="h-4 w-4" />
-          <AlertTitle>Access Denied</AlertTitle>
-          <AlertDescription>
-            You don't have permission to access this feature.
-          </AlertDescription>
-        </Alert>
-      );
-    }
-
-    return null;
+    return <Navigate to="/unauthorized" replace />
   }
 
-  return <>{children}</>;
-};
+  return <>{children}</>
+}
