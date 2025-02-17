@@ -3,8 +3,13 @@ import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { QuoteList } from "@/components/quotes/QuoteList"
 import { QuoteStats } from "@/components/quotes/QuoteStats"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import QuoteRequestsManagement from "./QuoteRequestsManagement"
 import { Toaster } from "sonner"
+import { Card } from "@/components/ui/card"
+import { Loader2 } from "lucide-react"
+import { QuoteRequestCard } from "@/components/quotes/QuoteRequestCard"
+import { DeleteQuoteDialog } from "@/components/quotes/DeleteQuoteDialog"
+import { useQuoteRequests } from "@/hooks/useQuoteRequests"
+import { useQuoteRequestManagement } from "@/components/quotes/hooks/useQuoteRequestManagement"
 
 export default function Quotes() {
   return (
@@ -196,4 +201,3 @@ function QuoteRequestsArchivedList() {
     </div>
   )
 }
-
