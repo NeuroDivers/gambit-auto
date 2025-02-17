@@ -1,6 +1,5 @@
 
 import { Button } from "@/components/ui/button"
-import { FormLabel } from "@/components/ui/form"
 import { cn } from "@/lib/utils"
 import { Upload, X } from "lucide-react"
 
@@ -19,7 +18,6 @@ export function ServiceImageUpload({ images, onImageUpload, onImageRemove }: Ser
 
   return (
     <div className="space-y-4">
-      <FormLabel>Upload Images</FormLabel>
       {images.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
           {images.map((url, index) => (
@@ -67,4 +65,3 @@ export function ServiceImageUpload({ images, onImageUpload, onImageRemove }: Ser
     </div>
   )
 }
-
