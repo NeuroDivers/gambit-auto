@@ -54,8 +54,7 @@ export function useInvoiceFormSubmission({
         notes,
         status,
         work_order_id: workOrderId || null,
-        business_profile_id: businessProfile?.id,
-        invoice_number: `INV-${Date.now()}`
+        business_profile_id: businessProfile?.id
       }
 
       if (invoiceId) {
