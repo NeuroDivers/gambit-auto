@@ -48,7 +48,12 @@ export function useQuoteRequestData() {
         .maybeSingle()
 
       if (clientError) throw clientError
-      if (!clientData) throw new Error("No client found")
+      if (!clientData) {
+        // Handle case where no client is found
+        toast.error("No client account found. Please contact support.")
+        navigate("/auth")
+        return []
+      }
 
       const { data, error } = await supabase
         .from("quote_requests")
