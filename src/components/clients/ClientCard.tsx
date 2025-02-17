@@ -13,9 +13,10 @@ import { ClientDetailsDialog } from "./ClientDetailsDialog"
 interface ClientCardProps {
   client: Client
   actions?: React.ReactNode
+  onEdit?: (client: Client) => void
 }
 
-export function ClientCard({ client, actions }: ClientCardProps) {
+export function ClientCard({ client, actions, onEdit }: ClientCardProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
   const { toast } = useToast()
@@ -42,6 +43,14 @@ export function ClientCard({ client, actions }: ClientCardProps) {
         description: error.message,
         variant: "destructive",
       })
+    }
+  }
+
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit(client)
+    } else {
+      setIsEditing(true)
     }
   }
 
@@ -90,7 +99,7 @@ export function ClientCard({ client, actions }: ClientCardProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setIsEditing(true)}
+                onClick={handleEdit}
               >
                 <Edit className="h-4 w-4" />
               </Button>

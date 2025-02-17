@@ -2,14 +2,19 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog"
 import { ClientForm } from "./ClientForm"
 
-export function CreateClientDialog() {
+interface CreateClientDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+export function CreateClientDialog({ open, onOpenChange }: CreateClientDialogProps) {
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add New Client</DialogTitle>
         </DialogHeader>
-        <ClientForm />
+        <ClientForm onSuccess={() => onOpenChange(false)} />
       </DialogContent>
     </Dialog>
   )
