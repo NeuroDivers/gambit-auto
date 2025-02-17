@@ -28,6 +28,17 @@ export function useInvoiceFormSubmission({
     setIsSubmitting(true)
 
     try {
+      console.log('Submit started with:', {
+        invoiceItems,
+        businessTaxes,
+        customerInfo,
+        vehicleInfo
+      })
+
+      if (!invoiceItems) {
+        invoiceItems = []
+      }
+
       if (!Array.isArray(invoiceItems)) {
         throw new Error("Invoice items must be an array")
       }
@@ -39,15 +50,21 @@ export function useInvoiceFormSubmission({
           title: "Error",
           description: "Please add at least one item to the invoice",
         })
+        setIsSubmitting(false)
         return
       }
 
       // Calculate subtotal with proper type checking and default values
       const subtotal = invoiceItems.reduce((acc: number, item: any) => {
+        console.log('Processing item:', item)
         const quantity = Number(item.quantity) || 0
         const unitPrice = Number(item.unit_price) || 0
-        return acc + (quantity * unitPrice)
+        const itemTotal = quantity * unitPrice
+        console.log('Item total:', itemTotal)
+        return acc + itemTotal
       }, 0)
+
+      console.log('Calculated subtotal:', subtotal)
 
       // Calculate taxes with proper type checking
       const taxes = Array.isArray(businessTaxes) ? businessTaxes.reduce((acc: number, tax: any) => {
@@ -55,26 +72,30 @@ export function useInvoiceFormSubmission({
         return acc + (subtotal * (rate / 100))
       }, 0) : 0
 
+      console.log('Calculated taxes:', taxes)
+
       const total = subtotal + taxes
 
       const invoiceData = {
-        customer_first_name: customerInfo.firstName || '',
-        customer_last_name: customerInfo.lastName || '',
-        customer_email: customerInfo.email || '',
-        customer_phone: customerInfo.phone || '',
-        customer_address: customerInfo.address || '',
-        vehicle_make: vehicleInfo.make || '',
-        vehicle_model: vehicleInfo.model || '',
-        vehicle_year: vehicleInfo.year || null,
-        vehicle_vin: vehicleInfo.vin || '',
-        subtotal: subtotal || 0, // Ensure subtotal is never null
-        tax_amount: taxes || 0,  // Ensure tax_amount is never null
-        total: total || 0,       // Ensure total is never null
+        customer_first_name: customerInfo?.firstName || '',
+        customer_last_name: customerInfo?.lastName || '',
+        customer_email: customerInfo?.email || '',
+        customer_phone: customerInfo?.phone || '',
+        customer_address: customerInfo?.address || '',
+        vehicle_make: vehicleInfo?.make || '',
+        vehicle_model: vehicleInfo?.model || '',
+        vehicle_year: vehicleInfo?.year || null,
+        vehicle_vin: vehicleInfo?.vin || '',
+        subtotal: Number(subtotal) || 0, // Ensure subtotal is never null and is a number
+        tax_amount: Number(taxes) || 0,  // Ensure tax_amount is never null and is a number
+        total: Number(total) || 0,       // Ensure total is never null and is a number
         notes: notes || '',
         status: status || 'draft',
         work_order_id: workOrderId || null,
         business_profile_id: businessProfile?.id || null
       }
+
+      console.log('Invoice data to be submitted:', invoiceData)
 
       if (invoiceId) {
         // Update existing invoice
