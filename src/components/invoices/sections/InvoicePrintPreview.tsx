@@ -116,12 +116,9 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
       )}
 
       <div className="text-center text-sm text-gray-600 space-y-2">
-        <p>Merci d'avoir choisi {businessProfile.company_name}</p>
-        <p>Thank you for choosing {businessProfile.company_name}</p>
+        <p>Merci d'avoir choisi {businessProfile.company_name} / Thank you for choosing {businessProfile.company_name}</p>
         <p className="break-words">
-          Pour toute question concernant cette facture, veuillez nous contacter à {businessProfile.email}
-          <br />
-          For questions about this invoice, please contact us at {businessProfile.email}
+          Pour toute question concernant cette facture, veuillez nous contacter à {businessProfile.email} / For questions about this invoice, please contact us at {businessProfile.email}
         </p>
       </div>
     </div>
