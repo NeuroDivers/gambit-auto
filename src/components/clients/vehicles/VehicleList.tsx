@@ -49,8 +49,8 @@ export function VehicleList({ clientId }: VehicleListProps) {
           </DialogHeader>
           <VehicleForm 
             clientId={clientId}
-            onSubmit={values => {
-              addVehicle.mutate(values)
+            onSubmit={async (values) => {
+              await addVehicle.mutateAsync(values)
               setIsAddingVehicle(false)
             }}
           />
@@ -66,8 +66,8 @@ export function VehicleList({ clientId }: VehicleListProps) {
             <VehicleForm 
               vehicle={editingVehicle}
               clientId={clientId}
-              onSubmit={values => {
-                updateVehicle.mutate({ id: editingVehicle.id, values })
+              onSubmit={async (values) => {
+                await updateVehicle.mutateAsync({ id: editingVehicle.id, values })
                 setEditingVehicle(null)
               }}
             />
