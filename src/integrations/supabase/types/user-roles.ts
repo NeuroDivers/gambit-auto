@@ -50,11 +50,11 @@ export interface RolePermission {
 }
 
 // Export a type for profiles with roles
-export interface ProfileWithRole {
-  id: string;
+export interface ProfileWithRole extends ProfilesTable["Row"] {
   role: {
     id: string;
     name: string;
     nicename: string;
   };
 }
+
