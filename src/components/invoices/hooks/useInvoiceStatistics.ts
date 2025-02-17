@@ -30,7 +30,7 @@ export function useInvoiceStatistics(isClient: boolean | undefined, clientId: st
         const collection_rate = total_revenue ? (collected_revenue / total_revenue) * 100 : 0
         const average_invoice_value = total_invoices ? total_revenue / total_invoices : 0
         
-        // Calculate overdue amount
+        // Calculate overdue amount - ensure due_date is compared correctly
         const now = new Date()
         const overdue_amount = invoices
           .filter(inv => 
@@ -72,7 +72,7 @@ export function useInvoiceStatistics(isClient: boolean | undefined, clientId: st
         const collection_rate = total_revenue ? (collected_revenue / total_revenue) * 100 : 0
         const average_invoice_value = total_invoices ? total_revenue / total_invoices : 0
 
-        // Calculate overdue amount
+        // Calculate overdue amount - ensure due_date is compared correctly
         const now = new Date()
         const overdue_amount = invoices
           .filter(inv => 
