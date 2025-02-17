@@ -56,7 +56,7 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
             </div>
           )}
           <div className="space-y-1 flex-grow md:flex-grow-0">
-            <h1 className="text-2xl md:text-3xl font-bold text-purple-600">{businessProfile.company_name}</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-purple-600">{businessProfile.company_name}</h1>
             <p className="text-sm md:text-base text-gray-600 whitespace-pre-wrap max-w-[300px]">{businessProfile.address}</p>
             <p className="text-sm md:text-base text-gray-600">{businessProfile.phone_number}</p>
             <p className="text-sm md:text-base text-gray-600 break-words">{businessProfile.email}</p>
@@ -78,21 +78,21 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
           <table className="w-full">
             <thead>
               <tr>
-                <th className="text-left text-purple-600 py-2">Service</th>
-                <th className="text-left text-purple-600 py-2">Description</th>
-                <th className="text-right text-purple-600 py-2">Quantité</th>
-                <th className="text-right text-purple-600 py-2">Prix unitaire</th>
-                <th className="text-right text-purple-600 py-2">Total</th>
+                <th className="text-left text-purple-600 py-2 text-sm">Service</th>
+                <th className="text-left text-purple-600 py-2 text-sm">Description</th>
+                <th className="text-right text-purple-600 py-2 text-sm">Quantité</th>
+                <th className="text-right text-purple-600 py-2 text-sm">Prix unitaire</th>
+                <th className="text-right text-purple-600 py-2 text-sm">Total</th>
               </tr>
             </thead>
             <tbody>
               {invoice.invoice_items?.map((item, index) => (
                 <tr key={index} className="border-t">
-                  <td className="py-2 text-black">{item.service_name}</td>
-                  <td className="py-2 text-black">{item.description}</td>
-                  <td className="text-right py-2 text-black">{item.quantity}</td>
-                  <td className="text-right py-2 text-black">${item.unit_price.toFixed(2)}</td>
-                  <td className="text-right py-2 text-black">${(item.quantity * item.unit_price).toFixed(2)}</td>
+                  <td className="py-2 text-black text-sm">{item.service_name}</td>
+                  <td className="py-2 text-black text-sm">{item.description}</td>
+                  <td className="text-right py-2 text-black text-sm">{item.quantity}</td>
+                  <td className="text-right py-2 text-black text-sm">${item.unit_price.toFixed(2)}</td>
+                  <td className="text-right py-2 text-black text-sm">${(item.quantity * item.unit_price).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
