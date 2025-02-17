@@ -19,6 +19,7 @@ import { Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
+import { Loader2 } from "lucide-react"
 
 interface QuoteRequestCardProps {
   request: QuoteRequest
@@ -49,7 +50,7 @@ export function QuoteRequestCard({
     estimated: "default",
     accepted: "outline",
     rejected: "destructive",
-    converted: "outline" // Changed from "success" to "outline" since it's a valid variant
+    converted: "outline"
   } as const
 
   const requestedServices = request.service_ids
@@ -93,7 +94,6 @@ export function QuoteRequestCard({
     <Card className={`hover:bg-accent/5 transition-colors ${request.is_archived ? 'opacity-75' : ''}`}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4">
-          {/* Left Section */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
               <h3 className="font-medium truncate">
@@ -127,7 +127,6 @@ export function QuoteRequestCard({
             )}
           </div>
 
-          {/* Right Section - Actions */}
           <div className="flex items-center gap-2 shrink-0">
             <Button
               variant="outline"

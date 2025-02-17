@@ -1,7 +1,8 @@
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Eye, Calendar } from "lucide-react"
+import { Eye, Calendar, Loader2 } from "lucide-react"
 import type { QuoteRequest } from "@/types/quote-request"
 import { useNavigate } from "react-router-dom"
 import {
@@ -18,7 +19,6 @@ import {
 import { Trash2 } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { useState } from "react"
-import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
 interface QuoteRequestCardProps {
