@@ -2,12 +2,13 @@
 import React from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { businessFormSchema, BusinessFormValues } from "../schemas/businessFormSchema"
+import { Building, Mail, Phone, MapPin, Image } from "lucide-react"
 
 interface BusinessFormProps {
   businessProfile: any
@@ -73,9 +74,15 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
           name="company_name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Company Name</FormLabel>
+              <FormLabel className="flex items-center gap-2">
+                <Building className="h-4 w-4 text-[#9b87f5]" />
+                Company Name
+              </FormLabel>
+              <FormDescription>
+                The official name of your business
+              </FormDescription>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} className="bg-white" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -86,9 +93,15 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Business Email</FormLabel>
+              <FormLabel className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-[#9b87f5]" />
+                Business Email
+              </FormLabel>
+              <FormDescription>
+                Your primary business contact email
+              </FormDescription>
               <FormControl>
-                <Input {...field} type="email" />
+                <Input {...field} type="email" className="bg-white" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -99,9 +112,15 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
           name="phone_number"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Business Phone</FormLabel>
+              <FormLabel className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-[#9b87f5]" />
+                Business Phone
+              </FormLabel>
+              <FormDescription>
+                Your primary business contact number
+              </FormDescription>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} className="bg-white" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -112,9 +131,15 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
           name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Business Address</FormLabel>
+              <FormLabel className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-[#9b87f5]" />
+                Business Address
+              </FormLabel>
+              <FormDescription>
+                Your business's physical location
+              </FormDescription>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} className="bg-white" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -125,15 +150,26 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
           name="logo_url"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Logo URL</FormLabel>
+              <FormLabel className="flex items-center gap-2">
+                <Image className="h-4 w-4 text-[#9b87f5]" />
+                Logo URL
+              </FormLabel>
+              <FormDescription>
+                A URL to your business logo image
+              </FormDescription>
               <FormControl>
-                <Input {...field} type="url" placeholder="https://" />
+                <Input {...field} type="url" placeholder="https://" className="bg-white" />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit">Save Changes</Button>
+        <Button 
+          type="submit" 
+          className="w-full bg-[#9b87f5] hover:bg-[#7E69AB] text-white"
+        >
+          Save Changes
+        </Button>
       </form>
     </Form>
   )
