@@ -18,7 +18,27 @@ interface QuoteFormProps {
 }
 
 export function QuoteForm({ quote, defaultValues, onSuccess }: QuoteFormProps) {
-  const { form, onSubmit } = useQuoteForm({ quote, defaultValues, onSuccess })
+  const initialValues = quote ? {
+    customer_first_name: quote.customer_first_name,
+    customer_last_name: quote.customer_last_name,
+    customer_email: quote.customer_email,
+    customer_phone: quote.customer_phone,
+    customer_address: quote.customer_address || '',
+    vehicle_make: quote.vehicle_make,
+    vehicle_model: quote.vehicle_model,
+    vehicle_year: quote.vehicle_year,
+    vehicle_vin: quote.vehicle_vin,
+    notes: quote.notes || '',
+    service_items: quote.quote_items?.map(item => ({
+      service_id: item.service_id || '',
+      service_name: item.service_name,
+      description: item.description || '',
+      quantity: item.quantity,
+      unit_price: item.unit_price
+    })) || []
+  } : defaultValues
+
+  const { form, onSubmit } = useQuoteForm({ quote, defaultValues: initialValues, onSuccess })
   const vin = form.watch('vehicle_vin')
   const { data: vinData, isLoading: isLoadingVin } = useVinLookup(vin)
 
@@ -34,7 +54,7 @@ export function QuoteForm({ quote, defaultValues, onSuccess }: QuoteFormProps) {
 
   const mapItemsToServiceItems = (items: any[]) => {
     return items.map(item => ({
-      service_id: item.service_id,
+      service_id: item.service_id || '',
       service_name: item.service_name,
       description: item.description || item.service_name,
       quantity: item.quantity,
@@ -44,7 +64,7 @@ export function QuoteForm({ quote, defaultValues, onSuccess }: QuoteFormProps) {
 
   const mapServiceItemsToItems = (services: any[]) => {
     return services.map(service => ({
-      service_id: service.service_id,
+      service_id: service.service_id || '',
       service_name: service.service_name,
       description: service.description || service.service_name,
       quantity: service.quantity,

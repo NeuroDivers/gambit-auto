@@ -17,6 +17,7 @@ const formSchema = z.object({
   vehicle_vin: z.string().min(1, "Vehicle VIN is required"),
   notes: z.string().optional(),
   service_items: z.array(z.object({
+    service_id: z.string().optional(),
     service_name: z.string(),
     description: z.string().optional(),
     quantity: z.number(),
@@ -35,19 +36,7 @@ export function useQuoteForm({ quote, defaultValues, onSuccess }: UseQuoteFormPr
 
   const form = useForm<QuoteFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: quote ? {
-      customer_first_name: quote.customer_first_name || '',
-      customer_last_name: quote.customer_last_name || '',
-      customer_email: quote.customer_email || '',
-      customer_phone: quote.customer_phone || '',
-      customer_address: quote.customer_address || '',
-      vehicle_make: quote.vehicle_make || '',
-      vehicle_model: quote.vehicle_model || '',
-      vehicle_year: quote.vehicle_year || new Date().getFullYear(),
-      vehicle_vin: quote.vehicle_vin || '',
-      notes: quote.notes || '',
-      service_items: quote.quote_items || []
-    } : defaultValues || {
+    defaultValues: defaultValues || {
       customer_first_name: '',
       customer_last_name: '',
       customer_email: '',
