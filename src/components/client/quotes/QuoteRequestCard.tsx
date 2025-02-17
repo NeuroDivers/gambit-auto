@@ -2,7 +2,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Eye, Upload, X } from "lucide-react"
+import { Eye } from "lucide-react"
 import { useState } from "react"
 import { QuoteRequestDetailsDialog } from "./QuoteRequestDetailsDialog"
 import type { QuoteRequest } from "@/types/quote-request"
@@ -13,9 +13,6 @@ interface QuoteRequestCardProps {
   services: any[]
   onAcceptEstimate: (id: string) => void
   onRejectEstimate: (id: string) => void
-  onUploadImages: (event: React.ChangeEvent<HTMLInputElement>, quoteId: string, currentUrls: string[]) => void
-  uploading: boolean
-  onImageRemove: (quoteId: string, urlToRemove: string, currentUrls: string[]) => void
 }
 
 export function QuoteRequestCard({
@@ -23,18 +20,9 @@ export function QuoteRequestCard({
   services,
   onAcceptEstimate,
   onRejectEstimate,
-  onUploadImages,
-  uploading,
-  onImageRemove
 }: QuoteRequestCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [uploadKey, setUploadKey] = useState(0)
   const navigate = useNavigate()
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onUploadImages(event, request.id, request.media_urls || [])
-    setUploadKey(prev => prev + 1) // Reset the input
-  }
 
   const statusVariant = {
     pending: "secondary",
@@ -87,28 +75,6 @@ export function QuoteRequestCard({
                 View Details
               </Button>
 
-              {["pending", "estimated"].includes(request.status) && (
-                <>
-                  <label className="cursor-pointer">
-                    <input
-                      key={uploadKey}
-                      type="file"
-                      className="hidden"
-                      multiple
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      disabled={uploading}
-                    />
-                    <Button variant="outline" size="sm" asChild>
-                      <span>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Add Images
-                      </span>
-                    </Button>
-                  </label>
-                </>
-              )}
-
               {request.status === "estimated" && !request.client_response && (
                 <>
                   <Button 
@@ -127,31 +93,6 @@ export function QuoteRequestCard({
                 </>
               )}
             </div>
-
-            {/* Preview images */}
-            {request.media_urls && request.media_urls.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {request.media_urls.map((url, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={url}
-                      alt={`Image ${index + 1}`}
-                      className="rounded-md object-cover w-full aspect-video"
-                    />
-                    {["pending", "estimated"].includes(request.status) && (
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => onImageRemove(request.id, url, request.media_urls || [])}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
