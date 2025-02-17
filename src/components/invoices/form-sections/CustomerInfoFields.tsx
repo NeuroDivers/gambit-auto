@@ -31,11 +31,12 @@ export function CustomerInfoFields({
   setCustomerPhone,
   customerAddress,
   setCustomerAddress,
-  clients = [],
+  clients = [], // Provide default empty array
   isLoadingClients = false,
   onClientSelect
 }: CustomerInfoFieldsProps) {
 
+  // Ensure we have a valid array of options even if clients is undefined
   const clientOptions = (clients || []).map(client => ({
     value: client.id,
     label: `${client.first_name} ${client.last_name} (${client.email})`
@@ -47,8 +48,8 @@ export function CustomerInfoFields({
         <div className="mb-6">
           <Label>Select Existing Client</Label>
           <SearchableSelect
-            placeholder="Search clients..."
             options={clientOptions}
+            placeholder="Search clients..."
             onValueChange={onClientSelect}
             emptyMessage="No clients found"
             disabled={isLoadingClients}
