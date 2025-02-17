@@ -36,6 +36,22 @@ export function InvoiceListItem({ invoice }: InvoiceListItemProps) {
     }
   })
 
+  // Check if user is a client
+  const { data: isClient } = useQuery({
+    queryKey: ["isClient"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return false
+
+      const { data } = await supabase.rpc('has_role_by_name', {
+        user_id: user.id,
+        role_name: 'client'
+      })
+      
+      return !!data
+    }
+  })
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'draft':
@@ -67,6 +83,16 @@ export function InvoiceListItem({ invoice }: InvoiceListItemProps) {
     } catch (error) {
       console.error('Error updating invoice status:', error)
       toast.error('Failed to update invoice status')
+    }
+  }
+
+  const handleViewClick = () => {
+    if (isClient) {
+      // Redirect to public invoice view for clients
+      navigate(`/invoices/public/${invoice.id}`)
+    } else {
+      // Redirect to admin invoice view
+      navigate(`/invoices/${invoice.id}`)
     }
   }
 
@@ -124,7 +150,7 @@ export function InvoiceListItem({ invoice }: InvoiceListItemProps) {
             <Button variant="outline" size="icon">
               <Printer className="h-4 w-4" />
             </Button>
-            {invoice.status === 'draft' && (
+            {isAdmin && invoice.status === 'draft' && (
               <Button 
                 variant="outline" 
                 size="icon"
@@ -134,7 +160,7 @@ export function InvoiceListItem({ invoice }: InvoiceListItemProps) {
               </Button>
             )}
             <Button 
-              onClick={() => navigate(`/invoices/${invoice.id}`)}
+              onClick={handleViewClick}
               className="gap-2"
             >
               View
