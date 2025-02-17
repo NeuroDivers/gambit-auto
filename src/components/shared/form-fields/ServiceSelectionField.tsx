@@ -75,7 +75,7 @@ export function ServiceSelectionField({
 
   // Group services by their type for better organization
   const groupedServices = serviceTypes?.reduce<Record<string, ServiceType[]>>((acc, service) => {
-    const type = service.service_type || 'Other Services'
+    const type = service.hierarchy_type || 'Other Services'
     if (!acc[type]) acc[type] = []
     acc[type].push(service)
     return acc
@@ -88,9 +88,9 @@ export function ServiceSelectionField({
         {Object.entries(groupedServices).map(([category, categoryServices]) => (
           <div key={category} className="space-y-4">
             <h3 className="text-base font-medium text-foreground/80 py-2">
-              {category === 'standalone' ? 'Main Services' : 
+              {category === 'main' ? 'Main Services' : 
                category === 'bundle' ? 'Service Bundles' :
-               category === 'sub_service' ? 'Additional Services' :
+               category === 'sub' ? 'Additional Services' :
                category}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -105,18 +105,25 @@ export function ServiceSelectionField({
                       onPressedChange={(pressed) => handleServiceToggle(service, pressed)}
                       disabled={disabled}
                       className={cn(
-                        "w-full justify-between px-4 py-3 rounded-lg border-2",
+                        "w-full h-auto flex-col items-start gap-1 px-4 py-3 rounded-lg border-2",
                         "data-[state=on]:bg-primary/5 data-[state=on]:text-primary data-[state=on]:border-primary",
                         "data-[state=off]:bg-background data-[state=off]:text-foreground data-[state=off]:border-input",
                         "hover:bg-accent hover:text-accent-foreground transition-colors",
                         "disabled:opacity-50"
                       )}
                     >
-                      <span className="font-medium">{service.name}</span>
-                      {service.price && (
-                        <span className="text-sm text-muted-foreground">
-                          ${service.price.toFixed(2)}
-                        </span>
+                      <div className="flex w-full justify-between items-center">
+                        <span className="font-medium">{service.name}</span>
+                        {service.price && (
+                          <span className="text-sm text-muted-foreground">
+                            ${service.price.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                      {service.description && (
+                        <p className="text-sm text-muted-foreground text-left line-clamp-2">
+                          {service.description}
+                        </p>
                       )}
                     </Toggle>
 
