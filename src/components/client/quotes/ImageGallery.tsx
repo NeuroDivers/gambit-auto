@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
@@ -11,6 +10,10 @@ type ImageGalleryProps = {
 
 export function ImageGallery({ mediaUrls, status, onImageRemove }: ImageGalleryProps) {
   const getPublicUrl = (filePath: string) => {
+    if (filePath.startsWith('http')) {
+      return filePath
+    }
+    
     const { data: { publicUrl } } = supabase.storage
       .from('quote-request-media')
       .getPublicUrl(filePath)

@@ -40,17 +40,6 @@ export default function QuoteRequestDetails() {
     }
   })
 
-  const { data: services } = useQuery({
-    queryKey: ["services"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("service_types")
-        .select("*")
-      if (error) throw error
-      return data
-    }
-  })
-
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       if (!event.target.files || event.target.files.length === 0) return
@@ -80,7 +69,7 @@ export default function QuoteRequestDetails() {
 
       if (updateError) throw updateError
 
-      await refetch() // Refresh the data
+      await refetch()
       toast.success(`Successfully uploaded ${files.length} image${files.length > 1 ? 's' : ''}`)
     } catch (error: any) {
       toast.error('Error uploading image: ' + error.message)
@@ -108,7 +97,7 @@ export default function QuoteRequestDetails() {
 
       if (updateError) throw updateError
 
-      await refetch() // Refresh the data
+      await refetch()
       toast.success('Image removed successfully')
     } catch (error: any) {
       toast.error('Error removing image: ' + error.message)
@@ -126,7 +115,9 @@ export default function QuoteRequestDetails() {
         .eq('id', id)
 
       if (error) throw error
+      
       toast.success('Changes saved successfully')
+      navigate("/client/quotes") // Navigate back to quotes page after successful save
     } catch (error: any) {
       toast.error('Error saving changes: ' + error.message)
     } finally {
@@ -140,11 +131,6 @@ export default function QuoteRequestDetails() {
 
   if (!quoteRequest) {
     return <div>Quote request not found</div>
-  }
-
-  const getServiceName = (serviceId: string) => {
-    const service = services?.find(s => s.id === serviceId)
-    return service ? service.name : "Unknown Service"
   }
 
   return (
