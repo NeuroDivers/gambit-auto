@@ -22,10 +22,12 @@ export type ServiceDetails = {
 }
 
 export type QuoteRequestFormData = {
-  vehicle_make: string;
-  vehicle_model: string;
-  vehicle_year: string;
-  vehicle_vin: string;
+  vehicleInfo: {
+    make: string;
+    model: string;
+    year: number;
+    vin: string;
+  };
   service_items: Array<{
     service_id: string;
     service_name: string;
