@@ -11,6 +11,7 @@ import { motion } from "framer-motion"
 import { Progress } from "@/components/ui/progress"
 import { ServiceTypeSelection } from "./form-steps/ServiceTypeSelection"
 import { toast } from "sonner"
+import type { QuoteRequestFormData, ServiceItemType } from "@/types/quote-request"
 
 type Props = {
   onSuccess?: () => void;
@@ -34,7 +35,7 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
 
   const progress = (step / totalSteps) * 100
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: QuoteRequestFormData) => {
     if (step === totalSteps) {
       try {
         await onSubmit(data)
@@ -48,7 +49,7 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
     }
   }
 
-  const handleServiceChange = (services: any[]) => {
+  const handleServiceChange = (services: ServiceItemType[]) => {
     form.setValue('service_items', services, {
       shouldValidate: true
     })
@@ -85,7 +86,7 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
                           Enter your vehicle details to help us provide accurate service quotes.
                         </p>
                       </div>
-                      <VehicleInfoStep form={form} />
+                      <VehicleInfoStep form={form as any} />
                     </div>
 
                     <div className="rounded-lg border bg-card p-6 space-y-6">
@@ -113,7 +114,7 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
                     className="rounded-lg border bg-card p-6"
                   >
                     <ServiceDetailsStep 
-                      form={form}
+                      form={form as any}
                       services={services || []}
                       serviceId={selectedServices[step - 2].service_id}
                       onImageUpload={handleImageUpload}
