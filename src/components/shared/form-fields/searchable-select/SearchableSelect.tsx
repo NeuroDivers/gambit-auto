@@ -56,7 +56,8 @@ export function SearchableSelect({
   };
 
   const findSelectedOption = (value: string): Option | undefined => {
-    for (const option of options) {
+    const safeOptions = options || [];
+    for (const option of safeOptions) {
       if (isGrouped(option)) {
         const found = option.options.find(opt => opt.value === value);
         if (found) return found;
@@ -68,6 +69,7 @@ export function SearchableSelect({
   };
 
   const selectedOption = findSelectedOption(value);
+  const safeOptions = options || [];
 
   if (disabled) {
     return (
@@ -104,13 +106,13 @@ export function SearchableSelect({
           />
           <CommandEmpty>{emptyMessage}</CommandEmpty>
           <CommandGroup>
-            {(options || []).map((item, index) => {
+            {safeOptions.map((item, index) => {
               if (isGrouped(item)) {
                 return (
-                  <CommandGroup key={index} heading={item.label}>
-                    {item.options.map((option) => (
+                  <CommandGroup key={`group-${index}`} heading={item.label}>
+                    {(item.options || []).map((option) => (
                       <CommandItem
-                        key={option.value}
+                        key={`group-item-${option.value}`}
                         value={option.value}
                         onSelect={() => {
                           onValueChange(option.value);
@@ -142,7 +144,7 @@ export function SearchableSelect({
 
               return (
                 <CommandItem
-                  key={item.value}
+                  key={`item-${item.value}`}
                   value={item.value}
                   onSelect={() => {
                     onValueChange(item.value);
@@ -173,5 +175,5 @@ export function SearchableSelect({
         </Command>
       </PopoverContent>
     </Popover>
-  );
+  )
 }
