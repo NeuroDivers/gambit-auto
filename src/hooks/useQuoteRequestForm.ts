@@ -131,11 +131,11 @@ export function useQuoteRequestForm() {
       // Clear form storage
       clearStoredForm()
 
-      toast.success("Quote request submitted successfully!")
+      // Removed toast from here since it will be handled in the form component
       navigate("/client/quotes")
     } catch (error: any) {
       console.error("Error submitting quote request:", error)
-      toast.error("Failed to submit quote request")
+      throw error // Re-throw the error to be handled by the form component
     }
   }, [navigate, clearStoredForm, uploadedUrls])
 

@@ -10,11 +10,13 @@ import { AnimatePresence } from "framer-motion"
 import { motion } from "framer-motion"
 import { Progress } from "@/components/ui/progress"
 import { ServiceTypeSelection } from "./form-steps/ServiceTypeSelection"
-import type { QuoteRequestFormData } from "@/hooks/quote-request/formSchema"
-import type { UseFormReturn } from "react-hook-form"
-import type { ServiceItemType } from "@/types/quote-request"
+import { toast } from "sonner"
 
-export function MultiStepQuoteRequestForm() {
+type Props = {
+  onSuccess?: () => void;
+}
+
+export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
   const {
     form,
     step,
@@ -32,15 +34,21 @@ export function MultiStepQuoteRequestForm() {
 
   const progress = (step / totalSteps) * 100
 
-  const handleSubmit = async (data: QuoteRequestFormData) => {
+  const handleSubmit = async (data: any) => {
     if (step === totalSteps) {
-      await onSubmit(data)
+      try {
+        await onSubmit(data)
+        toast.success("Quote request submitted successfully!")
+        onSuccess?.()
+      } catch (error) {
+        toast.error("Failed to submit quote request")
+      }
     } else {
       nextStep()
     }
   }
 
-  const handleServiceChange = (services: ServiceItemType[]) => {
+  const handleServiceChange = (services: any[]) => {
     form.setValue('service_items', services, {
       shouldValidate: true
     })
