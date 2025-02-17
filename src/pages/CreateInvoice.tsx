@@ -5,7 +5,7 @@ import { EditInvoiceForm } from "@/components/invoices/sections/EditInvoiceForm"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useLocation, useNavigate } from "react-router-dom"
-import { toast } from "sonner"
+import { useToast } from "@/hooks/use-toast"
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { useEffect } from "react"
 
@@ -13,6 +13,7 @@ export default function CreateInvoice() {
   const navigate = useNavigate()
   const location = useLocation()
   const queryClient = useQueryClient()
+  const { toast } = useToast()
   const preselectedClient = location.state?.preselectedClient
 
   const form = useForm<InvoiceFormValues>({
@@ -28,7 +29,10 @@ export default function CreateInvoice() {
       vehicle_model: "",
       vehicle_year: 0,
       vehicle_vin: "",
-      invoice_items: []
+      invoice_items: [],
+      subtotal: 0,
+      tax_amount: 0,
+      total: 0
     }
   })
 
@@ -69,36 +73,16 @@ export default function CreateInvoice() {
 
   const { mutate: createInvoice, isPending } = useMutation({
     mutationFn: async (values: InvoiceFormValues) => {
-      // First check if a client exists with this email
-      const { data: existingClient, error: clientLookupError } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('email', values.customer_email)
-        .maybeSingle()
-
-      if (clientLookupError) throw clientLookupError
-
-      let clientId: string | null = existingClient?.id
-
-      // If no client exists, create one
-      if (!clientId) {
-        const { data: newClient, error: createClientError } = await supabase
-          .from('clients')
-          .insert({
-            first_name: values.customer_first_name,
-            last_name: values.customer_last_name,
-            email: values.customer_email,
-            phone_number: values.customer_phone,
-            address: values.customer_address
-          })
-          .select()
-          .single()
-
-        if (createClientError) throw createClientError
-        clientId = newClient.id
+      if (!values.invoice_items || values.invoice_items.length === 0) {
+        throw new Error("Please add at least one item to the invoice")
       }
 
-      // Create the invoice with client_id
+      // Calculate subtotal
+      const subtotal = values.invoice_items.reduce((acc, item) => {
+        return acc + (Number(item.quantity) * Number(item.unit_price))
+      }, 0)
+
+      // Create the invoice with calculated values
       const { data: invoice, error: invoiceError } = await supabase
         .from('invoices')
         .insert({
@@ -113,7 +97,9 @@ export default function CreateInvoice() {
           vehicle_model: values.vehicle_model,
           vehicle_year: values.vehicle_year,
           vehicle_vin: values.vehicle_vin,
-          client_id: clientId
+          subtotal: subtotal,
+          tax_amount: 0, // Will be calculated by trigger
+          total: subtotal // Will be updated by trigger
         })
         .select()
         .single()
@@ -131,8 +117,8 @@ export default function CreateInvoice() {
               package_id: item.package_id,
               service_name: item.service_name,
               description: item.description,
-              quantity: item.quantity,
-              unit_price: item.unit_price
+              quantity: Number(item.quantity) || 1,
+              unit_price: Number(item.unit_price) || 0
             }))
           )
 
@@ -141,14 +127,21 @@ export default function CreateInvoice() {
 
       return invoice
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
-      toast.success('Invoice created successfully')
-      navigate(`/invoices/${data.id}`)
+      toast({
+        title: "Success",
+        description: "Invoice created successfully"
+      })
+      navigate("/invoices")
     },
     onError: (error: any) => {
       console.error('Error creating invoice:', error)
-      toast.error('Failed to create invoice: ' + error.message)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create invoice",
+        variant: "destructive"
+      })
     }
   })
 
