@@ -41,7 +41,7 @@ export function useMediaHandling() {
 
   const handleImageRemove = async (url: string) => {
     try {
-      // Extract the file path from the public URL
+      // Extract the file path from the URL
       const filePath = url.split('/').pop()
       if (!filePath) throw new Error('Invalid file URL')
 
