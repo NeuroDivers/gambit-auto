@@ -1,15 +1,16 @@
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ImageGallery } from "@/components/client/quotes/ImageGallery"
 import { useQuoteRequestActions } from "@/hooks/useQuoteRequestActions"
-import { ArrowLeft, Upload } from "lucide-react"
 import { toast } from "sonner"
+import { QuoteHeader } from "@/components/client/quotes/details/QuoteHeader"
+import { VehicleInformation } from "@/components/client/quotes/details/VehicleInformation"
+import { RequestedServices } from "@/components/client/quotes/details/RequestedServices"
+import { MediaSection } from "@/components/client/quotes/details/MediaSection"
+import { EstimateDetails } from "@/components/client/quotes/details/EstimateDetails"
 
 export default function QuoteRequestDetails() {
   const { id } = useParams()
@@ -121,70 +122,25 @@ export default function QuoteRequestDetails() {
     return service ? service.name : "Unknown Service"
   }
 
-  const statusVariant = {
-    pending: "secondary",
-    estimated: "default",
-    accepted: "outline",
-    rejected: "destructive"
-  } as const
-
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate("/client/quotes")}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Quote Requests
-        </Button>
-        <Badge variant={statusVariant[quoteRequest.status as keyof typeof statusVariant]}>
-          {quoteRequest.status}
-        </Badge>
-      </div>
+      <QuoteHeader 
+        quoteRequest={quoteRequest}
+        onBack={() => navigate("/client/quotes")}
+      />
 
       <Card>
         <CardHeader>
           <CardTitle>Quote Request Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Vehicle Information */}
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Vehicle Information</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <span className="text-muted-foreground">Make:</span>
-                <span className="ml-2">{quoteRequest.vehicle_make}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Model:</span>
-                <span className="ml-2">{quoteRequest.vehicle_model}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Year:</span>
-                <span className="ml-2">{quoteRequest.vehicle_year}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">VIN:</span>
-                <span className="ml-2">{quoteRequest.vehicle_vin}</span>
-              </div>
-            </div>
-          </div>
+          <VehicleInformation quoteRequest={quoteRequest} />
+          
+          <RequestedServices 
+            quoteRequest={quoteRequest}
+            getServiceName={getServiceName}
+          />
 
-          {/* Services */}
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Requested Services</h3>
-            <div className="flex flex-wrap gap-2">
-              {quoteRequest.service_ids.map((serviceId) => (
-                <Badge key={serviceId} variant="secondary">
-                  {getServiceName(serviceId)}
-                </Badge>
-              ))}
-            </div>
-          </div>
-
-          {/* Description */}
           {quoteRequest.description && (
             <div>
               <h3 className="text-lg font-semibold mb-2">Additional Details</h3>
@@ -192,69 +148,25 @@ export default function QuoteRequestDetails() {
             </div>
           )}
 
-          {/* Images */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Images</h3>
-              {["pending", "estimated"].includes(quoteRequest.status) && (
-                <Button variant="outline" asChild>
-                  <label className="cursor-pointer">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload Images
-                    <input
-                      type="file"
-                      className="hidden"
-                      multiple
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                      disabled={uploading}
-                    />
-                  </label>
-                </Button>
-              )}
-            </div>
-            {quoteRequest.media_urls && quoteRequest.media_urls.length > 0 ? (
-              <ImageGallery
-                mediaUrls={quoteRequest.media_urls}
-                status={quoteRequest.status}
-                onImageRemove={handleImageRemove}
-              />
-            ) : (
-              <p className="text-muted-foreground">No images uploaded</p>
-            )}
-          </div>
+          <MediaSection
+            quoteRequest={quoteRequest}
+            onFileUpload={handleFileUpload}
+            onImageRemove={handleImageRemove}
+            uploading={uploading}
+          />
 
-          {/* Estimate Information */}
-          {quoteRequest.status === "estimated" && (
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Estimate Details</h3>
-              {Object.entries(quoteRequest.service_estimates || {}).map(([serviceId, amount]) => (
-                <div key={serviceId} className="flex justify-between items-center">
-                  <span>{getServiceName(serviceId)}</span>
-                  <span className="font-medium">${String(amount)}</span>
-                </div>
-              ))}
-              <div className="mt-4 flex justify-between items-center text-lg font-semibold">
-                <span>Total Estimate:</span>
-                <span>${quoteRequest.estimated_amount}</span>
-              </div>
-              {!quoteRequest.client_response && (
-                <div className="mt-4 flex gap-4 justify-end">
-                  <Button
-                    onClick={() => handleResponseMutation.mutate({ id: quoteRequest.id, response: "accepted" })}
-                  >
-                    Accept Quote
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => handleResponseMutation.mutate({ id: quoteRequest.id, response: "rejected" })}
-                  >
-                    Decline Quote
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
+          <EstimateDetails
+            quoteRequest={quoteRequest}
+            getServiceName={getServiceName}
+            onAcceptEstimate={() => handleResponseMutation.mutate({ 
+              id: quoteRequest.id, 
+              response: "accepted" 
+            })}
+            onRejectEstimate={() => handleResponseMutation.mutate({ 
+              id: quoteRequest.id, 
+              response: "rejected" 
+            })}
+          />
         </CardContent>
       </Card>
     </div>
