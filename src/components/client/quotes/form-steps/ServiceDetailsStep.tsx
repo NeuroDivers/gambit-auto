@@ -31,11 +31,36 @@ export function ServiceDetailsStep({
   if (!service) return null
 
   const handleFilesUpload = async (files: FileList) => {
-    await onImageUpload(files, serviceId)
+    try {
+      await onImageUpload(files, serviceId)
+      // Get the current service details
+      const currentDetails = form.getValues(`service_details.${serviceId}`) || {}
+      const currentImages = currentDetails.images || []
+      
+      // Create URLs for the new files
+      const newImageUrls = Array.from(files).map(file => URL.createObjectURL(file))
+      
+      // Update the form with the new images
+      form.setValue(`service_details.${serviceId}.images`, [
+        ...currentImages,
+        ...newImageUrls
+      ], { shouldValidate: true })
+    } catch (error) {
+      console.error('Error uploading images:', error)
+    }
   }
 
   const handleImageRemoveClick = (url: string) => {
     onImageRemove(url, serviceId)
+    // Get the current service details
+    const currentDetails = form.getValues(`service_details.${serviceId}`) || {}
+    const currentImages = currentDetails.images || []
+    
+    // Remove the image URL from the array
+    const updatedImages = currentImages.filter((img: string) => img !== url)
+    
+    // Update the form
+    form.setValue(`service_details.${serviceId}.images`, updatedImages, { shouldValidate: true })
   }
 
   return (
