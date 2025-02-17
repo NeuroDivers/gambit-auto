@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
+import { toast } from "sonner"
 
 type ImageGalleryProps = {
   mediaUrls: string[]
@@ -18,6 +19,14 @@ export function ImageGallery({ mediaUrls, status, onImageRemove }: ImageGalleryP
       .from('quote-request-media')
       .getPublicUrl(filePath)
     return publicUrl
+  }
+
+  const handleImageRemove = async (url: string) => {
+    try {
+      await onImageRemove(url)
+    } catch (error) {
+      toast.error("Failed to remove image")
+    }
   }
 
   return (
@@ -39,8 +48,12 @@ export function ImageGallery({ mediaUrls, status, onImageRemove }: ImageGalleryP
               <Button
                 variant="destructive"
                 size="icon"
-                className="absolute top-2 right-2"
-                onClick={() => onImageRemove(url)}
+                className="absolute top-2 right-2 z-10"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  handleImageRemove(url)
+                }}
               >
                 <X className="h-4 w-4" />
               </Button>
