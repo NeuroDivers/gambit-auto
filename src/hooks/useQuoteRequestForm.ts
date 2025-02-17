@@ -18,6 +18,7 @@ export function useQuoteRequestForm() {
   const [step, setStep] = useState(1)
   const [uploading, setUploading] = useState(false)
 
+  // Initialize form first
   const form = useForm<QuoteRequestFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -33,7 +34,20 @@ export function useQuoteRequestForm() {
     }
   })
 
-  // Fetch the user's default vehicle
+  // Queries next (they should be at the top level, not inside conditions)
+  const { data: services } = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_types")
+        .select("*")
+        .eq("status", "active")
+      
+      if (error) throw error
+      return data
+    }
+  })
+
   const { data: defaultVehicle } = useQuery({
     queryKey: ["default-vehicle"],
     queryFn: async () => {
@@ -61,7 +75,7 @@ export function useQuoteRequestForm() {
     }
   })
 
-  // Update form with default vehicle data when available
+  // Effects after queries
   useEffect(() => {
     if (defaultVehicle) {
       form.setValue("vehicleInfo", {
@@ -72,19 +86,6 @@ export function useQuoteRequestForm() {
       })
     }
   }, [defaultVehicle, form])
-
-  const { data: services } = useQuery({
-    queryKey: ["services"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("service_types")
-        .select("*")
-        .eq("status", "active")
-      
-      if (error) throw error
-      return data
-    }
-  })
 
   const selectedServices = form.watch('service_items') || []
   const totalSteps = selectedServices.length > 0 ? selectedServices.length + 2 : 2
@@ -125,9 +126,9 @@ export function useQuoteRequestForm() {
 
   const onSubmit = useCallback(async (data: QuoteRequestFormData) => {
     try {
-      const { data: session, error: sessionError } = await supabase.auth.getSession()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       if (sessionError) throw sessionError
-      if (!session.session) {
+      if (!session) {
         toast.error("Please sign in to submit a quote request")
         navigate("/auth")
         return
@@ -137,7 +138,7 @@ export function useQuoteRequestForm() {
       const { data: clientData, error: clientError } = await supabase
         .from("clients")
         .select("id")
-        .eq("user_id", session.session.user.id)
+        .eq("user_id", session.user.id)
         .maybeSingle()
 
       if (clientError) throw clientError
