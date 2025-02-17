@@ -7,7 +7,6 @@ import { VehicleInformation } from "@/components/client/quotes/details/VehicleIn
 import { RequestedServices } from "@/components/client/quotes/details/RequestedServices"
 import { MediaSection } from "@/components/client/quotes/details/MediaSection"
 import { EstimateDetails } from "@/components/client/quotes/details/EstimateDetails"
-import { Button } from "@/components/ui/button"
 import { useQuoteRequestDetails } from "@/hooks/useQuoteRequestDetails"
 
 export default function QuoteRequestDetails() {
@@ -17,10 +16,8 @@ export default function QuoteRequestDetails() {
     quoteRequest,
     isLoading,
     uploading,
-    isSaving,
     handleFileUpload,
     handleImageRemove,
-    handleSave,
     getServiceName
   } = useQuoteRequestDetails()
 
@@ -39,17 +36,6 @@ export default function QuoteRequestDetails() {
           quoteRequest={quoteRequest}
           onBack={() => navigate("/client/quotes")}
         />
-        <Button 
-          onClick={async () => {
-            const success = await handleSave()
-            if (success) {
-              navigate("/client/quotes")
-            }
-          }} 
-          disabled={isSaving}
-        >
-          {isSaving ? "Saving..." : "Save Changes"}
-        </Button>
       </div>
 
       <Card>

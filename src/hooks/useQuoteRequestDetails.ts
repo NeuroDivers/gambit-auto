@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import type { QuoteRequest } from "@/types/quote-request"
@@ -9,7 +9,7 @@ import type { QuoteRequest } from "@/types/quote-request"
 export function useQuoteRequestDetails() {
   const { id } = useParams()
   const [uploading, setUploading] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
+  const queryClient = useQueryClient()
 
   const { data: services } = useQuery({
     queryKey: ["services"],
@@ -22,7 +22,7 @@ export function useQuoteRequestDetails() {
     }
   })
 
-  const { data: quoteRequest, isLoading, refetch } = useQuery({
+  const { data: quoteRequest, isLoading } = useQuery({
     queryKey: ["quoteRequest", id],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -56,9 +56,9 @@ export function useQuoteRequestDetails() {
           table: 'quote_requests',
           filter: `id=eq.${id}`
         },
-        (payload) => {
-          console.log('Received real-time update:', payload)
-          refetch()
+        () => {
+          // Invalidate and refetch the quote request data
+          queryClient.invalidateQueries({ queryKey: ["quoteRequest", id] })
         }
       )
       .subscribe()
@@ -66,7 +66,7 @@ export function useQuoteRequestDetails() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [id, refetch])
+  }, [id, queryClient])
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -96,7 +96,6 @@ export function useQuoteRequestDetails() {
 
       if (updateError) throw updateError
 
-      // No need to manually refetch as the real-time subscription will handle it
       toast.success(`Successfully uploaded ${files.length} image${files.length > 1 ? 's' : ''}`)
     } catch (error: any) {
       console.error('Error uploading image:', error)
@@ -108,26 +107,17 @@ export function useQuoteRequestDetails() {
 
   const handleImageRemove = async (filePath: string) => {
     try {
-      if (!quoteRequest) return
+      if (!quoteRequest || !quoteRequest.media_urls) return
 
-      console.log('Current media_urls:', quoteRequest.media_urls)
-      console.log('Attempting to delete file:', filePath)
-      
-      // First, delete from storage
+      // Delete from storage
       const { error: deleteError } = await supabase.storage
         .from('quote-request-media')
         .remove([filePath])
 
-      if (deleteError) {
-        console.error('Storage delete error:', deleteError)
-        throw deleteError
-      }
+      if (deleteError) throw deleteError
 
-      console.log('File deleted from storage successfully')
-
-      // Then update the media_urls array
-      const updatedUrls = (quoteRequest.media_urls || []).filter(url => url !== filePath)
-      console.log('Updated media_urls:', updatedUrls)
+      // Update the media_urls array
+      const updatedUrls = quoteRequest.media_urls.filter(url => url !== filePath)
 
       // Update the quote request
       const { error: updateError } = await supabase
@@ -137,39 +127,12 @@ export function useQuoteRequestDetails() {
         })
         .eq('id', id)
 
-      if (updateError) {
-        console.error('Database update error:', updateError)
-        throw updateError
-      }
+      if (updateError) throw updateError
 
-      console.log('Database updated successfully')
-      // No need to manually refetch as the real-time subscription will handle it
       toast.success('Image removed successfully')
     } catch (error: any) {
       console.error('Error removing image:', error)
       toast.error('Error removing image: ' + error.message)
-    }
-  }
-
-  const handleSave = async () => {
-    try {
-      setIsSaving(true)
-      const { error } = await supabase
-        .from('quote_requests')
-        .update({
-          media_urls: quoteRequest?.media_urls || []
-        })
-        .eq('id', id)
-
-      if (error) throw error
-      
-      toast.success('Changes saved successfully')
-      return true
-    } catch (error: any) {
-      toast.error('Error saving changes: ' + error.message)
-      return false
-    } finally {
-      setIsSaving(false)
     }
   }
 
@@ -182,10 +145,8 @@ export function useQuoteRequestDetails() {
     quoteRequest,
     isLoading,
     uploading,
-    isSaving,
     handleFileUpload,
     handleImageRemove,
-    handleSave,
     getServiceName
   }
 }
