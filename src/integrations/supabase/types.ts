@@ -612,7 +612,7 @@ export type Database = {
           id: string
           quantity: number
           quote_id: string | null
-          quote_request_id: string
+          quote_request_id: string | null
           service_id: string
           service_name: string
           unit_price: number
@@ -625,7 +625,7 @@ export type Database = {
           id?: string
           quantity?: number
           quote_id?: string | null
-          quote_request_id: string
+          quote_request_id?: string | null
           service_id: string
           service_name: string
           unit_price?: number
@@ -638,7 +638,7 @@ export type Database = {
           id?: string
           quantity?: number
           quote_id?: string | null
-          quote_request_id?: string
+          quote_request_id?: string | null
           service_id?: string
           service_name?: string
           unit_price?: number

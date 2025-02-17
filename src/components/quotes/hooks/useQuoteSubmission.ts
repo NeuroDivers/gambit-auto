@@ -1,3 +1,4 @@
+
 import { QuoteFormValues } from "../types"
 import { supabase } from "@/integrations/supabase/client"
 import { useQueryClient } from "@tanstack/react-query"
@@ -111,7 +112,8 @@ async function updateQuote(
           service_name: item.service_name,
           description: item.description || '',
           quantity: item.quantity,
-          unit_price: item.unit_price
+          unit_price: item.unit_price,
+          service_id: item.service_id
         }))
       )
 
@@ -175,7 +177,8 @@ async function createQuote(
           service_name: item.service_name,
           description: item.description || '',
           quantity: item.quantity,
-          unit_price: item.unit_price
+          unit_price: item.unit_price,
+          service_id: item.service_id
         }))
       )
 
