@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, Globe, Shield, Database, Users, Code } from "lucide-react"
+import { Loader2, Globe, Shield, Database, Code } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 
@@ -73,14 +73,14 @@ export default function DeveloperSettings() {
               <div className="space-y-2">
                 <h3 className="font-semibold">Anon Key (Public)</h3>
                 <code className="block bg-muted p-4 rounded-md text-sm">
-                  {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'Not configured'}
+                  {import.meta.env.VITE_SUPABASE_ANON_KEY || 'Not configured'}
                 </code>
               </div>
               <Separator />
               <div className="space-y-2">
                 <h3 className="font-semibold">API URL</h3>
                 <code className="block bg-muted p-4 rounded-md text-sm">
-                  {process.env.NEXT_PUBLIC_SUPABASE_URL || 'Not configured'}
+                  {import.meta.env.VITE_SUPABASE_URL || 'Not configured'}
                 </code>
               </div>
             </CardContent>
@@ -148,12 +148,16 @@ export default function DeveloperSettings() {
         <CardContent>
           <div className="grid gap-4">
             <div className="space-y-2">
-              <h3 className="font-semibold">Node Version</h3>
-              <p className="text-sm text-muted-foreground">{process.version}</p>
+              <h3 className="font-semibold">Environment</h3>
+              <p className="text-sm text-muted-foreground">
+                {import.meta.env.MODE}
+              </p>
             </div>
             <div className="space-y-2">
-              <h3 className="font-semibold">Environment</h3>
-              <p className="text-sm text-muted-foreground">{process.env.NODE_ENV}</p>
+              <h3 className="font-semibold">App Version</h3>
+              <p className="text-sm text-muted-foreground">
+                {import.meta.env.VITE_APP_VERSION || '1.0.0'}
+              </p>
             </div>
           </div>
         </CardContent>
