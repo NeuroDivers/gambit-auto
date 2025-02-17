@@ -6,6 +6,11 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Mail, Printer, PencilIcon } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { supabase } from "@/integrations/supabase/client"
+import { useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
+import { useQuery } from "@tanstack/react-query"
 
 type InvoiceListItemProps = {
   invoice: Invoice
@@ -13,6 +18,23 @@ type InvoiceListItemProps = {
 
 export function InvoiceListItem({ invoice }: InvoiceListItemProps) {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+
+  // Check if user is admin
+  const { data: isAdmin } = useQuery({
+    queryKey: ["isAdmin"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return false
+
+      const { data } = await supabase.rpc('has_role_by_name', {
+        user_id: user.id,
+        role_name: 'administrator'
+      })
+      
+      return !!data
+    }
+  })
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -31,15 +53,50 @@ export function InvoiceListItem({ invoice }: InvoiceListItemProps) {
     }
   }
 
+  const updateInvoiceStatus = async (newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .update({ status: newStatus })
+        .eq('id', invoice.id)
+
+      if (error) throw error
+
+      toast.success(`Invoice status updated to ${newStatus}`)
+      queryClient.invalidateQueries({ queryKey: ['invoices'] })
+    } catch (error) {
+      console.error('Error updating invoice status:', error)
+      toast.error('Failed to update invoice status')
+    }
+  }
+
   return (
     <Card className="p-6 hover:border-primary/50 transition-colors">
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="space-y-1 flex-1">
           <div className="flex items-center gap-3">
             <h3 className="text-lg font-semibold">{invoice.invoice_number}</h3>
-            <Badge className={getStatusColor(invoice.status)} variant="secondary">
-              {invoice.status}
-            </Badge>
+            {isAdmin ? (
+              <Select
+                defaultValue={invoice.status}
+                onValueChange={updateInvoiceStatus}
+              >
+                <SelectTrigger className={`w-[130px] ${getStatusColor(invoice.status)}`}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="sent">Sent</SelectItem>
+                  <SelectItem value="paid">Paid</SelectItem>
+                  <SelectItem value="overdue">Overdue</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <Badge className={getStatusColor(invoice.status)} variant="secondary">
+                {invoice.status}
+              </Badge>
+            )}
           </div>
           <p className="text-muted-foreground">
             {invoice.customer_first_name} {invoice.customer_last_name}
