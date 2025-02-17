@@ -32,12 +32,8 @@ export function ClientList() {
     queryKey: ['clients', debouncedSearch, sortBy],
     queryFn: async () => {
       let query = supabase
-        .from('clients')
-        .select(`
-          *,
-          work_orders!work_orders_client_id_fkey(count),
-          invoices!invoices_client_id_fkey(count, sum:total)
-        `)
+        .from('client_statistics')
+        .select('*')
 
       // Apply search if present
       if (debouncedSearch) {
@@ -47,13 +43,13 @@ export function ClientList() {
       // Apply sorting
       switch (sortBy) {
         case 'recent':
-          query = query.order('created_at', { ascending: false })
+          query = query.order('last_invoice_date', { ascending: false, nullsLast: true })
           break
         case 'name':
           query = query.order('first_name', { ascending: true })
           break
         case 'activity':
-          query = query.order('updated_at', { ascending: false })
+          query = query.order('last_work_order_date', { ascending: false, nullsLast: true })
           break
       }
       
@@ -61,12 +57,11 @@ export function ClientList() {
       
       if (error) throw error
 
-      // Transform the data to match the expected format
       return data.map(client => ({
         ...client,
-        total_work_orders: client.work_orders?.[0]?.count || 0,
-        total_invoices: client.invoices?.[0]?.count || 0,
-        total_spent: client.invoices?.[0]?.sum || 0
+        total_work_orders: client.total_work_orders || 0,
+        total_invoices: client.total_invoices || 0,
+        total_spent: client.total_spent || 0
       })) as Client[]
     }
   })
