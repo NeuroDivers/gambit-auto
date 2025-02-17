@@ -4,31 +4,25 @@ import { supabase } from "@/integrations/supabase/client"
 import type { ServiceTypesTable } from "@/integrations/supabase/types/service-types"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
-
-export type QuoteRequest = {
-  id: string
-  client_id: string
-  status: string
-  vehicle_make: string | null
-  vehicle_model: string | null
-  vehicle_year: number | null
-  vehicle_vin: string | null
-  description: string | null
-  service_ids: string[]
-  service_details: Record<string, any> | null
-  service_estimates: Record<string, number> | null
-  estimated_amount: number | null
-  client_response: string | null
-  created_at: string
-  media_urls: string[] | null
-}
+import type { QuoteRequest } from "@/types/quote-request"
 
 export function useQuoteRequestData() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
+  const { data: session } = useQuery({
+    queryKey: ["session"],
+    queryFn: async () => {
+      const { data: { session }, error } = await supabase.auth.getSession()
+      if (error) throw error
+      if (!session) throw new Error("Not authenticated")
+      return session
+    }
+  })
+
   const { data: services } = useQuery({
     queryKey: ["services"],
+    enabled: !!session,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_types")
@@ -42,9 +36,9 @@ export function useQuoteRequestData() {
 
   const { data: quoteRequests, isLoading } = useQuery({
     queryKey: ["quoteRequests"],
+    enabled: !!session?.user?.id,
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("Not authenticated")
+      if (!session?.user?.id) throw new Error("Not authenticated")
 
       const { data, error } = await supabase
         .from("quote_requests")
@@ -65,7 +59,7 @@ export function useQuoteRequestData() {
           created_at,
           media_urls
         `)
-        .eq("client_id", user.id)
+        .eq("client_id", session.user.id)
         .order("created_at", { ascending: false })
 
       if (error) throw error
