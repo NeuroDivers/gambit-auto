@@ -18,9 +18,14 @@ import { Label } from "@/components/ui/label"
 type ServiceSelectionFieldProps = {
   services: ServiceItemType[]
   onServicesChange: (services: ServiceItemType[]) => void
+  disabled?: boolean
 }
 
-export function ServiceSelectionField({ services, onServicesChange }: ServiceSelectionFieldProps) {
+export function ServiceSelectionField({ 
+  services, 
+  onServicesChange,
+  disabled = false 
+}: ServiceSelectionFieldProps) {
   const { data: availableServices, isLoading } = useQuery({
     queryKey: ["services"],
     queryFn: async () => {
@@ -64,7 +69,7 @@ export function ServiceSelectionField({ services, onServicesChange }: ServiceSel
       <div className="flex items-center gap-4">
         <Select
           onValueChange={(value) => addService(value)}
-          disabled={isLoading}
+          disabled={disabled || isLoading}
         >
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Add service" />
@@ -95,6 +100,7 @@ export function ServiceSelectionField({ services, onServicesChange }: ServiceSel
                     value={service.quantity}
                     onChange={(e) => updateQuantity(index, parseInt(e.target.value) || 1)}
                     className="w-24"
+                    disabled={disabled}
                   />
                 </div>
               </div>
@@ -103,6 +109,7 @@ export function ServiceSelectionField({ services, onServicesChange }: ServiceSel
                 variant="ghost"
                 size="sm"
                 onClick={() => removeService(index)}
+                disabled={disabled}
               >
                 Remove
               </Button>

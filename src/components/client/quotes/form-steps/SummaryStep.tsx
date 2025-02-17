@@ -1,11 +1,11 @@
 
 import { UseFormReturn } from "react-hook-form"
 import { motion } from "framer-motion"
-import { FormData } from "@/hooks/quote-request/formSchema"
+import { QuoteRequestFormData } from "@/hooks/quote-request/formSchema"
 import { Badge } from "@/components/ui/badge"
 
 type SummaryStepProps = {
-  form: UseFormReturn<FormData>
+  form: UseFormReturn<QuoteRequestFormData>
   services: any[]
 }
 

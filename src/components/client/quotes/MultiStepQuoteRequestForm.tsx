@@ -9,7 +9,7 @@ import { useQuoteRequestForm } from "@/hooks/useQuoteRequestForm"
 import { AnimatePresence } from "framer-motion"
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 import { motion } from "framer-motion"
-import { QuoteRequestFormData } from "@/hooks/quote-request/formSchema"
+import { QuoteRequestFormData, ServiceItemType } from "@/hooks/quote-request/formSchema"
 
 export function MultiStepQuoteRequestForm() {
   const {
@@ -26,6 +26,8 @@ export function MultiStepQuoteRequestForm() {
     nextStep,
     prevStep
   } = useQuoteRequestForm()
+
+  const serviceItems = form.watch('service_items') || []
 
   return (
     <Card>
@@ -46,7 +48,7 @@ export function MultiStepQuoteRequestForm() {
                   >
                     <VehicleInfoStep form={form} />
                     <ServiceSelectionField 
-                      services={form.watch('service_items') || []}
+                      services={serviceItems}
                       onServicesChange={(services) => form.setValue('service_items', services)}
                     />
                   </motion.div>
