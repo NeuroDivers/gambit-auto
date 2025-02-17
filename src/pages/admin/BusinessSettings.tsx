@@ -22,6 +22,12 @@ const businessFormSchema = z.object({
 
 type BusinessFormValues = z.infer<typeof businessFormSchema>
 
+interface UserProfile {
+  role: {
+    name: string
+  } | null
+}
+
 export default function BusinessSettings() {
   const { toast } = useToast()
 
@@ -36,11 +42,16 @@ export default function BusinessSettings() {
         throw new Error("Not authenticated")
       }
 
-      const { data: userProfile } = await supabase
+      const { data: userProfile, error: profileError } = await supabase
         .from('profiles')
         .select('role:role_id(name)')
         .eq('id', session.user.id)
-        .single()
+        .single<UserProfile>()
+
+      if (profileError) {
+        console.error("Error fetching user profile:", profileError)
+        throw new Error("Failed to verify user role")
+      }
 
       console.log("User profile:", userProfile)
       
