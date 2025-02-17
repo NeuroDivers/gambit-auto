@@ -1,5 +1,7 @@
 
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Check, X } from "lucide-react"
 import type { QuoteRequest } from "@/types/quote-request"
 
 type EstimateDetailsProps = {
@@ -32,7 +34,27 @@ export function EstimateDetails({
         <span>Total Estimate:</span>
         <span>${quoteRequest.estimated_amount}</span>
       </div>
-      {!quoteRequest.client_response && (
+
+      {quoteRequest.client_response ? (
+        <div className="mt-4 flex items-center gap-2">
+          <Badge 
+            variant={quoteRequest.client_response === "accepted" ? "outline" : "destructive"}
+            className="flex items-center gap-1"
+          >
+            {quoteRequest.client_response === "accepted" ? (
+              <>
+                <Check className="h-3 w-3" />
+                Quote Accepted
+              </>
+            ) : (
+              <>
+                <X className="h-3 w-3" />
+                Quote Rejected
+              </>
+            )}
+          </Badge>
+        </div>
+      ) : (
         <div className="mt-4 flex gap-4 justify-end">
           <Button onClick={onAcceptEstimate}>
             Accept Quote
