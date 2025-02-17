@@ -24,8 +24,6 @@ interface ProfileResponse {
 }
 
 export const usePermissions = () => {
-  // Cache permissions data with React Query, setting staleTime to Infinity
-  // This means the data will never go stale and will remain cached until explicitly invalidated
   const { data: permissions } = useQuery({
     queryKey: ["permissions"],
     queryFn: async () => {
@@ -44,8 +42,8 @@ export const usePermissions = () => {
       if (error) throw error;
       return data;
     },
-    staleTime: Infinity, // Never mark the data as stale
-    gcTime: Infinity, // Never remove from cache
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 
   const checkPermission = async (
@@ -67,10 +65,15 @@ export const usePermissions = () => {
           )
         `)
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error('Profile fetch error:', profileError);
+        return false;
+      }
+
+      if (!profileData) {
+        console.error('No profile found for user');
         return false;
       }
 
