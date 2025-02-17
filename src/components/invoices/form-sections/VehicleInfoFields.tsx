@@ -27,6 +27,7 @@ export function VehicleInfoFields({
   setVehicleVin,
 }: VehicleInfoFieldsProps) {
   const { data: vinData, isLoading: isLoadingVin } = useVinLookup(vehicleVin)
+  const currentYear = new Date().getFullYear()
 
   useEffect(() => {
     if (vinData && !vinData.error) {
@@ -35,6 +36,13 @@ export function VehicleInfoFields({
       if (vinData.year) setVehicleYear(vinData.year)
     }
   }, [vinData, setVehicleMake, setVehicleModel, setVehicleYear])
+
+  const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const yearValue = parseInt(e.target.value)
+    if (!isNaN(yearValue) && yearValue >= 1900 && yearValue <= currentYear + 1) {
+      setVehicleYear(yearValue)
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -79,8 +87,10 @@ export function VehicleInfoFields({
             <Input
               id="vehicleYear"
               type="number"
-              value={vehicleYear}
-              onChange={(e) => setVehicleYear(parseInt(e.target.value))}
+              min={1900}
+              max={currentYear + 1}
+              value={vehicleYear || ''}
+              onChange={handleYearChange}
               placeholder="Enter vehicle year..."
               autoComplete="off"
               disabled={isLoadingVin}
