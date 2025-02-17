@@ -17,20 +17,56 @@ export function useQuoteRequestForm() {
   const [step, setStep] = useState(1)
   const { uploading, handleImageUpload, handleImageRemove } = useMediaHandling()
 
+  // Fetch current user's default vehicle
+  const { data: defaultVehicle } = useQuery({
+    queryKey: ["default-vehicle"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error("Not authenticated")
+
+      const { data: client } = await supabase
+        .from("clients")
+        .select("id")
+        .eq("user_id", user.id)
+        .single()
+
+      if (!client) return null
+
+      const { data: vehicle } = await supabase
+        .from("vehicles")
+        .select("*")
+        .eq("client_id", client.id)
+        .eq("is_primary", true)
+        .single()
+
+      return vehicle
+    }
+  })
+
   const form = useForm<QuoteRequestFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       vehicleInfo: {
-        make: "",
-        model: "",
-        year: new Date().getFullYear(),
-        vin: ""
+        make: defaultVehicle?.make || "",
+        model: defaultVehicle?.model || "",
+        year: defaultVehicle?.year || new Date().getFullYear(),
+        vin: defaultVehicle?.vin || ""
       },
       service_items: [],
       description: "",
       service_details: {}
     }
   })
+
+  // Update form values when default vehicle is loaded
+  useEffect(() => {
+    if (defaultVehicle) {
+      form.setValue("vehicleInfo.make", defaultVehicle.make)
+      form.setValue("vehicleInfo.model", defaultVehicle.model)
+      form.setValue("vehicleInfo.year", defaultVehicle.year)
+      form.setValue("vehicleInfo.vin", defaultVehicle.vin || "")
+    }
+  }, [defaultVehicle, form])
 
   const { data: services } = useQuery({
     queryKey: ["services"],
