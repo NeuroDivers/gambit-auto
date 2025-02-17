@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { ForgotPasswordDialog } from "./ForgotPasswordDialog";
 
 interface LoginFormProps {
   formData: {
@@ -90,15 +91,7 @@ export const LoginForm = ({
             autoComplete="current-password"
           />
         </div>
-        <Button
-          variant="link"
-          type="button"
-          onClick={onForgotPassword}
-          className="px-0 text-sm font-medium text-primary hover:underline"
-          disabled={loading}
-        >
-          Forgot your password?
-        </Button>
+        <ForgotPasswordDialog email={formData.email} />
         <Button className="w-full" type="submit" disabled={loading}>
           {loading ? "Loading..." : "Sign In"}
         </Button>
