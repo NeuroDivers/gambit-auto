@@ -21,6 +21,10 @@ export type InvoiceFormValues = {
   vehicle_model: string
   vehicle_year: number
   vehicle_vin: string
+  subtotal: number
+  gst_amount: number
+  qst_amount: number
+  total: number
 }
 
 export type Invoice = {
@@ -30,7 +34,8 @@ export type Invoice = {
   status: string
   notes: string | null
   subtotal: number
-  tax_amount: number
+  gst_amount: number
+  qst_amount: number
   total: number
   due_date: string | null
   company_name: string | null

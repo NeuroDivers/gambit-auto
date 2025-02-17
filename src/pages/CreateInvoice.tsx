@@ -31,7 +31,8 @@ export default function CreateInvoice() {
       vehicle_vin: "",
       invoice_items: [],
       subtotal: 0,
-      tax_amount: 0,
+      gst_amount: 0,
+      qst_amount: 0,
       total: 0
     }
   })
@@ -98,7 +99,8 @@ export default function CreateInvoice() {
           vehicle_year: values.vehicle_year,
           vehicle_vin: values.vehicle_vin,
           subtotal: subtotal,
-          tax_amount: 0, // Will be calculated by trigger
+          gst_amount: 0, // Will be calculated by trigger
+          qst_amount: 0, // Will be calculated by trigger
           total: subtotal // Will be updated by trigger
         })
         .select()
