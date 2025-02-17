@@ -25,4 +25,14 @@ export type ServiceItemType = {
   unit_price: number
 }
 
-export type QuoteRequestFormData = z.infer<typeof formSchema>
+export type QuoteRequestFormData = {
+  vehicleInfo: {
+    make: string
+    model: string
+    year: number
+    vin: string
+  }
+  service_items: ServiceItemType[]
+  description: string
+  service_details: Record<string, any>
+}

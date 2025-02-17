@@ -6,8 +6,9 @@ import { toast } from "sonner"
 import { useNavigate } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
 import { useFormStorage } from "./quote-request/useFormStorage"
-import { QuoteRequestFormData, ServiceItemType } from "./quote-request/formSchema"
+import { QuoteRequestFormData, ServiceItemType, formSchema } from "./quote-request/formSchema"
 import { useQuery } from "@tanstack/react-query"
+import { zodResolver } from "@hookform/resolvers/zod"
 
 export function useQuoteRequestForm() {
   const navigate = useNavigate()
@@ -17,6 +18,7 @@ export function useQuoteRequestForm() {
   const [uploading, setUploading] = useState(false)
 
   const form = useForm<QuoteRequestFormData>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       vehicleInfo: {
         make: "",
@@ -24,7 +26,7 @@ export function useQuoteRequestForm() {
         year: new Date().getFullYear(),
         vin: ""
       },
-      service_items: [],
+      service_items: [] as ServiceItemType[],
       description: "",
       service_details: {}
     }
