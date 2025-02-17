@@ -65,7 +65,8 @@ export function useQuoteRequestData() {
           client_response,
           created_at,
           media_urls,
-          quote_items!quote_items_quote_request_id_fkey (
+          service_details,
+          quote_items:quote_items (
             id,
             service_id,
             service_name,

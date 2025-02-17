@@ -20,12 +20,10 @@ export type QuoteRequest = {
   vehicle_year: number | null
   vehicle_vin: string | null
   description: string | null
-  timeframe: string | null
-  contact_preference: string | null
-  additional_notes: string | null
   estimated_amount: number | null
   client_response: string | null
   created_at: string
   media_urls: string[] | null
   quote_items?: QuoteItem[]
+  service_details?: Record<string, any> | null
 }
