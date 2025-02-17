@@ -14,6 +14,9 @@ type CustomerInfoFieldsProps = {
   setCustomerPhone: (value: string) => void
   customerAddress: string
   setCustomerAddress: (value: string) => void
+  clients?: any[]
+  isLoadingClients?: boolean
+  onClientSelect?: (clientId: string) => void
 }
 
 export function CustomerInfoFields({
@@ -27,6 +30,9 @@ export function CustomerInfoFields({
   setCustomerPhone,
   customerAddress,
   setCustomerAddress,
+  clients = [],
+  isLoadingClients = false,
+  onClientSelect,
 }: CustomerInfoFieldsProps) {
   return (
     <div className="space-y-4">
