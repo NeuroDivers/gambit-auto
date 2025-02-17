@@ -131,7 +131,10 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
                     transition={{ duration: 0.3 }}
                     className="rounded-lg border bg-card p-6"
                   >
-                    <SummaryStep form={form} services={services || []} />
+                    <SummaryStep 
+                      form={form}
+                      services={services || []}
+                    />
                   </motion.div>
                 )}
               </AnimatePresence>
