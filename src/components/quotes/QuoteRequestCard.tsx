@@ -30,9 +30,8 @@ export function QuoteRequestCard({
   onStatusChange,
   onDelete
 }: QuoteRequestCardProps) {
-  const totalEstimate = request.service_estimates 
-    ? Object.values(request.service_estimates).reduce((sum, amount) => sum + amount, 0)
-    : null
+  const service_details = request.service_details || {}
+  const totalEstimate = request.estimated_amount || 0
 
   return (
     <Card className={cn(
@@ -99,14 +98,18 @@ export function QuoteRequestCard({
           />
         )}
         
-        {totalEstimate !== null && (
+        {totalEstimate > 0 && (
           <div className="mt-2">
             <h4 className="text-sm font-semibold mb-1">Service Estimates (before taxes):</h4>
-            {Object.entries(request.service_estimates || {}).map(([serviceId, amount]) => (
-              <p key={serviceId} className="text-sm">
-                {services?.find(s => s.id === serviceId)?.name}: ${amount.toFixed(2)}
-              </p>
-            ))}
+            {Object.entries(service_details).map(([serviceId, details]: [string, any]) => {
+              const service = services?.find(s => s.id === serviceId)
+              const amount = details.estimated_amount || 0
+              return service && (
+                <p key={serviceId} className="text-sm">
+                  {service.name}: ${amount.toFixed(2)}
+                </p>
+              )
+            })}
             <p className="mt-2 text-lg font-semibold">
               Total Estimate: ${totalEstimate.toFixed(2)}
             </p>
