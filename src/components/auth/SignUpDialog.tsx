@@ -33,6 +33,11 @@ export const SignUpDialog = ({
   onSignInClick,
   onGoogleSignIn,
 }: SignUpDialogProps) => {
+  // Since this is a sign-up dialog, we'll provide a no-op function for forgot password
+  const handleForgotPassword = () => {
+    onOpenChange(false); // Close the signup dialog
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
@@ -55,6 +60,7 @@ export const SignUpDialog = ({
             onSubmit={onSubmit}
             onChange={onChange}
             onGoogleSignIn={onGoogleSignIn}
+            onForgotPassword={handleForgotPassword}
           />
           <div className="text-center">
             <Button
