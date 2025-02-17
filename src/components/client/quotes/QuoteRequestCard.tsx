@@ -1,14 +1,13 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
-import { ImageGallery } from "./ImageGallery"
-import { getStatusBadgeVariant } from "@/components/quotes/utils"
-import { Upload } from "lucide-react"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Eye, Upload, X } from "lucide-react"
+import { useState } from "react"
+import { QuoteRequestDetailsDialog } from "./QuoteRequestDetailsDialog"
 import type { QuoteRequest } from "@/types/quote-request"
 
-type QuoteRequestCardProps = {
+interface QuoteRequestCardProps {
   request: QuoteRequest
   services: any[]
   onAcceptEstimate: (id: string) => void
@@ -27,114 +26,140 @@ export function QuoteRequestCard({
   uploading,
   onImageRemove
 }: QuoteRequestCardProps) {
-  const inputId = `image-upload-${request.id}`
-  const service_details = request.service_details || {}
-  const serviceIds = Object.keys(service_details)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [uploadKey, setUploadKey] = useState(0)
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    onUploadImages(event, request.id, request.media_urls || [])
+    setUploadKey(prev => prev + 1) // Reset the input
+  }
+
+  const statusVariant = {
+    pending: "secondary",
+    estimated: "default",
+    accepted: "success",
+    rejected: "destructive"
+  } as const
 
   return (
-    <Card className={cn(
-      "transition-colors",
-      request.status === "estimated" && !request.client_response && "border-primary"
-    )}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-medium">
-          {request.vehicle_make} {request.vehicle_model} ({request.vehicle_year})
-        </CardTitle>
-        <Badge variant={getStatusBadgeVariant(request.status)}>
-          {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-        </Badge>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground mb-2">{request.description}</p>
-        
-        <div className="mb-4">
-          <h4 className="text-sm font-semibold mb-1">Requested Services:</h4>
-          <div className="flex flex-wrap gap-2">
-            {serviceIds.map((serviceId) => {
-              const service = services.find(s => s.id === serviceId)
-              return service && (
-                <Badge key={serviceId} variant="secondary">
-                  {service.name}
-                </Badge>
-              )
-            })}
-          </div>
-        </div>
-
-        {request.media_urls && request.media_urls.length > 0 && (
-          <ImageGallery
-            mediaUrls={request.media_urls}
-            status={request.status}
-            onImageRemove={(url) => onImageRemove(request.id, url, request.media_urls || [])}
-          />
-        )}
-
-        {["pending", "estimated"].includes(request.status) && (
-          <div className="mb-4">
-            <Button 
-              variant="outline" 
-              className="gap-2"
-              disabled={uploading}
-              onClick={() => document.getElementById(inputId)?.click()}
-            >
-              <Upload className="h-4 w-4" />
-              {uploading ? "Uploading..." : "Upload Images"}
-            </Button>
-            <input
-              id={inputId}
-              type="file"
-              className="hidden"
-              accept="image/*"
-              multiple
-              onChange={(e) => onUploadImages(e, request.id, request.media_urls || [])}
-              disabled={uploading}
-            />
-          </div>
-        )}
-        
-        {request.estimated_amount !== null && (
-          <div className="mt-2">
-            <h4 className="text-sm font-semibold mb-1">Service Estimates (before taxes):</h4>
-            {Object.entries(service_details).map(([serviceId, details]) => {
-              const service = services.find(s => s.id === serviceId)
-              const amount = details.estimated_amount || 0
-              return service && (
-                <p key={serviceId} className="text-sm">
-                  {service.name}: ${amount.toFixed(2)}
-                </p>
-              )
-            })}
-            <p className="mt-2 text-lg font-semibold">
-              Total Estimate: ${request.estimated_amount.toFixed(2)}
+    <>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div className="space-y-1">
+            <h3 className="font-semibold">
+              {request.vehicle_make} {request.vehicle_model} ({request.vehicle_year})
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Submitted on {new Date(request.created_at).toLocaleDateString()}
             </p>
           </div>
-        )}
+          <Badge variant={statusVariant[request.status as keyof typeof statusVariant]}>
+            {request.status}
+          </Badge>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col space-y-4">
+            {/* Preview of services */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Requested Services:</h4>
+              <div className="flex flex-wrap gap-2">
+                {request.service_ids.map((serviceId) => {
+                  const service = services?.find(s => s.id === serviceId)
+                  return service ? (
+                    <Badge key={serviceId} variant="outline">
+                      {service.name}
+                    </Badge>
+                  ) : null
+                })}
+              </div>
+            </div>
 
-        {request.status === "estimated" && !request.client_response && (
-          <div className="flex gap-2 mt-4">
-            <Button 
-              variant="default"
-              onClick={() => onAcceptEstimate(request.id)}
-            >
-              Accept Estimate
-            </Button>
-            <Button 
-              variant="destructive"
-              onClick={() => onRejectEstimate(request.id)}
-            >
-              Reject Estimate
-            </Button>
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDialogOpen(true)}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                View Details
+              </Button>
+
+              {["pending", "estimated"].includes(request.status) && (
+                <>
+                  <label className="cursor-pointer">
+                    <input
+                      key={uploadKey}
+                      type="file"
+                      className="hidden"
+                      multiple
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={uploading}
+                    />
+                    <Button variant="outline" size="sm" asChild>
+                      <span>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Add Images
+                      </span>
+                    </Button>
+                  </label>
+                </>
+              )}
+
+              {request.status === "estimated" && !request.client_response && (
+                <>
+                  <Button 
+                    size="sm" 
+                    onClick={() => onAcceptEstimate(request.id)}
+                  >
+                    Accept
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={() => onRejectEstimate(request.id)}
+                  >
+                    Reject
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {/* Preview images */}
+            {request.media_urls && request.media_urls.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {request.media_urls.map((url, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={url}
+                      alt={`Image ${index + 1}`}
+                      className="rounded-md object-cover w-full aspect-video"
+                    />
+                    {["pending", "estimated"].includes(request.status) && (
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => onImageRemove(request.id, url, request.media_urls || [])}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </CardContent>
+      </Card>
 
-        <div className="mt-2 text-xs text-muted-foreground">
-          <p>VIN: {request.vehicle_vin}</p>
-          <p>Submitted: {new Date(request.created_at).toLocaleDateString()}</p>
-          {request.description && (
-            <p className="mt-1">Additional Notes: {request.description}</p>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+      <QuoteRequestDetailsDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        quoteRequest={request}
+        services={services}
+      />
+    </>
   )
 }
