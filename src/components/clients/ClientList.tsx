@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
-import { PlusCircle, FileText, Quote, Search } from "lucide-react"
+import { FileText, Quote, Search } from "lucide-react"
 import { CreateClientDialog } from "./CreateClientDialog"
 import { EditClientDialog } from "./EditClientDialog"
 import { useState } from "react"
@@ -99,39 +99,29 @@ export function ClientList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-3xl font-bold tracking-tight">Clients</h2>
-          <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
-            <PlusCircle className="h-4 w-4" />
-            Add New Client
-          </Button>
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search clients..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8"
+          />
         </div>
-
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search clients..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8"
-            />
-          </div>
-          <Select
-            value={sortBy}
-            onValueChange={setSortBy}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Sort by..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="recent">Most Recent</SelectItem>
-              <SelectItem value="name">Name</SelectItem>
-              <SelectItem value="activity">Recent Activity</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select
+          value={sortBy}
+          onValueChange={setSortBy}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Sort by..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="recent">Most Recent</SelectItem>
+            <SelectItem value="name">Name</SelectItem>
+            <SelectItem value="activity">Recent Activity</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
