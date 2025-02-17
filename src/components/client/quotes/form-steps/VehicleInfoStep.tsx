@@ -179,7 +179,7 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
                   <Input 
                     {...field} 
                     type="number" 
-                    onChange={e => field.onChange(e.target.value)}
+                    onChange={e => field.onChange(e.target.value.toString())}
                     placeholder="e.g. 2020" 
                   />
                 </FormControl>
