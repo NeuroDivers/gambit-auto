@@ -1,7 +1,6 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ServiceStatusFilter, ServiceTypeFilter } from "@/pages/ServiceTypes";
+import { ServiceStatusFilter, ServiceTypeFilter } from "@/types/service-types";
 
 export interface ServiceType {
   id: string;

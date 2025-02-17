@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ServiceTypeDialog } from "./ServiceTypeDialog";
 import { ServiceTypeCard } from "./ServiceTypeCard";
 import { useState } from "react";
-import { ServiceStatusFilter, ServiceTypeFilter } from "@/pages/ServiceTypes";
+import { ServiceStatusFilter, ServiceTypeFilter } from "@/types/service-types";
 import { ServiceFilters } from "./filters/ServiceFilters";
 import { useServiceTypes, ServiceType } from "./hooks/useServiceTypes";
 

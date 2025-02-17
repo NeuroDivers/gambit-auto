@@ -1,4 +1,3 @@
-
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Filter } from "lucide-react";
@@ -10,7 +9,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ServiceStatusFilter, ServiceTypeFilter } from "@/pages/ServiceTypes";
+import { ServiceStatusFilter, ServiceTypeFilter } from "@/types/service-types";
 
 interface ServiceFiltersProps {
   searchQuery: string;
