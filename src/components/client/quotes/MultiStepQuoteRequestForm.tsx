@@ -9,8 +9,8 @@ import { useQuoteRequestForm } from "@/hooks/useQuoteRequestForm"
 import { AnimatePresence } from "framer-motion"
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 import { motion } from "framer-motion"
-import { QuoteRequestFormData, ServiceItemType } from "@/hooks/quote-request/formSchema"
-import type { UseFormReturn } from "react-hook-form"
+import { Progress } from "@/components/ui/progress"
+import { ServiceTypeSelection } from "./form-steps/ServiceTypeSelection"
 
 export function MultiStepQuoteRequestForm() {
   const {
@@ -28,43 +28,86 @@ export function MultiStepQuoteRequestForm() {
     prevStep
   } = useQuoteRequestForm()
 
-  const serviceItems = (form.watch('service_items') || []) as ServiceItemType[]
+  const progress = (step / totalSteps) * 100
 
   return (
-    <Card>
-      <CardHeader className="pb-4">
-        <CardTitle>Request a Quote</CardTitle>
+    <Card className="border-none shadow-none bg-transparent">
+      <CardHeader className="pb-4 space-y-6">
+        <div className="space-y-2">
+          <CardTitle className="text-2xl font-bold tracking-tight">Request a Quote</CardTitle>
+          <p className="text-muted-foreground">
+            Tell us about your vehicle and the services you're interested in.
+          </p>
+        </div>
+        <Progress value={progress} className="h-2" />
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="relative">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <div className="relative min-h-[400px]">
               <AnimatePresence mode="wait">
                 {step === 1 && (
                   <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-4"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-6"
                   >
-                    <VehicleInfoStep form={form} />
-                    <ServiceSelectionField 
-                      services={serviceItems}
-                      onServicesChange={(services) => form.setValue('service_items', services)}
+                    <div className="rounded-lg border bg-card p-6 space-y-6">
+                      <div>
+                        <h2 className="text-lg font-semibold mb-2">Vehicle Information</h2>
+                        <p className="text-sm text-muted-foreground">
+                          Enter your vehicle details to help us provide accurate service quotes.
+                        </p>
+                      </div>
+                      <VehicleInfoStep form={form} />
+                    </div>
+
+                    <div className="rounded-lg border bg-card p-6 space-y-6">
+                      <div>
+                        <h2 className="text-lg font-semibold mb-2">Select Services</h2>
+                        <p className="text-sm text-muted-foreground">
+                          Choose the services you're interested in.
+                        </p>
+                      </div>
+                      <ServiceTypeSelection 
+                        services={services || []}
+                        selectedServices={selectedServices}
+                        onServicesChange={(services) => form.setValue('service_items', services)}
+                      />
+                    </div>
+                  </motion.div>
+                )}
+
+                {step > 1 && step < totalSteps && selectedServices[step - 2] && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="rounded-lg border bg-card p-6"
+                  >
+                    <ServiceDetailsStep 
+                      form={form}
+                      services={services || []}
+                      serviceId={selectedServices[step - 2].service_id}
+                      onImageUpload={handleImageUpload}
+                      onImageRemove={handleImageRemove}
                     />
                   </motion.div>
                 )}
-                {step > 1 && step < totalSteps && selectedServices[step - 2] && (
-                  <ServiceDetailsStep 
-                    form={form}
-                    services={services || []}
-                    serviceId={selectedServices[step - 2].service_id}
-                    onImageUpload={handleImageUpload}
-                    onImageRemove={handleImageRemove}
-                  />
-                )}
+
                 {step === totalSteps && (
-                  <SummaryStep form={form} services={services || []} />
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="rounded-lg border bg-card p-6"
+                  >
+                    <SummaryStep form={form} services={services || []} />
+                  </motion.div>
                 )}
               </AnimatePresence>
             </div>
