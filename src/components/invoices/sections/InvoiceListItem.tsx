@@ -1,5 +1,5 @@
 
-import { formatDistanceToNow } from "date-fns"
+import { formatDistanceToNow, format } from "date-fns"
 import { Invoice } from "../types"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -104,6 +104,11 @@ export function InvoiceListItem({ invoice }: InvoiceListItemProps) {
           <p className="text-sm text-muted-foreground">
             Created {formatDistanceToNow(new Date(invoice.created_at))} ago
           </p>
+          {invoice.status !== 'paid' && invoice.due_date && (
+            <p className="text-sm text-muted-foreground">
+              Due {format(new Date(invoice.due_date), "MMM d, yyyy")}
+            </p>
+          )}
         </div>
 
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
