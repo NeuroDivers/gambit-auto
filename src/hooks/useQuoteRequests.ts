@@ -13,7 +13,7 @@ export type QuoteRequest = {
   description: string
   created_at: string
   estimated_amount: number | null
-  service_estimates: Record<string, number> | null
+  service_details: Record<string, any> | null
   client_response: "accepted" | "rejected" | null
   service_ids: string[]
   media_urls: string[]
@@ -39,7 +39,23 @@ export function useQuoteRequests() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("quote_requests")
-        .select("*")
+        .select(`
+          id,
+          client_id,
+          status,
+          vehicle_make,
+          vehicle_model,
+          vehicle_year,
+          vehicle_vin,
+          description,
+          created_at,
+          estimated_amount,
+          service_details,
+          client_response,
+          service_ids,
+          media_urls,
+          is_archived
+        `)
         .order("created_at", { ascending: false })
 
       if (error) throw error
