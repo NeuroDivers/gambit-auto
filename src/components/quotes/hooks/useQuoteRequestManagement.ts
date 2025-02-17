@@ -2,7 +2,7 @@
 import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { QuoteRequest } from "@/hooks/useQuoteRequests"
+import type { QuoteRequest } from "@/types/quote-request"
 import { toast } from "sonner"
 
 export function useQuoteRequestManagement() {

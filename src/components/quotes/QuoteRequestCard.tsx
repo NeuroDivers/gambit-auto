@@ -32,6 +32,7 @@ export function QuoteRequestCard({
   isSubmitting = false
 }: QuoteRequestCardProps) {
   const [uploadKey, setUploadKey] = useState(0)
+  const [isUploading, setIsUploading] = useState(false)
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     onImageRemove(event.target.value, request.id, request.media_urls || [])
@@ -98,7 +99,7 @@ export function QuoteRequestCard({
                     multiple
                     accept="image/*"
                     onChange={handleImageUpload}
-                    disabled={uploading}
+                    disabled={isUploading}
                   />
                   <Upload className="h-4 w-4 mr-2" />
                   Add Images

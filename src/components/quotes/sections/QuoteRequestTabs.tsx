@@ -1,5 +1,5 @@
 
-import { QuoteRequest } from "@/hooks/useQuoteRequests"
+import type { QuoteRequest } from "@/types/quote-request"
 import { Button } from "@/components/ui/button"
 import { Archive } from "lucide-react"
 import { QuoteRequestCard } from "@/components/quotes/QuoteRequestCard"

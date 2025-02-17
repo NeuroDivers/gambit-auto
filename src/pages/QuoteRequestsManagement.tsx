@@ -1,6 +1,7 @@
 
 import { Loader2 } from "lucide-react"
-import { useQuoteRequests, QuoteRequest } from "@/hooks/useQuoteRequests"
+import { useQuoteRequests } from "@/hooks/useQuoteRequests"
+import type { QuoteRequest } from "@/types/quote-request"
 import { useQuoteRequestManagement } from "@/components/quotes/hooks/useQuoteRequestManagement"
 import { QuoteRequestTabs } from "@/components/quotes/sections/QuoteRequestTabs"
 import { DeleteQuoteDialog } from "@/components/quotes/DeleteQuoteDialog"
