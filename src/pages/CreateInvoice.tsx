@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { useLocation, useNavigate } from "react-router-dom"
 import { useToast } from "@/hooks/use-toast"
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 
 export default function CreateInvoice() {
   const navigate = useNavigate()
@@ -16,6 +16,7 @@ export default function CreateInvoice() {
   const { toast } = useToast()
   const preselectedClient = location.state?.preselectedClient
   const currentYear = new Date().getFullYear()
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(preselectedClient?.id || null)
 
   const form = useForm<InvoiceFormValues>({
     defaultValues: {
@@ -28,7 +29,7 @@ export default function CreateInvoice() {
       customer_address: "",
       vehicle_make: "",
       vehicle_model: "",
-      vehicle_year: currentYear,  // Set a reasonable default year
+      vehicle_year: currentYear,
       vehicle_vin: "",
       invoice_items: [],
       subtotal: 0,
@@ -53,6 +54,7 @@ export default function CreateInvoice() {
 
   useEffect(() => {
     if (preselectedClient) {
+      setSelectedClientId(preselectedClient.id)
       form.setValue('customer_first_name', preselectedClient.first_name)
       form.setValue('customer_last_name', preselectedClient.last_name)
       form.setValue('customer_email', preselectedClient.email)
@@ -65,6 +67,7 @@ export default function CreateInvoice() {
   const handleClientSelect = (clientId: string) => {
     const selectedClient = clients?.find(client => client.id === clientId)
     if (selectedClient) {
+      setSelectedClientId(clientId)
       form.setValue('customer_first_name', selectedClient.first_name)
       form.setValue('customer_last_name', selectedClient.last_name)
       form.setValue('customer_email', selectedClient.email)
@@ -103,12 +106,13 @@ export default function CreateInvoice() {
           customer_address: values.customer_address,
           vehicle_make: values.vehicle_make,
           vehicle_model: values.vehicle_model,
-          vehicle_year: year, // Use the validated year
+          vehicle_year: year,
           vehicle_vin: values.vehicle_vin,
           subtotal: subtotal,
-          gst_amount: 0, // Will be calculated by trigger
-          qst_amount: 0, // Will be calculated by trigger
-          total: subtotal // Will be updated by trigger
+          gst_amount: 0,
+          qst_amount: 0,
+          total: subtotal,
+          client_id: selectedClientId // Add the client_id to the invoice
         })
         .select()
         .single()
