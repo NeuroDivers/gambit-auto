@@ -7,9 +7,6 @@ import { supabase } from "@/integrations/supabase/client"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { SearchableSelect } from "@/components/shared/form-fields/searchable-select/SearchableSelect"
 
 export default function CreateInvoice() {
   const navigate = useNavigate()
@@ -149,35 +146,15 @@ export default function CreateInvoice() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <PageBreadcrumbs />
-      <div className="max-w-5xl mx-auto space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Select Existing Client</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label>Client</Label>
-                <SearchableSelect
-                  placeholder="Search clients..."
-                  options={(clients || []).map(client => ({
-                    value: client.id,
-                    label: `${client.first_name} ${client.last_name} (${client.email})`
-                  }))}
-                  onValueChange={handleClientSelect}
-                  emptyMessage="No clients found"
-                  disabled={isLoadingClients}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
+      <div className="max-w-5xl mx-auto">
         <EditInvoiceForm
           form={form}
           onSubmit={onSubmit}
           isPending={isPending}
           invoiceId={undefined}
+          clients={clients || []}
+          isLoadingClients={isLoadingClients}
+          onClientSelect={handleClientSelect}
         />
       </div>
     </div>

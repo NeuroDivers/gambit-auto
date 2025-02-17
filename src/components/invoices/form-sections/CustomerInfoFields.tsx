@@ -2,6 +2,7 @@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { SearchableSelect } from "@/components/shared/form-fields/searchable-select/SearchableSelect"
 
 type CustomerInfoFieldsProps = {
   customerFirstName: string
@@ -14,6 +15,9 @@ type CustomerInfoFieldsProps = {
   setCustomerPhone: (value: string) => void
   customerAddress: string
   setCustomerAddress: (value: string) => void
+  clients?: any[]
+  isLoadingClients?: boolean
+  onClientSelect?: (clientId: string) => void
 }
 
 export function CustomerInfoFields({
@@ -27,9 +31,28 @@ export function CustomerInfoFields({
   setCustomerPhone,
   customerAddress,
   setCustomerAddress,
+  clients = [],
+  isLoadingClients = false,
+  onClientSelect
 }: CustomerInfoFieldsProps) {
   return (
     <div className="space-y-4">
+      {onClientSelect && (
+        <div className="mb-6">
+          <Label>Select Existing Client</Label>
+          <SearchableSelect
+            placeholder="Search clients..."
+            options={(clients || []).map(client => ({
+              value: client.id,
+              label: `${client.first_name} ${client.last_name} (${client.email})`
+            }))}
+            onValueChange={onClientSelect}
+            emptyMessage="No clients found"
+            disabled={isLoadingClients}
+          />
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="customerFirstName">

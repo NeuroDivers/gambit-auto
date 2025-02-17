@@ -14,10 +14,21 @@ type EditInvoiceFormProps = {
   form: UseFormReturn<InvoiceFormValues>
   onSubmit: (values: InvoiceFormValues) => void
   isPending: boolean
-  invoiceId: string
+  invoiceId: string | undefined
+  clients?: any[]
+  isLoadingClients?: boolean
+  onClientSelect?: (clientId: string) => void
 }
 
-export function EditInvoiceForm({ form, onSubmit, isPending, invoiceId }: EditInvoiceFormProps) {
+export function EditInvoiceForm({ 
+  form, 
+  onSubmit, 
+  isPending, 
+  invoiceId,
+  clients = [],
+  isLoadingClients = false,
+  onClientSelect
+}: EditInvoiceFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[calc(100vh-8rem)] overflow-y-auto px-4">
@@ -46,6 +57,9 @@ export function EditInvoiceForm({ form, onSubmit, isPending, invoiceId }: EditIn
               setCustomerPhone={(value) => form.setValue('customer_phone', value)}
               customerAddress={form.watch('customer_address')}
               setCustomerAddress={(value) => form.setValue('customer_address', value)}
+              clients={clients}
+              isLoadingClients={isLoadingClients}
+              onClientSelect={onClientSelect}
             />
           </CardContent>
         </Card>
