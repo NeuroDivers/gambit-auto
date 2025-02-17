@@ -29,7 +29,7 @@ export interface GroupedOption {
 }
 
 interface SearchableSelectProps {
-  options: (Option | GroupedOption)[]
+  options?: (Option | GroupedOption)[]
   value?: string
   onValueChange: (value: string) => void
   placeholder?: string
@@ -40,7 +40,7 @@ interface SearchableSelectProps {
 }
 
 export function SearchableSelect({
-  options,
+  options = [], // Provide default empty array
   value,
   onValueChange,
   placeholder = "Select an option",
@@ -50,14 +50,28 @@ export function SearchableSelect({
   showPrice = false,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false)
+
+  // Early return if options is undefined to prevent reduce from running
+  if (!Array.isArray(options)) {
+    return (
+      <Button
+        variant="outline"
+        className={cn("w-full justify-between", className)}
+        disabled
+      >
+        <span className="truncate">Loading...</span>
+        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+      </Button>
+    )
+  }
   
-  // Ensure options is always an array
-  const safeOptions: Option[] = options?.reduce((acc: Option[], curr) => {
+  // Ensure options is always an array of flattened options
+  const safeOptions: Option[] = options.reduce((acc: Option[], curr) => {
     if ('options' in curr) {
       return [...acc, ...(curr.options || [])]
     }
     return [...acc, curr as Option]
-  }, []) || []
+  }, [])
 
   const selectedOption = safeOptions.find(option => option.value === value)
 
@@ -90,7 +104,7 @@ export function SearchableSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full min-w-[var(--radix-popover-trigger-width)] p-0">
-        <Command>
+        <Command shouldFilter={false}>
           <CommandInput placeholder={`Search ${placeholder.toLowerCase()}...`} />
           <CommandEmpty>{emptyMessage}</CommandEmpty>
           <CommandGroup>
