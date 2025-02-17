@@ -58,4 +58,5 @@ export type QuoteRequest = {
   service_details: Record<string, any> | null
   service_ids: string[]
   service_estimates?: Record<string, number>
+  is_archived: boolean
 }

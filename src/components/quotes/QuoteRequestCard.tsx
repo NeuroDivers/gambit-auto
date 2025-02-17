@@ -11,26 +11,30 @@ import type { QuoteRequest } from "@/types/quote-request"
 interface QuoteRequestCardProps {
   request: QuoteRequest
   services: any[]
-  onUploadImages: (event: React.ChangeEvent<HTMLInputElement>, quoteId: string, currentUrls: string[]) => void
-  uploading: boolean
-  onImageRemove: (quoteId: string, urlToRemove: string, currentUrls: string[]) => void
+  estimateAmount: Record<string, string>
+  setEstimateAmount: (value: Record<string, string>) => void
   onEstimateSubmit: (id: string, estimates: Record<string, string>) => void
+  onImageRemove: (url: string, quoteId: string, currentUrls: string[]) => void
+  onStatusChange: (id: string, status: QuoteRequest['status']) => void
+  onDelete: (id: string) => void
   isSubmitting?: boolean
 }
 
 export function QuoteRequestCard({
   request,
   services,
-  onUploadImages,
-  uploading,
-  onImageRemove,
+  estimateAmount,
+  setEstimateAmount,
   onEstimateSubmit,
+  onImageRemove,
+  onStatusChange,
+  onDelete,
   isSubmitting = false
 }: QuoteRequestCardProps) {
   const [uploadKey, setUploadKey] = useState(0)
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onUploadImages(event, request.id, request.media_urls || [])
+    onImageRemove(event.target.value, request.id, request.media_urls || [])
     setUploadKey(prev => prev + 1)
   }
 

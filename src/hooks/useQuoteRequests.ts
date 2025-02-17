@@ -1,10 +1,7 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
-import type { QuoteRequest as BaseQuoteRequest } from "@/types/quote-request"
-
-export type QuoteRequest = BaseQuoteRequest
+import type { QuoteRequest } from "@/types/quote-request"
 
 export function useQuoteRequests() {
   const queryClient = useQueryClient()
