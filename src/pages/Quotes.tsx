@@ -23,16 +23,20 @@ export default function Quotes() {
           <div className="max-w-[1600px] mx-auto">
             <QuoteStats />
             
-            <Tabs defaultValue="quotes" className="space-y-4">
+            <Tabs defaultValue="all-quotes" className="space-y-4">
               <TabsList>
-                <TabsTrigger value="quotes">Quotes</TabsTrigger>
-                <TabsTrigger value="requests">Quote Requests</TabsTrigger>
+                <TabsTrigger value="all-quotes">All Quotes</TabsTrigger>
+                <TabsTrigger value="active-requests">Active Requests</TabsTrigger>
+                <TabsTrigger value="archived-requests">Archived Requests</TabsTrigger>
               </TabsList>
-              <TabsContent value="quotes">
+              <TabsContent value="all-quotes">
                 <QuoteList />
               </TabsContent>
-              <TabsContent value="requests">
-                <QuoteRequestsManagement />
+              <TabsContent value="active-requests">
+                <QuoteRequestsActiveList />
+              </TabsContent>
+              <TabsContent value="archived-requests">
+                <QuoteRequestsArchivedList />
               </TabsContent>
             </Tabs>
           </div>
@@ -41,3 +45,155 @@ export default function Quotes() {
     </>
   );
 }
+
+// Split components for better organization
+function QuoteRequestsActiveList() {
+  const {
+    services,
+    quoteRequests,
+    isLoading,
+    archiveQuoteMutation,
+    updateStatusMutation,
+    deleteQuoteMutation
+  } = useQuoteRequests()
+
+  const {
+    estimateAmount,
+    setEstimateAmount,
+    deleteDialogOpen,
+    setDeleteDialogOpen,
+    selectedQuoteId,
+    setSelectedQuoteId,
+    handleEstimateSubmit,
+  } = useQuoteRequestManagement()
+
+  const activeQuotes = quoteRequests?.filter(q => !q.is_archived) || []
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-[200px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!activeQuotes?.length) {
+    return (
+      <Card className="p-6">
+        <p className="text-center text-muted-foreground">No active quote requests found.</p>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {activeQuotes.map((request) => (
+        <QuoteRequestCard
+          key={request.id}
+          request={request}
+          services={services || []}
+          onStatusChange={(id, status) => updateStatusMutation.mutate({ id, status })}
+          onDelete={(id) => {
+            setSelectedQuoteId(id)
+            setDeleteDialogOpen(true)
+          }}
+          onArchiveToggle={(id, currentArchiveStatus) => {
+            archiveQuoteMutation.mutate({ 
+              id, 
+              isArchived: !currentArchiveStatus 
+            })
+          }}
+          estimateAmount={estimateAmount}
+          setEstimateAmount={setEstimateAmount}
+          onEstimateSubmit={handleEstimateSubmit}
+        />
+      ))}
+      <DeleteQuoteDialog 
+        open={deleteDialogOpen} 
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={() => {
+          if (selectedQuoteId) {
+            deleteQuoteMutation.mutate(selectedQuoteId)
+            setDeleteDialogOpen(false)
+          }
+        }}
+      />
+    </div>
+  )
+}
+
+function QuoteRequestsArchivedList() {
+  const {
+    services,
+    quoteRequests,
+    isLoading,
+    archiveQuoteMutation,
+    updateStatusMutation,
+    deleteQuoteMutation
+  } = useQuoteRequests()
+
+  const {
+    estimateAmount,
+    setEstimateAmount,
+    deleteDialogOpen,
+    setDeleteDialogOpen,
+    selectedQuoteId,
+    setSelectedQuoteId,
+    handleEstimateSubmit,
+  } = useQuoteRequestManagement()
+
+  const archivedQuotes = quoteRequests?.filter(q => q.is_archived) || []
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-[200px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!archivedQuotes?.length) {
+    return (
+      <Card className="p-6">
+        <p className="text-center text-muted-foreground">No archived quote requests found.</p>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {archivedQuotes.map((request) => (
+        <QuoteRequestCard
+          key={request.id}
+          request={request}
+          services={services || []}
+          onStatusChange={(id, status) => updateStatusMutation.mutate({ id, status })}
+          onDelete={(id) => {
+            setSelectedQuoteId(id)
+            setDeleteDialogOpen(true)
+          }}
+          onArchiveToggle={(id, currentArchiveStatus) => {
+            archiveQuoteMutation.mutate({ 
+              id, 
+              isArchived: !currentArchiveStatus 
+            })
+          }}
+          estimateAmount={estimateAmount}
+          setEstimateAmount={setEstimateAmount}
+          onEstimateSubmit={handleEstimateSubmit}
+        />
+      ))}
+      <DeleteQuoteDialog 
+        open={deleteDialogOpen} 
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={() => {
+          if (selectedQuoteId) {
+            deleteQuoteMutation.mutate(selectedQuoteId)
+            setDeleteDialogOpen(false)
+          }
+        }}
+      />
+    </div>
+  )
+}
+
