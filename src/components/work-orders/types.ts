@@ -22,6 +22,13 @@ export type WorkOrder = {
   end_time?: string | null
   assigned_bay_id?: string | null
   assigned_profile_id?: string | null
+  assigned_bay?: {
+    name: string
+  } | null
+  assigned_profile?: {
+    first_name: string
+    last_name: string
+  } | null
 }
 
 export interface ServiceItemType {
