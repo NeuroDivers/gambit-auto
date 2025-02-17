@@ -27,7 +27,7 @@ export function QuoteRequestList({
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-3">
       {quoteRequests?.map((request) => (
         <QuoteRequestCard
           key={request.id}
