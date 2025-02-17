@@ -124,8 +124,8 @@ export function QuoteRequestCard({
         <div className="mt-2 text-xs text-muted-foreground">
           <p>VIN: {request.vehicle_vin}</p>
           <p>Submitted: {new Date(request.created_at).toLocaleDateString()}</p>
-          {request.additional_notes && (
-            <p className="mt-1">Additional Notes: {request.additional_notes}</p>
+          {request.description && (
+            <p className="mt-1">Additional Notes: {request.description}</p>
           )}
         </div>
       </CardContent>
