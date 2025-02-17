@@ -610,6 +610,7 @@ export type Database = {
           details: Json | null
           id: string
           quantity: number
+          quote_id: string | null
           quote_request_id: string
           service_id: string
           service_name: string
@@ -621,6 +622,7 @@ export type Database = {
           details?: Json | null
           id?: string
           quantity?: number
+          quote_id?: string | null
           quote_request_id: string
           service_id: string
           service_name: string
@@ -632,6 +634,7 @@ export type Database = {
           details?: Json | null
           id?: string
           quantity?: number
+          quote_id?: string | null
           quote_request_id?: string
           service_id?: string
           service_name?: string
@@ -639,6 +642,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "quote_items_quote_request_id_fkey"
             columns: ["quote_request_id"]

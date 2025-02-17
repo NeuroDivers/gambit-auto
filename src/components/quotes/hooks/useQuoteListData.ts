@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Quote } from "../types"
@@ -13,7 +14,14 @@ export function useQuoteListData() {
         .from("quotes")
         .select(`
           *,
-          quote_items (*)
+          quote_items (
+            id,
+            service_id,
+            service_name,
+            quantity,
+            unit_price,
+            details
+          )
         `)
         .order("created_at", { ascending: false })
 
@@ -43,7 +51,7 @@ export function useQuoteListData() {
   const convertToWorkOrderMutation = useMutation({
     mutationFn: async (quoteId: string) => {
       const { data, error } = await supabase.rpc('convert_quote_to_work_order', {
-        input_quote_id: quoteId  // Changed from quote_id to input_quote_id
+        input_quote_id: quoteId
       })
 
       if (error) throw error
