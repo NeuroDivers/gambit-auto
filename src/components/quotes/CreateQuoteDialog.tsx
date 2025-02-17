@@ -19,16 +19,8 @@ interface CreateQuoteDialogProps {
 }
 
 export function CreateQuoteDialog({ open, onOpenChange }: CreateQuoteDialogProps) {
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
-
-  const handleSuccess = async () => {
-    toast({
-      title: "Success",
-      description: "Quote created successfully",
-    })
-    onOpenChange(false)
-    await queryClient.invalidateQueries({ queryKey: ["quotes"] })
+  const handleSuccess = () => {
+    onOpenChange(false) // Close the dialog on success
   }
 
   return (
