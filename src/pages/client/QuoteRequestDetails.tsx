@@ -83,6 +83,7 @@ export default function QuoteRequestDetails() {
       await refetch()
       toast.success(`Successfully uploaded ${files.length} image${files.length > 1 ? 's' : ''}`)
     } catch (error: any) {
+      console.error('Error uploading image:', error)
       toast.error('Error uploading image: ' + error.message)
     } finally {
       setUploading(false)
@@ -92,13 +93,19 @@ export default function QuoteRequestDetails() {
   const handleImageRemove = async (urlToRemove: string) => {
     try {
       const currentUrls = quoteRequest?.media_urls || []
+      console.log('Attempting to delete file:', urlToRemove)
       
-      // The urlToRemove is already the storage path since we store paths in media_urls
+      // Delete the file from storage
       const { error: deleteError } = await supabase.storage
         .from('quote-request-media')
         .remove([urlToRemove])
 
-      if (deleteError) throw deleteError
+      if (deleteError) {
+        console.error('Storage delete error:', deleteError)
+        throw deleteError
+      }
+
+      console.log('File deleted from storage successfully')
 
       // Update the quote request with the new media URLs array
       const { error: updateError } = await supabase
@@ -108,8 +115,12 @@ export default function QuoteRequestDetails() {
         })
         .eq('id', id)
 
-      if (updateError) throw updateError
+      if (updateError) {
+        console.error('Database update error:', updateError)
+        throw updateError
+      }
 
+      console.log('Database updated successfully')
       await refetch()
       toast.success('Image removed successfully')
     } catch (error: any) {

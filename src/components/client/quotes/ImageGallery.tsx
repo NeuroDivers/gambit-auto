@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
@@ -23,6 +24,7 @@ export function ImageGallery({ mediaUrls, status, onImageRemove }: ImageGalleryP
 
   const handleImageRemove = async (url: string) => {
     try {
+      // We pass the storage path directly since that's what we store in media_urls
       await onImageRemove(url)
     } catch (error) {
       toast.error("Failed to remove image")
