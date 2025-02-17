@@ -31,15 +31,17 @@ export function CustomerInfoFields({
   setCustomerPhone,
   customerAddress,
   setCustomerAddress,
-  clients = [], // Provide default empty array
+  clients = [], 
   isLoadingClients = false,
   onClientSelect
 }: CustomerInfoFieldsProps) {
 
-  // Ensure we have a valid array of options even if clients is undefined
+  // Ensure we have a valid array of options with required properties
   const clientOptions = (clients || []).map(client => ({
-    value: client.id,
-    label: `${client.first_name} ${client.last_name} (${client.email})`
+    value: client.id || '',
+    label: client.first_name && client.last_name && client.email ? 
+      `${client.first_name} ${client.last_name} (${client.email})` :
+      'Unnamed Client'
   }))
 
   return (
