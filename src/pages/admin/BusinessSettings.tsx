@@ -25,17 +25,24 @@ type BusinessFormValues = z.infer<typeof businessFormSchema>
 export default function BusinessSettings() {
   const { toast } = useToast()
 
-  const { data: businessProfile, isLoading } = useQuery({
+  const { data: businessProfile, isLoading, error } = useQuery({
     queryKey: ["business-profile"],
     queryFn: async () => {
+      console.log("Fetching business profile...")
       const { data, error } = await supabase
         .from("business_profile")
         .select("*")
-        .maybeSingle()
+        .single()
 
-      if (error) throw error
+      if (error) {
+        console.error("Error fetching business profile:", error)
+        throw error
+      }
+      
+      console.log("Business profile data:", data)
       return data
-    }
+    },
+    retry: 1
   })
 
   const form = useForm<BusinessFormValues>({
@@ -86,6 +93,21 @@ export default function BusinessSettings() {
         description: "There was an error updating the business profile.",
       })
     }
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-destructive">Failed to load business settings. Please try again later.</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   if (isLoading) {
