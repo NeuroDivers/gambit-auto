@@ -14,7 +14,7 @@ export default function QuoteRequestsManagement() {
     services,
     quoteRequests,
     isLoading,
-    archiveQuoteMutation, // Note: using the correct name here
+    archiveQuoteMutation,
     updateStatusMutation,
     deleteQuoteMutation
   } = useQuoteRequests()
@@ -29,7 +29,8 @@ export default function QuoteRequestsManagement() {
     selectedQuoteId,
     setSelectedQuoteId,
     handleImageRemove,
-    handleEstimateSubmit
+    handleEstimateSubmit,
+    isSubmittingEstimate
   } = useQuoteRequestManagement()
 
   // Set up realtime subscription for quote request updates
@@ -56,7 +57,7 @@ export default function QuoteRequestsManagement() {
   }, [queryClient])
 
   const handleArchiveToggle = (id: string, currentArchiveStatus: boolean) => {
-    archiveQuoteMutation.mutate({ // Note: using the correct name here
+    archiveQuoteMutation.mutate({ 
       id, 
       isArchived: !currentArchiveStatus 
     })

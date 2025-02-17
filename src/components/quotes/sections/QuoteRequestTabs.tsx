@@ -11,7 +11,7 @@ interface QuoteRequestTabsProps {
   services: any[]
   estimateAmount: Record<string, string>
   setEstimateAmount: (value: Record<string, string>) => void
-  onEstimateSubmit: (id: string) => void
+  onEstimateSubmit: (id: string, estimates: Record<string, string>) => void
   onImageRemove: (url: string, quoteId: string, currentUrls: string[]) => void
   onStatusChange: (id: string, status: QuoteRequest['status']) => void
   onDelete: (id: string) => void
@@ -56,7 +56,7 @@ export function QuoteRequestTabs({
                 estimateAmount={estimateAmount}
                 setEstimateAmount={setEstimateAmount}
                 onEstimateSubmit={onEstimateSubmit}
-                onImageRemove={(url) => onImageRemove(url, request.id, request.media_urls)}
+                onImageRemove={onImageRemove}
                 onStatusChange={onStatusChange}
                 onDelete={onDelete}
               />
@@ -87,7 +87,7 @@ export function QuoteRequestTabs({
                 estimateAmount={estimateAmount}
                 setEstimateAmount={setEstimateAmount}
                 onEstimateSubmit={onEstimateSubmit}
-                onImageRemove={(url) => onImageRemove(url, request.id, request.media_urls)}
+                onImageRemove={onImageRemove}
                 onStatusChange={onStatusChange}
                 onDelete={onDelete}
               />

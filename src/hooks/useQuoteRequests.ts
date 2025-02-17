@@ -2,23 +2,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
+import type { QuoteRequest as BaseQuoteRequest } from "@/types/quote-request"
 
-export type QuoteRequest = {
-  id: string
-  status: "pending" | "estimated" | "accepted" | "rejected" | "converted"
-  vehicle_make: string
-  vehicle_model: string
-  vehicle_year: number
-  vehicle_vin: string
-  description: string
-  created_at: string
-  estimated_amount: number | null
-  service_details: Record<string, any> | null
-  client_response: "accepted" | "rejected" | null
-  service_ids: string[]
-  media_urls: string[]
-  is_archived: boolean
-}
+export type QuoteRequest = BaseQuoteRequest
 
 export function useQuoteRequests() {
   const queryClient = useQueryClient()
@@ -54,7 +40,8 @@ export function useQuoteRequests() {
           client_response,
           service_ids,
           media_urls,
-          is_archived
+          is_archived,
+          service_estimates
         `)
         .order("created_at", { ascending: false })
 
