@@ -47,10 +47,11 @@ export function ServiceSelectionSection({ form, services }: ServiceSelectionSect
                     <FormItem key={service.id}>
                       <FormControl>
                         <div
-                          className={`flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer bg-[#121212]
+                          className={`flex items-center justify-between p-4 rounded-lg border transition-all cursor-pointer
                             ${isChecked 
-                              ? 'border-primary bg-primary/10' 
-                              : 'border-border/40 hover:border-primary/50'}`}
+                              ? 'border-primary bg-primary/5 shadow-sm' 
+                              : 'border-input bg-card hover:border-primary/50'}
+                            hover:shadow-sm`}
                           onClick={() => handleServiceChange(service.id, !isChecked, field)}
                         >
                           <div className="flex-1">
@@ -62,11 +63,11 @@ export function ServiceSelectionSection({ form, services }: ServiceSelectionSect
                             )}
                           </div>
                           <div 
-                            className={`w-12 h-6 rounded-full transition-all relative
+                            className={`w-12 h-6 rounded-full relative transition-colors
                               ${isChecked ? 'bg-primary' : 'bg-muted'}`}
                           >
                             <div 
-                              className={`w-5 h-5 rounded-full bg-[#F1F1F1] absolute top-0.5 transition-transform
+                              className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-transform
                                 ${isChecked ? 'translate-x-6' : 'translate-x-1'}`}
                             />
                           </div>
