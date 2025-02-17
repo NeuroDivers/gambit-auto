@@ -48,12 +48,17 @@ export const usePermissions = () => {
 
       // Transform the data to match UserRole interface
       if (data?.role) {
-        const roleData = data.role as { id: string; name: string; nicename: string };
+        // Explicitly type the role data and ensure we're handling a single object
+        const roleData = Array.isArray(data.role) ? data.role[0] : data.role;
+        
+        // Now create a properly typed UserRole object
         const userRole: UserRole = {
-          id: roleData.id,
-          name: roleData.name,
-          nicename: roleData.nicename
+          id: String(roleData.id),
+          name: String(roleData.name),
+          nicename: String(roleData.nicename)
         };
+        
+        console.log('Processed user role:', userRole);
         return userRole;
       }
       
