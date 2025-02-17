@@ -49,7 +49,7 @@ export function SidebarHeader({ firstName, role, onLogout }: SidebarHeaderProps)
       <Button
         variant="ghost"
         onClick={onLogout}
-        className="w-full gap-2 justify-start text-muted-foreground hover:text-foreground"
+        className="w-full gap-2 justify-start text-muted-foreground hover:text-primary-foreground"
       >
         <LogOut className="h-4 w-4" />
         Logout
