@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
-import { PlusCircle, FileText, Search } from "lucide-react"
+import { PlusCircle, FileText, Quote, Search } from "lucide-react"
 import { CreateClientDialog } from "./CreateClientDialog"
 import { EditClientDialog } from "./EditClientDialog"
 import { useState } from "react"
@@ -86,6 +86,17 @@ export function ClientList() {
     }
   }
 
+  const handleCreateQuote = (clientId: string) => {
+    const client = clients?.find(c => c.id === clientId)
+    if (client) {
+      navigate('/quotes/create', { 
+        state: { 
+          preselectedClient: client 
+        }
+      })
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col space-y-4">
@@ -130,15 +141,26 @@ export function ClientList() {
             client={client}
             onEdit={() => handleEdit(client)}
             actions={
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => handleCreateInvoice(client.id)}
-              >
-                <FileText className="h-4 w-4" />
-                Create Invoice
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => handleCreateQuote(client.id)}
+                >
+                  <Quote className="h-4 w-4" />
+                  Create Quote
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => handleCreateInvoice(client.id)}
+                >
+                  <FileText className="h-4 w-4" />
+                  Create Invoice
+                </Button>
+              </div>
             }
           />
         ))}
