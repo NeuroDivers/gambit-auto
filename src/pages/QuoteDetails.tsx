@@ -57,7 +57,7 @@ export default function QuoteDetails() {
             <h1 className="text-3xl font-bold">Quote Request Details</h1>
             <Badge variant={quoteRequest.status === 'pending' ? 'secondary' : 
                           quoteRequest.status === 'estimated' ? 'default' :
-                          quoteRequest.status === 'accepted' ? 'success' :
+                          quoteRequest.status === 'accepted' ? 'outline' :
                           quoteRequest.status === 'rejected' ? 'destructive' : 'outline'}>
               {quoteRequest.status}
             </Badge>
