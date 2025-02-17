@@ -119,7 +119,7 @@ export function useQuoteRequestForm() {
           description: data.description,
           service_ids: data.service_items.map(item => item.service_id),
           service_details: data.service_details,
-          media_urls: uploadedUrls // Add the uploaded URLs to the quote request
+          media_urls: uploadedUrls
         })
 
       if (insertError) throw insertError
