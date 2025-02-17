@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
-import { Calendar, FileText, Settings, Users, Wrench, User, Terminal } from "lucide-react"
+import { FileText, Calendar, Settings, Users, Wrench, User, Terminal, MessageSquare } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePermissions } from "@/hooks/usePermissions"
 import { useEffect, useState } from "react"
@@ -15,6 +15,30 @@ const allItems: NavItem[] = [
     requiredPermission: "work_orders",
   },
   {
+    title: "Quotes",
+    href: "/quotes",
+    icon: MessageSquare,
+    requiredPermission: "quotes",
+  },
+  {
+    title: "Invoices",
+    href: "/invoices",
+    icon: FileText,
+    requiredPermission: "invoices",
+  },
+  {
+    title: "Clients",
+    href: "/clients",
+    icon: Users,
+    requiredPermission: "clients",
+  },
+  {
+    title: "Users",
+    href: "/users",
+    icon: Users,
+    requiredPermission: "users",
+  },
+  {
     title: "Service Types",
     href: "/service-types",
     icon: Settings,
@@ -26,30 +50,6 @@ const allItems: NavItem[] = [
     icon: Calendar,
     requiredPermission: "service_bays",
   },
-  {
-    title: "Invoices",
-    href: "/invoices",
-    icon: FileText,
-    requiredPermission: "invoices",
-  },
-  {
-    title: "Users",
-    href: "/users",
-    icon: Users,
-    requiredPermission: "users",
-  },
-  {
-    title: "Clients",
-    href: "/clients",
-    icon: Users,
-    requiredPermission: "clients",
-  },
-  {
-    title: "Quotes",
-    href: "/quotes",
-    icon: FileText,
-    requiredPermission: "quotes",
-  },
 ]
 
 const settingsItems: NavItem[] = [
@@ -57,6 +57,7 @@ const settingsItems: NavItem[] = [
     title: "Business Settings",
     href: "/business-settings",
     icon: Settings,
+    requiredPermission: "business_settings",
   },
   {
     title: "Profile Settings",
