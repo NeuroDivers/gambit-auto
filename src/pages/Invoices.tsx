@@ -65,25 +65,44 @@ export default function Invoices() {
         const collected_revenue = invoices
           .filter(inv => inv.payment_status === 'paid')
           .reduce((sum, inv) => sum + (inv.total || 0), 0)
+        const uncollected_revenue = invoices
+          .filter(inv => inv.payment_status === 'unpaid')
+          .reduce((sum, inv) => sum + (inv.total || 0), 0)
         const total_invoices = invoices.length
         const unpaid_invoices = invoices.filter(inv => inv.payment_status === 'unpaid').length
 
         return {
           total_revenue,
           collected_revenue,
+          uncollected_revenue,
           total_invoices,
           unpaid_invoices
         }
       } else {
         // Admin view - global statistics
-        const { data, error } = await supabase
-          .from('revenue_statistics')
-          .select('*')
-          .limit(1)
-          .single()
+        const { data: invoices } = await supabase
+          .from('invoices')
+          .select('total, payment_status')
 
-        if (error) throw error
-        return data
+        if (!invoices) return null
+
+        const total_revenue = invoices.reduce((sum, inv) => sum + (inv.total || 0), 0)
+        const collected_revenue = invoices
+          .filter(inv => inv.payment_status === 'paid')
+          .reduce((sum, inv) => sum + (inv.total || 0), 0)
+        const uncollected_revenue = invoices
+          .filter(inv => inv.payment_status === 'unpaid')
+          .reduce((sum, inv) => sum + (inv.total || 0), 0)
+        const total_invoices = invoices.length
+        const unpaid_invoices = invoices.filter(inv => inv.payment_status === 'unpaid').length
+
+        return {
+          total_revenue,
+          collected_revenue,
+          uncollected_revenue,
+          total_invoices,
+          unpaid_invoices
+        }
       }
     }
   })
@@ -122,13 +141,14 @@ export default function Invoices() {
         }))
       } else {
         // Admin view - global monthly data
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('revenue_statistics')
           .select('month, collected_revenue')
           .order('month', { ascending: true })
           .limit(12)
 
-        if (error) throw error
+        if (!data) return []
+        
         return data.map(item => ({
           month: new Date(item.month).toLocaleString('default', { month: 'short' }),
           revenue: item.collected_revenue || 0
@@ -171,10 +191,10 @@ export default function Invoices() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Invoices</CardTitle>
+            <CardTitle className="text-sm font-medium">Uncollected Amount</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_invoices || 0}</div>
+            <div className="text-2xl font-bold text-yellow-500">{formatCurrency(stats?.uncollected_revenue || 0)}</div>
           </CardContent>
         </Card>
 
