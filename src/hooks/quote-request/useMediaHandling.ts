@@ -5,34 +5,37 @@ import { toast } from "sonner"
 
 export function useMediaHandling() {
   const [uploading, setUploading] = useState(false)
+  const [uploadedUrls, setUploadedUrls] = useState<string[]>([])
 
-  const handleImageUpload = async (files: FileList, serviceId: string) => {
+  const handleImageUpload = async (files: FileList) => {
     try {
       setUploading(true)
       const newUrls: string[] = []
 
       for (const file of Array.from(files)) {
         const fileExt = file.name.split('.').pop()
-        const filePath = `${crypto.randomUUID()}.${fileExt}`
+        const fileName = `${Math.random()}-${Date.now()}.${fileExt}`
 
         const { error: uploadError } = await supabase.storage
           .from('quote-request-media')
-          .upload(filePath, file)
+          .upload(fileName, file)
 
         if (uploadError) throw uploadError
 
-        const { data: { publicUrl } } = supabase.storage
+        const { data: publicUrlData } = supabase.storage
           .from('quote-request-media')
-          .getPublicUrl(filePath)
+          .getPublicUrl(fileName)
 
-        newUrls.push(publicUrl)
+        if (publicUrlData?.publicUrl) {
+          newUrls.push(publicUrlData.publicUrl)
+        }
       }
 
+      setUploadedUrls(prev => [...prev, ...newUrls])
       toast.success(`Successfully uploaded ${files.length} image${files.length > 1 ? 's' : ''}`)
       return newUrls
     } catch (error: any) {
-      console.error('Error uploading image:', error)
-      toast.error('Failed to upload image: ' + error.message)
+      toast.error('Error uploading image: ' + error.message)
       throw error
     } finally {
       setUploading(false)
@@ -41,26 +44,25 @@ export function useMediaHandling() {
 
   const handleImageRemove = async (url: string) => {
     try {
-      // Extract the file path from the URL
-      const filePath = url.split('/').pop()
-      if (!filePath) throw new Error('Invalid file URL')
+      const fileName = url.split('/').pop()
+      if (!fileName) return
 
       const { error } = await supabase.storage
         .from('quote-request-media')
-        .remove([filePath])
+        .remove([fileName])
 
       if (error) throw error
 
+      setUploadedUrls(prev => prev.filter(u => u !== url))
       toast.success('Image removed successfully')
     } catch (error: any) {
-      console.error('Error removing image:', error)
-      toast.error('Failed to remove image: ' + error.message)
-      throw error
+      toast.error('Error removing image: ' + error.message)
     }
   }
 
   return {
     uploading,
+    uploadedUrls,
     handleImageUpload,
     handleImageRemove
   }

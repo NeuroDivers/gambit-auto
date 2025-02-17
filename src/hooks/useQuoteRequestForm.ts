@@ -15,7 +15,7 @@ export function useQuoteRequestForm() {
   const navigate = useNavigate()
   const { clearFormData: clearStoredForm } = useFormStorage()
   const [step, setStep] = useState(1)
-  const { uploading, handleImageUpload, handleImageRemove } = useMediaHandling()
+  const { uploading, handleImageUpload, handleImageRemove, uploadedUrls } = useMediaHandling()
 
   // Fetch current user's default vehicle
   const { data: defaultVehicle } = useQuery({
@@ -118,7 +118,8 @@ export function useQuoteRequestForm() {
           vehicle_vin: data.vehicleInfo.vin,
           description: data.description,
           service_ids: data.service_items.map(item => item.service_id),
-          service_details: data.service_details
+          service_details: data.service_details,
+          media_urls: uploadedUrls // Add the uploaded URLs to the quote request
         })
 
       if (insertError) throw insertError
@@ -132,7 +133,7 @@ export function useQuoteRequestForm() {
       console.error("Error submitting quote request:", error)
       toast.error("Failed to submit quote request")
     }
-  }, [navigate, clearStoredForm])
+  }, [navigate, clearStoredForm, uploadedUrls])
 
   const nextStep = () => {
     if (step < totalSteps) {
