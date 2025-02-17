@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast";
 import { formSchema } from "../../UserFormFields";
 import * as z from "zod";
@@ -17,6 +18,7 @@ export const useCreateUser = (onSuccess?: () => void) => {
           email: values.email,
           password: values.password,
           role: values.role,
+          action: 'create'
         },
       });
 
