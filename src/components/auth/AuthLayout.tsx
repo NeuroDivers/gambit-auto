@@ -28,16 +28,18 @@ export const AuthLayout = ({
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-md p-8 space-y-6 bg-card rounded-lg shadow-lg">
-        <div className="text-center space-y-2">
+      <div className="w-full max-w-md p-8 space-y-8 bg-card rounded-lg shadow-lg">
+        <div className="text-center space-y-4">
           {profile?.logo_url ? (
-            <img 
-              src={profile.logo_url} 
-              alt="Business Logo" 
-              className="mx-auto h-12 w-12 object-contain"
-            />
+            <div className="mb-6">
+              <img 
+                src={profile.logo_url} 
+                alt="Business Logo" 
+                className="mx-auto h-20 w-auto max-w-[200px] object-contain drop-shadow-md"
+              />
+            </div>
           ) : (
-            <div className="mx-auto h-12 w-12 bg-primary/10 rounded-lg" />
+            <div className="mx-auto h-20 w-20 bg-primary/10 rounded-lg mb-6" />
           )}
           <h2 className="text-2xl font-bold">{title}</h2>
           <p className="text-muted-foreground">{description}</p>
