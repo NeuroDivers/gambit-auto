@@ -28,33 +28,52 @@ export function useInvoiceFormSubmission({
     setIsSubmitting(true)
 
     try {
+      if (!Array.isArray(invoiceItems)) {
+        throw new Error("Invoice items must be an array")
+      }
+
+      // Ensure we have valid invoice items
+      if (invoiceItems.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Please add at least one item to the invoice",
+        })
+        return
+      }
+
+      // Calculate subtotal with proper type checking and default values
       const subtotal = invoiceItems.reduce((acc: number, item: any) => {
-        return acc + (item.quantity * item.unit_price)
+        const quantity = Number(item.quantity) || 0
+        const unitPrice = Number(item.unit_price) || 0
+        return acc + (quantity * unitPrice)
       }, 0)
 
-      const taxes = businessTaxes.reduce((acc: number, tax: any) => {
-        return acc + (subtotal * (tax.rate / 100))
-      }, 0)
+      // Calculate taxes with proper type checking
+      const taxes = Array.isArray(businessTaxes) ? businessTaxes.reduce((acc: number, tax: any) => {
+        const rate = Number(tax.rate) || 0
+        return acc + (subtotal * (rate / 100))
+      }, 0) : 0
 
       const total = subtotal + taxes
 
       const invoiceData = {
-        customer_first_name: customerInfo.firstName,
-        customer_last_name: customerInfo.lastName,
-        customer_email: customerInfo.email,
-        customer_phone: customerInfo.phone,
-        customer_address: customerInfo.address,
-        vehicle_make: vehicleInfo.make,
-        vehicle_model: vehicleInfo.model,
-        vehicle_year: vehicleInfo.year,
-        vehicle_vin: vehicleInfo.vin,
-        subtotal,
-        tax_amount: taxes,
-        total,
-        notes,
-        status,
+        customer_first_name: customerInfo.firstName || '',
+        customer_last_name: customerInfo.lastName || '',
+        customer_email: customerInfo.email || '',
+        customer_phone: customerInfo.phone || '',
+        customer_address: customerInfo.address || '',
+        vehicle_make: vehicleInfo.make || '',
+        vehicle_model: vehicleInfo.model || '',
+        vehicle_year: vehicleInfo.year || null,
+        vehicle_vin: vehicleInfo.vin || '',
+        subtotal: subtotal || 0, // Ensure subtotal is never null
+        tax_amount: taxes || 0,  // Ensure tax_amount is never null
+        total: total || 0,       // Ensure total is never null
+        notes: notes || '',
+        status: status || 'draft',
         work_order_id: workOrderId || null,
-        business_profile_id: businessProfile?.id
+        business_profile_id: businessProfile?.id || null
       }
 
       if (invoiceId) {
@@ -77,12 +96,12 @@ export function useInvoiceFormSubmission({
           .insert(
             invoiceItems.map((item: any) => ({
               invoice_id: invoiceId,
-              service_id: item.service_id,
-              package_id: item.package_id,
-              service_name: item.service_name,
-              description: item.description,
-              quantity: item.quantity,
-              unit_price: item.unit_price,
+              service_id: item.service_id || null,
+              package_id: item.package_id || null,
+              service_name: item.service_name || '',
+              description: item.description || '',
+              quantity: Number(item.quantity) || 1,
+              unit_price: Number(item.unit_price) || 0,
             }))
           )
 
@@ -108,12 +127,12 @@ export function useInvoiceFormSubmission({
           .insert(
             invoiceItems.map((item: any) => ({
               invoice_id: newInvoice.id,
-              service_id: item.service_id,
-              package_id: item.package_id,
-              service_name: item.service_name,
-              description: item.description,
-              quantity: item.quantity,
-              unit_price: item.unit_price,
+              service_id: item.service_id || null,
+              package_id: item.package_id || null,
+              service_name: item.service_name || '',
+              description: item.description || '',
+              quantity: Number(item.quantity) || 1,
+              unit_price: Number(item.unit_price) || 0,
             }))
           )
 
