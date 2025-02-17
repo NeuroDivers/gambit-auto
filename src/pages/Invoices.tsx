@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { InvoiceList } from "@/components/invoices/InvoiceList"
@@ -102,8 +101,12 @@ export default function Invoices() {
 
         if (!data) return []
 
-        // Group by month and calculate totals
-        const monthlyTotals = data.reduce((acc, invoice) => {
+        type MonthlyTotal = {
+          revenue: number;
+        }
+
+        // Group by month and calculate totals with proper typing
+        const monthlyTotals = data.reduce<Record<string, MonthlyTotal>>((acc, invoice) => {
           const month = new Date(invoice.created_at).toLocaleString('default', { month: 'short' })
           if (!acc[month]) {
             acc[month] = { revenue: 0 }
