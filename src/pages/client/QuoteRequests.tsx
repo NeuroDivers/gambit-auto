@@ -10,6 +10,7 @@ import { QuoteRequestFormDialog } from "@/components/client/quotes/QuoteRequestF
 import { ClientQuoteStats } from "@/components/client/quotes/ClientQuoteStats"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
+import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 
 export default function QuoteRequests() {
   const navigate = useNavigate()
@@ -62,16 +63,19 @@ export default function QuoteRequests() {
   }, [queryClient])
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">My Quote Requests</h1>
-        <Button onClick={() => setFormDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Quote Request
-        </Button>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex flex-col gap-4">
+        <PageBreadcrumbs />
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl md:text-3xl font-bold">My Quote Requests</h1>
+          <Button onClick={() => setFormDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Quote Request
+          </Button>
+        </div>
       </div>
       
-      <div className="space-y-8">
+      <div className="space-y-6">
         <ClientQuoteStats />
         
         <QuoteRequestList

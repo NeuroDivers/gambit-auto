@@ -3,6 +3,7 @@ import { VehicleList } from "@/components/clients/vehicles/VehicleList"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Loader2 } from "lucide-react"
+import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 
 export default function ClientVehicles() {
   const { data: client, isLoading } = useQuery({
@@ -35,8 +36,11 @@ export default function ClientVehicles() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">My Vehicles</h1>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex flex-col gap-4">
+        <PageBreadcrumbs />
+        <h1 className="text-2xl md:text-3xl font-bold">My Vehicles</h1>
+      </div>
       <VehicleList clientId={client.id} />
     </div>
   )

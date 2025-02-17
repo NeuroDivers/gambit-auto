@@ -1,4 +1,3 @@
-
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -102,84 +101,82 @@ export default function ClientDashboard() {
   })) || []
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
-      <div className="container mx-auto py-6 px-4 md:py-12 md:px-6">
-        <div className="space-y-6">
-          <div className="mb-8">
-            <PageBreadcrumbs />
-            <h1 className="text-2xl md:text-3xl font-bold mt-4">
-              Welcome back, {profile?.first_name}
-            </h1>
-            <p className="text-muted-foreground mt-2 text-sm md:text-base">
-              Manage your quotes, invoices, and bookings all in one place.
-            </p>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Active Quotes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">
-                  {quotes?.filter(q => q.status !== 'converted').length || 0}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Pending Invoices</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">
-                  {invoices?.filter(i => i.status === 'pending').length || 0}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Total Spent</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">
-                  {formatCurrency(invoices?.reduce((acc, inv) => acc + (Number(inv.total) || 0), 0) || 0)}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Invoice History Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Invoice History</CardTitle>
-            </CardHeader>
-            <CardContent className="h-[300px]">
-              {invoiceData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={invoiceData}>
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip 
-                      formatter={(value) => formatCurrency(value as number)}
-                    />
-                    <Bar dataKey="amount" fill="#9b87f5" />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    No invoice history available yet.
-                  </AlertDescription>
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex flex-col gap-4">
+        <PageBreadcrumbs />
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold">
+            Welcome back, {profile?.first_name}
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Manage your quotes, invoices, and bookings all in one place.
+          </p>
         </div>
       </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Active Quotes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">
+              {quotes?.filter(q => q.status !== 'converted').length || 0}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Pending Invoices</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">
+              {invoices?.filter(i => i.status === 'pending').length || 0}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Total Spent</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">
+              {formatCurrency(invoices?.reduce((acc, inv) => acc + (Number(inv.total) || 0), 0) || 0)}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Invoice History Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Invoice History</CardTitle>
+        </CardHeader>
+        <CardContent className="h-[300px]">
+          {invoiceData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={invoiceData}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value) => formatCurrency(value as number)}
+                />
+                <Bar dataKey="amount" fill="#9b87f5" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                No invoice history available yet.
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }
