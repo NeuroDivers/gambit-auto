@@ -135,7 +135,13 @@ export function QuoteRequestForm() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <VehicleInfoSection form={form} />
             <ServiceSelectionSection form={form} services={services} />
-            <DescriptionSection form={form} />
+            <DescriptionSection 
+              form={form} 
+              mediaUrls={mediaUrls}
+              uploading={uploading}
+              onFileUpload={handleFileUpload}
+              onMediaRemove={handleMediaRemove}
+            />
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Submitting..." : "Submit Quote Request"}
             </Button>
