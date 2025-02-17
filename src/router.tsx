@@ -1,3 +1,4 @@
+
 import { createBrowserRouter, Navigate } from "react-router-dom"
 import Auth from "./pages/Auth"
 import Dashboard from "./pages/Dashboard"
@@ -18,6 +19,7 @@ import ClientManagement from "./pages/ClientManagement"
 import BusinessSettings from "./pages/BusinessSettings"
 import ProfileSettings from "./pages/ProfileSettings"
 import DeveloperSettings from "./pages/DeveloperSettings"
+import ResetPassword from "./pages/ResetPassword"
 import { DashboardLayoutWrapper } from "./components/dashboard/DashboardLayoutWrapper"
 import { ClientLayoutWrapper } from "./components/client/ClientLayoutWrapper"
 import ClientDashboard from "./pages/client/Dashboard"
@@ -29,6 +31,10 @@ export const router = createBrowserRouter([
   {
     path: "/auth",
     element: <Auth />,
+  },
+  {
+    path: "/auth/reset-password",
+    element: <ResetPassword />,
   },
   {
     path: "/unauthorized",
