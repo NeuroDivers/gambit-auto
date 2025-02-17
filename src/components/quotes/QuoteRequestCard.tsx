@@ -7,6 +7,8 @@ import { useState } from "react"
 import { ImageGallery } from "@/components/client/quotes/ImageGallery"
 import { EstimateForm } from "./EstimateForm"
 import type { QuoteRequest } from "@/types/quote-request"
+import { supabase } from "@/integrations/supabase/client"
+import { toast } from "sonner"
 
 interface QuoteRequestCardProps {
   request: QuoteRequest
@@ -34,9 +36,52 @@ export function QuoteRequestCard({
   const [uploadKey, setUploadKey] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onImageRemove(event.target.value, request.id, request.media_urls || [])
-    setUploadKey(prev => prev + 1)
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      if (!event.target.files || event.target.files.length === 0) return
+      
+      setIsUploading(true)
+      const files = Array.from(event.target.files)
+      const currentUrls = request.media_urls || []
+      const newUrls: string[] = []
+
+      // Upload each file
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop()
+        const fileName = `${request.id}-${Math.random()}.${fileExt}`
+
+        const { error: uploadError } = await supabase.storage
+          .from('quote-request-media')
+          .upload(fileName, file)
+
+        if (uploadError) throw uploadError
+
+        const { data: publicUrlData } = supabase.storage
+          .from('quote-request-media')
+          .getPublicUrl(fileName)
+
+        if (publicUrlData?.publicUrl) {
+          newUrls.push(publicUrlData.publicUrl)
+        }
+      }
+
+      // Update quote request with new URLs
+      const { error: updateError } = await supabase
+        .from('quote_requests')
+        .update({ 
+          media_urls: [...currentUrls, ...newUrls]
+        })
+        .eq('id', request.id)
+
+      if (updateError) throw updateError
+
+      toast.success(`Successfully uploaded ${files.length} image${files.length > 1 ? 's' : ''}`)
+    } catch (error: any) {
+      toast.error('Error uploading image: ' + error.message)
+    } finally {
+      setIsUploading(false)
+      setUploadKey(prev => prev + 1)
+    }
   }
 
   const statusVariant = {
@@ -102,7 +147,7 @@ export function QuoteRequestCard({
                     disabled={isUploading}
                   />
                   <Upload className="h-4 w-4 mr-2" />
-                  Add Images
+                  {isUploading ? "Uploading..." : "Add Images"}
                 </label>
               </Button>
             </div>
