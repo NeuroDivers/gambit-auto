@@ -1,5 +1,5 @@
 
-import { useCallback, useState } from "react"
+import { useCallback, useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
@@ -9,6 +9,7 @@ import { useFormStorage } from "./quote-request/useFormStorage"
 import { QuoteRequestFormData, ServiceItemType, formSchema } from "./quote-request/formSchema"
 import { useQuery } from "@tanstack/react-query"
 import { zodResolver } from "@hookform/resolvers/zod"
+import type { UseFormReturn } from "react-hook-form"
 
 export function useQuoteRequestForm() {
   const navigate = useNavigate()
@@ -31,6 +32,46 @@ export function useQuoteRequestForm() {
       service_details: {}
     }
   })
+
+  // Fetch the user's default vehicle
+  const { data: defaultVehicle } = useQuery({
+    queryKey: ["default-vehicle"],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return null
+
+      // First get the client ID
+      const { data: client } = await supabase
+        .from("clients")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .maybeSingle()
+
+      if (!client) return null
+
+      // Then get the default vehicle
+      const { data: vehicle } = await supabase
+        .from("vehicles")
+        .select("*")
+        .eq("client_id", client.id)
+        .eq("is_primary", true)
+        .maybeSingle()
+
+      return vehicle
+    }
+  })
+
+  // Update form with default vehicle data when available
+  useEffect(() => {
+    if (defaultVehicle) {
+      form.setValue("vehicleInfo", {
+        make: defaultVehicle.make,
+        model: defaultVehicle.model,
+        year: defaultVehicle.year,
+        vin: defaultVehicle.vin || ""
+      })
+    }
+  }, [defaultVehicle, form])
 
   const { data: services } = useQuery({
     queryKey: ["services"],

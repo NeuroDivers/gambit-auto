@@ -10,11 +10,7 @@ import { AnimatePresence } from "framer-motion"
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 import { motion } from "framer-motion"
 import { QuoteRequestFormData, ServiceItemType } from "@/hooks/quote-request/formSchema"
-
-type QuoteRequestFormProps = {
-  form: UseFormReturn<QuoteRequestFormData>
-  services: any[]
-}
+import type { UseFormReturn } from "react-hook-form"
 
 export function MultiStepQuoteRequestForm() {
   const {
