@@ -20,13 +20,42 @@ export default function Dashboard() {
     },
   });
 
+  // Fetch user role
+  const { data: profile, isLoading: profileLoading } = useQuery({
+    queryKey: ["profile", session?.user?.id],
+    enabled: !!session?.user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(`
+          role:role_id (
+            id,
+            name,
+            nicename
+          )
+        `)
+        .eq("id", session?.user?.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
   useEffect(() => {
     if (!sessionLoading && !session) {
       navigate("/auth");
     }
   }, [session, navigate, sessionLoading]);
 
-  if (sessionLoading) {
+  useEffect(() => {
+    if (!profileLoading && profile?.role?.name?.toLowerCase() === 'client') {
+      navigate("/client");
+    }
+  }, [profile, navigate, profileLoading]);
+
+  // Show loading screen while checking session and profile
+  if (sessionLoading || profileLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-pulse text-primary/60 text-lg">Loading...</div>
