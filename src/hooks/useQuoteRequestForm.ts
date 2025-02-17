@@ -43,24 +43,21 @@ export function useQuoteRequestForm() {
     }
   })
 
+  const defaultValues: QuoteRequestFormData = {
+    vehicleInfo: {
+      make: defaultVehicle?.make || "",
+      model: defaultVehicle?.model || "",
+      year: defaultVehicle?.year || new Date().getFullYear(),
+      vin: defaultVehicle?.vin || ""
+    },
+    service_items: [],
+    description: "",
+    service_details: {}
+  }
+
   const form = useForm<QuoteRequestFormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      vehicleInfo: {
-        make: defaultVehicle?.make || "",
-        model: defaultVehicle?.model || "",
-        year: defaultVehicle?.year || new Date().getFullYear(),
-        vin: defaultVehicle?.vin || ""
-      },
-      service_items: [] as {
-        service_id: string;
-        service_name: string;
-        quantity: number;
-        unit_price: number;
-      }[],
-      description: "",
-      service_details: {}
-    }
+    defaultValues
   })
 
   // Update form values when default vehicle is loaded
@@ -88,7 +85,7 @@ export function useQuoteRequestForm() {
     }
   })
 
-  const selectedServices = form.watch('service_items') || []
+  const selectedServices = form.watch('service_items')
   const totalSteps = selectedServices.length > 0 ? selectedServices.length + 2 : 2
 
   const onSubmit = useCallback(async (data: QuoteRequestFormData) => {

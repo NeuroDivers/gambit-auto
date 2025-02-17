@@ -40,6 +40,12 @@ export function MultiStepQuoteRequestForm() {
     }
   }
 
+  const handleServiceChange = (services: ServiceItemType[]) => {
+    form.setValue('service_items', services, {
+      shouldValidate: true
+    })
+  }
+
   return (
     <Card className="border-none shadow-none bg-transparent">
       <CardHeader className="pb-4 space-y-6">
@@ -71,7 +77,7 @@ export function MultiStepQuoteRequestForm() {
                           Enter your vehicle details to help us provide accurate service quotes.
                         </p>
                       </div>
-                      <VehicleInfoStep form={form as UseFormReturn<QuoteRequestFormData>} />
+                      <VehicleInfoStep form={form} />
                     </div>
 
                     <div className="rounded-lg border bg-card p-6 space-y-6">
@@ -84,11 +90,7 @@ export function MultiStepQuoteRequestForm() {
                       <ServiceTypeSelection 
                         services={services || []}
                         selectedServices={selectedServices}
-                        onServicesChange={(services: ServiceItemType[]) => {
-                          form.setValue('service_items', services, {
-                            shouldValidate: true
-                          })
-                        }}
+                        onServicesChange={handleServiceChange}
                       />
                     </div>
                   </motion.div>
@@ -103,7 +105,7 @@ export function MultiStepQuoteRequestForm() {
                     className="rounded-lg border bg-card p-6"
                   >
                     <ServiceDetailsStep 
-                      form={form as UseFormReturn<QuoteRequestFormData>}
+                      form={form}
                       services={services || []}
                       serviceId={selectedServices[step - 2].service_id}
                       onImageUpload={handleImageUpload}
@@ -120,7 +122,7 @@ export function MultiStepQuoteRequestForm() {
                     transition={{ duration: 0.3 }}
                     className="rounded-lg border bg-card p-6"
                   >
-                    <SummaryStep form={form as UseFormReturn<QuoteRequestFormData>} services={services || []} />
+                    <SummaryStep form={form} services={services || []} />
                   </motion.div>
                 )}
               </AnimatePresence>
