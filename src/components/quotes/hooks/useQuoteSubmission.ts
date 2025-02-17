@@ -81,7 +81,8 @@ async function updateQuote(
       notes: values.notes,
       subtotal,
       tax_amount: taxAmount,
-      total
+      total,
+      status: values.status
     })
     .eq('id', quoteId)
 
@@ -113,7 +114,7 @@ async function updateQuote(
           description: item.description || '',
           quantity: item.quantity,
           unit_price: item.unit_price,
-          service_id: item.service_id
+          service_id: item.service_id || null // Set to null if empty string or undefined
         }))
       )
 
@@ -156,7 +157,7 @@ async function createQuote(
       subtotal,
       tax_amount: taxAmount,
       total,
-      status: "draft"
+      status: values.status
     })
     .select()
     .single()
@@ -178,7 +179,7 @@ async function createQuote(
           description: item.description || '',
           quantity: item.quantity,
           unit_price: item.unit_price,
-          service_id: item.service_id
+          service_id: item.service_id || null // Set to null if empty string or undefined
         }))
       )
 
