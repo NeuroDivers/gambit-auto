@@ -79,7 +79,6 @@ export function ServiceSelectionField({
 
   // Group services by their type for better organization
   const groupedServices = serviceTypes?.reduce<Record<string, ServiceType[]>>((acc, service) => {
-    // Use the service type from the service_type column
     const type = service.service_type || 'standalone'
     if (!acc[type]) acc[type] = []
     acc[type].push(service)
