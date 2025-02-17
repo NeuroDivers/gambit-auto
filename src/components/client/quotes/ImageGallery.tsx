@@ -24,8 +24,16 @@ export function ImageGallery({ mediaUrls, status, onImageRemove }: ImageGalleryP
 
   const handleImageRemove = async (url: string) => {
     try {
-      // We pass the storage path directly since that's what we store in media_urls
-      await onImageRemove(url)
+      // Extract the file path from the URL if it's a full URL
+      const filePath = url.startsWith('http') 
+        ? url.split('/').pop() 
+        : url
+      
+      if (!filePath) {
+        throw new Error('Invalid file path')
+      }
+
+      await onImageRemove(filePath)
     } catch (error) {
       toast.error("Failed to remove image")
     }
