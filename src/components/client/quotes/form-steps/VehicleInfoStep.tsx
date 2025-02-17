@@ -1,4 +1,3 @@
-
 import { FormField, FormItem, FormLabel, FormMessage, FormControl } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { UseFormReturn } from "react-hook-form"
@@ -20,7 +19,6 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
   const [saveVehicle, setSaveVehicle] = useState(false)
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>()
 
-  // Fetch client's vehicles
   const { data: vehicles, isLoading } = useQuery({
     queryKey: ['client-vehicles'],
     queryFn: async () => {
@@ -67,7 +65,6 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
     }
   }
 
-  // Save new vehicle to client's vehicles if requested
   const saveNewVehicle = async () => {
     if (!saveVehicle) return
 
@@ -87,9 +84,9 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
         client_id: client.id,
         make: form.getValues('vehicleInfo.make'),
         model: form.getValues('vehicleInfo.model'),
-        year: parseInt(form.getValues('vehicleInfo.year')),
+        year: parseInt(form.getValues('vehicleInfo.year') || '0'),
         vin: form.getValues('vehicleInfo.vin') || null,
-        is_primary: !vehicles?.length // Set as primary if no other vehicles exist
+        is_primary: !vehicles?.length
       }
 
       await supabase.from('vehicles').insert(vehicleData)
@@ -98,7 +95,6 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
     }
   }
 
-  // Add form submission handler for saving vehicle
   const originalSubmit = form.handleSubmit
   form.handleSubmit = (onValid: any) => {
     return originalSubmit(async (values: any) => {
@@ -187,7 +183,7 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
                   <Input 
                     {...field} 
                     type="number" 
-                    onChange={e => field.onChange(e.target.value.toString())}
+                    onChange={e => field.onChange(e.target.value)}
                     placeholder="e.g. 2020" 
                   />
                 </FormControl>
