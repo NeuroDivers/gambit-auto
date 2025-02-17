@@ -5,6 +5,8 @@ import { PrintButton } from "./PrintButton"
 import { PaymentSection } from "./PaymentSection"
 import { Invoice } from "../types"
 import { Tables } from "@/integrations/supabase/types"
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
 
 type PublicViewProps = {
   invoice: Invoice | null
@@ -25,7 +27,30 @@ export function PublicView({
   onPrint,
   printRef 
 }: PublicViewProps) {
-  if (!isAdmin && !isVerified) {
+  // Check if the current user is the owner of the invoice
+  const { data: currentUser } = useQuery({
+    queryKey: ["current-user"],
+    queryFn: async () => {
+      const { data: { user }, error } = await supabase.auth.getUser()
+      if (error || !user) return null
+
+      const { data: profile } = await supabase
+        .from("clients")
+        .select("*")
+        .eq("user_id", user.id)
+        .single()
+
+      return profile
+    }
+  })
+
+  // If the user is logged in and the invoice belongs to them, or they're verified, or they're an admin, show the invoice
+  const canViewInvoice = 
+    isAdmin || 
+    isVerified || 
+    (currentUser && invoice && currentUser.email === invoice.customer_email)
+
+  if (!canViewInvoice) {
     return (
       <EmailVerification 
         correctEmail={invoice?.customer_email || null}
@@ -44,7 +69,7 @@ export function PublicView({
       <div ref={printRef}>
         <InvoicePrintPreview invoice={invoice} businessProfile={businessProfile} />
       </div>
-      {(isVerified || isAdmin) && invoice && (
+      {(isVerified || isAdmin || currentUser) && invoice && (
         <PaymentSection invoice={invoice} />
       )}
     </div>
