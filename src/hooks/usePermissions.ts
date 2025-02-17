@@ -45,8 +45,19 @@ export const usePermissions = () => {
         .single();
 
       if (error) throw error;
-      // Ensure we return the role object directly, not as an array
-      return data?.role as UserRole | null;
+
+      // Transform the data to match UserRole interface
+      if (data?.role) {
+        const roleData = data.role as { id: string; name: string; nicename: string };
+        const userRole: UserRole = {
+          id: roleData.id,
+          name: roleData.name,
+          nicename: roleData.nicename
+        };
+        return userRole;
+      }
+      
+      return null;
     },
     staleTime: Infinity,
   });
