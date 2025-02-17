@@ -72,7 +72,7 @@ export function ServiceSelectionField({
 
   return (
     <div className="space-y-4">
-      <Label>Select Services</Label>
+      <Label className="text-foreground font-medium">Select Services</Label>
       <div className="flex flex-col gap-4">
         {serviceTypes?.map((service) => {
           const selectedService = services.find(s => s.service_id === service.id)
@@ -85,10 +85,11 @@ export function ServiceSelectionField({
                 onPressedChange={(pressed) => handleServiceToggle(service, pressed)}
                 disabled={disabled}
                 className={cn(
-                  "border-2 w-full justify-start",
-                  "data-[state=on]:bg-primary data-[state=on]:text-primary-foreground",
-                  "data-[state=off]:bg-background data-[state=off]:text-foreground",
-                  "hover:bg-muted hover:text-muted-foreground"
+                  "border-2 w-full justify-start px-4 py-2 rounded-md",
+                  "data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary",
+                  "data-[state=off]:bg-card data-[state=off]:text-card-foreground data-[state=off]:border-input",
+                  "hover:bg-muted hover:text-muted-foreground transition-colors",
+                  "disabled:opacity-50"
                 )}
               >
                 {service.name}
@@ -97,7 +98,9 @@ export function ServiceSelectionField({
               {isSelected && (
                 <div className="grid grid-cols-2 gap-4 px-4">
                   <div>
-                    <Label htmlFor={`quantity-${service.id}`}>Quantity</Label>
+                    <Label htmlFor={`quantity-${service.id}`} className="text-foreground">
+                      Quantity
+                    </Label>
                     <Input
                       id={`quantity-${service.id}`}
                       type="number"
@@ -105,11 +108,13 @@ export function ServiceSelectionField({
                       value={selectedService.quantity}
                       onChange={(e) => handleQuantityChange(service.id, parseInt(e.target.value) || 1)}
                       disabled={disabled}
-                      className="mt-1"
+                      className="mt-1 bg-background border-input"
                     />
                   </div>
                   <div>
-                    <Label htmlFor={`price-${service.id}`}>Unit Price</Label>
+                    <Label htmlFor={`price-${service.id}`} className="text-foreground">
+                      Unit Price
+                    </Label>
                     <Input
                       id={`price-${service.id}`}
                       type="number"
@@ -118,7 +123,7 @@ export function ServiceSelectionField({
                       value={selectedService.unit_price}
                       onChange={(e) => handlePriceChange(service.id, parseFloat(e.target.value) || 0)}
                       disabled={disabled}
-                      className="mt-1"
+                      className="mt-1 bg-background border-input"
                     />
                   </div>
                 </div>

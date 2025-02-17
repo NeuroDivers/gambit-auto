@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -76,14 +75,31 @@
     @apply bg-background text-foreground;
   }
 
+  /* Custom Scrollbar Styling */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+    border-radius: 5px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary/50 hover:bg-primary/70 transition-colors;
+    border-radius: 5px;
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary)) hsl(var(--muted));
+  }
+
   /* Ensure proper text color contrast for form elements */
   input, textarea, select {
     @apply text-foreground bg-background border-input;
-  }
-
-  /* Ensure proper text color contrast for buttons and interactive elements */
-  button {
-    @apply text-foreground;
   }
 
   /* Additional contrast fixes for specific elements */
@@ -110,9 +126,6 @@
 
   /* Ensure white text on primary/purple backgrounds */
   .bg-primary, 
-  .bg-[#9b87f5], 
-  .bg-[#7E69AB], 
-  .bg-[#6E59A5],
   [class*="bg-primary"] {
     @apply text-primary-foreground;
   }
