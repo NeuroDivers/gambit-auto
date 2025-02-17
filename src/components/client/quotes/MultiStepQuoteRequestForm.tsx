@@ -30,6 +30,14 @@ export function MultiStepQuoteRequestForm() {
 
   const progress = (step / totalSteps) * 100
 
+  const handleSubmit = async (data: any) => {
+    if (step === totalSteps) {
+      await onSubmit(data)
+    } else {
+      nextStep()
+    }
+  }
+
   return (
     <Card className="border-none shadow-none bg-transparent">
       <CardHeader className="pb-4 space-y-6">
@@ -43,7 +51,7 @@ export function MultiStepQuoteRequestForm() {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
             <div className="relative min-h-[400px]">
               <AnimatePresence mode="wait">
                 {step === 1 && (
@@ -115,7 +123,7 @@ export function MultiStepQuoteRequestForm() {
             <FormNavigation
               step={step}
               totalSteps={totalSteps}
-              onNext={nextStep}
+              onNext={form.handleSubmit(handleSubmit)}
               onPrevious={prevStep}
               isSubmitting={isSubmitting}
               uploading={uploading}
