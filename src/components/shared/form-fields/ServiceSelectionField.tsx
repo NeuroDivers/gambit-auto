@@ -8,6 +8,7 @@ import { ServiceItemType } from "@/components/work-orders/types"
 import { Input } from "@/components/ui/input"
 import { ServiceTypesTable } from "@/integrations/supabase/types/service-types"
 import { useLocation } from "react-router-dom"
+import { useEffect, useState } from "react"
 
 type ServiceType = ServiceTypesTable['Row']
 
@@ -24,6 +25,7 @@ export function ServiceSelectionField({
 }: ServiceSelectionFieldProps) {
   const location = useLocation()
   const isClientQuote = location.pathname.includes('client/quotes')
+  const [selectedServices, setSelectedServices] = useState<ServiceItemType[]>(services)
 
   const { data: serviceTypes } = useQuery({
     queryKey: ["service-types"],
@@ -39,42 +41,52 @@ export function ServiceSelectionField({
     }
   })
 
+  // Update selected services when the services prop changes (for editing)
+  useEffect(() => {
+    setSelectedServices(services)
+  }, [services])
+
   const handleServiceToggle = (service: ServiceType, pressed: boolean) => {
     if (pressed) {
-      onServicesChange([
-        ...services,
+      const newServices = [
+        ...selectedServices,
         {
           service_id: service.id,
           service_name: service.name,
           quantity: 1,
-          unit_price: service.price || 0
+          unit_price: service.price || 0,
+          description: service.description || ''
         }
-      ])
+      ]
+      setSelectedServices(newServices)
+      onServicesChange(newServices)
     } else {
-      onServicesChange(
-        services.filter((s) => s.service_id !== service.id)
+      const filteredServices = selectedServices.filter(
+        (s) => s.service_id !== service.id
       )
+      setSelectedServices(filteredServices)
+      onServicesChange(filteredServices)
     }
   }
 
   const handleQuantityChange = (serviceId: string, quantity: number) => {
-    onServicesChange(
-      services.map((service) =>
-        service.service_id === serviceId
-          ? { ...service, quantity }
-          : service
-      )
+    const updatedServices = selectedServices.map((service) =>
+      service.service_id === serviceId
+        ? { ...service, quantity }
+        : service
     )
+    setSelectedServices(updatedServices)
+    onServicesChange(updatedServices)
   }
 
   const handlePriceChange = (serviceId: string, price: number) => {
-    onServicesChange(
-      services.map((service) =>
-        service.service_id === serviceId
-          ? { ...service, unit_price: price }
-          : service
-      )
+    const updatedServices = selectedServices.map((service) =>
+      service.service_id === serviceId
+        ? { ...service, unit_price: price }
+        : service
     )
+    setSelectedServices(updatedServices)
+    onServicesChange(updatedServices)
   }
 
   // Group services by their type for better organization
@@ -96,7 +108,7 @@ export function ServiceSelectionField({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {categoryServices.map((service) => {
-                const selectedService = services.find(s => s.service_id === service.id)
+                const selectedService = selectedServices.find(s => s.service_id === service.id)
                 const isSelected = !!selectedService
 
                 return (
