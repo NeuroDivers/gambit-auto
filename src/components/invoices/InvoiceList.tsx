@@ -34,7 +34,7 @@ export function InvoiceList() {
           .from("clients")
           .select("id")
           .eq("user_id", user.id)
-          .single()
+          .maybeSingle()
 
         if (!clientData) throw new Error("No client found")
 
