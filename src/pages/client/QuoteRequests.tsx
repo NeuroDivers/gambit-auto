@@ -5,7 +5,6 @@ import { toast } from "sonner"
 import { useNavigate } from "react-router-dom"
 import { useQuoteRequestData } from "@/hooks/useQuoteRequestData"
 import { useQuoteRequestActions } from "@/hooks/useQuoteRequestActions"
-import { useMediaUpload } from "@/hooks/useMediaUpload"
 import { QuoteRequestList } from "@/components/client/quotes/QuoteRequestList"
 import { QuoteRequestFormDialog } from "@/components/client/quotes/QuoteRequestFormDialog"
 import { ClientQuoteStats } from "@/components/client/quotes/ClientQuoteStats"
@@ -16,7 +15,6 @@ export default function QuoteRequests() {
   const navigate = useNavigate()
   const { services, quoteRequests, isLoading, queryClient } = useQuoteRequestData()
   const { handleResponseMutation } = useQuoteRequestActions()
-  const { uploading, handleImageUpload, handleImageRemove } = useMediaUpload()
   const [formDialogOpen, setFormDialogOpen] = useState(false)
 
   // Check authentication status
@@ -82,9 +80,6 @@ export default function QuoteRequests() {
           isLoading={isLoading}
           onAcceptEstimate={(id) => handleResponseMutation.mutate({ id, response: "accepted" })}
           onRejectEstimate={(id) => handleResponseMutation.mutate({ id, response: "rejected" })}
-          onUploadImages={(event, quoteId, currentUrls) => handleImageUpload(event, quoteId, currentUrls)}
-          onImageRemove={(quoteId, urlToRemove, currentUrls) => handleImageRemove(quoteId, urlToRemove, currentUrls)}
-          uploading={uploading}
         />
       </div>
 
