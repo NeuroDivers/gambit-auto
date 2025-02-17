@@ -32,7 +32,7 @@ export default function CreateInvoice() {
   })
 
   // Fetch clients for the dropdown
-  const { data: clients } = useQuery({
+  const { data: clients, isLoading: isLoadingClients } = useQuery({
     queryKey: ['clients'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -41,7 +41,7 @@ export default function CreateInvoice() {
         .order('first_name')
       
       if (error) throw error
-      return data
+      return data || [] // Ensure we always return an array
     }
   })
 
@@ -160,12 +160,13 @@ export default function CreateInvoice() {
                 <Label>Client</Label>
                 <SearchableSelect
                   placeholder="Search clients..."
-                  options={clients?.map(client => ({
+                  options={(clients || []).map(client => ({
                     value: client.id,
                     label: `${client.first_name} ${client.last_name} (${client.email})`
-                  })) || []}
+                  }))}
                   onValueChange={handleClientSelect}
                   emptyMessage="No clients found"
+                  disabled={isLoadingClients}
                 />
               </div>
             </div>
