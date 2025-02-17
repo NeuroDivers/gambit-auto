@@ -38,27 +38,30 @@ export function useInvoiceFormSubmission({
 
       const total = subtotal + taxes
 
+      const invoiceData = {
+        customer_first_name: customerInfo.firstName,
+        customer_last_name: customerInfo.lastName,
+        customer_email: customerInfo.email,
+        customer_phone: customerInfo.phone,
+        customer_address: customerInfo.address,
+        vehicle_make: vehicleInfo.make,
+        vehicle_model: vehicleInfo.model,
+        vehicle_year: vehicleInfo.year,
+        vehicle_vin: vehicleInfo.vin,
+        subtotal,
+        tax_amount: taxes,
+        total,
+        notes,
+        status,
+        work_order_id: workOrderId || null,
+        business_profile_id: businessProfile?.id
+      }
+
       if (invoiceId) {
         // Update existing invoice
         const { error: updateError } = await supabase
           .from("invoices")
-          .update({
-            customer_first_name: customerInfo.firstName,
-            customer_last_name: customerInfo.lastName,
-            customer_email: customerInfo.email,
-            customer_phone: customerInfo.phone,
-            customer_address: customerInfo.address,
-            vehicle_make: vehicleInfo.make,
-            vehicle_model: vehicleInfo.model,
-            vehicle_year: vehicleInfo.year,
-            vehicle_vin: vehicleInfo.vin,
-            subtotal,
-            tax_amount: taxes,
-            total,
-            notes,
-            status,
-            business_profile_id: businessProfile?.id
-          })
+          .update(invoiceData)
           .eq("id", invoiceId)
 
         if (updateError) throw updateError
@@ -90,26 +93,12 @@ export function useInvoiceFormSubmission({
           description: "Invoice updated successfully",
         })
       } else {
-        // Create new invoice using the new database function
-        const { data: newInvoiceId, error: createError } = await supabase
-          .rpc('create_new_invoice', {
-            p_work_order_id: workOrderId || null,
-            p_customer_first_name: customerInfo.firstName,
-            p_customer_last_name: customerInfo.lastName,
-            p_customer_email: customerInfo.email,
-            p_customer_phone: customerInfo.phone,
-            p_customer_address: customerInfo.address,
-            p_vehicle_make: vehicleInfo.make,
-            p_vehicle_model: vehicleInfo.model,
-            p_vehicle_year: vehicleInfo.year,
-            p_vehicle_vin: vehicleInfo.vin,
-            p_subtotal: subtotal,
-            p_tax_amount: taxes,
-            p_total: total,
-            p_notes: notes,
-            p_status: status,
-            p_business_profile_id: businessProfile?.id
-          })
+        // Create new invoice
+        const { data: newInvoice, error: createError } = await supabase
+          .from("invoices")
+          .insert(invoiceData)
+          .select()
+          .single()
 
         if (createError) throw createError
 
@@ -118,7 +107,7 @@ export function useInvoiceFormSubmission({
           .from("invoice_items")
           .insert(
             invoiceItems.map((item: any) => ({
-              invoice_id: newInvoiceId,
+              invoice_id: newInvoice.id,
               service_id: item.service_id,
               package_id: item.package_id,
               service_name: item.service_name,
