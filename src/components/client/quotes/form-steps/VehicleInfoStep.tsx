@@ -18,6 +18,7 @@ type VehicleInfoStepProps = {
 export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
   const [useNewVehicle, setUseNewVehicle] = useState(true)
   const [saveVehicle, setSaveVehicle] = useState(false)
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>()
 
   // Fetch client's vehicles
   const { data: vehicles, isLoading } = useQuery({
@@ -45,8 +46,14 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
   })
 
   const handleVehicleSelect = (vehicleId: string) => {
+    setSelectedVehicleId(vehicleId)
+
     if (vehicleId === 'new') {
       setUseNewVehicle(true)
+      form.setValue('vehicleInfo.make', '')
+      form.setValue('vehicleInfo.model', '')
+      form.setValue('vehicleInfo.year', '')
+      form.setValue('vehicleInfo.vin', '')
       return
     }
 
@@ -106,7 +113,8 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
         <div className="flex items-center space-x-2">
           <Select
             onValueChange={handleVehicleSelect}
-            value={useNewVehicle ? 'new' : undefined}
+            value={selectedVehicleId}
+            defaultValue="new"
           >
             <FormControl>
               <SelectTrigger>
