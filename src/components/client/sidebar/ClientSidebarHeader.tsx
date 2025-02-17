@@ -1,54 +1,48 @@
 
-import { LogOut } from "lucide-react"
+import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { User } from "lucide-react"
+import { LogOut } from "lucide-react"
+import { supabase } from "@/integrations/supabase/client"
+import { useNavigate } from "react-router-dom"
+import { toast } from "sonner"
 
-interface ClientSidebarHeaderProps {
-  firstName?: string | null
-  role?: string | null
-  onLogout: () => void
-}
+export function ClientSidebarHeader() {
+  const navigate = useNavigate()
 
-export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebarHeaderProps) {
-  const formatName = (name: string | null | undefined) => {
-    if (!name) return 'Guest'
-    const nameParts = name.split(' ')
-    if (nameParts.length > 1) {
-      return `${nameParts[0]} ${nameParts[1].charAt(0)}.`
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      
+      navigate("/auth")
+      toast.success("Logged out successfully")
+    } catch (error) {
+      console.error("Error logging out:", error)
+      toast.error("Failed to log out")
     }
-    return name
   }
 
   return (
-    <div className="p-4 space-y-4 border-b">
-      <div className="flex items-start gap-3">
-        <Avatar className="h-10 w-10">
-          <AvatarImage src="" alt={firstName || 'User'} />
-          <AvatarFallback>
-            <User className="h-4 w-4" />
-          </AvatarFallback>
-        </Avatar>
-        <div className="space-y-1">
-          <h2 className="text-lg font-medium">
-            Welcome, {formatName(firstName)}
-          </h2>
-          <span className="text-sm rounded-md px-2 py-1 capitalize inline-block" style={{
-            color: '#bb86fc',
-            background: 'rgb(187 134 252 / 0.1)',
-          }}>
-            {role || 'Client'} account
-          </span>
-        </div>
-      </div>
-      <Button
-        variant="ghost"
-        onClick={onLogout}
-        className="w-full gap-2 justify-start text-muted-foreground hover:text-foreground"
+    <div className="flex h-[52px] items-center justify-between px-4 py-2">
+      <Link
+        to="/client"
+        className="flex items-center gap-2 font-semibold"
       >
-        <LogOut className="h-4 w-4" />
-        Logout
-      </Button>
+        <span className="text-lg">
+          Dashboard
+        </span>
+      </Link>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleLogout}
+          className="w-full gap-2 justify-start text-muted-foreground hover:text-white"
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
+        </Button>
+      </div>
     </div>
   )
 }
