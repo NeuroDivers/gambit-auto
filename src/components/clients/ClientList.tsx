@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
@@ -36,9 +35,8 @@ export function ClientList() {
         .from('clients')
         .select(`
           *,
-          total_work_orders:work_orders(count),
-          total_invoices:invoices(count),
-          total_spent:invoices(sum(total))
+          work_orders!work_orders_client_id_fkey(count),
+          invoices!invoices_client_id_fkey(count, total)
         `)
 
       // Apply search if present
@@ -62,11 +60,17 @@ export function ClientList() {
       const { data, error } = await query
       
       if (error) throw error
-      return data as Client[]
+
+      // Transform the data to match the expected format
+      return data.map(client => ({
+        ...client,
+        total_work_orders: client.work_orders?.[0]?.count || 0,
+        total_invoices: client.invoices?.[0]?.count || 0,
+        total_spent: client.invoices?.[0]?.total || 0
+      })) as Client[]
     }
   })
 
-  // Fetch revenue statistics
   const { data: revenueStats } = useQuery({
     queryKey: ['revenue-statistics'],
     queryFn: async () => {
