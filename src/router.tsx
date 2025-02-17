@@ -24,6 +24,7 @@ import { DashboardLayoutWrapper } from "./components/dashboard/DashboardLayoutWr
 import { ClientLayoutWrapper } from "./components/client/ClientLayoutWrapper"
 import ClientDashboard from "./pages/client/Dashboard"
 import ClientQuoteRequests from "./pages/client/QuoteRequests"
+import ClientVehicles from "./pages/client/Vehicles"
 import { PermissionGuard } from "./components/auth/PermissionGuard"
 import Unauthorized from "./pages/Unauthorized"
 
@@ -185,6 +186,10 @@ export const router = createBrowserRouter([
       {
         path: "invoices",
         element: <Invoices />,
+      },
+      {
+        path: "vehicles",
+        element: <ClientVehicles />,
       },
       {
         path: "bookings",
