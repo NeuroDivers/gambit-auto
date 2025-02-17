@@ -1,3 +1,4 @@
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -11,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { VehicleInfoSection } from "./form-sections/VehicleInfoSection";
 import { ServiceSelectionSection } from "./form-sections/ServiceSelectionSection";
 import { DescriptionSection } from "./form-sections/DescriptionSection";
+
 const formSchema = z.object({
   vehicle_make: z.string().min(1, "Vehicle make is required"),
   vehicle_model: z.string().min(1, "Vehicle model is required"),
@@ -19,10 +21,12 @@ const formSchema = z.object({
   description: z.string().min(1, "Please describe the service you need"),
   service_ids: z.array(z.string()).min(1, "Please select at least one service")
 });
+
 export function QuoteRequestForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
+
   const {
     data: services = []
   } = useQuery({
@@ -36,6 +40,7 @@ export function QuoteRequestForm() {
       return data;
     }
   });
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -47,6 +52,7 @@ export function QuoteRequestForm() {
       service_ids: []
     }
   });
+
   const handleFileUpload = async (files: FileList) => {
     try {
       setUploading(true);
@@ -73,6 +79,7 @@ export function QuoteRequestForm() {
       setUploading(false);
     }
   };
+
   const handleMediaRemove = async (urlToRemove: string) => {
     try {
       const {
@@ -85,6 +92,7 @@ export function QuoteRequestForm() {
       toast.error('Error removing image: ' + error.message);
     }
   };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsSubmitting(true);
@@ -121,5 +129,24 @@ export function QuoteRequestForm() {
       setIsSubmitting(false);
     }
   };
-  return;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Request a Quote</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <VehicleInfoSection form={form} />
+            <ServiceSelectionSection form={form} services={services} />
+            <DescriptionSection form={form} />
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Submit Quote Request"}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  );
 }
