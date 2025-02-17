@@ -38,14 +38,7 @@ export function useInvoiceFormSubmission({
 
       const total = subtotal + taxes
 
-      // Generate invoice number using the database function
-      const { data: invoiceNumberResult, error: invoiceNumberError } = await supabase
-        .rpc('generate_invoice_number')
-
-      if (invoiceNumberError) throw invoiceNumberError
-
       const invoiceData = {
-        invoice_number: invoiceNumberResult,
         customer_first_name: customerInfo.firstName,
         customer_last_name: customerInfo.lastName,
         customer_email: customerInfo.email,
@@ -65,13 +58,10 @@ export function useInvoiceFormSubmission({
       }
 
       if (invoiceId) {
-        // Update existing invoice - don't update invoice number
+        // Update existing invoice
         const { error: updateError } = await supabase
           .from("invoices")
-          .update({
-            ...invoiceData,
-            invoice_number: undefined // Don't update invoice number for existing invoices
-          })
+          .update(invoiceData)
           .eq("id", invoiceId)
 
         if (updateError) throw updateError
@@ -103,20 +93,30 @@ export function useInvoiceFormSubmission({
           description: "Invoice updated successfully",
         })
       } else {
-        // Create new invoice
-        const { data: invoice, error: createError } = await supabase
-          .from("invoices")
-          .insert(invoiceData)
-          .select()
-          .single()
+        // Create new invoice with RPC call
+        const { data: response, error: createError } = await supabase
+          .rpc('create_invoice_from_work_order', {
+            work_order_id: workOrderId || null
+          })
 
         if (createError) throw createError
 
+        const newInvoiceId = response
+
+        // Update the invoice with the rest of the data
+        const { error: updateError } = await supabase
+          .from("invoices")
+          .update(invoiceData)
+          .eq("id", newInvoiceId)
+
+        if (updateError) throw updateError
+
+        // Insert invoice items
         const { error: itemsError } = await supabase
           .from("invoice_items")
           .insert(
             invoiceItems.map((item: any) => ({
-              invoice_id: invoice.id,
+              invoice_id: newInvoiceId,
               service_id: item.service_id,
               package_id: item.package_id,
               service_name: item.service_name,
