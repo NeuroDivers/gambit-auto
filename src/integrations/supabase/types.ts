@@ -607,60 +607,43 @@ export type Database = {
       quote_items: {
         Row: {
           created_at: string
-          description: string | null
+          details: Json | null
           id: string
-          main_service_id: string | null
           quantity: number
-          quote_id: string
+          quote_request_id: string
+          service_id: string
           service_name: string
-          sub_service_id: string | null
           unit_price: number
           updated_at: string
         }
         Insert: {
           created_at?: string
-          description?: string | null
+          details?: Json | null
           id?: string
-          main_service_id?: string | null
           quantity?: number
-          quote_id: string
+          quote_request_id: string
+          service_id: string
           service_name: string
-          sub_service_id?: string | null
-          unit_price: number
+          unit_price?: number
           updated_at?: string
         }
         Update: {
           created_at?: string
-          description?: string | null
+          details?: Json | null
           id?: string
-          main_service_id?: string | null
           quantity?: number
-          quote_id?: string
+          quote_request_id?: string
+          service_id?: string
           service_name?: string
-          sub_service_id?: string | null
           unit_price?: number
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "quote_items_main_service_id_fkey"
-            columns: ["main_service_id"]
+            foreignKeyName: "quote_items_quote_request_id_fkey"
+            columns: ["quote_request_id"]
             isOneToOne: false
-            referencedRelation: "service_types"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quote_items_quote_id_fkey"
-            columns: ["quote_id"]
-            isOneToOne: false
-            referencedRelation: "quotes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quote_items_sub_service_id_fkey"
-            columns: ["sub_service_id"]
-            isOneToOne: false
-            referencedRelation: "service_types"
+            referencedRelation: "quote_requests"
             referencedColumns: ["id"]
           },
         ]
