@@ -20,6 +20,17 @@ export default function QuoteRequestDetails() {
   const [isSaving, setIsSaving] = useState(false)
   const { handleResponseMutation } = useQuoteRequestActions()
 
+  const { data: services } = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_types")
+        .select("*")
+      if (error) throw error
+      return data
+    }
+  })
+
   const { data: quoteRequest, isLoading, refetch } = useQuery({
     queryKey: ["quoteRequest", id],
     queryFn: async () => {
@@ -123,6 +134,11 @@ export default function QuoteRequestDetails() {
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const getServiceName = (serviceId: string) => {
+    const service = services?.find(s => s.id === serviceId)
+    return service ? service.name : "Unknown Service"
   }
 
   if (isLoading) {
