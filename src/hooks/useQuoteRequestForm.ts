@@ -52,7 +52,12 @@ export function useQuoteRequestForm() {
         year: defaultVehicle?.year || new Date().getFullYear(),
         vin: defaultVehicle?.vin || ""
       },
-      service_items: [],
+      service_items: [] as {
+        service_id: string;
+        service_name: string;
+        quantity: number;
+        unit_price: number;
+      }[],
       description: "",
       service_details: {}
     }
@@ -61,10 +66,12 @@ export function useQuoteRequestForm() {
   // Update form values when default vehicle is loaded
   useEffect(() => {
     if (defaultVehicle) {
-      form.setValue("vehicleInfo.make", defaultVehicle.make)
-      form.setValue("vehicleInfo.model", defaultVehicle.model)
-      form.setValue("vehicleInfo.year", defaultVehicle.year)
-      form.setValue("vehicleInfo.vin", defaultVehicle.vin || "")
+      form.setValue("vehicleInfo", {
+        make: defaultVehicle.make,
+        model: defaultVehicle.model,
+        year: defaultVehicle.year,
+        vin: defaultVehicle.vin || ""
+      })
     }
   }, [defaultVehicle, form])
 
