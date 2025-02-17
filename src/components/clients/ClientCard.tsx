@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { EditClientDialog } from "./EditClientDialog"
+import { ClientDetailsDialog } from "./ClientDetailsDialog"
 
 interface ClientCardProps {
   client: Client
@@ -16,6 +17,7 @@ interface ClientCardProps {
 
 export function ClientCard({ client, actions }: ClientCardProps) {
   const [isEditing, setIsEditing] = useState(false)
+  const [showDetails, setShowDetails] = useState(false)
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
@@ -45,7 +47,10 @@ export function ClientCard({ client, actions }: ClientCardProps) {
 
   return (
     <>
-      <Card>
+      <Card 
+        className="cursor-pointer hover:border-primary/50 transition-all duration-200"
+        onClick={() => setShowDetails(true)}
+      >
         <CardContent className="p-6">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-4">
@@ -78,7 +83,10 @@ export function ClientCard({ client, actions }: ClientCardProps) {
                 )}
               </div>
             </div>
-            <div className="flex gap-2">
+            <div 
+              className="flex gap-2"
+              onClick={(e) => e.stopPropagation()} // Prevent card click when clicking buttons
+            >
               <Button
                 variant="ghost"
                 size="icon"
@@ -103,6 +111,12 @@ export function ClientCard({ client, actions }: ClientCardProps) {
         client={client}
         open={isEditing}
         onOpenChange={setIsEditing}
+      />
+
+      <ClientDetailsDialog 
+        client={client}
+        open={showDetails}
+        onOpenChange={setShowDetails}
       />
     </>
   )
