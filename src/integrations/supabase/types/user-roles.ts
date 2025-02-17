@@ -1,6 +1,7 @@
 
 import { Json } from './json';
 import { Database } from './database';
+import { ProfilesTable } from './profiles';
 
 // This interface represents the roles table
 export interface RolesTable {
@@ -50,11 +51,20 @@ export interface RolePermission {
 }
 
 // Export a type for profiles with roles
-export interface ProfileWithRole extends ProfilesTable["Row"] {
+export interface ProfileWithRole {
+  id: string;
+  created_at: string;
+  email: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  updated_at: string;
+  avatar_url: string | null;
+  phone_number: string | null;
+  address: string | null;
+  bio: string | null;
   role: {
     id: string;
     name: string;
     nicename: string;
   };
 }
-
