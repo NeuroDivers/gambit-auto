@@ -1,5 +1,5 @@
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { useNavigate } from "react-router-dom"
@@ -7,13 +7,17 @@ import { useQuoteRequestData } from "@/hooks/useQuoteRequestData"
 import { useQuoteRequestActions } from "@/hooks/useQuoteRequestActions"
 import { useMediaUpload } from "@/hooks/useMediaUpload"
 import { QuoteRequestList } from "@/components/client/quotes/QuoteRequestList"
-import { MultiStepQuoteRequestForm } from "@/components/client/quotes/MultiStepQuoteRequestForm"
+import { QuoteRequestFormDialog } from "@/components/client/quotes/QuoteRequestFormDialog"
+import { ClientQuoteStats } from "@/components/client/quotes/ClientQuoteStats"
+import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
 
 export default function QuoteRequests() {
   const navigate = useNavigate()
   const { services, quoteRequests, isLoading, queryClient } = useQuoteRequestData()
   const { handleResponseMutation } = useQuoteRequestActions()
   const { uploading, handleImageUpload, handleImageRemove } = useMediaUpload()
+  const [formDialogOpen, setFormDialogOpen] = useState(false)
 
   // Check authentication status
   useEffect(() => {
@@ -61,10 +65,16 @@ export default function QuoteRequests() {
 
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-2xl font-bold mb-6">My Quote Requests</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">My Quote Requests</h1>
+        <Button onClick={() => setFormDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Quote Request
+        </Button>
+      </div>
       
       <div className="space-y-8">
-        <MultiStepQuoteRequestForm />
+        <ClientQuoteStats />
         
         <QuoteRequestList
           quoteRequests={quoteRequests}
@@ -77,6 +87,11 @@ export default function QuoteRequests() {
           uploading={uploading}
         />
       </div>
+
+      <QuoteRequestFormDialog 
+        open={formDialogOpen} 
+        onOpenChange={setFormDialogOpen} 
+      />
     </div>
   )
 }
