@@ -1,3 +1,4 @@
+
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -21,7 +22,7 @@ export default function ClientDashboard() {
         .from("profiles")
         .select("*")
         .eq("id", user.id)
-        .single()
+        .maybeSingle()
       
       return profileData
     },
@@ -38,9 +39,12 @@ export default function ClientDashboard() {
         .from("clients")
         .select("id")
         .eq("user_id", user.id)
-        .single()
+        .maybeSingle()
 
-      if (!clientData) throw new Error("No client found")
+      if (!clientData) {
+        console.log("No client found for user:", user.id)
+        return []
+      }
 
       const { data, error } = await supabase
         .from("quotes")
@@ -64,9 +68,12 @@ export default function ClientDashboard() {
         .from("clients")
         .select("id")
         .eq("user_id", user.id)
-        .single()
+        .maybeSingle()
 
-      if (!clientData) throw new Error("No client found")
+      if (!clientData) {
+        console.log("No client found for user:", user.id)
+        return []
+      }
 
       const { data, error } = await supabase
         .from("invoices")
