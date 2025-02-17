@@ -1,3 +1,4 @@
+
 import { CustomerInfo } from "./CustomerInfo"
 import { VehicleInfo } from "./VehicleInfo"
 import { ServicesList } from "./ServicesList"
@@ -12,6 +13,9 @@ type InvoiceCardProps = {
 
 export function InvoiceCard({ invoice }: InvoiceCardProps) {
   if (!invoice) return null
+
+  // Calculate total tax amount for display
+  const totalTaxAmount = (invoice.gst_amount || 0) + (invoice.qst_amount || 0)
 
   return (
     <div className="space-y-8 text-[#1A1F2C]">
@@ -44,7 +48,7 @@ export function InvoiceCard({ invoice }: InvoiceCardProps) {
       <div>
         <InvoiceTotals
           subtotal={invoice.subtotal}
-          taxAmount={invoice.tax_amount}
+          taxAmount={totalTaxAmount}
           total={invoice.total}
         />
       </div>
