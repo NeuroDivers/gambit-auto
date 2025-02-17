@@ -89,7 +89,7 @@ export function ClientList() {
   const handleCreateQuote = (clientId: string) => {
     const client = clients?.find(c => c.id === clientId)
     if (client) {
-      navigate('/quotes/create', { 
+      navigate('/quotes', { 
         state: { 
           preselectedClient: client 
         }
