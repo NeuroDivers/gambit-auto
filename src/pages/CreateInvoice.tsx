@@ -28,8 +28,8 @@ export default function CreateInvoice() {
     }
   })
 
-  // Fetch clients for the dropdown
-  const { data: clients, isLoading: isLoadingClients } = useQuery({
+  // Fetch clients for the dropdown with proper error handling
+  const { data: clients = [], isLoading: isLoadingClients } = useQuery({
     queryKey: ['clients'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -37,9 +37,14 @@ export default function CreateInvoice() {
         .select('*')
         .order('first_name')
       
-      if (error) throw error
-      return data || [] // Ensure we always return an array
-    }
+      if (error) {
+        console.error('Error fetching clients:', error)
+        throw error
+      }
+      
+      return data || []
+    },
+    initialData: [] // Provide initial empty array to prevent undefined
   })
 
   // Handle client selection
@@ -152,7 +157,7 @@ export default function CreateInvoice() {
           onSubmit={onSubmit}
           isPending={isPending}
           invoiceId={undefined}
-          clients={clients || []}
+          clients={clients}
           isLoadingClients={isLoadingClients}
           onClientSelect={handleClientSelect}
         />
