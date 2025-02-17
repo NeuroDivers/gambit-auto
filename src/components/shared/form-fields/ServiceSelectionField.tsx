@@ -4,13 +4,19 @@ import { supabase } from "@/integrations/supabase/client"
 import { Toggle } from "@/components/ui/toggle"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
+import { ServiceItemType } from "@/components/work-orders/types"
 
 interface ServiceSelectionFieldProps {
-  services: string[]
-  onServicesChange: (services: string[]) => void
+  services: ServiceItemType[]
+  onServicesChange: (services: ServiceItemType[]) => void
+  disabled?: boolean
 }
 
-export function ServiceSelectionField({ services, onServicesChange }: ServiceSelectionFieldProps) {
+export function ServiceSelectionField({ 
+  services, 
+  onServicesChange,
+  disabled 
+}: ServiceSelectionFieldProps) {
   const { data: serviceTypes } = useQuery({
     queryKey: ["service-types"],
     queryFn: async () => {
@@ -25,6 +31,24 @@ export function ServiceSelectionField({ services, onServicesChange }: ServiceSel
     }
   })
 
+  const handleServiceToggle = (service: any, pressed: boolean) => {
+    if (pressed) {
+      onServicesChange([
+        ...services,
+        {
+          service_id: service.id,
+          service_name: service.name,
+          quantity: 1,
+          unit_price: service.price || 0
+        }
+      ])
+    } else {
+      onServicesChange(
+        services.filter((s) => s.service_id !== service.id)
+      )
+    }
+  }
+
   return (
     <div className="space-y-4">
       <Label>Select Services</Label>
@@ -32,14 +56,9 @@ export function ServiceSelectionField({ services, onServicesChange }: ServiceSel
         {serviceTypes?.map((service) => (
           <Toggle
             key={service.id}
-            pressed={services.includes(service.id)}
-            onPressedChange={(pressed) => {
-              if (pressed) {
-                onServicesChange([...services, service.id])
-              } else {
-                onServicesChange(services.filter((id) => id !== service.id))
-              }
-            }}
+            pressed={services.some(s => s.service_id === service.id)}
+            onPressedChange={(pressed) => handleServiceToggle(service, pressed)}
+            disabled={disabled}
             className={cn(
               "border-2",
               "data-[state=on]:bg-primary data-[state=on]:text-primary-foreground",
