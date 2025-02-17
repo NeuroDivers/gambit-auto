@@ -8,6 +8,9 @@ import { Button } from "../../ui/button"
 import { Textarea } from "../../ui/textarea"
 import { Vehicle, VehicleFormValues } from "./types"
 import { Switch } from "../../ui/switch"
+import { useVinLookup } from "@/hooks/useVinLookup"
+import { useEffect } from "react"
+import { Loader2 } from "lucide-react"
 
 const formSchema = z.object({
   make: z.string().min(1, "Make is required"),
@@ -50,6 +53,17 @@ export function VehicleForm({ vehicle, clientId, onSubmit }: VehicleFormProps) {
     }
   })
 
+  const vin = form.watch('vin')
+  const { data: vinData, isLoading: isLoadingVin } = useVinLookup(vin)
+
+  useEffect(() => {
+    if (vinData && !vinData.error) {
+      if (vinData.make) form.setValue('make', vinData.make)
+      if (vinData.model) form.setValue('model', vinData.model)
+      if (vinData.year) form.setValue('year', vinData.year)
+    }
+  }, [vinData, form])
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -61,7 +75,12 @@ export function VehicleForm({ vehicle, clientId, onSubmit }: VehicleFormProps) {
               <FormItem>
                 <FormLabel>Make</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Toyota" {...field} />
+                  <div className="relative">
+                    <Input placeholder="e.g. Toyota" {...field} disabled={isLoadingVin} />
+                    {isLoadingVin && (
+                      <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -75,7 +94,12 @@ export function VehicleForm({ vehicle, clientId, onSubmit }: VehicleFormProps) {
               <FormItem>
                 <FormLabel>Model</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Camry" {...field} />
+                  <div className="relative">
+                    <Input placeholder="e.g. Camry" {...field} disabled={isLoadingVin} />
+                    {isLoadingVin && (
+                      <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -89,11 +113,17 @@ export function VehicleForm({ vehicle, clientId, onSubmit }: VehicleFormProps) {
               <FormItem>
                 <FormLabel>Year</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
-                    {...field}
-                    onChange={e => field.onChange(parseInt(e.target.value))}
-                  />
+                  <div className="relative">
+                    <Input 
+                      type="number" 
+                      {...field}
+                      onChange={e => field.onChange(parseInt(e.target.value))}
+                      disabled={isLoadingVin}
+                    />
+                    {isLoadingVin && (
+                      <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -105,7 +135,10 @@ export function VehicleForm({ vehicle, clientId, onSubmit }: VehicleFormProps) {
             name="vin"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>VIN</FormLabel>
+                <FormLabel>
+                  VIN
+                  <span className="text-xs text-muted-foreground ml-2">(Optional - Auto-fills vehicle info)</span>
+                </FormLabel>
                 <FormControl>
                   <Input {...field} />
                 </FormControl>
