@@ -70,15 +70,7 @@ export function useQuoteRequestData() {
           client_response,
           created_at,
           media_urls,
-          service_details,
-          quote_items (
-            id,
-            service_id,
-            service_name,
-            quantity,
-            unit_price,
-            details
-          )
+          service_details
         `)
         .eq("client_id", clientData.id)
         .order("created_at", { ascending: false })

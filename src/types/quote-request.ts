@@ -1,16 +1,6 @@
 
 export type QuoteRequestStatus = "pending" | "estimated" | "accepted" | "rejected" | "converted";
 
-export type QuoteItem = {
-  id: string
-  quote_request_id: string
-  service_id: string
-  service_name: string
-  quantity: number
-  unit_price: number
-  details: Record<string, any> | null
-}
-
 export type QuoteRequest = {
   id: string
   client_id: string
@@ -24,6 +14,5 @@ export type QuoteRequest = {
   client_response: string | null
   created_at: string
   media_urls: string[] | null
-  quote_items?: QuoteItem[]
   service_details?: Record<string, any> | null
 }
