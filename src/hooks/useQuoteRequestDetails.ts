@@ -82,9 +82,12 @@ export function useQuoteRequestDetails() {
 
   const handleImageRemove = async (filePath: string) => {
     try {
-      const currentUrls = quoteRequest?.media_urls || []
+      if (!quoteRequest) return
+
+      console.log('Current media_urls:', quoteRequest.media_urls)
       console.log('Attempting to delete file:', filePath)
       
+      // First, delete from storage
       const { error: deleteError } = await supabase.storage
         .from('quote-request-media')
         .remove([filePath])
@@ -96,10 +99,15 @@ export function useQuoteRequestDetails() {
 
       console.log('File deleted from storage successfully')
 
+      // Then update the media_urls array
+      const updatedUrls = (quoteRequest.media_urls || []).filter(url => url !== filePath)
+      console.log('Updated media_urls:', updatedUrls)
+
+      // Update the quote request
       const { error: updateError } = await supabase
         .from('quote_requests')
         .update({
-          media_urls: currentUrls.filter(url => url !== filePath)
+          media_urls: updatedUrls
         })
         .eq('id', id)
 
