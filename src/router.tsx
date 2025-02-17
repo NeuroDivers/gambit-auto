@@ -1,3 +1,4 @@
+
 import { createBrowserRouter, Navigate } from "react-router-dom"
 import Auth from "./pages/Auth"
 import Dashboard from "./pages/Dashboard"
@@ -42,7 +43,7 @@ export const router = createBrowserRouter([
     element: <Unauthorized />,
   },
   {
-    path: "/i/:id",
+    path: "/invoices/public/:id",
     element: <PublicInvoiceView />,
   },
   {
@@ -190,6 +191,10 @@ export const router = createBrowserRouter([
       {
         path: "invoices",
         element: <Invoices />,
+      },
+      {
+        path: "invoices/public/:id",
+        element: <PublicInvoiceView />,
       },
       {
         path: "vehicles",

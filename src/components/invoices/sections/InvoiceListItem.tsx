@@ -89,7 +89,7 @@ export function InvoiceListItem({ invoice }: InvoiceListItemProps) {
   const handleViewClick = () => {
     if (isClient) {
       // Redirect to public invoice view for clients
-      navigate(`/invoices/public/${invoice.id}`)
+      navigate(`/client/invoices/public/${invoice.id}`)
     } else {
       // Redirect to admin invoice view
       navigate(`/invoices/${invoice.id}`)
