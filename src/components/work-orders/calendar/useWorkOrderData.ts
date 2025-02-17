@@ -1,8 +1,12 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
+import { toast } from "sonner"
+import { useNavigate } from "react-router-dom"
 
 export function useWorkOrderData() {
+  const navigate = useNavigate()
+
   const { data: roleData } = useQuery({
     queryKey: ["clientRole"],
     queryFn: async () => {
@@ -26,13 +30,19 @@ export function useWorkOrderData() {
 
       if (roleData?.isClient) {
         // Get client ID first
-        const { data: clientData } = await supabase
+        const { data: clientData, error: clientError } = await supabase
           .from("clients")
           .select("id")
           .eq("user_id", user.id)
-          .single()
+          .maybeSingle()
 
-        if (!clientData) throw new Error("No client found")
+        if (clientError) throw clientError
+        if (!clientData) {
+          // Handle case where no client is found
+          toast.error("No client account found. Please contact support.")
+          navigate("/auth")
+          return []
+        }
 
         // Then get client's work orders
         const { data, error } = await supabase
