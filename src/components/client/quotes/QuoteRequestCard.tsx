@@ -2,7 +2,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Eye, Calendar, Loader2 } from "lucide-react"
+import { Eye, Calendar, Loader2, Check, X } from "lucide-react"
 import type { QuoteRequest } from "@/types/quote-request"
 import { useNavigate } from "react-router-dom"
 import {
@@ -37,6 +37,19 @@ export function QuoteRequestCard({
   onDelete
 }: QuoteRequestCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
+  const navigate = useNavigate()
+
+  const statusVariant = {
+    pending: "secondary",
+    estimated: "default",
+    accepted: "outline",
+    rejected: "destructive"
+  } as const
+
+  const requestedServices = request.service_ids
+    .map(id => services?.find(s => s.id === id)?.name)
+    .filter(Boolean)
+    .join(", ")
 
   const handleDelete = async () => {
     try {
@@ -58,20 +71,6 @@ export function QuoteRequestCard({
     }
   }
 
-  const navigate = useNavigate()
-
-  const statusVariant = {
-    pending: "secondary",
-    estimated: "default",
-    accepted: "outline",
-    rejected: "destructive"
-  } as const
-
-  const requestedServices = request.service_ids
-    .map(id => services?.find(s => s.id === id)?.name)
-    .filter(Boolean)
-    .join(", ")
-
   return (
     <Card className={`hover:bg-accent/5 transition-colors ${request.is_archived ? 'opacity-75' : ''}`}>
       <CardContent className="p-4">
@@ -85,6 +84,24 @@ export function QuoteRequestCard({
               <Badge variant={statusVariant[request.status as keyof typeof statusVariant]}>
                 {request.status}
               </Badge>
+              {request.client_response && (
+                <Badge 
+                  variant={request.client_response === "accepted" ? "outline" : "destructive"}
+                  className="flex items-center gap-1"
+                >
+                  {request.client_response === "accepted" ? (
+                    <>
+                      <Check className="h-3 w-3" />
+                      Accepted
+                    </>
+                  ) : (
+                    <>
+                      <X className="h-3 w-3" />
+                      Rejected
+                    </>
+                  )}
+                </Badge>
+              )}
             </div>
             
             <div className="flex items-center text-sm text-muted-foreground gap-2 mb-2">
