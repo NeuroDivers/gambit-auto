@@ -28,6 +28,7 @@ export function useMediaHandling() {
         newUrls.push(publicUrl)
       }
 
+      toast.success(`Successfully uploaded ${files.length} image${files.length > 1 ? 's' : ''}`)
       return newUrls
     } catch (error: any) {
       console.error('Error uploading image:', error)

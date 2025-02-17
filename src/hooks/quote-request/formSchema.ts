@@ -10,10 +10,10 @@ const vehicleInfoSchema = z.object({
 })
 
 const serviceItemSchema = z.object({
-  service_id: z.string(),
-  service_name: z.string(),
-  quantity: z.number(),
-  unit_price: z.number()
+  service_id: z.string().min(1, "Service is required"),
+  service_name: z.string().min(1, "Service name is required"),
+  quantity: z.number().min(1, "Quantity must be at least 1"),
+  unit_price: z.number().min(0, "Price cannot be negative")
 })
 
 export const formSchema = z.object({

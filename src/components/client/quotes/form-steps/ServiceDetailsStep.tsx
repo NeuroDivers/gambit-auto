@@ -1,3 +1,4 @@
+
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Textarea } from "@/components/ui/textarea"
 import { UseFormReturn } from "react-hook-form"
@@ -12,7 +13,7 @@ type ServiceDetailsStepProps = {
   form: UseFormReturn<QuoteRequestFormData>
   services: any[]
   serviceId: string
-  onImageUpload: (files: FileList, serviceId: string) => Promise<void>
+  onImageUpload: (files: FileList, serviceId: string) => Promise<string[]>
   onImageRemove: (url: string, serviceId: string) => void
 }
 
@@ -35,11 +36,13 @@ export function ServiceDetailsStep({
       const currentDetails = form.getValues(`service_details.${serviceId}`) || {}
       const currentImages = currentDetails.images || []
       
-      await onImageUpload(files, serviceId)
+      // Upload images and get URLs
+      const newUrls = await onImageUpload(files, serviceId)
       
       // Update the form with the new images
       form.setValue(`service_details.${serviceId}.images`, [
-        ...currentImages
+        ...currentImages,
+        ...newUrls
       ], { shouldValidate: true })
     } catch (error) {
       console.error('Error uploading images:', error)
