@@ -35,11 +35,11 @@ export const AuthLayout = ({
               <img 
                 src={profile.logo_url} 
                 alt="Business Logo" 
-                className="mx-auto h-20 w-auto max-w-[200px] object-contain drop-shadow-md"
+                className="mx-auto h-32 w-auto max-w-[300px] object-contain drop-shadow-md"
               />
             </div>
           ) : (
-            <div className="mx-auto h-20 w-20 bg-primary/10 rounded-lg mb-6" />
+            <div className="mx-auto h-32 w-32 bg-primary/10 rounded-lg mb-6" />
           )}
           <h2 className="text-2xl font-bold">{title}</h2>
           <p className="text-muted-foreground">{description}</p>
