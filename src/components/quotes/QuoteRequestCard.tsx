@@ -1,10 +1,24 @@
-
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Eye, Calendar, Archive, Clock } from "lucide-react"
 import type { QuoteRequest } from "@/types/quote-request"
 import { useNavigate } from "react-router-dom"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Trash2 } from "lucide-react"
+import { toast } from "sonner"
+import { useState } from "react"
+import { supabase } from "@/integrations/supabase/client"
 
 interface QuoteRequestCardProps {
   request: QuoteRequest
@@ -28,6 +42,7 @@ export function QuoteRequestCard({
   onEstimateSubmit,
 }: QuoteRequestCardProps) {
   const navigate = useNavigate()
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const statusVariant = {
     pending: "secondary",
@@ -52,6 +67,26 @@ export function QuoteRequestCard({
     }
     const diffInDays = Math.floor(diffInHours / 24)
     return `${diffInDays}d ago`
+  }
+
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true)
+      
+      const response = await supabase.functions.invoke('delete-quote-request', {
+        body: { id: request.id }
+      })
+
+      if (response.error) throw response.error
+
+      toast.success('Quote request deleted successfully')
+      onDelete(request.id)
+    } catch (error) {
+      console.error('Error deleting quote request:', error)
+      toast.error('Failed to delete quote request')
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   return (
@@ -109,6 +144,41 @@ export function QuoteRequestCard({
             >
               <Archive className="h-4 w-4" />
             </Button>
+            {(request.status === "pending" || request.status === "estimated") && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete this quote request
+                      and all associated files.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {isDeleting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Delete"
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         </div>
       </CardContent>

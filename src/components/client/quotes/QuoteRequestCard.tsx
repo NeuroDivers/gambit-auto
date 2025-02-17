@@ -1,16 +1,32 @@
-
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Eye, Calendar } from "lucide-react"
 import type { QuoteRequest } from "@/types/quote-request"
 import { useNavigate } from "react-router-dom"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Trash2 } from "lucide-react"
+import { supabase } from "@/integrations/supabase/client"
+import { useState } from "react"
+import { Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 interface QuoteRequestCardProps {
   request: QuoteRequest
   services: any[]
   onAcceptEstimate: (id: string) => void
   onRejectEstimate: (id: string) => void
+  onDelete?: () => void
 }
 
 export function QuoteRequestCard({
@@ -18,7 +34,30 @@ export function QuoteRequestCard({
   services,
   onAcceptEstimate,
   onRejectEstimate,
+  onDelete
 }: QuoteRequestCardProps) {
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true)
+      
+      const response = await supabase.functions.invoke('delete-quote-request', {
+        body: { id: request.id }
+      })
+
+      if (response.error) throw response.error
+
+      toast.success('Quote request deleted successfully')
+      onDelete?.()
+    } catch (error) {
+      console.error('Error deleting quote request:', error)
+      toast.error('Failed to delete quote request')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   const navigate = useNavigate()
 
   const statusVariant = {
@@ -34,7 +73,7 @@ export function QuoteRequestCard({
     .join(", ")
 
   return (
-    <Card className="hover:bg-accent/5 transition-colors">
+    <Card className={`hover:bg-accent/5 transition-colors ${request.is_archived ? 'opacity-75' : ''}`}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4">
           {/* Left Section */}
@@ -87,6 +126,42 @@ export function QuoteRequestCard({
                   Reject
                 </Button>
               </>
+            )}
+
+            {request.status === "pending" && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete your quote request
+                      and all associated files.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {isDeleting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Delete"
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
           </div>
         </div>

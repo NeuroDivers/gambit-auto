@@ -2,6 +2,7 @@
 import { Loader2 } from "lucide-react"
 import { QuoteRequestCard } from "./QuoteRequestCard"
 import type { QuoteRequest } from "@/types/quote-request"
+import { useQueryClient } from "@tanstack/react-query"
 
 type QuoteRequestListProps = {
   quoteRequests: QuoteRequest[] | undefined
@@ -18,6 +19,8 @@ export function QuoteRequestList({
   onAcceptEstimate,
   onRejectEstimate,
 }: QuoteRequestListProps) {
+  const queryClient = useQueryClient()
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-[200px]">
@@ -35,6 +38,9 @@ export function QuoteRequestList({
           services={services || []}
           onAcceptEstimate={onAcceptEstimate}
           onRejectEstimate={onRejectEstimate}
+          onDelete={() => {
+            queryClient.invalidateQueries({ queryKey: ["quoteRequests"] })
+          }}
         />
       ))}
       {quoteRequests?.length === 0 && (
