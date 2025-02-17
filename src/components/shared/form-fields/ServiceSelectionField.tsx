@@ -1,82 +1,56 @@
 
-import { ServiceItemType } from "@/components/work-orders/types"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { useServiceData } from "./service-selection/useServiceData"
-import { ServiceItem } from "./service-selection/ServiceItem"
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
+import { Toggle } from "@/components/ui/toggle"
+import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
 
-type ServiceSelectionFieldProps = {
-  services: ServiceItemType[]
-  onServicesChange: (services: ServiceItemType[]) => void
-  disabled?: boolean
+interface ServiceSelectionFieldProps {
+  services: string[]
+  onServicesChange: (services: string[]) => void
 }
 
-export function ServiceSelectionField({ services = [], onServicesChange, disabled }: ServiceSelectionFieldProps) {
-  const { data: availableServices = [], isLoading } = useServiceData();
+export function ServiceSelectionField({ services, onServicesChange }: ServiceSelectionFieldProps) {
+  const { data: serviceTypes } = useQuery({
+    queryKey: ["service-types"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_types")
+        .select("*")
+        .eq("status", "active")
+        .order("sort_order", { ascending: true })
 
-  const handleRemoveService = (index: number) => {
-    const updatedServices = [...services];
-    updatedServices.splice(index, 1);
-    onServicesChange(updatedServices);
-  };
-
-  const handleUpdateService = (index: number, updates: Partial<ServiceItemType>) => {
-    const updatedServices = [...services];
-    updatedServices[index] = {
-      ...updatedServices[index],
-      ...updates,
-      id: updatedServices[index].id || crypto.randomUUID()
-    };
-    onServicesChange(updatedServices);
-  };
-
-  const handleAddService = () => {
-    const newService: ServiceItemType = {
-      service_id: "",
-      service_name: "",
-      quantity: 1,
-      unit_price: 0,
-      id: crypto.randomUUID()
-    };
-    onServicesChange([...services, newService]);
-  };
+      if (error) throw error
+      return data
+    }
+  })
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div className="font-medium">Services</div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleAddService}
-          disabled={disabled || isLoading}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Service
-        </Button>
+      <Label>Select Services</Label>
+      <div className="flex flex-wrap gap-2">
+        {serviceTypes?.map((service) => (
+          <Toggle
+            key={service.id}
+            pressed={services.includes(service.id)}
+            onPressedChange={(pressed) => {
+              if (pressed) {
+                onServicesChange([...services, service.id])
+              } else {
+                onServicesChange(services.filter((id) => id !== service.id))
+              }
+            }}
+            className={cn(
+              "border-2",
+              "data-[state=on]:bg-primary data-[state=on]:text-primary-foreground",
+              "data-[state=off]:bg-background data-[state=off]:text-foreground",
+              "hover:bg-muted hover:text-muted-foreground"
+            )}
+          >
+            {service.name}
+          </Toggle>
+        ))}
       </div>
-
-      <ScrollArea className="h-[calc(100vh-20rem)]">
-        <div className="space-y-4">
-          {services.map((service, index) => (
-            <ServiceItem
-              key={service.id || index}
-              index={index}
-              item={service}
-              services={availableServices}
-              onUpdate={handleUpdateService}
-              onRemove={() => handleRemoveService(index)}
-            />
-          ))}
-          {services.length === 0 && (
-            <p className="text-muted-foreground text-center py-4">
-              No services added
-            </p>
-          )}
-        </div>
-      </ScrollArea>
     </div>
-  );
+  )
 }
