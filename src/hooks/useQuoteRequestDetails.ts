@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -42,6 +42,32 @@ export function useQuoteRequestDetails() {
     }
   })
 
+  // Set up real-time subscription
+  useEffect(() => {
+    if (!id) return
+
+    const channel = supabase
+      .channel('quote-request-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'quote_requests',
+          filter: `id=eq.${id}`
+        },
+        (payload) => {
+          console.log('Received real-time update:', payload)
+          refetch()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [id, refetch])
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       if (!event.target.files || event.target.files.length === 0) return
@@ -70,7 +96,7 @@ export function useQuoteRequestDetails() {
 
       if (updateError) throw updateError
 
-      await refetch()
+      // No need to manually refetch as the real-time subscription will handle it
       toast.success(`Successfully uploaded ${files.length} image${files.length > 1 ? 's' : ''}`)
     } catch (error: any) {
       console.error('Error uploading image:', error)
@@ -117,7 +143,7 @@ export function useQuoteRequestDetails() {
       }
 
       console.log('Database updated successfully')
-      await refetch()
+      // No need to manually refetch as the real-time subscription will handle it
       toast.success('Image removed successfully')
     } catch (error: any) {
       console.error('Error removing image:', error)
