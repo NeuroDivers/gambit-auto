@@ -7,21 +7,21 @@ const vehicleInfoSchema = z.object({
   model: z.string().min(1, "Model is required"),
   year: z.number().min(1900, "Year must be after 1900"),
   vin: z.string()
-})
+}).required()
 
 const serviceItemSchema = z.object({
   service_id: z.string().min(1, "Service is required"),
   service_name: z.string().min(1, "Service name is required"),
   quantity: z.number().min(1, "Quantity must be at least 1"),
   unit_price: z.number().min(0, "Price cannot be negative")
-})
+}).required()
 
 export const formSchema = z.object({
   vehicleInfo: vehicleInfoSchema,
   service_items: z.array(serviceItemSchema),
   description: z.string(),
   service_details: z.record(z.any())
-})
+}).required()
 
 export type QuoteRequestFormData = z.infer<typeof formSchema>
 export type { ServiceItemType }

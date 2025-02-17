@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
-import type { QuoteRequestFormData } from "./quote-request/formSchema"
+import type { QuoteRequestFormData, ServiceItemType } from "@/types/quote-request"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { formSchema } from "./quote-request/formSchema"
 import { useFormStorage } from "./quote-request/useFormStorage"
@@ -43,21 +43,21 @@ export function useQuoteRequestForm() {
     }
   })
 
-  const defaultValues: QuoteRequestFormData = {
+  const initialValues: QuoteRequestFormData = {
     vehicleInfo: {
-      make: defaultVehicle?.make || "",
-      model: defaultVehicle?.model || "",
-      year: defaultVehicle?.year || new Date().getFullYear(),
-      vin: defaultVehicle?.vin || ""
+      make: defaultVehicle?.make ?? "",
+      model: defaultVehicle?.model ?? "",
+      year: defaultVehicle?.year ?? new Date().getFullYear(),
+      vin: defaultVehicle?.vin ?? ""
     },
-    service_items: [],
+    service_items: [] satisfies ServiceItemType[],
     description: "",
     service_details: {}
   }
 
   const form = useForm<QuoteRequestFormData>({
     resolver: zodResolver(formSchema),
-    defaultValues
+    defaultValues: initialValues
   })
 
   // Update form values when default vehicle is loaded
@@ -67,7 +67,7 @@ export function useQuoteRequestForm() {
         make: defaultVehicle.make,
         model: defaultVehicle.model,
         year: defaultVehicle.year,
-        vin: defaultVehicle.vin || ""
+        vin: defaultVehicle.vin ?? ""
       })
     }
   }, [defaultVehicle, form])
