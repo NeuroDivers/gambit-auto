@@ -1,10 +1,10 @@
 
 import { ClientLayoutWrapper } from "@/components/client/ClientLayoutWrapper"
-import ClientDashboard from "@/pages/client/Dashboard"
-import ClientQuoteRequests from "@/pages/client/QuoteRequests"
+import Dashboard from "@/pages/client/Dashboard"
+import QuoteRequests from "@/pages/client/QuoteRequests"
 import QuoteRequestDetails from "@/pages/client/QuoteRequestDetails"
-import ClientVehicles from "@/pages/client/Vehicles"
-import Invoices from "@/pages/Invoices"
+import Vehicles from "@/pages/client/Vehicles"
+import Invoices from "@/pages/client/Invoices"
 import { RouteObject } from "react-router-dom"
 
 export const clientRoutes: RouteObject = {
@@ -13,11 +13,11 @@ export const clientRoutes: RouteObject = {
   children: [
     {
       path: "",
-      element: <ClientDashboard />,
+      element: <Dashboard />,
     },
     {
       path: "quotes",
-      element: <ClientQuoteRequests />,
+      element: <QuoteRequests />,
     },
     {
       path: "quotes/:id",
@@ -29,7 +29,7 @@ export const clientRoutes: RouteObject = {
     },
     {
       path: "vehicles",
-      element: <ClientVehicles />,
+      element: <Vehicles />,
     },
     {
       path: "bookings",
