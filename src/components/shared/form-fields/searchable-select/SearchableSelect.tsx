@@ -40,8 +40,8 @@ interface SearchableSelectProps {
 }
 
 export function SearchableSelect({
-  options = [],
-  value = '',
+  options,
+  value,
   onValueChange,
   placeholder = "Select an option",
   emptyMessage = "No results found.",
@@ -50,25 +50,16 @@ export function SearchableSelect({
   showPrice = false,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false)
-  const safeOptions = Array.isArray(options) ? options : []
-
-  const isGrouped = (option: Option | GroupedOption): option is GroupedOption => {
-    return 'options' in option && Array.isArray((option as GroupedOption).options);
-  };
-
-  const findSelectedOption = (value: string): Option | undefined => {
-    for (const option of safeOptions) {
-      if (isGrouped(option)) {
-        const found = option.options?.find(opt => opt.value === value);
-        if (found) return found;
-      } else if (option.value === value) {
-        return option;
-      }
+  
+  // Ensure options is always an array
+  const safeOptions: Option[] = options?.reduce((acc: Option[], curr) => {
+    if ('options' in curr) {
+      return [...acc, ...(curr.options || [])]
     }
-    return undefined;
-  };
+    return [...acc, curr as Option]
+  }, []) || []
 
-  const selectedOption = findSelectedOption(value);
+  const selectedOption = safeOptions.find(option => option.value === value)
 
   if (disabled) {
     return (
@@ -80,7 +71,7 @@ export function SearchableSelect({
         <span className="truncate">Loading...</span>
         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
       </Button>
-    );
+    )
   }
 
   return (
@@ -99,77 +90,39 @@ export function SearchableSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full min-w-[var(--radix-popover-trigger-width)] p-0">
-        <Command loop>
-          <CommandInput 
-            placeholder={`Search ${placeholder.toLowerCase()}...`}
-          />
+        <Command>
+          <CommandInput placeholder={`Search ${placeholder.toLowerCase()}...`} />
           <CommandEmpty>{emptyMessage}</CommandEmpty>
-          {safeOptions.map((item, index) => {
-            if (isGrouped(item)) {
-              const groupOptions = Array.isArray(item.options) ? item.options : [];
-              return groupOptions.length > 0 ? (
-                <CommandGroup key={`group-${index}`} heading={item.label}>
-                  {groupOptions.map((option) => (
-                    <CommandItem
-                      key={`group-item-${option.value}`}
-                      value={option.value}
-                      onSelect={() => {
-                        onValueChange(option.value);
-                        setOpen(false);
-                      }}
-                      disabled={option.disabled}
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center">
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              value === option.value ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          <span>{option.label}</span>
-                        </div>
-                        {showPrice && option.price !== null && option.price !== undefined && (
-                          <span className="text-muted-foreground">
-                            ${option.price.toFixed(2)}
-                          </span>
-                        )}
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              ) : null;
-            }
-
-            return (
+          <CommandGroup>
+            {safeOptions.map((option) => (
               <CommandItem
-                key={`item-${item.value}`}
-                value={item.value}
+                key={option.value}
+                value={option.value}
                 onSelect={() => {
-                  onValueChange(item.value);
-                  setOpen(false);
+                  onValueChange(option.value)
+                  setOpen(false)
                 }}
-                disabled={item.disabled}
+                disabled={option.disabled}
               >
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center">
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        value === item.value ? "opacity-100" : "opacity-0"
+                        value === option.value ? "opacity-100" : "opacity-0"
                       )}
                     />
-                    <span>{item.label}</span>
+                    <span>{option.label}</span>
                   </div>
-                  {showPrice && item.price !== null && item.price !== undefined && (
+                  {showPrice && option.price !== null && option.price !== undefined && (
                     <span className="text-muted-foreground">
-                      ${item.price.toFixed(2)}
+                      ${option.price.toFixed(2)}
                     </span>
                   )}
                 </div>
               </CommandItem>
-            );
-          })}
+            ))}
+          </CommandGroup>
         </Command>
       </PopoverContent>
     </Popover>
