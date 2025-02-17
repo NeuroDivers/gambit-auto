@@ -29,10 +29,29 @@ export default function BusinessSettings() {
     queryKey: ["business-profile"],
     queryFn: async () => {
       console.log("Fetching business profile...")
+      
+      // First check if user is logged in
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        throw new Error("Not authenticated")
+      }
+
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('role:role_id(name)')
+        .eq('id', session.user.id)
+        .single()
+
+      console.log("User profile:", userProfile)
+      
+      if (!userProfile?.role?.name || userProfile.role.name !== 'administrator') {
+        throw new Error("Unauthorized - Admin access required")
+      }
+
       const { data, error } = await supabase
         .from("business_profile")
         .select("*")
-        .single()
+        .maybeSingle()
 
       if (error) {
         console.error("Error fetching business profile:", error)
@@ -40,9 +59,14 @@ export default function BusinessSettings() {
       }
       
       console.log("Business profile data:", data)
-      return data
-    },
-    retry: 1
+      return data || {
+        company_name: "",
+        email: "",
+        phone_number: "",
+        address: "",
+        logo_url: ""
+      }
+    }
   })
 
   const form = useForm<BusinessFormValues>({
@@ -103,7 +127,11 @@ export default function BusinessSettings() {
             <CardTitle>Error</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-destructive">Failed to load business settings. Please try again later.</p>
+            <p className="text-destructive">
+              {error instanceof Error 
+                ? error.message 
+                : "Failed to load business settings. Please try again later."}
+            </p>
           </CardContent>
         </Card>
       </div>
