@@ -10,6 +10,7 @@ import ServiceBays from "@/pages/ServiceBays"
 import UserManagement from "@/pages/UserManagement"
 import Quotes from "@/pages/Quotes"
 import CreateQuote from "@/pages/CreateQuote"
+import QuoteDetails from "@/pages/QuoteDetails"
 import Invoices from "@/pages/Invoices"
 import CreateInvoice from "@/pages/CreateInvoice"
 import InvoiceDetails from "@/pages/InvoiceDetails"
@@ -81,6 +82,14 @@ export const dashboardRoutes: RouteObject = {
       element: (
         <PermissionGuard resource="quotes" type="page_access">
           <Quotes />
+        </PermissionGuard>
+      ),
+    },
+    {
+      path: "quotes/:id",
+      element: (
+        <PermissionGuard resource="quotes" type="page_access">
+          <QuoteDetails />
         </PermissionGuard>
       ),
     },
