@@ -35,7 +35,7 @@ export default function Dashboard() {
     queryKey: ["profile", session?.user?.id],
     enabled: !!session?.user?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: profileData, error } = await supabase
         .from("profiles")
         .select(`
           role:role_id (
@@ -45,10 +45,17 @@ export default function Dashboard() {
           )
         `)
         .eq("id", session?.user?.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      return data as UserProfile;
+      
+      // Ensure we're returning data in the correct format
+      if (!profileData) throw new Error("Profile not found");
+
+      // Transform the data to match our UserProfile type
+      return {
+        role: profileData.role as UserRole // This ensures role is a single object, not an array
+      };
     },
   });
 
