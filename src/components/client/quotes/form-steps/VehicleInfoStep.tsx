@@ -1,3 +1,4 @@
+
 import { FormField, FormItem, FormLabel, FormMessage, FormControl } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { UseFormReturn } from "react-hook-form"
@@ -50,7 +51,7 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
       setUseNewVehicle(true)
       form.setValue('vehicleInfo.make', '')
       form.setValue('vehicleInfo.model', '')
-      form.setValue('vehicleInfo.year', '')
+      form.setValue('vehicleInfo.year', 0)
       form.setValue('vehicleInfo.vin', '')
       return
     }
@@ -59,7 +60,7 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
     if (selectedVehicle) {
       form.setValue('vehicleInfo.make', selectedVehicle.make)
       form.setValue('vehicleInfo.model', selectedVehicle.model)
-      form.setValue('vehicleInfo.year', selectedVehicle.year.toString())
+      form.setValue('vehicleInfo.year', selectedVehicle.year)
       form.setValue('vehicleInfo.vin', selectedVehicle.vin || '')
       setUseNewVehicle(false)
     }
@@ -80,11 +81,12 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
 
       if (!client) return
 
+      const yearValue = form.getValues('vehicleInfo.year')
       const vehicleData = {
         client_id: client.id,
         make: form.getValues('vehicleInfo.make'),
         model: form.getValues('vehicleInfo.model'),
-        year: parseInt(form.getValues('vehicleInfo.year') || '0'),
+        year: typeof yearValue === 'string' ? parseInt(yearValue) : yearValue,
         vin: form.getValues('vehicleInfo.vin') || null,
         is_primary: !vehicles?.length
       }
@@ -183,7 +185,7 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
                   <Input 
                     {...field} 
                     type="number" 
-                    onChange={e => field.onChange(e.target.value)}
+                    onChange={e => field.onChange(Number(e.target.value))}
                     placeholder="e.g. 2020" 
                   />
                 </FormControl>

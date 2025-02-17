@@ -1,11 +1,11 @@
 
 import { z } from "zod"
-import type { ServiceDetails } from "@/types/quote-request"
+import type { ServiceDetails, ServiceItemType } from "@/types/quote-request"
 
 const vehicleInfoSchema = z.object({
   make: z.string().min(1, "Make is required"),
   model: z.string().min(1, "Model is required"),
-  year: z.string().min(1, "Year is required"),
+  year: z.number().min(1900, "Year must be after 1900"),
   vin: z.string()
 })
 
@@ -24,3 +24,4 @@ export const formSchema = z.object({
 })
 
 export type QuoteRequestFormData = z.infer<typeof formSchema>
+export type { ServiceItemType }
