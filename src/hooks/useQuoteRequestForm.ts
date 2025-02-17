@@ -4,21 +4,19 @@ import { useForm } from "react-hook-form"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { useNavigate } from "react-router-dom"
-import { useQueryClient } from "@tanstack/react-query"
-import { useFormStorage } from "./quote-request/useFormStorage"
-import { QuoteRequestFormData, ServiceItemType, formSchema } from "./quote-request/formSchema"
 import { useQuery } from "@tanstack/react-query"
+import type { QuoteRequestFormData } from "./quote-request/formSchema"
 import { zodResolver } from "@hookform/resolvers/zod"
-import type { UseFormReturn } from "react-hook-form"
+import { formSchema } from "./quote-request/formSchema"
+import { useFormStorage } from "./quote-request/useFormStorage"
+import { useMediaHandling } from "./quote-request/useMediaHandling"
 
 export function useQuoteRequestForm() {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const { clearFormData: clearStoredForm } = useFormStorage()
   const [step, setStep] = useState(1)
-  const [uploading, setUploading] = useState(false)
+  const { uploading, handleImageUpload, handleImageRemove } = useMediaHandling()
 
-  // Initialize form first
   const form = useForm<QuoteRequestFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -28,13 +26,12 @@ export function useQuoteRequestForm() {
         year: new Date().getFullYear(),
         vin: ""
       },
-      service_items: [] as ServiceItemType[],
+      service_items: [],
       description: "",
       service_details: {}
     }
   })
 
-  // Queries next (they should be at the top level, not inside conditions)
   const { data: services } = useQuery({
     queryKey: ["services"],
     queryFn: async () => {
@@ -48,81 +45,8 @@ export function useQuoteRequestForm() {
     }
   })
 
-  const { data: defaultVehicle } = useQuery({
-    queryKey: ["default-vehicle"],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return null
-
-      // First get the client ID
-      const { data: client } = await supabase
-        .from("clients")
-        .select("id")
-        .eq("user_id", session.user.id)
-        .maybeSingle()
-
-      if (!client) return null
-
-      // Then get the default vehicle
-      const { data: vehicle } = await supabase
-        .from("vehicles")
-        .select("*")
-        .eq("client_id", client.id)
-        .eq("is_primary", true)
-        .maybeSingle()
-
-      return vehicle
-    }
-  })
-
-  // Effects after queries
-  useEffect(() => {
-    if (defaultVehicle) {
-      form.setValue("vehicleInfo", {
-        make: defaultVehicle.make,
-        model: defaultVehicle.model,
-        year: defaultVehicle.year,
-        vin: defaultVehicle.vin || ""
-      })
-    }
-  }, [defaultVehicle, form])
-
   const selectedServices = form.watch('service_items') || []
   const totalSteps = selectedServices.length > 0 ? selectedServices.length + 2 : 2
-  const isSubmitting = form.formState.isSubmitting
-
-  const handleImageUpload = async (files: FileList, serviceId: string) => {
-    setUploading(true)
-    try {
-      // Image upload logic here
-      toast.success("Images uploaded successfully")
-    } catch (error) {
-      console.error("Error uploading images:", error)
-      toast.error("Failed to upload images")
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  const handleImageRemove = (url: string, serviceId: string) => {
-    const currentDetails = form.getValues('service_details')
-    const serviceDetails = currentDetails[serviceId] || {}
-    const updatedImages = (serviceDetails.images || []).filter((img: string) => img !== url)
-    
-    form.setValue(`service_details.${serviceId}.images`, updatedImages)
-  }
-
-  const nextStep = () => {
-    if (step < totalSteps) {
-      setStep(step + 1)
-    }
-  }
-
-  const prevStep = () => {
-    if (step > 1) {
-      setStep(step - 1)
-    }
-  }
 
   const onSubmit = useCallback(async (data: QuoteRequestFormData) => {
     try {
@@ -166,16 +90,25 @@ export function useQuoteRequestForm() {
       // Clear form storage
       clearStoredForm()
 
-      // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ["quoteRequests"] })
-
       toast.success("Quote request submitted successfully!")
       navigate("/client/quotes")
     } catch (error: any) {
       console.error("Error submitting quote request:", error)
       toast.error("Failed to submit quote request")
     }
-  }, [navigate, queryClient, clearStoredForm])
+  }, [navigate, clearStoredForm])
+
+  const nextStep = () => {
+    if (step < totalSteps) {
+      setStep(step + 1)
+    }
+  }
+
+  const prevStep = () => {
+    if (step > 1) {
+      setStep(step - 1)
+    }
+  }
 
   return {
     form,
@@ -184,7 +117,7 @@ export function useQuoteRequestForm() {
     services,
     selectedServices,
     uploading,
-    isSubmitting,
+    isSubmitting: form.formState.isSubmitting,
     handleImageUpload,
     handleImageRemove,
     onSubmit,
