@@ -38,7 +38,7 @@ export default function WorkOrders() {
   const { data: stats } = useQuery({
     queryKey: ["workOrderStats"],
     queryFn: async () => {
-      const { data: { count: total } } = await supabase
+      const { count } = await supabase
         .from('work_orders')
         .select('*', { count: 'exact', head: true })
 
@@ -48,7 +48,7 @@ export default function WorkOrders() {
         .eq('is_archived', false)
 
       const counts = {
-        total,
+        total: count || 0,
         pending: statusCounts?.filter(wo => wo.status === 'pending').length || 0,
         approved: statusCounts?.filter(wo => wo.status === 'approved').length || 0,
         rejected: statusCounts?.filter(wo => wo.status === 'rejected').length || 0,

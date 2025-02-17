@@ -47,6 +47,9 @@ export function VehicleList({ clientId }: VehicleListProps) {
         .insert([{ ...values, client_id: clientId }])
 
       if (error) throw error
+      
+      // Return a promise
+      return Promise.resolve()
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicles'] })
@@ -73,6 +76,9 @@ export function VehicleList({ clientId }: VehicleListProps) {
         .eq('id', id)
 
       if (error) throw error
+      
+      // Return a promise
+      return Promise.resolve()
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicles'] })

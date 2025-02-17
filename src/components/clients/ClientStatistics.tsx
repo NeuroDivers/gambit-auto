@@ -1,8 +1,8 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/utils"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { format } from "date-fns"
+import { Client } from "./types"
 
 interface RevenueStatistic {
   month: string
@@ -14,10 +14,11 @@ interface RevenueStatistic {
 }
 
 interface ClientStatisticsProps {
+  client: Client
   data?: RevenueStatistic[]
 }
 
-export function ClientStatistics({ data }: ClientStatisticsProps) {
+export function ClientStatistics({ client, data }: ClientStatisticsProps) {
   // Calculate summary statistics
   const totalRevenue = data?.reduce((sum, month) => sum + Number(month.total_revenue), 0) || 0
   const collectedRevenue = data?.reduce((sum, month) => sum + Number(month.collected_revenue), 0) || 0
