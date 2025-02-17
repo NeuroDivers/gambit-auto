@@ -1,98 +1,117 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { useState } from "react";
-import { EstimateForm } from "./EstimateForm";
-import type { QuoteRequest } from "@/types/quote-request";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { QuoteHeader } from "./card-sections/QuoteHeader";
-import { ServicesList } from "./card-sections/ServicesList";
-import { EstimateDetails } from "./card-sections/EstimateDetails";
-import { MediaGallery } from "./card-sections/MediaGallery";
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Eye, Calendar, Archive, Clock } from "lucide-react"
+import type { QuoteRequest } from "@/types/quote-request"
+import { useNavigate } from "react-router-dom"
+
 interface QuoteRequestCardProps {
-  request: QuoteRequest;
-  services: any[];
-  estimateAmount: Record<string, string>;
-  setEstimateAmount: (value: Record<string, string>) => void;
-  onEstimateSubmit: (id: string, estimates: Record<string, string>) => void;
-  onImageRemove: (url: string, quoteId: string, currentUrls: string[]) => void;
-  onStatusChange: (id: string, status: QuoteRequest['status']) => void;
-  onDelete: (id: string) => void;
-  isSubmitting?: boolean;
+  request: QuoteRequest
+  services: any[]
+  onStatusChange: (id: string, status: QuoteRequest['status']) => void
+  onDelete: (id: string) => void
+  onArchiveToggle: (id: string, currentArchiveStatus: boolean) => void
+  estimateAmount: Record<string, string>
+  setEstimateAmount: (value: Record<string, string>) => void
+  onEstimateSubmit: (id: string, estimates: Record<string, string>) => void
 }
+
 export function QuoteRequestCard({
   request,
   services,
+  onStatusChange,
+  onDelete,
+  onArchiveToggle,
   estimateAmount,
   setEstimateAmount,
   onEstimateSubmit,
-  onImageRemove,
-  onStatusChange,
-  onDelete,
-  isSubmitting = false
 }: QuoteRequestCardProps) {
-  const [uploadKey, setUploadKey] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      if (!event.target.files || event.target.files.length === 0) return;
-      setIsUploading(true);
-      const files = Array.from(event.target.files);
-      const currentUrls = request.media_urls || [];
-      const newUrls: string[] = [];
+  const navigate = useNavigate()
 
-      // Upload each file
-      for (const file of files) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${request.id}-${Math.random()}.${fileExt}`;
-        const {
-          error: uploadError
-        } = await supabase.storage.from('quote-request-media').upload(fileName, file);
-        if (uploadError) throw uploadError;
-        const {
-          data: publicUrlData
-        } = supabase.storage.from('quote-request-media').getPublicUrl(fileName);
-        if (publicUrlData?.publicUrl) {
-          newUrls.push(publicUrlData.publicUrl);
-        }
-      }
+  const statusVariant = {
+    pending: "secondary",
+    estimated: "default",
+    accepted: "outline",
+    rejected: "destructive",
+    converted: "success"
+  } as const
 
-      // Update quote request with new URLs
-      const {
-        error: updateError
-      } = await supabase.from('quote_requests').update({
-        media_urls: [...currentUrls, ...newUrls]
-      }).eq('id', request.id);
-      if (updateError) throw updateError;
-      toast.success(`Successfully uploaded ${files.length} image${files.length > 1 ? 's' : ''}`);
-    } catch (error: any) {
-      toast.error('Error uploading image: ' + error.message);
-    } finally {
-      setIsUploading(false);
-      setUploadKey(prev => prev + 1);
+  const requestedServices = request.service_ids
+    .map(id => services?.find(s => s.id === id)?.name)
+    .filter(Boolean)
+    .join(", ")
+
+  const timeSinceCreation = () => {
+    const created = new Date(request.created_at)
+    const now = new Date()
+    const diffInHours = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60))
+    
+    if (diffInHours < 24) {
+      return `${diffInHours}h ago`
     }
-  };
-  return <Card className="redesign the quotes cards">
-      <CardHeader>
-        <QuoteHeader request={request} />
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col space-y-4">
-          <ServicesList serviceIds={request.service_ids} services={services} />
+    const diffInDays = Math.floor(diffInHours / 24)
+    return `${diffInDays}d ago`
+  }
 
-          {/* Description if available */}
-          {request.description && <div>
-              <h4 className="text-sm font-medium">Additional Details:</h4>
-              <p className="text-sm text-muted-foreground">{request.description}</p>
-            </div>}
+  return (
+    <Card className={`hover:bg-accent/5 transition-colors ${request.is_archived ? 'opacity-75' : ''}`}>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-4">
+          {/* Left Section */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="font-medium truncate">
+                {request.vehicle_make} {request.vehicle_model} ({request.vehicle_year})
+              </h3>
+              <Badge variant={statusVariant[request.status as keyof typeof statusVariant]}>
+                {request.status}
+              </Badge>
+              {request.estimated_amount && (
+                <span className="text-sm font-medium text-muted-foreground">
+                  ${request.estimated_amount.toLocaleString()}
+                </span>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <div className="flex items-center text-sm text-muted-foreground gap-2">
+                <Calendar className="h-4 w-4" />
+                <span>{new Date(request.created_at).toLocaleDateString()}</span>
+              </div>
+              <div className="flex items-center text-sm text-muted-foreground gap-2">
+                <Clock className="h-4 w-4" />
+                <span>{timeSinceCreation()}</span>
+              </div>
+            </div>
+            
+            {requestedServices && (
+              <p className="text-sm text-muted-foreground truncate mt-1">
+                Services: {requestedServices}
+              </p>
+            )}
+          </div>
 
-          <MediaGallery request={request} onImageUpload={handleImageUpload} onImageRemove={onImageRemove} isUploading={isUploading} uploadKey={uploadKey} />
-
-          {/* Estimate Form for pending requests */}
-          {request.status === "pending" && <EstimateForm quoteRequest={request} services={services} onSubmit={estimates => onEstimateSubmit(request.id, estimates)} isSubmitting={isSubmitting} />}
-
-          {/* Show estimate details if already estimated */}
-          {request.status === "estimated" && <EstimateDetails request={request} services={services} />}
+          {/* Right Section - Actions */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/quotes/${request.id}`)}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              View
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onArchiveToggle(request.id, request.is_archived || false)}
+            >
+              <Archive className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </CardContent>
-    </Card>;
+    </Card>
+  )
 }
