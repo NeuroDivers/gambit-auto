@@ -42,9 +42,9 @@ export default function Invoices() {
         .from("clients")
         .select("id")
         .eq("user_id", user.id)
-        .single()
+        .maybeSingle()  // Changed from .single() to .maybeSingle()
       
-      return data?.id
+      return data?.id || null  // Return null if no client record found
     }
   })
 
