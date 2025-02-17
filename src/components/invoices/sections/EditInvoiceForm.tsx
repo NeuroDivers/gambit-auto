@@ -9,6 +9,12 @@ import { CustomerInfoFields } from "../form-sections/CustomerInfoFields"
 import { VehicleInfoFields } from "../form-sections/VehicleInfoFields"
 import { InvoiceServiceItems } from "./InvoiceServiceItems"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form"
+import { CalendarIcon } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
 
 type EditInvoiceFormProps = {
   form: UseFormReturn<InvoiceFormValues>
@@ -36,8 +42,47 @@ export function EditInvoiceForm({
           <CardHeader>
             <CardTitle>Invoice Status</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <InvoiceStatusField form={form} />
+            
+            <FormField
+              control={form.control}
+              name="due_date"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Due Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "pl-3 text-left font-normal w-[240px]",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(new Date(field.value), "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value ? new Date(field.value) : undefined}
+                        onSelect={(date) => field.onChange(date ? date.toISOString() : null)}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </FormItem>
+              )}
+            />
           </CardContent>
         </Card>
 
