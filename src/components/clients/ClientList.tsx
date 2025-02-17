@@ -43,13 +43,13 @@ export function ClientList() {
       // Apply sorting
       switch (sortBy) {
         case 'recent':
-          query = query.order('last_invoice_date', { ascending: false, nullsLast: true })
+          query = query.order('last_invoice_date', { ascending: false, nullsFirst: false })
           break
         case 'name':
           query = query.order('first_name', { ascending: true })
           break
         case 'activity':
-          query = query.order('last_work_order_date', { ascending: false, nullsLast: true })
+          query = query.order('last_work_order_date', { ascending: false, nullsFirst: false })
           break
       }
       
