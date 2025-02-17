@@ -4,9 +4,18 @@ import { Plus } from "lucide-react"
 import { useState } from "react"
 import { ServiceTypeDialog } from "@/components/services/ServiceTypeDialog"
 import { ServiceTypesList } from "@/components/services/ServiceTypesList"
+import { toast } from "sonner"
 
 export default function ServiceTypes() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("")
+  const [typeFilter, setTypeFilter] = useState<string>("")
+
+  const handleSuccess = () => {
+    setIsDialogOpen(false)
+    toast.success("Service type created successfully")
+  }
 
   return (
     <div className="space-y-6 p-6">
@@ -18,11 +27,16 @@ export default function ServiceTypes() {
         </Button>
       </div>
 
-      <ServiceTypesList />
+      <ServiceTypesList 
+        onSearch={setSearchQuery}
+        onStatusFilter={setStatusFilter}
+        onTypeFilter={setTypeFilter}
+      />
       
       <ServiceTypeDialog 
         open={isDialogOpen} 
         onOpenChange={setIsDialogOpen}
+        onSuccess={handleSuccess}
       />
     </div>
   )

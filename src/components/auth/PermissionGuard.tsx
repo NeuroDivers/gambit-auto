@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect, useState } from "react"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Navigate } from "react-router-dom"
@@ -9,6 +10,16 @@ interface PermissionGuardProps {
   children: ReactNode
   resource: string
   type: 'page_access' | 'feature_access'
+}
+
+interface UserRole {
+  id: string
+  name: string
+  nicename: string
+}
+
+interface ProfileData {
+  role: UserRole
 }
 
 export function PermissionGuard({ children, resource, type }: PermissionGuardProps) {
@@ -34,7 +45,7 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
         .eq('id', user.id)
         .single()
 
-      return data
+      return data as ProfileData
     }
   })
 

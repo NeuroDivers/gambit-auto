@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button"
 import { Link } from "react-router-dom"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { WorkOrder, FileText, MessageSquare, Users } from "lucide-react"
+import { Wrench, FileText, MessageSquare, Users } from "lucide-react"
 
 export default function Dashboard() {
   return (
@@ -15,7 +15,7 @@ export default function Dashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Work Orders</CardTitle>
-            <WorkOrder className="h-4 w-4 text-muted-foreground" />
+            <Wrench className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <Link to="/admin/work-orders">
