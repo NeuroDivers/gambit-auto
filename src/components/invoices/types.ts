@@ -11,6 +11,7 @@ export type InvoiceItem = {
 export type InvoiceFormValues = {
   notes: string
   status: string
+  due_date: string | null  // Added due_date field
   invoice_items: InvoiceItem[]
   customer_first_name: string
   customer_last_name: string

@@ -40,6 +40,7 @@ export default function EditInvoice() {
       form.reset({
         status: data.status,
         notes: data.notes || "",
+        due_date: data.due_date || null,
         customer_first_name: data.customer_first_name || "",
         customer_last_name: data.customer_last_name || "",
         customer_email: data.customer_email || "",
