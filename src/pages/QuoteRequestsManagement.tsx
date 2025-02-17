@@ -29,7 +29,6 @@ export default function QuoteRequestsManagement() {
     setDeleteDialogOpen,
     selectedQuoteId,
     setSelectedQuoteId,
-    handleImageRemove,
     handleEstimateSubmit,
     isSubmittingEstimate
   } = useQuoteRequestManagement()
@@ -101,7 +100,6 @@ export default function QuoteRequestsManagement() {
         estimateAmount={estimateAmount}
         setEstimateAmount={setEstimateAmount}
         onEstimateSubmit={handleEstimateSubmit}
-        onImageRemove={handleImageRemove}
         onStatusChange={handleStatusChange}
         onDelete={handleDelete}
         onArchiveToggle={handleArchiveToggle}

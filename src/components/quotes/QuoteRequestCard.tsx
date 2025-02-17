@@ -34,7 +34,7 @@ export function QuoteRequestCard({
     estimated: "default",
     accepted: "outline",
     rejected: "destructive",
-    converted: "success"
+    converted: "outline" // Changed from "success" to "outline" since it's a valid variant
   } as const
 
   const requestedServices = request.service_ids
