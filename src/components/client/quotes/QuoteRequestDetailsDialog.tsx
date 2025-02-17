@@ -121,7 +121,7 @@ export function QuoteRequestDetailsDialog({
           {quoteRequest.media_urls && quoteRequest.media_urls.length > 0 && (
             <Card>
               <CardHeader className="pb-2">
-                <h3 className="font-semibold">Attached Images</h3>
+                <h3 className="font-semibold">Uploaded Images</h3>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-2">
@@ -129,7 +129,7 @@ export function QuoteRequestDetailsDialog({
                     <img 
                       key={index} 
                       src={url} 
-                      alt={`Image ${index + 1}`} 
+                      alt={`Quote request image ${index + 1}`} 
                       className="rounded-md object-cover w-full aspect-video"
                     />
                   ))}
