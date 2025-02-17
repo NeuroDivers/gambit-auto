@@ -71,7 +71,7 @@ export function useQuoteRequestData() {
           created_at,
           media_urls,
           service_details,
-          quote_items:quote_items (
+          quote_items (
             id,
             service_id,
             service_name,
