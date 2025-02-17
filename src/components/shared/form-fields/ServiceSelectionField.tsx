@@ -7,6 +7,9 @@ import { cn } from "@/lib/utils"
 import { ServiceItemType } from "@/components/work-orders/types"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { ServiceTypesTable } from "@/integrations/supabase/types/service-types"
+
+type ServiceType = ServiceTypesTable['Row']
 
 interface ServiceSelectionFieldProps {
   services: ServiceItemType[]
@@ -29,11 +32,11 @@ export function ServiceSelectionField({
         .order("sort_order", { ascending: true })
 
       if (error) throw error
-      return data
+      return data as ServiceType[]
     }
   })
 
-  const handleServiceToggle = (service: any, pressed: boolean) => {
+  const handleServiceToggle = (service: ServiceType, pressed: boolean) => {
     if (pressed) {
       onServicesChange([
         ...services,
@@ -72,7 +75,7 @@ export function ServiceSelectionField({
   }
 
   // Group services by their type for better organization
-  const groupedServices = serviceTypes?.reduce((acc: { [key: string]: any[] }, service) => {
+  const groupedServices = serviceTypes?.reduce<Record<string, ServiceType[]>>((acc, service) => {
     const type = service.hierarchy_type || 'Other Services'
     if (!acc[type]) acc[type] = []
     acc[type].push(service)
@@ -90,7 +93,7 @@ export function ServiceSelectionField({
                 {category}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {categoryServices.map((service: any) => {
+                {categoryServices.map((service) => {
                   const selectedService = services.find(s => s.service_id === service.id)
                   const isSelected = !!selectedService
 
