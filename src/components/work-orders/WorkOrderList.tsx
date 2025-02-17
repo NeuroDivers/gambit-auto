@@ -12,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { WorkOrder } from "./types"
-import { LoadingScreen } from "../shared/LoadingScreen"
+import { Loader2 } from "lucide-react"
 
 export function WorkOrderList() {
   const { data: workOrders, isLoading } = useQuery({
@@ -27,12 +27,21 @@ export function WorkOrderList() {
         `)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching work orders:', error)
+        throw error
+      }
       return data as WorkOrder[]
     }
   })
 
-  if (isLoading) return <LoadingScreen />
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   return (
     <div className="rounded-md border">
