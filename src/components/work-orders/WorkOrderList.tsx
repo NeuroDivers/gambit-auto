@@ -1,75 +1,100 @@
 
-import { useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { useEffect } from "react"
-import { WorkOrdersSection } from "./sections/WorkOrdersSection"
-import { WorkOrderCalendar } from "./WorkOrderCalendar"
-import { toast } from "sonner"
-import { CreateWorkOrderDialog } from "./CreateWorkOrderDialog"
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
-import { CalendarClock } from "lucide-react"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { format } from "date-fns"
+import { WorkOrder } from "./types"
+import { LoadingScreen } from "../shared/LoadingScreen"
 
-export const WorkOrderList = () => {
-  const queryClient = useQueryClient()
+export function WorkOrderList() {
+  const { data: workOrders, isLoading } = useQuery({
+    queryKey: ['work-orders'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('work_orders')
+        .select(`
+          *,
+          assigned_bay:service_bays!assigned_bay_id(name),
+          assigned_profile:profiles!assigned_profile_id(first_name, last_name)
+        `)
+        .order('created_at', { ascending: false })
 
-  useEffect(() => {
-    const channel = supabase
-      .channel("work_orders_changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "work_orders",
-        },
-        (payload) => {
-          console.log("Work order change detected:", payload)
-          
-          switch (payload.eventType) {
-            case "DELETE":
-              toast.info("Work order deleted")
-              queryClient.setQueryData(["workOrders"], (oldData: any) => {
-                if (!oldData) return oldData
-                return oldData.filter((workOrder: any) => workOrder.id !== payload.old.id)
-              })
-              break
-            case "INSERT":
-              toast.success("New work order created")
-              queryClient.invalidateQueries({ queryKey: ["workOrders"] })
-              break
-            case "UPDATE":
-              toast.success("Work order updated")
-              queryClient.invalidateQueries({ queryKey: ["workOrders"] })
-              break
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log("Subscription status:", status)
-      })
-
-    return () => {
-      console.log("Cleaning up subscription")
-      supabase.removeChannel(channel)
+      if (error) throw error
+      return data as WorkOrder[]
     }
-  }, [queryClient])
+  })
+
+  if (isLoading) return <LoadingScreen />
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-end px-6">
-        <CreateWorkOrderDialog />
-      </div>
-      <div className="space-y-20">
-        <WorkOrderCalendar />
-        <Alert>
-          <CalendarClock className="h-4 w-4" />
-          <AlertTitle>Unscheduled Work Orders</AlertTitle>
-          <AlertDescription>
-            Work orders without a start time won't appear on the calendar. They will be listed in the section below.
-          </AlertDescription>
-        </Alert>
-        <WorkOrdersSection />
-      </div>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Client</TableHead>
+            <TableHead>Vehicle</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Assigned To</TableHead>
+            <TableHead>Bay</TableHead>
+            <TableHead>Created</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {workOrders && workOrders.length > 0 ? (
+            workOrders.map((workOrder) => (
+              <TableRow key={workOrder.id}>
+                <TableCell>
+                  <div>
+                    <p className="font-medium">
+                      {workOrder.first_name} {workOrder.last_name}
+                    </p>
+                    <p className="text-sm text-muted-foreground">{workOrder.email}</p>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={workOrder.status === 'completed' ? 'default' : 'secondary'}>
+                    {workOrder.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {workOrder.assigned_profile ? (
+                    `${workOrder.assigned_profile.first_name} ${workOrder.assigned_profile.last_name}`
+                  ) : (
+                    <span className="text-muted-foreground">Unassigned</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {workOrder.assigned_bay ? (
+                    workOrder.assigned_bay.name
+                  ) : (
+                    <span className="text-muted-foreground">Not assigned</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {format(new Date(workOrder.created_at), 'MMM d, yyyy')}
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center">
+                No work orders found
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
     </div>
   )
 }
