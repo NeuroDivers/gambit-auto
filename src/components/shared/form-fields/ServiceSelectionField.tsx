@@ -75,7 +75,7 @@ export function ServiceSelectionField({
 
   // Group services by their type for better organization
   const groupedServices = serviceTypes?.reduce<Record<string, ServiceType[]>>((acc, service) => {
-    const type = service.hierarchy_type || 'Other Services'
+    const type = service.service_type || 'Other Services'
     if (!acc[type]) acc[type] = []
     acc[type].push(service)
     return acc
@@ -88,9 +88,9 @@ export function ServiceSelectionField({
         {Object.entries(groupedServices).map(([category, categoryServices]) => (
           <div key={category} className="space-y-4">
             <h3 className="text-base font-medium text-foreground/80 py-2">
-              {category === 'main' ? 'Main Services' : 
+              {category === 'standalone' ? 'Main Services' : 
                category === 'bundle' ? 'Service Bundles' :
-               category === 'sub' ? 'Additional Services' :
+               category === 'sub_service' ? 'Additional Services' :
                category}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
