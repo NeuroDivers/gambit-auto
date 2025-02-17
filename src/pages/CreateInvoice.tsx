@@ -2,11 +2,14 @@
 import { useForm } from "react-hook-form"
 import { InvoiceFormValues } from "@/components/invoices/types"
 import { EditInvoiceForm } from "@/components/invoices/sections/EditInvoiceForm"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { SearchableSelect } from "@/components/shared/form-fields/searchable-select/SearchableSelect"
 
 export default function CreateInvoice() {
   const navigate = useNavigate()
@@ -27,6 +30,32 @@ export default function CreateInvoice() {
       invoice_items: []
     }
   })
+
+  // Fetch clients for the dropdown
+  const { data: clients } = useQuery({
+    queryKey: ['clients'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .order('first_name')
+      
+      if (error) throw error
+      return data
+    }
+  })
+
+  // Handle client selection
+  const handleClientSelect = (clientId: string) => {
+    const selectedClient = clients?.find(client => client.id === clientId)
+    if (selectedClient) {
+      form.setValue('customer_first_name', selectedClient.first_name)
+      form.setValue('customer_last_name', selectedClient.last_name)
+      form.setValue('customer_email', selectedClient.email)
+      form.setValue('customer_phone', selectedClient.phone_number || '')
+      form.setValue('customer_address', selectedClient.address || '')
+    }
+  }
 
   const { mutate: createInvoice, isPending } = useMutation({
     mutationFn: async (values: InvoiceFormValues) => {
@@ -120,7 +149,29 @@ export default function CreateInvoice() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <PageBreadcrumbs />
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-5xl mx-auto space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Select Existing Client</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label>Client</Label>
+                <SearchableSelect
+                  placeholder="Search clients..."
+                  options={clients?.map(client => ({
+                    value: client.id,
+                    label: `${client.first_name} ${client.last_name} (${client.email})`
+                  })) || []}
+                  onValueChange={handleClientSelect}
+                  emptyMessage="No clients found"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
         <EditInvoiceForm
           form={form}
           onSubmit={onSubmit}
