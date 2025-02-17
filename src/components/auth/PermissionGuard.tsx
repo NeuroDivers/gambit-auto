@@ -38,7 +38,7 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
         .from('profiles')
         .select(`
           id,
-          role:role_id (
+          role:role_id!inner (
             id,
             name,
             nicename
@@ -47,8 +47,20 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
         .eq('id', user.id)
         .single()
 
-      console.log('Profile data:', data)
-      return data as ProfileData
+      // Transform the data to match our expected type
+      if (data) {
+        const transformedData: ProfileData = {
+          id: data.id,
+          role: {
+            id: data.role.id,
+            name: data.role.name,
+            nicename: data.role.nicename
+          }
+        }
+        console.log('Transformed profile data:', transformedData)
+        return transformedData
+      }
+      return null
     }
   })
 
