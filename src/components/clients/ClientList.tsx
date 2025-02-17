@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
@@ -78,6 +79,17 @@ export function ClientList() {
     const client = clients?.find(c => c.id === clientId)
     if (client) {
       navigate('/quotes/create', { 
+        state: { 
+          preselectedClient: client 
+        }
+      })
+    }
+  }
+
+  const handleCreateInvoice = (clientId: string) => {
+    const client = clients?.find(c => c.id === clientId)
+    if (client) {
+      navigate('/invoices/create', { 
         state: { 
           preselectedClient: client 
         }
