@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { supabase } from "@/integrations/supabase/client"
 
 type ImageGalleryProps = {
   mediaUrls: string[]
@@ -10,6 +10,13 @@ type ImageGalleryProps = {
 }
 
 export function ImageGallery({ mediaUrls, status, onImageRemove }: ImageGalleryProps) {
+  const getPublicUrl = (filePath: string) => {
+    const { data: { publicUrl } } = supabase.storage
+      .from('quote-request-media')
+      .getPublicUrl(filePath)
+    return publicUrl
+  }
+
   return (
     <div className="mb-4">
       <h4 className="text-sm font-semibold mb-2">Uploaded Images:</h4>
@@ -17,7 +24,7 @@ export function ImageGallery({ mediaUrls, status, onImageRemove }: ImageGalleryP
         {mediaUrls.map((url, index) => (
           <div key={index} className="relative aspect-video overflow-hidden rounded-lg border bg-muted">
             <img 
-              src={url}
+              src={getPublicUrl(url)}
               alt={`Vehicle image ${index + 1}`}
               className="object-cover w-full h-full"
               onError={(e) => {
