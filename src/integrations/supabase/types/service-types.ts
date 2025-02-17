@@ -14,6 +14,18 @@ export interface ServicePackage {
   updated_at: string;
 }
 
+export interface ServiceType {
+  id: string;
+  name: string;
+  description: string | null;
+  duration: number | null;
+  price: number | null;
+  status: Database["public"]["Enums"]["service_status"];
+  updated_at: string;
+  pricing_model: 'flat_rate' | 'hourly' | 'variable';
+  base_price: number | null;
+}
+
 export interface ServiceTypesTable {
   Row: {
     created_at: string

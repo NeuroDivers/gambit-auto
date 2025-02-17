@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress"
 import { ServiceTypeSelection } from "./form-steps/ServiceTypeSelection"
 import type { QuoteRequestFormData } from "@/hooks/quote-request/formSchema"
 import type { UseFormReturn } from "react-hook-form"
+import type { ServiceItemType } from "@/types/quote-request"
 
 export function MultiStepQuoteRequestForm() {
   const {
@@ -70,7 +71,7 @@ export function MultiStepQuoteRequestForm() {
                           Enter your vehicle details to help us provide accurate service quotes.
                         </p>
                       </div>
-                      <VehicleInfoStep form={form} />
+                      <VehicleInfoStep form={form as UseFormReturn<QuoteRequestFormData>} />
                     </div>
 
                     <div className="rounded-lg border bg-card p-6 space-y-6">
@@ -83,7 +84,7 @@ export function MultiStepQuoteRequestForm() {
                       <ServiceTypeSelection 
                         services={services || []}
                         selectedServices={selectedServices}
-                        onServicesChange={(services) => {
+                        onServicesChange={(services: ServiceItemType[]) => {
                           form.setValue('service_items', services, {
                             shouldValidate: true
                           })
@@ -102,7 +103,7 @@ export function MultiStepQuoteRequestForm() {
                     className="rounded-lg border bg-card p-6"
                   >
                     <ServiceDetailsStep 
-                      form={form}
+                      form={form as UseFormReturn<QuoteRequestFormData>}
                       services={services || []}
                       serviceId={selectedServices[step - 2].service_id}
                       onImageUpload={handleImageUpload}
@@ -119,7 +120,7 @@ export function MultiStepQuoteRequestForm() {
                     transition={{ duration: 0.3 }}
                     className="rounded-lg border bg-card p-6"
                   >
-                    <SummaryStep form={form} services={services || []} />
+                    <SummaryStep form={form as UseFormReturn<QuoteRequestFormData>} services={services || []} />
                   </motion.div>
                 )}
               </AnimatePresence>
