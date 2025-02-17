@@ -117,7 +117,8 @@ export default function QuoteRequestDetails() {
   }
 
   const getServiceName = (serviceId: string) => {
-    return services?.find(s => s.id === serviceId)?.name || "Unknown Service"
+    const service = services?.find(s => s.id === serviceId)
+    return service ? service.name : "Unknown Service"
   }
 
   const statusVariant = {
@@ -230,7 +231,7 @@ export default function QuoteRequestDetails() {
               {Object.entries(quoteRequest.service_estimates || {}).map(([serviceId, amount]) => (
                 <div key={serviceId} className="flex justify-between items-center">
                   <span>{getServiceName(serviceId)}</span>
-                  <span className="font-medium">${amount}</span>
+                  <span className="font-medium">${String(amount)}</span>
                 </div>
               ))}
               <div className="mt-4 flex justify-between items-center text-lg font-semibold">
