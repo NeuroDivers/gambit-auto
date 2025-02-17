@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Plus, Loader2 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ServiceTypeDialog } from "@/components/services/ServiceTypeDialog"
 import { ServiceTypesList } from "@/components/services/ServiceTypesList"
 import { toast } from "sonner"
@@ -17,14 +17,14 @@ export default function ServiceTypes() {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
 
   // Check permission when component mounts
-  useState(() => {
+  useEffect(() => {
     const checkAccess = async () => {
       const hasPermission = await checkPermission("service_types", "page_access")
       console.log("Service types permission check:", hasPermission)
       setHasAccess(hasPermission)
     }
     checkAccess()
-  })
+  }, [checkPermission])
 
   const handleSuccess = () => {
     setIsDialogOpen(false)

@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Plus, Loader2 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useQuery } from "@tanstack/react-query"
@@ -22,14 +22,14 @@ export default function ServiceBays() {
   const { checkPermission } = usePermissions()
 
   // Check permission when component mounts
-  useState(() => {
+  useEffect(() => {
     const checkAccess = async () => {
       const hasPermission = await checkPermission("service_bays", "page_access")
       console.log("Service bays permission check:", hasPermission)
       setHasAccess(hasPermission)
     }
     checkAccess()
-  })
+  }, [checkPermission])
 
   const { data: serviceBays, isLoading } = useQuery({
     queryKey: ["service-bays"],
