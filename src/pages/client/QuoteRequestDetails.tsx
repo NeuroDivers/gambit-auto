@@ -92,6 +92,8 @@ export default function QuoteRequestDetails() {
   const handleImageRemove = async (urlToRemove: string) => {
     try {
       const currentUrls = quoteRequest?.media_urls || []
+      
+      // The urlToRemove is already the storage path since we store paths in media_urls
       const { error: deleteError } = await supabase.storage
         .from('quote-request-media')
         .remove([urlToRemove])
@@ -111,6 +113,7 @@ export default function QuoteRequestDetails() {
       await refetch()
       toast.success('Image removed successfully')
     } catch (error: any) {
+      console.error('Error removing image:', error)
       toast.error('Error removing image: ' + error.message)
     }
   }
