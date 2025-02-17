@@ -8,11 +8,12 @@ import { EditClientDialog } from "./EditClientDialog"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { ClientCard } from "./ClientCard"
+import { Client } from "./types"
 
 export function ClientList() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const navigate = useNavigate()
 
   const { data: clients, isLoading } = useQuery({
@@ -24,7 +25,7 @@ export function ClientList() {
         .order('created_at', { ascending: false })
       
       if (error) throw error
-      return data
+      return data as Client[]
     }
   })
 
@@ -32,8 +33,8 @@ export function ClientList() {
     return <div>Loading...</div>
   }
 
-  const handleEdit = (clientId: string) => {
-    setSelectedClientId(clientId)
+  const handleEdit = (client: Client) => {
+    setSelectedClient(client)
     setEditDialogOpen(true)
   }
 
@@ -63,7 +64,6 @@ export function ClientList() {
           <ClientCard 
             key={client.id}
             client={client}
-            onEdit={() => handleEdit(client.id)}
             actions={
               <Button
                 variant="outline"
@@ -79,16 +79,15 @@ export function ClientList() {
         ))}
       </div>
 
-      <CreateClientDialog 
-        open={createDialogOpen} 
-        onOpenChange={setCreateDialogOpen} 
-      />
+      <CreateClientDialog />
 
-      <EditClientDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        clientId={selectedClientId}
-      />
+      {selectedClient && (
+        <EditClientDialog
+          client={selectedClient}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+        />
+      )}
     </div>
   )
 }

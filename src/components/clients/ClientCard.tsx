@@ -3,7 +3,6 @@ import { Client } from "./types"
 import { Card, CardContent } from "../ui/card"
 import { Button } from "../ui/button"
 import { Edit, Trash, User, UserCheck } from "lucide-react"
-import { EditClientDialog } from "./EditClientDialog"
 import { useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
@@ -11,9 +10,10 @@ import { supabase } from "@/integrations/supabase/client"
 
 interface ClientCardProps {
   client: Client
+  actions?: React.ReactNode
 }
 
-export function ClientCard({ client }: ClientCardProps) {
+export function ClientCard({ client, actions }: ClientCardProps) {
   const [isEditing, setIsEditing] = useState(false)
   const { toast } = useToast()
   const queryClient = useQueryClient()
@@ -92,10 +92,12 @@ export function ClientCard({ client }: ClientCardProps) {
               >
                 <Trash className="h-4 w-4" />
               </Button>
+              {actions}
             </div>
           </div>
         </CardContent>
       </Card>
+
       <EditClientDialog
         client={client}
         open={isEditing}
