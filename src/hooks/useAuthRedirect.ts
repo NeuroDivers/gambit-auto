@@ -40,7 +40,7 @@ export const useAuthRedirect = () => {
           if ((profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase() === 'client') {
             navigate("/client", { replace: true });
           } else {
-            navigate("/", { replace: true });
+            navigate("/admin", { replace: true });
           }
         }
       } catch (error: any) {
@@ -73,10 +73,10 @@ export const useAuthRedirect = () => {
           if ((profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase() === 'client') {
             navigate("/client", { replace: true });
           } else {
-            navigate("/", { replace: true });
+            navigate("/admin", { replace: true });
           }
         } else if (event === 'SIGNED_OUT') {
-          navigate("/auth", { replace: true });
+          navigate("/", { replace: true });
         }
       }
     );

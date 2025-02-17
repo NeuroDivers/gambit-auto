@@ -5,7 +5,6 @@ import ClientQuoteRequests from "@/pages/client/QuoteRequests"
 import QuoteRequestDetails from "@/pages/client/QuoteRequestDetails"
 import ClientVehicles from "@/pages/client/Vehicles"
 import Invoices from "@/pages/Invoices"
-import PublicInvoiceView from "@/pages/PublicInvoiceView"
 import { RouteObject } from "react-router-dom"
 
 export const clientRoutes: RouteObject = {
@@ -27,10 +26,6 @@ export const clientRoutes: RouteObject = {
     {
       path: "invoices",
       element: <Invoices />,
-    },
-    {
-      path: "invoices/public/:id",
-      element: <PublicInvoiceView />,
     },
     {
       path: "vehicles",
