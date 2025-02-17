@@ -14,7 +14,7 @@ export default function QuoteRequestsManagement() {
     services,
     quoteRequests,
     isLoading,
-    archiveMutation,
+    archiveQuoteMutation, // Note: using the correct name here
     updateStatusMutation,
     deleteQuoteMutation
   } = useQuoteRequests()
@@ -56,7 +56,7 @@ export default function QuoteRequestsManagement() {
   }, [queryClient])
 
   const handleArchiveToggle = (id: string, currentArchiveStatus: boolean) => {
-    archiveMutation.mutate({ 
+    archiveQuoteMutation.mutate({ // Note: using the correct name here
       id, 
       isArchived: !currentArchiveStatus 
     })
