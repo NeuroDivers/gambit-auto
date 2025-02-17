@@ -5,18 +5,27 @@ import { Loader2 } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
+import { Badge } from "@/components/ui/badge"
 
 export default function QuoteDetails() {
   const { id } = useParams()
 
-  const { data: quote, isLoading } = useQuery({
-    queryKey: ["quote", id],
+  const { data: quoteRequest, isLoading } = useQuery({
+    queryKey: ["quoteRequest", id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("quotes")
-        .select("*")
+        .from("quote_requests")
+        .select(`
+          *,
+          client:client_id (
+            first_name,
+            last_name,
+            email,
+            phone_number
+          )
+        `)
         .eq("id", id)
-        .single()
+        .maybeSingle()
 
       if (error) throw error
       return data
@@ -31,10 +40,10 @@ export default function QuoteDetails() {
     )
   }
 
-  if (!quote) {
+  if (!quoteRequest) {
     return (
       <Card className="p-6">
-        <p className="text-center text-muted-foreground">Quote not found.</p>
+        <p className="text-center text-muted-foreground">Quote request not found.</p>
       </Card>
     )
   }
@@ -44,31 +53,68 @@ export default function QuoteDetails() {
       <div className="px-6">
         <div className="mb-8">
           <PageBreadcrumbs />
-          <h1 className="text-3xl font-bold">Quote Details</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-bold">Quote Request Details</h1>
+            <Badge variant={quoteRequest.status === 'pending' ? 'secondary' : 
+                          quoteRequest.status === 'estimated' ? 'default' :
+                          quoteRequest.status === 'accepted' ? 'success' :
+                          quoteRequest.status === 'rejected' ? 'destructive' : 'outline'}>
+              {quoteRequest.status}
+            </Badge>
+          </div>
         </div>
         <Card className="p-6">
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <h2 className="font-semibold">Customer Information</h2>
-              <p>{quote.customer_first_name} {quote.customer_last_name}</p>
-              <p>{quote.customer_email}</p>
-              <p>{quote.customer_phone}</p>
+              <h2 className="text-xl font-semibold mb-3">Customer Information</h2>
+              <div className="space-y-1">
+                <p><span className="font-medium">Name:</span> {quoteRequest.client?.first_name} {quoteRequest.client?.last_name}</p>
+                <p><span className="font-medium">Email:</span> {quoteRequest.client?.email}</p>
+                <p><span className="font-medium">Phone:</span> {quoteRequest.client?.phone_number}</p>
+              </div>
             </div>
+            
             <div>
-              <h2 className="font-semibold">Vehicle Information</h2>
-              <p>{quote.vehicle_year} {quote.vehicle_make} {quote.vehicle_model}</p>
-              {quote.vehicle_vin && <p>VIN: {quote.vehicle_vin}</p>}
+              <h2 className="text-xl font-semibold mb-3">Vehicle Information</h2>
+              <div className="space-y-1">
+                <p><span className="font-medium">Make:</span> {quoteRequest.vehicle_make}</p>
+                <p><span className="font-medium">Model:</span> {quoteRequest.vehicle_model}</p>
+                <p><span className="font-medium">Year:</span> {quoteRequest.vehicle_year}</p>
+                {quoteRequest.vehicle_vin && (
+                  <p><span className="font-medium">VIN:</span> {quoteRequest.vehicle_vin}</p>
+                )}
+              </div>
             </div>
+
             <div>
-              <h2 className="font-semibold">Quote Details</h2>
-              <p>Status: {quote.status}</p>
-              <p>Total: ${quote.total.toLocaleString()}</p>
-              <p>Created: {new Date(quote.created_at).toLocaleDateString()}</p>
+              <h2 className="text-xl font-semibold mb-3">Request Details</h2>
+              <div className="space-y-1">
+                <p><span className="font-medium">Created:</span> {new Date(quoteRequest.created_at).toLocaleDateString()}</p>
+                {quoteRequest.estimated_amount && (
+                  <p><span className="font-medium">Estimated Amount:</span> ${quoteRequest.estimated_amount.toLocaleString()}</p>
+                )}
+                {quoteRequest.description && (
+                  <div className="mt-2">
+                    <p className="font-medium mb-1">Description:</p>
+                    <p className="text-muted-foreground">{quoteRequest.description}</p>
+                  </div>
+                )}
+              </div>
             </div>
-            {quote.notes && (
+
+            {quoteRequest.media_urls && quoteRequest.media_urls.length > 0 && (
               <div>
-                <h2 className="font-semibold">Notes</h2>
-                <p>{quote.notes}</p>
+                <h2 className="text-xl font-semibold mb-3">Attached Images</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {quoteRequest.media_urls.map((url, index) => (
+                    <img 
+                      key={index}
+                      src={url}
+                      alt={`Quote request image ${index + 1}`}
+                      className="rounded-lg object-cover w-full aspect-square"
+                    />
+                  ))}
+                </div>
               </div>
             )}
           </div>
