@@ -15,6 +15,7 @@ export default function CreateInvoice() {
   const queryClient = useQueryClient()
   const { toast } = useToast()
   const preselectedClient = location.state?.preselectedClient
+  const currentYear = new Date().getFullYear()
 
   const form = useForm<InvoiceFormValues>({
     defaultValues: {
@@ -27,7 +28,7 @@ export default function CreateInvoice() {
       customer_address: "",
       vehicle_make: "",
       vehicle_model: "",
-      vehicle_year: 0,
+      vehicle_year: currentYear,  // Set a reasonable default year
       vehicle_vin: "",
       invoice_items: [],
       subtotal: 0,
@@ -78,6 +79,12 @@ export default function CreateInvoice() {
         throw new Error("Please add at least one item to the invoice")
       }
 
+      // Validate vehicle year
+      const year = Number(values.vehicle_year)
+      if (isNaN(year) || year < 1900 || year > currentYear + 1) {
+        throw new Error(`Vehicle year must be between 1900 and ${currentYear + 1}`)
+      }
+
       // Calculate subtotal
       const subtotal = values.invoice_items.reduce((acc, item) => {
         return acc + (Number(item.quantity) * Number(item.unit_price))
@@ -96,7 +103,7 @@ export default function CreateInvoice() {
           customer_address: values.customer_address,
           vehicle_make: values.vehicle_make,
           vehicle_model: values.vehicle_model,
-          vehicle_year: values.vehicle_year,
+          vehicle_year: year, // Use the validated year
           vehicle_vin: values.vehicle_vin,
           subtotal: subtotal,
           gst_amount: 0, // Will be calculated by trigger
