@@ -10,7 +10,6 @@ import { useNavigate } from "react-router-dom"
 import { ClientCard } from "./ClientCard"
 import { Client } from "./types"
 import { Input } from "@/components/ui/input"
-import { ClientStatistics } from "./ClientStatistics"
 import { 
   Select,
   SelectContent,
@@ -36,9 +35,8 @@ export function ClientList() {
         .from('clients')
         .select(`
           *,
-          total_work_orders:work_orders(count),
-          total_invoices:invoices(count),
-          total_spent:invoices(sum)
+          work_orders!work_orders_client_id_fkey(count),
+          invoices!invoices_client_id_fkey(count, total)
         `)
 
       // Apply search if present
@@ -66,23 +64,10 @@ export function ClientList() {
       // Transform the data to match the expected format
       return data.map(client => ({
         ...client,
-        total_work_orders: client.total_work_orders || 0,
-        total_invoices: client.total_invoices || 0,
-        total_spent: client.total_spent || 0
+        total_work_orders: client.work_orders?.[0]?.count || 0,
+        total_invoices: client.invoices?.[0]?.count || 0,
+        total_spent: client.invoices?.[0]?.total || 0
       })) as Client[]
-    }
-  })
-
-  const { data: revenueStats } = useQuery({
-    queryKey: ['revenue-statistics'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('revenue_statistics')
-        .select('*')
-        .limit(12)
-      
-      if (error) throw error
-      return data
     }
   })
 
@@ -108,8 +93,6 @@ export function ClientList() {
 
   return (
     <div className="space-y-6">
-      <ClientStatistics data={revenueStats} />
-      
       <div className="flex flex-col space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="text-3xl font-bold tracking-tight">Clients</h2>
