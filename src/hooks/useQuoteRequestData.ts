@@ -40,11 +40,21 @@ export function useQuoteRequestData() {
     queryFn: async () => {
       if (!session?.user?.id) throw new Error("Not authenticated")
 
+      // First get the client ID for the current user
+      const { data: clientData, error: clientError } = await supabase
+        .from("clients")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .maybeSingle()
+
+      if (clientError) throw clientError
+      if (!clientData) throw new Error("No client found")
+
       const { data, error } = await supabase
         .from("quote_requests")
         .select(`
           *,
-          quote_items!quote_items_quote_request_id_fkey (
+          quote_items (
             id,
             service_id,
             service_name,
@@ -53,7 +63,7 @@ export function useQuoteRequestData() {
             details
           )
         `)
-        .eq("client_id", session.user.id)
+        .eq("client_id", clientData.id)
         .order("created_at", { ascending: false })
 
       if (error) throw error
