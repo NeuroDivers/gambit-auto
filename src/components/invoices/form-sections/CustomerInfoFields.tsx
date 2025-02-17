@@ -35,6 +35,12 @@ export function CustomerInfoFields({
   isLoadingClients = false,
   onClientSelect
 }: CustomerInfoFieldsProps) {
+
+  const clientOptions = (clients || []).map(client => ({
+    value: client.id,
+    label: `${client.first_name} ${client.last_name} (${client.email})`
+  }))
+
   return (
     <div className="space-y-4">
       {onClientSelect && (
@@ -42,10 +48,7 @@ export function CustomerInfoFields({
           <Label>Select Existing Client</Label>
           <SearchableSelect
             placeholder="Search clients..."
-            options={(clients || []).map(client => ({
-              value: client.id,
-              label: `${client.first_name} ${client.last_name} (${client.email})`
-            }))}
+            options={clientOptions}
             onValueChange={onClientSelect}
             emptyMessage="No clients found"
             disabled={isLoadingClients}
