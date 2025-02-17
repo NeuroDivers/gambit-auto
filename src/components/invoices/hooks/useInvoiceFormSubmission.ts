@@ -38,7 +38,14 @@ export function useInvoiceFormSubmission({
 
       const total = subtotal + taxes
 
+      // Generate invoice number using the database function
+      const { data: invoiceNumberResult, error: invoiceNumberError } = await supabase
+        .rpc('generate_invoice_number')
+
+      if (invoiceNumberError) throw invoiceNumberError
+
       const invoiceData = {
+        invoice_number: invoiceNumberResult,
         customer_first_name: customerInfo.firstName,
         customer_last_name: customerInfo.lastName,
         customer_email: customerInfo.email,
@@ -58,10 +65,13 @@ export function useInvoiceFormSubmission({
       }
 
       if (invoiceId) {
-        // Update existing invoice
+        // Update existing invoice - don't update invoice number
         const { error: updateError } = await supabase
           .from("invoices")
-          .update(invoiceData)
+          .update({
+            ...invoiceData,
+            invoice_number: undefined // Don't update invoice number for existing invoices
+          })
           .eq("id", invoiceId)
 
         if (updateError) throw updateError
