@@ -61,7 +61,6 @@ export function useQuoteRequestData() {
           vehicle_year,
           vehicle_vin,
           description,
-          additional_notes,
           estimated_amount,
           client_response,
           created_at,
