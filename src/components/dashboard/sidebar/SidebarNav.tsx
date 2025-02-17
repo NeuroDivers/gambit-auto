@@ -10,43 +10,43 @@ import type { NavItem } from "./types"
 const allItems: NavItem[] = [
   {
     title: "Work Orders",
-    href: "/work-orders",
+    href: "/admin/work-orders",
     icon: Wrench,
     requiredPermission: "work_orders",
   },
   {
     title: "Quotes",
-    href: "/quotes",
+    href: "/admin/quotes",
     icon: MessageSquare,
     requiredPermission: "quotes",
   },
   {
     title: "Invoices",
-    href: "/invoices",
+    href: "/admin/invoices",
     icon: FileText,
     requiredPermission: "invoices",
   },
   {
     title: "Clients",
-    href: "/clients",
+    href: "/admin/clients",
     icon: Users,
     requiredPermission: "clients",
   },
   {
     title: "Users",
-    href: "/users",
+    href: "/admin/users",
     icon: Users,
     requiredPermission: "users",
   },
   {
     title: "Service Types",
-    href: "/service-types",
+    href: "/admin/service-types",
     icon: Settings,
     requiredPermission: "service_types",
   },
   {
     title: "Service Bays",
-    href: "/service-bays",
+    href: "/admin/service-bays",
     icon: Calendar,
     requiredPermission: "service_bays",
   },
@@ -55,18 +55,18 @@ const allItems: NavItem[] = [
 const settingsItems: NavItem[] = [
   {
     title: "Business Settings",
-    href: "/business-settings",
+    href: "/admin/business-settings",
     icon: Settings,
     requiredPermission: "business_settings",
   },
   {
     title: "Profile Settings",
-    href: "/profile-settings",
+    href: "/admin/profile-settings",
     icon: User,
   },
   {
     title: "Developer Settings",
-    href: "/developer-settings",
+    href: "/admin/developer-settings",
     icon: Terminal,
     requiredPermission: "developer_settings",
   },
