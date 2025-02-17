@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -50,15 +50,26 @@ export function SearchableSelect({
   showPrice = false,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false)
-  const [search, setSearch] = useState("")
+  const [inputValue, setInputValue] = useState("")
 
   // Ensure we have a valid array and flatten it
-  const safeOptions: Option[] = (options || []).reduce((acc: Option[], curr) => {
-    if ('options' in curr && Array.isArray(curr.options)) {
-      return [...acc, ...(curr.options)]
-    }
-    return curr ? [...acc, curr as Option] : acc
-  }, [])
+  const safeOptions = useMemo(() => {
+    return (options || []).reduce<Option[]>((acc, curr) => {
+      if ('options' in curr && Array.isArray(curr.options)) {
+        return [...acc, ...curr.options]
+      }
+      return curr ? [...acc, curr as Option] : acc
+    }, [])
+  }, [options])
+
+  // Filter options based on input value
+  const filteredOptions = useMemo(() => {
+    if (!inputValue) return safeOptions
+    const search = inputValue.toLowerCase()
+    return safeOptions.filter(option => 
+      option.label.toLowerCase().includes(search)
+    )
+  }, [safeOptions, inputValue])
 
   const selectedOption = safeOptions.find(option => option.value === value)
 
@@ -92,23 +103,23 @@ export function SearchableSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full min-w-[var(--radix-popover-trigger-width)] p-0">
-        <Command>
+        <Command shouldFilter={false}>
           <CommandInput 
             placeholder={`Search ${placeholder.toLowerCase()}...`}
-            value={search}
-            onValueChange={setSearch}
+            value={inputValue}
+            onValueChange={setInputValue}
           />
           <CommandEmpty>{emptyMessage}</CommandEmpty>
           <CommandGroup>
-            {safeOptions.length > 0 ? (
-              safeOptions.map((option) => (
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
                   value={option.value}
                   onSelect={() => {
                     onValueChange(option.value)
                     setOpen(false)
-                    setSearch("")
+                    setInputValue("")
                   }}
                   disabled={option.disabled}
                 >
