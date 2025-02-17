@@ -908,6 +908,7 @@ export type Database = {
       service_bays: {
         Row: {
           assigned_profile_id: string | null
+          assigned_services: string[] | null
           created_at: string
           id: string
           name: string
@@ -917,6 +918,7 @@ export type Database = {
         }
         Insert: {
           assigned_profile_id?: string | null
+          assigned_services?: string[] | null
           created_at?: string
           id?: string
           name: string
@@ -926,6 +928,7 @@ export type Database = {
         }
         Update: {
           assigned_profile_id?: string | null
+          assigned_services?: string[] | null
           created_at?: string
           id?: string
           name?: string
@@ -1432,6 +1435,12 @@ export type Database = {
       }
     }
     Functions: {
+      can_be_assigned_to_bay: {
+        Args: {
+          role_id: string
+        }
+        Returns: boolean
+      }
       convert_quote_to_work_order: {
         Args: {
           input_quote_id: string

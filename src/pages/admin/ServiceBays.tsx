@@ -1,10 +1,10 @@
 
 import { Button } from "@/components/ui/button"
-import { Plus, Loader2, Edit, Trash2 } from "lucide-react"
+import { Plus, Loader2, Edit, Trash2, User, Wrench } from "lucide-react"
 import { useState, useEffect } from "react"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/use-toast"
@@ -27,13 +27,15 @@ import { Input } from "@/components/ui/input"
 import { useForm } from "react-hook-form"
 import { Textarea } from "@/components/ui/textarea"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { ProfileWithRole } from "@/integrations/supabase/types/user-roles"
 
 interface ServiceBay {
   id: string
   name: string
   status: 'available' | 'occupied' | 'maintenance'
   notes?: string
-  assigned_profile_id?: string
+  assigned_profile_id?: string | null
   created_at: string
   updated_at: string
 }
@@ -44,13 +46,22 @@ interface ServiceBayFormData {
   notes?: string
 }
 
+interface BayService {
+  service_id: string
+  is_active: boolean
+  bay_id: string
+}
+
 export default function ServiceBays() {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
   const { checkPermission } = usePermissions()
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedBay, setSelectedBay] = useState<ServiceBay | null>(null)
+  const [isAssignUserOpen, setIsAssignUserOpen] = useState(false)
+  const [isManageServicesOpen, setIsManageServicesOpen] = useState(false)
   const { toast } = useToast()
+  const queryClient = useQueryClient()
 
   const form = useForm<ServiceBayFormData>({
     defaultValues: {
@@ -58,6 +69,60 @@ export default function ServiceBays() {
       status: "available",
       notes: "",
     },
+  })
+
+  // Fetch assignable users (profiles with roles that can be assigned to bays)
+  const { data: assignableUsers } = useQuery({
+    queryKey: ["assignable-users"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          email,
+          first_name,
+          last_name,
+          role:role_id (
+            id,
+            name,
+            nicename
+          )
+        `)
+        .eq('role.can_be_assigned_to_bay', true)
+
+      if (error) throw error
+      return data as ProfileWithRole[]
+    },
+  })
+
+  // Fetch available services
+  const { data: availableServices } = useQuery({
+    queryKey: ["available-services"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('service_types')
+        .select('*')
+        .eq('status', 'active')
+
+      if (error) throw error
+      return data
+    },
+  })
+
+  // Fetch bay services
+  const { data: bayServices } = useQuery({
+    queryKey: ["bay-services", selectedBay?.id],
+    queryFn: async () => {
+      if (!selectedBay) return []
+      const { data, error } = await supabase
+        .from('bay_services')
+        .select('*')
+        .eq('bay_id', selectedBay.id)
+
+      if (error) throw error
+      return data as BayService[]
+    },
+    enabled: !!selectedBay,
   })
 
   // Check permission when component mounts
@@ -75,12 +140,82 @@ export default function ServiceBays() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_bays")
-        .select("*")
+        .select(`
+          *,
+          assigned_profile:assigned_profile_id (
+            id,
+            email,
+            first_name,
+            last_name
+          )
+        `)
         .order("name")
 
       if (error) throw error
       return data as ServiceBay[]
     },
+  })
+
+  const assignUserMutation = useMutation({
+    mutationFn: async ({ bayId, userId }: { bayId: string, userId: string | null }) => {
+      const { error } = await supabase
+        .from('service_bays')
+        .update({ assigned_profile_id: userId })
+        .eq('id', bayId)
+
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "User assignment updated successfully" })
+      queryClient.invalidateQueries({ queryKey: ["service-bays"] })
+      setIsAssignUserOpen(false)
+    },
+    onError: (error) => {
+      toast({ 
+        title: "Error", 
+        description: "Failed to update user assignment", 
+        variant: "destructive" 
+      })
+      console.error('Error assigning user:', error)
+    }
+  })
+
+  const toggleServiceMutation = useMutation({
+    mutationFn: async ({ 
+      bayId, 
+      serviceId, 
+      isActive 
+    }: { 
+      bayId: string, 
+      serviceId: string, 
+      isActive: boolean 
+    }) => {
+      if (isActive) {
+        const { error } = await supabase
+          .from('bay_services')
+          .insert({ bay_id: bayId, service_id: serviceId })
+        if (error) throw error
+      } else {
+        const { error } = await supabase
+          .from('bay_services')
+          .delete()
+          .eq('bay_id', bayId)
+          .eq('service_id', serviceId)
+        if (error) throw error
+      }
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Services updated successfully" })
+      queryClient.invalidateQueries({ queryKey: ["bay-services"] })
+    },
+    onError: (error) => {
+      toast({ 
+        title: "Error", 
+        description: "Failed to update services", 
+        variant: "destructive" 
+      })
+      console.error('Error updating services:', error)
+    }
   })
 
   const handleCreateBay = async (data: ServiceBayFormData) => {
@@ -352,6 +487,93 @@ export default function ServiceBays() {
                     </DialogContent>
                   </Dialog>
 
+                  {/* User Assignment Sheet */}
+                  <Sheet open={isAssignUserOpen} onOpenChange={setIsAssignUserOpen}>
+                    <SheetTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setSelectedBay(bay)
+                        }}
+                      >
+                        <User className="h-4 w-4" />
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent>
+                      <SheetHeader>
+                        <SheetTitle>Assign User to {bay.name}</SheetTitle>
+                      </SheetHeader>
+                      <div className="py-6">
+                        <Select
+                          onValueChange={(value) => 
+                            assignUserMutation.mutate({ 
+                              bayId: bay.id, 
+                              userId: value === "none" ? null : value 
+                            })
+                          }
+                          defaultValue={bay.assigned_profile_id || "none"}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select user" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            {assignableUsers?.map((user) => (
+                              <SelectItem key={user.id} value={user.id}>
+                                {user.first_name} {user.last_name} ({user.role.nicename})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+
+                  {/* Service Management Sheet */}
+                  <Sheet open={isManageServicesOpen} onOpenChange={setIsManageServicesOpen}>
+                    <SheetTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setSelectedBay(bay)
+                        }}
+                      >
+                        <Wrench className="h-4 w-4" />
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent>
+                      <SheetHeader>
+                        <SheetTitle>Manage Services for {bay.name}</SheetTitle>
+                      </SheetHeader>
+                      <div className="py-6 space-y-4">
+                        {availableServices?.map((service) => {
+                          const isActive = bayServices?.some(
+                            bs => bs.service_id === service.id && bs.bay_id === bay.id
+                          )
+                          return (
+                            <div key={service.id} className="flex items-center justify-between">
+                              <span>{service.name}</span>
+                              <Button
+                                variant={isActive ? "default" : "outline"}
+                                onClick={() => {
+                                  toggleServiceMutation.mutate({
+                                    bayId: bay.id,
+                                    serviceId: service.id,
+                                    isActive: !isActive
+                                  })
+                                }}
+                              >
+                                {isActive ? 'Active' : 'Inactive'}
+                              </Button>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="ghost" size="icon">
@@ -390,6 +612,15 @@ export default function ServiceBays() {
                 {bay.notes && (
                   <div className="text-sm text-muted-foreground">
                     {bay.notes}
+                  </div>
+                )}
+                {/* Display assigned user if any */}
+                {bay.assigned_profile && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="h-4 w-4" />
+                    <span>
+                      Assigned to: {bay.assigned_profile.first_name} {bay.assigned_profile.last_name}
+                    </span>
                   </div>
                 )}
               </div>
