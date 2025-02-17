@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Invoice } from "../types"
@@ -15,10 +16,15 @@ type PaymentSectionProps = {
 }
 
 export function PaymentSection({ invoice }: PaymentSectionProps) {
-  const { initiatePayment, isProcessing } = usePayment()
+  const { mutate, isPending } = usePayment()
 
   const handlePayment = async () => {
-    await initiatePayment(invoice)
+    mutate({
+      invoiceId: invoice.id,
+      amount: invoice.total,
+      email: invoice.customer_email || '',
+      customerId: invoice.stripe_customer_id,
+    })
   }
 
   // Ensure we calculate the total correctly using subtotal and both GST and QST amounts
@@ -46,8 +52,8 @@ export function PaymentSection({ invoice }: PaymentSectionProps) {
       </CardHeader>
       <CardContent>
         <p className="text-lg font-semibold">Total Amount: {formatCurrency(total)}</p>
-        <Button onClick={handlePayment} disabled={isProcessing}>
-          {isProcessing ? "Processing..." : "Pay Now"}
+        <Button onClick={handlePayment} disabled={isPending}>
+          {isPending ? "Processing..." : "Pay Now"}
         </Button>
       </CardContent>
       <CardFooter>
