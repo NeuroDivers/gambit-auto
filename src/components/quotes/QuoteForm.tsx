@@ -6,18 +6,19 @@ import { CustomerInfoFields } from "@/components/shared/form-fields/CustomerInfo
 import { VehicleInfoFields } from "@/components/shared/form-fields/VehicleInfoFields"
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Quote } from "./types"
+import { Quote, QuoteFormValues } from "./types"
 import { useEffect } from "react"
 import { useVinLookup } from "@/hooks/useVinLookup"
 import { toast } from "sonner"
 
 interface QuoteFormProps {
   quote?: Quote
+  defaultValues?: QuoteFormValues
   onSuccess?: () => void
 }
 
-export function QuoteForm({ quote, onSuccess }: QuoteFormProps) {
-  const { form, onSubmit } = useQuoteForm({ quote, onSuccess })
+export function QuoteForm({ quote, defaultValues, onSuccess }: QuoteFormProps) {
+  const { form, onSubmit } = useQuoteForm({ quote, defaultValues, onSuccess })
   const vin = form.watch('vehicle_vin')
   const { data: vinData, isLoading: isLoadingVin } = useVinLookup(vin)
 
@@ -44,7 +45,7 @@ export function QuoteForm({ quote, onSuccess }: QuoteFormProps) {
     return services.map(service => ({
       service_id: service.service_id,
       service_name: service.service_name,
-      description: service.service_name, // Using service_name as description for now
+      description: service.service_name,
       quantity: service.quantity,
       unit_price: service.unit_price
     }))

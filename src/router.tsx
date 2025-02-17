@@ -1,4 +1,3 @@
-
 import { createBrowserRouter, Navigate } from "react-router-dom"
 import Auth from "./pages/Auth"
 import Dashboard from "./pages/Dashboard"
@@ -27,6 +26,7 @@ import ClientQuoteRequests from "./pages/client/QuoteRequests"
 import ClientVehicles from "./pages/client/Vehicles"
 import { PermissionGuard } from "./components/auth/PermissionGuard"
 import Unauthorized from "./pages/Unauthorized"
+import CreateQuote from "./pages/CreateQuote"
 
 export const router = createBrowserRouter([
   {
@@ -108,6 +108,10 @@ export const router = createBrowserRouter([
             <Quotes />
           </PermissionGuard>
         ),
+      },
+      {
+        path: "quotes/create",
+        element: <CreateQuote />,
       },
       {
         path: "invoices",

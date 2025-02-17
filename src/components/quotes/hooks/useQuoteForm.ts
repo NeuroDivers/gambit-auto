@@ -1,3 +1,4 @@
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -25,10 +26,11 @@ const formSchema = z.object({
 
 interface UseQuoteFormProps {
   quote?: Quote
+  defaultValues?: QuoteFormValues
   onSuccess?: () => void
 }
 
-export function useQuoteForm({ quote, onSuccess }: UseQuoteFormProps = {}) {
+export function useQuoteForm({ quote, defaultValues, onSuccess }: UseQuoteFormProps = {}) {
   const { submitQuote } = useQuoteSubmission()
 
   const form = useForm<QuoteFormValues>({
@@ -45,7 +47,7 @@ export function useQuoteForm({ quote, onSuccess }: UseQuoteFormProps = {}) {
       vehicle_vin: quote.vehicle_vin || '',
       notes: quote.notes || '',
       service_items: quote.quote_items || []
-    } : {
+    } : defaultValues || {
       customer_first_name: '',
       customer_last_name: '',
       customer_email: '',
