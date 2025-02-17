@@ -1353,6 +1353,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_work_orders_assigned_bay"
+            columns: ["assigned_bay_id"]
+            isOneToOne: false
+            referencedRelation: "service_bays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_work_orders_assigned_profile"
+            columns: ["assigned_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "quote_requests_assigned_bay_id_fkey"
             columns: ["assigned_bay_id"]
             isOneToOne: false
