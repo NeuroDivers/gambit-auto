@@ -3,9 +3,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { InvoiceFormValues, InvoiceItem } from "../types"
+import { useNavigate } from "react-router-dom"
 
 export function useInvoiceMutation(invoiceId?: string) {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   const isValidUUID = (uuid: string | null | undefined): boolean => {
     if (!uuid) return false
@@ -112,6 +114,7 @@ export function useInvoiceMutation(invoiceId?: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] })
       toast.success('Invoice updated successfully')
+      navigate('/invoices') // Add navigation to invoices list
     },
     onError: (error: any) => {
       console.error('Error updating invoice:', error)

@@ -16,7 +16,7 @@ const routeNames: Record<string, string> = {
   "work-orders": "Work Orders",
   "auth": "Authentication",
   "invoices": "Invoices",
-  "edit": "Edit Work Order",
+  "edit": "Edit Invoice",
   "service-types": "Service Types",
   "service-bays": "Service Bays",
   "developer-settings": "Developer Settings",
