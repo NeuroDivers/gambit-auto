@@ -1,10 +1,11 @@
 
 import { UseFormReturn } from "react-hook-form"
-import { QuoteRequestFormData } from "./types"
 import { motion } from "framer-motion"
+import { FormData } from "@/hooks/quote-request/formSchema"
+import { Badge } from "@/components/ui/badge"
 
 type SummaryStepProps = {
-  form: UseFormReturn<QuoteRequestFormData>
+  form: UseFormReturn<FormData>
   services: any[]
 }
 
@@ -12,7 +13,7 @@ export function SummaryStep({ form, services }: SummaryStepProps) {
   const formValues = form.getValues()
   
   const getServicePackage = (serviceId: string, packageId: string) => {
-    const service = services.find(s => s.id === serviceId)
+    const service = services?.find(s => s.id === serviceId)
     return service?.service_packages?.find((p: any) => p.id === packageId)
   }
   
@@ -27,11 +28,11 @@ export function SummaryStep({ form, services }: SummaryStepProps) {
         <div>
           <h3 className="text-lg font-semibold mb-2">Vehicle Information</h3>
           <div className="grid grid-cols-2 gap-2 text-sm">
-            <p><span className="text-muted-foreground">Make:</span> {formValues.vehicle_make}</p>
-            <p><span className="text-muted-foreground">Model:</span> {formValues.vehicle_model}</p>
-            <p><span className="text-muted-foreground">Year:</span> {formValues.vehicle_year}</p>
-            {formValues.vehicle_vin && (
-              <p><span className="text-muted-foreground">VIN:</span> {formValues.vehicle_vin}</p>
+            <p><span className="text-muted-foreground">Make:</span> {formValues.vehicleInfo.make}</p>
+            <p><span className="text-muted-foreground">Model:</span> {formValues.vehicleInfo.model}</p>
+            <p><span className="text-muted-foreground">Year:</span> {formValues.vehicleInfo.year}</p>
+            {formValues.vehicleInfo.vin && (
+              <p><span className="text-muted-foreground">VIN:</span> {formValues.vehicleInfo.vin}</p>
             )}
           </div>
         </div>
@@ -39,8 +40,8 @@ export function SummaryStep({ form, services }: SummaryStepProps) {
         <div>
           <h3 className="text-lg font-semibold mb-2">Selected Services</h3>
           <div className="space-y-4">
-            {formValues.service_items.map((item) => {
-              const service = services.find(s => s.id === item.service_id)
+            {(formValues.service_items || []).map((item) => {
+              const service = services?.find(s => s.id === item.service_id)
               const details = formValues.service_details[item.service_id]
               if (!service) return null
 

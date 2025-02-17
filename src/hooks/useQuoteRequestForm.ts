@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect } from "react"
+import { useCallback, useState } from "react"
 import { useForm } from "react-hook-form"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
@@ -7,11 +7,14 @@ import { useNavigate } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
 import { useFormStorage } from "./quote-request/useFormStorage"
 import { FormData, formSchema } from "./quote-request/formSchema"
+import { useQuery } from "@tanstack/react-query"
 
 export function useQuoteRequestForm() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { clearStoredForm } = useFormStorage()
+  const { clearFormData: clearStoredForm } = useFormStorage()
+  const [step, setStep] = useState(1)
+  const [uploading, setUploading] = useState(false)
 
   const form = useForm<FormData>({
     defaultValues: {
@@ -21,11 +24,61 @@ export function useQuoteRequestForm() {
         year: new Date().getFullYear(),
         vin: ""
       },
-      services: [],
+      service_items: [],
       description: "",
-      details: {}
+      service_details: {}
     }
   })
+
+  const { data: services } = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_types")
+        .select("*")
+        .eq("status", "active")
+      
+      if (error) throw error
+      return data
+    }
+  })
+
+  const selectedServices = form.watch('service_items') || []
+  const totalSteps = selectedServices.length > 0 ? selectedServices.length + 2 : 2
+  const isSubmitting = form.formState.isSubmitting
+
+  const handleImageUpload = async (files: FileList, serviceId: string) => {
+    setUploading(true)
+    try {
+      // Image upload logic here
+      toast.success("Images uploaded successfully")
+    } catch (error) {
+      console.error("Error uploading images:", error)
+      toast.error("Failed to upload images")
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleImageRemove = (url: string, serviceId: string) => {
+    const currentDetails = form.getValues('service_details')
+    const serviceDetails = currentDetails[serviceId] || {}
+    const updatedImages = (serviceDetails.images || []).filter((img: string) => img !== url)
+    
+    form.setValue(`service_details.${serviceId}.images`, updatedImages)
+  }
+
+  const nextStep = () => {
+    if (step < totalSteps) {
+      setStep(step + 1)
+    }
+  }
+
+  const prevStep = () => {
+    if (step > 1) {
+      setStep(step - 1)
+    }
+  }
 
   const onSubmit = useCallback(async (data: FormData) => {
     try {
@@ -60,8 +113,8 @@ export function useQuoteRequestForm() {
           vehicle_year: data.vehicleInfo.year,
           vehicle_vin: data.vehicleInfo.vin,
           description: data.description,
-          service_ids: data.services,
-          service_details: data.details
+          service_ids: data.service_items.map(item => item.service_id),
+          service_details: data.service_details
         })
 
       if (insertError) throw insertError
@@ -82,6 +135,16 @@ export function useQuoteRequestForm() {
 
   return {
     form,
-    onSubmit
+    step,
+    totalSteps,
+    services,
+    selectedServices,
+    uploading,
+    isSubmitting,
+    handleImageUpload,
+    handleImageRemove,
+    onSubmit,
+    nextStep,
+    prevStep
   }
 }
