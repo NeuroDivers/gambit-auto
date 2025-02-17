@@ -89,13 +89,19 @@ export function useQuoteRequestDetails() {
         newUrls.push(filePath)
       }
 
+      // Update the quote request with new media_urls
       const { error: updateError } = await supabase
         .from('quote_requests')
-        .update({ media_urls: [...currentUrls, ...newUrls] })
+        .update({ 
+          media_urls: [...currentUrls, ...newUrls] 
+        })
         .eq('id', id)
 
       if (updateError) throw updateError
 
+      // Immediately invalidate the cache to trigger a refetch
+      queryClient.invalidateQueries({ queryKey: ["quoteRequest", id] })
+      
       toast.success(`Successfully uploaded ${files.length} image${files.length > 1 ? 's' : ''}`)
     } catch (error: any) {
       console.error('Error uploading image:', error)
@@ -128,6 +134,9 @@ export function useQuoteRequestDetails() {
         .eq('id', id)
 
       if (updateError) throw updateError
+
+      // Immediately invalidate the cache to trigger a refetch
+      queryClient.invalidateQueries({ queryKey: ["quoteRequest", id] })
 
       toast.success('Image removed successfully')
     } catch (error: any) {
