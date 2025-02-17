@@ -63,19 +63,6 @@ export default function CreateInvoice() {
     }
   }, [preselectedClient, form])
 
-  // Handle client selection
-  const handleClientSelect = (clientId: string) => {
-    const selectedClient = clients?.find(client => client.id === clientId)
-    if (selectedClient) {
-      setSelectedClientId(clientId)
-      form.setValue('customer_first_name', selectedClient.first_name)
-      form.setValue('customer_last_name', selectedClient.last_name)
-      form.setValue('customer_email', selectedClient.email)
-      form.setValue('customer_phone', selectedClient.phone_number || '')
-      form.setValue('customer_address', selectedClient.address || '')
-    }
-  }
-
   const { mutate: createInvoice, isPending } = useMutation({
     mutationFn: async (values: InvoiceFormValues) => {
       if (!values.invoice_items || values.invoice_items.length === 0) {
@@ -112,12 +99,13 @@ export default function CreateInvoice() {
           gst_amount: 0,
           qst_amount: 0,
           total: subtotal,
-          client_id: selectedClientId // Add the client_id to the invoice
+          client_id: selectedClientId
         })
         .select()
-        .single()
+        .maybeSingle()
 
       if (invoiceError) throw invoiceError
+      if (!invoice) throw new Error("Failed to create invoice")
 
       // Then create the invoice items
       if (values.invoice_items?.length > 0) {
@@ -173,7 +161,7 @@ export default function CreateInvoice() {
           invoiceId={undefined}
           clients={clients || []}
           isLoadingClients={isLoadingClients}
-          onClientSelect={handleClientSelect}
+          onClientSelect={setSelectedClientId}
         />
       </div>
     </div>
