@@ -12,6 +12,7 @@ interface LoginFormProps {
   onSubmit: (e: React.FormEvent) => void;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onGoogleSignIn: () => void;
+  onForgotPassword: () => void;
 }
 
 export const LoginForm = ({ 
@@ -19,7 +20,8 @@ export const LoginForm = ({
   loading, 
   onSubmit, 
   onChange,
-  onGoogleSignIn 
+  onGoogleSignIn,
+  onForgotPassword
 }: LoginFormProps) => {
   return (
     <div className="space-y-4">
@@ -88,6 +90,15 @@ export const LoginForm = ({
             autoComplete="current-password"
           />
         </div>
+        <Button
+          variant="link"
+          type="button"
+          onClick={onForgotPassword}
+          className="px-0 text-sm font-medium text-primary hover:underline"
+          disabled={loading}
+        >
+          Forgot your password?
+        </Button>
         <Button className="w-full" type="submit" disabled={loading}>
           {loading ? "Loading..." : "Sign In"}
         </Button>

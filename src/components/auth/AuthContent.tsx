@@ -14,6 +14,7 @@ interface AuthContentProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSignInClick: () => void;
   onGoogleSignIn: () => void;
+  onForgotPassword: () => void;
 }
 
 export const AuthContent = ({
@@ -26,6 +27,7 @@ export const AuthContent = ({
   onChange,
   onSignInClick,
   onGoogleSignIn,
+  onForgotPassword,
 }: AuthContentProps) => {
   return isLogin ? (
     <>
@@ -35,6 +37,7 @@ export const AuthContent = ({
         onSubmit={onSubmit}
         onChange={onChange}
         onGoogleSignIn={onGoogleSignIn}
+        onForgotPassword={onForgotPassword}
       />
       <div className="text-center">
         <SignUpDialog
@@ -57,6 +60,7 @@ export const AuthContent = ({
         onSubmit={onSubmit}
         onChange={onChange}
         onGoogleSignIn={onGoogleSignIn}
+        onForgotPassword={onForgotPassword}
       />
       <div className="text-center">
         <Button
