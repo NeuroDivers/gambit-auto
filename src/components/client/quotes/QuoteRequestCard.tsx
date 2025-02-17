@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { ImageGallery } from "./ImageGallery"
-import { getServiceNames, getStatusBadgeVariant } from "@/components/quotes/utils"
+import { getStatusBadgeVariant } from "@/components/quotes/utils"
 import { Upload } from "lucide-react"
 import type { QuoteRequest } from "@/types/quote-request"
 
@@ -28,9 +28,8 @@ export function QuoteRequestCard({
   onImageRemove
 }: QuoteRequestCardProps) {
   const inputId = `image-upload-${request.id}`
-  const totalEstimate = request.service_estimates 
-    ? Object.values(request.service_estimates).reduce((sum, amount) => sum + amount, 0)
-    : null
+  const totalEstimate = request.quote_items?.reduce((sum, item) => 
+    sum + (item.quantity * item.unit_price), 0) || 0
 
   return (
     <Card className={cn(
@@ -51,9 +50,9 @@ export function QuoteRequestCard({
         <div className="mb-4">
           <h4 className="text-sm font-semibold mb-1">Requested Services:</h4>
           <div className="flex flex-wrap gap-2">
-            {getServiceNames(request.service_ids, services || []).map((serviceName, index) => (
-              <Badge key={index} variant="secondary">
-                {serviceName}
+            {request.quote_items?.map((item) => (
+              <Badge key={item.id} variant="secondary">
+                {item.service_name}
               </Badge>
             ))}
           </div>
@@ -90,12 +89,13 @@ export function QuoteRequestCard({
           </div>
         )}
         
-        {totalEstimate !== null && (
+        {request.quote_items && request.quote_items.length > 0 && (
           <div className="mt-2">
             <h4 className="text-sm font-semibold mb-1">Service Estimates (before taxes):</h4>
-            {Object.entries(request.service_estimates || {}).map(([serviceId, amount]) => (
-              <p key={serviceId} className="text-sm">
-                {services?.find(s => s.id === serviceId)?.name}: ${amount.toFixed(2)}
+            {request.quote_items.map((item) => (
+              <p key={item.id} className="text-sm">
+                {item.service_name}: ${(item.quantity * item.unit_price).toFixed(2)}
+                {item.quantity > 1 && ` (${item.quantity} x $${item.unit_price.toFixed(2)})`}
               </p>
             ))}
             <p className="mt-2 text-lg font-semibold">
@@ -124,9 +124,11 @@ export function QuoteRequestCard({
         <div className="mt-2 text-xs text-muted-foreground">
           <p>VIN: {request.vehicle_vin}</p>
           <p>Submitted: {new Date(request.created_at).toLocaleDateString()}</p>
+          {request.additional_notes && (
+            <p className="mt-1">Additional Notes: {request.additional_notes}</p>
+          )}
         </div>
       </CardContent>
     </Card>
   )
 }
-

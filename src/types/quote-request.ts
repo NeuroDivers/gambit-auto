@@ -1,6 +1,16 @@
 
 export type QuoteRequestStatus = "pending" | "estimated" | "accepted" | "rejected" | "converted";
 
+export type QuoteItem = {
+  id: string
+  quote_request_id: string
+  service_id: string
+  service_name: string
+  quantity: number
+  unit_price: number
+  details: Record<string, any> | null
+}
+
 export type QuoteRequest = {
   id: string
   client_id: string
@@ -10,12 +20,12 @@ export type QuoteRequest = {
   vehicle_year: number | null
   vehicle_vin: string | null
   description: string | null
-  service_ids: string[]
-  service_details: Record<string, any> | null
-  service_estimates: Record<string, number> | null
+  timeframe: string | null
+  contact_preference: string | null
+  additional_notes: string | null
   estimated_amount: number | null
   client_response: string | null
   created_at: string
   media_urls: string[] | null
+  quote_items?: QuoteItem[]
 }
-

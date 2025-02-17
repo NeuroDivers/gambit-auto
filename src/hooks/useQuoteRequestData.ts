@@ -51,13 +51,21 @@ export function useQuoteRequestData() {
           vehicle_year,
           vehicle_vin,
           description,
-          service_ids,
-          service_details,
-          service_estimates,
+          timeframe,
+          contact_preference,
+          additional_notes,
           estimated_amount,
           client_response,
           created_at,
-          media_urls
+          media_urls,
+          quote_items (
+            id,
+            service_id,
+            service_name,
+            quantity,
+            unit_price,
+            details
+          )
         `)
         .eq("client_id", session.user.id)
         .order("created_at", { ascending: false })
