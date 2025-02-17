@@ -86,7 +86,7 @@ export function QuoteRequestCard({
               </Badge>
               {request.client_response && (
                 <Badge 
-                  variant={request.client_response === "accepted" ? "default" : "destructive"}
+                  variant={request.client_response === "accepted" ? "success" : "destructive"}
                   className="flex items-center gap-1"
                 >
                   {request.client_response === "accepted" ? (
