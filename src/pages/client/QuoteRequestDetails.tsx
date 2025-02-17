@@ -11,14 +11,16 @@ import { VehicleInformation } from "@/components/client/quotes/details/VehicleIn
 import { RequestedServices } from "@/components/client/quotes/details/RequestedServices"
 import { MediaSection } from "@/components/client/quotes/details/MediaSection"
 import { EstimateDetails } from "@/components/client/quotes/details/EstimateDetails"
+import { Button } from "@/components/ui/button"
 
 export default function QuoteRequestDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [uploading, setUploading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const { handleResponseMutation } = useQuoteRequestActions()
 
-  const { data: quoteRequest, isLoading } = useQuery({
+  const { data: quoteRequest, isLoading, refetch } = useQuery({
     queryKey: ["quoteRequest", id],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -70,6 +72,7 @@ export default function QuoteRequestDetails() {
         newUrls.push(filePath)
       }
 
+      // Save the updated media URLs to the quote request
       const { error: updateError } = await supabase
         .from('quote_requests')
         .update({ media_urls: [...currentUrls, ...newUrls] })
@@ -77,6 +80,7 @@ export default function QuoteRequestDetails() {
 
       if (updateError) throw updateError
 
+      await refetch() // Refresh the data
       toast.success(`Successfully uploaded ${files.length} image${files.length > 1 ? 's' : ''}`)
     } catch (error: any) {
       toast.error('Error uploading image: ' + error.message)
@@ -94,6 +98,7 @@ export default function QuoteRequestDetails() {
 
       if (deleteError) throw deleteError
 
+      // Update the quote request with the new media URLs array
       const { error: updateError } = await supabase
         .from('quote_requests')
         .update({
@@ -103,9 +108,29 @@ export default function QuoteRequestDetails() {
 
       if (updateError) throw updateError
 
+      await refetch() // Refresh the data
       toast.success('Image removed successfully')
     } catch (error: any) {
       toast.error('Error removing image: ' + error.message)
+    }
+  }
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true)
+      const { error } = await supabase
+        .from('quote_requests')
+        .update({
+          media_urls: quoteRequest?.media_urls || []
+        })
+        .eq('id', id)
+
+      if (error) throw error
+      toast.success('Changes saved successfully')
+    } catch (error: any) {
+      toast.error('Error saving changes: ' + error.message)
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -124,10 +149,18 @@ export default function QuoteRequestDetails() {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <QuoteHeader 
-        quoteRequest={quoteRequest}
-        onBack={() => navigate("/client/quotes")}
-      />
+      <div className="flex justify-between items-center">
+        <QuoteHeader 
+          quoteRequest={quoteRequest}
+          onBack={() => navigate("/client/quotes")}
+        />
+        <Button 
+          onClick={handleSave} 
+          disabled={isSaving}
+        >
+          {isSaving ? "Saving..." : "Save Changes"}
+        </Button>
+      </div>
 
       <Card>
         <CardHeader>
