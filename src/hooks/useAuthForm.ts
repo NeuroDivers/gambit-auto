@@ -62,38 +62,62 @@ export const useAuthForm = () => {
     }
   };
 
-  const handleAuth = async (e: React.FormEvent, isLogin: boolean) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
     setLoading(true);
 
     try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        });
-        if (error) {
-          if (error.message === "Invalid login credentials") {
-            throw new Error(
-              "Invalid email or password. Please check your credentials and try again."
-            );
-          }
-          throw error;
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth`,
+        },
+      });
+
+      if (error) {
+        if (error.message.includes("already registered")) {
+          throw new Error("This email is already registered. Please try logging in instead.");
         }
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth`,
-          },
-        });
-        if (error) throw error;
+        throw error;
+      }
+
+      if (data?.user) {
         toast({
           title: "Success!",
           description: "Please check your email to verify your account.",
         });
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loading) return;
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (error) {
+        if (error.message === "Invalid login credentials") {
+          throw new Error(
+            "Invalid email or password. Please check your credentials and try again."
+          );
+        }
+        throw error;
       }
     } catch (error: any) {
       toast({
@@ -117,7 +141,8 @@ export const useAuthForm = () => {
     formData,
     loading,
     handleInputChange,
-    handleAuth,
+    handleSignIn,
+    handleSignUp,
     handleGoogleSignIn,
     resetForm,
   };

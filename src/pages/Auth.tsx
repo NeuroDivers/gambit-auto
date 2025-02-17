@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { formData, loading, handleInputChange, handleAuth, handleGoogleSignIn, resetForm } = useAuthForm();
+  const { formData, loading, handleInputChange, handleSignIn, handleSignUp, handleGoogleSignIn, resetForm } = useAuthForm();
   
   // Set up auth redirect
   useAuthRedirect();
@@ -42,7 +42,11 @@ const Auth = () => {
   };
 
   const handleSubmit = (e: React.FormEvent) => {
-    handleAuth(e, isLogin);
+    if (isLogin) {
+      handleSignIn(e);
+    } else {
+      handleSignUp(e);
+    }
   };
 
   return (
