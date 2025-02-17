@@ -36,8 +36,9 @@ export function ClientList() {
         .from('clients')
         .select(`
           *,
-          work_orders!work_orders_client_id_fkey(count),
-          invoices!invoices_client_id_fkey(count, sum:total)
+          total_work_orders:work_orders(count),
+          total_invoices:invoices(count),
+          total_spent:invoices(sum)
         `)
 
       // Apply search if present
@@ -65,9 +66,9 @@ export function ClientList() {
       // Transform the data to match the expected format
       return data.map(client => ({
         ...client,
-        total_work_orders: client.work_orders?.[0]?.count || 0,
-        total_invoices: client.invoices?.[0]?.count || 0,
-        total_spent: client.invoices?.[0]?.sum || 0
+        total_work_orders: client.total_work_orders || 0,
+        total_invoices: client.total_invoices || 0,
+        total_spent: client.total_spent || 0
       })) as Client[]
     }
   })
