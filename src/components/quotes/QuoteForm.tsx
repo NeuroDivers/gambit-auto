@@ -36,6 +36,7 @@ export function QuoteForm({ quote, defaultValues, onSuccess }: QuoteFormProps) {
     return items.map(item => ({
       service_id: item.service_id,
       service_name: item.service_name,
+      description: item.description || item.service_name,
       quantity: item.quantity,
       unit_price: item.unit_price
     }))
@@ -45,7 +46,7 @@ export function QuoteForm({ quote, defaultValues, onSuccess }: QuoteFormProps) {
     return services.map(service => ({
       service_id: service.service_id,
       service_name: service.service_name,
-      description: service.service_name,
+      description: service.description || service.service_name,
       quantity: service.quantity,
       unit_price: service.unit_price
     }))
