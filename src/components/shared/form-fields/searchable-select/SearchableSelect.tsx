@@ -50,16 +50,16 @@ export function SearchableSelect({
   showPrice = false,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false)
+  const safeOptions = Array.isArray(options) ? options : []
 
   const isGrouped = (option: Option | GroupedOption): option is GroupedOption => {
     return 'options' in option && Array.isArray((option as GroupedOption).options);
   };
 
   const findSelectedOption = (value: string): Option | undefined => {
-    const safeOptions = options || [];
     for (const option of safeOptions) {
       if (isGrouped(option)) {
-        const found = option.options.find(opt => opt.value === value);
+        const found = option.options?.find(opt => opt.value === value);
         if (found) return found;
       } else if (option.value === value) {
         return option;
@@ -69,7 +69,6 @@ export function SearchableSelect({
   };
 
   const selectedOption = findSelectedOption(value);
-  const safeOptions = options || [];
 
   if (disabled) {
     return (
@@ -100,7 +99,7 @@ export function SearchableSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full min-w-[var(--radix-popover-trigger-width)] p-0">
-        <Command>
+        <Command value={value || undefined}>
           <CommandInput 
             placeholder={`Search ${placeholder.toLowerCase()}...`}
           />
@@ -108,9 +107,10 @@ export function SearchableSelect({
           <CommandGroup>
             {safeOptions.map((item, index) => {
               if (isGrouped(item)) {
+                const groupOptions = Array.isArray(item.options) ? item.options : [];
                 return (
                   <CommandGroup key={`group-${index}`} heading={item.label}>
-                    {(item.options || []).map((option) => (
+                    {groupOptions.map((option) => (
                       <CommandItem
                         key={`group-item-${option.value}`}
                         value={option.value}
