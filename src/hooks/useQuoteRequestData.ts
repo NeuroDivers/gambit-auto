@@ -49,7 +49,6 @@ export function useQuoteRequestData() {
 
       if (clientError) throw clientError
       if (!clientData) {
-        // Handle case where no client is found
         toast.error("No client account found. Please contact support.")
         navigate("/auth")
         return []
@@ -67,10 +66,11 @@ export function useQuoteRequestData() {
           vehicle_vin,
           description,
           estimated_amount,
+          service_details,
           client_response,
           created_at,
           media_urls,
-          service_details
+          service_ids
         `)
         .eq("client_id", clientData.id)
         .order("created_at", { ascending: false })
