@@ -375,7 +375,7 @@ export type Database = {
           vehicle_model: string | null
           vehicle_vin: string | null
           vehicle_year: number | null
-          work_order_id: string
+          work_order_id: string | null
         }
         Insert: {
           client_id?: string | null
@@ -408,7 +408,7 @@ export type Database = {
           vehicle_model?: string | null
           vehicle_vin?: string | null
           vehicle_year?: number | null
-          work_order_id: string
+          work_order_id?: string | null
         }
         Update: {
           client_id?: string | null
@@ -441,7 +441,7 @@ export type Database = {
           vehicle_model?: string | null
           vehicle_vin?: string | null
           vehicle_year?: number | null
-          work_order_id?: string
+          work_order_id?: string | null
         }
         Relationships: [
           {

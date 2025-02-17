@@ -49,12 +49,13 @@ export function useInvoiceFormSubmission({
         vehicle_year: vehicleInfo.year,
         vehicle_vin: vehicleInfo.vin,
         subtotal,
-        tax: taxes,
+        tax_amount: taxes,
         total,
         notes,
         status,
-        work_order_id: workOrderId,
+        work_order_id: workOrderId || null,
         business_profile_id: businessProfile?.id,
+        invoice_number: `INV-${Date.now()}`
       }
 
       if (invoiceId) {
