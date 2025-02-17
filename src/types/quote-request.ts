@@ -42,9 +42,17 @@ export type QuoteRequestFormData = {
   service_details: ServiceDetails;
 }
 
+export type ClientInfo = {
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  phone_number: string | null;
+}
+
 export type QuoteRequest = {
   id: string
   client_id: string
+  client?: ClientInfo
   status: QuoteRequestStatus
   vehicle_make: string | null
   vehicle_model: string | null
