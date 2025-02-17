@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
@@ -45,16 +44,15 @@ export default function Dashboard() {
           )
         `)
         .eq("id", session?.user?.id)
-        .maybeSingle();
+        .single();
 
       if (error) throw error;
       
-      // Ensure we're returning data in the correct format
-      if (!profileData) throw new Error("Profile not found");
+      if (!profileData?.role) throw new Error("Profile or role not found");
 
-      // Transform the data to match our UserProfile type
+      // Ensure we're returning a single role object, not an array
       return {
-        role: profileData.role as UserRole // This ensures role is a single object, not an array
+        role: profileData.role as unknown as UserRole
       };
     },
   });

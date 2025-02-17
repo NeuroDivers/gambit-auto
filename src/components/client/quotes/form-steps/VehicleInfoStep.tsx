@@ -16,7 +16,7 @@ type VehicleInfoStepProps = {
 }
 
 export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
-  const [useNewVehicle, setUseNewVehicle] = useState(false)
+  const [useNewVehicle, setUseNewVehicle] = useState(true)
   const [saveVehicle, setSaveVehicle] = useState(false)
 
   // Fetch client's vehicles
@@ -45,11 +45,16 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
   })
 
   const handleVehicleSelect = (vehicleId: string) => {
+    if (vehicleId === 'new') {
+      setUseNewVehicle(true)
+      return
+    }
+
     const selectedVehicle = vehicles?.find(v => v.id === vehicleId)
     if (selectedVehicle) {
       form.setValue('vehicleInfo.make', selectedVehicle.make)
       form.setValue('vehicleInfo.model', selectedVehicle.model)
-      form.setValue('vehicleInfo.year', selectedVehicle.year)
+      form.setValue('vehicleInfo.year', selectedVehicle.year.toString())
       form.setValue('vehicleInfo.vin', selectedVehicle.vin || '')
       setUseNewVehicle(false)
     }
@@ -75,9 +80,9 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
         client_id: client.id,
         make: form.getValues('vehicleInfo.make'),
         model: form.getValues('vehicleInfo.model'),
-        year: form.getValues('vehicleInfo.year'),
+        year: parseInt(form.getValues('vehicleInfo.year')),
         vin: form.getValues('vehicleInfo.vin') || null,
-        is_primary: false
+        is_primary: !vehicles?.length // Set as primary if no other vehicles exist
       }
 
       await supabase.from('vehicles').insert(vehicleData)
@@ -97,51 +102,44 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
 
   return (
     <div className="space-y-4">
-      {!useNewVehicle && (
-        <FormField
-          control={form.control}
-          name="selectedVehicle"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Select Vehicle</FormLabel>
-              <Select
-                onValueChange={handleVehicleSelect}
-                value={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a vehicle" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {isLoading ? (
-                    <div className="flex items-center justify-center p-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
+      {vehicles && vehicles.length > 0 && (
+        <div className="flex items-center space-x-2">
+          <Select
+            onValueChange={handleVehicleSelect}
+            value={useNewVehicle ? 'new' : undefined}
+          >
+            <FormControl>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose a vehicle" />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              {isLoading ? (
+                <div className="flex items-center justify-center p-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                </div>
+              ) : (
+                <>
+                  {vehicles?.map((vehicle: Vehicle) => (
+                    <SelectItem key={vehicle.id} value={vehicle.id}>
+                      {vehicle.year} {vehicle.make} {vehicle.model}
+                      {vehicle.is_primary && " (Primary)"}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="new">
+                    <div className="flex items-center gap-2">
+                      <Plus className="h-4 w-4" />
+                      Add New Vehicle
                     </div>
-                  ) : (
-                    <>
-                      {vehicles?.map((vehicle: Vehicle) => (
-                        <SelectItem key={vehicle.id} value={vehicle.id}>
-                          {vehicle.year} {vehicle.make} {vehicle.model}
-                          {vehicle.is_primary && " (Primary)"}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="new">
-                        <div className="flex items-center gap-2">
-                          <Plus className="h-4 w-4" />
-                          Add New Vehicle
-                        </div>
-                      </SelectItem>
-                    </>
-                  )}
-                </SelectContent>
-              </Select>
-            </FormItem>
-          )}
-        />
+                  </SelectItem>
+                </>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
       )}
 
-      {(useNewVehicle || vehicles?.length === 0) && (
+      {useNewVehicle && (
         <div className="space-y-4">
           <FormField
             control={form.control}
@@ -181,7 +179,7 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
                   <Input 
                     {...field} 
                     type="number" 
-                    onChange={e => field.onChange(parseInt(e.target.value))}
+                    onChange={e => field.onChange(e.target.value)}
                     placeholder="e.g. 2020" 
                   />
                 </FormControl>
@@ -204,7 +202,7 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
             )}
           />
 
-          {!vehicles?.length && (
+          {vehicles?.length === 0 ? (
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
                 <FormLabel className="text-base">Save as Primary Vehicle</FormLabel>
@@ -217,9 +215,7 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
                 onCheckedChange={setSaveVehicle}
               />
             </FormItem>
-          )}
-
-          {vehicles?.length > 0 && (
+          ) : (
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
                 <FormLabel className="text-base">Save Vehicle</FormLabel>
