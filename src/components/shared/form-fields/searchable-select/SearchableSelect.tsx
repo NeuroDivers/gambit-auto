@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -53,23 +53,18 @@ export function SearchableSelect({
   const [inputValue, setInputValue] = useState("")
 
   // Ensure we have a valid array and flatten it
-  const safeOptions = useMemo(() => {
-    return (options || []).reduce<Option[]>((acc, curr) => {
-      if ('options' in curr && Array.isArray(curr.options)) {
-        return [...acc, ...curr.options]
-      }
-      return curr ? [...acc, curr as Option] : acc
-    }, [])
-  }, [options])
+  const safeOptions = (options || []).reduce<Option[]>((acc, curr) => {
+    if ('options' in curr && Array.isArray(curr.options)) {
+      return [...acc, ...curr.options]
+    }
+    return [...acc, curr as Option]
+  }, [])
 
   // Filter options based on input value
-  const filteredOptions = useMemo(() => {
-    if (!inputValue) return safeOptions
-    const search = inputValue.toLowerCase()
-    return safeOptions.filter(option => 
-      option.label.toLowerCase().includes(search)
+  const filteredOptions = !inputValue ? safeOptions : 
+    safeOptions.filter(option => 
+      option.label.toLowerCase().includes(inputValue.toLowerCase())
     )
-  }, [safeOptions, inputValue])
 
   const selectedOption = safeOptions.find(option => option.value === value)
 
@@ -78,6 +73,7 @@ export function SearchableSelect({
     return (
       <Button
         variant="outline"
+        role="combobox"
         className={cn("w-full justify-between", className)}
         disabled
       >
@@ -103,7 +99,7 @@ export function SearchableSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full min-w-[var(--radix-popover-trigger-width)] p-0">
-        <Command shouldFilter={false}>
+        <Command>
           <CommandInput 
             placeholder={`Search ${placeholder.toLowerCase()}...`}
             value={inputValue}
@@ -111,41 +107,35 @@ export function SearchableSelect({
           />
           <CommandEmpty>{emptyMessage}</CommandEmpty>
           <CommandGroup>
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  value={option.value}
-                  onSelect={() => {
-                    onValueChange(option.value)
-                    setOpen(false)
-                    setInputValue("")
-                  }}
-                  disabled={option.disabled}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center">
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          value === option.value ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      <span>{option.label}</span>
-                    </div>
-                    {showPrice && option.price !== null && option.price !== undefined && (
-                      <span className="text-muted-foreground">
-                        ${option.price.toFixed(2)}
-                      </span>
-                    )}
+            {filteredOptions.map((option) => (
+              <CommandItem
+                key={option.value}
+                value={option.value}
+                onSelect={() => {
+                  onValueChange(option.value)
+                  setOpen(false)
+                  setInputValue("")
+                }}
+                disabled={option.disabled}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center">
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value === option.value ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    <span>{option.label}</span>
                   </div>
-                </CommandItem>
-              ))
-            ) : (
-              <CommandItem value="" disabled>
-                No options available
+                  {showPrice && option.price !== null && option.price !== undefined && (
+                    <span className="text-muted-foreground">
+                      ${option.price.toFixed(2)}
+                    </span>
+                  )}
+                </div>
               </CommandItem>
-            )}
+            ))}
           </CommandGroup>
         </Command>
       </PopoverContent>

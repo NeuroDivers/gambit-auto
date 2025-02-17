@@ -4,13 +4,17 @@ import { InvoiceFormValues } from "@/components/invoices/types"
 import { EditInvoiceForm } from "@/components/invoices/sections/EditInvoiceForm"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
+import { useEffect } from "react"
 
 export default function CreateInvoice() {
   const navigate = useNavigate()
+  const location = useLocation()
   const queryClient = useQueryClient()
+  const preselectedClient = location.state?.preselectedClient
+
   const form = useForm<InvoiceFormValues>({
     defaultValues: {
       status: "draft",
@@ -38,10 +42,18 @@ export default function CreateInvoice() {
       
       if (error) throw error
       return data || []
-    },
-    // Initialize with empty array
-    initialData: [],
+    }
   })
+
+  useEffect(() => {
+    if (preselectedClient) {
+      form.setValue('customer_first_name', preselectedClient.first_name)
+      form.setValue('customer_last_name', preselectedClient.last_name)
+      form.setValue('customer_email', preselectedClient.email)
+      form.setValue('customer_phone', preselectedClient.phone_number || '')
+      form.setValue('customer_address', preselectedClient.address || '')
+    }
+  }, [preselectedClient, form])
 
   // Handle client selection
   const handleClientSelect = (clientId: string) => {
