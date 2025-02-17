@@ -99,81 +99,77 @@ export function SearchableSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full min-w-[var(--radix-popover-trigger-width)] p-0">
-        <Command defaultValue={value}>
+        <Command loop>
           <CommandInput 
             placeholder={`Search ${placeholder.toLowerCase()}...`}
           />
           <CommandEmpty>{emptyMessage}</CommandEmpty>
-          {safeOptions.length > 0 && (
-            <CommandGroup>
-              {safeOptions.map((item, index) => {
-                if (isGrouped(item)) {
-                  const groupOptions = Array.isArray(item.options) ? item.options : [];
-                  return groupOptions.length > 0 ? (
-                    <CommandGroup key={`group-${index}`} heading={item.label}>
-                      {groupOptions.map((option) => (
-                        <CommandItem
-                          key={`group-item-${option.value}`}
-                          value={option.value}
-                          onSelect={() => {
-                            onValueChange(option.value);
-                            setOpen(false);
-                          }}
-                          disabled={option.disabled}
-                        >
-                          <div className="flex items-center justify-between w-full">
-                            <div className="flex items-center">
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  value === option.value ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              <span>{option.label}</span>
-                            </div>
-                            {showPrice && option.price !== null && option.price !== undefined && (
-                              <span className="text-muted-foreground">
-                                ${option.price.toFixed(2)}
-                              </span>
+          {safeOptions.map((item, index) => {
+            if (isGrouped(item)) {
+              const groupOptions = Array.isArray(item.options) ? item.options : [];
+              return groupOptions.length > 0 ? (
+                <CommandGroup key={`group-${index}`} heading={item.label}>
+                  {groupOptions.map((option) => (
+                    <CommandItem
+                      key={`group-item-${option.value}`}
+                      value={option.value}
+                      onSelect={() => {
+                        onValueChange(option.value);
+                        setOpen(false);
+                      }}
+                      disabled={option.disabled}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center">
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              value === option.value ? "opacity-100" : "opacity-0"
                             )}
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  ) : null;
-                }
-
-                return (
-                  <CommandItem
-                    key={`item-${item.value}`}
-                    value={item.value}
-                    onSelect={() => {
-                      onValueChange(item.value);
-                      setOpen(false);
-                    }}
-                    disabled={item.disabled}
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center">
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            value === item.value ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        <span>{item.label}</span>
+                          />
+                          <span>{option.label}</span>
+                        </div>
+                        {showPrice && option.price !== null && option.price !== undefined && (
+                          <span className="text-muted-foreground">
+                            ${option.price.toFixed(2)}
+                          </span>
+                        )}
                       </div>
-                      {showPrice && item.price !== null && item.price !== undefined && (
-                        <span className="text-muted-foreground">
-                          ${item.price.toFixed(2)}
-                        </span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              ) : null;
+            }
+
+            return (
+              <CommandItem
+                key={`item-${item.value}`}
+                value={item.value}
+                onSelect={() => {
+                  onValueChange(item.value);
+                  setOpen(false);
+                }}
+                disabled={item.disabled}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center">
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value === item.value ? "opacity-100" : "opacity-0"
                       )}
-                    </div>
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
-          )}
+                    />
+                    <span>{item.label}</span>
+                  </div>
+                  {showPrice && item.price !== null && item.price !== undefined && (
+                    <span className="text-muted-foreground">
+                      ${item.price.toFixed(2)}
+                    </span>
+                  )}
+                </div>
+              </CommandItem>
+            );
+          })}
         </Command>
       </PopoverContent>
     </Popover>
