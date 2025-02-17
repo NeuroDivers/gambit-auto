@@ -66,6 +66,7 @@ export function useInvoiceMutation(invoiceId?: string) {
         .update({
           notes: values.notes || "",
           status: values.status,
+          due_date: values.due_date,  // Added due_date field
           customer_first_name: values.customer_first_name || "",
           customer_last_name: values.customer_last_name || "",
           customer_email: values.customer_email || "",
