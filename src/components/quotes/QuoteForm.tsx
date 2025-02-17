@@ -29,6 +29,7 @@ export function QuoteForm({ quote, defaultValues, onSuccess }: QuoteFormProps) {
     vehicle_year: quote.vehicle_year,
     vehicle_vin: quote.vehicle_vin,
     notes: quote.notes || '',
+    status: quote.status,
     service_items: quote.quote_items?.map(item => ({
       service_id: item.service_id || '',
       service_name: item.service_name,

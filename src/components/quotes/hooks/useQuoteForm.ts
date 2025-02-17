@@ -16,6 +16,7 @@ const formSchema = z.object({
   vehicle_year: z.number().min(1900).max(new Date().getFullYear() + 1),
   vehicle_vin: z.string().min(1, "Vehicle VIN is required"),
   notes: z.string().optional(),
+  status: z.string(),
   service_items: z.array(z.object({
     service_id: z.string().optional(),
     service_name: z.string(),
@@ -47,6 +48,7 @@ export function useQuoteForm({ quote, defaultValues, onSuccess }: UseQuoteFormPr
       vehicle_year: new Date().getFullYear(),
       vehicle_vin: '',
       notes: '',
+      status: 'draft',
       service_items: []
     }
   })
