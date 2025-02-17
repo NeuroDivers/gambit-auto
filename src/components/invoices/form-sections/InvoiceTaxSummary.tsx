@@ -38,7 +38,7 @@ export function InvoiceTaxSummary({ items = [], onTotalCalculated }: InvoiceTaxS
 
   // Calculate taxes
   const gstAmount = subtotal * (gstRate / 100)
-  const qstAmount = (subtotal + gstAmount) * (qstRate / 100)
+  const qstAmount = subtotal * (qstRate / 100) // QST calculated on subtotal only
   const total = subtotal + gstAmount + qstAmount
 
   useEffect(() => {
