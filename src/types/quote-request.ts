@@ -16,4 +16,5 @@ export type QuoteRequest = {
   media_urls: string[] | null
   service_details: Record<string, any> | null
   service_ids: string[]
+  service_estimates?: Record<string, number>
 }

@@ -37,7 +37,7 @@ export function QuoteRequestCard({
   const statusVariant = {
     pending: "secondary",
     estimated: "default",
-    accepted: "success",
+    accepted: "outline",
     rejected: "destructive"
   } as const
 

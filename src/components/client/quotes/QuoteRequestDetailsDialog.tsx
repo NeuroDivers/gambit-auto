@@ -29,7 +29,7 @@ export function QuoteRequestDetailsDialog({
   const statusVariant = {
     pending: "secondary",
     estimated: "default",
-    accepted: "success",
+    accepted: "outline",
     rejected: "destructive"
   } as const
 
