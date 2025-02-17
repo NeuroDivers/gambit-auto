@@ -13,6 +13,7 @@ export type BusinessFormValues = z.infer<typeof businessFormSchema>
 
 export interface UserProfile {
   role: {
+    id: string
     name: string
   } | null
 }

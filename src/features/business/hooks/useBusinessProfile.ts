@@ -16,7 +16,12 @@ export function useBusinessProfile() {
 
       const { data: userProfile, error: profileError } = await supabase
         .from('profiles')
-        .select('role:role_id(name)')
+        .select(`
+          role:role_id (
+            id,
+            name
+          )
+        `)
         .eq('id', session.user.id)
         .single<UserProfile>()
 
@@ -27,7 +32,7 @@ export function useBusinessProfile() {
 
       console.log("User profile:", userProfile)
       
-      if (!userProfile?.role?.name || userProfile.role.name !== 'administrator') {
+      if (!userProfile?.role?.name || userProfile.role.name.toLowerCase() !== 'administrator') {
         throw new Error("Unauthorized - Admin access required")
       }
 
