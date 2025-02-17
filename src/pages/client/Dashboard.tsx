@@ -2,7 +2,6 @@
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { QuoteRequestForm } from "@/components/client/quotes/QuoteRequestForm"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts'
 import { formatCurrency } from "@/lib/utils"
@@ -179,11 +178,6 @@ export default function ClientDashboard() {
               )}
             </CardContent>
           </Card>
-
-          {/* Quote Request Form */}
-          <div className="w-full">
-            <QuoteRequestForm />
-          </div>
         </div>
       </div>
     </div>
