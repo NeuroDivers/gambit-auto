@@ -53,8 +53,22 @@ export function useQuoteRequestData() {
       const { data, error } = await supabase
         .from("quote_requests")
         .select(`
-          *,
-          quote_items (
+          id,
+          client_id,
+          status,
+          vehicle_make,
+          vehicle_model,
+          vehicle_year,
+          vehicle_vin,
+          description,
+          timeframe,
+          contact_preference,
+          additional_notes,
+          estimated_amount,
+          client_response,
+          created_at,
+          media_urls,
+          quote_items!quote_items_quote_request_id_fkey (
             id,
             service_id,
             service_name,
