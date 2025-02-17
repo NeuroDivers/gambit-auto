@@ -178,7 +178,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "invoices",
-        element: <div>Invoices</div>,
+        element: <Invoices />,
       },
       {
         path: "bookings",
