@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import { useNavigate } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
 import { useFormStorage } from "./quote-request/useFormStorage"
-import { FormData, formSchema } from "./quote-request/formSchema"
+import { QuoteRequestFormData, ServiceItemType } from "./quote-request/formSchema"
 import { useQuery } from "@tanstack/react-query"
 
 export function useQuoteRequestForm() {
@@ -16,7 +16,7 @@ export function useQuoteRequestForm() {
   const [step, setStep] = useState(1)
   const [uploading, setUploading] = useState(false)
 
-  const form = useForm<FormData>({
+  const form = useForm<QuoteRequestFormData>({
     defaultValues: {
       vehicleInfo: {
         make: "",
@@ -80,7 +80,7 @@ export function useQuoteRequestForm() {
     }
   }
 
-  const onSubmit = useCallback(async (data: FormData) => {
+  const onSubmit = useCallback(async (data: QuoteRequestFormData) => {
     try {
       const { data: session, error: sessionError } = await supabase.auth.getSession()
       if (sessionError) throw sessionError

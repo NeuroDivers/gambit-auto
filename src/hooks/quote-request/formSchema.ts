@@ -19,3 +19,22 @@ export const formSchema = z.object({
 })
 
 export type FormData = z.infer<typeof formSchema>
+
+export type ServiceItemType = {
+  service_id: string
+  service_name: string
+  quantity: number
+  unit_price: number
+}
+
+export type QuoteRequestFormData = {
+  vehicleInfo: {
+    make: string
+    model: string
+    year: number
+    vin: string
+  }
+  service_items: ServiceItemType[]
+  description: string
+  service_details: Record<string, any>
+}

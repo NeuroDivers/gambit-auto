@@ -9,6 +9,7 @@ import { useQuoteRequestForm } from "@/hooks/useQuoteRequestForm"
 import { AnimatePresence } from "framer-motion"
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 import { motion } from "framer-motion"
+import { QuoteRequestFormData } from "@/hooks/quote-request/formSchema"
 
 export function MultiStepQuoteRequestForm() {
   const {
