@@ -6,22 +6,7 @@ import { cn } from "@/lib/utils"
 import { ImageGallery } from "./ImageGallery"
 import { getServiceNames, getStatusBadgeVariant } from "@/components/quotes/utils"
 import { Upload } from "lucide-react"
-
-type QuoteRequest = {
-  id: string
-  status: "pending" | "estimated" | "accepted" | "rejected" | "converted"
-  vehicle_make: string
-  vehicle_model: string
-  vehicle_year: number
-  vehicle_vin: string
-  description: string
-  created_at: string
-  estimated_amount: number | null
-  service_estimates: Record<string, number> | null
-  client_response: "accepted" | "rejected" | null
-  service_ids: string[]
-  media_urls: string[]
-}
+import type { QuoteRequest } from "@/types/quote-request"
 
 type QuoteRequestCardProps = {
   request: QuoteRequest
@@ -78,7 +63,7 @@ export function QuoteRequestCard({
           <ImageGallery
             mediaUrls={request.media_urls}
             status={request.status}
-            onImageRemove={(url) => onImageRemove(request.id, url, request.media_urls)}
+            onImageRemove={(url) => onImageRemove(request.id, url, request.media_urls || [])}
           />
         )}
 

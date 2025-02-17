@@ -1,7 +1,7 @@
 
 import { Loader2 } from "lucide-react"
 import { QuoteRequestCard } from "./QuoteRequestCard"
-import type { QuoteRequest } from "@/hooks/useQuoteRequestActions"
+import type { QuoteRequest } from "@/types/quote-request"
 
 type QuoteRequestListProps = {
   quoteRequests: QuoteRequest[] | undefined
