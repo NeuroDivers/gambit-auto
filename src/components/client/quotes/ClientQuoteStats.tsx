@@ -20,19 +20,20 @@ export function ClientQuoteStats() {
 
       if (!client) throw new Error("No client found")
 
-      // Get quotes statistics
+      // Get quotes statistics with fixed status counting
       const { data: quotes } = await supabase
         .from("quote_requests")
-        .select("status")
+        .select("status, client_response")
         .eq("client_id", client.id)
 
       const stats = {
         total: quotes?.length || 0,
         pending: quotes?.filter(q => q.status === "pending").length || 0,
-        accepted: quotes?.filter(q => q.status === "accepted").length || 0,
-        rejected: quotes?.filter(q => q.status === "rejected").length || 0
+        accepted: quotes?.filter(q => q.status === "estimated" && q.client_response === "accepted").length || 0,
+        rejected: quotes?.filter(q => q.status === "estimated" && q.client_response === "rejected").length || 0
       }
 
+      console.log("Quote stats:", stats) // Added for debugging
       return stats
     }
   })
