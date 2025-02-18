@@ -1,6 +1,5 @@
 
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
-import { WorkOrderCalendar } from "@/components/work-orders/WorkOrderCalendar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
 import { format } from "date-fns"
@@ -10,8 +9,27 @@ import { Loader2, MapPin, CalendarClock } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Calendar } from "lucide-react"
 
+interface WorkOrder {
+  id: string
+  vehicle_year: number
+  vehicle_make: string
+  vehicle_model: string
+  start_time: string
+  status: string
+  created_at: string
+  service_bays?: {
+    name: string
+  }
+  work_order_services: Array<{
+    service_id: string
+    service_types: {
+      name: string
+    }
+  }>
+}
+
 export default function ClientBookings() {
-  const { data: workOrders, isLoading } = useQuery({
+  const { data: workOrders, isLoading } = useQuery<WorkOrder[]>({
     queryKey: ['client-work-orders'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -54,7 +72,7 @@ export default function ClientBookings() {
     }
     acc[date].push(order)
     return acc
-  }, {} as Record<string, typeof workOrders>)
+  }, {} as Record<string, WorkOrder[]>)
 
   if (isLoading) {
     return (
