@@ -22,14 +22,22 @@ export default function DeveloperSettings() {
       foreground: '#000000',
       primary: '#7c3aed',
       secondary: '#f3f4f6',
-      accent: '#8b5cf6'
+      accent: '#8b5cf6',
+      buttonPrimary: '#7c3aed',
+      buttonPrimaryHover: '#6d28d9',
+      buttonSecondary: '#f3f4f6',
+      buttonSecondaryHover: '#e5e7eb'
     },
     dark: {
       background: '#000000',
       foreground: '#ffffff',
       primary: '#8b5cf6',
       secondary: '#1f2937',
-      accent: '#7c3aed'
+      accent: '#7c3aed',
+      buttonPrimary: '#8b5cf6',
+      buttonPrimaryHover: '#7c3aed',
+      buttonSecondary: '#1f2937',
+      buttonSecondaryHover: '#374151'
     }
   })
 
@@ -61,14 +69,22 @@ export default function DeveloperSettings() {
             background: colors.light.background,
             foreground: colors.light.foreground,
             primary_color: colors.light.primary,
-            accent_color: colors.light.accent
+            accent_color: colors.light.accent,
+            button_primary: colors.light.buttonPrimary,
+            button_primary_hover: colors.light.buttonPrimaryHover,
+            button_secondary: colors.light.buttonSecondary,
+            button_secondary_hover: colors.light.buttonSecondaryHover
           },
           {
             theme_mode: 'dark',
             background: colors.dark.background,
             foreground: colors.dark.foreground,
             primary_color: colors.dark.primary,
-            accent_color: colors.dark.accent
+            accent_color: colors.dark.accent,
+            button_primary: colors.dark.buttonPrimary,
+            button_primary_hover: colors.dark.buttonPrimaryHover,
+            button_secondary: colors.dark.buttonSecondary,
+            button_secondary_hover: colors.dark.buttonSecondaryHover
           }
         ])
 

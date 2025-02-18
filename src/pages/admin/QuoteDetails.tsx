@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -24,15 +23,30 @@ export default function QuoteDetails() {
   const { data: quote, isLoading, error } = useQuery({
     queryKey: ['quote', id],
     queryFn: async () => {
+      if (!id) throw new Error("Quote ID is required")
+
       const { data, error } = await supabase
         .from('quotes')
-        .select('*, quote_items(*)')
+        .select(`
+          *,
+          quote_items (
+            id,
+            service_name,
+            quantity,
+            unit_price,
+            description
+          )
+        `)
         .eq('id', id)
-        .single()
+        .maybeSingle()
 
       if (error) throw error
+      if (!data) throw new Error("Quote not found")
+      
+      console.log('Fetched quote:', data)
       return data
-    }
+    },
+    enabled: !!id
   })
 
   if (isLoading) {
@@ -45,8 +59,22 @@ export default function QuoteDetails() {
 
   if (error || !quote) {
     return (
-      <div className="p-8 text-center text-red-500">
-        Error loading quote. Please try again later.
+      <div className="p-8">
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="text-destructive">Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Failed to load quote details. The quote might not exist or you may not have permission to view it.</p>
+            <Button 
+              variant="outline" 
+              className="mt-4"
+              onClick={() => navigate('/admin/quotes')}
+            >
+              Return to Quotes
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }
