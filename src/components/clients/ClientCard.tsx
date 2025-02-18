@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import { FileText, Quote } from "lucide-react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -51,25 +52,17 @@ export function ClientCard({
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div>
             <span className="font-medium">Phone:</span>
-            <p className="text-muted-foreground">{client.phone || 'N/A'}</p>
+            <p className="text-muted-foreground">{client.phone_number || 'N/A'}</p>
           </div>
           <div>
-            <span className="font-medium">Total Spent:</span>
-            <p className="text-muted-foreground">${client.total_spent.toFixed(2)}</p>
-          </div>
-          <div>
-            <span className="font-medium">Work Orders:</span>
-            <p className="text-muted-foreground">{client.total_work_orders}</p>
-          </div>
-          <div>
-            <span className="font-medium">Invoices:</span>
-            <p className="text-muted-foreground">{client.total_invoices}</p>
+            <span className="font-medium">Address:</span>
+            <p className="text-muted-foreground">{client.address || 'N/A'}</p>
           </div>
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
         <p className="text-xs text-muted-foreground">
-          Last Invoice: {client.last_invoice_date ? new Date(client.last_invoice_date).toLocaleDateString() : 'N/A'}
+          Created: {new Date(client.created_at).toLocaleDateString()}
         </p>
       </CardFooter>
       {!actions && (
