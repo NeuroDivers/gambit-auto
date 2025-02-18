@@ -14,12 +14,24 @@ export default function ProfileSettings() {
   // Wait for component to mount to avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
-  }, []);
+    
+    // Set initial theme to system if not set
+    if (!theme) {
+      setTheme('system');
+    }
+  }, [theme, setTheme]);
 
   // Handle theme change
   const handleThemeChange = (value: string) => {
     setTheme(value);
     toast.success(`Theme changed to ${value === 'system' ? 'system default' : value} mode`);
+
+    // Log theme state for debugging
+    console.log({
+      selectedTheme: value,
+      resolvedTheme,
+      currentSystemTheme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    });
   };
 
   // Check the actual theme being applied
@@ -39,7 +51,9 @@ export default function ProfileSettings() {
         <Card>
           <CardHeader>
             <CardTitle>Theme Preferences</CardTitle>
-            <CardDescription>Choose your preferred theme mode</CardDescription>
+            <CardDescription>
+              Current theme: {theme === 'system' ? `System (${currentTheme})` : theme}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <RadioGroup 
