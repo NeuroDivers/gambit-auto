@@ -55,12 +55,12 @@ export function CalendarDay({ date, workOrders, isCurrentMonth, blockedDates = [
           "hover:bg-primary/5 cursor-pointer group",
           !isCurrentMonth && "opacity-50 bg-muted/20",
           isToday(date) && "ring-2 ring-primary bg-primary/5",
-          isDateBlocked && "bg-red-100/10 hover:bg-red-100/20"
+          isDateBlocked && "bg-destructive/5 hover:bg-destructive/10"
         )}
         onClick={handleDayClick}
       >
         <div className={cn(
-          "font-medium text-sm mb-2 flex items-center justify-between",
+          "font-medium text-sm mb-2 flex items-center justify-between text-foreground",
           isToday(date) && "text-primary"
         )}>
           <span className={cn(
@@ -75,13 +75,13 @@ export function CalendarDay({ date, workOrders, isCurrentMonth, blockedDates = [
             </span>
           )}
           {isDateBlocked && (
-            <Lock className="h-4 w-4 text-red-500" />
+            <Lock className="h-4 w-4 text-destructive" />
           )}
         </div>
         
         {isDateBlocked && blockedDateInfo?.reason && (
-          <Alert variant="destructive" className="mt-2 py-1 px-2 bg-red-500/10 border-red-500/20">
-            <AlertDescription className="text-xs text-red-500">
+          <Alert variant="destructive" className="mt-2 py-1 px-2">
+            <AlertDescription className="text-xs">
               {blockedDateInfo.reason}
             </AlertDescription>
           </Alert>

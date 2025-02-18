@@ -1,5 +1,5 @@
 
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isAfter, startOfToday } from "date-fns"
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { WorkOrder } from "../types"
@@ -17,16 +17,12 @@ type DesktopCalendarViewProps = {
 
 export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blockedDates }: DesktopCalendarViewProps) {
   const [showMonthPicker, setShowMonthPicker] = useState(false)
-  const today = startOfToday()
 
   const handlePreviousMonth = () => {
     if (onDateChange) {
       const prevMonth = new Date(currentDate)
       prevMonth.setMonth(prevMonth.getMonth() - 1)
-      // Only allow changing to previous month if it's not before today
-      if (!isAfter(today, endOfMonth(prevMonth))) {
-        onDateChange(prevMonth)
-      }
+      onDateChange(prevMonth)
     }
   }
 
@@ -46,7 +42,7 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blo
   const days = eachDayOfInterval({
     start: calendarStart,
     end: calendarEnd,
-  }).filter(date => !isAfter(today, date)) // Only include today and future dates
+  })
 
   return (
     <div className="rounded-lg bg-card/50 p-4">
@@ -63,7 +59,6 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blo
             variant="outline" 
             size="icon"
             onClick={handlePreviousMonth}
-            disabled={isAfter(today, endOfMonth(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1)))}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
