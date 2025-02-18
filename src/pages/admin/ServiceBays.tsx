@@ -106,23 +106,28 @@ export default function ServiceBays() {
       if (error) throw error
 
       // Transform the data to match ProfileWithRole interface
-      const transformedProfiles = profiles.map(profile => ({
-        id: profile.id,
-        created_at: profile.created_at,
-        updated_at: profile.updated_at,
-        email: profile.email,
-        first_name: profile.first_name,
-        last_name: profile.last_name,
-        avatar_url: profile.avatar_url,
-        phone_number: profile.phone_number,
-        address: profile.address,
-        bio: profile.bio,
-        role: {
-          id: profile.role.id,
-          name: profile.role.name,
-          nicename: profile.role.nicename,
+      const transformedProfiles = profiles.map(profile => {
+        // Ensure role is treated as a single object, not an array
+        const roleData = Array.isArray(profile.role) ? profile.role[0] : profile.role
+
+        return {
+          id: profile.id,
+          created_at: profile.created_at,
+          updated_at: profile.updated_at,
+          email: profile.email,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          avatar_url: profile.avatar_url,
+          phone_number: profile.phone_number,
+          address: profile.address,
+          bio: profile.bio,
+          role: {
+            id: roleData.id,
+            name: roleData.name,
+            nicename: roleData.nicename,
+          }
         }
-      })) as ProfileWithRole[]
+      }) as ProfileWithRole[]
 
       return transformedProfiles
     },
