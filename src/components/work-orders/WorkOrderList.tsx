@@ -22,7 +22,7 @@ export function WorkOrderList() {
         .from('work_orders')
         .select(`
           *,
-          assigned_bay:service_bays (
+          assigned_bay:service_bays!fk_work_orders_assigned_bay (
             name
           ),
           assigned_to:profiles!assigned_profile_id (
