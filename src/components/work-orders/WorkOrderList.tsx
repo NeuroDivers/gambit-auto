@@ -1,5 +1,5 @@
 
-import { Loader2, Pencil } from "lucide-react"
+import { Loader2, Pencil, FileText } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -16,9 +16,13 @@ import { useAdminStatus } from "@/hooks/useAdminStatus"
 import { WorkOrderFilters } from "./components/WorkOrderFilters"
 import { AssignmentSheet } from "./components/AssignmentSheet"
 import { useWorkOrderListData } from "./hooks/useWorkOrderListData"
+import { useNavigate } from "react-router-dom"
+import { toast } from "sonner"
+import { supabase } from "@/integrations/supabase/client"
 
 export function WorkOrderList() {
   const { isAdmin } = useAdminStatus()
+  const navigate = useNavigate()
   const {
     searchTerm,
     setSearchTerm,
@@ -38,6 +42,23 @@ export function WorkOrderList() {
     handleAssignUser,
     handleAssignBay
   } = useWorkOrderListData()
+
+  const handleCreateInvoice = async (workOrderId: string) => {
+    try {
+      const { data, error } = await supabase.rpc(
+        'create_invoice_from_work_order',
+        { work_order_id: workOrderId }
+      )
+
+      if (error) throw error
+
+      toast.success("Invoice created successfully")
+      navigate(`/admin/invoices/${data}/edit`)
+    } catch (error: any) {
+      console.error('Error creating invoice:', error)
+      toast.error("Failed to create invoice")
+    }
+  }
 
   if (isLoading) {
     return (
@@ -74,7 +95,7 @@ export function WorkOrderList() {
               <TableHead>Assigned To</TableHead>
               <TableHead>Bay</TableHead>
               <TableHead>Created</TableHead>
-              {isAdmin && <TableHead className="w-[100px]">Actions</TableHead>}
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -124,22 +145,31 @@ export function WorkOrderList() {
                   <TableCell>
                     {format(new Date(workOrder.created_at), 'MMM d, yyyy')}
                   </TableCell>
-                  {isAdmin && (
-                    <TableCell>
+                  <TableCell>
+                    <div className="flex justify-end gap-2">
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => setSelectedWorkOrder(workOrder)}
+                        onClick={() => handleCreateInvoice(workOrder.id)}
                       >
-                        <Pencil className="h-4 w-4" />
+                        <FileText className="h-4 w-4" />
                       </Button>
-                    </TableCell>
-                  )}
+                      {isAdmin && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setSelectedWorkOrder(workOrder)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={isAdmin ? 7 : 6} className="text-center">
+                <TableCell colSpan={7} className="text-center">
                   No work orders found
                 </TableCell>
               </TableRow>
