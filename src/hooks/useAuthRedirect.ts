@@ -23,8 +23,9 @@ export const useAuthRedirect = () => {
         if (error) throw error;
         
         if (session) {
+          console.log("Session found:", session);
           // Get user role from profiles
-          const { data: profileData } = await supabase
+          const { data: profileData, error: profileError } = await supabase
             .from("profiles")
             .select(`
               role:role_id (
@@ -36,10 +37,19 @@ export const useAuthRedirect = () => {
             .eq("id", session.user.id)
             .single();
 
+          if (profileError) {
+            console.error("Profile fetch error:", profileError);
+            throw profileError;
+          }
+
+          console.log("Profile data:", profileData);
+
           // Redirect based on role
-          if ((profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase() === 'client') {
+          if (profileData?.role?.name?.toLowerCase() === 'client') {
+            console.log("Redirecting to client dashboard");
             navigate("/client", { replace: true });
           } else {
+            console.log("Redirecting to admin dashboard");
             navigate("/admin", { replace: true });
           }
         }
@@ -56,8 +66,9 @@ export const useAuthRedirect = () => {
         console.log("Auth state changed:", event, session);
         
         if (event === 'SIGNED_IN' && session) {
+          console.log("User signed in, fetching profile");
           // Get user role
-          const { data: profileData } = await supabase
+          const { data: profileData, error: profileError } = await supabase
             .from("profiles")
             .select(`
               role:role_id (
@@ -69,14 +80,24 @@ export const useAuthRedirect = () => {
             .eq("id", session.user.id)
             .single();
 
+          if (profileError) {
+            console.error("Profile fetch error:", profileError);
+            throw profileError;
+          }
+
+          console.log("Profile data after sign in:", profileData);
+
           // Redirect based on role
-          if ((profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase() === 'client') {
+          if (profileData?.role?.name?.toLowerCase() === 'client') {
+            console.log("Redirecting to client dashboard");
             navigate("/client", { replace: true });
           } else {
+            console.log("Redirecting to admin dashboard");
             navigate("/admin", { replace: true });
           }
         } else if (event === 'SIGNED_OUT') {
-          navigate("/", { replace: true });
+          console.log("User signed out, redirecting to auth");
+          navigate("/auth", { replace: true });
         }
       }
     );
