@@ -5,11 +5,11 @@ export interface WorkOrder {
   last_name: string;
   email: string;
   phone_number: string;
-  contact_preference: "phone" | "email";  // Updated to strict union type
+  contact_preference: "phone" | "email";
   vehicle_make: string;
   vehicle_model: string;
   vehicle_year: number;
-  vehicle_serial?: string;
+  vehicle_serial: string;  // Changed from optional to required
   additional_notes?: string;
   status: string;
   created_at: string;
