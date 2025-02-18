@@ -1,25 +1,23 @@
-
-import * as React from "react"
-import { Button } from "@/components/ui/button"
-import { Plus, List, Calendar as CalendarIcon } from "lucide-react"
-import { Link } from "react-router-dom"
-import { WorkOrderList } from "@/components/work-orders/WorkOrderList"
-import { WorkOrderCalendar } from "@/components/work-orders/WorkOrderCalendar"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { BlockedDatesDialog } from "@/components/work-orders/calendar/BlockedDatesDialog"
-import { useAdminStatus } from "@/hooks/useAdminStatus"
-
+import * as React from "react";
+import { Button } from "@/components/ui/button";
+import { Plus, List, Calendar as CalendarIcon } from "lucide-react";
+import { Link } from "react-router-dom";
+import { WorkOrderList } from "@/components/work-orders/WorkOrderList";
+import { WorkOrderCalendar } from "@/components/work-orders/WorkOrderCalendar";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { BlockedDatesDialog } from "@/components/work-orders/calendar/BlockedDatesDialog";
+import { useAdminStatus } from "@/hooks/useAdminStatus";
 export default function WorkOrders() {
-  const [view, setView] = React.useState<"list" | "calendar">("list")
-  const { isAdmin } = useAdminStatus()
-
-  return (
-    <div>
-      <div className="space-y-6 p-6">
+  const [view, setView] = React.useState<"list" | "calendar">("list");
+  const {
+    isAdmin
+  } = useAdminStatus();
+  return <div>
+      <div className="space-y-6 p-6 px-0 py-[24px]">
         <div className="space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
           <h1 className="text-3xl font-bold">Work Orders</h1>
           <div className="flex items-center gap-4 flex-wrap">
-            <ToggleGroup type="single" value={view} onValueChange={(value) => value && setView(value as "list" | "calendar")}>
+            <ToggleGroup type="single" value={view} onValueChange={value => value && setView(value as "list" | "calendar")}>
               <ToggleGroupItem value="list" aria-label="List view">
                 <List className="h-4 w-4" />
               </ToggleGroupItem>
@@ -40,11 +38,8 @@ export default function WorkOrders() {
         {view === "list" && <WorkOrderList />}
       </div>
       
-      {view === "calendar" && (
-        <div className="w-full">
+      {view === "calendar" && <div className="w-full">
           <WorkOrderCalendar />
-        </div>
-      )}
-    </div>
-  )
+        </div>}
+    </div>;
 }
