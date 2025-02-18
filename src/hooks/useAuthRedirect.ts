@@ -9,8 +9,9 @@ interface Role {
   nicename: string;
 }
 
-interface ProfileResponse {
-  role: Role;
+interface Profile {
+  id: string;
+  role: Role;  // This is a single role object, not an array
 }
 
 export const useAuthRedirect = () => {
@@ -28,6 +29,7 @@ export const useAuthRedirect = () => {
           const { data: profileData, error: profileError } = await supabase
             .from("profiles")
             .select(`
+              id,
               role:role_id (
                 id,
                 name,
@@ -71,6 +73,7 @@ export const useAuthRedirect = () => {
           const { data: profileData, error: profileError } = await supabase
             .from("profiles")
             .select(`
+              id,
               role:role_id (
                 id,
                 name,
