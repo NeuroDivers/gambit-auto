@@ -111,7 +111,8 @@ export default function ServiceBays() {
           phone_number,
           address,
           bio,
-          role:roles!inner (
+          role_id,
+          roles (
             id,
             name,
             nicename
@@ -127,27 +128,19 @@ export default function ServiceBays() {
       console.log("Fetched profiles:", profiles)
 
       // Transform the data to match ProfileWithRole interface
-      const transformedProfiles = profiles.map(profile => {
-        const roleData = Array.isArray(profile.role) ? profile.role[0] : profile.role
-
-        return {
-          id: profile.id,
-          created_at: profile.created_at,
-          updated_at: profile.updated_at,
-          email: profile.email,
-          first_name: profile.first_name,
-          last_name: profile.last_name,
-          avatar_url: profile.avatar_url,
-          phone_number: profile.phone_number,
-          address: profile.address,
-          bio: profile.bio,
-          role: roleData ? {
-            id: roleData.id,
-            name: roleData.name,
-            nicename: roleData.nicename,
-          } : null
-        }
-      }).filter(profile => profile.role)
+      const transformedProfiles = profiles.map(profile => ({
+        id: profile.id,
+        created_at: profile.created_at,
+        updated_at: profile.updated_at,
+        email: profile.email,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        avatar_url: profile.avatar_url,
+        phone_number: profile.phone_number,
+        address: profile.address,
+        bio: profile.bio,
+        role: profile.roles
+      })).filter(profile => profile.role)
 
       console.log("Transformed profiles:", transformedProfiles)
       return transformedProfiles
@@ -565,13 +558,13 @@ export default function ServiceBays() {
                       </SheetHeader>
                       <div className="py-6">
                         <Select
+                          defaultValue={bay.assigned_profile_id || "none"}
                           onValueChange={(value) => 
                             assignUserMutation.mutate({ 
                               bayId: bay.id, 
                               userId: value === "none" ? null : value 
                             })
                           }
-                          defaultValue={bay.assigned_profile_id || "none"}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select user" />
@@ -580,7 +573,7 @@ export default function ServiceBays() {
                             <SelectItem value="none">None</SelectItem>
                             {assignableUsers?.map((user) => (
                               <SelectItem key={user.id} value={user.id}>
-                                {user.first_name} {user.last_name} ({user.role.nicename})
+                                {user.first_name} {user.last_name} ({user.role?.nicename || ''})
                               </SelectItem>
                             ))}
                           </SelectContent>
