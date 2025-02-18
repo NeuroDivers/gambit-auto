@@ -5,6 +5,7 @@ import QuoteRequests from "@/pages/client/QuoteRequests"
 import QuoteRequestDetails from "@/pages/client/QuoteRequestDetails"
 import Vehicles from "@/pages/client/Vehicles"
 import Invoices from "@/pages/client/Invoices"
+import ClientBookings from "@/pages/client/Bookings"
 import { RouteObject } from "react-router-dom"
 
 export const clientRoutes: RouteObject = {
@@ -33,7 +34,7 @@ export const clientRoutes: RouteObject = {
     },
     {
       path: "bookings",
-      element: <div>Bookings</div>,
+      element: <ClientBookings />,
     },
     {
       path: "payment-methods",
