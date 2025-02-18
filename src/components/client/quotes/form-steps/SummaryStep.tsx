@@ -1,6 +1,8 @@
 
 import { UseFormReturn } from "react-hook-form"
 import { QuoteRequestFormData } from "@/types/quote-request"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { InfoIcon } from "lucide-react"
 
 type SummaryStepProps = {
   form: UseFormReturn<QuoteRequestFormData>
@@ -15,6 +17,12 @@ export function SummaryStep({ form, services }: SummaryStepProps) {
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold mb-4">Review Your Quote Request</h2>
+        <Alert variant="warning" className="mb-4">
+          <InfoIcon className="h-4 w-4" />
+          <AlertDescription>
+            Prices shown are starting from estimates. Final pricing may vary based on vehicle condition and specific requirements.
+          </AlertDescription>
+        </Alert>
         <div className="space-y-4">
           <div className="space-y-2">
             <h3 className="text-base font-medium">Vehicle Information</h3>
@@ -60,8 +68,9 @@ export function SummaryStep({ form, services }: SummaryStepProps) {
                       </div>
                       <div className="text-sm text-right">
                         <div>Quantity: {item.quantity}</div>
-                        <div className="font-medium">
-                          Price: ${item.unit_price.toFixed(2)}
+                        <div>
+                          <span className="text-muted-foreground">Starting from: </span>
+                          <span className="font-medium">${item.unit_price.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
