@@ -49,6 +49,7 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
 
     if (vehicleId === 'new') {
       setUseNewVehicle(true)
+      setSaveVehicle(false) // Reset save vehicle toggle when switching to new vehicle
       form.setValue('vehicleInfo.make', '')
       form.setValue('vehicleInfo.model', '')
       form.setValue('vehicleInfo.year', 0)
@@ -63,11 +64,12 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
       form.setValue('vehicleInfo.year', selectedVehicle.year)
       form.setValue('vehicleInfo.vin', selectedVehicle.vin || '')
       setUseNewVehicle(false)
+      setSaveVehicle(false) // Reset save vehicle toggle when selecting existing vehicle
     }
   }
 
   const saveNewVehicle = async () => {
-    if (!saveVehicle) return
+    if (!saveVehicle || !useNewVehicle) return // Only save if both flags are true
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -208,33 +210,18 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
             )}
           />
 
-          {vehicles?.length === 0 ? (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">Save as Primary Vehicle</FormLabel>
-                <div className="text-sm text-muted-foreground">
-                  This will be saved as your primary vehicle
-                </div>
+          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <FormLabel className="text-base">Save Vehicle</FormLabel>
+              <div className="text-sm text-muted-foreground">
+                {vehicles?.length === 0 ? 'This will be saved as your primary vehicle' : 'Add this vehicle to your saved vehicles'}
               </div>
-              <Switch
-                checked={saveVehicle}
-                onCheckedChange={setSaveVehicle}
-              />
-            </FormItem>
-          ) : (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">Save Vehicle</FormLabel>
-                <div className="text-sm text-muted-foreground">
-                  Add this vehicle to your saved vehicles
-                </div>
-              </div>
-              <Switch
-                checked={saveVehicle}
-                onCheckedChange={setSaveVehicle}
-              />
-            </FormItem>
-          )}
+            </div>
+            <Switch
+              checked={saveVehicle}
+              onCheckedChange={setSaveVehicle}
+            />
+          </FormItem>
         </div>
       )}
     </div>

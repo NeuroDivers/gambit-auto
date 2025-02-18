@@ -19,12 +19,14 @@ type ServiceSelectionFieldProps = {
   services: ServiceItemType[]
   onServicesChange: (services: ServiceItemType[]) => void
   disabled?: boolean
+  isClient?: boolean
 }
 
 export function ServiceSelectionField({ 
-  services = [], // Provide default empty array
+  services = [],
   onServicesChange,
-  disabled = false 
+  disabled = false,
+  isClient = false
 }: ServiceSelectionFieldProps) {
   const { data: availableServices = [], isLoading } = useQuery({
     queryKey: ["services"],
@@ -34,7 +36,7 @@ export function ServiceSelectionField({
         .select("*")
         .eq("status", "active")
       if (error) throw error
-      return data || [] // Ensure we always return an array
+      return data || []
     }
   })
 
@@ -65,6 +67,7 @@ export function ServiceSelectionField({
   }
 
   const updatePrice = (index: number, price: number) => {
+    if (isClient) return // Prevent price updates for clients
     const newServices = [...services]
     newServices[index] = { ...newServices[index], unit_price: price }
     onServicesChange(newServices)
@@ -110,19 +113,21 @@ export function ServiceSelectionField({
                       disabled={disabled}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor={`price-${index}`}>Price</Label>
-                    <Input
-                      id={`price-${index}`}
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={service.unit_price}
-                      onChange={(e) => updatePrice(index, parseFloat(e.target.value) || 0)}
-                      className="w-24"
-                      disabled={disabled}
-                    />
-                  </div>
+                  {!isClient && (
+                    <div>
+                      <Label htmlFor={`price-${index}`}>Price</Label>
+                      <Input
+                        id={`price-${index}`}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={service.unit_price}
+                        onChange={(e) => updatePrice(index, parseFloat(e.target.value) || 0)}
+                        className="w-24"
+                        disabled={disabled}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
               <Button

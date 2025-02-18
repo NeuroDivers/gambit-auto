@@ -9,6 +9,7 @@ import ClientBookings from "@/pages/client/Bookings"
 import BookingDetails from "@/pages/client/BookingDetails"
 import { RouteObject } from "react-router-dom"
 import PublicInvoiceView from "@/pages/PublicInvoiceView"
+import ProfileSettings from "@/pages/admin/ProfileSettings"
 
 export const clientRoutes: RouteObject = {
   path: "/client",
@@ -49,6 +50,10 @@ export const clientRoutes: RouteObject = {
     {
       path: "payment-methods",
       element: <div>Payment Methods</div>,
+    },
+    {
+      path: "settings",
+      element: <ProfileSettings />,
     },
   ]
 }
