@@ -19,14 +19,16 @@ export function QuoteHeader({ quoteRequest, onBack }: QuoteHeaderProps) {
 
   return (
     <div className="flex items-center justify-between">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={onBack}
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Quote Requests
-      </Button>
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onBack}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <h2 className="text-2xl font-semibold">Quote Request Details</h2>
+      </div>
       <Badge variant={statusVariant[quoteRequest.status as keyof typeof statusVariant]}>
         {quoteRequest.status}
       </Badge>
