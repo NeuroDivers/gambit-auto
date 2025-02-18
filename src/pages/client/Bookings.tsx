@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client"
 import { Loader2, MapPin, CalendarClock } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Calendar } from "lucide-react"
+import { BookingDetailsDialog } from "@/components/client/bookings/BookingDetailsDialog"
+import { useState } from "react"
 
 interface WorkOrder {
   id: string
@@ -29,6 +31,8 @@ interface WorkOrder {
 }
 
 export default function ClientBookings() {
+  const [selectedBooking, setSelectedBooking] = useState<WorkOrder | null>(null)
+
   const { data: workOrders, isLoading } = useQuery<WorkOrder[]>({
     queryKey: ['client-work-orders'],
     queryFn: async () => {
@@ -125,7 +129,11 @@ export default function ClientBookings() {
             </h2>
             <div className="space-y-4">
               {orders?.map((order) => (
-                <Card key={order.id} className="overflow-hidden">
+                <Card 
+                  key={order.id} 
+                  className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => setSelectedBooking(order)}
+                >
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between gap-4">
                       <div className="space-y-4">
@@ -158,6 +166,12 @@ export default function ClientBookings() {
           </div>
         ))}
       </div>
+
+      <BookingDetailsDialog 
+        open={!!selectedBooking}
+        onOpenChange={(open) => !open && setSelectedBooking(null)}
+        booking={selectedBooking}
+      />
     </div>
   )
 }
