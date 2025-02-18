@@ -29,6 +29,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { ProfileWithRole } from "@/integrations/supabase/types/user-roles"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { UserAvatar } from "@/components/users/card/UserAvatar"
 
 interface AssignedProfile {
   id: string;
@@ -606,29 +607,47 @@ export default function ServiceBays() {
                       <SheetHeader>
                         <SheetTitle>Assign User to {bay.name}</SheetTitle>
                       </SheetHeader>
-                      <div className="py-6">
-                        <Select
-                          value={bay.assigned_profile_id || "none"}
-                          onValueChange={(value) => 
-                            assignUserMutation.mutate({ 
+                      <ScrollArea className="h-[calc(100vh-8rem)] mt-6">
+                        <div className="space-y-4 pr-4">
+                          <Card 
+                            className={`cursor-pointer transition-all hover:border-primary ${!bay.assigned_profile_id ? 'border-primary' : ''}`}  
+                            onClick={() => assignUserMutation.mutate({ 
                               bayId: bay.id, 
-                              userId: value === "none" ? null : value 
-                            })
-                          }
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select user" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">None</SelectItem>
-                            {assignableUsers?.map((user) => (
-                              <SelectItem key={user.id} value={user.id}>
-                                {user.first_name} {user.last_name} ({user.role?.nicename || ''})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                              userId: null 
+                            })}
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex items-center gap-2">
+                                <User className="h-8 w-8" />
+                                <div>
+                                  <p className="font-medium">Unassigned</p>
+                                  <p className="text-sm text-muted-foreground">Remove current assignment</p>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                          
+                          {assignableUsers?.map((user) => (
+                            <Card 
+                              key={user.id} 
+                              className={`cursor-pointer transition-all hover:border-primary ${bay.assigned_profile_id === user.id ? 'border-primary' : ''}`}
+                              onClick={() => assignUserMutation.mutate({ 
+                                bayId: bay.id, 
+                                userId: user.id 
+                              })}
+                            >
+                              <CardContent className="p-4">
+                                <UserAvatar
+                                  displayName={`${user.first_name || ''} ${user.last_name || ''}`}
+                                  email={user.email || ''}
+                                  showEmail={true}
+                                  role={user.role}
+                                />
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </ScrollArea>
                     </SheetContent>
                   </Sheet>
 
