@@ -78,13 +78,11 @@ export default function ServiceBays() {
     },
   })
 
-  // Fetch assignable users (profiles with roles that can be assigned to bays)
   const { data: assignableUsers } = useQuery({
     queryKey: ["assignable-users"],
     queryFn: async () => {
       console.log("Fetching assignable users...")
       
-      // First, get all roles that can be assigned to bays
       const { data: assignableRoles, error: rolesError } = await supabase
         .from('roles')
         .select('*')
@@ -97,7 +95,6 @@ export default function ServiceBays() {
 
       console.log("Assignable roles:", assignableRoles)
 
-      // Then get all profiles with these roles
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select(`
@@ -127,9 +124,7 @@ export default function ServiceBays() {
 
       console.log("Fetched profiles:", profiles)
 
-      // Transform the data to match ProfileWithRole interface
       const transformedProfiles = profiles.map(profile => {
-        // Extract the first role since we know there will only be one
         const roleData = Array.isArray(profile.roles) ? profile.roles[0] : profile.roles
 
         return {
@@ -156,7 +151,6 @@ export default function ServiceBays() {
     },
   })
 
-  // Fetch available services
   const { data: availableServices } = useQuery({
     queryKey: ["available-services"],
     queryFn: async () => {
@@ -170,7 +164,6 @@ export default function ServiceBays() {
     },
   })
 
-  // Fetch bay services
   const { data: bayServices } = useQuery({
     queryKey: ["bay-services", selectedBay?.id],
     queryFn: async () => {
@@ -186,7 +179,6 @@ export default function ServiceBays() {
     enabled: !!selectedBay,
   })
 
-  // Check permission when component mounts
   useEffect(() => {
     const checkAccess = async () => {
       const hasPermission = await checkPermission("service_bays", "page_access")
@@ -252,10 +244,26 @@ export default function ServiceBays() {
       isActive: boolean 
     }) => {
       if (isActive) {
-        const { error } = await supabase
+        const { data: existingService } = await supabase
           .from('bay_services')
-          .insert({ bay_id: bayId, service_id: serviceId })
-        if (error) throw error
+          .select('*')
+          .eq('bay_id', bayId)
+          .eq('service_id', serviceId)
+          .single()
+
+        if (!existingService) {
+          const { error } = await supabase
+            .from('bay_services')
+            .insert({ bay_id: bayId, service_id: serviceId })
+          if (error) throw error
+        } else {
+          const { error } = await supabase
+            .from('bay_services')
+            .update({ is_active: true })
+            .eq('bay_id', bayId)
+            .eq('service_id', serviceId)
+          if (error) throw error
+        }
       } else {
         const { error } = await supabase
           .from('bay_services')
@@ -548,7 +556,6 @@ export default function ServiceBays() {
                     </DialogContent>
                   </Dialog>
 
-                  {/* User Assignment Sheet */}
                   <Sheet open={isAssignUserOpen} onOpenChange={setIsAssignUserOpen}>
                     <SheetTrigger asChild>
                       <Button
@@ -591,7 +598,6 @@ export default function ServiceBays() {
                     </SheetContent>
                   </Sheet>
 
-                  {/* Service Management Sheet */}
                   <Sheet open={isManageServicesOpen} onOpenChange={setIsManageServicesOpen}>
                     <SheetTrigger asChild>
                       <Button
@@ -675,7 +681,6 @@ export default function ServiceBays() {
                     {bay.notes}
                   </div>
                 )}
-                {/* Display assigned user if any */}
                 {bay.profile && (
                   <div className="flex items-center gap-2 text-sm">
                     <User className="h-4 w-4" />
