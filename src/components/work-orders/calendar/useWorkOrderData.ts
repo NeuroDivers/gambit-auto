@@ -11,13 +11,17 @@ export function useWorkOrderData() {
     queryKey: ["clientRole"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return { isClient: false }
+      if (!user) {
+        console.log("No user found in clientRole check")
+        return { isClient: false }
+      }
 
-      const { data } = await supabase.rpc('has_role_by_name', {
+      const { data, error } = await supabase.rpc('has_role_by_name', {
         user_id: user.id,
         role_name: 'client'
       })
       
+      console.log("Client role check result:", { data, error })
       return { isClient: !!data }
     }
   })
@@ -26,7 +30,12 @@ export function useWorkOrderData() {
     queryKey: ["workOrders", roleData?.isClient],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("No user found")
+      if (!user) {
+        console.log("No user found in workOrders fetch")
+        throw new Error("No user found")
+      }
+
+      console.log("Fetching work orders for user:", user.id, "isClient:", roleData?.isClient)
 
       if (roleData?.isClient) {
         // Get client ID first
@@ -36,9 +45,10 @@ export function useWorkOrderData() {
           .eq("user_id", user.id)
           .maybeSingle()
 
+        console.log("Client lookup result:", { clientData, clientError })
+
         if (clientError) throw clientError
         if (!clientData) {
-          // Handle case where no client is found
           toast.error("No client account found. Please contact support.")
           navigate("/auth")
           return []
@@ -47,9 +57,16 @@ export function useWorkOrderData() {
         // Then get client's work orders
         const { data, error } = await supabase
           .from("work_orders")
-          .select("*")
+          .select(`
+            *,
+            service_bays (
+              name
+            )
+          `)
           .eq("client_id", clientData.id)
-          .order("created_at", { ascending: false })
+          .order("start_time", { ascending: true })
+
+        console.log("Work orders fetch result:", { data, error, clientId: clientData.id })
 
         if (error) throw error
         return data || []
@@ -57,8 +74,13 @@ export function useWorkOrderData() {
         // Admin view - get all work orders
         const { data, error } = await supabase
           .from("work_orders")
-          .select("*")
-          .order("created_at", { ascending: false })
+          .select(`
+            *,
+            service_bays (
+              name
+            )
+          `)
+          .order("start_time", { ascending: true })
 
         if (error) throw error
         return data || []
