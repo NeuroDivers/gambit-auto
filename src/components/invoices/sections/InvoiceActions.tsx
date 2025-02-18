@@ -1,17 +1,21 @@
+
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Mail, Printer } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
 type InvoiceActionsProps = {
   invoiceId?: string;
   onPrint: () => void;
 };
+
 export function InvoiceActions({
   invoiceId,
   onPrint
 }: InvoiceActionsProps) {
   const [isSending, setIsSending] = useState(false);
+
   const handleSendEmail = async () => {
     try {
       setIsSending(true);
@@ -31,7 +35,9 @@ export function InvoiceActions({
       setIsSending(false);
     }
   };
-  return <div className="flex justify-end gap-4">
+
+  return (
+    <div className="flex justify-end gap-4">
       <Button variant="outline" onClick={handleSendEmail} disabled={isSending} className="gap-2">
         <Mail className="h-4 w-4" />
         {isSending ? 'Sending...' : 'Send Email'}
@@ -41,5 +47,6 @@ export function InvoiceActions({
         Print Invoice
       </Button>
       
-    </div>;
+    </div>
+  );
 }

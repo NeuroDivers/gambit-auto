@@ -115,7 +115,7 @@ export function useInvoiceMutation(invoiceId?: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] })
       toast.success('Invoice updated successfully')
-      navigate('/invoices') // Add navigation to invoices list
+      navigate('/admin/invoices') // Fix: Changed from /invoices to /admin/invoices
     },
     onError: (error: any) => {
       console.error('Error updating invoice:', error)
