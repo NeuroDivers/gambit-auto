@@ -122,10 +122,10 @@ export function WorkOrderDetailsDialog({
           <div className="space-y-2">
             <Label>Assign Staff</Label>
             <Select
-              defaultValue={workOrder.assigned_profile_id || ""}
+              value={workOrder.assigned_profile_id || "none"}
               onValueChange={(value) => {
                 updateAssignmentsMutation.mutate({
-                  userId: value === "" ? null : value,
+                  userId: value === "none" ? null : value,
                   bayId: workOrder.assigned_bay_id
                 })
               }}
@@ -134,7 +134,7 @@ export function WorkOrderDetailsDialog({
                 <SelectValue placeholder="Select staff member" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Unassigned</SelectItem>
+                <SelectItem value="none">Unassigned</SelectItem>
                 {assignableUsers?.map((user) => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.first_name} {user.last_name}
@@ -148,10 +148,10 @@ export function WorkOrderDetailsDialog({
           <div className="space-y-2">
             <Label>Assign Service Bay</Label>
             <Select
-              defaultValue={workOrder.assigned_bay_id || ""}
+              value={workOrder.assigned_bay_id || "none"}
               onValueChange={(value) => {
                 updateAssignmentsMutation.mutate({
-                  bayId: value === "" ? null : value,
+                  bayId: value === "none" ? null : value,
                   userId: workOrder.assigned_profile_id
                 })
               }}
@@ -160,7 +160,7 @@ export function WorkOrderDetailsDialog({
                 <SelectValue placeholder="Select service bay" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Unassigned</SelectItem>
+                <SelectItem value="none">Unassigned</SelectItem>
                 {serviceBays?.map((bay) => (
                   <SelectItem key={bay.id} value={bay.id}>
                     {bay.name}
