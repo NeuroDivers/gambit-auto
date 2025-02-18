@@ -8,6 +8,7 @@ import Invoices from "@/pages/client/Invoices"
 import ClientBookings from "@/pages/client/Bookings"
 import BookingDetails from "@/pages/client/BookingDetails"
 import { RouteObject } from "react-router-dom"
+import PublicInvoiceView from "@/pages/PublicInvoiceView"
 
 export const clientRoutes: RouteObject = {
   path: "/client",
@@ -28,6 +29,10 @@ export const clientRoutes: RouteObject = {
     {
       path: "invoices",
       element: <Invoices />,
+    },
+    {
+      path: "invoices/:id",
+      element: <PublicInvoiceView />,
     },
     {
       path: "vehicles",
