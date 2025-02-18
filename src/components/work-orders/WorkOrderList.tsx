@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -15,9 +16,6 @@ import { format } from "date-fns"
 import { WorkOrder } from "./types"
 import { Loader2, Search } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
-import { Edit } from "lucide-react"
-import { Link } from "react-router-dom"
 
 export function WorkOrderList() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -114,7 +112,6 @@ export function WorkOrderList() {
               <TableHead>Assigned To</TableHead>
               <TableHead>Bay</TableHead>
               <TableHead>Created</TableHead>
-              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -154,18 +151,11 @@ export function WorkOrderList() {
                   <TableCell>
                     {format(new Date(workOrder.created_at), 'MMM d, yyyy')}
                   </TableCell>
-                  <TableCell>
-                    <Link to={`/admin/work-orders/${workOrder.id}/edit`}>
-                      <Button variant="ghost" size="icon">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">
+                <TableCell colSpan={6} className="text-center">
                   No work orders found
                 </TableCell>
               </TableRow>

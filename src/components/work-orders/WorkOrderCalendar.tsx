@@ -1,10 +1,13 @@
 
 import { useState } from "react";
-import { startOfDay, endOfDay } from "date-fns";
+import { addMonths, subMonths, startOfDay, endOfDay } from "date-fns";
 import { CalendarGrid } from "./calendar/CalendarGrid";
+import { CalendarHeader } from "./calendar/CalendarHeader";
 import { useWorkOrderData } from "./calendar/useWorkOrderData";
 import { StatusLegend } from "./StatusLegend";
 import { CalendarDayView } from "./calendar/CalendarDayView";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Calendar as CalendarIcon, Clock } from "lucide-react";
 import { BlockedDatesList } from "./calendar/BlockedDatesList";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { Separator } from "@/components/ui/separator";
@@ -12,6 +15,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 export function WorkOrderCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [view, setView] = useState<'month' | 'day'>('month');
   const {
     data: workOrders = [],
     isLoading
@@ -50,9 +54,19 @@ export function WorkOrderCalendar() {
 
   return <section className="">
       <div className="space-y-6 p-6 px-0">
+        <div className="flex items-center justify-end gap-4">
+          <ToggleGroup type="single" value={view} onValueChange={value => value && setView(value as 'month' | 'day')}>
+            <ToggleGroupItem value="month" aria-label="Month view">
+              <CalendarIcon className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="day" aria-label="Day view">
+              <Clock className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
         {!isMobile && <StatusLegend statusCounts={statusCounts} />}
         <div className="space-y-4">
-          <CalendarGrid currentDate={currentDate} workOrders={workOrders} onDateChange={handleDateChange} />
+          {view === 'month' ? <CalendarGrid currentDate={currentDate} workOrders={workOrders} onDateChange={handleDateChange} /> : <CalendarDayView currentDate={currentDate} workOrders={getWorkOrdersForDay()} />}
         </div>
         {isAdmin && <div className="pt-8 space-y-4">
             <Separator />
