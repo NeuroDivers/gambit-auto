@@ -5,7 +5,7 @@ export interface WorkOrder {
   last_name: string;
   email: string;
   phone_number: string;
-  contact_preference: string;
+  contact_preference: "phone" | "email";  // Updated to strict union type
   vehicle_make: string;
   vehicle_model: string;
   vehicle_year: number;
