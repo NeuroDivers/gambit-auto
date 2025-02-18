@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Database } from "@/integrations/supabase/types/database";
 
 interface Role {
   id: string;
@@ -9,9 +10,9 @@ interface Role {
   nicename: string;
 }
 
-interface Profile {
+type ProfileWithRole = {
   id: string;
-  role: Role;  // This is a single role object, not an array
+  role: Role;
 }
 
 export const useAuthRedirect = () => {
@@ -26,28 +27,28 @@ export const useAuthRedirect = () => {
         if (session) {
           console.log("Session found:", session);
           // Get user role from profiles
-          const { data: profileData, error: profileError } = await supabase
+          const { data, error: profileError } = await supabase
             .from("profiles")
             .select(`
               id,
-              role:role_id (
+              role:role_id!inner (
                 id,
                 name,
                 nicename
               )
             `)
             .eq("id", session.user.id)
-            .single();
+            .single<ProfileWithRole>();
 
           if (profileError) {
             console.error("Profile fetch error:", profileError);
             throw profileError;
           }
 
-          console.log("Profile data:", profileData);
+          console.log("Profile data:", data);
 
           // Redirect based on role
-          if (profileData?.role?.name?.toLowerCase() === 'client') {
+          if (data?.role?.name?.toLowerCase() === 'client') {
             console.log("Redirecting to client dashboard");
             navigate("/client", { replace: true });
           } else {
@@ -70,28 +71,28 @@ export const useAuthRedirect = () => {
         if (event === 'SIGNED_IN' && session) {
           console.log("User signed in, fetching profile");
           // Get user role
-          const { data: profileData, error: profileError } = await supabase
+          const { data, error: profileError } = await supabase
             .from("profiles")
             .select(`
               id,
-              role:role_id (
+              role:role_id!inner (
                 id,
                 name,
                 nicename
               )
             `)
             .eq("id", session.user.id)
-            .single();
+            .single<ProfileWithRole>();
 
           if (profileError) {
             console.error("Profile fetch error:", profileError);
             throw profileError;
           }
 
-          console.log("Profile data after sign in:", profileData);
+          console.log("Profile data after sign in:", data);
 
           // Redirect based on role
-          if (profileData?.role?.name?.toLowerCase() === 'client') {
+          if (data?.role?.name?.toLowerCase() === 'client') {
             console.log("Redirecting to client dashboard");
             navigate("/client", { replace: true });
           } else {
