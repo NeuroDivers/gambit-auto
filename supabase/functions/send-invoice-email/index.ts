@@ -1,7 +1,9 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts"
+import { Resend } from "npm:resend@2.0.0"
+
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"))
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -42,48 +44,33 @@ serve(async (req) => {
       .select('*')
       .single()
 
-    // Configure SMTP client
-    const client = new SMTPClient({
-      connection: {
-        hostname: Deno.env.get('SMTP_HOST') || '',
-        port: Number(Deno.env.get('SMTP_PORT')) || 587,
-        tls: true,
-        auth: {
-          username: Deno.env.get('SMTP_USER') || '',
-          password: Deno.env.get('SMTP_PASSWORD') || '',
-        },
-      },
-    })
-
-    // Use the calculated values from the invoice record
-    const total = invoice.total || 0
-    const subtotal = invoice.subtotal || 0
-    const gstAmount = invoice.gst_amount || 0
-    const qstAmount = invoice.qst_amount || 0
-
-    // Create email content
+    // Create email content with invoice details
     const publicInvoiceUrl = `${Deno.env.get('PUBLIC_APP_URL')}/i/${invoiceId}`
     const emailContent = `
       <h1>Invoice ${invoice.invoice_number}</h1>
       <p>Dear ${invoice.customer_first_name} ${invoice.customer_last_name},</p>
-      <p>Please find your invoice attached below:</p>
-      <p><a href="${publicInvoiceUrl}">View Invoice</a></p>
-      <p>Subtotal: $${subtotal.toFixed(2)}</p>
-      <p>GST (${invoice.gst_number}): $${gstAmount.toFixed(2)}</p>
-      <p>QST (${invoice.qst_number}): $${qstAmount.toFixed(2)}</p>
-      <p>Total Amount: $${total.toFixed(2)}</p>
+      <p>Please find your invoice details below:</p>
+      <p><a href="${publicInvoiceUrl}">View Invoice Online</a></p>
+      <div style="margin: 20px 0;">
+        <h2>Invoice Summary</h2>
+        <p>Subtotal: $${invoice.subtotal.toFixed(2)}</p>
+        <p>GST (${invoice.gst_number}): $${invoice.gst_amount.toFixed(2)}</p>
+        <p>QST (${invoice.qst_number}): $${invoice.qst_amount.toFixed(2)}</p>
+        <p><strong>Total Amount: $${invoice.total.toFixed(2)}</strong></p>
+      </div>
       <p>If you have any questions, please don't hesitate to contact us.</p>
       <p>Best regards,<br>${businessProfile?.company_name || 'The Team'}</p>
     `
 
-    // Send email
-    await client.send({
-      from: businessProfile?.company_email || Deno.env.get('SMTP_USER') || '',
+    // Send email using Resend
+    const emailResponse = await resend.emails.send({
+      from: businessProfile?.company_email || 'onboarding@resend.dev',
       to: invoice.customer_email,
       subject: `Invoice ${invoice.invoice_number} from ${businessProfile?.company_name || 'Us'}`,
-      content: "Invoice",
       html: emailContent,
     })
+
+    console.log('Email sent successfully:', emailResponse)
 
     // Update invoice status to sent if it was in draft
     if (invoice.status === 'draft') {
