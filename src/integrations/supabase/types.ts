@@ -1088,6 +1088,10 @@ export type Database = {
           accent_color: string
           accent_hover: string
           background: string
+          button_primary: string
+          button_primary_hover: string
+          button_secondary: string
+          button_secondary_hover: string
           created_at: string
           foreground: string
           id: string
@@ -1100,6 +1104,10 @@ export type Database = {
           accent_color?: string
           accent_hover?: string
           background?: string
+          button_primary?: string
+          button_primary_hover?: string
+          button_secondary?: string
+          button_secondary_hover?: string
           created_at?: string
           foreground?: string
           id?: string
@@ -1112,6 +1120,10 @@ export type Database = {
           accent_color?: string
           accent_hover?: string
           background?: string
+          button_primary?: string
+          button_primary_hover?: string
+          button_secondary?: string
+          button_secondary_hover?: string
           created_at?: string
           foreground?: string
           id?: string
