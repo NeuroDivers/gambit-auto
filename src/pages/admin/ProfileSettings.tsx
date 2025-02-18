@@ -7,13 +7,21 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useTheme } from "next-themes";
 
 export default function ProfileSettings() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, systemTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   // Wait for component to mount to avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Handle theme change
+  const handleThemeChange = (value: string) => {
+    setTheme(value);
+    // Force a re-render after theme change
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(value === 'system' ? systemTheme || 'light' : value);
+  };
 
   if (!mounted) {
     return null;
@@ -34,7 +42,7 @@ export default function ProfileSettings() {
           <CardContent>
             <RadioGroup 
               value={theme} 
-              onValueChange={setTheme}
+              onValueChange={handleThemeChange}
               className="grid grid-cols-3 gap-4"
             >
               <div>
