@@ -96,7 +96,7 @@ export default function ServiceBays() {
           phone_number,
           address,
           bio,
-          role:roles!profiles_role_id_fkey (
+          role:roles!inner (
             id,
             name,
             nicename
@@ -133,7 +133,7 @@ export default function ServiceBays() {
             nicename: roleData.nicename,
           } : null
         }
-      }).filter(profile => profile.role) as ProfileWithRole[] // Only include profiles with roles
+      }).filter(profile => profile.role) as ProfileWithRole[]
 
       console.log("Transformed profiles:", transformedProfiles)
       return transformedProfiles
