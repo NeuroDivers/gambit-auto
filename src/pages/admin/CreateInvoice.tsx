@@ -96,7 +96,7 @@ export default function CreateInvoice() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/admin/invoices")}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
