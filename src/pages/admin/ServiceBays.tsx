@@ -266,6 +266,34 @@ export default function ServiceBays() {
     }
   })
 
+  const { data: availableServices } = useQuery({
+    queryKey: ["available-services"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('service_types')
+        .select('*')
+        .eq('status', 'active')
+
+      if (error) throw error
+      return data
+    },
+  })
+
+  const { data: bayServices } = useQuery({
+    queryKey: ["bay-services", selectedBay?.id],
+    queryFn: async () => {
+      if (!selectedBay) return []
+      const { data, error } = await supabase
+        .from('bay_services')
+        .select('*')
+        .eq('bay_id', selectedBay.id)
+
+      if (error) throw error
+      return data
+    },
+    enabled: !!selectedBay,
+  })
+
   useEffect(() => {
     const checkAccess = async () => {
       const hasPermission = await checkPermission("service_bays", "page_access")
