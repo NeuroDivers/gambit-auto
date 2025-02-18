@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Plus, Check, X } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import {
   Table,
@@ -267,15 +267,35 @@ export default function Quotes() {
                         {request.vehicle_year} {request.vehicle_make} {request.vehicle_model}
                       </TableCell>
                       <TableCell>
-                        <Badge 
-                          variant={
-                            request.status === 'accepted' ? 'default' : 
-                            request.status === 'rejected' ? 'destructive' : 
-                            'secondary'
-                          }
-                        >
-                          {request.status}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            variant={
+                              request.status === 'accepted' ? 'default' : 
+                              request.status === 'rejected' ? 'destructive' : 
+                              'secondary'
+                            }
+                          >
+                            {request.status}
+                          </Badge>
+                          {request.client_response && (
+                            <Badge 
+                              variant={request.client_response === "accepted" ? "success" : "destructive"}
+                              className="flex items-center gap-1"
+                            >
+                              {request.client_response === "accepted" ? (
+                                <>
+                                  <Check className="h-3 w-3" />
+                                  Accepted
+                                </>
+                              ) : (
+                                <>
+                                  <X className="h-3 w-3" />
+                                  Rejected
+                                </>
+                              )}
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="font-mono">
