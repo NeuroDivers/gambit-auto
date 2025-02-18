@@ -162,7 +162,7 @@ export default function ServiceBays() {
         .from('service_bays')
         .update({ 
           assigned_profile_id: userId,
-          status: userId ? 'occupied' : 'available'
+          status: userId ? 'in_use' : 'available'
         })
         .eq('id', bayId)
 
