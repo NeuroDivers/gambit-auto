@@ -19,6 +19,9 @@ export default {
 			}
 		},
 		extend: {
+			maxWidth: {
+				'sm': '54rem'
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

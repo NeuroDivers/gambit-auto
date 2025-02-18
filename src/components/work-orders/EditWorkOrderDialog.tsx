@@ -35,7 +35,7 @@ export function EditWorkOrderDialog({ workOrder, open, onOpenChange }: EditWorkO
     >
       <SheetContent 
         side="right"
-        className="w-[calc(100vw-256px)] max-w-[calc(100vw-256px)] p-0"
+        className="sm:max-w-sm p-0"
         onPointerDownOutside={(e) => {
           if (isSubmitting) {
             e.preventDefault()
