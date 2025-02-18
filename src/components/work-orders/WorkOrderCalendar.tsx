@@ -6,6 +6,8 @@ import { CalendarGrid } from "./calendar/CalendarGrid"
 import { useWorkOrderData } from "./calendar/useWorkOrderData"
 import { LoadingScreen } from "../shared/LoadingScreen"
 import { CreateWorkOrderDialog } from "./CreateWorkOrderDialog"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+import { Calendar } from "lucide-react"
 
 interface WorkOrderCalendarProps {
   clientView?: boolean;
@@ -30,6 +32,18 @@ export function WorkOrderCalendar({ clientView = false }: WorkOrderCalendarProps
 
   if (isLoading) {
     return <LoadingScreen />
+  }
+
+  if (workOrders.length === 0 && clientView) {
+    return (
+      <Alert>
+        <Calendar className="h-4 w-4" />
+        <AlertTitle>No Bookings Found</AlertTitle>
+        <AlertDescription>
+          You don't have any bookings scheduled at the moment.
+        </AlertDescription>
+      </Alert>
+    )
   }
 
   return (

@@ -39,6 +39,8 @@ export function WorkOrderCard({ workOrder, className }: WorkOrderCardProps) {
 
   const isMultiDay = workOrder.duration && workOrder.duration > 1
 
+  console.log("Rendering work order card:", workOrder)
+
   return (
     <>
       {(workOrder.isStart || !isMultiDay) && (
@@ -73,6 +75,11 @@ export function WorkOrderCard({ workOrder, className }: WorkOrderCardProps) {
           {workOrder.start_time && (
             <div className="text-[10px] opacity-70">
               {format(new Date(workOrder.start_time), 'h:mm a')}
+            </div>
+          )}
+          {workOrder.service_bays?.name && (
+            <div className="text-[10px] opacity-70">
+              Bay: {workOrder.service_bays.name}
             </div>
           )}
         </div>

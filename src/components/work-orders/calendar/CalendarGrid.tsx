@@ -20,6 +20,12 @@ export function CalendarGrid({ currentDate, workOrders, onDateChange }: Calendar
   const today = startOfToday()
   const effectiveDate = currentDate < today ? today : currentDate
 
+  console.log("Calendar Grid Props:", { 
+    currentDate: effectiveDate, 
+    workOrdersCount: workOrders.length,
+    workOrders
+  })
+
   if (isMobile) {
     return (
       <MobileCalendarView
