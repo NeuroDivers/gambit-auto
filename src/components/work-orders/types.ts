@@ -26,8 +26,8 @@ export interface WorkOrder {
     first_name: string;
     last_name: string;
   };
-  address: string;  // Changed from optional to required
-  timeframe?: string;
+  address: string;
+  timeframe?: "flexible" | "asap" | "within_week" | "within_month";  // Updated to use specific union type
 }
 
 export interface ServiceItemType {
@@ -48,7 +48,7 @@ export interface WorkOrderFormValues {
   vehicle_year: number;
   vehicle_serial: string;
   additional_notes?: string;
-  address: string;  // Also making required here for consistency
+  address: string;
   start_time: Date | null;
   estimated_duration: number | null;
   end_time: Date | null;
