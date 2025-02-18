@@ -37,7 +37,7 @@ export function EditInvoiceForm({
 }: EditInvoiceFormProps) {
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-[calc(100vh-8rem)] overflow-hidden">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-screen">
         <div className="flex-1 overflow-y-auto space-y-6 px-4 pb-4">
           <Card>
             <CardHeader>
