@@ -17,7 +17,7 @@ export const UserAvatar = ({ displayName, email, showEmail, role }: UserAvatarPr
       </div>
       <div className="space-y-1">
         <p className="font-medium text-card-foreground">{displayName}</p>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col space-y-1">
           {showEmail && (
             <p className="text-sm text-muted-foreground">{email}</p>
           )}
