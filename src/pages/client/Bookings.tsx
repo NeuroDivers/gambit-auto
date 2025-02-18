@@ -47,7 +47,7 @@ export default function ClientBookings() {
         .from('work_orders')
         .select(`
           *,
-          service_bays (
+          service_bays!fk_work_orders_assigned_bay (
             name
           ),
           work_order_services (
