@@ -936,7 +936,15 @@ export type Database = {
           status?: Database["public"]["Enums"]["bay_status"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_service_bays_assigned_profile"
+            columns: ["assigned_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       service_packages: {
         Row: {

@@ -89,12 +89,6 @@ export default function ServiceBays() {
           email,
           first_name,
           last_name,
-          created_at,
-          updated_at,
-          avatar_url,
-          phone_number,
-          address,
-          bio,
           role:role_id (
             id,
             name,
@@ -105,17 +99,7 @@ export default function ServiceBays() {
 
       if (error) throw error
 
-      // Transform the data to match ProfileWithRole interface
-      const transformedProfiles = profiles.map(profile => ({
-        ...profile,
-        role: {
-          id: profile.role.id,
-          name: profile.role.name,
-          nicename: profile.role.nicename,
-        }
-      })) as ProfileWithRole[]
-
-      return transformedProfiles
+      return profiles as ProfileWithRole[]
     },
   })
 
