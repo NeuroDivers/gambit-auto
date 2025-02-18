@@ -1,23 +1,17 @@
+
 import { useParams, useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { Loader2, ArrowLeft } from "lucide-react"
-import { format } from "date-fns"
 import { PageTitle } from "@/components/shared/PageTitle"
 import { InvoiceActions } from "@/components/invoices/sections/InvoiceActions"
 import { useReactToPrint } from 'react-to-print'
 import { useRef } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CustomerInfoCard } from "@/components/invoices/sections/CustomerInfoCard"
+import { VehicleInfoCard } from "@/components/invoices/sections/VehicleInfoCard"
+import { InvoiceDetailsCard } from "@/components/invoices/sections/InvoiceDetailsCard"
 
 export default function InvoiceDetails() {
   const { id } = useParams()
@@ -111,128 +105,34 @@ export default function InvoiceDetails() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Customer Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div>
-              <p className="font-medium">Name</p>
-              <p>{invoice.customer_first_name} {invoice.customer_last_name}</p>
-            </div>
-            <div>
-              <p className="font-medium">Email</p>
-              <p>{invoice.customer_email}</p>
-            </div>
-            <div>
-              <p className="font-medium">Phone</p>
-              <p>{invoice.customer_phone}</p>
-            </div>
-            {invoice.customer_address && (
-              <div>
-                <p className="font-medium">Address</p>
-                <p>{invoice.customer_address}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <CustomerInfoCard
+          firstName={invoice.customer_first_name}
+          lastName={invoice.customer_last_name}
+          email={invoice.customer_email}
+          phone={invoice.customer_phone}
+          address={invoice.customer_address}
+        />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Vehicle Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div>
-              <p className="font-medium">Vehicle</p>
-              <p>{invoice.vehicle_year} {invoice.vehicle_make} {invoice.vehicle_model}</p>
-            </div>
-            {invoice.vehicle_vin && (
-              <div>
-                <p className="font-medium">VIN</p>
-                <p>{invoice.vehicle_vin}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <VehicleInfoCard
+          year={invoice.vehicle_year}
+          make={invoice.vehicle_make}
+          model={invoice.vehicle_model}
+          vin={invoice.vehicle_vin}
+        />
 
-        <Card className="md:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Invoice Details</CardTitle>
-            <Badge 
-              variant={
-                invoice.status === 'paid' ? 'default' : 
-                invoice.status === 'overdue' ? 'destructive' : 
-                'secondary'
-              }
-            >
-              {invoice.status}
-            </Badge>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4" ref={printRef}>
-              <div>
-                <p className="font-medium mb-2">Services</p>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Service</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead className="text-right">Quantity</TableHead>
-                      <TableHead className="text-right">Price</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {invoice.invoice_items?.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.service_name}</TableCell>
-                        <TableCell>{item.description}</TableCell>
-                        <TableCell className="text-right">{item.quantity}</TableCell>
-                        <TableCell className="text-right">${item.unit_price.toFixed(2)}</TableCell>
-                        <TableCell className="text-right">${(item.quantity * item.unit_price).toFixed(2)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                  <TableBody className="border-t-2">
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-right font-medium">Subtotal</TableCell>
-                      <TableCell className="text-right">${invoice.subtotal.toFixed(2)}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-right font-medium">GST</TableCell>
-                      <TableCell className="text-right">${invoice.gst_amount.toFixed(2)}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-right font-medium">QST</TableCell>
-                      <TableCell className="text-right">${invoice.qst_amount.toFixed(2)}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-right font-medium">Total</TableCell>
-                      <TableCell className="text-right font-bold">${invoice.total.toFixed(2)}</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-              
-              {invoice.notes && (
-                <div>
-                  <p className="font-medium mb-2">Notes</p>
-                  <p className="text-muted-foreground">{invoice.notes}</p>
-                </div>
-              )}
-
-              <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-                <p>Created: {format(new Date(invoice.created_at), 'PPP')}</p>
-                {invoice.due_date && (
-                  <p>Due Date: {format(new Date(invoice.due_date), 'PPP')}</p>
-                )}
-                {invoice.updated_at && (
-                  <p>Last Updated: {format(new Date(invoice.updated_at), 'PPP')}</p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <InvoiceDetailsCard
+          ref={printRef}
+          status={invoice.status}
+          items={invoice.invoice_items}
+          subtotal={invoice.subtotal}
+          gstAmount={invoice.gst_amount}
+          qstAmount={invoice.qst_amount}
+          total={invoice.total}
+          notes={invoice.notes}
+          createdAt={invoice.created_at}
+          dueDate={invoice.due_date}
+          updatedAt={invoice.updated_at}
+        />
       </div>
 
       <div className="flex justify-end gap-4">
