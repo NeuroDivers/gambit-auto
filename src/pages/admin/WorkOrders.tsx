@@ -14,32 +14,36 @@ export default function WorkOrders() {
   const { isAdmin } = useAdminStatus()
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
-        <h1 className="text-3xl font-bold">Work Orders</h1>
-        <div className="flex items-center gap-4 flex-wrap">
-          <ToggleGroup type="single" value={view} onValueChange={(value) => value && setView(value as "list" | "calendar")}>
-            <ToggleGroupItem value="list" aria-label="List view">
-              <List className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="calendar" aria-label="Calendar view">
-              <CalendarIcon className="h-4 w-4" />
-            </ToggleGroupItem>
-          </ToggleGroup>
-          {isAdmin && <BlockedDatesDialog />}
-          <Link to="/admin/work-orders/create">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              New Work Order
-            </Button>
-          </Link>
+    <div>
+      <div className="space-y-6 p-6">
+        <div className="space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
+          <h1 className="text-3xl font-bold">Work Orders</h1>
+          <div className="flex items-center gap-4 flex-wrap">
+            <ToggleGroup type="single" value={view} onValueChange={(value) => value && setView(value as "list" | "calendar")}>
+              <ToggleGroupItem value="list" aria-label="List view">
+                <List className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="calendar" aria-label="Calendar view">
+                <CalendarIcon className="h-4 w-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
+            {isAdmin && <BlockedDatesDialog />}
+            <Link to="/admin/work-orders/create">
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                New Work Order
+              </Button>
+            </Link>
+          </div>
         </div>
+        
+        {view === "list" && <WorkOrderList />}
       </div>
       
-      {view === "list" ? (
-        <WorkOrderList />
-      ) : (
-        <WorkOrderCalendar />
+      {view === "calendar" && (
+        <div className="w-full">
+          <WorkOrderCalendar />
+        </div>
       )}
     </div>
   )
