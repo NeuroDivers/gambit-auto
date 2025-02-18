@@ -128,19 +128,28 @@ export default function ServiceBays() {
       console.log("Fetched profiles:", profiles)
 
       // Transform the data to match ProfileWithRole interface
-      const transformedProfiles = profiles.map(profile => ({
-        id: profile.id,
-        created_at: profile.created_at,
-        updated_at: profile.updated_at,
-        email: profile.email,
-        first_name: profile.first_name,
-        last_name: profile.last_name,
-        avatar_url: profile.avatar_url,
-        phone_number: profile.phone_number,
-        address: profile.address,
-        bio: profile.bio,
-        role: profile.roles
-      })).filter(profile => profile.role)
+      const transformedProfiles = profiles.map(profile => {
+        // Extract the first role since we know there will only be one
+        const roleData = Array.isArray(profile.roles) ? profile.roles[0] : profile.roles
+
+        return {
+          id: profile.id,
+          created_at: profile.created_at,
+          updated_at: profile.updated_at,
+          email: profile.email,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          avatar_url: profile.avatar_url,
+          phone_number: profile.phone_number,
+          address: profile.address,
+          bio: profile.bio,
+          role: roleData ? {
+            id: roleData.id,
+            name: roleData.name,
+            nicename: roleData.nicename,
+          } : null
+        }
+      }).filter(profile => profile.role)
 
       console.log("Transformed profiles:", transformedProfiles)
       return transformedProfiles
