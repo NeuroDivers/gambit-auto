@@ -15,9 +15,9 @@ export default function WorkOrders() {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+      <div className="space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
         <h1 className="text-3xl font-bold">Work Orders</h1>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           <ToggleGroup type="single" value={view} onValueChange={(value) => value && setView(value as "list" | "calendar")}>
             <ToggleGroupItem value="list" aria-label="List view">
               <List className="h-4 w-4" />
