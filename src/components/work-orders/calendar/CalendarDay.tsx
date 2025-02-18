@@ -1,5 +1,5 @@
 
-import { format, isToday, setHours, isWithinInterval } from "date-fns"
+import { format, isToday, setHours, isWithinInterval, isPast, startOfDay } from "date-fns"
 import { WorkOrder } from "../types"
 import { cn } from "@/lib/utils"
 import { WorkOrderCard } from "./WorkOrderCard"
@@ -20,6 +20,7 @@ type CalendarDayProps = {
 export function CalendarDay({ date, workOrders, isCurrentMonth, blockedDates = [] }: CalendarDayProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const defaultStartTime = setHours(date, 8)
+  const isPastDate = isPast(startOfDay(date)) && !isToday(date)
 
   const isDateBlocked = blockedDates.some(block => {
     const startDate = new Date(block.start_date)
@@ -30,6 +31,10 @@ export function CalendarDay({ date, workOrders, isCurrentMonth, blockedDates = [
   const handleDayClick = (e: React.MouseEvent) => {
     // Only open create dialog if clicking directly on the day cell
     if (e.target === e.currentTarget) {
+      if (isPastDate) {
+        toast.error("Cannot create work orders for past dates")
+        return
+      }
       if (isDateBlocked) {
         toast.error("This date is blocked for bookings")
         return
@@ -55,7 +60,8 @@ export function CalendarDay({ date, workOrders, isCurrentMonth, blockedDates = [
           "hover:bg-primary/5 cursor-pointer group",
           !isCurrentMonth && "opacity-50 bg-muted/20",
           isToday(date) && "ring-2 ring-primary bg-primary/5",
-          isDateBlocked && "bg-destructive/5 hover:bg-destructive/10"
+          isDateBlocked && "bg-destructive/5 hover:bg-destructive/10",
+          isPastDate && "cursor-not-allowed hover:bg-background/50"
         )}
         onClick={handleDayClick}
       >
@@ -69,7 +75,7 @@ export function CalendarDay({ date, workOrders, isCurrentMonth, blockedDates = [
           )}>
             {format(date, 'd')}
           </span>
-          {isCurrentMonth && !isDateBlocked && (
+          {isCurrentMonth && !isDateBlocked && !isPastDate && (
             <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
               Click to add
             </span>
