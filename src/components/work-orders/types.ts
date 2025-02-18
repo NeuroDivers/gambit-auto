@@ -27,7 +27,7 @@ export interface WorkOrder {
     last_name: string;
   };
   address: string;
-  timeframe?: "flexible" | "asap" | "within_week" | "within_month";  // Updated to use specific union type
+  timeframe: "flexible" | "asap" | "within_week" | "within_month";  // Removed optional modifier (?)
 }
 
 export interface ServiceItemType {
