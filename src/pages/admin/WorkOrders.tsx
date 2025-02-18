@@ -1,14 +1,14 @@
 
+import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Plus, List, Calendar as CalendarIcon } from "lucide-react"
 import { Link } from "react-router-dom"
 import { WorkOrderList } from "@/components/work-orders/WorkOrderList"
 import { WorkOrderCalendar } from "@/components/work-orders/WorkOrderCalendar"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { useState } from "react"
 
 export default function WorkOrders() {
-  const [view, setView] = useState<"list" | "calendar">("list")
+  const [view, setView] = React.useState<"list" | "calendar">("list")
 
   return (
     <div className="space-y-6 p-6">
