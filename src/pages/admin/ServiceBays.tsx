@@ -65,7 +65,6 @@ interface BayService {
 
 export default function ServiceBays() {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
-  const { checkPermission } = usePermissions()
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedBay, setSelectedBay] = useState<ServiceBay | null>(null)
@@ -73,6 +72,7 @@ export default function ServiceBays() {
   const [isManageServicesOpen, setIsManageServicesOpen] = useState(false)
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const { checkPermission } = usePermissions()
 
   const form = useForm<ServiceBayFormData>({
     defaultValues: {
@@ -155,74 +155,15 @@ export default function ServiceBays() {
     },
   })
 
-  const { data: availableServices } = useQuery({
-    queryKey: ["available-services"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('service_types')
-        .select('*')
-        .eq('status', 'active')
-
-      if (error) throw error
-      return data
-    },
-  })
-
-  const { data: bayServices } = useQuery({
-    queryKey: ["bay-services", selectedBay?.id],
-    queryFn: async () => {
-      if (!selectedBay) return []
-      const { data, error } = await supabase
-        .from('bay_services')
-        .select('*')
-        .eq('bay_id', selectedBay.id)
-
-      if (error) throw error
-      return data as BayService[]
-    },
-    enabled: !!selectedBay,
-  })
-
-  useEffect(() => {
-    const checkAccess = async () => {
-      const hasPermission = await checkPermission("service_bays", "page_access")
-      console.log("Service bays permission check:", hasPermission)
-      setHasAccess(hasPermission)
-    }
-    checkAccess()
-  }, [checkPermission])
-
-  const { data: serviceBays, isLoading, refetch } = useQuery({
-    queryKey: ["service-bays"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("service_bays")
-        .select(`
-          *,
-          profile:assigned_profile_id (
-            id,
-            email,
-            first_name,
-            last_name
-          ),
-          bay_services (
-            service_id,
-            is_active
-          )
-        `)
-        .order("name")
-
-      if (error) throw error
-      return data as ServiceBay[]
-    },
-  })
-
   const assignUserMutation = useMutation({
     mutationFn: async ({ bayId, userId }: { bayId: string, userId: string | null }) => {
       console.log('Assigning user:', { bayId, userId })
       const { error } = await supabase
         .from('service_bays')
-        .update({ assigned_profile_id: userId })
+        .update({ 
+          assigned_profile_id: userId,
+          status: userId ? 'occupied' : 'available'
+        })
         .eq('id', bayId)
 
       if (error) {
@@ -231,8 +172,11 @@ export default function ServiceBays() {
       }
     },
     onSuccess: () => {
-      toast({ title: "Success", description: "User assignment updated successfully" })
-      queryClient.invalidateQueries({ queryKey: ["service-bays"] })
+      toast({ 
+        title: "Success", 
+        description: "User assignment updated successfully" 
+      })
+      queryClient.invalidateQueries({ queryKey: ["serviceBays"] })
       setIsAssignUserOpen(false)
     },
     onError: (error) => {
@@ -320,6 +264,40 @@ export default function ServiceBays() {
       })
       console.error('Error updating services:', error)
     }
+  })
+
+  useEffect(() => {
+    const checkAccess = async () => {
+      const hasPermission = await checkPermission("service_bays", "page_access")
+      console.log("Service bays permission check:", hasPermission)
+      setHasAccess(hasPermission)
+    }
+    checkAccess()
+  }, [checkPermission])
+
+  const { data: serviceBays, isLoading, refetch } = useQuery({
+    queryKey: ["service-bays"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_bays")
+        .select(`
+          *,
+          profile:assigned_profile_id (
+            id,
+            email,
+            first_name,
+            last_name
+          ),
+          bay_services (
+            service_id,
+            is_active
+          )
+        `)
+        .order("name")
+
+      if (error) throw error
+      return data as ServiceBay[]
+    },
   })
 
   const handleCreateBay = async (data: ServiceBayFormData) => {
