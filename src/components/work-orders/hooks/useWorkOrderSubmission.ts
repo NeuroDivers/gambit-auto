@@ -12,8 +12,8 @@ export function useWorkOrderSubmission() {
 
   const submitWorkOrder = async (values: WorkOrderFormValues, workOrderId?: string) => {
     try {
-      console.log("Submitting work order with values:", values)
-      console.log("Service items to submit:", values.service_items)
+      console.log("Form values before submission:", values)
+      console.log("Service items before submission:", values.service_items)
 
       // Create a copy of service items and sanitize them
       const validServices = values.service_items
@@ -32,7 +32,7 @@ export function useWorkOrderSubmission() {
           item.service_name.trim() !== ""
         );
 
-      console.log("Sanitized valid services:", validServices);
+      console.log("Valid service items:", validServices);
 
       if (validServices.length === 0) {
         toast({
@@ -57,8 +57,8 @@ export function useWorkOrderSubmission() {
         description: workOrderId ? "Work order updated successfully" : "Work order created successfully",
       })
 
-      // Navigate back to work orders page after successful submission
-      navigate("/work-orders")
+      // Update the navigation to use the correct path
+      navigate("/admin/work-orders")
       return true
     } catch (error: any) {
       console.error("Error saving work order:", error)
