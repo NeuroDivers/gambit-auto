@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import { Plus, Loader2, Edit, Trash2, User, Wrench } from "lucide-react"
 import { useState, useEffect } from "react"
@@ -30,26 +29,34 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { ProfileWithRole } from "@/integrations/supabase/types/user-roles"
 
+interface AssignedProfile {
+  id: string;
+  email: string | null;
+  first_name: string | null;
+  last_name: string | null;
+}
+
 interface ServiceBay {
-  id: string
-  name: string
-  status: 'available' | 'occupied' | 'maintenance'
-  notes?: string
-  assigned_profile_id?: string | null
-  created_at: string
-  updated_at: string
+  id: string;
+  name: string;
+  status: 'available' | 'occupied' | 'maintenance';
+  notes?: string;
+  assigned_profile_id?: string | null;
+  created_at: string;
+  updated_at: string;
+  profile?: AssignedProfile | null;
 }
 
 interface ServiceBayFormData {
-  name: string
-  status: 'available' | 'occupied' | 'maintenance'
-  notes?: string
+  name: string;
+  status: 'available' | 'occupied' | 'maintenance';
+  notes?: string;
 }
 
 interface BayService {
-  service_id: string
-  is_active: boolean
-  bay_id: string
+  service_id: string;
+  is_active: boolean;
+  bay_id: string;
 }
 
 export default function ServiceBays() {
@@ -75,13 +82,19 @@ export default function ServiceBays() {
   const { data: assignableUsers } = useQuery({
     queryKey: ["assignable-users"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: profiles, error } = await supabase
         .from('profiles')
         .select(`
           id,
           email,
           first_name,
           last_name,
+          created_at,
+          updated_at,
+          avatar_url,
+          phone_number,
+          address,
+          bio,
           role:role_id (
             id,
             name,
@@ -91,7 +104,18 @@ export default function ServiceBays() {
         .eq('role.can_be_assigned_to_bay', true)
 
       if (error) throw error
-      return data as ProfileWithRole[]
+
+      // Transform the data to match ProfileWithRole interface
+      const transformedProfiles = profiles.map(profile => ({
+        ...profile,
+        role: {
+          id: profile.role.id,
+          name: profile.role.name,
+          nicename: profile.role.nicename,
+        }
+      })) as ProfileWithRole[]
+
+      return transformedProfiles
     },
   })
 
@@ -142,7 +166,7 @@ export default function ServiceBays() {
         .from("service_bays")
         .select(`
           *,
-          assigned_profile:assigned_profile_id (
+          profile:assigned_profile_id (
             id,
             email,
             first_name,
@@ -615,11 +639,11 @@ export default function ServiceBays() {
                   </div>
                 )}
                 {/* Display assigned user if any */}
-                {bay.assigned_profile && (
+                {bay.profile && (
                   <div className="flex items-center gap-2 text-sm">
                     <User className="h-4 w-4" />
                     <span>
-                      Assigned to: {bay.assigned_profile.first_name} {bay.assigned_profile.last_name}
+                      Assigned to: {bay.profile.first_name} {bay.profile.last_name}
                     </span>
                   </div>
                 )}
