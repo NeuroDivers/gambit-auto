@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { businessFormSchema, BusinessFormValues } from "../schemas/businessFormSchema"
-import { Building, Mail, Phone, MapPin, Image } from "lucide-react"
+import { Building, Mail, Phone, MapPin, Image, Loader2 } from "lucide-react"
+import { Label } from "@/components/ui/label"
 
 interface BusinessFormProps {
   businessProfile: any
@@ -16,6 +17,9 @@ interface BusinessFormProps {
 
 export function BusinessForm({ businessProfile }: BusinessFormProps) {
   const { toast } = useToast()
+  const [isUploading, setIsUploading] = React.useState(false)
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null)
+  
   const form = useForm<BusinessFormValues>({
     resolver: zodResolver(businessFormSchema),
     defaultValues: {
@@ -36,8 +40,50 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
         address: businessProfile.address || "",
         logo_url: businessProfile.logo_url || "",
       })
+      setPreviewUrl(businessProfile.logo_url || null)
     }
   }, [businessProfile, form])
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      setIsUploading(true)
+
+      // Upload the file to Supabase Storage
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${crypto.randomUUID()}.${fileExt}`
+      const { data, error: uploadError } = await supabase.storage
+        .from('business-logos')
+        .upload(fileName, file)
+
+      if (uploadError) throw uploadError
+
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('business-logos')
+        .getPublicUrl(fileName)
+
+      // Update the form
+      form.setValue('logo_url', publicUrl)
+      setPreviewUrl(publicUrl)
+
+      toast({
+        title: "Success",
+        description: "Logo uploaded successfully.",
+      })
+    } catch (error) {
+      console.error("Error uploading logo:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to upload logo. Please try again.",
+      })
+    } finally {
+      setIsUploading(false)
+    }
+  }
 
   async function onSubmit(values: BusinessFormValues) {
     try {
@@ -88,6 +134,43 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
             </FormItem>
           )}
         />
+
+        <div className="space-y-3">
+          <FormLabel className="flex items-center gap-2">
+            <Image className="h-4 w-4 text-[#9b87f5]" />
+            Business Logo
+          </FormLabel>
+          <FormDescription>
+            Upload your business logo image
+          </FormDescription>
+          <div className="flex flex-col gap-4">
+            {previewUrl && (
+              <div className="relative w-32 h-32">
+                <img 
+                  src={previewUrl} 
+                  alt="Business Logo Preview" 
+                  className="w-full h-full object-contain rounded-lg border"
+                />
+              </div>
+            )}
+            <div>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                disabled={isUploading}
+                className="bg-white"
+              />
+              {isUploading && (
+                <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Uploading...
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         <FormField
           control={form.control}
           name="email"
@@ -145,28 +228,10 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="logo_url"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-2">
-                <Image className="h-4 w-4 text-[#9b87f5]" />
-                Logo URL
-              </FormLabel>
-              <FormDescription>
-                A URL to your business logo image
-              </FormDescription>
-              <FormControl>
-                <Input {...field} type="url" placeholder="https://" className="bg-white" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         <Button 
           type="submit" 
           className="w-full bg-[#9b87f5] hover:bg-[#7E69AB] text-white"
+          disabled={isUploading}
         >
           Save Changes
         </Button>
