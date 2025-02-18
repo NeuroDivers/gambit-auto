@@ -14,12 +14,17 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { format } from "date-fns"
 import { WorkOrder } from "./types"
-import { Loader2, Search } from "lucide-react"
+import { Loader2, Search, Pencil } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { EditWorkOrderDialog } from "./EditWorkOrderDialog"
+import { useAdminStatus } from "@/hooks/useAdminStatus"
 
 export function WorkOrderList() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
+  const { isAdmin } = useAdminStatus()
 
   const { data: workOrders, isLoading, error } = useQuery({
     queryKey: ['work-orders'],
@@ -102,7 +107,7 @@ export function WorkOrderList() {
         </Select>
       </div>
 
-      <div className="work-orders-table-container rounded-md border">
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -112,6 +117,7 @@ export function WorkOrderList() {
               <TableHead>Assigned To</TableHead>
               <TableHead>Bay</TableHead>
               <TableHead>Created</TableHead>
+              {isAdmin && <TableHead className="w-[100px]">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -151,11 +157,22 @@ export function WorkOrderList() {
                   <TableCell>
                     {format(new Date(workOrder.created_at), 'MMM d, yyyy')}
                   </TableCell>
+                  {isAdmin && (
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setSelectedWorkOrder(workOrder)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">
+                <TableCell colSpan={isAdmin ? 7 : 6} className="text-center">
                   No work orders found
                 </TableCell>
               </TableRow>
@@ -163,6 +180,14 @@ export function WorkOrderList() {
           </TableBody>
         </Table>
       </div>
+
+      {selectedWorkOrder && (
+        <EditWorkOrderDialog
+          workOrder={selectedWorkOrder}
+          open={!!selectedWorkOrder}
+          onOpenChange={(open) => !open && setSelectedWorkOrder(null)}
+        />
+      )}
     </div>
   );
 }
