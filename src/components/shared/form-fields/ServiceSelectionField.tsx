@@ -64,6 +64,12 @@ export function ServiceSelectionField({
     onServicesChange(newServices)
   }
 
+  const updatePrice = (index: number, price: number) => {
+    const newServices = [...services]
+    newServices[index] = { ...newServices[index], unit_price: price }
+    onServicesChange(newServices)
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
@@ -91,17 +97,32 @@ export function ServiceSelectionField({
             <div key={index} className="flex items-center gap-4 p-2 border rounded">
               <div className="flex-1">
                 <p className="font-medium">{service.service_name}</p>
-                <div className="mt-2">
-                  <Label htmlFor={`quantity-${index}`}>Quantity</Label>
-                  <Input
-                    id={`quantity-${index}`}
-                    type="number"
-                    min="1"
-                    value={service.quantity}
-                    onChange={(e) => updateQuantity(index, parseInt(e.target.value) || 1)}
-                    className="w-24"
-                    disabled={disabled}
-                  />
+                <div className="mt-2 flex gap-4">
+                  <div>
+                    <Label htmlFor={`quantity-${index}`}>Quantity</Label>
+                    <Input
+                      id={`quantity-${index}`}
+                      type="number"
+                      min="1"
+                      value={service.quantity}
+                      onChange={(e) => updateQuantity(index, parseInt(e.target.value) || 1)}
+                      className="w-24"
+                      disabled={disabled}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor={`price-${index}`}>Price</Label>
+                    <Input
+                      id={`price-${index}`}
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={service.unit_price}
+                      onChange={(e) => updatePrice(index, parseFloat(e.target.value) || 0)}
+                      className="w-24"
+                      disabled={disabled}
+                    />
+                  </div>
                 </div>
               </div>
               <Button
