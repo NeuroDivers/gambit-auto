@@ -33,7 +33,7 @@ export function WorkOrderList() {
         .from('work_orders')
         .select(`
           *,
-          assigned_bay:service_bays!fk_work_orders_assigned_bay (
+          service_bays (
             name
           ),
           assigned_to:profiles!assigned_profile_id (
@@ -148,8 +148,8 @@ export function WorkOrderList() {
                     )}
                   </TableCell>
                   <TableCell>
-                    {workOrder.assigned_bay ? (
-                      workOrder.assigned_bay.name
+                    {workOrder.service_bays ? (
+                      workOrder.service_bays.name
                     ) : (
                       <span className="text-muted-foreground">Not assigned</span>
                     )}
@@ -189,5 +189,5 @@ export function WorkOrderList() {
         />
       )}
     </div>
-  );
+  )
 }
