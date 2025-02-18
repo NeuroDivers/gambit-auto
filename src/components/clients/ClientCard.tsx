@@ -1,135 +1,100 @@
-
+import { Button } from "@/components/ui/button"
+import { FileText, Quote } from "lucide-react"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Client } from "./types"
-import { Card, CardContent } from "../ui/card"
-import { Button } from "../ui/button"
-import { Edit, Trash, User, UserCheck } from "lucide-react"
-import { useState } from "react"
-import { useToast } from "@/hooks/use-toast"
-import { useQueryClient } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
-import { EditClientDialog } from "./EditClientDialog"
-import { ClientDetailsDialog } from "./ClientDetailsDialog"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useNavigate } from "react-router-dom"
 
-interface ClientCardProps {
+export function ClientCard({ 
+  client,
+  onEdit,
+  actions
+}: { 
   client: Client
+  onEdit?: () => void
   actions?: React.ReactNode
-  onEdit?: (client: Client) => void
-}
+}) {
+  const navigate = useNavigate()
 
-export function ClientCard({ client, actions, onEdit }: ClientCardProps) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [showDetails, setShowDetails] = useState(false)
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
-
-  const handleDelete = async () => {
-    try {
-      const { error } = await supabase
-        .from("clients")
-        .delete()
-        .eq("id", client.id)
-
-      if (error) throw error
-
-      await queryClient.invalidateQueries({ queryKey: ["clients"] })
-      
-      toast({
-        title: "Success",
-        description: "Client deleted successfully",
-      })
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
-    }
+  const handleCreateQuote = () => {
+    navigate('/admin/quotes/create', { 
+      state: { preselectedClient: client }
+    })
   }
 
-  const handleEdit = () => {
-    if (onEdit) {
-      onEdit(client)
-    } else {
-      setIsEditing(true)
-    }
+  const handleCreateInvoice = () => {
+    navigate('/admin/invoices/create', { 
+      state: { preselectedClient: client }
+    })
   }
 
   return (
-    <>
-      <Card 
-        className="cursor-pointer hover:border-primary/50 transition-all duration-200"
-        onClick={() => setShowDetails(true)}
-      >
-        <CardContent className="p-6">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-4">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  {client.user_id ? (
-                    <UserCheck className="h-5 w-5 text-primary" />
-                  ) : (
-                    <User className="h-5 w-5" />
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-semibold">
-                    {client.first_name} {client.last_name}
-                    {client.user_id && (
-                      <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                        Has Account
-                      </span>
-                    )}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">{client.email}</p>
-                  {client.phone_number && (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {client.phone_number}
-                    </p>
-                  )}
-                  {client.address && (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {client.address}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            <div 
-              className="flex gap-2 mt-auto"
-              onClick={(e) => e.stopPropagation()} // Prevent card click when clicking buttons
-            >
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleEdit}
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleDelete}
-              >
-                <Trash className="h-4 w-4" />
-              </Button>
-              {actions}
-            </div>
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center">
+            <Avatar className="mr-2 h-8 w-8">
+              <AvatarImage src={`https://avatar.vercel.sh/${client.email}.png`} />
+              <AvatarFallback>{client.first_name[0]}{client.last_name[0]}</AvatarFallback>
+            </Avatar>
+            {client.first_name} {client.last_name}
+          </CardTitle>
+          {onEdit && (
+            <Button variant="ghost" size="sm" onClick={onEdit}>
+              Edit
+            </Button>
+          )}
+        </div>
+        <p className="text-sm text-muted-foreground">{client.email}</p>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          <div>
+            <span className="font-medium">Phone:</span>
+            <p className="text-muted-foreground">{client.phone || 'N/A'}</p>
           </div>
-        </CardContent>
-      </Card>
-
-      <EditClientDialog
-        client={client}
-        open={isEditing}
-        onOpenChange={setIsEditing}
-      />
-
-      <ClientDetailsDialog 
-        client={client}
-        open={showDetails}
-        onOpenChange={setShowDetails}
-      />
-    </>
+          <div>
+            <span className="font-medium">Total Spent:</span>
+            <p className="text-muted-foreground">${client.total_spent.toFixed(2)}</p>
+          </div>
+          <div>
+            <span className="font-medium">Work Orders:</span>
+            <p className="text-muted-foreground">{client.total_work_orders}</p>
+          </div>
+          <div>
+            <span className="font-medium">Invoices:</span>
+            <p className="text-muted-foreground">{client.total_invoices}</p>
+          </div>
+        </div>
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <p className="text-xs text-muted-foreground">
+          Last Invoice: {client.last_invoice_date ? new Date(client.last_invoice_date).toLocaleDateString() : 'N/A'}
+        </p>
+      </CardFooter>
+      {!actions && (
+        <div className="flex gap-2 mt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={handleCreateQuote}
+          >
+            <Quote className="h-4 w-4" />
+            Create Quote
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={handleCreateInvoice}
+          >
+            <FileText className="h-4 w-4" />
+            Create Invoice
+          </Button>
+        </div>
+      )}
+      {actions}
+    </Card>
   )
 }

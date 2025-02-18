@@ -22,11 +22,11 @@ type ServiceSelectionFieldProps = {
 }
 
 export function ServiceSelectionField({ 
-  services, 
+  services = [], // Provide default empty array
   onServicesChange,
   disabled = false 
 }: ServiceSelectionFieldProps) {
-  const { data: availableServices, isLoading } = useQuery({
+  const { data: availableServices = [], isLoading } = useQuery({
     queryKey: ["services"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -34,7 +34,7 @@ export function ServiceSelectionField({
         .select("*")
         .eq("status", "active")
       if (error) throw error
-      return data
+      return data || [] // Ensure we always return an array
     }
   })
 
