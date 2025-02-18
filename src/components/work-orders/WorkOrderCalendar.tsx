@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { addMonths, subMonths, startOfDay, endOfDay } from "date-fns";
 import { CalendarGrid } from "./calendar/CalendarGrid";
@@ -54,16 +53,14 @@ export function WorkOrderCalendar() {
 
   return <section className="">
       <div className="space-y-6 p-6 px-0">
-        <div className="flex items-center justify-end gap-4">
-          <ToggleGroup type="single" value={view} onValueChange={value => value && setView(value as 'month' | 'day')}>
-            <ToggleGroupItem value="month" aria-label="Month view">
-              <CalendarIcon className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="day" aria-label="Day view">
-              <Clock className="h-4 w-4" />
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
+        <ToggleGroup type="single" value={view} onValueChange={value => value && setView(value as 'month' | 'day')}>
+          <ToggleGroupItem value="month" aria-label="Month view">
+            <CalendarIcon className="h-4 w-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="day" aria-label="Day view">
+            <Clock className="h-4 w-4" />
+          </ToggleGroupItem>
+        </ToggleGroup>
         {!isMobile && <StatusLegend statusCounts={statusCounts} />}
         <div className="space-y-4">
           {view === 'month' ? <CalendarGrid currentDate={currentDate} workOrders={workOrders} onDateChange={handleDateChange} /> : <CalendarDayView currentDate={currentDate} workOrders={getWorkOrdersForDay()} />}
