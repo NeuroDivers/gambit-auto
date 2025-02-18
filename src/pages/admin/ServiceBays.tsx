@@ -211,12 +211,16 @@ export default function ServiceBays() {
 
   const assignUserMutation = useMutation({
     mutationFn: async ({ bayId, userId }: { bayId: string, userId: string | null }) => {
+      console.log('Assigning user:', { bayId, userId })
       const { error } = await supabase
         .from('service_bays')
         .update({ assigned_profile_id: userId })
         .eq('id', bayId)
 
-      if (error) throw error
+      if (error) {
+        console.error('Error assigning user:', error)
+        throw error
+      }
     },
     onSuccess: () => {
       toast({ title: "Success", description: "User assignment updated successfully" })
@@ -243,39 +247,62 @@ export default function ServiceBays() {
       serviceId: string, 
       isActive: boolean 
     }) => {
+      console.log('Toggling service:', { bayId, serviceId, isActive })
+      
       if (isActive) {
-        const { data: existingService } = await supabase
+        const { data: existingService, error: checkError } = await supabase
           .from('bay_services')
           .select('*')
           .eq('bay_id', bayId)
           .eq('service_id', serviceId)
-          .single()
+          .maybeSingle()
+
+        if (checkError) {
+          console.error('Error checking existing service:', checkError)
+          throw checkError
+        }
 
         if (!existingService) {
-          const { error } = await supabase
+          const { error: insertError } = await supabase
             .from('bay_services')
-            .insert({ bay_id: bayId, service_id: serviceId })
-          if (error) throw error
+            .insert([{ 
+              bay_id: bayId, 
+              service_id: serviceId,
+              is_active: true 
+            }])
+          
+          if (insertError) {
+            console.error('Error inserting service:', insertError)
+            throw insertError
+          }
         } else {
-          const { error } = await supabase
+          const { error: updateError } = await supabase
             .from('bay_services')
             .update({ is_active: true })
             .eq('bay_id', bayId)
             .eq('service_id', serviceId)
-          if (error) throw error
+          
+          if (updateError) {
+            console.error('Error updating service:', updateError)
+            throw updateError
+          }
         }
       } else {
-        const { error } = await supabase
+        const { error: deleteError } = await supabase
           .from('bay_services')
           .delete()
           .eq('bay_id', bayId)
           .eq('service_id', serviceId)
-        if (error) throw error
+        
+        if (deleteError) {
+          console.error('Error deleting service:', deleteError)
+          throw deleteError
+        }
       }
     },
     onSuccess: () => {
       toast({ title: "Success", description: "Services updated successfully" })
-      queryClient.invalidateQueries({ queryKey: ["bay-services"] })
+      queryClient.invalidateQueries({ queryKey: ["bay-services", selectedBay?.id] })
     },
     onError: (error) => {
       toast({ 
@@ -574,7 +601,7 @@ export default function ServiceBays() {
                       </SheetHeader>
                       <div className="py-6">
                         <Select
-                          defaultValue={bay.assigned_profile_id || "none"}
+                          value={bay.assigned_profile_id || "none"}
                           onValueChange={(value) => 
                             assignUserMutation.mutate({ 
                               bayId: bay.id, 
@@ -582,7 +609,7 @@ export default function ServiceBays() {
                             })
                           }
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select user" />
                           </SelectTrigger>
                           <SelectContent>
