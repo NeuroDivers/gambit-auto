@@ -19,11 +19,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button"
 import { EditWorkOrderDialog } from "./EditWorkOrderDialog"
 import { useAdminStatus } from "@/hooks/useAdminStatus"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { toast } from "sonner"
 
 export function WorkOrderList() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
+  const [assignWorkOrder, setAssignWorkOrder] = useState<WorkOrder | null>(null)
   const { isAdmin } = useAdminStatus()
 
   const { data: workOrders, isLoading, error } = useQuery({
@@ -50,6 +53,56 @@ export function WorkOrderList() {
       return data as WorkOrder[];
     }
   });
+
+  const { data: assignableUsers } = useQuery({
+    queryKey: ["assignable-users"],
+    queryFn: async () => {
+      const { data: assignableRoles, error: rolesError } = await supabase
+        .from('roles')
+        .select('*')
+        .eq('can_be_assigned_to_bay', true)
+
+      if (rolesError) throw rolesError
+
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          email,
+          first_name,
+          last_name,
+          role_id,
+          roles (
+            id,
+            name,
+            nicename
+          )
+        `)
+        .in('role_id', assignableRoles.map(role => role.id))
+
+      if (error) throw error
+      return profiles
+    }
+  })
+
+  const handleAssignUser = async (userId: string) => {
+    if (!assignWorkOrder) return;
+
+    try {
+      const { error } = await supabase
+        .from('work_orders')
+        .update({ assigned_profile_id: userId })
+        .eq('id', assignWorkOrder.id);
+
+      if (error) throw error;
+
+      toast.success("User assigned successfully");
+      setAssignWorkOrder(null);
+    } catch (error) {
+      console.error('Error assigning user:', error);
+      toast.error("Failed to assign user");
+    }
+  };
 
   const filteredWorkOrders = workOrders?.filter(order => {
     const matchesSearch = (
@@ -141,11 +194,16 @@ export function WorkOrderList() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {workOrder.assigned_to ? (
-                      `${workOrder.assigned_to.first_name} ${workOrder.assigned_to.last_name}`
-                    ) : (
-                      <span className="text-muted-foreground">Unassigned</span>
-                    )}
+                    <span 
+                      className={`cursor-pointer ${!workOrder.assigned_to ? 'text-muted-foreground' : ''}`}
+                      onClick={() => setAssignWorkOrder(workOrder)}
+                    >
+                      {workOrder.assigned_to ? (
+                        `${workOrder.assigned_to.first_name} ${workOrder.assigned_to.last_name}`
+                      ) : (
+                        "Unassigned"
+                      )}
+                    </span>
                   </TableCell>
                   <TableCell>
                     {workOrder.service_bays ? (
@@ -188,6 +246,26 @@ export function WorkOrderList() {
           onOpenChange={(open) => !open && setSelectedWorkOrder(null)}
         />
       )}
+
+      <Sheet open={!!assignWorkOrder} onOpenChange={(open) => !open && setAssignWorkOrder(null)}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Assign User</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6 space-y-4">
+            {assignableUsers?.map((user) => (
+              <Button
+                key={user.id}
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => handleAssignUser(user.id)}
+              >
+                {user.first_name} {user.last_name}
+              </Button>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
