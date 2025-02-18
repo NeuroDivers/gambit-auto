@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
-import { FileText, Calendar, User, CreditCard, MessageSquare, Car } from "lucide-react"
+import { FileText, Calendar, User, CreditCard, MessageSquare, Car, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const items = [
@@ -34,6 +34,11 @@ const items = [
     title: "Payment Methods",
     href: "/client/payment-methods",
     icon: CreditCard,
+  },
+  {
+    title: "Settings",
+    href: "/client/settings",
+    icon: Settings,
   },
 ]
 
