@@ -9,7 +9,7 @@ export interface WorkOrder {
   vehicle_make: string;
   vehicle_model: string;
   vehicle_year: number;
-  vehicle_serial: string;  // Changed from optional to required
+  vehicle_serial: string;
   additional_notes?: string;
   status: string;
   created_at: string;
@@ -26,7 +26,7 @@ export interface WorkOrder {
     first_name: string;
     last_name: string;
   };
-  address?: string;
+  address: string;  // Changed from optional to required
   timeframe?: string;
 }
 
@@ -48,7 +48,7 @@ export interface WorkOrderFormValues {
   vehicle_year: number;
   vehicle_serial: string;
   additional_notes?: string;
-  address?: string;
+  address: string;  // Also making required here for consistency
   start_time: Date | null;
   estimated_duration: number | null;
   end_time: Date | null;
