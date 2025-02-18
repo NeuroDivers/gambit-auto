@@ -58,7 +58,8 @@ export function CalendarDay({ date, workOrders, isCurrentMonth, blockedDates = [
         className={cn(
           "relative min-h-[120px] p-2 bg-background/50 border border-border/50 rounded-lg transition-all duration-200",
           "hover:bg-primary/5 cursor-pointer group",
-          !isCurrentMonth && "opacity-50 bg-muted/20",
+          !isCurrentMonth && "opacity-40 bg-muted/30",
+          isCurrentMonth && isPastDate && "bg-muted/10",
           isToday(date) && "ring-2 ring-primary bg-primary/5",
           isDateBlocked && "bg-destructive/5 hover:bg-destructive/10",
           isPastDate && "cursor-not-allowed hover:bg-background/50"
@@ -66,8 +67,10 @@ export function CalendarDay({ date, workOrders, isCurrentMonth, blockedDates = [
         onClick={handleDayClick}
       >
         <div className={cn(
-          "font-medium text-sm mb-2 flex items-center justify-between text-foreground",
-          isToday(date) && "text-primary"
+          "font-medium text-sm mb-2 flex items-center justify-between",
+          isToday(date) && "text-primary",
+          !isCurrentMonth ? "text-muted-foreground/60" : "text-foreground",
+          isPastDate && isCurrentMonth && "text-muted-foreground"
         )}>
           <span className={cn(
             "h-6 w-6 flex items-center justify-center rounded-full",
