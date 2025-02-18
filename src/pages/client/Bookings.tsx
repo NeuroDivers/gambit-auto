@@ -52,7 +52,7 @@ export default function ClientBookings() {
           ),
           work_order_services (
             service_id,
-            service_types!work_order_services_service_id_fkey (
+            service_types!work_order_services_main_service_id_fkey (
               name
             )
           )
