@@ -102,7 +102,7 @@ export function WorkOrderList() {
         </Select>
       </div>
 
-      <div className="rounded-md border">
+      <div className="work-orders-table-container rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
