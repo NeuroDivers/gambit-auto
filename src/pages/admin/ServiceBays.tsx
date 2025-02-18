@@ -83,6 +83,21 @@ export default function ServiceBays() {
     queryKey: ["assignable-users"],
     queryFn: async () => {
       console.log("Fetching assignable users...")
+      
+      // First, get all roles that can be assigned to bays
+      const { data: assignableRoles, error: rolesError } = await supabase
+        .from('roles')
+        .select('*')
+        .eq('can_be_assigned_to_bay', true)
+
+      if (rolesError) {
+        console.error("Error fetching roles:", rolesError)
+        throw rolesError
+      }
+
+      console.log("Assignable roles:", assignableRoles)
+
+      // Then get all profiles with these roles
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select(`
@@ -102,7 +117,7 @@ export default function ServiceBays() {
             nicename
           )
         `)
-        .eq('roles.can_be_assigned_to_bay', true)
+        .in('role_id', assignableRoles.map(role => role.id))
 
       if (error) {
         console.error("Error fetching profiles:", error)
@@ -113,7 +128,6 @@ export default function ServiceBays() {
 
       // Transform the data to match ProfileWithRole interface
       const transformedProfiles = profiles.map(profile => {
-        // Ensure role is treated as a single object, not an array
         const roleData = Array.isArray(profile.role) ? profile.role[0] : profile.role
 
         return {
@@ -133,7 +147,7 @@ export default function ServiceBays() {
             nicename: roleData.nicename,
           } : null
         }
-      }).filter(profile => profile.role) as ProfileWithRole[]
+      }).filter(profile => profile.role)
 
       console.log("Transformed profiles:", transformedProfiles)
       return transformedProfiles
