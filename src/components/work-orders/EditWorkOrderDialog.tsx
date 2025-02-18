@@ -1,5 +1,5 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { WorkOrder } from "./types"
 import { WorkOrderForm } from "./WorkOrderForm"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -25,7 +25,7 @@ export function EditWorkOrderDialog({ workOrder, open, onOpenChange }: EditWorkO
   }, [])
 
   return (
-    <Dialog 
+    <Sheet 
       open={open} 
       onOpenChange={(newOpen) => {
         if (!isSubmitting) {
@@ -33,8 +33,9 @@ export function EditWorkOrderDialog({ workOrder, open, onOpenChange }: EditWorkO
         }
       }}
     >
-      <DialogContent 
-        className="max-w-3xl max-h-[90vh] p-0"
+      <SheetContent 
+        side="right"
+        className="w-[calc(100vw-256px)] max-w-[calc(100vw-256px)] p-0"
         onPointerDownOutside={(e) => {
           if (isSubmitting) {
             e.preventDefault()
@@ -46,26 +47,24 @@ export function EditWorkOrderDialog({ workOrder, open, onOpenChange }: EditWorkO
           }
         }}
       >
-        <div className="p-6 pb-0">
-          <DialogHeader>
-            <DialogTitle>Edit Work Order</DialogTitle>
-            <DialogDescription>
-              Make changes to the work order details below.
-            </DialogDescription>
-          </DialogHeader>
-        </div>
-        <div className="px-6 pb-6">
-          <ScrollArea className="h-[calc(85vh-8rem)] rounded-md">
-            <div className="pr-4">
-              <WorkOrderForm 
-                workOrder={workOrder} 
-                onSuccess={handleSuccess}
-                onSubmitting={handleSubmitting}
-              />
+        <div className="flex flex-col h-full">
+          <div className="p-6 pb-0">
+            <div className="space-y-2">
+              <h2 className="text-lg font-semibold">Edit Work Order</h2>
+              <p className="text-sm text-muted-foreground">
+                Make changes to the work order details below.
+              </p>
             </div>
+          </div>
+          <ScrollArea className="flex-1 p-6">
+            <WorkOrderForm 
+              workOrder={workOrder} 
+              onSuccess={handleSuccess}
+              onSubmitting={handleSubmitting}
+            />
           </ScrollArea>
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   )
 }
