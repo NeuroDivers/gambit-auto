@@ -1,11 +1,12 @@
 
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { WorkOrder } from "../types"
-import { format } from "date-fns"
-import { Badge } from "@/components/ui/badge"
-import { useQuery } from "@tanstack/react-query"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { toast } from "sonner"
+import { LoadingScreen } from "@/components/shared/LoadingScreen"
 
 type WorkOrderDetailsDialogProps = {
   workOrder: WorkOrder
@@ -13,120 +14,163 @@ type WorkOrderDetailsDialogProps = {
   onOpenChange: (open: boolean) => void
 }
 
-export function WorkOrderDetailsDialog({ workOrder, open, onOpenChange }: WorkOrderDetailsDialogProps) {
-  const { data: services } = useQuery({
-    queryKey: ['workOrderServices', workOrder.id],
+export function WorkOrderDetailsDialog({
+  workOrder,
+  open,
+  onOpenChange,
+}: WorkOrderDetailsDialogProps) {
+  const queryClient = useQueryClient()
+
+  // Fetch available users (staff)
+  const { data: assignableUsers, isLoading: loadingUsers } = useQuery({
+    queryKey: ["assignable-users"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('work_order_services')
+      console.log("Fetching assignable users...")
+      
+      const { data: assignableRoles, error: rolesError } = await supabase
+        .from('roles')
+        .select('*')
+        .eq('can_be_assigned_to_bay', true)
+
+      if (rolesError) throw rolesError
+
+      const { data: profiles, error } = await supabase
+        .from('profiles')
         .select(`
-          *,
-          service:service_types!work_order_services_service_id_fkey(
+          id,
+          email,
+          first_name,
+          last_name,
+          role_id,
+          roles (
+            id,
             name,
-            price
+            nicename
           )
         `)
-        .eq('work_order_id', workOrder.id)
+        .in('role_id', assignableRoles.map(role => role.id))
 
       if (error) throw error
-      return data
-    },
-    enabled: open
+      return profiles
+    }
   })
 
+  // Fetch available service bays
+  const { data: serviceBays, isLoading: loadingBays } = useQuery({
+    queryKey: ["service-bays"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('service_bays')
+        .select('*')
+        .eq('status', 'available')
+      
+      if (error) throw error
+      return data
+    }
+  })
+
+  // Mutation to update work order assignments
+  const updateAssignmentsMutation = useMutation({
+    mutationFn: async ({ bayId, userId }: { bayId?: string | null, userId?: string | null }) => {
+      console.log('Updating assignments:', { bayId, userId, workOrderId: workOrder.id })
+      
+      const { error } = await supabase
+        .from('work_orders')
+        .update({ 
+          assigned_bay_id: bayId,
+          assigned_profile_id: userId
+        })
+        .eq('id', workOrder.id)
+
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Work order assignments updated")
+      queryClient.invalidateQueries({ queryKey: ["workOrders"] })
+    },
+    onError: (error) => {
+      console.error('Error updating assignments:', error)
+      toast.error("Failed to update assignments")
+    }
+  })
+
+  if (loadingUsers || loadingBays) {
+    return <LoadingScreen />
+  }
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="sm:max-w-sm p-0">
-        <div className="flex flex-col h-full">
-          <div className="p-6 pb-0">
-            <div className="space-y-2">
-              <h2 className="text-lg font-semibold">Work Order Details</h2>
-              <p className="text-sm text-muted-foreground">
-                View work order information below.
-              </p>
-            </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Work Order Details</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-6">
+          {/* Basic work order info */}
+          <div>
+            <h3 className="font-medium">Customer Information</h3>
+            <p>{workOrder.first_name} {workOrder.last_name}</p>
+            <p className="text-sm text-muted-foreground">{workOrder.email}</p>
           </div>
-          <ScrollArea className="flex-1 p-6">
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-semibold mb-2">Customer Information</h3>
-                <div className="space-y-1 text-sm">
-                  <p>Name: {workOrder.first_name} {workOrder.last_name}</p>
-                  <p>Email: {workOrder.email}</p>
-                  <p>Phone: {workOrder.phone_number}</p>
-                  <p>Contact Preference: {workOrder.contact_preference}</p>
-                  {workOrder.address && <p>Address: {workOrder.address}</p>}
-                </div>
-              </div>
 
-              <div>
-                <h3 className="font-semibold mb-2">Vehicle Information</h3>
-                <div className="space-y-1 text-sm">
-                  <p>Make: {workOrder.vehicle_make}</p>
-                  <p>Model: {workOrder.vehicle_model}</p>
-                  <p>Year: {workOrder.vehicle_year}</p>
-                  <p>Serial: {workOrder.vehicle_serial}</p>
-                </div>
-              </div>
+          <div>
+            <h3 className="font-medium">Vehicle Information</h3>
+            <p>{workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}</p>
+          </div>
 
-              <div>
-                <h3 className="font-semibold mb-2">Services</h3>
-                <div className="space-y-2">
-                  {services?.map((service) => (
-                    <div 
-                      key={service.id} 
-                      className="p-3 rounded-lg bg-muted/50 flex justify-between items-center"
-                    >
-                      <div>
-                        <p className="font-medium">{service.service.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Quantity: {service.quantity}
-                        </p>
-                      </div>
-                      <p className="font-medium">
-                        ${(service.unit_price * service.quantity).toFixed(2)}
-                      </p>
-                    </div>
-                  ))}
-                  {services?.length === 0 && (
-                    <p className="text-sm text-muted-foreground">No services added</p>
-                  )}
-                </div>
-              </div>
+          {/* Assign Staff */}
+          <div className="space-y-2">
+            <Label>Assign Staff</Label>
+            <Select
+              defaultValue={workOrder.assigned_profile_id || ""}
+              onValueChange={(value) => {
+                updateAssignmentsMutation.mutate({
+                  userId: value === "" ? null : value,
+                  bayId: workOrder.assigned_bay_id
+                })
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select staff member" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Unassigned</SelectItem>
+                {assignableUsers?.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.first_name} {user.last_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-              <div>
-                <h3 className="font-semibold mb-2">Additional Information</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">Status:</span>
-                    <Badge>{workOrder.status}</Badge>
-                  </div>
-                  {workOrder.start_time && (
-                    <p className="text-sm">
-                      Start Time: {format(new Date(workOrder.start_time), "PPP p")}
-                    </p>
-                  )}
-                  {workOrder.estimated_duration && (
-                    <p className="text-sm">
-                      Estimated Duration: {workOrder.estimated_duration}
-                    </p>
-                  )}
-                  {workOrder.end_time && (
-                    <p className="text-sm">
-                      End Time: {format(new Date(workOrder.end_time), "PPP p")}
-                    </p>
-                  )}
-                  {workOrder.additional_notes && (
-                    <div className="bg-muted/50 p-3 rounded-lg">
-                      <p className="text-sm">{workOrder.additional_notes}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </ScrollArea>
+          {/* Assign Bay */}
+          <div className="space-y-2">
+            <Label>Assign Service Bay</Label>
+            <Select
+              defaultValue={workOrder.assigned_bay_id || ""}
+              onValueChange={(value) => {
+                updateAssignmentsMutation.mutate({
+                  bayId: value === "" ? null : value,
+                  userId: workOrder.assigned_profile_id
+                })
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select service bay" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Unassigned</SelectItem>
+                {serviceBays?.map((bay) => (
+                  <SelectItem key={bay.id} value={bay.id}>
+                    {bay.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }
