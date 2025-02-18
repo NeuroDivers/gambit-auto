@@ -1,8 +1,7 @@
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import {
   Table,
   TableBody,
@@ -26,6 +25,7 @@ export default function Quotes() {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState("quotes")
+  const navigate = useNavigate()
 
   const { data: quotes, isLoading: isLoadingQuotes, error: quotesError } = useQuery({
     queryKey: ['quotes'],
@@ -87,6 +87,14 @@ export default function Quotes() {
 
     return matchesSearch && matchesStatus
   })
+
+  const handleRowClick = (id: string, type: 'quote' | 'request') => {
+    if (type === 'quote') {
+      navigate(`/admin/quotes/${id}`)
+    } else {
+      navigate(`/admin/quotes/requests/${id}`)
+    }
+  }
 
   if (isLoadingQuotes || isLoadingRequests) {
     return (
@@ -177,7 +185,11 @@ export default function Quotes() {
               <TableBody>
                 {filteredQuotes && filteredQuotes.length > 0 ? (
                   filteredQuotes.map((quote) => (
-                    <TableRow key={quote.id}>
+                    <TableRow 
+                      key={quote.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleRowClick(quote.id, 'quote')}
+                    >
                       <TableCell className="font-medium">
                         {quote.quote_number}
                       </TableCell>
@@ -238,7 +250,11 @@ export default function Quotes() {
               <TableBody>
                 {filteredRequests && filteredRequests.length > 0 ? (
                   filteredRequests.map((request) => (
-                    <TableRow key={request.id}>
+                    <TableRow 
+                      key={request.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleRowClick(request.id, 'request')}
+                    >
                       <TableCell>
                         <div>
                           <p className="font-medium">
