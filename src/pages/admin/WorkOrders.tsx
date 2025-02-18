@@ -6,9 +6,12 @@ import { Link } from "react-router-dom"
 import { WorkOrderList } from "@/components/work-orders/WorkOrderList"
 import { WorkOrderCalendar } from "@/components/work-orders/WorkOrderCalendar"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { BlockedDatesDialog } from "@/components/work-orders/calendar/BlockedDatesDialog"
+import { useAdminStatus } from "@/hooks/useAdminStatus"
 
 export default function WorkOrders() {
   const [view, setView] = React.useState<"list" | "calendar">("list")
+  const { isAdmin } = useAdminStatus()
 
   return (
     <div className="space-y-6 p-6">
@@ -23,6 +26,7 @@ export default function WorkOrders() {
               <CalendarIcon className="h-4 w-4" />
             </ToggleGroupItem>
           </ToggleGroup>
+          {isAdmin && <BlockedDatesDialog />}
           <Link to="/admin/work-orders/create">
             <Button>
               <Plus className="mr-2 h-4 w-4" />

@@ -8,7 +8,6 @@ import { StatusLegend } from "./StatusLegend";
 import { CalendarDayView } from "./calendar/CalendarDayView";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Calendar as CalendarIcon, Clock } from "lucide-react";
-import { BlockedDatesDialog } from "./calendar/BlockedDatesDialog";
 import { BlockedDatesList } from "./calendar/BlockedDatesList";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { Separator } from "@/components/ui/separator";
@@ -56,7 +55,6 @@ export function WorkOrderCalendar() {
   return <section className="">
       <div className="space-y-6 p-6 px-0">
         <div className="flex items-center justify-end gap-4">
-          {isAdmin && <BlockedDatesDialog />}
           <ToggleGroup type="single" value={view} onValueChange={value => value && setView(value as 'month' | 'day')}>
             <ToggleGroupItem value="month" aria-label="Month view">
               <CalendarIcon className="h-4 w-4" />
