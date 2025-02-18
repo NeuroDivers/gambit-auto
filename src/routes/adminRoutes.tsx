@@ -11,6 +11,7 @@ import UserManagement from "@/pages/admin/UserManagement"
 import Quotes from "@/pages/admin/Quotes"
 import CreateQuote from "@/pages/admin/CreateQuote"
 import QuoteDetails from "@/pages/admin/QuoteDetails"
+import QuoteRequestDetails from "@/pages/admin/QuoteRequestDetails"
 import Invoices from "@/pages/admin/Invoices"
 import CreateInvoice from "@/pages/admin/CreateInvoice"
 import InvoiceDetails from "@/pages/admin/InvoiceDetails"
@@ -90,6 +91,14 @@ export const adminRoutes: RouteObject = {
       element: (
         <PermissionGuard resource="quotes" type="page_access">
           <QuoteDetails />
+        </PermissionGuard>
+      ),
+    },
+    {
+      path: "quotes/requests/:id",
+      element: (
+        <PermissionGuard resource="quotes" type="page_access">
+          <QuoteRequestDetails />
         </PermissionGuard>
       ),
     },
