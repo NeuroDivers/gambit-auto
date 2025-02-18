@@ -27,6 +27,7 @@ export function InvoiceServiceItems({ form }: InvoiceServiceItemsProps) {
           <InvoiceItemsFields
             items={form.watch('invoice_items')}
             setItems={(items) => form.setValue('invoice_items', items)}
+            allowPriceEdit={true}
           />
         </CardContent>
       </Card>
