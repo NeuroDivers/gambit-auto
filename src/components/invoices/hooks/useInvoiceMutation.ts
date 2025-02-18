@@ -66,7 +66,7 @@ export function useInvoiceMutation(invoiceId?: string) {
         .update({
           notes: values.notes || "",
           status: values.status,
-          due_date: values.due_date,  // Added due_date field
+          due_date: values.due_date,
           customer_first_name: values.customer_first_name || "",
           customer_last_name: values.customer_last_name || "",
           customer_email: values.customer_email || "",
@@ -115,7 +115,7 @@ export function useInvoiceMutation(invoiceId?: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] })
       toast.success('Invoice updated successfully')
-      navigate('/admin/invoices') // Fix: Changed from /invoices to /admin/invoices
+      navigate('/admin/invoices')
     },
     onError: (error: any) => {
       console.error('Error updating invoice:', error)

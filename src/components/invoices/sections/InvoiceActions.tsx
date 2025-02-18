@@ -46,7 +46,6 @@ export function InvoiceActions({
         <Printer className="h-4 w-4" />
         Print Invoice
       </Button>
-      
     </div>
   );
 }
