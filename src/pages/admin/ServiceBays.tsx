@@ -28,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { ProfileWithRole } from "@/integrations/supabase/types/user-roles"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface AssignedProfile {
   id: string;
@@ -309,7 +310,6 @@ export default function ServiceBays() {
     onSuccess: () => {
       toast({ title: "Success", description: "Services updated successfully" })
       queryClient.invalidateQueries({ queryKey: ["service-bays"] })
-      queryClient.invalidateQueries({ queryKey: ["bay-services", selectedBay?.id] })
     },
     onError: (error) => {
       toast({ 
@@ -648,31 +648,33 @@ export default function ServiceBays() {
                       <SheetHeader>
                         <SheetTitle>Manage Services for {bay.name}</SheetTitle>
                       </SheetHeader>
-                      <div className="py-6 space-y-4">
-                        {availableServices?.map((service) => {
-                          const isActive = bay.bay_services?.some(
-                            bs => bs.service_id === service.id && bs.is_active
-                          ) || bay.assigned_services?.includes(service.id)
-                          
-                          return (
-                            <div key={service.id} className="flex items-center justify-between">
-                              <span>{service.name}</span>
-                              <Button
-                                variant={isActive ? "default" : "outline"}
-                                onClick={() => {
-                                  toggleServiceMutation.mutate({
-                                    bayId: bay.id,
-                                    serviceId: service.id,
-                                    isActive: !isActive
-                                  })
-                                }}
-                              >
-                                {isActive ? 'Active' : 'Inactive'}
-                              </Button>
-                            </div>
-                          )
-                        })}
-                      </div>
+                      <ScrollArea className="h-[calc(100vh-8rem)] mt-6">
+                        <div className="pr-4 space-y-4">
+                          {availableServices?.map((service) => {
+                            const isActive = bay.bay_services?.some(
+                              bs => bs.service_id === service.id && bs.is_active
+                            )
+                            
+                            return (
+                              <div key={service.id} className="flex items-center justify-between">
+                                <span>{service.name}</span>
+                                <Button
+                                  variant={isActive ? "default" : "outline"}
+                                  onClick={() => {
+                                    toggleServiceMutation.mutate({
+                                      bayId: bay.id,
+                                      serviceId: service.id,
+                                      isActive: !isActive
+                                    })
+                                  }}
+                                >
+                                  {isActive ? 'Active' : 'Inactive'}
+                                </Button>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </ScrollArea>
                     </SheetContent>
                   </Sheet>
 
