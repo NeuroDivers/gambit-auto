@@ -1,78 +1,66 @@
 
-import { useState } from "react";
-import { addMonths, subMonths, startOfDay, endOfDay } from "date-fns";
-import { CalendarGrid } from "./calendar/CalendarGrid";
-import { CalendarHeader } from "./calendar/CalendarHeader";
-import { useWorkOrderData } from "./calendar/useWorkOrderData";
-import { StatusLegend } from "./StatusLegend";
-import { CalendarDayView } from "./calendar/CalendarDayView";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Calendar as CalendarIcon, Clock } from "lucide-react";
-import { BlockedDatesList } from "./calendar/BlockedDatesList";
-import { useAdminStatus } from "@/hooks/useAdminStatus";
-import { Separator } from "@/components/ui/separator";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { format, startOfMonth } from "date-fns"
+import { useState } from "react"
+import { CalendarHeader } from "./calendar/CalendarHeader"
+import { CalendarGrid } from "./calendar/CalendarGrid"
+import { useWorkOrderData } from "./calendar/useWorkOrderData"
+import { LoadingScreen } from "../shared/LoadingScreen"
+import { CreateWorkOrderDialog } from "./CreateWorkOrderDialog"
 
-export function WorkOrderCalendar() {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<'month' | 'day'>('month');
-  const {
-    data: workOrders = [],
-    isLoading
-  } = useWorkOrderData();
-  const {
-    isAdmin
-  } = useAdminStatus();
-  const isMobile = useIsMobile();
+interface WorkOrderCalendarProps {
+  clientView?: boolean;
+}
 
-  const statusCounts = {
-    pending: workOrders.filter(wo => wo.status === 'pending').length,
-    approved: workOrders.filter(wo => wo.status === 'approved').length,
-    rejected: workOrders.filter(wo => wo.status === 'rejected').length,
-    completed: workOrders.filter(wo => wo.status === 'completed').length
-  };
+export function WorkOrderCalendar({ clientView = false }: WorkOrderCalendarProps) {
+  const [currentDate, setCurrentDate] = useState(startOfMonth(new Date()))
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const { data: workOrders = [], isLoading } = useWorkOrderData()
 
-  const handleDateChange = (date: Date) => {
-    setCurrentDate(date);
-  };
-
-  const getWorkOrdersForDay = () => {
-    const dayStart = startOfDay(currentDate);
-    const dayEnd = endOfDay(currentDate);
-    return workOrders.filter(workOrder => {
-      if (!workOrder.start_time) return false;
-      const orderDate = new Date(workOrder.start_time);
-      return orderDate >= dayStart && orderDate <= dayEnd;
-    });
-  };
-
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-pulse text-primary/60">Loading calendar...</div>
-      </div>;
+  const handlePrevMonth = () => {
+    const prevMonth = new Date(currentDate)
+    prevMonth.setMonth(prevMonth.getMonth() - 1)
+    setCurrentDate(prevMonth)
   }
 
-  return <section className="">
-      <div className="space-y-6 p-6 px-0">
-        <div className="flex items-center justify-end gap-4">
-          <ToggleGroup type="single" value={view} onValueChange={value => value && setView(value as 'month' | 'day')}>
-            <ToggleGroupItem value="month" aria-label="Month view">
-              <CalendarIcon className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="day" aria-label="Day view">
-              <Clock className="h-4 w-4" />
-            </ToggleGroupItem>
-          </ToggleGroup>
+  const handleNextMonth = () => {
+    const nextMonth = new Date(currentDate)
+    nextMonth.setMonth(nextMonth.getMonth() + 1)
+    setCurrentDate(nextMonth)
+  }
+
+  if (isLoading) {
+    return <LoadingScreen />
+  }
+
+  return (
+    <div className="space-y-6">
+      {!clientView && (
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl md:text-3xl font-bold">
+            Work Orders - {format(currentDate, 'MMMM yyyy')}
+          </h1>
+          <CreateWorkOrderDialog 
+            open={showCreateDialog} 
+            onOpenChange={setShowCreateDialog} 
+          />
         </div>
-        {!isMobile && <StatusLegend statusCounts={statusCounts} />}
-        <div className="space-y-4">
-          {view === 'month' ? <CalendarGrid currentDate={currentDate} workOrders={workOrders} onDateChange={handleDateChange} /> : <CalendarDayView currentDate={currentDate} workOrders={getWorkOrdersForDay()} />}
-        </div>
-        {isAdmin && <div className="pt-8 space-y-4">
-            <Separator />
-            <h4 className="font-medium">Blocked Dates</h4>
-            <BlockedDatesList />
-          </div>}
+      )}
+      
+      <div className="rounded-lg border bg-card">
+        <CalendarHeader 
+          currentDate={currentDate}
+          onPrevMonth={handlePrevMonth}
+          onNextMonth={handleNextMonth}
+        />
+        <CalendarGrid 
+          currentDate={currentDate} 
+          workOrders={workOrders}
+          onDateChange={!clientView ? (date) => {
+            setCurrentDate(date)
+            setShowCreateDialog(true)
+          } : undefined}
+        />
       </div>
-    </section>;
+    </div>
+  )
 }

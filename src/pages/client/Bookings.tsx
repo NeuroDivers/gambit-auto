@@ -1,5 +1,6 @@
 
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
+import { WorkOrderCalendar } from "@/components/work-orders/WorkOrderCalendar"
 
 export default function ClientBookings() {
   return (
@@ -8,7 +9,8 @@ export default function ClientBookings() {
         <PageBreadcrumbs />
         <h1 className="text-2xl md:text-3xl font-bold">My Bookings</h1>
       </div>
-      {/* Content goes here */}
+      
+      <WorkOrderCalendar clientView />
     </div>
   )
 }
