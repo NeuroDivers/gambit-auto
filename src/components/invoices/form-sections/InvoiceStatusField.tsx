@@ -1,3 +1,4 @@
+
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { UseFormReturn } from "react-hook-form"
@@ -5,9 +6,10 @@ import { InvoiceFormValues } from "../types"
 
 type InvoiceStatusFieldProps = {
   form: UseFormReturn<InvoiceFormValues>
+  defaultValue?: string
 }
 
-export function InvoiceStatusField({ form }: InvoiceStatusFieldProps) {
+export function InvoiceStatusField({ form, defaultValue }: InvoiceStatusFieldProps) {
   return (
     <FormField
       control={form.control}
@@ -17,7 +19,8 @@ export function InvoiceStatusField({ form }: InvoiceStatusFieldProps) {
           <FormLabel>Status</FormLabel>
           <Select 
             onValueChange={field.onChange} 
-            defaultValue={field.value}
+            defaultValue={defaultValue || field.value}
+            value={field.value}
           >
             <FormControl>
               <SelectTrigger>

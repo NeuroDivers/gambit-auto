@@ -43,7 +43,7 @@ export function EditInvoiceForm({
             <CardTitle>Invoice Status</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <InvoiceStatusField form={form} />
+            <InvoiceStatusField form={form} defaultValue={form.watch('status')} />
             
             <FormField
               control={form.control}
