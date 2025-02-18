@@ -27,6 +27,7 @@ export function WorkOrderList() {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
   const [assignWorkOrder, setAssignWorkOrder] = useState<WorkOrder | null>(null)
+  const [assignBayWorkOrder, setAssignBayWorkOrder] = useState<WorkOrder | null>(null)
   const { isAdmin } = useAdminStatus()
 
   const { data: workOrders, isLoading, error } = useQuery({
@@ -85,6 +86,19 @@ export function WorkOrderList() {
     }
   })
 
+  const { data: serviceBays } = useQuery({
+    queryKey: ["service-bays"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('service_bays')
+        .select('*')
+        .eq('status', 'available')
+      
+      if (error) throw error
+      return data
+    }
+  })
+
   const handleAssignUser = async (userId: string) => {
     if (!assignWorkOrder) return;
 
@@ -101,6 +115,25 @@ export function WorkOrderList() {
     } catch (error) {
       console.error('Error assigning user:', error);
       toast.error("Failed to assign user");
+    }
+  };
+
+  const handleAssignBay = async (bayId: string) => {
+    if (!assignBayWorkOrder) return;
+
+    try {
+      const { error } = await supabase
+        .from('work_orders')
+        .update({ assigned_bay_id: bayId })
+        .eq('id', assignBayWorkOrder.id);
+
+      if (error) throw error;
+
+      toast.success("Bay assigned successfully");
+      setAssignBayWorkOrder(null);
+    } catch (error) {
+      console.error('Error assigning bay:', error);
+      toast.error("Failed to assign bay");
     }
   };
 
@@ -206,11 +239,16 @@ export function WorkOrderList() {
                     </span>
                   </TableCell>
                   <TableCell>
-                    {workOrder.service_bays ? (
-                      workOrder.service_bays.name
-                    ) : (
-                      <span className="text-muted-foreground">Not assigned</span>
-                    )}
+                    <span 
+                      className={`cursor-pointer ${!workOrder.service_bays ? 'text-muted-foreground' : ''}`}
+                      onClick={() => setAssignBayWorkOrder(workOrder)}
+                    >
+                      {workOrder.service_bays ? (
+                        workOrder.service_bays.name
+                      ) : (
+                        "Not assigned"
+                      )}
+                    </span>
                   </TableCell>
                   <TableCell>
                     {format(new Date(workOrder.created_at), 'MMM d, yyyy')}
@@ -261,6 +299,26 @@ export function WorkOrderList() {
                 onClick={() => handleAssignUser(user.id)}
               >
                 {user.first_name} {user.last_name}
+              </Button>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={!!assignBayWorkOrder} onOpenChange={(open) => !open && setAssignBayWorkOrder(null)}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Assign Bay</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6 space-y-4">
+            {serviceBays?.map((bay) => (
+              <Button
+                key={bay.id}
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => handleAssignBay(bay.id)}
+              >
+                {bay.name}
               </Button>
             ))}
           </div>
