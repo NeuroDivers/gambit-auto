@@ -45,6 +45,8 @@ interface ServiceBay {
   created_at: string;
   updated_at: string;
   profile?: AssignedProfile | null;
+  bay_services?: { service_id: string, is_active: boolean }[];
+  assigned_services?: string[];
 }
 
 interface ServiceBayFormData {
@@ -200,6 +202,10 @@ export default function ServiceBays() {
             email,
             first_name,
             last_name
+          ),
+          bay_services (
+            service_id,
+            is_active
           )
         `)
         .order("name")
@@ -302,6 +308,7 @@ export default function ServiceBays() {
     },
     onSuccess: () => {
       toast({ title: "Success", description: "Services updated successfully" })
+      queryClient.invalidateQueries({ queryKey: ["service-bays"] })
       queryClient.invalidateQueries({ queryKey: ["bay-services", selectedBay?.id] })
     },
     onError: (error) => {
@@ -643,9 +650,10 @@ export default function ServiceBays() {
                       </SheetHeader>
                       <div className="py-6 space-y-4">
                         {availableServices?.map((service) => {
-                          const isActive = bayServices?.some(
-                            bs => bs.service_id === service.id && bs.bay_id === bay.id
-                          )
+                          const isActive = bay.bay_services?.some(
+                            bs => bs.service_id === service.id && bs.is_active
+                          ) || bay.assigned_services?.includes(service.id)
+                          
                           return (
                             <div key={service.id} className="flex items-center justify-between">
                               <span>{service.name}</span>
