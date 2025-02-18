@@ -211,7 +211,11 @@ export function ProfileForm({ role }: ProfileFormProps) {
               <FormItem>
                 <FormLabel>Address</FormLabel>
                 <FormControl>
-                  <Input placeholder="123 Main St, City, Country" {...field} />
+                  <Textarea 
+                    placeholder="123 Main St, City, Country" 
+                    className="min-h-[80px] resize-none"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
