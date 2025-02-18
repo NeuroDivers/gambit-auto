@@ -62,7 +62,7 @@ export function EstimateDetails({
     }
   }
 
-  // For clients viewing an existing estimate
+  // Only show estimate details if an estimate exists
   if (quoteRequest.status === "estimated") {
     return (
       <div>
@@ -114,39 +114,16 @@ export function EstimateDetails({
     )
   }
 
-  // For admins creating an estimate
-  return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Create Estimate</h3>
-      {quoteRequest.service_ids.map(serviceId => (
-        <div key={serviceId} className="flex items-center gap-4">
-          <span className="flex-1">{getServiceName(serviceId)}</span>
-          <div className="w-32">
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              value={serviceEstimates[serviceId] || ""}
-              onChange={(e) => handleEstimateChange(serviceId, e.target.value)}
-              placeholder="Enter amount"
-            />
-          </div>
-        </div>
-      ))}
-      
-      <div className="flex justify-between items-center text-lg font-semibold pt-4 border-t">
-        <span>Total:</span>
-        <span>${calculateTotal().toFixed(2)}</span>
+  // If there's no estimate and user is a client, show waiting message
+  if (!quoteRequest.status || quoteRequest.status === "pending") {
+    return (
+      <div>
+        <h3 className="text-lg font-semibold mb-2">Estimate Status</h3>
+        <p className="text-muted-foreground">Waiting for estimate from service provider...</p>
       </div>
+    )
+  }
 
-      <div className="flex justify-end pt-4">
-        <Button 
-          onClick={handleSubmitEstimate}
-          disabled={isSubmitting || calculateTotal() <= 0}
-        >
-          Submit Estimate
-        </Button>
-      </div>
-    </div>
-  )
+  // Create estimate section - only shown to admins, not visible to clients
+  return null
 }
