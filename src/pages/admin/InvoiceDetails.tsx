@@ -16,10 +16,19 @@ import {
 import { Loader2, ArrowLeft } from "lucide-react"
 import { format } from "date-fns"
 import { PageTitle } from "@/components/shared/PageTitle"
+import { InvoiceActions } from "@/components/invoices/sections/InvoiceActions"
+import { useReactToPrint } from 'react-to-print'
+import { useRef } from 'react'
 
 export default function InvoiceDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const printRef = useRef<HTMLDivElement>(null)
+
+  const handlePrint = useReactToPrint({
+    documentTitle: 'Invoice',
+    content: () => printRef.current,
+  })
 
   const { data: invoice, isLoading, error } = useQuery({
     queryKey: ['invoice', id],
@@ -82,17 +91,23 @@ export default function InvoiceDetails() {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <PageTitle 
-          title={`Invoice ${invoice.invoice_number}`}
-          description="View and manage invoice details"
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <PageTitle 
+            title={`Invoice ${invoice.invoice_number}`}
+            description="View and manage invoice details"
+          />
+        </div>
+        <InvoiceActions 
+          invoiceId={id} 
+          onPrint={handlePrint}
         />
       </div>
 
@@ -155,7 +170,7 @@ export default function InvoiceDetails() {
             </Badge>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-4" ref={printRef}>
               <div>
                 <p className="font-medium mb-2">Services</p>
                 <Table>
