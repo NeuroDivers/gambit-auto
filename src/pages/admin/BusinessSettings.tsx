@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { TaxManagementForm } from "@/features/business/components/TaxManagementForm"
+import { PageTitle } from "@/components/shared/PageTitle"
 
 export default function BusinessSettings() {
   const { data: businessProfile, isLoading: profileLoading, error: profileError } = useBusinessProfile()
@@ -27,8 +28,12 @@ export default function BusinessSettings() {
   if (profileError || taxError) {
     const error = profileError || taxError;
     return (
-      <div className="container mx-auto py-8 px-4">
-        <Card className="max-w-4xl mx-auto border-destructive">
+      <div className="p-6">
+        <PageTitle 
+          title="Business Settings" 
+          description="Manage your business profile and settings"
+        />
+        <Card className="mt-6 border-destructive">
           <CardHeader>
             <CardTitle className="text-destructive flex items-center gap-2">
               <Building2 className="h-6 w-6" />
@@ -49,62 +54,71 @@ export default function BusinessSettings() {
 
   if (profileLoading || taxesLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="p-6">
+        <PageTitle 
+          title="Business Settings" 
+          description="Manage your business profile and settings"
+        />
+        <div className="flex items-center justify-center p-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="profile" className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              Business Profile
-            </TabsTrigger>
-            <TabsTrigger value="taxes" className="flex items-center gap-2">
-              <ReceiptText className="h-4 w-4" />
-              Tax Settings
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="profile">
-            <Card className="shadow-lg">
-              <CardHeader className="space-y-2">
-                <CardTitle className="text-2xl flex items-center gap-2 text-primary">
-                  <Building2 className="h-6 w-6" />
-                  Business Profile
-                </CardTitle>
-                <CardDescription>
-                  Manage your business profile and contact information
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <BusinessForm businessProfile={businessProfile} />
-              </CardContent>
-            </Card>
-          </TabsContent>
+    <div className="space-y-6 p-6">
+      <PageTitle 
+        title="Business Settings" 
+        description="Manage your business profile and settings"
+      />
 
-          <TabsContent value="taxes">
-            <Card className="shadow-lg">
-              <CardHeader className="space-y-2">
-                <CardTitle className="text-2xl flex items-center gap-2 text-primary">
-                  <ReceiptText className="h-6 w-6" />
-                  Tax Settings
-                </CardTitle>
-                <CardDescription>
-                  Configure your business tax rates and numbers
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <TaxManagementForm initialTaxes={taxes || []} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="w-full sm:w-auto inline-flex">
+          <TabsTrigger value="profile" className="flex items-center gap-2">
+            <Building2 className="h-4 w-4" />
+            Business Profile
+          </TabsTrigger>
+          <TabsTrigger value="taxes" className="flex items-center gap-2">
+            <ReceiptText className="h-4 w-4" />
+            Tax Settings
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="profile" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-muted-foreground" />
+                Business Profile
+              </CardTitle>
+              <CardDescription>
+                Update your business information and contact details
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BusinessForm businessProfile={businessProfile} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="taxes" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <ReceiptText className="h-5 w-5 text-muted-foreground" />
+                Tax Settings
+              </CardTitle>
+              <CardDescription>
+                Configure your business tax rates and registration numbers
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TaxManagementForm initialTaxes={taxes || []} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
