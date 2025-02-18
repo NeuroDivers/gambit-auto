@@ -33,47 +33,43 @@ export function QuotesTable({ quotes, onRowClick }: QuotesTableProps) {
     )
   }
 
-  return (
-    <>
-      {quotes.map((quote) => (
-        <TableRow 
-          key={quote.id}
-          className="cursor-pointer hover:bg-muted/50"
-          onClick={() => onRowClick(quote.id, 'quote')}
+  return quotes.map((quote) => (
+    <TableRow 
+      key={quote.id}
+      className="cursor-pointer hover:bg-muted/50"
+      onClick={() => onRowClick(quote.id, 'quote')}
+    >
+      <TableCell className="font-medium">
+        {quote.quote_number}
+      </TableCell>
+      <TableCell>
+        <div>
+          <p className="font-medium">
+            {quote.customer_first_name} {quote.customer_last_name}
+          </p>
+          <p className="text-sm text-muted-foreground">{quote.customer_email}</p>
+        </div>
+      </TableCell>
+      <TableCell>
+        {quote.vehicle_year} {quote.vehicle_make} {quote.vehicle_model}
+      </TableCell>
+      <TableCell>
+        <Badge 
+          variant={
+            quote.status === 'accepted' ? 'default' : 
+            quote.status === 'rejected' ? 'destructive' : 
+            'secondary'
+          }
         >
-          <TableCell className="font-medium">
-            {quote.quote_number}
-          </TableCell>
-          <TableCell>
-            <div>
-              <p className="font-medium">
-                {quote.customer_first_name} {quote.customer_last_name}
-              </p>
-              <p className="text-sm text-muted-foreground">{quote.customer_email}</p>
-            </div>
-          </TableCell>
-          <TableCell>
-            {quote.vehicle_year} {quote.vehicle_make} {quote.vehicle_model}
-          </TableCell>
-          <TableCell>
-            <Badge 
-              variant={
-                quote.status === 'accepted' ? 'default' : 
-                quote.status === 'rejected' ? 'destructive' : 
-                'secondary'
-              }
-            >
-              {quote.status}
-            </Badge>
-          </TableCell>
-          <TableCell>
-            ${quote.total.toFixed(2)}
-          </TableCell>
-          <TableCell>
-            {format(new Date(quote.created_at), 'MMM d, yyyy')}
-          </TableCell>
-        </TableRow>
-      )}
-    </>
-  )
+          {quote.status}
+        </Badge>
+      </TableCell>
+      <TableCell>
+        ${quote.total.toFixed(2)}
+      </TableCell>
+      <TableCell>
+        {format(new Date(quote.created_at), 'MMM d, yyyy')}
+      </TableCell>
+    </TableRow>
+  ))
 }
