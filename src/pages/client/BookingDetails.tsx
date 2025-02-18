@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 export default function BookingDetails() {
   const { id } = useParams()
@@ -35,8 +36,11 @@ export default function BookingDetails() {
           ),
           work_order_services (
             service_id,
-            service_types!work_order_services_main_service_id_fkey (
-              name
+            quantity,
+            unit_price,
+            service_types!work_order_services_service_id_fkey (
+              name,
+              description
             )
           )
         `)
@@ -55,6 +59,12 @@ export default function BookingDetails() {
 
   if (!booking) {
     return <div>Booking not found</div>
+  }
+
+  const calculateTotal = () => {
+    return booking.work_order_services.reduce((total, service) => {
+      return total + (service.quantity * service.unit_price)
+    }, 0)
   }
 
   return (
@@ -101,6 +111,49 @@ export default function BookingDetails() {
                 <p className="font-medium">{booking.service_bays?.name || 'Not assigned'}</p>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Service Items */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Service Items</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Service</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead className="text-right">Quantity</TableHead>
+                  <TableHead className="text-right">Unit Price</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {booking.work_order_services.map((service) => (
+                  <TableRow key={service.service_id}>
+                    <TableCell className="font-medium">
+                      {service.service_types.name}
+                    </TableCell>
+                    <TableCell>{service.service_types.description}</TableCell>
+                    <TableCell className="text-right">{service.quantity}</TableCell>
+                    <TableCell className="text-right">${service.unit_price.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">
+                      ${(service.quantity * service.unit_price).toFixed(2)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                <TableRow>
+                  <TableCell colSpan={4} className="text-right font-medium">
+                    Total
+                  </TableCell>
+                  <TableCell className="text-right font-medium">
+                    ${calculateTotal().toFixed(2)}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
 
