@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { Label } from "@/components/ui/label";
@@ -8,12 +8,16 @@ import { useTheme } from "next-themes";
 
 export default function ProfileSettings() {
   const { theme, setTheme } = useTheme();
-  const [selectedTheme, setSelectedTheme] = useState(theme);
+  const [mounted, setMounted] = useState(false);
 
-  const handleThemeChange = (value: string) => {
-    setSelectedTheme(value);
-    setTheme(value);
-  };
+  // Wait for component to mount to avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="space-y-6 p-6">
@@ -29,8 +33,8 @@ export default function ProfileSettings() {
           </CardHeader>
           <CardContent>
             <RadioGroup 
-              value={selectedTheme} 
-              onValueChange={handleThemeChange}
+              value={theme} 
+              onValueChange={setTheme}
               className="grid grid-cols-3 gap-4"
             >
               <div>
