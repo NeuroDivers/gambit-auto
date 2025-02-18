@@ -597,7 +597,7 @@ export default function ServiceBays() {
                     </DialogContent>
                   </Dialog>
 
-                  <Sheet open={isAssignUserOpen} onOpenChange={setIsAssignUserOpen}>
+                  <Sheet open={isAssignUserOpen && selectedBay?.id === bay.id} onOpenChange={setIsAssignUserOpen}>
                     <SheetTrigger asChild>
                       <Button
                         variant="ghost"
@@ -609,55 +609,53 @@ export default function ServiceBays() {
                         <User className="h-4 w-4" />
                       </Button>
                     </SheetTrigger>
-                    <SheetContent>
+                    <SheetContent className="overflow-y-auto">
                       <SheetHeader>
                         <SheetTitle>Assign User to {bay.name}</SheetTitle>
                       </SheetHeader>
-                      <ScrollArea className="h-[calc(100vh-8rem)] mt-6">
-                        <div className="space-y-4 pr-4">
+                      <div className="mt-6 space-y-4">
+                        <Card 
+                          className={`cursor-pointer transition-all hover:border-primary ${!bay.assigned_profile_id ? 'border-primary' : ''}`}  
+                          onClick={() => assignUserMutation.mutate({ 
+                            bayId: bay.id, 
+                            userId: null 
+                          })}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-2">
+                              <User className="h-8 w-8" />
+                              <div>
+                                <p className="font-medium">Unassigned</p>
+                                <p className="text-sm text-muted-foreground">Remove current assignment</p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        
+                        {assignableUsers?.map((user) => (
                           <Card 
-                            className={`cursor-pointer transition-all hover:border-primary ${!bay.assigned_profile_id ? 'border-primary' : ''}`}  
+                            key={user.id} 
+                            className={`cursor-pointer transition-all hover:border-primary ${bay.assigned_profile_id === user.id ? 'border-primary' : ''}`}
                             onClick={() => assignUserMutation.mutate({ 
                               bayId: bay.id, 
-                              userId: null 
+                              userId: user.id 
                             })}
                           >
                             <CardContent className="p-4">
-                              <div className="flex items-center gap-2">
-                                <User className="h-8 w-8" />
-                                <div>
-                                  <p className="font-medium">Unassigned</p>
-                                  <p className="text-sm text-muted-foreground">Remove current assignment</p>
-                                </div>
-                              </div>
+                              <UserAvatar
+                                displayName={`${user.first_name || ''} ${user.last_name || ''}`}
+                                email={user.email || ''}
+                                showEmail={true}
+                                role={user.role}
+                              />
                             </CardContent>
                           </Card>
-                          
-                          {assignableUsers?.map((user) => (
-                            <Card 
-                              key={user.id} 
-                              className={`cursor-pointer transition-all hover:border-primary ${bay.assigned_profile_id === user.id ? 'border-primary' : ''}`}
-                              onClick={() => assignUserMutation.mutate({ 
-                                bayId: bay.id, 
-                                userId: user.id 
-                              })}
-                            >
-                              <CardContent className="p-4">
-                                <UserAvatar
-                                  displayName={`${user.first_name || ''} ${user.last_name || ''}`}
-                                  email={user.email || ''}
-                                  showEmail={true}
-                                  role={user.role}
-                                />
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      </ScrollArea>
+                        ))}
+                      </div>
                     </SheetContent>
                   </Sheet>
 
-                  <Sheet open={isManageServicesOpen} onOpenChange={setIsManageServicesOpen}>
+                  <Sheet open={isManageServicesOpen && selectedBay?.id === bay.id} onOpenChange={setIsManageServicesOpen}>
                     <SheetTrigger asChild>
                       <Button
                         variant="ghost"
@@ -669,37 +667,35 @@ export default function ServiceBays() {
                         <Wrench className="h-4 w-4" />
                       </Button>
                     </SheetTrigger>
-                    <SheetContent>
+                    <SheetContent className="overflow-y-auto">
                       <SheetHeader>
                         <SheetTitle>Manage Services for {bay.name}</SheetTitle>
                       </SheetHeader>
-                      <ScrollArea className="h-[calc(100vh-8rem)] mt-6">
-                        <div className="pr-4 space-y-4">
-                          {availableServices?.map((service) => {
-                            const isActive = bay.bay_services?.some(
-                              bs => bs.service_id === service.id && bs.is_active
-                            )
-                            
-                            return (
-                              <div key={service.id} className="flex items-center justify-between">
-                                <span>{service.name}</span>
-                                <Button
-                                  variant={isActive ? "default" : "outline"}
-                                  onClick={() => {
-                                    toggleServiceMutation.mutate({
-                                      bayId: bay.id,
-                                      serviceId: service.id,
-                                      isActive: !isActive
-                                    })
-                                  }}
-                                >
-                                  {isActive ? 'Active' : 'Inactive'}
-                                </Button>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      </ScrollArea>
+                      <div className="mt-6 pr-4 space-y-4">
+                        {availableServices?.map((service) => {
+                          const isActive = bay.bay_services?.some(
+                            bs => bs.service_id === service.id && bs.is_active
+                          )
+                          
+                          return (
+                            <div key={service.id} className="flex items-center justify-between">
+                              <span>{service.name}</span>
+                              <Button
+                                variant={isActive ? "default" : "outline"}
+                                onClick={() => {
+                                  toggleServiceMutation.mutate({
+                                    bayId: bay.id,
+                                    serviceId: service.id,
+                                    isActive: !isActive
+                                  })
+                                }}
+                              >
+                                {isActive ? 'Active' : 'Inactive'}
+                              </Button>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </SheetContent>
                   </Sheet>
 
