@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "next-themes"
 import { toast } from "sonner"
+import { supabase } from "@/integrations/supabase/client"
 
 export default function DeveloperSettings() {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
