@@ -1,15 +1,18 @@
+
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ServiceType } from "../hooks/useServiceTypes";
 import { ServiceTypeBadge } from "../card/ServiceTypeBadge";
+
 interface ServiceCardHeaderProps {
   service: ServiceType;
   hasSubServices: boolean;
   isExpanded: boolean;
   onToggleExpand: () => void;
 }
+
 export const ServiceCardHeader = ({
   service,
   hasSubServices,
@@ -17,7 +20,8 @@ export const ServiceCardHeader = ({
   onToggleExpand
 }: ServiceCardHeaderProps) => {
   const isSubService = service.service_type === 'sub_service' && service.parent;
-  return <CardHeader className="">
+
+  return <CardHeader className="!p-0">
       <div className="flex flex-wrap gap-2 items-start">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
