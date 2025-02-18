@@ -41,11 +41,23 @@ const Auth = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (isLogin) {
-      handleSignIn(e);
+      try {
+        const result = await handleSignIn(e);
+        console.log("Sign in result:", result);
+      } catch (error) {
+        console.error("Sign in error:", error);
+      }
     } else {
-      handleSignUp(e);
+      try {
+        const result = await handleSignUp(e);
+        console.log("Sign up result:", result);
+      } catch (error) {
+        console.error("Sign up error:", error);
+      }
     }
   };
 
