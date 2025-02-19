@@ -12,6 +12,10 @@ interface ProfileResponse {
   role: RoleData
 }
 
+interface ClientResponse {
+  role: RoleData
+}
+
 export const useAdminStatus = () => {
   const [isAdmin, setIsAdmin] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -25,6 +29,7 @@ export const useAdminStatus = () => {
           return
         }
 
+        // First check profiles table
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select(`
@@ -37,13 +42,23 @@ export const useAdminStatus = () => {
           .eq('id', user.id)
           .single();
 
-        if (profileError) {
-          console.error('Profile fetch error:', profileError);
-          setIsAdmin(false);
-          return;
-        }
+        // Then check clients table
+        const { data: clientData, error: clientError } = await supabase
+          .from('clients')
+          .select(`
+            role:role_id (
+              id,
+              name,
+              nicename
+            )
+          `)
+          .eq('user_id', user.id)
+          .single();
 
-        const userRole = (profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase();
+        // Get role from either profile or client
+        const userRole = (profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase() || 
+                        (clientData as unknown as ClientResponse)?.role?.name?.toLowerCase();
+        
         console.log("Checking admin status, user role:", userRole);
         
         // Consider both administrator and king as admin roles

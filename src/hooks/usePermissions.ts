@@ -25,14 +25,15 @@ interface UserRole {
 }
 
 export const usePermissions = () => {
-  // Get current user's role and permissions
+  // Get current user's role and permissions from both profiles and clients tables
   const { data: currentUserRole } = useQuery({
     queryKey: ["current-user-role"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
-      const { data, error } = await supabase
+      // Check profiles table first
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select(`
           role:role_id (
@@ -44,24 +45,28 @@ export const usePermissions = () => {
         .eq('id', user.id)
         .single();
 
-      if (error) throw error;
-
-      // Transform the data to match UserRole interface
-      if (data?.role) {
-        // Explicitly type the role data and ensure we're handling a single object
-        const roleData = Array.isArray(data.role) ? data.role[0] : data.role;
-        
-        // Now create a properly typed UserRole object
-        const userRole: UserRole = {
-          id: String(roleData.id),
-          name: String(roleData.name),
-          nicename: String(roleData.nicename)
-        };
-        
-        console.log('Processed user role:', userRole);
-        return userRole;
+      if (!profileError && profileData?.role) {
+        return profileData.role as UserRole;
       }
-      
+
+      // If no profile found or no role, check clients table
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select(`
+          role:role_id (
+            id,
+            name,
+            nicename
+          )
+        `)
+        .eq('user_id', user.id)
+        .single();
+
+      if (!clientError && clientData?.role) {
+        return clientData.role as UserRole;
+      }
+
+      console.log('No role found in either profiles or clients table');
       return null;
     },
     staleTime: Infinity,
@@ -94,7 +99,6 @@ export const usePermissions = () => {
     type: 'page_access' | 'feature_access'
   ): Promise<boolean> => {
     try {
-      // First check if user is authenticated
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         console.log('No user found');
