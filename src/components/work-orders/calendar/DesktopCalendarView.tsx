@@ -19,7 +19,7 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blo
   const [showMonthPicker, setShowMonthPicker] = useState(false)
 
   const handlePreviousMonth = (e: React.MouseEvent) => {
-    e.stopPropagation() // Prevent event from bubbling up
+    e.stopPropagation()
     if (onDateChange) {
       const prevMonth = new Date(currentDate)
       prevMonth.setMonth(prevMonth.getMonth() - 1)
@@ -28,7 +28,7 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blo
   }
 
   const handleNextMonth = (e: React.MouseEvent) => {
-    e.stopPropagation() // Prevent event from bubbling up
+    e.stopPropagation()
     if (onDateChange) {
       const nextMonth = new Date(currentDate)
       nextMonth.setMonth(nextMonth.getMonth() + 1)
@@ -47,7 +47,7 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blo
   })
 
   return (
-    <div className="rounded-lg bg-card/50 p-4">
+    <div className="rounded-lg bg-card/50 p-4" onClick={e => e.stopPropagation()}>
       <div className="flex items-center justify-between mb-4">
         <Button 
           variant="ghost" 
@@ -59,7 +59,10 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blo
         >
           {format(currentDate, 'MMMM yyyy')}
         </Button>
-        <div className="flex items-center gap-2">
+        <div 
+          className="flex items-center gap-2" 
+          onClick={e => e.stopPropagation()}
+        >
           <Button 
             variant="outline" 
             size="icon"
