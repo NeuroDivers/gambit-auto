@@ -29,8 +29,7 @@ export const useAuthForm = () => {
   const handleRoleBasedRedirect = async (userId: string) => {
     try {
       console.log("Checking user role for redirect...");
-      
-      // First check if user is in profiles (staff)
+      // Get user role from profiles
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select(`
@@ -42,36 +41,30 @@ export const useAuthForm = () => {
         .eq("id", userId)
         .single<RoleData>();
 
-      if (!profileError && profileData?.role) {
-        console.log("Found staff profile:", profileData);
-        // Staff member - redirect based on role
-        if (profileData.role.name.toLowerCase() === 'client') {
-          navigate("/client", { replace: true });
-        } else {
-          navigate("/admin", { replace: true });
-        }
-        return;
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        throw profileError;
       }
 
-      // If not in profiles, check clients table
-      const { data: clientData, error: clientError } = await supabase
-        .from("clients")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
+      if (!profileData?.role) {
+        console.error("No role found for user");
+        throw new Error("No role found for user");
+      }
 
-      if (!clientError && clientData) {
-        console.log("Found client:", clientData);
-        // Client - always redirect to client dashboard
+      console.log("Profile data for redirect:", profileData);
+
+      // Redirect based on role
+      if (profileData.role.name.toLowerCase() === 'client') {
+        console.log("Redirecting to client dashboard");
         navigate("/client", { replace: true });
-        return;
+      } else {
+        console.log("Redirecting to admin dashboard");
+        navigate("/admin", { replace: true });
       }
-
-      console.error("User not found in either profiles or clients");
-      navigate("/unauthorized", { replace: true });
     } catch (error) {
       console.error("Error during role-based redirect:", error);
-      navigate("/unauthorized", { replace: true });
+      // Default to client route if role check fails
+      navigate("/client", { replace: true });
     }
   };
 
@@ -89,12 +82,7 @@ export const useAuthForm = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth`,
-          queryParams: {
-            // Default to client role for Google sign-ins
-            access_type: 'offline',
-            prompt: 'consent',
-          }
+          redirectTo: `${window.location.origin}/auth`
         }
       });
       if (error) throw error;
@@ -110,7 +98,7 @@ export const useAuthForm = () => {
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent, isStaff: boolean = false) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
     setLoading(true);
@@ -123,7 +111,6 @@ export const useAuthForm = () => {
         options: {
           data: {
             email: formData.email,
-            is_staff: isStaff, // This determines which table gets the entry
           }
         }
       });
@@ -136,16 +123,25 @@ export const useAuthForm = () => {
       }
 
       if (signUpData?.user) {
-        console.log("User signed up successfully:", signUpData.user.id);
+        console.log("User signed up successfully, attempting immediate sign in");
+        // Sign in the user immediately after signup
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (signInError) throw signInError;
+
+        // Wait a moment for the session to be fully established
+        setTimeout(async () => {
+          // Redirect based on role
+          await handleRoleBasedRedirect(signUpData.user.id);
+        }, 1000);
+        
         toast({
           title: "Welcome!",
           description: "Your account has been created successfully.",
         });
-
-        // Wait for the database triggers to complete
-        setTimeout(async () => {
-          await handleRoleBasedRedirect(signUpData.user.id);
-        }, 1000);
       }
     } catch (error: any) {
       console.error("Sign up error:", error);
@@ -181,8 +177,9 @@ export const useAuthForm = () => {
       }
 
       if (data?.user) {
-        // Wait for session to be established
+        // Wait a moment for the session to be fully established
         setTimeout(async () => {
+          // Redirect based on role
           await handleRoleBasedRedirect(data.user.id);
         }, 1000);
       }
