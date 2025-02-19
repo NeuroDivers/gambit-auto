@@ -14,6 +14,7 @@ interface ProfileResponse {
 
 export const useAdminStatus = () => {
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isInternalStaff, setIsInternalStaff] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -22,9 +23,11 @@ export const useAdminStatus = () => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) {
           setIsAdmin(false)
+          setIsInternalStaff(false)
           return
         }
 
+        // Check if user has a profile (internal staff)
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select(`
@@ -38,19 +41,34 @@ export const useAdminStatus = () => {
           .single();
 
         if (profileError) {
-          console.error('Profile fetch error:', profileError);
-          setIsAdmin(false);
+          if (profileError.code === 'PGRST116') {
+            // Record not found - user is not internal staff
+            console.log('User is not internal staff');
+            setIsAdmin(false);
+            setIsInternalStaff(false);
+          } else {
+            console.error('Profile fetch error:', profileError);
+            setIsAdmin(false);
+            setIsInternalStaff(false);
+          }
           return;
         }
 
-        const userRole = (profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase();
-        console.log("Checking admin status, user role:", userRole);
-        
-        // Consider both administrator and king as admin roles
-        setIsAdmin(userRole === 'administrator' || userRole === 'king');
+        // If we have profile data, user is internal staff
+        if (profileData) {
+          const userRole = (profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase();
+          console.log("Internal staff role:", userRole);
+          
+          setIsInternalStaff(true);
+          setIsAdmin(userRole === 'administrator');
+        } else {
+          setIsInternalStaff(false);
+          setIsAdmin(false);
+        }
       } catch (error) {
         console.error('Error checking admin status:', error)
         setIsAdmin(false)
+        setIsInternalStaff(false)
       } finally {
         setIsLoading(false)
       }
@@ -69,5 +87,5 @@ export const useAdminStatus = () => {
     }
   }, [])
 
-  return { isAdmin, isLoading }
+  return { isAdmin, isInternalStaff, isLoading }
 }
