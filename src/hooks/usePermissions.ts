@@ -20,6 +20,14 @@ interface UserRole {
   nicename: string;
 }
 
+interface ProfileResponse {
+  role: UserRole;
+}
+
+interface ClientResponse {
+  role: UserRole;
+}
+
 export const usePermissions = () => {
   const { data: currentUserRole } = useQuery<UserRole | null>({
     queryKey: ["current-user-role"],
@@ -41,12 +49,13 @@ export const usePermissions = () => {
               nicename
             )
           `)
-          .eq('id', user.id);
+          .eq('id', user.id)
+          .returns<ProfileResponse[]>();
 
         // Check if we have a valid profile with role
         if (profiles?.[0]?.role) {
           console.log('Found profile role:', profiles[0].role);
-          return profiles[0].role as UserRole;
+          return profiles[0].role;
         }
 
         // Fallback to client role
@@ -59,12 +68,13 @@ export const usePermissions = () => {
               nicename
             )
           `)
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .returns<ClientResponse[]>();
 
         // Check if we have a valid client with role
         if (clients?.[0]?.role) {
           console.log('Found client role:', clients[0].role);
-          return clients[0].role as UserRole;
+          return clients[0].role;
         }
 
         console.log('No role found in either profiles or clients table');
