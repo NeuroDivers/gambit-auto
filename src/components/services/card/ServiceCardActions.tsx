@@ -1,8 +1,6 @@
 
 import { Button } from "@/components/ui/button"
-import { Pencil, Trash2 } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { supabase } from "@/integrations/supabase/client"
+import { Pencil, Trash } from "lucide-react"
 
 interface ServiceCardActionsProps {
   serviceId: string;
@@ -45,10 +43,10 @@ export const ServiceCardActions = ({ serviceId, onEdit, onRefetch }: ServiceCard
       <Button 
         variant="ghost" 
         size="icon" 
-        className="h-8 w-8 text-destructive hover:text-destructive/90"
+        className="h-8 w-8 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
         onClick={handleDelete}
       >
-        <Trash2 className="h-4 w-4" />
+        <Trash className="h-4 w-4" />
       </Button>
     </div>
   );
