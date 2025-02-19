@@ -9,6 +9,13 @@ export interface AuthFormData {
   password: string;
 }
 
+interface RoleData {
+  role: {
+    name: string;
+    nicename: string;
+  };
+}
+
 export const useAuthForm = () => {
   const [formData, setFormData] = useState<AuthFormData>({
     email: "",
@@ -31,7 +38,7 @@ export const useAuthForm = () => {
           )
         `)
         .eq("id", userId)
-        .single();
+        .single<RoleData>();
 
       if (profileError) throw profileError;
 
