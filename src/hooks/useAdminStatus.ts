@@ -35,8 +35,8 @@ export const useAdminStatus = () => {
               nicename
             )
           `)
-          .returns<ProfileWithRole[]>()
           .eq('id', user.id)
+          .returns<ProfileWithRole>()
           .maybeSingle();
 
         if (profileError) {
