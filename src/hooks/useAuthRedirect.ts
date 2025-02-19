@@ -19,7 +19,7 @@ export const useAuthRedirect = () => {
             .from("profiles")
             .select(`
               id,
-              role:role_id!inner (
+              role:role_id (
                 id,
                 name,
                 nicename
@@ -42,15 +42,19 @@ export const useAuthRedirect = () => {
           console.log("Profile found:", profileData);
 
           // Redirect based on role
-          const roleName = profileData.role?.name?.toLowerCase();
+          const roleName = profileData.role?.name?.toLowerCase() || '';
           if (roleName === 'client') {
             navigate("/client", { replace: true });
-          } else {
+          } else if (roleName === 'admin') {
             navigate("/admin", { replace: true });
+          } else {
+            console.log("Unknown role:", roleName);
+            navigate("/unauthorized", { replace: true });
           }
         }
       } catch (error: any) {
         console.error("Session check error:", error.message);
+        navigate("/auth", { replace: true });
       }
     };
 
@@ -62,13 +66,13 @@ export const useAuthRedirect = () => {
         console.log("Auth state changed:", event, session);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          console.log("User signed in, checking profile");
+          console.log("User signed in, fetching profile");
           // Get user profile and role
           const { data: profileData, error: profileError } = await supabase
             .from("profiles")
             .select(`
               id,
-              role:role_id!inner (
+              role:role_id (
                 id,
                 name,
                 nicename
@@ -92,11 +96,14 @@ export const useAuthRedirect = () => {
           console.log("Profile found after sign in:", profileData);
 
           // Redirect based on role
-          const roleName = profileData.role?.name?.toLowerCase();
+          const roleName = profileData.role?.name?.toLowerCase() || '';
           if (roleName === 'client') {
             navigate("/client", { replace: true });
-          } else {
+          } else if (roleName === 'admin') {
             navigate("/admin", { replace: true });
+          } else {
+            console.log("Unknown role:", roleName);
+            navigate("/unauthorized", { replace: true });
           }
         } else if (event === 'SIGNED_OUT') {
           console.log("User signed out, redirecting to auth");
