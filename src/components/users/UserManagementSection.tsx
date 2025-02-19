@@ -12,7 +12,9 @@ import { Card } from "@/components/ui/card";
 export const UserManagementSection = () => {
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState("all");
-  const { isAdmin } = useAdminStatus();
+  const { isAdmin, isLoading } = useAdminStatus();
+
+  console.log("UserManagementSection - isAdmin:", isAdmin); // Debug log
 
   const handleRoleSelect = (role: string) => {
     setSelectedRole(role);
