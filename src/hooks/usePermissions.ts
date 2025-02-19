@@ -20,12 +20,14 @@ interface UserRole {
   nicename: string;
 }
 
-type ProfileWithRole = {
-  role: UserRole | null;
+type ProfileResponse = {
+  id: string;
+  role: UserRole;
 }
 
-type ClientWithRole = {
-  role: UserRole | null;
+type ClientResponse = {
+  user_id: string;
+  role: UserRole;
 }
 
 export const usePermissions = () => {
@@ -43,6 +45,7 @@ export const usePermissions = () => {
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select(`
+            id,
             role:role_id (
               id,
               name,
@@ -50,7 +53,7 @@ export const usePermissions = () => {
             )
           `)
           .eq('id', user.id)
-          .single();
+          .single<ProfileResponse>();
 
         if (!profileError && profileData?.role) {
           console.log('Found profile role:', profileData.role);
@@ -61,17 +64,21 @@ export const usePermissions = () => {
         const { data: clientsData, error: clientError } = await supabase
           .from('clients')
           .select(`
+            user_id,
             role:role_id (
               id,
               name,
               nicename
             )
           `)
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .limit(1);
 
-        if (!clientError && clientsData && clientsData.length > 0 && clientsData[0].role) {
-          console.log('Found client role:', clientsData[0].role);
-          return clientsData[0].role;
+        const clientData = clientsData?.[0] as ClientResponse | undefined;
+
+        if (!clientError && clientData?.role) {
+          console.log('Found client role:', clientData.role);
+          return clientData.role;
         }
 
         if (profileError) console.error('Error fetching profile:', profileError);
