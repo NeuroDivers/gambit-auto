@@ -11,11 +11,7 @@ interface RolePermission {
   description: string | null;
   created_at: string;
   updated_at: string;
-  roles?: {
-    id: string;
-    name: string;
-    nicename: string;
-  };
+  roles?: UserRole;
 }
 
 interface UserRole {
@@ -51,14 +47,14 @@ export const usePermissions = () => {
           .from('profiles')
           .select(`
             id,
-            roles:roles!role_id (
+            roles:role_id!roles (
               id,
               name,
               nicename
             )
           `)
           .eq('id', user.id)
-          .maybeSingle();
+          .single();
 
         if (!profileError && profileData?.roles) {
           console.log('Found profile role:', profileData.roles);
@@ -71,14 +67,14 @@ export const usePermissions = () => {
           .select(`
             id,
             user_id,
-            roles:roles!role_id (
+            roles:role_id!roles (
               id,
               name,
               nicename
             )
           `)
           .eq('user_id', user.id)
-          .maybeSingle();
+          .single();
 
         if (!clientError && clientData?.roles) {
           console.log('Found client role:', clientData.roles);
@@ -103,7 +99,7 @@ export const usePermissions = () => {
         .from("role_permissions")
         .select(`
           *,
-          roles:roles!role_id (
+          roles:role_id!roles (
             id,
             name,
             nicename
