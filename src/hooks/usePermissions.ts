@@ -22,12 +22,12 @@ interface UserRole {
 
 interface ProfileWithRole {
   id: string;
-  roles: UserRole;
+  role: UserRole;
 }
 
 interface ClientWithRole {
   id: string;
-  roles: UserRole;
+  role: UserRole;
 }
 
 export const usePermissions = () => {
@@ -41,12 +41,12 @@ export const usePermissions = () => {
           return null;
         }
 
-        // Check profiles table first
-        const { data: profileData } = await supabase
+        // Try to get profile role first since it's the primary source
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select(`
             id,
-            roles:role_id (
+            role:role_id (
               id,
               name,
               nicename
@@ -55,17 +55,21 @@ export const usePermissions = () => {
           .eq('id', user.id)
           .maybeSingle<ProfileWithRole>();
 
-        if (profileData?.roles) {
-          console.log('Found profile role:', profileData.roles);
-          return profileData.roles;
+        if (profileError) {
+          console.error('Error fetching profile role:', profileError);
         }
 
-        // If no profile found or no role, check clients table
-        const { data: clientData } = await supabase
+        if (profileData?.role) {
+          console.log('Found profile role:', profileData.role);
+          return profileData.role;
+        }
+
+        // Fallback to client role if no profile role found
+        const { data: clientData, error: clientError } = await supabase
           .from('clients')
           .select(`
             id,
-            roles:role_id (
+            role:role_id (
               id,
               name,
               nicename
@@ -74,41 +78,56 @@ export const usePermissions = () => {
           .eq('user_id', user.id)
           .maybeSingle<ClientWithRole>();
 
-        if (clientData?.roles) {
-          console.log('Found client role:', clientData.roles);
-          return clientData.roles;
+        if (clientError) {
+          console.error('Error fetching client role:', clientError);
+        }
+
+        if (clientData?.role) {
+          console.log('Found client role:', clientData.role);
+          return clientData.role;
         }
 
         console.log('No role found in either profiles or clients table');
         return null;
       } catch (error) {
-        console.error('Error fetching user role:', error);
+        console.error('Error in role fetch process:', error);
         return null;
       }
     },
     staleTime: Infinity,
+    retry: 1, // Only retry once to prevent excessive requests on failure
   });
 
-  // Get all permissions
   const { data: permissions } = useQuery<RolePermission[]>({
-    queryKey: ["permissions"],
+    queryKey: ["permissions", currentUserRole?.id],
     queryFn: async () => {
+      if (!currentUserRole?.id) {
+        console.log('No role ID available for permissions query');
+        return [];
+      }
+
       const { data, error } = await supabase
         .from("role_permissions")
         .select(`
           *,
-          roles:role_id (
+          role:role_id (
             id,
             name,
             nicename
           )
         `)
+        .eq('role_id', currentUserRole.id)
         .order('resource_name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching permissions:', error);
+        return [];
+      }
+
       return data || [];
     },
     staleTime: Infinity,
+    enabled: !!currentUserRole?.id,
   });
 
   const checkPermission = async (
@@ -118,17 +137,17 @@ export const usePermissions = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.log('No user found');
+        console.log('No user found during permission check');
         return false;
       }
 
-      // If user is administrator, grant access immediately
+      // Administrator check
       if (currentUserRole?.name?.toLowerCase() === 'administrator') {
         console.log('User is administrator, granting access');
         return true;
       }
 
-      // For other roles, check specific permissions
+      // RPC permission check
       const { data: hasPermission, error } = await supabase.rpc('has_permission', {
         user_id: user.id,
         resource: resource,
@@ -143,7 +162,7 @@ export const usePermissions = () => {
       console.log(`Permission check for ${resource}: ${hasPermission}`);
       return hasPermission || false;
     } catch (error) {
-      console.error('Permission check error:', error);
+      console.error('Error in permission check:', error);
       return false;
     }
   };
