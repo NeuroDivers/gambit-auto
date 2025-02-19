@@ -53,20 +53,16 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
 
       // Transform the data to match our expected type
       if (data) {
-        const supabaseData = data as SupabaseProfileResponse
-        // Since role is an array, take the first role (assuming there's only one)
-        if (supabaseData.role && supabaseData.role.length > 0) {
-          const transformedData: ProfileData = {
-            id: supabaseData.id,
-            role: {
-              id: supabaseData.role[0].id,
-              name: supabaseData.role[0].name,
-              nicename: supabaseData.role[0].nicename
-            }
+        const transformedData: ProfileData = {
+          id: data.id,
+          role: {
+            id: data.role.id,
+            name: data.role.name,
+            nicename: data.role.nicename
           }
-          console.log('Transformed profile data:', transformedData)
-          return transformedData
         }
+        console.log('Transformed profile data:', transformedData)
+        return transformedData
       }
       return null
     }
