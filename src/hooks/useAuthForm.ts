@@ -73,7 +73,7 @@ export const useAuthForm = () => {
 
     try {
       console.log("Attempting sign up with:", formData.email);
-      const { data, error } = await supabase.auth.signUp({
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -83,23 +83,29 @@ export const useAuthForm = () => {
         }
       });
 
-      if (error) {
-        if (error.message.includes("already registered")) {
+      if (signUpError) {
+        if (signUpError.message.includes("already registered")) {
           throw new Error("This email is already registered. Please try logging in instead.");
         }
-        throw error;
+        throw signUpError;
       }
 
-      if (data?.user) {
+      if (signUpData?.user) {
+        console.log("User signed up successfully, attempting immediate sign in");
         // Sign in the user immediately after signup
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email: formData.email,
           password: formData.password,
         });
 
         if (signInError) throw signInError;
 
-        navigate("/dashboard");
+        console.log("Sign in successful, redirecting to client dashboard");
+        navigate("/client", { replace: true });
+        toast({
+          title: "Welcome!",
+          description: "Your account has been created successfully.",
+        });
       }
     } catch (error: any) {
       console.error("Sign up error:", error);
@@ -134,7 +140,8 @@ export const useAuthForm = () => {
         throw error;
       }
 
-      navigate("/dashboard");
+      console.log("Sign in successful, redirecting to client dashboard");
+      navigate("/client", { replace: true });
       return data;
     } catch (error: any) {
       console.error("Sign in error:", error);
@@ -166,3 +173,4 @@ export const useAuthForm = () => {
     resetForm,
   };
 };
+
