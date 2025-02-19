@@ -1,4 +1,5 @@
 
+import { useEffect } from "react"
 import { EditInvoiceForm } from "@/components/invoices/sections/EditInvoiceForm"
 import { PageTitle } from "@/components/shared/PageTitle"
 import { useNavigate, useLocation } from "react-router-dom"
@@ -100,7 +101,7 @@ export default function CreateInvoice() {
   }
 
   // Fetch default vehicle if client is preselected
-  React.useEffect(() => {
+  useEffect(() => {
     if (preselectedClient?.id) {
       const fetchDefaultVehicle = async () => {
         const { data: vehicles, error } = await supabase
