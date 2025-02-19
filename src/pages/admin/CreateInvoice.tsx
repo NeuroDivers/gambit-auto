@@ -1,24 +1,32 @@
 
 import { EditInvoiceForm } from "@/components/invoices/sections/EditInvoiceForm"
 import { PageTitle } from "@/components/shared/PageTitle"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { InvoiceFormValues } from "@/components/invoices/types"
+import { Client } from "@/components/clients/types"
+
+interface LocationState {
+  preselectedClient?: Client;
+}
 
 export default function CreateInvoice() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { preselectedClient } = location.state as LocationState || {}
+
   const form = useForm<InvoiceFormValues>({
     defaultValues: {
       status: 'draft',
-      customer_first_name: '',
-      customer_last_name: '',
-      customer_email: '',
-      customer_phone: '',
-      customer_address: '',
+      customer_first_name: preselectedClient?.first_name || '',
+      customer_last_name: preselectedClient?.last_name || '',
+      customer_email: preselectedClient?.email || '',
+      customer_phone: preselectedClient?.phone_number || '',
+      customer_address: preselectedClient?.address || '',
       vehicle_make: '',
       vehicle_model: '',
       vehicle_year: new Date().getFullYear(),
@@ -57,7 +65,8 @@ export default function CreateInvoice() {
           due_date: values.due_date,
           subtotal,
           total: subtotal, // Add tax calculation if needed
-          status: 'draft'
+          status: 'draft',
+          client_id: preselectedClient?.id // Add client reference
         })
         .select()
         .single()
@@ -89,6 +98,34 @@ export default function CreateInvoice() {
       toast.error("Failed to create invoice")
     }
   }
+
+  // Fetch default vehicle if client is preselected
+  React.useEffect(() => {
+    if (preselectedClient?.id) {
+      const fetchDefaultVehicle = async () => {
+        const { data: vehicles, error } = await supabase
+          .from('vehicles')
+          .select('*')
+          .eq('client_id', preselectedClient.id)
+          .eq('is_primary', true)
+          .maybeSingle()
+
+        if (error) {
+          console.error('Error fetching vehicle:', error)
+          return
+        }
+
+        if (vehicles) {
+          form.setValue('vehicle_make', vehicles.make)
+          form.setValue('vehicle_model', vehicles.model)
+          form.setValue('vehicle_year', vehicles.year)
+          form.setValue('vehicle_vin', vehicles.vin || '')
+        }
+      }
+
+      fetchDefaultVehicle()
+    }
+  }, [preselectedClient?.id, form])
 
   return (
     <div className="min-h-screen">

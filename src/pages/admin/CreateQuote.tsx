@@ -8,10 +8,12 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
 import { PageTitle } from "@/components/shared/PageTitle"
 import { ArrowLeft } from "lucide-react"
+import { Client } from "@/components/clients/types"
+import { useEffect } from "react"
 
 type FormData = {
   customer_first_name: string
@@ -32,16 +34,22 @@ type FormData = {
   notes: string
 }
 
+interface LocationState {
+  preselectedClient?: Client;
+}
+
 export default function CreateQuote() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { preselectedClient } = location.state as LocationState || {}
   
   const form = useForm<FormData>({
     defaultValues: {
-      customer_first_name: "",
-      customer_last_name: "",
-      customer_email: "",
-      customer_phone: "",
-      customer_address: "",
+      customer_first_name: preselectedClient?.first_name || "",
+      customer_last_name: preselectedClient?.last_name || "",
+      customer_email: preselectedClient?.email || "",
+      customer_phone: preselectedClient?.phone_number || "",
+      customer_address: preselectedClient?.address || "",
       vehicle_make: "",
       vehicle_model: "",
       vehicle_year: new Date().getFullYear(),
@@ -50,6 +58,34 @@ export default function CreateQuote() {
       notes: ""
     }
   })
+
+  // Fetch default vehicle if client is preselected
+  useEffect(() => {
+    if (preselectedClient?.id) {
+      const fetchDefaultVehicle = async () => {
+        const { data: vehicles, error } = await supabase
+          .from('vehicles')
+          .select('*')
+          .eq('client_id', preselectedClient.id)
+          .eq('is_primary', true)
+          .maybeSingle()
+
+        if (error) {
+          console.error('Error fetching vehicle:', error)
+          return
+        }
+
+        if (vehicles) {
+          form.setValue('vehicle_make', vehicles.make)
+          form.setValue('vehicle_model', vehicles.model)
+          form.setValue('vehicle_year', vehicles.year)
+          form.setValue('vehicle_vin', vehicles.vin || '')
+        }
+      }
+
+      fetchDefaultVehicle()
+    }
+  }, [preselectedClient?.id, form])
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -73,8 +109,9 @@ export default function CreateQuote() {
           vehicle_vin: data.vehicle_vin,
           notes: data.notes,
           subtotal,
-          total: subtotal, // Add tax calculation if needed
-          status: 'draft'
+          total: subtotal,
+          status: 'draft',
+          client_id: preselectedClient?.id
         })
         .select()
         .single()
