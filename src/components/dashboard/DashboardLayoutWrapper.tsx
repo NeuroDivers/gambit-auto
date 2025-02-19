@@ -29,7 +29,7 @@ export function DashboardLayoutWrapper() {
     retry: false
   });
 
-  const { data: profile, isLoading: profileLoading, error: profileError } = useQuery({
+  const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile", session?.user?.id],
     enabled: !!session?.user?.id,
     queryFn: async () => {
@@ -81,18 +81,7 @@ export function DashboardLayoutWrapper() {
   }
 
   // Show loading screen while checking initial session
-  if (sessionLoading) {
-    return <LoadingScreen />;
-  }
-
-  // Redirect to auth if no profile
-  if (profileError || (!profileLoading && !profile)) {
-    console.log("No profile found or error, redirecting to auth");
-    return <Navigate to="/auth" replace />;
-  }
-
-  // Show loading while fetching profile
-  if (profileLoading) {
+  if (sessionLoading || profileLoading) {
     return <LoadingScreen />;
   }
 
