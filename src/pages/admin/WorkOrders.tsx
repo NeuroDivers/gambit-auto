@@ -26,7 +26,7 @@ export default function WorkOrders() {
     <div>
       <div className="space-y-6 p-6">
         <div className="space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
-          <h1 className="text-3xl font-bold">Work Orders</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Work Orders</h1>
           <div className="flex items-center gap-4 flex-wrap">
             <ToggleGroup 
               type="single" 
