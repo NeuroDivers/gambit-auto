@@ -103,9 +103,10 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
             isActive
 
           return cn(
-            "flex items-center gap-3 rounded-lg px-4 py-2 text-base font-medium transition-colors hover:bg-accent hover:text-accent-foreground min-w-0",
+            "flex items-center gap-3 rounded-lg text-base font-medium transition-colors hover:bg-accent hover:text-accent-foreground min-w-0",
+            "px-4 py-3",
             activeState ? "bg-accent text-accent-foreground" : "text-foreground",
-            isCollapsed && "justify-center p-2"
+            isCollapsed && "justify-center h-10 w-10 p-2"
           )
         }}
       >
@@ -139,7 +140,7 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
       <SidebarGroup>
         <SidebarGroupLabel>Main</SidebarGroupLabel>
         <SidebarGroupContent>
-          <SidebarMenu className="px-2">
+          <SidebarMenu className="flex flex-col gap-2 p-4">
             {mainMenuItems.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
@@ -154,7 +155,7 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
       <SidebarGroup>
         <SidebarGroupLabel>Management</SidebarGroupLabel>
         <SidebarGroupContent>
-          <SidebarMenu className="px-2">
+          <SidebarMenu className="flex flex-col gap-2 p-4">
             {managementMenuItems.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
@@ -169,7 +170,7 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
       <SidebarGroup>
         <SidebarGroupLabel>Settings</SidebarGroupLabel>
         <SidebarGroupContent>
-          <SidebarMenu className="px-2">
+          <SidebarMenu className="flex flex-col gap-2 p-4">
             {settingsMenuItems.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
