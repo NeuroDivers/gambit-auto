@@ -31,7 +31,7 @@ export const useAdminStatus = () => {
           .from('profiles')
           .select(`
             id,
-            role:role_id (
+            role:role_id!inner (
               id,
               name,
               nicename
