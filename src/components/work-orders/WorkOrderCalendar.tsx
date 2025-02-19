@@ -30,6 +30,13 @@ export function WorkOrderCalendar({ clientView = false }: WorkOrderCalendarProps
     setCurrentDate(nextMonth)
   }
 
+  const handleDateClick = (date: Date) => {
+    if (!clientView) {
+      setCurrentDate(date)
+      setShowCreateDialog(true)
+    }
+  }
+
   if (isLoading) {
     return <LoadingScreen />
   }
@@ -69,10 +76,7 @@ export function WorkOrderCalendar({ clientView = false }: WorkOrderCalendarProps
         <CalendarGrid 
           currentDate={currentDate} 
           workOrders={workOrders}
-          onDateChange={!clientView ? (date) => {
-            setCurrentDate(date)
-            setShowCreateDialog(true)
-          } : undefined}
+          onDateChange={!clientView ? handleDateClick : undefined}
         />
       </div>
     </div>
