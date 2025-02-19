@@ -12,8 +12,8 @@ export type UserRole = {
 export type User = {
   id: string;
   email: string | null;
-  first_name: string | null;
-  last_name: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
   role?: UserRole;
   avatar_url?: string | null;
   phone_number?: string | null;
