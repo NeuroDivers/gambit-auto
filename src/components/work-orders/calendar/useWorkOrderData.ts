@@ -26,7 +26,7 @@ export function useWorkOrderData() {
     }
   })
 
-  const { data: workOrders = [], isLoading } = useQuery({
+  const { data: workOrders = [], isLoading, refetch } = useQuery({
     queryKey: ["workOrders", roleData?.isClient],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -91,6 +91,7 @@ export function useWorkOrderData() {
 
   return {
     data: workOrders,
-    isLoading
+    isLoading,
+    refetch
   }
 }

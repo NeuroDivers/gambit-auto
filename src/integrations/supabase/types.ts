@@ -221,36 +221,6 @@ export type Database = {
         }
         Relationships: []
       }
-      employees: {
-        Row: {
-          active: boolean | null
-          created_at: string
-          email: string
-          id: string
-          name: string
-          role: Database["public"]["Enums"]["user_role"]
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean | null
-          created_at?: string
-          email: string
-          id?: string
-          name: string
-          role?: Database["public"]["Enums"]["user_role"]
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean | null
-          created_at?: string
-          email?: string
-          id?: string
-          name?: string
-          role?: Database["public"]["Enums"]["user_role"]
-          updated_at?: string
-        }
-        Relationships: []
-      }
       invoice_items: {
         Row: {
           created_at: string
@@ -598,6 +568,20 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_profiles_roles"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_role"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_role_id_fkey"
             columns: ["role_id"]
@@ -1497,6 +1481,13 @@ export type Database = {
         }
         Returns: string
       }
+      create_user_role: {
+        Args: {
+          user_id: string
+          role_name: string
+        }
+        Returns: undefined
+      }
       generate_invoice_number: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1504,6 +1495,16 @@ export type Database = {
       generate_quote_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_user_role: {
+        Args: {
+          input_user_id: string
+        }
+        Returns: {
+          role_name: string
+          role_nicename: string
+          user_type: string
+        }[]
       }
       has_permission: {
         Args: {
@@ -1538,6 +1539,12 @@ export type Database = {
       is_admin: {
         Args: {
           user_id: string
+        }
+        Returns: boolean
+      }
+      is_internal_role: {
+        Args: {
+          role_id: string
         }
         Returns: boolean
       }

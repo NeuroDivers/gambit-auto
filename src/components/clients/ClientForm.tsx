@@ -1,3 +1,4 @@
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -45,17 +46,26 @@ export function ClientForm({ client, onSuccess }: ClientFormProps) {
 
   const onSubmit = async (values: ClientFormValues) => {
     try {
+      // Clean up empty strings for optional fields
+      const dataToUpdate = {
+        ...values,
+        phone_number: values.phone_number || null,
+        address: values.address || null,
+      }
+
       if (client) {
+        console.log("Updating client with data:", dataToUpdate)
         const { error } = await supabase
           .from("clients")
-          .update(values)
+          .update(dataToUpdate)
           .eq("id", client.id)
 
         if (error) throw error
       } else {
+        console.log("Creating client with data:", dataToUpdate)
         const { error } = await supabase
           .from("clients")
-          .insert(values)
+          .insert(dataToUpdate)
 
         if (error) throw error
       }
@@ -69,6 +79,7 @@ export function ClientForm({ client, onSuccess }: ClientFormProps) {
 
       onSuccess?.()
     } catch (error: any) {
+      console.error("Error saving client:", error)
       toast({
         title: "Error",
         description: error.message,

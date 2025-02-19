@@ -7,6 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Outlet, Navigate } from "react-router-dom"
 import { DashboardLayout } from "./DashboardLayout"
 import { LoadingScreen } from "../shared/LoadingScreen"
+import { SidebarProvider } from "@/components/ui/sidebar"
 
 export function DashboardLayoutWrapper() {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export function DashboardLayoutWrapper() {
     retry: false
   });
 
-  const { data: profile, isLoading: profileLoading, error: profileError } = useQuery({
+  const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile", session?.user?.id],
     enabled: !!session?.user?.id,
     queryFn: async () => {
@@ -37,14 +38,7 @@ export function DashboardLayoutWrapper() {
       
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select(`
-          *,
-          role:role_id (
-            id,
-            name,
-            nicename
-          )
-        `)
+        .select("*")
         .eq("id", session.user.id)
         .maybeSingle();
 
@@ -81,28 +75,18 @@ export function DashboardLayoutWrapper() {
   }
 
   // Show loading screen while checking initial session
-  if (sessionLoading) {
-    return <LoadingScreen />;
-  }
-
-  // Redirect to auth if no profile
-  if (profileError || (!profileLoading && !profile)) {
-    console.log("No profile found or error, redirecting to auth");
-    return <Navigate to="/auth" replace />;
-  }
-
-  // Show loading while fetching profile
-  if (profileLoading) {
+  if (sessionLoading || profileLoading) {
     return <LoadingScreen />;
   }
 
   return (
-    <DashboardLayout
-      firstName={profile?.first_name}
-      role={profile?.role}
-      onLogout={handleLogout}
-    >
-      <Outlet />
-    </DashboardLayout>
+    <SidebarProvider>
+      <DashboardLayout
+        firstName={profile?.first_name}
+        onLogout={handleLogout}
+      >
+        <Outlet />
+      </DashboardLayout>
+    </SidebarProvider>
   );
 }

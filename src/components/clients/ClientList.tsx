@@ -31,9 +31,26 @@ export function ClientList() {
   const { data: clients, isLoading } = useQuery({
     queryKey: ['clients', debouncedSearch, sortBy],
     queryFn: async () => {
+      console.log("Fetching clients...")
       let query = supabase
-        .from('client_statistics')
-        .select('*')
+        .from('clients')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          email,
+          phone_number,
+          address,
+          created_at,
+          updated_at,
+          invoices (
+            total,
+            created_at
+          ),
+          work_orders!work_orders_client_id_fkey (
+            created_at
+          )
+        `)
 
       // Apply search if present
       if (debouncedSearch) {
@@ -43,26 +60,50 @@ export function ClientList() {
       // Apply sorting
       switch (sortBy) {
         case 'recent':
-          query = query.order('last_invoice_date', { ascending: false, nullsFirst: false })
+          query = query.order('created_at', { ascending: false })
           break
         case 'name':
           query = query.order('first_name', { ascending: true })
           break
         case 'activity':
-          query = query.order('last_work_order_date', { ascending: false, nullsFirst: false })
+          query = query.order('updated_at', { ascending: false })
           break
       }
       
-      const { data, error } = await query
+      const { data: clientData, error } = await query
       
-      if (error) throw error
+      if (error) {
+        console.error("Error fetching clients:", error)
+        throw error
+      }
 
-      return data.map(client => ({
-        ...client,
-        total_work_orders: client.total_work_orders || 0,
-        total_invoices: client.total_invoices || 0,
-        total_spent: client.total_spent || 0
-      })) as Client[]
+      console.log("Fetched clients:", clientData)
+
+      // Transform the data to include the calculated fields
+      return (clientData || []).map(client => {
+        const invoices = client.invoices || []
+        const workOrders = client.work_orders || []
+        
+        return {
+          id: client.id,
+          first_name: client.first_name,
+          last_name: client.last_name,
+          email: client.email,
+          phone_number: client.phone_number,
+          address: client.address,
+          created_at: client.created_at,
+          updated_at: client.updated_at,
+          total_work_orders: workOrders.length,
+          total_invoices: invoices.length,
+          total_spent: invoices.reduce((sum, inv) => sum + (inv.total || 0), 0),
+          last_invoice_date: invoices.length > 0 
+            ? Math.max(...invoices.map(inv => new Date(inv.created_at).getTime()))
+            : null,
+          last_work_order_date: workOrders.length > 0
+            ? Math.max(...workOrders.map(wo => new Date(wo.created_at).getTime()))
+            : null
+        } as Client
+      })
     }
   })
 
@@ -130,28 +171,6 @@ export function ClientList() {
             key={client.id}
             client={client}
             onEdit={() => handleEdit(client)}
-            actions={
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => handleCreateQuote(client.id)}
-                >
-                  <Quote className="h-4 w-4" />
-                  Create Quote
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => handleCreateInvoice(client.id)}
-                >
-                  <FileText className="h-4 w-4" />
-                  Create Invoice
-                </Button>
-              </div>
-            }
           />
         ))}
       </div>

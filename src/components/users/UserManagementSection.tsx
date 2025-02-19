@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { RoleList } from "./roles/RoleList";
+import { Card } from "@/components/ui/card";
 
 export const UserManagementSection = () => {
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
@@ -19,8 +20,9 @@ export const UserManagementSection = () => {
 
   return (
     <div className="space-y-8">      
-      <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
-        <div className="space-y-6">
+      <div className="grid gap-8 grid-cols-1">
+        {/* Users Section */}
+        <Card className="p-6 space-y-6">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-semibold mb-2 text-foreground">Users</h3>
@@ -34,12 +36,22 @@ export const UserManagementSection = () => {
             )}
           </div>
           <UserList initialRoleFilter={selectedRole} />
-        </div>
-        <div className="space-y-8">
-          <RoleManagement onRoleSelect={handleRoleSelect} />
-          <RoleList />
+        </Card>
+
+        {/* Role Management Section */}
+        <div className="grid gap-8 lg:grid-cols-2">
+          {/* Role Statistics */}
+          <Card className="p-6">
+            <RoleManagement onRoleSelect={handleRoleSelect} />
+          </Card>
+          
+          {/* Role List and Management */}
+          <Card className="p-6">
+            <RoleList />
+          </Card>
         </div>
       </div>
+
       <CreateUserDialog 
         open={isCreateUserOpen} 
         onOpenChange={setIsCreateUserOpen} 
