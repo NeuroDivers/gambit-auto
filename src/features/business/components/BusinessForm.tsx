@@ -1,4 +1,3 @@
-
 import React from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -138,7 +137,7 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
                 The official name of your business
               </FormDescription>
               <FormControl>
-                <Input {...field} className="bg-white" />
+                <Input {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -163,7 +162,7 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
               </Label>
               <div className="flex flex-col gap-4">
                 {lightLogoPreview && (
-                  <div className="relative w-32 h-32 bg-white rounded-lg border p-2">
+                  <div className="relative w-32 h-32 bg-background rounded-lg border p-2">
                     <img 
                       src={lightLogoPreview} 
                       alt="Light Logo Preview" 
@@ -177,7 +176,6 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
                     accept="image/*"
                     onChange={(e) => handleFileUpload(e, 'light')}
                     disabled={isUploading}
-                    className="bg-white"
                   />
                 </div>
               </div>
@@ -207,7 +205,6 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
                     accept="image/*"
                     onChange={(e) => handleFileUpload(e, 'dark')}
                     disabled={isUploading}
-                    className="bg-white"
                   />
                 </div>
               </div>
@@ -235,7 +232,7 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
                 Your primary business contact email
               </FormDescription>
               <FormControl>
-                <Input {...field} type="email" className="bg-white" />
+                <Input {...field} type="email" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -254,7 +251,7 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
                 Your primary business contact number
               </FormDescription>
               <FormControl>
-                <Input {...field} className="bg-white" />
+                <Input {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -273,7 +270,7 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
                 Your business's physical location
               </FormDescription>
               <FormControl>
-                <Input {...field} className="bg-white" />
+                <Input {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
