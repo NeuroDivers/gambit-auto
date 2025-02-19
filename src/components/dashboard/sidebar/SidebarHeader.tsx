@@ -1,8 +1,8 @@
 
-import { LogOut } from "lucide-react"
+import { LogOut, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { User } from "lucide-react"
+import { useSidebar } from "@/components/ui/sidebar"
 
 interface SidebarHeaderProps {
   firstName?: string | null
@@ -14,6 +14,9 @@ interface SidebarHeaderProps {
 }
 
 export function SidebarHeader({ firstName, role, onLogout }: SidebarHeaderProps) {
+  const { state } = useSidebar()
+  const isCollapsed = state === "collapsed"
+
   const formatName = (name: string | null | undefined) => {
     if (!name) return 'Guest';
     const nameParts = name.split(' ');
@@ -23,7 +26,25 @@ export function SidebarHeader({ firstName, role, onLogout }: SidebarHeaderProps)
     return name;
   };
 
-  console.log('Current role:', role); // Keep this log to help debug
+  if (isCollapsed) {
+    return (
+      <div className="p-2 space-y-2 flex flex-col items-center border-b">
+        <Avatar>
+          <AvatarFallback>
+            {firstName?.[0]?.toUpperCase() ?? "U"}
+          </AvatarFallback>
+        </Avatar>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onLogout}
+          className="w-8 h-8 p-0"
+        >
+          <LogOut className="h-4 w-4" />
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div className="p-4 space-y-4 border-b">
