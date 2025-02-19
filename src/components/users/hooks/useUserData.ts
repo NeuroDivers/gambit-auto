@@ -1,6 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { ProfilesTable } from "@/integrations/supabase/types/profiles";
 
 export type UserRole = {
   id: string;
@@ -10,35 +11,25 @@ export type UserRole = {
 
 export type User = {
   id: string;
-  email: string;
-  first_name?: string;
-  last_name?: string;
-  role?: UserRole;
-};
-
-type ProfileResponse = {
-  id: string;
-  email: string;
+  email: string | null;
   first_name: string | null;
   last_name: string | null;
-  role: UserRole;
+  role?: UserRole;
+  avatar_url?: string | null;
+  phone_number?: string | null;
+  address?: string | null;
+  bio?: string | null;
 };
 
-type ClientResponse = {
-  id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  user_id: string;
-  phone_number?: string;
-  address?: string;
+type ProfileResponse = ProfilesTable['Row'] & {
+  role: UserRole;
 };
 
 export const useUserData = () => {
   return useQuery({
     queryKey: ["users"],
     queryFn: async () => {
-      console.log("Fetching users...");
+      console.log("Fetching users from profiles table...");
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select(`
@@ -46,6 +37,10 @@ export const useUserData = () => {
           email,
           first_name,
           last_name,
+          avatar_url,
+          phone_number,
+          address,
+          bio,
           role:role_id (
             id,
             name,
@@ -61,41 +56,19 @@ export const useUserData = () => {
 
       console.log("Fetched profiles:", profiles);
 
-      // Separate client profiles - we'll get their data from clients table
-      const clientProfiles = profiles.filter(profile => profile.role.name === 'client');
-      const nonClientProfiles = profiles.filter(profile => profile.role.name !== 'client');
+      const users: User[] = profiles.map(profile => ({
+        id: profile.id,
+        email: profile.email,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        role: profile.role,
+        avatar_url: profile.avatar_url,
+        phone_number: profile.phone_number,
+        address: profile.address,
+        bio: profile.bio
+      }));
 
-      // Get client data for client profiles
-      const { data: clients, error: clientsError } = await supabase
-        .from("clients")
-        .select("*")
-        .in('user_id', clientProfiles.map(p => p.id))
-        .returns<ClientResponse[]>();
-
-      if (clientsError) {
-        console.error("Error fetching clients:", clientsError);
-        throw clientsError;
-      }
-
-      // Map client profiles to include client data
-      const clientUsers = clientProfiles.map(profile => {
-        const clientData = clients.find(c => c.user_id === profile.id);
-        return {
-          id: profile.id,
-          email: clientData?.email || profile.email,
-          first_name: clientData?.first_name || profile.first_name,
-          last_name: clientData?.last_name || profile.last_name,
-          role: profile.role
-        } satisfies User;
-      });
-
-      // Combine non-client profiles with client users
-      const allUsers: User[] = [
-        ...nonClientProfiles,
-        ...clientUsers
-      ];
-
-      return allUsers;
+      return users;
     },
   });
 };
