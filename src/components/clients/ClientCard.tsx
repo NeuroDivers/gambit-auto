@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button"
-import { FileText, Quote } from "lucide-react"
+import { FileText, Quote, UserCog } from "lucide-react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Client } from "./types"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -37,13 +37,13 @@ export function ClientCard({
 
   return (
     <Card 
-      className="overflow-hidden hover:shadow-lg transition-shadow border-muted cursor-pointer"
+      className="overflow-hidden transition-all duration-200 hover:border-primary/30"
       onClick={handleCardClick}
     >
       <CardHeader className="space-y-0 pb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between">
           <CardTitle className="flex items-center text-lg font-medium">
-            <Avatar className="h-10 w-10 border-2 border-primary/20">
+            <Avatar className="h-10 w-10">
               <AvatarImage src={`https://avatar.vercel.sh/${client.email}.png`} />
               <AvatarFallback className="bg-primary/10 text-primary">
                 {client.first_name[0]}{client.last_name[0]}
@@ -57,14 +57,14 @@ export function ClientCard({
           {onEdit && (
             <Button 
               variant="ghost" 
-              size="sm" 
+              size="icon"
               onClick={(e) => {
                 e.stopPropagation()
                 onEdit()
               }}
-              className="hover:bg-primary/10 hover:text-primary"
+              className="text-muted-foreground hover:text-primary"
             >
-              Edit
+              <UserCog className="h-4 w-4" />
             </Button>
           )}
         </div>
