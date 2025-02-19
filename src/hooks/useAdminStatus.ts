@@ -2,6 +2,17 @@
 import { useState, useEffect } from "react"
 import { supabase } from "@/integrations/supabase/client"
 
+type RoleData = {
+  id: string;
+  name: string;
+  nicename: string;
+}
+
+type ProfileData = {
+  id: string;
+  role: RoleData;
+}
+
 export const useAdminStatus = () => {
   const [isAdmin, setIsAdmin] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -19,6 +30,7 @@ export const useAdminStatus = () => {
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select(`
+            id,
             role:role_id (
               id,
               name,
@@ -26,6 +38,7 @@ export const useAdminStatus = () => {
             )
           `)
           .eq('id', user.id)
+          .returns<ProfileData>()
           .maybeSingle();
 
         if (profileError) {
