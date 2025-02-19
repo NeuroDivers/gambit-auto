@@ -1,24 +1,15 @@
-
 import { format } from "date-fns"
 import { WorkOrder } from "../types"
 import { WorkOrderCard } from "./WorkOrderCard"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Calendar } from "lucide-react"
 
-interface CalendarDayViewProps {
-  date: Date | undefined
+type CalendarDayViewProps = {
+  currentDate: Date
   workOrders: WorkOrder[]
 }
 
-export function CalendarDayView({ date, workOrders }: CalendarDayViewProps) {
-  if (!date) {
-    return (
-      <div className="text-muted-foreground text-sm py-4 text-center">
-        Select a date to view work orders
-      </div>
-    )
-  }
-
+export function CalendarDayView({ currentDate, workOrders }: CalendarDayViewProps) {
   const scheduledWorkOrders = workOrders.filter(wo => wo.start_time)
   const unscheduledWorkOrders = workOrders.filter(wo => !wo.start_time)
 
@@ -31,7 +22,7 @@ export function CalendarDayView({ date, workOrders }: CalendarDayViewProps) {
   return (
     <div className="space-y-4 bg-card/50 p-6 rounded-lg">
       <h3 className="text-lg font-semibold">
-        {format(date, 'EEEE, MMMM d, yyyy')}
+        {format(currentDate, 'EEEE, MMMM d, yyyy')}
       </h3>
       
       <div className="space-y-2">

@@ -46,38 +46,36 @@ export function DashboardLayout({
 
   if (isMobile) {
     return (
-      <SidebarProvider>
-        <div className="min-h-screen w-full bg-background text-foreground">
-          <ProfileCompletionDialog />
-          <Header 
-            firstName={firstName}
-            role={role}
-            onLogout={onLogout}
-          />
+      <div className={cn("min-h-screen w-full bg-background text-foreground")}>
+        <ProfileCompletionDialog />
+        <Header 
+          firstName={firstName}
+          role={role}
+          onLogout={onLogout}
+        />
 
-          <div className={cn(
-            "fixed inset-0 bg-background z-40 transform transition-transform duration-300 ease-in-out",
-            isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-          )}>
-            <div className="h-screen pt-16">
-              {sidebarContent}
-            </div>
+        <div className={cn(
+          "fixed inset-0 bg-background z-40 transform transition-transform duration-300 ease-in-out",
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        )}>
+          <div className="h-screen pt-16">
+            {sidebarContent}
           </div>
-
-          <main className={cn(
-            "flex-1 p-4 transition-all duration-300 ease-in-out bg-background",
-            isMobileMenuOpen ? "opacity-50" : "opacity-100"
-          )}>
-            {children}
-          </main>
         </div>
-      </SidebarProvider>
+
+        <main className={cn(
+          "flex-1 p-4 transition-all duration-300 ease-in-out bg-background",
+          isMobileMenuOpen ? "opacity-50" : "opacity-100"
+        )}>
+          {children}
+        </main>
+      </div>
     )
   }
 
   return (
     <SidebarProvider defaultOpen>
-      <div className="flex h-screen w-full overflow-hidden bg-background"
+      <div className={cn("flex h-screen w-full overflow-hidden bg-background")}
         style={{ 
           "--sidebar-width-icon": "4rem",
         } as React.CSSProperties}
