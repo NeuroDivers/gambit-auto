@@ -2,8 +2,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+interface Role {
+  id: string;
+  name: string;
+}
+
+interface Profile {
+  role_id: string;
+  role: Role;
+}
+
 export const usePermissions = () => {
-  const { data: currentUserRole } = useQuery({
+  const { data: currentUserRole } = useQuery<Role | null>({
     queryKey: ["current-user-role"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -20,14 +30,20 @@ export const usePermissions = () => {
           )
         `)
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error("Error fetching user role:", profileError);
         return null;
       }
 
-      return profile?.role;
+      // Handle case where no profile or role is found
+      if (!profile || !profile.role) {
+        console.warn("No role found for user:", user.id);
+        return null;
+      }
+
+      return profile.role;
     },
   });
 
@@ -37,9 +53,15 @@ export const usePermissions = () => {
     queryFn: async () => {
       if (!currentUserRole?.id) return [];
       
-      const { data } = await supabase.from('role_permissions')
+      const { data, error } = await supabase
+        .from('role_permissions')
         .select('*')
         .eq('role_id', currentUserRole.id);
+
+      if (error) {
+        console.error("Error fetching permissions:", error);
+        return [];
+      }
         
       return data || [];
     },
