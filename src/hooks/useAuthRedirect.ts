@@ -1,6 +1,6 @@
 
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types/database";
 
@@ -17,62 +17,62 @@ type ProfileWithRole = {
 
 export const useAuthRedirect = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const checkSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        
-        if (session) {
-          console.log("Session found:", session);
-          try {
-            // Get user role from profiles
-            const { data, error: profileError } = await supabase
-              .from("profiles")
-              .select(`
-                id,
-                role:role_id!inner (
-                  id,
-                  name,
-                  nicename
-                )
-              `)
-              .eq("id", session.user.id)
-              .single<ProfileWithRole>();
-
-            if (profileError && profileError.code !== 'PGRST116') {
-              console.error("Profile fetch error:", profileError);
-              // If no profile found, assume it's a client
-              console.log("No profile found, redirecting to client dashboard");
-              navigate("/client", { replace: true });
-              return;
-            }
-
-            console.log("Profile data:", data);
-
-            // Redirect based on role
-            if (data?.role?.name?.toLowerCase() === 'client') {
-              console.log("Redirecting to client dashboard");
-              navigate("/client", { replace: true });
-            } else {
-              console.log("Redirecting to admin dashboard");
-              navigate("/admin", { replace: true });
-            }
-          } catch (error) {
-            // If any error occurs during profile check, default to client view
-            console.error("Error during profile check:", error);
-            navigate("/client", { replace: true });
-          }
-        }
-      } catch (error: any) {
+      // Don't redirect if we're already on the auth page and there's no session
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
         console.error("Session check error:", error.message);
+        return;
+      }
+      
+      // If we're on the auth page and have no session, don't redirect
+      if (!session && location.pathname === '/auth') {
+        console.log("No session on auth page, staying here");
+        return;
+      }
+      
+      // If we're on the auth page and have a session, redirect appropriately
+      if (session && location.pathname === '/auth') {
+        console.log("Session found on auth page, redirecting...");
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select(`
+              id,
+              role:role_id!inner (
+                id,
+                name,
+                nicename
+              )
+            `)
+            .eq("id", session.user.id)
+            .maybeSingle<ProfileWithRole>();
+
+          if (profile?.role?.name?.toLowerCase() === 'client') {
+            console.log("Redirecting to client dashboard");
+            navigate("/client", { replace: true });
+          } else {
+            console.log("Redirecting to admin dashboard");
+            navigate("/admin", { replace: true });
+          }
+        } catch (error) {
+          console.log("No profile found or error, redirecting to client dashboard");
+          navigate("/client", { replace: true });
+        }
+      }
+      
+      // If we have no session and we're not on the auth page, redirect to auth
+      if (!session && location.pathname !== '/auth') {
+        console.log("No session found, redirecting to auth");
+        navigate("/auth", { replace: true });
       }
     };
 
     checkSession();
 
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("Auth state changed:", event, session);
@@ -80,8 +80,7 @@ export const useAuthRedirect = () => {
         if (event === 'SIGNED_IN' && session) {
           console.log("User signed in, checking profile");
           try {
-            // Get user role
-            const { data, error: profileError } = await supabase
+            const { data: profile, error: profileError } = await supabase
               .from("profiles")
               .select(`
                 id,
@@ -92,18 +91,9 @@ export const useAuthRedirect = () => {
                 )
               `)
               .eq("id", session.user.id)
-              .single<ProfileWithRole>();
+              .maybeSingle<ProfileWithRole>();
 
-            if (profileError && profileError.code !== 'PGRST116') {
-              console.log("No profile found or error, redirecting to client dashboard");
-              navigate("/client", { replace: true });
-              return;
-            }
-
-            console.log("Profile data after sign in:", data);
-
-            // Redirect based on role
-            if (data?.role?.name?.toLowerCase() === 'client') {
+            if (profile?.role?.name?.toLowerCase() === 'client') {
               console.log("Redirecting to client dashboard");
               navigate("/client", { replace: true });
             } else {
@@ -111,8 +101,7 @@ export const useAuthRedirect = () => {
               navigate("/admin", { replace: true });
             }
           } catch (error) {
-            // If any error occurs during profile check, default to client view
-            console.error("Error during profile check:", error);
+            console.log("No profile found or error, redirecting to client dashboard");
             navigate("/client", { replace: true });
           }
         } else if (event === 'SIGNED_OUT') {
@@ -125,5 +114,5 @@ export const useAuthRedirect = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 };
