@@ -103,10 +103,12 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
             isActive
 
           return cn(
-            "flex items-center gap-3 rounded-lg text-base font-medium transition-colors hover:bg-accent hover:text-accent-foreground w-full overflow-hidden",
+            "flex items-center gap-3 rounded-lg text-base font-medium transition-colors w-full overflow-hidden",
             "px-4 py-3",
             activeState ? "bg-accent text-accent-foreground" : "text-foreground",
-            isCollapsed && "justify-center h-10 w-10 p-2"
+            isCollapsed 
+              ? "justify-center h-10 w-10 p-2 hover:bg-primary hover:text-primary-foreground" 
+              : "hover:bg-accent hover:text-accent-foreground"
           )
         }}
       >
