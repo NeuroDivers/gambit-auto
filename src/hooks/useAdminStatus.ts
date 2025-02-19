@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 import { supabase } from "@/integrations/supabase/client"
 
-type ProfileData = {
+interface ProfileWithRole {
   id: string;
   role_id: {
     id: string;
@@ -25,7 +25,7 @@ export const useAdminStatus = () => {
         }
 
         // Check profiles table only - only staff members should be here
-        const { data: profileData, error: profileError } = await supabase
+        const { data, error: profileError } = await supabase
           .from('profiles')
           .select(`
             id,
@@ -36,6 +36,7 @@ export const useAdminStatus = () => {
             )
           `)
           .eq('id', user.id)
+          .returns<ProfileWithRole>()
           .single();
 
         if (profileError) {
@@ -44,13 +45,13 @@ export const useAdminStatus = () => {
           return;
         }
 
-        if (!profileData) {
+        if (!data) {
           console.log("No profile data found - user is a client");
           setIsAdmin(false);
           return;
         }
 
-        const userRole = profileData.role_id.name.toLowerCase();
+        const userRole = data.role_id.name.toLowerCase();
         console.log("Checking admin status, user role:", userRole);
         
         // Consider both administrator and king as admin roles
