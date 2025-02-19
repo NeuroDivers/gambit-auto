@@ -1,5 +1,5 @@
 
-import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sidebar"
+import { Sidebar, SidebarContent, SidebarProvider, SidebarRail } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 import { ClientSidebarNav } from "./sidebar/ClientSidebarNav"
 import { ClientSidebarHeader } from "./sidebar/ClientSidebarHeader"
@@ -75,10 +75,11 @@ export function ClientLayout({
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen>
       <div className={cn("flex h-screen w-full overflow-hidden bg-background")}>
         <Sidebar>
           {sidebarContent}
+          <SidebarRail />
         </Sidebar>
         <main className="flex-1 overflow-auto p-4 bg-background">{children}</main>
       </div>
