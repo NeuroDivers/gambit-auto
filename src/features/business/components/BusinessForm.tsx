@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { businessFormSchema, BusinessFormValues } from "../schemas/businessFormSchema"
-import { Building, Mail, Phone, MapPin, Image, Loader2 } from "lucide-react"
+import { Building, Mail, Phone, MapPin, Image, Loader2, Sun, Moon } from "lucide-react"
 import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
 
 interface BusinessFormProps {
   businessProfile: any
@@ -18,7 +19,8 @@ interface BusinessFormProps {
 export function BusinessForm({ businessProfile }: BusinessFormProps) {
   const { toast } = useToast()
   const [isUploading, setIsUploading] = React.useState(false)
-  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null)
+  const [lightLogoPreview, setLightLogoPreview] = React.useState<string | null>(null)
+  const [darkLogoPreview, setDarkLogoPreview] = React.useState<string | null>(null)
   
   const form = useForm<BusinessFormValues>({
     resolver: zodResolver(businessFormSchema),
@@ -27,7 +29,8 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
       email: "",
       phone_number: "",
       address: "",
-      logo_url: "",
+      light_logo_url: "",
+      dark_logo_url: "",
     }
   })
 
@@ -38,13 +41,15 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
         email: businessProfile.email || "",
         phone_number: businessProfile.phone_number || "",
         address: businessProfile.address || "",
-        logo_url: businessProfile.logo_url || "",
+        light_logo_url: businessProfile.light_logo_url || "",
+        dark_logo_url: businessProfile.dark_logo_url || "",
       })
-      setPreviewUrl(businessProfile.logo_url || null)
+      setLightLogoPreview(businessProfile.light_logo_url || null)
+      setDarkLogoPreview(businessProfile.dark_logo_url || null)
     }
   }, [businessProfile, form])
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, logoType: 'light' | 'dark') => {
     const file = event.target.files?.[0]
     if (!file) return
 
@@ -66,12 +71,17 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
         .getPublicUrl(fileName)
 
       // Update the form
-      form.setValue('logo_url', publicUrl)
-      setPreviewUrl(publicUrl)
+      if (logoType === 'light') {
+        form.setValue('light_logo_url', publicUrl)
+        setLightLogoPreview(publicUrl)
+      } else {
+        form.setValue('dark_logo_url', publicUrl)
+        setDarkLogoPreview(publicUrl)
+      }
 
       toast({
         title: "Success",
-        description: "Logo uploaded successfully.",
+        description: `${logoType === 'light' ? 'Light' : 'Dark'} logo uploaded successfully.`,
       })
     } catch (error) {
       console.error("Error uploading logo:", error)
@@ -135,40 +145,81 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
           )}
         />
 
-        <div className="space-y-3">
-          <FormLabel className="flex items-center gap-2">
-            <Image className="h-4 w-4 text-[#9b87f5]" />
-            Business Logo
-          </FormLabel>
-          <FormDescription>
-            Upload your business logo image
-          </FormDescription>
-          <div className="flex flex-col gap-4">
-            {previewUrl && (
-              <div className="relative w-32 h-32">
-                <img 
-                  src={previewUrl} 
-                  alt="Business Logo Preview" 
-                  className="w-full h-full object-contain rounded-lg border"
-                />
-              </div>
-            )}
-            <div>
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                disabled={isUploading}
-                className="bg-white"
-              />
-              {isUploading && (
-                <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Uploading...
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <Label className="flex items-center gap-2">
+              <Image className="h-4 w-4 text-[#9b87f5]" />
+              Business Logos
+            </Label>
+            <FormDescription>
+              Upload your business logos for light and dark modes
+            </FormDescription>
+            
+            {/* Light Logo Section */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Sun className="h-4 w-4" />
+                Light Mode Logo
+              </Label>
+              <div className="flex flex-col gap-4">
+                {lightLogoPreview && (
+                  <div className="relative w-32 h-32 bg-white rounded-lg border p-2">
+                    <img 
+                      src={lightLogoPreview} 
+                      alt="Light Logo Preview" 
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                )}
+                <div>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e, 'light')}
+                    disabled={isUploading}
+                    className="bg-white"
+                  />
                 </div>
-              )}
+              </div>
+            </div>
+
+            <Separator className="my-4" />
+
+            {/* Dark Logo Section */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Moon className="h-4 w-4" />
+                Dark Mode Logo
+              </Label>
+              <div className="flex flex-col gap-4">
+                {darkLogoPreview && (
+                  <div className="relative w-32 h-32 bg-zinc-900 rounded-lg border p-2">
+                    <img 
+                      src={darkLogoPreview} 
+                      alt="Dark Logo Preview" 
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                )}
+                <div>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e, 'dark')}
+                    disabled={isUploading}
+                    className="bg-white"
+                  />
+                </div>
+              </div>
             </div>
           </div>
+
+          {isUploading && (
+            <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Uploading...
+            </div>
+          )}
         </div>
 
         <FormField
