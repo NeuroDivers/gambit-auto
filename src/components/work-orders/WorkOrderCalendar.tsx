@@ -19,16 +19,8 @@ export function WorkOrderCalendar({ clientView = false }: WorkOrderCalendarProps
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const { data: workOrders = [], isLoading } = useWorkOrderData()
 
-  const handlePrevMonth = () => {
-    const prevMonth = new Date(currentDate)
-    prevMonth.setMonth(prevMonth.getMonth() - 1)
-    setCurrentDate(prevMonth)
-  }
-
-  const handleNextMonth = () => {
-    const nextMonth = new Date(currentDate)
-    nextMonth.setMonth(nextMonth.getMonth() + 1)
-    setCurrentDate(nextMonth)
+  const handleMonthChange = (date: Date) => {
+    setCurrentDate(date)
   }
 
   const handleDateClick = (date: Date) => {
@@ -69,13 +61,22 @@ export function WorkOrderCalendar({ clientView = false }: WorkOrderCalendarProps
       <div className="rounded-lg border bg-card">
         <CalendarHeader 
           currentDate={currentDate}
-          onPrevMonth={handlePrevMonth}
-          onNextMonth={handleNextMonth}
+          onPrevMonth={() => {
+            const prevMonth = new Date(currentDate)
+            prevMonth.setMonth(prevMonth.getMonth() - 1)
+            handleMonthChange(prevMonth)
+          }}
+          onNextMonth={() => {
+            const nextMonth = new Date(currentDate)
+            nextMonth.setMonth(nextMonth.getMonth() + 1)
+            handleMonthChange(nextMonth)
+          }}
         />
         <CalendarGrid 
           currentDate={currentDate} 
           workOrders={workOrders}
           onDateChange={!clientView ? handleDateClick : undefined}
+          onMonthChange={handleMonthChange}
         />
       </div>
     </div>

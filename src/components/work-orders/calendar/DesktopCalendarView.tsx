@@ -12,10 +12,17 @@ type DesktopCalendarViewProps = {
   currentDate: Date
   workOrders: WorkOrder[]
   onDateChange?: (date: Date) => void
+  onMonthChange: (date: Date) => void
   blockedDates: BlockedDate[]
 }
 
-export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blockedDates }: DesktopCalendarViewProps) {
+export function DesktopCalendarView({ 
+  currentDate, 
+  workOrders, 
+  onDateChange, 
+  onMonthChange,
+  blockedDates 
+}: DesktopCalendarViewProps) {
   const [showMonthPicker, setShowMonthPicker] = useState(false)
 
   const monthStart = startOfMonth(currentDate)
@@ -28,7 +35,7 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blo
     e.stopPropagation()
     const prevMonth = new Date(currentDate)
     prevMonth.setMonth(prevMonth.getMonth() - 1)
-    onDateChange?.(prevMonth)
+    onMonthChange(prevMonth)
   }
 
   const handleNextMonth = (e: React.MouseEvent) => {
@@ -36,7 +43,7 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blo
     e.stopPropagation()
     const nextMonth = new Date(currentDate)
     nextMonth.setMonth(nextMonth.getMonth() + 1)
-    onDateChange?.(nextMonth)
+    onMonthChange(nextMonth)
   }
 
   const days = eachDayOfInterval({
@@ -99,7 +106,7 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blo
         currentDate={currentDate}
         open={showMonthPicker}
         onOpenChange={setShowMonthPicker}
-        onDateChange={onDateChange || (() => {})}
+        onDateChange={onMonthChange}
       />
     </div>
   )

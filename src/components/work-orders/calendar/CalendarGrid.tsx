@@ -9,9 +9,10 @@ type CalendarGridProps = {
   currentDate: Date
   workOrders: WorkOrder[]
   onDateChange?: (date: Date) => void
+  onMonthChange: (date: Date) => void
 }
 
-export function CalendarGrid({ currentDate, workOrders, onDateChange }: CalendarGridProps) {
+export function CalendarGrid({ currentDate, workOrders, onDateChange, onMonthChange }: CalendarGridProps) {
   const isMobile = useIsMobile()
   const { blockedDates = [] } = useBlockedDates()
 
@@ -30,6 +31,7 @@ export function CalendarGrid({ currentDate, workOrders, onDateChange }: Calendar
       currentDate={currentDate}
       workOrders={workOrders}
       onDateChange={onDateChange}
+      onMonthChange={onMonthChange}
       blockedDates={blockedDates}
     />
   )
