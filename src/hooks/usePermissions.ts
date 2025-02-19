@@ -20,16 +20,6 @@ interface UserRole {
   nicename: string;
 }
 
-interface ProfileWithRole {
-  id: string;
-  role: UserRole | null;
-}
-
-interface ClientWithRole {
-  id: string;
-  role: UserRole | null;
-}
-
 export const usePermissions = () => {
   const { data: currentUserRole } = useQuery<UserRole | null>({
     queryKey: ["current-user-role"],
@@ -41,52 +31,40 @@ export const usePermissions = () => {
           return null;
         }
 
-        // Try to get profile role first since it's the primary source
-        const { data: profileData, error: profileError } = await supabase
+        // Try to get profile role first
+        const { data: profiles } = await supabase
           .from('profiles')
           .select(`
-            id,
             role:role_id (
               id,
               name,
               nicename
             )
           `)
-          .eq('id', user.id)
-          .limit(1)
-          .single();
+          .eq('id', user.id);
 
-        if (!profileError && profileData?.role) {
-          console.log('Found profile role:', profileData.role);
-          return profileData.role;
+        // Check if we have a valid profile with role
+        if (profiles?.[0]?.role) {
+          console.log('Found profile role:', profiles[0].role);
+          return profiles[0].role as UserRole;
         }
 
-        if (profileError && profileError.code !== 'PGRST116') {
-          console.error('Profile fetch error:', profileError);
-        }
-
-        // Fallback to client role if no profile role found
-        const { data: clientData, error: clientError } = await supabase
+        // Fallback to client role
+        const { data: clients } = await supabase
           .from('clients')
           .select(`
-            id,
             role:role_id (
               id,
               name,
               nicename
             )
           `)
-          .eq('user_id', user.id)
-          .limit(1)
-          .single();
+          .eq('user_id', user.id);
 
-        if (!clientError && clientData?.role) {
-          console.log('Found client role:', clientData.role);
-          return clientData.role;
-        }
-
-        if (clientError && clientError.code !== 'PGRST116') {
-          console.error('Client fetch error:', clientError);
+        // Check if we have a valid client with role
+        if (clients?.[0]?.role) {
+          console.log('Found client role:', clients[0].role);
+          return clients[0].role as UserRole;
         }
 
         console.log('No role found in either profiles or clients table');
@@ -100,7 +78,7 @@ export const usePermissions = () => {
     retry: 1,
   });
 
-  const { data: permissions } = useQuery<RolePermission[]>({
+  const { data: permissions = [] } = useQuery<RolePermission[]>({
     queryKey: ["permissions", currentUserRole?.id],
     queryFn: async () => {
       if (!currentUserRole?.id) {
