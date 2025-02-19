@@ -77,7 +77,7 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
   const { isMobile, state } = useSidebar()
   const isCollapsed = state === "collapsed"
 
-  const NavLink = ({ item }: { item: typeof items[0] }) => {
+  const SidebarNavLink = ({ item }: { item: typeof items[0] }) => {
     const link = (
       <NavLink
         to={item.to}
@@ -117,7 +117,7 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
     <ScrollArea className="flex-1">
       <nav className="flex flex-col gap-2 p-4">
         {items.map((item) => (
-          <NavLink key={item.to} item={item} />
+          <SidebarNavLink key={item.to} item={item} />
         ))}
       </nav>
     </ScrollArea>
