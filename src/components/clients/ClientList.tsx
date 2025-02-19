@@ -35,12 +35,21 @@ export function ClientList() {
       let query = supabase
         .from('clients')
         .select(`
-          *,
-          total_spent:invoices(sum(total)),
-          total_invoices:invoices(count(*)),
-          total_work_orders:work_orders(count(*)),
-          last_invoice_date:invoices(max(created_at)),
-          last_work_order_date:work_orders(max(created_at))
+          id,
+          first_name,
+          last_name,
+          email,
+          phone_number,
+          address,
+          created_at,
+          updated_at,
+          invoices!inner (
+            total,
+            created_at
+          ),
+          work_orders!inner (
+            created_at
+          )
         `)
 
       // Apply search if present
@@ -57,30 +66,44 @@ export function ClientList() {
           query = query.order('first_name', { ascending: true })
           break
         case 'activity':
-          // Since we can't sort by a computed column directly,
-          // we'll sort by updated_at as a fallback
           query = query.order('updated_at', { ascending: false })
           break
       }
       
-      const { data, error } = await query
+      const { data: clientData, error } = await query
       
       if (error) {
         console.error("Error fetching clients:", error)
         throw error
       }
 
-      console.log("Fetched clients:", data)
+      console.log("Fetched clients:", clientData)
 
-      return data.map(client => ({
-        ...client,
-        // Extract aggregated values from the nested objects
-        total_work_orders: client.total_work_orders?.[0]?.count || 0,
-        total_invoices: client.total_invoices?.[0]?.count || 0,
-        total_spent: client.total_spent?.[0]?.sum || 0,
-        last_invoice_date: client.last_invoice_date?.[0]?.max || null,
-        last_work_order_date: client.last_work_order_date?.[0]?.max || null
-      })) as Client[]
+      // Transform the data to include the calculated fields
+      return (clientData || []).map(client => {
+        const invoices = client.invoices || []
+        const workOrders = client.work_orders || []
+        
+        return {
+          id: client.id,
+          first_name: client.first_name,
+          last_name: client.last_name,
+          email: client.email,
+          phone_number: client.phone_number,
+          address: client.address,
+          created_at: client.created_at,
+          updated_at: client.updated_at,
+          total_work_orders: workOrders.length,
+          total_invoices: invoices.length,
+          total_spent: invoices.reduce((sum, inv) => sum + (inv.total || 0), 0),
+          last_invoice_date: invoices.length > 0 
+            ? Math.max(...invoices.map(inv => new Date(inv.created_at).getTime()))
+            : null,
+          last_work_order_date: workOrders.length > 0
+            ? Math.max(...workOrders.map(wo => new Date(wo.created_at).getTime()))
+            : null
+        } as Client
+      })
     }
   })
 
