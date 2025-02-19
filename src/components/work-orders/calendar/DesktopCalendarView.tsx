@@ -50,9 +50,7 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blo
               e.stopPropagation()
               const prevMonth = new Date(currentDate)
               prevMonth.setMonth(prevMonth.getMonth() - 1)
-              if (onDateChange) {
-                onDateChange(prevMonth)
-              }
+              onDateChange?.(prevMonth)
             }}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -65,9 +63,7 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blo
               e.stopPropagation()
               const nextMonth = new Date(currentDate)
               nextMonth.setMonth(nextMonth.getMonth() + 1)
-              if (onDateChange) {
-                onDateChange(nextMonth)
-              }
+              onDateChange?.(prevMonth)
             }}
           >
             <ChevronRight className="h-4 w-4" />
