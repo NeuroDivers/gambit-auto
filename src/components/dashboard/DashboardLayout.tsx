@@ -83,14 +83,14 @@ export function DashboardLayout({
   }
 
   return (
-    <div className={cn("flex h-screen w-full overflow-hidden")}>
-      <SidebarProvider>
-        <Sidebar>
+    <SidebarProvider>
+      <div className={cn("flex h-screen w-full overflow-hidden")}>
+        <Sidebar className="border-r">
           {sidebarContent}
           <SidebarRail />
         </Sidebar>
-      </SidebarProvider>
-      <main className="flex-1 overflow-auto p-4">{children}</main>
-    </div>
+        <main className="flex-1 overflow-auto p-4">{children}</main>
+      </div>
+    </SidebarProvider>
   )
 }
