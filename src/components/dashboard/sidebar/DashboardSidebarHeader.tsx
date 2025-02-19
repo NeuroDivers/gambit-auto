@@ -37,7 +37,7 @@ export function DashboardSidebarHeader({
     : businessProfile?.light_logo_url
 
   return (
-    <div className="flex h-16 items-center justify-between px-4 border-b">
+    <div className="flex h-32 items-center justify-between px-4 border-b">
       <div className="flex-1 flex items-center justify-center">
         {state === "expanded" ? (
           logoUrl ? (
