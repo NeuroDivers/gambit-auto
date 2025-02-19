@@ -10,7 +10,11 @@ type RoleData = {
 
 type ProfileData = {
   id: string;
-  role: RoleData;
+  role_id: {
+    id: string;
+    name: string;
+    nicename: string;
+  };
 }
 
 export const useAdminStatus = () => {
@@ -31,7 +35,7 @@ export const useAdminStatus = () => {
           .from('profiles')
           .select(`
             id,
-            role:role_id (
+            role_id (
               id,
               name,
               nicename
@@ -53,7 +57,7 @@ export const useAdminStatus = () => {
           return;
         }
 
-        const userRole = profileData.role?.name?.toLowerCase();
+        const userRole = profileData.role_id?.name?.toLowerCase();
         console.log("Checking admin status, user role:", userRole);
         
         // Consider both administrator and king as admin roles
