@@ -22,7 +22,7 @@ export type User = {
 };
 
 type ProfileWithRole = ProfilesTable['Row'] & {
-  role: UserRole | null;
+  roles: UserRole | null;
 };
 
 export const useUserData = () => {
@@ -34,7 +34,7 @@ export const useUserData = () => {
           .from("profiles")
           .select(`
             *,
-            role:role_id (
+            roles!profiles_role_id_fkey (
               id,
               name,
               nicename
@@ -56,7 +56,7 @@ export const useUserData = () => {
           email: profile.email,
           first_name: profile.first_name,
           last_name: profile.last_name,
-          role: profile.role,
+          role: profile.roles,
           avatar_url: profile.avatar_url,
           phone_number: profile.phone_number,
           address: profile.address,
