@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { UserList } from "./UserList";
 import { RoleManagement } from "./RoleManagement";
@@ -9,18 +8,16 @@ import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { RoleList } from "./roles/RoleList";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
 export const UserManagementSection = () => {
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState("all");
-  const { isAdmin } = useAdminStatus();
-
+  const {
+    isAdmin
+  } = useAdminStatus();
   const handleRoleSelect = (role: string) => {
     setSelectedRole(role);
   };
-
-  return (
-    <div className="grid gap-8 grid-cols-1 xl:grid-cols-[1fr_400px]">
+  return <div className="grid gap-8 grid-cols-1 xl:grid-cols-[1fr_400px]">
       {/* Main Content - Users List */}
       <div className="space-y-8">
         <Card className="border-none shadow-md">
@@ -37,12 +34,10 @@ export const UserManagementSection = () => {
                   </p>
                 </div>
               </div>
-              {isAdmin && (
-                <Button onClick={() => setIsCreateUserOpen(true)} className="gap-2">
+              {isAdmin && <Button onClick={() => setIsCreateUserOpen(true)} className="gap-2">
                   <Plus className="h-4 w-4" />
                   Create User
-                </Button>
-              )}
+                </Button>}
             </div>
           </div>
           <ScrollArea className="h-[calc(100vh-320px)]">
@@ -56,7 +51,7 @@ export const UserManagementSection = () => {
       {/* Sidebar - Role Management */}
       <div className="space-y-8">
         <Card className="border-none shadow-md">
-          <div className="border-b p-6">
+          <div className="">
             <RoleManagement onRoleSelect={handleRoleSelect} />
           </div>
         </Card>
@@ -68,10 +63,6 @@ export const UserManagementSection = () => {
         </Card>
       </div>
 
-      <CreateUserDialog 
-        open={isCreateUserOpen} 
-        onOpenChange={setIsCreateUserOpen} 
-      />
-    </div>
-  );
+      <CreateUserDialog open={isCreateUserOpen} onOpenChange={setIsCreateUserOpen} />
+    </div>;
 };
