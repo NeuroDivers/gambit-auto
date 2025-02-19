@@ -13,10 +13,10 @@ export function CalendarHeader({ currentDate, onPrevMonth, onNextMonth }: Calend
   return (
     <div className="flex items-center gap-2">
       <Button
-        variant="ghost"
+        variant="outline"
         size="icon"
         onClick={onPrevMonth}
-        className="text-primary hover:bg-primary hover:text-white border-0"
+        className="hover:bg-primary/10"
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
@@ -26,10 +26,10 @@ export function CalendarHeader({ currentDate, onPrevMonth, onNextMonth }: Calend
       </h2>
       
       <Button
-        variant="ghost"
+        variant="outline"
         size="icon"
         onClick={onNextMonth}
-        className="text-primary hover:bg-primary hover:text-white border-0"
+        className="hover:bg-primary/10"
       >
         <ChevronRight className="h-4 w-4" />
       </Button>
