@@ -1,8 +1,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Plus, Loader2, Edit, Trash, User, Wrench } from "lucide-react"
-import { useState, useEffect } from "react"
-import { usePermissions } from "@/hooks/usePermissions"
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -65,7 +64,6 @@ interface BayService {
 }
 
 export default function ServiceBays() {
-  const [hasAccess, setHasAccess] = useState<boolean | null>(null)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedBay, setSelectedBay] = useState<ServiceBay | null>(null)
@@ -73,7 +71,6 @@ export default function ServiceBays() {
   const [isManageServicesOpen, setIsManageServicesOpen] = useState(false)
   const { toast } = useToast()
   const queryClient = useQueryClient()
-  const { checkPermission } = usePermissions()
 
   const form = useForm<ServiceBayFormData>({
     defaultValues: {
@@ -295,15 +292,6 @@ export default function ServiceBays() {
     enabled: !!selectedBay,
   })
 
-  useEffect(() => {
-    const checkAccess = async () => {
-      const hasPermission = await checkPermission("service_bays", "page_access")
-      console.log("Service bays permission check:", hasPermission)
-      setHasAccess(hasPermission)
-    }
-    checkAccess()
-  }, [checkPermission])
-
   const { data: serviceBays, isLoading, refetch } = useQuery({
     queryKey: ["service-bays"],
     queryFn: async () => {
@@ -419,25 +407,10 @@ export default function ServiceBays() {
     }
   }
 
-  if (hasAccess === null || isLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
-  }
-
-  if (hasAccess === false) {
-    return (
-      <div className="p-6">
-        <Card className="border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive">Access Denied</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>You don't have permission to access service bays.</p>
-          </CardContent>
-        </Card>
       </div>
     )
   }
