@@ -22,12 +22,12 @@ interface UserRole {
 
 interface ProfileWithRole {
   id: string;
-  role: UserRole;
+  role: UserRole | null;
 }
 
 interface ClientWithRole {
   id: string;
-  role: UserRole;
+  role: UserRole | null;
 }
 
 export const usePermissions = () => {
@@ -53,15 +53,16 @@ export const usePermissions = () => {
             )
           `)
           .eq('id', user.id)
-          .maybeSingle<ProfileWithRole>();
+          .limit(1)
+          .single();
 
-        if (profileError) {
-          console.error('Error fetching profile role:', profileError);
-        }
-
-        if (profileData?.role) {
+        if (!profileError && profileData?.role) {
           console.log('Found profile role:', profileData.role);
           return profileData.role;
+        }
+
+        if (profileError && profileError.code !== 'PGRST116') {
+          console.error('Profile fetch error:', profileError);
         }
 
         // Fallback to client role if no profile role found
@@ -76,15 +77,16 @@ export const usePermissions = () => {
             )
           `)
           .eq('user_id', user.id)
-          .maybeSingle<ClientWithRole>();
+          .limit(1)
+          .single();
 
-        if (clientError) {
-          console.error('Error fetching client role:', clientError);
-        }
-
-        if (clientData?.role) {
+        if (!clientError && clientData?.role) {
           console.log('Found client role:', clientData.role);
           return clientData.role;
+        }
+
+        if (clientError && clientError.code !== 'PGRST116') {
+          console.error('Client fetch error:', clientError);
         }
 
         console.log('No role found in either profiles or clients table');
@@ -95,7 +97,7 @@ export const usePermissions = () => {
       }
     },
     staleTime: Infinity,
-    retry: 1, // Only retry once to prevent excessive requests on failure
+    retry: 1,
   });
 
   const { data: permissions } = useQuery<RolePermission[]>({
