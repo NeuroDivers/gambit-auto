@@ -5,6 +5,7 @@ import { UserCard } from "./UserCard";
 import { useUserData } from "./hooks/useUserData";
 import { useUserSubscription } from "./hooks/useUserSubscription";
 import { UserListHeader } from "./UserListHeader";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface UserListProps {
   initialRoleFilter?: string;
@@ -14,6 +15,7 @@ export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState(initialRoleFilter);
   const { data: users, isLoading, error } = useUserData();
+  const queryClient = useQueryClient();
   
   // Update roleFilter when initialRoleFilter changes
   useState(() => {
