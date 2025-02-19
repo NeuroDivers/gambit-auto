@@ -9,10 +9,14 @@ import Auth from "./pages/Auth"
 
 export const router = createBrowserRouter([
   {
-    path: "/",
+    path: "/auth",
     element: <Auth />,
   },
   ...authRoutes,
+  {
+    path: "/",
+    element: <Auth />,
+  },
   {
     path: "/invoices/public/:id",
     element: <PublicInvoiceView />,
