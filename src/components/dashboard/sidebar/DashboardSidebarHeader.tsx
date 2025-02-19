@@ -38,13 +38,13 @@ export function DashboardSidebarHeader({
 
   return (
     <div className="flex h-16 items-center justify-between px-4 border-b">
-      <div className="flex items-center gap-2">
+      <div className="flex-1 flex items-center justify-center">
         {state === "expanded" ? (
           logoUrl ? (
             <img 
               src={logoUrl}
               alt="Business Logo"
-              className="h-12 w-auto max-w-[200px] object-contain"
+              className="h-24 w-auto max-w-[240px] object-contain"
               onError={(e) => {
                 const target = e.target as HTMLImageElement
                 target.style.display = 'none'
