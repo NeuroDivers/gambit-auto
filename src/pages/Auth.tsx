@@ -18,7 +18,11 @@ const Auth = () => {
   const handleSignInClick = () => {
     setIsLogin(true);
     resetForm();
-    setIsModalOpen(false);
+  };
+
+  const handleSignUpClick = () => {
+    setIsLogin(false);
+    resetForm();
   };
 
   const handleForgotPassword = async () => {
@@ -68,7 +72,8 @@ const Auth = () => {
       footerText={isLogin ? "Don't have an account?" : "Already have an account?"}
       footerAction={{
         text: isLogin ? "Sign up" : "Sign in",
-        href: isLogin ? "/auth/signup" : "/auth"
+        href: "#",
+        onClick: isLogin ? handleSignUpClick : handleSignInClick
       }}
     >
       <AuthContent

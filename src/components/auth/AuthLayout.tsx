@@ -11,6 +11,7 @@ interface AuthLayoutProps {
   footerAction?: {
     text: string
     href: string
+    onClick?: () => void
   }
 }
 
@@ -58,12 +59,12 @@ export function AuthLayout({
         {footerText && footerAction && (
           <p className="px-8 text-center text-sm text-muted-foreground">
             {footerText}{" "}
-            <Link
-              to={footerAction.href}
+            <button
+              onClick={footerAction.onClick}
               className="underline underline-offset-4 hover:text-primary"
             >
               {footerAction.text}
-            </Link>
+            </button>
           </p>
         )}
       </div>
