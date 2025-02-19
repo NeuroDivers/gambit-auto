@@ -26,7 +26,7 @@ export const useAdminStatus = () => {
           return
         }
 
-        // Check profiles table only
+        // Check profiles table only - only staff members should be here
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select(`
@@ -48,7 +48,7 @@ export const useAdminStatus = () => {
         }
 
         if (!profileData) {
-          console.log("No profile data found");
+          console.log("No profile data found - user is a client");
           setIsAdmin(false);
           return;
         }
