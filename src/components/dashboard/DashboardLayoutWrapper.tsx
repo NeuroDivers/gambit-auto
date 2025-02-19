@@ -39,7 +39,7 @@ export function DashboardLayoutWrapper() {
         .from("profiles")
         .select(`
           *,
-          role:role_id (
+          role:roles!profiles_role_id_fkey (
             id,
             name,
             nicename
