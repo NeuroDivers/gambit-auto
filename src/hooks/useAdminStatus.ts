@@ -47,7 +47,13 @@ export const useAdminStatus = () => {
           return;
         }
 
-        const userRole = profileData?.role?.name?.toLowerCase();
+        if (!profileData) {
+          console.log("No profile data found");
+          setIsAdmin(false);
+          return;
+        }
+
+        const userRole = profileData.role?.name?.toLowerCase();
         console.log("Checking admin status, user role:", userRole);
         
         // Consider both administrator and king as admin roles
