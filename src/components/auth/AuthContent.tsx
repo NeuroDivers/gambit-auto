@@ -29,7 +29,7 @@ export const AuthContent = ({
   onGoogleSignIn,
   onForgotPassword,
 }: AuthContentProps) => {
-  return isLogin ? (
+  return (
     <LoginForm
       formData={formData}
       loading={loading}
@@ -38,26 +38,5 @@ export const AuthContent = ({
       onGoogleSignIn={onGoogleSignIn}
       onForgotPassword={onForgotPassword}
     />
-  ) : (
-    <>
-      <LoginForm
-        formData={formData}
-        loading={loading}
-        onSubmit={onSubmit}
-        onChange={onChange}
-        onGoogleSignIn={onGoogleSignIn}
-        onForgotPassword={onForgotPassword}
-      />
-      <div className="text-center">
-        <Button
-          type="button"
-          variant="link"
-          className="text-primary hover:underline"
-          onClick={onSignInClick}
-        >
-          Already have an account? Sign in
-        </Button>
-      </div>
-    </>
   );
 };
