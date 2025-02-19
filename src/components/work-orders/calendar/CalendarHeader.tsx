@@ -7,18 +7,11 @@ type CalendarHeaderProps = {
   currentDate: Date
   onPrevMonth: () => void
   onNextMonth: () => void
-  onShowMonthPicker?: () => void
 }
 
-export function CalendarHeader({ currentDate, onPrevMonth, onNextMonth, onShowMonthPicker }: CalendarHeaderProps) {
+export function CalendarHeader({ currentDate, onPrevMonth, onNextMonth }: CalendarHeaderProps) {
   return (
     <>
-      <h2 
-        className="text-xl font-semibold text-foreground hover:text-primary cursor-pointer"
-        onClick={onShowMonthPicker}
-      >
-        {format(currentDate, 'MMMM yyyy')}
-      </h2>
       <div className="flex gap-1">
         <Button
           variant="ghost"
