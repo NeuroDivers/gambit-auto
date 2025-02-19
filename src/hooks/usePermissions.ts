@@ -50,17 +50,15 @@ export const usePermissions = () => {
             )
           `)
           .eq('id', user.id)
-          .maybeSingle<ProfileWithRole>();
+          .single();
 
-        if (profileError) {
-          console.error('Error fetching profile:', profileError);
-        } else if (profileData?.role) {
+        if (!profileError && profileData?.role) {
           console.log('Found profile role:', profileData.role);
           return profileData.role;
         }
 
-        // Fallback to client role
-        const { data: clientData, error: clientError } = await supabase
+        // If no profile role found, try to get client role
+        const { data: clientsData, error: clientError } = await supabase
           .from('clients')
           .select(`
             role:role_id (
@@ -69,16 +67,16 @@ export const usePermissions = () => {
               nicename
             )
           `)
-          .eq('user_id', user.id)
-          .maybeSingle<ClientWithRole>();
+          .eq('user_id', user.id);
 
-        if (clientError) {
-          console.error('Error fetching client:', clientError);
-        } else if (clientData?.role) {
-          console.log('Found client role:', clientData.role);
-          return clientData.role;
+        if (!clientError && clientsData && clientsData.length > 0 && clientsData[0].role) {
+          console.log('Found client role:', clientsData[0].role);
+          return clientsData[0].role;
         }
 
+        if (profileError) console.error('Error fetching profile:', profileError);
+        if (clientError) console.error('Error fetching client:', clientError);
+        
         console.log('No role found in either profiles or clients table');
         return null;
       } catch (error) {
