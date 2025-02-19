@@ -60,38 +60,46 @@ export const useUserData = () => {
         throw profilesError;
       }
 
+      if (!profiles) {
+        return [];
+      }
+
       console.log("Fetched profiles:", profiles);
 
       // Separate client profiles - we'll get their data from clients table
-      const clientProfiles = profiles?.filter(profile => profile.role?.name === 'client') || [];
-      const nonClientProfiles = profiles?.filter(profile => profile.role?.name !== 'client') || [];
+      const clientProfiles = profiles.filter(profile => profile.role?.name === 'client');
+      const nonClientProfiles = profiles.filter(profile => profile.role?.name !== 'client');
 
       // Get client data for client profiles
       let clients: ClientResponse[] = [];
       if (clientProfiles.length > 0) {
-        const { data: clientsData, error: clientsError } = await supabase
-          .from("clients")
-          .select(`
-            id,
-            email,
-            first_name,
-            last_name,
-            user_id,
-            phone_number,
-            address,
-            role:role_id!inner (
+        try {
+          const { data: clientsData, error: clientsError } = await supabase
+            .from("clients")
+            .select(`
               id,
-              name,
-              nicename
-            )
-          `)
-          .in('user_id', clientProfiles.map(p => p.id))
-          .returns<ClientResponse[]>();
+              email,
+              first_name,
+              last_name,
+              user_id,
+              phone_number,
+              address,
+              role:role_id (
+                id,
+                name,
+                nicename
+              )
+            `)
+            .in('user_id', clientProfiles.map(p => p.id))
+            .returns<ClientResponse[]>();
 
-        if (clientsError) {
-          console.error("Error fetching clients:", clientsError);
-        } else if (clientsData) {
-          clients = clientsData;
+          if (clientsError) {
+            console.error("Error fetching clients:", clientsError);
+          } else if (clientsData) {
+            clients = clientsData;
+          }
+        } catch (error) {
+          console.error("Error in clients query:", error);
         }
       }
 
@@ -105,7 +113,7 @@ export const useUserData = () => {
           email: clientData?.email || profile.email,
           first_name: clientData?.first_name || profile.first_name,
           last_name: clientData?.last_name || profile.last_name,
-          role: clientData?.role || profile.role
+          role: profile.role // Use profile role as the source of truth
         } satisfies User;
       });
 
