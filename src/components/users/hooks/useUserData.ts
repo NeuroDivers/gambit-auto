@@ -32,7 +32,7 @@ type ClientResponse = {
   user_id: string;
   phone_number?: string;
   address?: string;
-  role?: UserRole;
+  role: UserRole;
 };
 
 export const useUserData = () => {
@@ -63,8 +63,8 @@ export const useUserData = () => {
       console.log("Fetched profiles:", profiles);
 
       // Separate client profiles - we'll get their data from clients table
-      const clientProfiles = profiles.filter(profile => profile.role?.name === 'client');
-      const nonClientProfiles = profiles.filter(profile => profile.role?.name !== 'client');
+      const clientProfiles = profiles?.filter(profile => profile.role?.name === 'client') || [];
+      const nonClientProfiles = profiles?.filter(profile => profile.role?.name !== 'client') || [];
 
       // Get client data for client profiles
       let clients: ClientResponse[] = [];
@@ -79,18 +79,19 @@ export const useUserData = () => {
             user_id,
             phone_number,
             address,
-            role:role_id (
+            role:role_id!inner (
               id,
               name,
               nicename
             )
           `)
-          .in('user_id', clientProfiles.map(p => p.id));
+          .in('user_id', clientProfiles.map(p => p.id))
+          .returns<ClientResponse[]>();
 
         if (clientsError) {
           console.error("Error fetching clients:", clientsError);
-        } else {
-          clients = clientsData || [];
+        } else if (clientsData) {
+          clients = clientsData;
         }
       }
 
