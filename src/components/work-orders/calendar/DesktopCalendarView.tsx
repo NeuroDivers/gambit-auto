@@ -54,16 +54,15 @@ export function DesktopCalendarView({
   return (
     <div className="rounded-lg bg-card/50 p-4" onClick={(e) => e.stopPropagation()}>
       <div className="flex items-center justify-between mb-4">
-        <Button 
-          variant="ghost" 
+        <h2 
           onClick={(e) => {
             e.stopPropagation()
             setShowMonthPicker(true)
           }}
-          className="font-semibold"
+          className="text-xl font-semibold text-foreground hover:text-primary cursor-pointer"
         >
           {format(currentDate, 'MMMM yyyy')}
-        </Button>
+        </h2>
         <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
