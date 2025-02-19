@@ -33,8 +33,8 @@ export const useAuthRedirect = () => {
             throw profileError;
           }
 
-          if (!profileData) {
-            console.log("No profile found");
+          if (!profileData?.role) {
+            console.log("No role found");
             navigate("/unauthorized", { replace: true });
             return;
           }
@@ -42,7 +42,7 @@ export const useAuthRedirect = () => {
           console.log("Profile found:", profileData);
 
           // Redirect based on role
-          const roleName = profileData.role?.name?.toLowerCase() || '';
+          const roleName = profileData.role.name.toLowerCase();
           if (roleName === 'client') {
             navigate("/client", { replace: true });
           } else if (roleName === 'admin') {
@@ -87,8 +87,8 @@ export const useAuthRedirect = () => {
             return;
           }
 
-          if (!profileData) {
-            console.log("No profile found after sign in");
+          if (!profileData?.role) {
+            console.log("No role found after sign in");
             navigate("/unauthorized", { replace: true });
             return;
           }
@@ -96,7 +96,7 @@ export const useAuthRedirect = () => {
           console.log("Profile found after sign in:", profileData);
 
           // Redirect based on role
-          const roleName = profileData.role?.name?.toLowerCase() || '';
+          const roleName = profileData.role.name.toLowerCase();
           if (roleName === 'client') {
             navigate("/client", { replace: true });
           } else if (roleName === 'admin') {
