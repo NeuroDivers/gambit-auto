@@ -84,7 +84,11 @@ export function DashboardLayout({
 
   return (
     <SidebarProvider defaultOpen>
-      <div className={cn("flex h-screen w-full overflow-hidden")}>
+      <div className={cn("flex h-screen w-full overflow-hidden")}
+        style={{ 
+          "--sidebar-width-icon": "4rem",
+        } as React.CSSProperties}
+      >
         <Sidebar className="border-r" collapsible="icon">
           {sidebarContent}
           <SidebarRail />

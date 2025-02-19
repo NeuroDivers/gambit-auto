@@ -81,7 +81,11 @@ export function ClientLayout({
 
   return (
     <SidebarProvider defaultOpen>
-      <div className={cn("flex h-screen w-full overflow-hidden bg-background")}>
+      <div className={cn("flex h-screen w-full overflow-hidden bg-background")}
+        style={{ 
+          "--sidebar-width-icon": "4rem",
+        } as React.CSSProperties}
+      >
         <Sidebar className="border-r" collapsible="icon">
           {sidebarContent}
           <SidebarRail />
