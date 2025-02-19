@@ -3,12 +3,12 @@ import { UserManagementSection } from "@/components/users/UserManagementSection"
 
 export default function UserManagement() {
   return (
-    <div className="p-8 max-w-[1600px] mx-auto">
-      <div className="flex items-center justify-between mb-8">
+    <div className="container py-8 mx-auto">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold">User Management</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage system users and roles
+          <h1 className="text-2xl font-semibold tracking-tight">User Management</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage system users and their roles
           </p>
         </div>
       </div>
