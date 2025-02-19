@@ -19,6 +19,37 @@ export const useAuthForm = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const handleRoleBasedRedirect = async (userId: string) => {
+    try {
+      // Get user role from profiles
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select(`
+          role:role_id!inner (
+            name,
+            nicename
+          )
+        `)
+        .eq("id", userId)
+        .single();
+
+      if (profileError) throw profileError;
+
+      // Redirect based on role
+      if (profileData?.role?.name?.toLowerCase() === 'client') {
+        console.log("Redirecting to client dashboard");
+        navigate("/client", { replace: true });
+      } else {
+        console.log("Redirecting to admin dashboard");
+        navigate("/admin", { replace: true });
+      }
+    } catch (error) {
+      console.error("Error checking role:", error);
+      // Default to client route if role check fails
+      navigate("/client", { replace: true });
+    }
+  };
+
   // Handle URL error parameters
   const handleUrlErrors = () => {
     const params = new URLSearchParams(window.location.search);
@@ -100,8 +131,9 @@ export const useAuthForm = () => {
 
         if (signInError) throw signInError;
 
-        console.log("Sign in successful, redirecting to client dashboard");
-        navigate("/client", { replace: true });
+        // Redirect based on role
+        await handleRoleBasedRedirect(signUpData.user.id);
+        
         toast({
           title: "Welcome!",
           description: "Your account has been created successfully.",
@@ -140,8 +172,10 @@ export const useAuthForm = () => {
         throw error;
       }
 
-      console.log("Sign in successful, redirecting to client dashboard");
-      navigate("/client", { replace: true });
+      if (data?.user) {
+        await handleRoleBasedRedirect(data.user.id);
+      }
+      
       return data;
     } catch (error: any) {
       console.error("Sign in error:", error);
@@ -173,4 +207,3 @@ export const useAuthForm = () => {
     resetForm,
   };
 };
-
