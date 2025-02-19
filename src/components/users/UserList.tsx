@@ -45,6 +45,11 @@ export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
     
     const matchesRole = roleFilter === "all" || user.role?.name === roleFilter;
     
+    // Add console logs for debugging role filtering
+    console.log('User role:', user.role?.name);
+    console.log('Current filter:', roleFilter);
+    console.log('Matches role:', matchesRole);
+    
     return matchesSearch && matchesRole;
   });
 
