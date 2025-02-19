@@ -11,6 +11,12 @@ export interface AuthFormData {
   lastName: string;
 }
 
+interface UserRoleResponse {
+  role_name: string;
+  role_nicename: string;
+  user_type: string;
+}
+
 export const useAuthForm = () => {
   const [formData, setFormData] = useState<AuthFormData>({
     email: "",
@@ -123,19 +129,19 @@ export const useAuthForm = () => {
       }
 
       if (data?.user) {
-        // Get user role using RPC function
+        // Get user role using RPC function with proper typing
         const { data: roleData, error: roleError } = await supabase
           .rpc('get_user_role', {
             input_user_id: data.user.id
           })
-          .single();
+          .single<UserRoleResponse>();
 
         if (roleError) {
           console.error('Error checking user role:', roleError);
           // Default to client dashboard if role check fails
           navigate("/client", { replace: true });
         } else {
-          if (roleData.user_type === 'staff') {
+          if (roleData?.user_type === 'staff') {
             navigate("/admin", { replace: true });
           } else {
             navigate("/client", { replace: true });
