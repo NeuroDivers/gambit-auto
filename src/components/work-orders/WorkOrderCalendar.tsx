@@ -38,6 +38,10 @@ export function WorkOrderCalendar({ clientView = false }: WorkOrderCalendarProps
     }
   }
 
+  const handleMonthChange = (date: Date) => {
+    setCurrentDate(date)
+  }
+
   if (isLoading) {
     return <LoadingScreen />
   }
@@ -75,7 +79,7 @@ export function WorkOrderCalendar({ clientView = false }: WorkOrderCalendarProps
         <CalendarGrid 
           currentDate={currentDate} 
           workOrders={workOrders}
-          onDateChange={!clientView ? handleDateClick : undefined}
+          onDateChange={handleDateClick}
         />
       </div>
     </div>

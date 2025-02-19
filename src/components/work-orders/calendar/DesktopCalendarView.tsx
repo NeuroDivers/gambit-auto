@@ -18,26 +18,6 @@ type DesktopCalendarViewProps = {
 export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blockedDates }: DesktopCalendarViewProps) {
   const [showMonthPicker, setShowMonthPicker] = useState(false)
 
-  const handlePreviousMonth = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const prevMonth = new Date(currentDate)
-    prevMonth.setMonth(prevMonth.getMonth() - 1)
-    if (onDateChange) {
-      onDateChange(prevMonth)
-    }
-  }
-
-  const handleNextMonth = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const nextMonth = new Date(currentDate)
-    nextMonth.setMonth(nextMonth.getMonth() + 1)
-    if (onDateChange) {
-      onDateChange(nextMonth)
-    }
-  }
-
   const monthStart = startOfMonth(currentDate)
   const monthEnd = endOfMonth(monthStart)
   const calendarStart = startOfWeek(monthStart)
@@ -65,14 +45,30 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blo
           <Button 
             variant="outline" 
             size="icon"
-            onClick={handlePreviousMonth}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              const prevMonth = new Date(currentDate)
+              prevMonth.setMonth(prevMonth.getMonth() - 1)
+              if (onDateChange) {
+                onDateChange(prevMonth)
+              }
+            }}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button 
             variant="outline" 
             size="icon"
-            onClick={handleNextMonth}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              const nextMonth = new Date(currentDate)
+              nextMonth.setMonth(nextMonth.getMonth() + 1)
+              if (onDateChange) {
+                onDateChange(nextMonth)
+              }
+            }}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
