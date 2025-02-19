@@ -10,28 +10,6 @@ export type Client = {
   updated_at: string
   user_id?: string | null
   access_token?: string | null
-  total_spent?: number
-  total_invoices?: number
-  total_work_orders?: number
-  last_sign_in_at?: string | null
-  monthlySpending?: Array<{
-    month: string
-    amount: number
-  }>
-  invoices?: Array<{
-    id: string
-    invoice_number: string
-    total: number
-    status: string
-    created_at: string
-  }>
-  quotes?: Array<{
-    id: string
-    quote_number: string
-    total: number
-    status: string
-    created_at: string
-  }>
 }
 
 export type ClientFormValues = {

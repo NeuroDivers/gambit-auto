@@ -1,6 +1,5 @@
-
 import { Button } from "@/components/ui/button"
-import { Plus, Loader2, Edit, Trash, User, Wrench } from "lucide-react"
+import { Plus, Loader2, Edit, Trash2, User, Wrench } from "lucide-react"
 import { useState, useEffect } from "react"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -702,12 +701,8 @@ export default function ServiceBays() {
 
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
-                      >
-                        <Trash className="h-4 w-4" />
+                      <Button variant="ghost" size="icon">
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>

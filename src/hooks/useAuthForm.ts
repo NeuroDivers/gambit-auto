@@ -28,7 +28,6 @@ export const useAuthForm = () => {
 
   const handleRoleBasedRedirect = async (userId: string) => {
     try {
-      console.log("Checking user role for redirect...");
       // Get user role from profiles
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
@@ -41,20 +40,10 @@ export const useAuthForm = () => {
         .eq("id", userId)
         .single<RoleData>();
 
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        throw profileError;
-      }
-
-      if (!profileData?.role) {
-        console.error("No role found for user");
-        throw new Error("No role found for user");
-      }
-
-      console.log("Profile data for redirect:", profileData);
+      if (profileError) throw profileError;
 
       // Redirect based on role
-      if (profileData.role.name.toLowerCase() === 'client') {
+      if (profileData?.role?.name?.toLowerCase() === 'client') {
         console.log("Redirecting to client dashboard");
         navigate("/client", { replace: true });
       } else {
@@ -62,9 +51,26 @@ export const useAuthForm = () => {
         navigate("/admin", { replace: true });
       }
     } catch (error) {
-      console.error("Error during role-based redirect:", error);
+      console.error("Error checking role:", error);
       // Default to client route if role check fails
       navigate("/client", { replace: true });
+    }
+  };
+
+  // Handle URL error parameters
+  const handleUrlErrors = () => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get("error");
+    const errorDescription = params.get("error_description");
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: errorDescription?.replace(/\+/g, ' ') || "An error occurred during authentication",
+      });
+      // Clean up URL
+      navigate("/auth", { replace: true });
     }
   };
 
@@ -132,11 +138,8 @@ export const useAuthForm = () => {
 
         if (signInError) throw signInError;
 
-        // Wait a moment for the session to be fully established
-        setTimeout(async () => {
-          // Redirect based on role
-          await handleRoleBasedRedirect(signUpData.user.id);
-        }, 1000);
+        // Redirect based on role
+        await handleRoleBasedRedirect(signUpData.user.id);
         
         toast({
           title: "Welcome!",
@@ -177,11 +180,7 @@ export const useAuthForm = () => {
       }
 
       if (data?.user) {
-        // Wait a moment for the session to be fully established
-        setTimeout(async () => {
-          // Redirect based on role
-          await handleRoleBasedRedirect(data.user.id);
-        }, 1000);
+        await handleRoleBasedRedirect(data.user.id);
       }
       
       return data;

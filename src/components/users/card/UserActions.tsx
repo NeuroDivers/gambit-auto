@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Edit2, Trash } from "lucide-react";
+import { Edit2, Trash2 } from "lucide-react";
 
 type UserActionsProps = {
   onEdit: () => void;
@@ -22,9 +22,9 @@ export const UserActions = ({ onEdit, onDelete }: UserActionsProps) => {
         variant="ghost"
         size="icon"
         onClick={onDelete}
-        className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+        className="text-muted-foreground hover:text-destructive hover:bg-accent"
       >
-        <Trash className="h-4 w-4" />
+        <Trash2 className="h-4 w-4" />
       </Button>
     </div>
   );
