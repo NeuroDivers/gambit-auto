@@ -1,9 +1,9 @@
 
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,12 +26,16 @@ interface HeaderProps {
 export function Header({ firstName, role, onLogout }: HeaderProps) {
   return (
     <header className="flex h-16 items-center px-6 border-b">
-      <NavLink to="/dashboard" className="flex items-center gap-2">
-        <LayoutDashboard className="h-6 w-6" />
+      <div className="flex items-center gap-2">
         <span className="font-semibold text-lg">
           Welcome, {firstName || 'Guest'}
         </span>
-      </NavLink>
+        {role && (
+          <Badge variant="secondary" className="capitalize">
+            {role.nicename}
+          </Badge>
+        )}
+      </div>
       <nav className="ml-auto flex items-center gap-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
