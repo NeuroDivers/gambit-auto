@@ -2,12 +2,6 @@
 import { useState, useEffect } from "react"
 import { supabase } from "@/integrations/supabase/client"
 
-type RoleData = {
-  id: string;
-  name: string;
-  nicename: string;
-}
-
 type ProfileData = {
   id: string;
   role_id: {
@@ -42,8 +36,7 @@ export const useAdminStatus = () => {
             )
           `)
           .eq('id', user.id)
-          .returns<ProfileData>()
-          .maybeSingle();
+          .single();
 
         if (profileError) {
           console.error('Error checking admin status:', profileError);
