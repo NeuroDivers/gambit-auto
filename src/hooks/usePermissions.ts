@@ -37,7 +37,8 @@ export const usePermissions = () => {
           )
         `)
         .eq('id', user.id)
-        .maybeSingle();
+        .maybeSingle()
+        .returns<ProfileResponse>();
 
       if (!data || !data.role) {
         console.warn("No role found for user:", user.id);

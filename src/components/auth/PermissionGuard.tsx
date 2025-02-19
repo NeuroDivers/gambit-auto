@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect, useState } from "react"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Navigate } from "react-router-dom"
@@ -18,6 +19,11 @@ interface UserRole {
 }
 
 interface ProfileData {
+  id: string
+  role: UserRole
+}
+
+interface ProfileResponse {
   id: string
   role: UserRole
 }
@@ -45,12 +51,13 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
         `)
         .eq('id', user.id)
         .maybeSingle()
+        .returns<ProfileResponse>()
 
-      if (!data) return null
+      if (!data || !data.role) return null
 
       const transformedData: ProfileData = {
         id: data.id,
-        role: data.role
+        role: data.role as UserRole // Type assertion here since we know the shape matches
       }
       console.log('Transformed profile data:', transformedData)
       return transformedData
