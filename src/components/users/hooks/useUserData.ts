@@ -24,17 +24,6 @@ type ProfileResponse = {
   role: UserRole;
 };
 
-type ClientResponse = {
-  id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  user_id?: string;
-  phone_number?: string;
-  address?: string;
-  role: UserRole;
-};
-
 export const useUserData = () => {
   return useQuery({
     queryKey: ["users"],
@@ -64,49 +53,16 @@ export const useUserData = () => {
         return [];
       }
 
-      // Get all non-client profiles
-      const nonClientProfiles = profiles.filter(profile => profile.role?.name !== 'client');
-
-      // Fetch all clients
-      const { data: clients, error: clientsError } = await supabase
-        .from("clients")
-        .select(`
-          id,
-          email,
-          first_name,
-          last_name,
-          user_id,
-          phone_number,
-          address,
-          role:role_id (
-            id,
-            name,
-            nicename
-          )
-        `);
-
-      if (clientsError) {
-        console.error("Error fetching clients:", clientsError);
-      }
-
-      console.log("Fetched clients:", clients);
-
-      // Map clients to User type, handling the case where clients might be null
-      const clientUsers = (clients || []).map(client => ({
-        id: client.id,
-        email: client.email,
-        first_name: client.first_name,
-        last_name: client.last_name,
-        role: client.role
+      // Map profiles to User type
+      const users: User[] = profiles.map(profile => ({
+        id: profile.id,
+        email: profile.email,
+        first_name: profile.first_name ?? undefined,
+        last_name: profile.last_name ?? undefined,
+        role: profile.role
       }));
 
-      // Combine non-client profiles with client users
-      const allUsers: User[] = [
-        ...nonClientProfiles,
-        ...clientUsers
-      ];
-
-      return allUsers;
+      return users;
     },
   });
 };
