@@ -146,13 +146,6 @@ export default function ClientDetails() {
                   <FileText className="h-4 w-4" />
                   {client.address || 'No address'}
                 </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  Last sign in: {client.last_sign_in_at 
-                    ? new Date(client.last_sign_in_at).toLocaleDateString()
-                    : 'Never'
-                  }
-                </div>
               </div>
             </div>
             <Button
