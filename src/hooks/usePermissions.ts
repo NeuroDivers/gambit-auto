@@ -24,6 +24,22 @@ interface UserRole {
   nicename: string;
 }
 
+interface ProfileResponse {
+  roles: {
+    id: string;
+    name: string;
+    nicename: string;
+  };
+}
+
+interface ClientResponse {
+  roles: {
+    id: string;
+    name: string;
+    nicename: string;
+  };
+}
+
 export const usePermissions = () => {
   const { data: currentUserRole } = useQuery({
     queryKey: ["current-user-role"],
@@ -44,9 +60,10 @@ export const usePermissions = () => {
             nicename
           )
         `)
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .returns<ProfileResponse[]>();
 
-      if (!profileError && profiles?.[0]?.roles) {
+      if (!profileError && profiles && profiles.length > 0 && profiles[0].roles) {
         return {
           id: profiles[0].roles.id,
           name: profiles[0].roles.name,
@@ -64,9 +81,10 @@ export const usePermissions = () => {
             nicename
           )
         `)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .returns<ClientResponse[]>();
 
-      if (!clientError && clients?.[0]?.roles) {
+      if (!clientError && clients && clients.length > 0 && clients[0].roles) {
         return {
           id: clients[0].roles.id,
           name: clients[0].roles.name,
