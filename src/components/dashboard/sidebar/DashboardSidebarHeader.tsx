@@ -44,7 +44,7 @@ export function DashboardSidebarHeader({
             <img 
               src={logoUrl}
               alt="Business Logo"
-              className="h-8 w-auto object-contain"
+              className="h-12 w-auto max-w-[200px] object-contain"
               onError={(e) => {
                 const target = e.target as HTMLImageElement
                 target.style.display = 'none'
