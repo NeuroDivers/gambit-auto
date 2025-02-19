@@ -23,45 +23,49 @@ export const useAuthRedirect = () => {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
         
-        if (session?.user) {
-          console.log("Session found, checking profile...");
-          // Get user profile and role
-          const { data: profileData, error: profileError } = await supabase
-            .from("profiles")
-            .select(`
+        if (!session?.user) {
+          console.log("No session found, redirecting to auth");
+          navigate("/auth", { replace: true });
+          return;
+        }
+
+        console.log("Session found, checking profile...");
+        // Get user profile and role
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select(`
+            id,
+            role:role_id (
               id,
-              role:role_id (
-                id,
-                name,
-                nicename
-              )
-            `)
-            .eq("id", session.user.id)
-            .single<Profile>();
+              name,
+              nicename
+            )
+          `)
+          .eq("id", session.user.id)
+          .single<Profile>();
 
-          if (profileError) {
-            console.error("Profile fetch error:", profileError);
-            throw profileError;
-          }
+        if (profileError) {
+          console.error("Profile fetch error:", profileError);
+          throw profileError;
+        }
 
-          if (!profileData?.role) {
-            console.log("No role found");
-            navigate("/unauthorized", { replace: true });
-            return;
-          }
+        if (!profileData?.role) {
+          console.log("No role found");
+          navigate("/unauthorized", { replace: true });
+          return;
+        }
 
-          console.log("Profile found:", profileData);
+        console.log("Profile found:", profileData);
 
-          // Redirect based on role
-          const roleName = profileData.role.name.toLowerCase();
-          if (roleName === 'client') {
-            navigate("/client", { replace: true });
-          } else if (roleName === 'admin') {
-            navigate("/admin", { replace: true });
-          } else {
-            console.log("Unknown role:", roleName);
-            navigate("/unauthorized", { replace: true });
-          }
+        // Redirect based on role
+        const roleName = profileData.role.name.toLowerCase();
+        if (roleName === 'client') {
+          navigate("/client", { replace: true });
+        } else if (roleName === 'administrator' || roleName === 'admin') {
+          navigate("/admin", { replace: true });
+        } else {
+          console.log("Unknown role:", roleName);
+          navigate("/unauthorized", { replace: true });
         }
       } catch (error: any) {
         console.error("Session check error:", error.message);
@@ -110,7 +114,7 @@ export const useAuthRedirect = () => {
           const roleName = profileData.role.name.toLowerCase();
           if (roleName === 'client') {
             navigate("/client", { replace: true });
-          } else if (roleName === 'admin') {
+          } else if (roleName === 'administrator' || roleName === 'admin') {
             navigate("/admin", { replace: true });
           } else {
             console.log("Unknown role:", roleName);
