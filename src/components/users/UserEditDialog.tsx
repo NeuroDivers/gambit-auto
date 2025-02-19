@@ -1,52 +1,125 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { UserEditFormFields, formSchema } from "./UserEditFormFields";
-import { z } from "zod";
+import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form } from "@/components/ui/form";
-import { useUserEditSubmit } from "./hooks/useUserEditSubmit";
-import { User } from "./hooks/useUserData";
+import * as z from "zod";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { UserEditFormFields } from "./UserEditFormFields";
 
-type UserEditDialogProps = {
-  user: User;
+export const formSchema = z.object({
+  role: z.string(),
+  first_name: z.string(),
+  last_name: z.string(),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
+interface UserEditDialogProps {
+  userId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-};
+  onSuccess?: () => void;
+}
 
-export const UserEditDialog = ({ user, open, onOpenChange }: UserEditDialogProps) => {
-  const form = useForm<z.infer<typeof formSchema>>({
+export const UserEditDialog = ({
+  userId,
+  open,
+  onOpenChange,
+  onSuccess,
+}: UserEditDialogProps) => {
+  const { toast } = useToast();
+
+  // Fetch user data
+  const { data: userData, isLoading } = useQuery({
+    queryKey: ["user", userId],
+    queryFn: async () => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select(`
+          *,
+          role:roles (
+            id,
+            name,
+            nicename
+          )
+        `)
+        .eq("id", userId)
+        .single();
+      return profile;
+    },
+    enabled: open && !!userId,
+  });
+
+  const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      first_name: user.first_name || "",
-      last_name: user.last_name || "",
-      role: user.role?.id || "",
+      role: "",
+      first_name: "",
+      last_name: "",
     },
+    values: userData
+      ? {
+          role: userData.role?.id || "",
+          first_name: userData.first_name || "",
+          last_name: userData.last_name || "",
+        }
+      : undefined,
   });
 
-  const { handleSubmit } = useUserEditSubmit({
-    userId: user.id,
-    currentRole: user.role?.id,
-    onSuccess: () => onOpenChange(false),
-  });
+  const onSubmit = async (values: FormData) => {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          role_id: values.role,
+          first_name: values.first_name,
+          last_name: values.last_name,
+        })
+        .eq("id", userId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "User information updated successfully.",
+      });
+
+      onSuccess?.();
+      onOpenChange(false);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    }
+  };
+
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] bg-card text-card-foreground">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
+          <DialogDescription>
+            Update user information and role assignment.
+          </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <UserEditFormFields form={form} />
-            <button 
-              type="submit"
-              className="w-full px-4 py-2 bg-[#BB86FC] text-white rounded-lg hover:bg-[#BB86FC]/90 transition-colors"
-            >
-              Save Changes
-            </button>
-          </form>
-        </Form>
+
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <UserEditFormFields form={form} />
+        </form>
       </DialogContent>
     </Dialog>
   );

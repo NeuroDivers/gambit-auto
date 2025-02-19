@@ -4,17 +4,22 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useAdminStatus = () => {
   const { data: isAdmin, isLoading } = useQuery({
-    queryKey: ["admin-status"],
+    queryKey: ["isAdmin"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
-      
-      const { data: role } = await supabase.from('available_roles')
-        .select('*')
-        .eq('name', user.app_metadata?.role)
-        .single();
-        
-      return role?.name === 'admin';
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select(`
+          role:roles (
+            name
+          )
+        `)
+        .eq('id', user.id)
+        .maybeSingle();
+
+      return profile?.role?.name?.toLowerCase() === 'admin';
     },
   });
 
