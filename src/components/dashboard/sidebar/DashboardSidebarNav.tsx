@@ -1,3 +1,4 @@
+
 import { NavLink } from "react-router-dom"
 import { 
   CalendarDays, 
@@ -138,7 +139,7 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
       <SidebarGroup>
         <SidebarGroupLabel>Main</SidebarGroupLabel>
         <SidebarGroupContent>
-          <SidebarMenu>
+          <SidebarMenu className="px-2">
             {mainMenuItems.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
@@ -153,7 +154,7 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
       <SidebarGroup>
         <SidebarGroupLabel>Management</SidebarGroupLabel>
         <SidebarGroupContent>
-          <SidebarMenu>
+          <SidebarMenu className="px-2">
             {managementMenuItems.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
@@ -168,7 +169,7 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
       <SidebarGroup>
         <SidebarGroupLabel>Settings</SidebarGroupLabel>
         <SidebarGroupContent>
-          <SidebarMenu>
+          <SidebarMenu className="px-2">
             {settingsMenuItems.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
