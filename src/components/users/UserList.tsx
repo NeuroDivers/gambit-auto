@@ -13,7 +13,7 @@ interface UserListProps {
 export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState(initialRoleFilter);
-  const { data: users, isLoading, refetch } = useUserData();
+  const { data: users, isLoading, error } = useUserData();
   
   // Update roleFilter when initialRoleFilter changes
   useState(() => {
@@ -25,6 +25,17 @@ export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
   // Set up realtime subscriptions
   useUserSubscription();
 
+  // Log error if any
+  if (error) {
+    console.error("Error loading users:", error);
+  }
+
+  // Log current state
+  console.log("Current users data:", users);
+  console.log("Loading state:", isLoading);
+  console.log("Current role filter:", roleFilter);
+  console.log("Current search query:", searchQuery);
+
   const filteredUsers = users?.filter(user => {
     const matchesSearch = searchQuery.toLowerCase() === "" || 
       user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -34,10 +45,6 @@ export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
     
     return matchesSearch && matchesRole;
   });
-
-  const handleRefresh = async () => {
-    await refetch();
-  };
 
   if (isLoading) {
     return (
@@ -56,13 +63,13 @@ export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
         onSearchChange={setSearchQuery}
         roleFilter={roleFilter}
         onRoleFilterChange={setRoleFilter}
-        onRefresh={handleRefresh}
+        onRefresh={() => queryClient.invalidateQueries({ queryKey: ["users"] })}
       />
       <div className="grid gap-4">
         {filteredUsers?.map((user) => (
           <UserCard key={user.id} user={user} />
         ))}
-        {filteredUsers?.length === 0 && (
+        {(!filteredUsers || filteredUsers.length === 0) && (
           <div className="text-center py-8 text-muted-foreground">
             No users found matching your filters.
           </div>
