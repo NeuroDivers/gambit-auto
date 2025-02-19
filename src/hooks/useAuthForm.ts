@@ -1,8 +1,20 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, useNavigate } from "react-router-dom";
-import { AuthFormData, RoleData } from "@/types/auth";
+
+export interface AuthFormData {
+  email: string;
+  password: string;
+}
+
+interface RoleData {
+  role: {
+    name: string;
+    nicename: string;
+  };
+}
 
 export const useAuthForm = () => {
   const [formData, setFormData] = useState<AuthFormData>({

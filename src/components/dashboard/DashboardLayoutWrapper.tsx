@@ -7,7 +7,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Outlet, Navigate } from "react-router-dom"
 import { DashboardLayout } from "./DashboardLayout"
 import { LoadingScreen } from "../shared/LoadingScreen"
-import { RoleData } from "@/types/auth"
 
 export function DashboardLayoutWrapper() {
   const navigate = useNavigate();
@@ -47,7 +46,7 @@ export function DashboardLayoutWrapper() {
           )
         `)
         .eq("id", session.user.id)
-        .maybeSingle<RoleData>();
+        .maybeSingle();
 
       if (profileError) throw profileError;
       return profileData;
