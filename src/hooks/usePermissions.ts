@@ -25,19 +25,11 @@ interface UserRole {
 }
 
 interface ProfileResponse {
-  role: {
-    id: string;
-    name: string;
-    nicename: string;
-  };
+  role: UserRole;
 }
 
 interface ClientResponse {
-  role: {
-    id: string;
-    name: string;
-    nicename: string;
-  };
+  role: UserRole;
 }
 
 export const usePermissions = () => {
@@ -61,15 +53,11 @@ export const usePermissions = () => {
           )
         `)
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (!profileError && profileData?.role) {
         console.log('Found profile role:', profileData.role);
-        return {
-          id: profileData.role.id,
-          name: profileData.role.name,
-          nicename: profileData.role.nicename
-        };
+        return profileData.role;
       }
 
       // If no profile found or no role, check clients table
@@ -83,15 +71,11 @@ export const usePermissions = () => {
           )
         `)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (!clientError && clientData?.role) {
         console.log('Found client role:', clientData.role);
-        return {
-          id: clientData.role.id,
-          name: clientData.role.name,
-          nicename: clientData.role.nicename
-        };
+        return clientData.role;
       }
 
       console.log('No role found in either profiles or clients table');
