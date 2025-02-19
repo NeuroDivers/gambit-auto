@@ -20,6 +20,16 @@ interface UserRole {
   nicename: string;
 }
 
+interface ProfileWithRole {
+  id: string;
+  role: UserRole;
+}
+
+interface ClientWithRole {
+  id: string;
+  role: UserRole;
+}
+
 export const usePermissions = () => {
   const { data: currentUserRole } = useQuery<UserRole | null>({
     queryKey: ["current-user-role"],
@@ -32,7 +42,7 @@ export const usePermissions = () => {
         }
 
         // Check profiles table first
-        const { data: profileData, error: profileError } = await supabase
+        const { data: profileData } = await supabase
           .from('profiles')
           .select(`
             id,
@@ -43,15 +53,15 @@ export const usePermissions = () => {
             )
           `)
           .eq('id', user.id)
-          .maybeSingle();
+          .maybeSingle<ProfileWithRole>();
 
-        if (!profileError && profileData?.role) {
+        if (profileData?.role) {
           console.log('Found profile role:', profileData.role);
           return profileData.role;
         }
 
         // If no profile found or no role, check clients table
-        const { data: clientData, error: clientError } = await supabase
+        const { data: clientData } = await supabase
           .from('clients')
           .select(`
             id,
@@ -62,9 +72,9 @@ export const usePermissions = () => {
             )
           `)
           .eq('user_id', user.id)
-          .maybeSingle();
+          .maybeSingle<ClientWithRole>();
 
-        if (!clientError && clientData?.role) {
+        if (clientData?.role) {
           console.log('Found client role:', clientData.role);
           return clientData.role;
         }
@@ -96,7 +106,7 @@ export const usePermissions = () => {
         .order('resource_name');
 
       if (error) throw error;
-      return data as RolePermission[];
+      return data || [];
     },
     staleTime: Infinity,
   });
