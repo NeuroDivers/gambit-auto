@@ -39,21 +39,25 @@ export function DashboardSidebarHeader({
   return (
     <div className="flex h-32 items-center justify-between px-4 border-b">
       <div className="flex-1 flex items-center justify-center">
-        {state === "expanded" ? (
-          logoUrl ? (
-            <img 
-              src={logoUrl}
-              alt="Business Logo"
-              className="h-24 w-auto max-w-[240px] object-contain"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement
-                target.style.display = 'none'
-              }}
-            />
-          ) : (
-            <span className="font-semibold">Admin Panel</span>
-          )
-        ) : null}
+        {state === "expanded" && (
+          <div className="h-24 flex items-center justify-center">
+            {logoUrl ? (
+              <img 
+                src={logoUrl}
+                alt="Business Logo"
+                className="h-24 w-auto max-w-[240px] object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.style.display = 'none'
+                }}
+              />
+            ) : (
+              <div className="text-lg font-semibold text-primary">
+                {businessProfile?.company_name || 'Admin Panel'}
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <Button 
         variant="ghost" 
@@ -68,5 +72,5 @@ export function DashboardSidebarHeader({
         )}
       </Button>
     </div>
-  )
+  );
 }
