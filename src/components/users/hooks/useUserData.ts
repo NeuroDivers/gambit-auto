@@ -21,8 +21,8 @@ export type User = {
   bio?: string | null;
 };
 
-type ProfileResponse = ProfilesTable['Row'] & {
-  role: UserRole;
+type ProfileWithRole = ProfilesTable['Row'] & {
+  role: UserRole | null;
 };
 
 export const useUserData = () => {
@@ -59,7 +59,7 @@ export const useUserData = () => {
               name,
               nicename
             )
-          `);
+          `) as { data: ProfileWithRole[] | null; error: any };
 
         if (profilesError) {
           console.error("Error fetching profiles:", profilesError);
@@ -78,7 +78,7 @@ export const useUserData = () => {
           email: profile.email,
           first_name: profile.first_name,
           last_name: profile.last_name,
-          role: profile.role,
+          role: profile.role || undefined,
           avatar_url: profile.avatar_url,
           phone_number: profile.phone_number,
           address: profile.address,
