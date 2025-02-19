@@ -1,64 +1,72 @@
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay } from "date-fns";
+
+import React, { useState } from "react";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { WorkOrder } from "@/components/work-orders/types";
+import { BlockedDatesDialog } from "./BlockedDatesDialog";
+import { CalendarDayView } from "./CalendarDayView";
+import { ServiceLegend } from "./ServiceLegend";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { WorkOrder } from "../types";
-import { CalendarDay } from "./CalendarDay";
-import { MonthPicker } from "./MonthPicker";
-import { useState } from "react";
-import { BlockedDate } from "./types";
-type DesktopCalendarViewProps = {
-  currentDate: Date;
+
+interface DesktopCalendarViewProps {
+  date: Date;
   workOrders: WorkOrder[];
-  onDateChange?: (date: Date) => void;
-  blockedDates: BlockedDate[];
-};
+  onDateSelect?: (date: Date) => void;
+}
+
 export function DesktopCalendarView({
-  currentDate,
+  date,
   workOrders,
-  onDateChange,
-  blockedDates
+  onDateSelect,
 }: DesktopCalendarViewProps) {
-  const [showMonthPicker, setShowMonthPicker] = useState(false);
-  const handlePreviousMonth = () => {
-    if (onDateChange) {
-      const prevMonth = new Date(currentDate);
-      prevMonth.setMonth(prevMonth.getMonth() - 1);
-      onDateChange(prevMonth);
+  const [showBlockedDatesDialog, setShowBlockedDatesDialog] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(date);
+
+  const handleSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    if (date) {
+      onDateSelect?.(date);
     }
   };
-  const handleNextMonth = () => {
-    if (onDateChange) {
-      const nextMonth = new Date(currentDate);
-      nextMonth.setMonth(nextMonth.getMonth() + 1);
-      onDateChange(nextMonth);
-    }
-  };
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(monthStart);
-  const calendarStart = startOfWeek(monthStart);
-  const calendarEnd = endOfWeek(monthEnd);
-  const days = eachDayOfInterval({
-    start: calendarStart,
-    end: calendarEnd
-  });
-  return <div className="rounded-lg bg-card/50 p-4">
-      <div className="flex items-center justify-between mb-4">
-        <Button variant="ghost" onClick={() => setShowMonthPicker(true)} className="font-semibold">
-          {format(currentDate, 'MMMM yyyy')}
-        </Button>
-        
-      </div>
-      <div className="grid grid-cols-7 gap-4">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => <div key={day} className="text-sm font-medium text-muted-foreground text-center py-2">
-            {day}
-          </div>)}
-        {days.map(day => <CalendarDay key={day.toISOString()} date={day} workOrders={workOrders.filter(wo => {
-        if (!wo.start_time) return false;
-        const startDate = new Date(wo.start_time);
-        return isSameDay(day, startDate);
-      })} isCurrentMonth={isSameMonth(day, currentDate)} blockedDates={blockedDates} />)}
+
+  return (
+    <div className="grid gap-4 md:grid-cols-[280px_1fr]">
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <CalendarIcon className="h-5 w-5" />
+              <span>Calendar</span>
+            </div>
+            <button
+              onClick={() => setShowBlockedDatesDialog(true)}
+              className="font-semibold"
+            >
+              Blocked Dates
+            </button>
+          </div>
+          <ServiceLegend />
+        </div>
+        <Calendar
+          mode="single"
+          selected={selectedDate}
+          onSelect={handleSelect}
+          className="rounded-md border"
+        />
       </div>
 
-      <MonthPicker currentDate={currentDate} open={showMonthPicker} onOpenChange={setShowMonthPicker} onDateChange={onDateChange || (() => {})} />
-    </div>;
+      <div className="space-y-4">
+        <h2 className="font-semibold">
+          {selectedDate && format(selectedDate, "MMMM d, yyyy")}
+        </h2>
+        <CalendarDayView date={selectedDate} workOrders={workOrders} />
+      </div>
+
+      <BlockedDatesDialog
+        open={showBlockedDatesDialog}
+        onOpenChange={setShowBlockedDatesDialog}
+      />
+    </div>
+  );
 }
