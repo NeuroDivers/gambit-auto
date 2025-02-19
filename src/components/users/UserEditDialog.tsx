@@ -27,6 +27,17 @@ interface UserEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  user?: {
+    id: string;
+    email: string;
+    first_name?: string;
+    last_name?: string;
+    role?: {
+      id: string;
+      name: string;
+      nicename: string;
+    };
+  };
 }
 
 export const UserEditDialog = ({
@@ -34,10 +45,11 @@ export const UserEditDialog = ({
   open,
   onOpenChange,
   onSuccess,
+  user,
 }: UserEditDialogProps) => {
   const { toast } = useToast();
 
-  // Fetch user data
+  // Fetch user data only if not provided through props
   const { data: userData, isLoading } = useQuery({
     queryKey: ["user", userId],
     queryFn: async () => {
@@ -55,8 +67,10 @@ export const UserEditDialog = ({
         .single();
       return profile;
     },
-    enabled: open && !!userId,
+    enabled: open && !!userId && !user, // Only fetch if user is not provided
   });
+
+  const activeData = user || userData;
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -65,11 +79,11 @@ export const UserEditDialog = ({
       first_name: "",
       last_name: "",
     },
-    values: userData
+    values: activeData
       ? {
-          role: userData.role?.id || "",
-          first_name: userData.first_name || "",
-          last_name: userData.last_name || "",
+          role: activeData.role?.id || "",
+          first_name: activeData.first_name || "",
+          last_name: activeData.last_name || "",
         }
       : undefined,
   });

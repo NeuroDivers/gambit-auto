@@ -19,6 +19,7 @@ export const useAdminStatus = () => {
         .eq('id', user.id)
         .maybeSingle();
 
+      // Fixed the property access
       return profile?.role?.name?.toLowerCase() === 'admin';
     },
   });
