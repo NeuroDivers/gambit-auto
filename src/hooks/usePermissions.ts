@@ -24,8 +24,16 @@ interface UserRole {
   nicename: string;
 }
 
+// Define the response type from Supabase
+interface RoleResponse {
+  role: {
+    id: string;
+    name: string;
+    nicename: string;
+  };
+}
+
 export const usePermissions = () => {
-  // Get current user's role and permissions from both profiles and clients tables
   const { data: currentUserRole } = useQuery({
     queryKey: ["current-user-role"],
     queryFn: async () => {
@@ -46,7 +54,12 @@ export const usePermissions = () => {
         .single();
 
       if (!profileError && profileData?.role) {
-        return profileData.role as UserRole;
+        const role = profileData.role as unknown as UserRole;
+        return {
+          id: role.id,
+          name: role.name,
+          nicename: role.nicename
+        };
       }
 
       // If no profile found or no role, check clients table
@@ -63,7 +76,12 @@ export const usePermissions = () => {
         .single();
 
       if (!clientError && clientData?.role) {
-        return clientData.role as UserRole;
+        const role = clientData.role as unknown as UserRole;
+        return {
+          id: role.id,
+          name: role.name,
+          nicename: role.nicename
+        };
       }
 
       console.log('No role found in either profiles or clients table');
