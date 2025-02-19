@@ -40,15 +40,15 @@ export function AuthLayout({
     <div className="container relative min-h-screen flex items-center justify-center">
       <div className="mx-auto w-full max-w-[350px] space-y-6">
         <div className="flex flex-col items-center space-y-2 text-center">
-          <div className="flex items-center justify-center">
+          <div className="relative h-32 w-32 flex items-center justify-center rounded-lg overflow-hidden bg-background">
             {businessProfile?.light_logo_url ? (
               <img 
                 src={businessProfile.light_logo_url} 
-                alt="Business Logo" 
-                className="h-32 w-32 object-contain"
+                alt={businessProfile.company_name || "Business Logo"}
+                className="h-full w-full object-contain p-4"
               />
             ) : (
-              <LayoutDashboard className="h-32 w-32 text-primary" />
+              <LayoutDashboard className="h-16 w-16 text-primary opacity-50" />
             )}
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">
