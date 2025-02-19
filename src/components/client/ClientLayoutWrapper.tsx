@@ -42,6 +42,7 @@ export function ClientLayoutWrapper() {
         .select(`
           *,
           role:role_id (
+            id,
             name,
             nicename
           )
@@ -127,7 +128,7 @@ export function ClientLayoutWrapper() {
   return (
     <ClientLayout
       firstName={profile?.first_name}
-      role={profile?.role?.nicename}
+      role={profile?.role}
       onLogout={handleLogout}
     >
       <Outlet />

@@ -7,11 +7,16 @@ import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useState } from "react"
+import { Header } from "../shared/Header"
 
 interface ClientLayoutProps {
   children: React.ReactNode
   firstName?: string | null
-  role?: string | null
+  role?: {
+    id: string
+    name: string
+    nicename: string
+  } | null
   onLogout: () => void
 }
 
@@ -43,22 +48,11 @@ export function ClientLayout({
   if (isMobile) {
     return (
       <div className={cn("min-h-screen w-full bg-background text-foreground")}>
-        <header className="border-b p-4 flex items-center justify-between sticky top-0 z-50 bg-background">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? (
-              <X className="h-5 w-5" />
-            ) : (
-              <Menu className="h-5 w-5" />
-            )}
-          </Button>
-          <div className="font-semibold">
-            {firstName ? `Welcome, ${firstName}` : 'Welcome'}
-          </div>
-        </header>
+        <Header 
+          firstName={firstName}
+          role={role}
+          onLogout={onLogout}
+        />
 
         <div className={cn(
           "fixed inset-0 bg-background z-40 transform transition-transform duration-300 ease-in-out",
@@ -90,7 +84,16 @@ export function ClientLayout({
           {sidebarContent}
           <SidebarRail />
         </Sidebar>
-        <main className="flex-1 overflow-auto p-4 bg-background">{children}</main>
+        <div className="flex-1 overflow-hidden flex flex-col">
+          <Header 
+            firstName={firstName}
+            role={role}
+            onLogout={onLogout}
+          />
+          <main className="flex-1 overflow-auto p-4 bg-background">
+            {children}
+          </main>
+        </div>
       </div>
     </SidebarProvider>
   )
