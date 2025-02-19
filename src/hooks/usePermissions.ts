@@ -22,12 +22,12 @@ interface UserRole {
 
 interface ProfileWithRole {
   id: string;
-  role: UserRole;
+  roles: UserRole;
 }
 
 interface ClientWithRole {
   id: string;
-  role: UserRole;
+  roles: UserRole;
 }
 
 export const usePermissions = () => {
@@ -46,7 +46,7 @@ export const usePermissions = () => {
           .from('profiles')
           .select(`
             id,
-            role:role_id (
+            roles:role_id (
               id,
               name,
               nicename
@@ -55,9 +55,9 @@ export const usePermissions = () => {
           .eq('id', user.id)
           .maybeSingle<ProfileWithRole>();
 
-        if (profileData?.role) {
-          console.log('Found profile role:', profileData.role);
-          return profileData.role;
+        if (profileData?.roles) {
+          console.log('Found profile role:', profileData.roles);
+          return profileData.roles;
         }
 
         // If no profile found or no role, check clients table
@@ -65,7 +65,7 @@ export const usePermissions = () => {
           .from('clients')
           .select(`
             id,
-            role:role_id (
+            roles:role_id (
               id,
               name,
               nicename
@@ -74,9 +74,9 @@ export const usePermissions = () => {
           .eq('user_id', user.id)
           .maybeSingle<ClientWithRole>();
 
-        if (clientData?.role) {
-          console.log('Found client role:', clientData.role);
-          return clientData.role;
+        if (clientData?.roles) {
+          console.log('Found client role:', clientData.roles);
+          return clientData.roles;
         }
 
         console.log('No role found in either profiles or clients table');
@@ -97,7 +97,7 @@ export const usePermissions = () => {
         .from("role_permissions")
         .select(`
           *,
-          role:role_id (
+          roles:role_id (
             id,
             name,
             nicename
