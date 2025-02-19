@@ -29,13 +29,14 @@ export const useAdminStatus = () => {
           .from('profiles')
           .select(`
             id,
-            role_id (
+            role_id:roles (
               id,
               name,
               nicename
             )
           `)
           .eq('id', user.id)
+          .returns<ProfileWithRole>()
           .single();
 
         if (profileError) {
