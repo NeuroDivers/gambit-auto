@@ -40,7 +40,7 @@ export const usePermissions = () => {
         }
 
         // Try to get profile role first
-        const { data: profiles } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select(`
             role:role_id (
@@ -50,16 +50,17 @@ export const usePermissions = () => {
             )
           `)
           .eq('id', user.id)
-          .returns<ProfileResponse[]>();
+          .maybeSingle();
 
-        // Check if we have a valid profile with role
-        if (profiles?.[0]?.role) {
-          console.log('Found profile role:', profiles[0].role);
-          return profiles[0].role;
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+        } else if (profileData?.role) {
+          console.log('Found profile role:', profileData.role);
+          return profileData.role;
         }
 
         // Fallback to client role
-        const { data: clients } = await supabase
+        const { data: clientData, error: clientError } = await supabase
           .from('clients')
           .select(`
             role:role_id (
@@ -69,12 +70,13 @@ export const usePermissions = () => {
             )
           `)
           .eq('user_id', user.id)
-          .returns<ClientResponse[]>();
+          .maybeSingle();
 
-        // Check if we have a valid client with role
-        if (clients?.[0]?.role) {
-          console.log('Found client role:', clients[0].role);
-          return clients[0].role;
+        if (clientError) {
+          console.error('Error fetching client:', clientError);
+        } else if (clientData?.role) {
+          console.log('Found client role:', clientData.role);
+          return clientData.role;
         }
 
         console.log('No role found in either profiles or clients table');
