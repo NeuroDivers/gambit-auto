@@ -68,10 +68,12 @@ export function SummaryStep({ form, services }: SummaryStepProps) {
                       </div>
                       <div className="text-sm text-right">
                         <div>Quantity: {item.quantity}</div>
-                        <div>
-                          <span className="text-muted-foreground">Starting from: </span>
-                          <span className="font-medium">${item.unit_price.toFixed(2)}</span>
-                        </div>
+                        {item.unit_price > 0 && (
+                          <div>
+                            <span className="text-muted-foreground">Starting from: </span>
+                            <span className="font-medium">${item.unit_price.toFixed(2)}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     {details?.images && details.images.length > 0 && (
