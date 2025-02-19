@@ -26,15 +26,13 @@ interface UserRole {
 
 interface ProfileData {
   id: string;
-  role_id: string;
-  role: UserRole | null;
+  role: UserRole;
 }
 
 interface ClientData {
   id: string;
   user_id: string;
-  role_id: string;
-  role: UserRole | null;
+  role: UserRole;
 }
 
 export const usePermissions = () => {
@@ -53,19 +51,19 @@ export const usePermissions = () => {
           .from('profiles')
           .select(`
             id,
-            role_id,
-            role:roles (
+            roles!role_id (
               id,
               name,
               nicename
             )
           `)
           .eq('id', user.id)
-          .maybeSingle<ProfileData>();
+          .returns<ProfileData>()
+          .maybeSingle();
 
-        if (!profileError && profileData?.role) {
-          console.log('Found profile role:', profileData.role);
-          return profileData.role;
+        if (!profileError && profileData?.roles) {
+          console.log('Found profile role:', profileData.roles);
+          return profileData.roles;
         }
 
         // If no profile found or no role, check clients table
@@ -74,19 +72,19 @@ export const usePermissions = () => {
           .select(`
             id,
             user_id,
-            role_id,
-            role:roles (
+            roles!role_id (
               id,
               name,
               nicename
             )
           `)
           .eq('user_id', user.id)
-          .maybeSingle<ClientData>();
+          .returns<ClientData>()
+          .maybeSingle();
 
-        if (!clientError && clientData?.role) {
-          console.log('Found client role:', clientData.role);
-          return clientData.role;
+        if (!clientError && clientData?.roles) {
+          console.log('Found client role:', clientData.roles);
+          return clientData.roles;
         }
 
         console.log('No role found in either profiles or clients table');
@@ -107,7 +105,7 @@ export const usePermissions = () => {
         .from("role_permissions")
         .select(`
           *,
-          roles:role_id (
+          roles!role_id (
             id,
             name,
             nicename
