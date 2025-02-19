@@ -23,6 +23,22 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blo
   const calendarStart = startOfWeek(monthStart)
   const calendarEnd = endOfWeek(monthEnd)
 
+  const handlePrevMonth = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const prevMonth = new Date(currentDate)
+    prevMonth.setMonth(prevMonth.getMonth() - 1)
+    onDateChange?.(prevMonth)
+  }
+
+  const handleNextMonth = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const nextMonth = new Date(currentDate)
+    nextMonth.setMonth(nextMonth.getMonth() + 1)
+    onDateChange?.(nextMonth)
+  }
+
   const days = eachDayOfInterval({
     start: calendarStart,
     end: calendarEnd,
@@ -45,26 +61,14 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blo
           <Button 
             variant="outline" 
             size="icon"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              const prevMonth = new Date(currentDate)
-              prevMonth.setMonth(prevMonth.getMonth() - 1)
-              onDateChange?.(prevMonth)
-            }}
+            onClick={handlePrevMonth}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button 
             variant="outline" 
             size="icon"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              const nextMonth = new Date(currentDate)
-              nextMonth.setMonth(nextMonth.getMonth() + 1)
-              onDateChange?.(nextMonth)
-            }}
+            onClick={handleNextMonth}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
