@@ -13,6 +13,7 @@ export const useAdminStatus = () => {
         // Get current user's role using the get_user_role RPC function
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) {
+          console.log("No user found");
           setIsAdmin(false)
           setIsInternalStaff(false)
           return
@@ -33,9 +34,12 @@ export const useAdminStatus = () => {
         // If we have role data, check if user is administrator
         if (roleData) {
           console.log("User role data:", roleData)
-          setIsAdmin(roleData.role_name === 'administrator')
+          const isAdminRole = roleData.role_name === 'administrator';
+          console.log("Is admin role:", isAdminRole);
+          setIsAdmin(isAdminRole)
           setIsInternalStaff(roleData.user_type === 'staff')
         } else {
+          console.log("No role data found");
           setIsAdmin(false)
           setIsInternalStaff(false)
         }
