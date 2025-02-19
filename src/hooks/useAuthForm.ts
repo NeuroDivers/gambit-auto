@@ -1,8 +1,8 @@
 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export interface AuthFormData {
   email: string;
@@ -22,7 +22,6 @@ export const useAuthForm = () => {
     password: "",
   });
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -30,7 +29,6 @@ export const useAuthForm = () => {
     try {
       console.log("Checking user role for redirect...");
       
-      // First check if user is in profiles (staff)
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select(`
@@ -42,33 +40,25 @@ export const useAuthForm = () => {
         .eq("id", userId)
         .single<RoleData>();
 
-      if (!profileError && profileData?.role) {
-        console.log("Found staff profile:", profileData);
-        // Staff member - redirect based on role
-        if (profileData.role.name.toLowerCase() === 'client') {
-          navigate("/client", { replace: true });
-        } else {
-          navigate("/admin", { replace: true });
-        }
+      if (profileError) {
+        console.error("Profile fetch error:", profileError);
+        throw profileError;
+      }
+
+      if (!profileData?.role) {
+        console.error("No role found for user");
+        navigate("/unauthorized", { replace: true });
         return;
       }
 
-      // If not in profiles, check clients table
-      const { data: clientData, error: clientError } = await supabase
-        .from("clients")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
-
-      if (!clientError && clientData) {
-        console.log("Found client:", clientData);
-        // Client - always redirect to client dashboard
+      console.log("User role found:", profileData.role);
+      
+      // Redirect based on role
+      if (profileData.role.name.toLowerCase() === 'client') {
         navigate("/client", { replace: true });
-        return;
+      } else {
+        navigate("/admin", { replace: true });
       }
-
-      console.error("User not found in either profiles or clients");
-      navigate("/unauthorized", { replace: true });
     } catch (error) {
       console.error("Error during role-based redirect:", error);
       navigate("/unauthorized", { replace: true });
@@ -91,7 +81,6 @@ export const useAuthForm = () => {
         options: {
           redirectTo: `${window.location.origin}/auth`,
           queryParams: {
-            // Default to client role for Google sign-ins
             access_type: 'offline',
             prompt: 'consent',
           }
@@ -100,17 +89,13 @@ export const useAuthForm = () => {
       if (error) throw error;
     } catch (error: any) {
       console.error("Google sign in error:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message,
-      });
+      toast.error(error.message || "Failed to sign in with Google");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent, isStaff: boolean = false) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
     setLoading(true);
@@ -119,13 +104,7 @@ export const useAuthForm = () => {
       console.log("Attempting sign up with:", formData.email);
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            email: formData.email,
-            is_staff: isStaff, // This determines which table gets the entry
-          }
-        }
+        password: formData.password
       });
 
       if (signUpError) {
@@ -137,23 +116,16 @@ export const useAuthForm = () => {
 
       if (signUpData?.user) {
         console.log("User signed up successfully:", signUpData.user.id);
-        toast({
-          title: "Welcome!",
-          description: "Your account has been created successfully.",
-        });
-
-        // Wait for the database triggers to complete
+        toast.success("Your account has been created successfully!");
+        
+        // Wait for the trigger to complete profile creation
         setTimeout(async () => {
           await handleRoleBasedRedirect(signUpData.user.id);
         }, 1000);
       }
     } catch (error: any) {
       console.error("Sign up error:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message,
-      });
+      toast.error(error.message || "Failed to create account");
     } finally {
       setLoading(false);
     }
@@ -173,9 +145,7 @@ export const useAuthForm = () => {
 
       if (error) {
         if (error.message === "Invalid login credentials") {
-          throw new Error(
-            "Invalid email or password. Please check your credentials and try again."
-          );
+          throw new Error("Invalid email or password. Please check your credentials and try again.");
         }
         throw error;
       }
@@ -190,11 +160,7 @@ export const useAuthForm = () => {
       return data;
     } catch (error: any) {
       console.error("Sign in error:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message,
-      });
+      toast.error(error.message || "Failed to sign in");
       throw error;
     } finally {
       setLoading(false);

@@ -2,18 +2,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/integrations/supabase/types/database";
-
-interface Role {
-  id: string;
-  name: string;
-  nicename: string;
-}
-
-type ProfileWithRole = {
-  id: string;
-  role: Role;
-}
 
 export const useAuthRedirect = () => {
   const navigate = useNavigate();
@@ -24,10 +12,10 @@ export const useAuthRedirect = () => {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
         
-        if (session) {
-          console.log("Session found:", session);
-          // Get user role from profiles
-          const { data, error: profileError } = await supabase
+        if (session?.user) {
+          console.log("Session found, checking profile...");
+          // Get user profile and role
+          const { data: profileData, error: profileError } = await supabase
             .from("profiles")
             .select(`
               id,
@@ -38,21 +26,26 @@ export const useAuthRedirect = () => {
               )
             `)
             .eq("id", session.user.id)
-            .single<ProfileWithRole>();
+            .single();
 
           if (profileError) {
             console.error("Profile fetch error:", profileError);
             throw profileError;
           }
 
-          console.log("Profile data:", data);
+          if (!profileData) {
+            console.log("No profile found");
+            navigate("/unauthorized", { replace: true });
+            return;
+          }
+
+          console.log("Profile found:", profileData);
 
           // Redirect based on role
-          if (data?.role?.name?.toLowerCase() === 'client') {
-            console.log("Redirecting to client dashboard");
+          const roleName = profileData.role?.name?.toLowerCase();
+          if (roleName === 'client') {
             navigate("/client", { replace: true });
           } else {
-            console.log("Redirecting to admin dashboard");
             navigate("/admin", { replace: true });
           }
         }
@@ -68,10 +61,10 @@ export const useAuthRedirect = () => {
       async (event, session) => {
         console.log("Auth state changed:", event, session);
         
-        if (event === 'SIGNED_IN' && session) {
-          console.log("User signed in, fetching profile");
-          // Get user role
-          const { data, error: profileError } = await supabase
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log("User signed in, checking profile");
+          // Get user profile and role
+          const { data: profileData, error: profileError } = await supabase
             .from("profiles")
             .select(`
               id,
@@ -82,21 +75,27 @@ export const useAuthRedirect = () => {
               )
             `)
             .eq("id", session.user.id)
-            .single<ProfileWithRole>();
+            .single();
 
           if (profileError) {
             console.error("Profile fetch error:", profileError);
-            throw profileError;
+            navigate("/unauthorized", { replace: true });
+            return;
           }
 
-          console.log("Profile data after sign in:", data);
+          if (!profileData) {
+            console.log("No profile found after sign in");
+            navigate("/unauthorized", { replace: true });
+            return;
+          }
+
+          console.log("Profile found after sign in:", profileData);
 
           // Redirect based on role
-          if (data?.role?.name?.toLowerCase() === 'client') {
-            console.log("Redirecting to client dashboard");
+          const roleName = profileData.role?.name?.toLowerCase();
+          if (roleName === 'client') {
             navigate("/client", { replace: true });
           } else {
-            console.log("Redirecting to admin dashboard");
             navigate("/admin", { replace: true });
           }
         } else if (event === 'SIGNED_OUT') {
