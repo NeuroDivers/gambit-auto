@@ -67,7 +67,7 @@ export const useUserData = () => {
       // Get all non-client profiles
       const nonClientProfiles = profiles.filter(profile => profile.role?.name !== 'client');
 
-      // Now fetch all clients directly (regardless of user_id)
+      // Now fetch all clients using maybeSingle for potential empty results
       const { data: clients, error: clientsError } = await supabase
         .from("clients")
         .select(`
@@ -84,7 +84,8 @@ export const useUserData = () => {
             nicename
           )
         `)
-        .returns<ClientResponse[]>();
+        .maybeSingle()
+        .returns<ClientResponse>();
 
       if (clientsError) {
         console.error("Error fetching clients:", clientsError);
@@ -92,14 +93,14 @@ export const useUserData = () => {
 
       console.log("Fetched clients:", clients);
 
-      // Map clients to User type
-      const clientUsers = (clients || []).map(client => ({
-        id: client.id, // Use client's own ID instead of user_id
-        email: client.email,
-        first_name: client.first_name,
-        last_name: client.last_name,
-        role: client.role
-      }));
+      // Map clients to User type, handling the case where clients might be null
+      const clientUsers = clients ? [{
+        id: clients.id,
+        email: clients.email,
+        first_name: clients.first_name,
+        last_name: clients.last_name,
+        role: clients.role
+      }] : [];
 
       // Combine non-client profiles with client users
       const allUsers: User[] = [
