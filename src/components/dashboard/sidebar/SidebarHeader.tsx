@@ -31,7 +31,7 @@ export function SidebarHeader({ firstName, role, onLogout }: SidebarHeaderProps)
       <div className="p-2 space-y-2 flex flex-col items-center border-b">
         <Avatar>
           <AvatarFallback>
-            <User className="h-4 w-4" />
+            {firstName?.[0]?.toUpperCase() ?? "U"}
           </AvatarFallback>
         </Avatar>
         <Button
@@ -52,7 +52,7 @@ export function SidebarHeader({ firstName, role, onLogout }: SidebarHeaderProps)
         <Avatar className="h-10 w-10">
           <AvatarImage src="" alt={firstName || 'User'} />
           <AvatarFallback>
-            <User className="h-4 w-4" />
+            {firstName?.[0]?.toUpperCase() ?? "U"}
           </AvatarFallback>
         </Avatar>
         <div className="space-y-1">
