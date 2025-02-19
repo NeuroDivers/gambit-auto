@@ -24,62 +24,67 @@ interface UserRole {
   nicename: string;
 }
 
-interface ProfileResponse {
-  role: UserRole;
+interface ProfileData {
+  role: UserRole | null;
 }
 
-interface ClientResponse {
-  role: UserRole;
+interface ClientData {
+  role: UserRole | null;
 }
 
 export const usePermissions = () => {
   const { data: currentUserRole } = useQuery({
     queryKey: ["current-user-role"],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log('No user found');
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          console.log('No user found');
+          return null;
+        }
+
+        // Check profiles table first
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select(`
+            role:role_id (
+              id,
+              name,
+              nicename
+            )
+          `)
+          .eq('id', user.id)
+          .maybeSingle<ProfileData>();
+
+        if (!profileError && profileData?.role) {
+          console.log('Found profile role:', profileData.role);
+          return profileData.role;
+        }
+
+        // If no profile found or no role, check clients table
+        const { data: clientData, error: clientError } = await supabase
+          .from('clients')
+          .select(`
+            role:role_id (
+              id,
+              name,
+              nicename
+            )
+          `)
+          .eq('user_id', user.id)
+          .maybeSingle<ClientData>();
+
+        if (!clientError && clientData?.role) {
+          console.log('Found client role:', clientData.role);
+          return clientData.role;
+        }
+
+        console.log('No role found in either profiles or clients table');
+        return null;
+      } catch (error) {
+        console.error('Error fetching user role:', error);
         return null;
       }
-
-      // Check profiles table first
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select(`
-          role:role_id (
-            id,
-            name,
-            nicename
-          )
-        `)
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (!profileError && profileData?.role) {
-        console.log('Found profile role:', profileData.role);
-        return profileData.role;
-      }
-
-      // If no profile found or no role, check clients table
-      const { data: clientData, error: clientError } = await supabase
-        .from('clients')
-        .select(`
-          role:role_id (
-            id,
-            name,
-            nicename
-          )
-        `)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (!clientError && clientData?.role) {
-        console.log('Found client role:', clientData.role);
-        return clientData.role;
-      }
-
-      console.log('No role found in either profiles or clients table');
-      return null;
     },
     staleTime: Infinity,
   });
