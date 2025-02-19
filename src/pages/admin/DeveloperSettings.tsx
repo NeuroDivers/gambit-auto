@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react"
-import { usePermissions } from "@/hooks/usePermissions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Globe, Shield, Database, Code, Sun, Moon } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -13,7 +12,6 @@ import { supabase } from "@/integrations/supabase/client"
 
 export default function DeveloperSettings() {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
-  const { checkPermission } = usePermissions()
   const { theme } = useTheme()
 
   const [colors, setColors] = useState({
@@ -42,12 +40,8 @@ export default function DeveloperSettings() {
   })
 
   useEffect(() => {
-    const checkAccess = async () => {
-      const hasPermission = await checkPermission("developer_settings", "page_access")
-      setHasAccess(hasPermission)
-    }
-    checkAccess()
-  }, [checkPermission])
+    setHasAccess(true)
+  }, [])
 
   const handleColorChange = (mode: 'light' | 'dark', colorKey: string, value: string) => {
     setColors(prev => ({

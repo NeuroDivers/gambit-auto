@@ -24,16 +24,6 @@ type ProfileResponse = {
   role: UserRole;
 };
 
-type ClientResponse = {
-  id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  user_id: string;
-  phone_number?: string;
-  address?: string;
-};
-
 export const useUserData = () => {
   return useQuery({
     queryKey: ["users"],
@@ -59,43 +49,20 @@ export const useUserData = () => {
         throw profilesError;
       }
 
-      console.log("Fetched profiles:", profiles);
-
-      // Separate client profiles - we'll get their data from clients table
-      const clientProfiles = profiles.filter(profile => profile.role.name === 'client');
-      const nonClientProfiles = profiles.filter(profile => profile.role.name !== 'client');
-
-      // Get client data for client profiles
-      const { data: clients, error: clientsError } = await supabase
-        .from("clients")
-        .select("*")
-        .in('user_id', clientProfiles.map(p => p.id))
-        .returns<ClientResponse[]>();
-
-      if (clientsError) {
-        console.error("Error fetching clients:", clientsError);
-        throw clientsError;
+      if (!profiles) {
+        return [];
       }
 
-      // Map client profiles to include client data
-      const clientUsers = clientProfiles.map(profile => {
-        const clientData = clients.find(c => c.user_id === profile.id);
-        return {
-          id: profile.id,
-          email: clientData?.email || profile.email,
-          first_name: clientData?.first_name || profile.first_name,
-          last_name: clientData?.last_name || profile.last_name,
-          role: profile.role
-        } satisfies User;
-      });
+      // Map profiles to User type
+      const users: User[] = profiles.map(profile => ({
+        id: profile.id,
+        email: profile.email,
+        first_name: profile.first_name ?? undefined,
+        last_name: profile.last_name ?? undefined,
+        role: profile.role
+      }));
 
-      // Combine non-client profiles with client users
-      const allUsers: User[] = [
-        ...nonClientProfiles,
-        ...clientUsers
-      ];
-
-      return allUsers;
+      return users;
     },
   });
 };

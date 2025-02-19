@@ -1,5 +1,5 @@
+
 import { DashboardLayoutWrapper } from "@/components/dashboard/DashboardLayoutWrapper"
-import { PermissionGuard } from "@/components/auth/PermissionGuard"
 import Dashboard from "@/pages/admin/Dashboard"
 import WorkOrders from "@/pages/admin/WorkOrders"
 import CreateWorkOrder from "@/pages/admin/CreateWorkOrder"
@@ -32,75 +32,39 @@ export const adminRoutes: RouteObject = {
     },
     {
       path: "work-orders",
-      element: (
-        <PermissionGuard resource="work_orders" type="page_access">
-          <WorkOrders />
-        </PermissionGuard>
-      ),
+      element: <WorkOrders />,
     },
     {
       path: "work-orders/create",
-      element: (
-        <PermissionGuard resource="work_orders" type="page_access">
-          <CreateWorkOrder />
-        </PermissionGuard>
-      ),
+      element: <CreateWorkOrder />,
     },
     {
       path: "work-orders/:id/edit",
-      element: (
-        <PermissionGuard resource="work_orders" type="page_access">
-          <EditWorkOrder />
-        </PermissionGuard>
-      ),
+      element: <EditWorkOrder />,
     },
     {
       path: "service-types",
-      element: (
-        <PermissionGuard resource="service_types" type="page_access">
-          <ServiceTypes />
-        </PermissionGuard>
-      ),
+      element: <ServiceTypes />,
     },
     {
       path: "service-bays",
-      element: (
-        <PermissionGuard resource="service_bays" type="page_access">
-          <ServiceBays />
-        </PermissionGuard>
-      ),
+      element: <ServiceBays />,
     },
     {
       path: "users",
-      element: (
-        <PermissionGuard resource="users" type="page_access">
-          <UserManagement />
-        </PermissionGuard>
-      ),
+      element: <UserManagement />,
     },
     {
       path: "quotes",
-      element: (
-        <PermissionGuard resource="quotes" type="page_access">
-          <Quotes />
-        </PermissionGuard>
-      ),
+      element: <Quotes />,
     },
     {
       path: "quotes/:id",
-      element: (
-        <PermissionGuard resource="quotes" type="page_access">
-          <QuoteDetails />
-        </PermissionGuard>
-      ),
+      element: <QuoteDetails />,
     },
     {
       path: "quotes/requests/:id",
-      element: (
-        <PermissionGuard resource="quotes" type="page_access">
-          <QuoteRequestDetails />
-        </PermissionGuard>
-      ),
+      element: <QuoteRequestDetails />,
     },
     {
       path: "quotes/create",
@@ -108,59 +72,31 @@ export const adminRoutes: RouteObject = {
     },
     {
       path: "invoices",
-      element: (
-        <PermissionGuard resource="invoices" type="page_access">
-          <Invoices />
-        </PermissionGuard>
-      ),
+      element: <Invoices />,
     },
     {
       path: "invoices/create",
-      element: (
-        <PermissionGuard resource="invoices" type="page_access">
-          <CreateInvoice />
-        </PermissionGuard>
-      ),
+      element: <CreateInvoice />,
     },
     {
       path: "invoices/:id",
-      element: (
-        <PermissionGuard resource="invoices" type="page_access">
-          <InvoiceDetails />
-        </PermissionGuard>
-      ),
+      element: <InvoiceDetails />,
     },
     {
       path: "invoices/:id/edit",
-      element: (
-        <PermissionGuard resource="invoices" type="page_access">
-          <EditInvoice />
-        </PermissionGuard>
-      ),
+      element: <EditInvoice />,
     },
     {
       path: "clients",
-      element: (
-        <PermissionGuard resource="clients" type="page_access">
-          <ClientManagement />
-        </PermissionGuard>
-      ),
+      element: <ClientManagement />,
     },
     {
       path: "clients/:id",
-      element: (
-        <PermissionGuard resource="clients" type="page_access">
-          <ClientDetails />
-        </PermissionGuard>
-      ),
+      element: <ClientDetails />,
     },
     {
       path: "business-settings",
-      element: (
-        <PermissionGuard resource="business_settings" type="page_access">
-          <BusinessSettings />
-        </PermissionGuard>
-      ),
+      element: <BusinessSettings />,
     },
     {
       path: "profile-settings",
@@ -168,11 +104,7 @@ export const adminRoutes: RouteObject = {
     },
     {
       path: "developer-settings",
-      element: (
-        <PermissionGuard resource="developer_settings" type="page_access">
-          <DeveloperSettings />
-        </PermissionGuard>
-      ),
+      element: <DeveloperSettings />,
     },
   ]
 }
