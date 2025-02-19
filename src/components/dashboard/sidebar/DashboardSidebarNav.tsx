@@ -19,8 +19,14 @@ import {
 } from "@/components/ui/tooltip"
 import { useSidebar } from "@/components/ui/sidebar"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+} from "@/components/ui/sidebar"
 
-const items = [
+const mainItems = [
   {
     title: "Dashboard",
     to: "/admin",
@@ -41,6 +47,9 @@ const items = [
     to: "/admin/invoices",
     icon: FileText,
   },
+]
+
+const managementItems = [
   {
     title: "Service Types",
     to: "/admin/service-types",
@@ -61,8 +70,11 @@ const items = [
     to: "/admin/users",
     icon: Users,
   },
+]
+
+const settingsItems = [
   {
-    title: "Settings",
+    title: "Business Settings",
     to: "/admin/business-settings",
     icon: Settings,
   },
@@ -77,7 +89,7 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
   const { isMobile, state } = useSidebar()
   const isCollapsed = state === "collapsed"
 
-  const SidebarNavLink = ({ item }: { item: typeof items[0] }) => {
+  const SidebarNavLink = ({ item }: { item: { title: string; to: string; icon: React.ElementType } }) => {
     const link = (
       <NavLink
         to={item.to}
@@ -113,12 +125,27 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
     return link
   }
 
+  const renderNavGroup = (items: typeof mainItems, label: string) => (
+    <SidebarGroup>
+      {!isCollapsed && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map((item) => (
+            <div key={item.to} className="px-2">
+              <SidebarNavLink item={item} />
+            </div>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  )
+
   return (
     <ScrollArea className="flex-1">
-      <nav className="flex flex-col gap-2 p-4">
-        {items.map((item) => (
-          <SidebarNavLink key={item.to} item={item} />
-        ))}
+      <nav className="flex flex-col gap-4 py-4">
+        {renderNavGroup(mainItems, "Main")}
+        {renderNavGroup(managementItems, "Management")}
+        {renderNavGroup(settingsItems, "Settings")}
       </nav>
     </ScrollArea>
   )
