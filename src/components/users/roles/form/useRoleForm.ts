@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
@@ -29,7 +28,7 @@ export const useRoleForm = ({ role, onSuccess, onOpenChange }: UseRoleFormProps)
       if (!role?.id) return null;
       console.log("Fetching role data for:", role.id);
       const { data, error } = await supabase
-        .from("available_roles")
+        .from("roles") // Changed from "available_roles" to "roles"
         .select("*")
         .eq("id", role.id)
         .maybeSingle();
@@ -87,7 +86,7 @@ export const useRoleForm = ({ role, onSuccess, onOpenChange }: UseRoleFormProps)
       if (role?.id) {
         console.log("Updating role:", role.id, values);
         const { error } = await supabase
-          .from("available_roles")
+          .from("roles")
           .update({
             name: values.name,
             nicename: values.nicename,
@@ -105,7 +104,7 @@ export const useRoleForm = ({ role, onSuccess, onOpenChange }: UseRoleFormProps)
       } else {
         console.log("Creating new role:", values);
         const { error } = await supabase
-          .from("available_roles")
+          .from("roles")
           .insert({
             name: values.name,
             nicename: values.nicename,
