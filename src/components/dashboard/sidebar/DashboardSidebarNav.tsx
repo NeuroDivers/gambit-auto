@@ -1,4 +1,3 @@
-
 import { NavLink } from "react-router-dom"
 import { 
   CalendarDays, 
@@ -95,6 +94,7 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
     const content = (
       <NavLink 
         to={item.to}
+        onClick={onClick}
         className={({ isActive }) => {
           // Use custom isActive function for dashboard, otherwise use default isActive
           const activeState = item.isActive ? 
@@ -102,23 +102,14 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
             isActive
 
           return cn(
-            "flex items-center gap-3 rounded-lg px-4 py-2 text-base font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+            "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-accent hover:text-accent-foreground min-w-0",
             activeState ? "bg-accent text-accent-foreground" : "text-foreground",
-            isCollapsed && "h-9 w-full px-2 justify-center"
+            isCollapsed && "justify-center px-2"
           )
         }}
-        onClick={onClick}
       >
-        <item.icon className={cn(
-          "h-5 w-5 shrink-0",
-          isCollapsed && "h-4 w-4"
-        )} />
-        <span className={cn(
-          "truncate",
-          isCollapsed && "hidden"
-        )}>
-          {item.title}
-        </span>
+        <item.icon className="h-5 w-5 shrink-0" />
+        {!isCollapsed && <span className="truncate">{item.title}</span>}
       </NavLink>
     )
 
