@@ -192,6 +192,7 @@ export type Database = {
           id: string
           last_name: string
           phone_number: string | null
+          role_id: string | null
           updated_at: string
           user_id: string | null
         }
@@ -204,6 +205,7 @@ export type Database = {
           id?: string
           last_name: string
           phone_number?: string | null
+          role_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -216,10 +218,19 @@ export type Database = {
           id?: string
           last_name?: string
           phone_number?: string | null
+          role_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       employees: {
         Row: {
