@@ -46,7 +46,7 @@ export const useAdminStatus = () => {
           return;
         }
 
-        if (!data || !data.role) {
+        if (!data?.role?.name) {
           console.log("No profile or role data found - user is a client");
           setIsAdmin(false);
           return;
