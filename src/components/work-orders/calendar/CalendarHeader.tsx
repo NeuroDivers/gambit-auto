@@ -16,28 +16,23 @@ export function CalendarHeader({
 }: CalendarHeaderProps) {
   return (
     <div className="flex items-center justify-between pb-4 border-b border-border/50">
-      <div className="flex items-center justify-between w-full">
-        <h2 className="text-lg font-semibold">
-          {format(currentDate, 'MMMM yyyy')}
-        </h2>
-        <div className="flex gap-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={onPrevMonth} 
-            className="text-primary hover:bg-primary hover:text-primary-foreground"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={onNextMonth} 
-            className="text-primary hover:bg-primary hover:text-primary-foreground"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+      <div className="flex gap-1">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={onPrevMonth} 
+          className="text-primary hover:bg-primary hover:text-primary-foreground"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={onNextMonth} 
+          className="text-primary hover:bg-primary hover:text-primary-foreground"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
