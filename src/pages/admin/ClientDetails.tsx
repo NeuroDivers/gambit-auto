@@ -6,8 +6,21 @@ import { Client } from "@/components/clients/types"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { FileText, Mail, Phone } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { FileText, Mail, Phone, Calendar, User, Car } from "lucide-react"
+import { VehicleList } from "@/components/clients/vehicles/VehicleList"
+import {
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts"
+
+interface ClientWithAuth extends Client {
+  last_sign_in_at?: string | null;
+}
 
 export default function ClientDetails() {
   const { id } = useParams()
@@ -15,42 +28,51 @@ export default function ClientDetails() {
   const { data: client, isLoading } = useQuery({
     queryKey: ['client', id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch client details with auth data
+      const { data: clientData, error: clientError } = await supabase
         .from('clients')
-        .select('*')
+        .select(`
+          *,
+          user:user_id (
+            last_sign_in_at
+          )
+        `)
         .eq('id', id)
         .single()
       
-      if (error) throw error
-      return data as Client
-    }
-  })
-
-  const { data: invoices } = useQuery({
-    queryKey: ['client-invoices', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
+      if (clientError) throw clientError
+      
+      // Get last 6 months of invoice data for the chart
+      const sixMonthsAgo = new Date()
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+      
+      const { data: invoiceData, error: invoiceError } = await supabase
         .from('invoices')
-        .select('*')
+        .select('total, created_at')
         .eq('client_id', id)
-        .order('created_at', { ascending: false })
+        .gte('created_at', sixMonthsAgo.toISOString())
+        .order('created_at', { ascending: true })
       
-      if (error) throw error
-      return data
-    }
-  })
+      if (invoiceError) throw invoiceError
 
-  const { data: quotes } = useQuery({
-    queryKey: ['client-quotes', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quotes')
-        .select('*')
-        .eq('client_id', id)
-        .order('created_at', { ascending: false })
-      
-      if (error) throw error
-      return data
+      // Process invoice data for the chart
+      const monthlySpending = invoiceData?.reduce((acc: any[], invoice) => {
+        const month = new Date(invoice.created_at).toLocaleString('default', { month: 'short' })
+        const existingMonth = acc.find(item => item.month === month)
+        
+        if (existingMonth) {
+          existingMonth.amount += invoice.total
+        } else {
+          acc.push({ month, amount: invoice.total })
+        }
+        return acc
+      }, []) || []
+
+      return {
+        ...clientData,
+        last_sign_in_at: clientData.user?.last_sign_in_at,
+        monthlySpending
+      } as ClientWithAuth
     }
   })
 
@@ -89,22 +111,82 @@ export default function ClientDetails() {
                 <FileText className="h-4 w-4" />
                 {client.address || 'No address'}
               </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                Last sign in: {client.last_sign_in_at 
+                  ? new Date(client.last_sign_in_at).toLocaleDateString()
+                  : 'Never'
+                }
+              </div>
             </div>
           </div>
         </CardHeader>
       </Card>
 
-      <Tabs defaultValue="history" className="w-full">
+      {/* Client Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${client.total_spent?.toFixed(2) || '0.00'}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Invoices</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{client.total_invoices || 0}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Work Orders</CardTitle>
+            <User className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{client.total_work_orders || 0}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Spending Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Monthly Spending</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={350}>
+            <BarChart data={client.monthlySpending}>
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="amount" fill="var(--primary)" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Tabs defaultValue="vehicles" className="w-full">
         <TabsList>
+          <TabsTrigger value="vehicles">Vehicles</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
           <TabsTrigger value="invoices">Invoices</TabsTrigger>
           <TabsTrigger value="quotes">Quotes</TabsTrigger>
         </TabsList>
         
+        <TabsContent value="vehicles" className="border rounded-lg mt-6">
+          <VehicleList clientId={client.id} />
+        </TabsContent>
+
         <TabsContent value="history" className="border rounded-lg mt-6">
           <ScrollArea className="h-[400px]">
             <div className="p-4 space-y-4">
-              {[...(invoices || []), ...(quotes || [])]
+              {[...(client.invoices || []), ...(client.quotes || [])]
                 .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
                 .map((item) => (
                   <Card key={item.id}>
@@ -132,7 +214,7 @@ export default function ClientDetails() {
         <TabsContent value="invoices" className="border rounded-lg mt-6">
           <ScrollArea className="h-[400px]">
             <div className="p-4 space-y-4">
-              {invoices?.map((invoice) => (
+              {client.invoices?.map((invoice) => (
                 <Card key={invoice.id}>
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start">
@@ -157,7 +239,7 @@ export default function ClientDetails() {
         <TabsContent value="quotes" className="border rounded-lg mt-6">
           <ScrollArea className="h-[400px]">
             <div className="p-4 space-y-4">
-              {quotes?.map((quote) => (
+              {client.quotes?.map((quote) => (
                 <Card key={quote.id}>
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start">
