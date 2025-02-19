@@ -14,56 +14,63 @@ export const useAuthRedirect = () => {
   const location = useLocation();
 
   useEffect(() => {
-    const checkUserType = async (userId: string) => {
-      const { data: userRole, error } = await supabase
-        .rpc('get_user_role', {
-          input_user_id: userId
-        })
-        .single();
+    let isSubscribed = true; // For cleanup
 
-      if (error) {
+    const checkUserType = async (userId: string) => {
+      try {
+        const { data: userRole, error } = await supabase
+          .rpc('get_user_role', {
+            input_user_id: userId
+          })
+          .single();
+
+        if (error) throw error;
+        return userRole as UserRole;
+      } catch (error) {
         console.error("Error checking user role:", error);
         return null;
       }
+    };
 
-      console.log("Found user role:", userRole);
-      return userRole as UserRole;
+    const redirectBasedOnRole = async (session: any) => {
+      if (!isSubscribed) return; // Don't redirect if component unmounted
+
+      const userRole = await checkUserType(session.user.id);
+      const currentPath = location.pathname;
+
+      // Skip redirect if already on correct path
+      if (userRole?.user_type === 'staff') {
+        if (!currentPath.startsWith('/admin') && currentPath !== '/auth') {
+          navigate("/admin", { replace: true });
+        }
+      } else {
+        if (!currentPath.startsWith('/client') && currentPath !== '/auth') {
+          navigate("/client", { replace: true });
+        }
+      }
     };
 
     const checkSession = async () => {
+      if (!isSubscribed) return;
+
       const { data: { session }, error } = await supabase.auth.getSession();
+      
       if (error) {
         console.error("Session check error:", error.message);
         return;
       }
 
-      // If no session and not on auth page, redirect to auth
-      if (!session && location.pathname !== '/auth') {
-        console.log("No session, redirecting to auth");
-        navigate("/auth", { replace: true });
+      if (!session) {
+        // Only redirect to auth if not already there
+        if (location.pathname !== '/auth') {
+          navigate("/auth", { replace: true });
+        }
         return;
       }
 
-      // If we have a session, check if we need to redirect
-      if (session) {
-        const userRole = await checkUserType(session.user.id);
-        const isOnAuthPage = location.pathname === '/auth';
-        const isOnClientDashboard = location.pathname.startsWith('/client');
-        const isOnAdminDashboard = location.pathname.startsWith('/admin');
-        
-        if (userRole?.user_type === 'staff') {
-          // For staff users
-          if (isOnAuthPage || isOnClientDashboard) {
-            console.log("Staff user, redirecting to admin dashboard");
-            navigate("/admin", { replace: true });
-          }
-        } else {
-          // For client users
-          if (isOnAuthPage || isOnAdminDashboard) {
-            console.log("Client user, redirecting to client dashboard");
-            navigate("/client", { replace: true });
-          }
-        }
+      // If on auth page with valid session, redirect based on role
+      if (location.pathname === '/auth') {
+        await redirectBasedOnRole(session);
       }
     };
 
@@ -73,26 +80,18 @@ export const useAuthRedirect = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("Auth state changed:", event);
+        if (!isSubscribed) return;
         
         if (event === 'SIGNED_IN' && session) {
-          const userRole = await checkUserType(session.user.id);
-          
-          if (userRole?.user_type === 'staff') {
-            console.log("Staff signed in, redirecting to admin dashboard");
-            navigate("/admin", { replace: true });
-          } else {
-            console.log("Client signed in, redirecting to client dashboard");
-            navigate("/client", { replace: true });
-          }
+          await redirectBasedOnRole(session);
         } else if (event === 'SIGNED_OUT') {
-          console.log("User signed out, redirecting to auth");
           navigate("/auth", { replace: true });
         }
       }
     );
 
     return () => {
+      isSubscribed = false;
       subscription.unsubscribe();
     };
   }, [navigate, location.pathname]);
