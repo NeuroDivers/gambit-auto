@@ -8,7 +8,6 @@ import { Plus, Users } from "lucide-react";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { RoleList } from "./roles/RoleList";
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 export const UserManagementSection = () => {
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
@@ -45,11 +44,9 @@ export const UserManagementSection = () => {
               )}
             </div>
           </div>
-          <ScrollArea className="h-[calc(100vh-280px)]">
-            <div className="p-4">
-              <UserList initialRoleFilter={selectedRole} />
-            </div>
-          </ScrollArea>
+          <div className="p-4">
+            <UserList initialRoleFilter={selectedRole} />
+          </div>
         </Card>
       </div>
 
