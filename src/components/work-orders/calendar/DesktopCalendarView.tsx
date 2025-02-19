@@ -39,12 +39,13 @@ export function DesktopCalendarView({
               <CalendarIcon className="h-5 w-5" />
               <span>Calendar</span>
             </div>
-            <button
+            <Button
+              variant="ghost"
               onClick={() => setShowBlockedDatesDialog(true)}
               className="font-semibold"
             >
               Blocked Dates
-            </button>
+            </Button>
           </div>
           <ServiceLegend />
         </div>
