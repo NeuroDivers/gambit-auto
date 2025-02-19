@@ -38,7 +38,10 @@ export const usePermissions = () => {
     queryKey: ["current-user-role"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      if (!user) {
+        console.log('No user found');
+        return null;
+      }
 
       // Check profiles table first
       const { data: profileData, error: profileError } = await supabase
