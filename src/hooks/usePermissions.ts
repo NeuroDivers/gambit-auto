@@ -1,6 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { RolePermission } from "@/types/permissions";
 
 interface Role {
   id: string;
@@ -13,7 +14,7 @@ interface Profile {
 }
 
 export const usePermissions = () => {
-  const { data: currentUserRole } = useQuery<Role | null>({
+  const { data: currentUserRole, isLoading: isRoleLoading } = useQuery<Role | null>({
     queryKey: ["current-user-role"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -47,7 +48,7 @@ export const usePermissions = () => {
     },
   });
 
-  const { data: permissions } = useQuery({
+  const { data: permissions, isLoading: isPermissionsLoading } = useQuery<RolePermission[]>({
     queryKey: ["role-permissions", currentUserRole?.id],
     enabled: !!currentUserRole?.id,
     queryFn: async () => {
@@ -86,5 +87,10 @@ export const usePermissions = () => {
     return false;
   };
 
-  return { checkPermission, permissions, currentUserRole };
+  return { 
+    checkPermission, 
+    permissions, 
+    currentUserRole,
+    isLoading: isRoleLoading || isPermissionsLoading 
+  };
 };
