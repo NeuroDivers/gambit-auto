@@ -2,6 +2,7 @@
 import React from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useSidebar } from "@/components/ui/sidebar";
 
 interface DashboardSidebarHeaderProps {
   firstName?: string | null;
@@ -14,6 +15,7 @@ interface DashboardSidebarHeaderProps {
 }
 
 export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardSidebarHeaderProps) {
+  const { state } = useSidebar();
   const { data: businessProfile } = useQuery({
     queryKey: ["business-profile"],
     queryFn: async () => {
@@ -33,7 +35,7 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
         <img 
           src={businessProfile.light_logo_url}
           alt="Business Logo"
-          className="h-16 w-auto object-contain"
+          className={`w-auto object-contain transition-all duration-300 ${state === 'expanded' ? 'h-24' : 'h-16'}`}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.style.display = 'none';
