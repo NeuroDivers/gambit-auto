@@ -1,5 +1,5 @@
 
-import { NavLink } from "react-router-dom"
+import { NavLink, useLocation } from "react-router-dom"
 import { 
   CalendarDays, 
   ClipboardList, 
@@ -13,114 +13,91 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import {
   Tooltip,
   TooltipContent,
   TooltipTrigger
 } from "@/components/ui/tooltip"
 import { useSidebar } from "@/components/ui/sidebar"
+import { ScrollArea } from "@/components/ui/scroll-area"
+
+const items = [
+  {
+    title: "Dashboard",
+    to: "/admin",
+    icon: Home,
+  },
+  {
+    title: "Work Orders",
+    to: "/admin/work-orders",
+    icon: Wrench,
+  },
+  {
+    title: "Quotes",
+    to: "/admin/quotes",
+    icon: MessagesSquare,
+  },
+  {
+    title: "Invoices",
+    to: "/admin/invoices",
+    icon: FileText,
+  },
+  {
+    title: "Service Types",
+    to: "/admin/service-types",
+    icon: Factory,
+  },
+  {
+    title: "Service Bays",
+    to: "/admin/service-bays",
+    icon: CalendarDays,
+  },
+  {
+    title: "Clients",
+    to: "/admin/clients",
+    icon: ClipboardList,
+  },
+  {
+    title: "Users",
+    to: "/admin/users",
+    icon: Users,
+  },
+  {
+    title: "Settings",
+    to: "/admin/business-settings",
+    icon: Settings,
+  },
+]
 
 interface DashboardSidebarNavProps {
   onNavigate?: () => void
 }
 
 export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
-  const { state } = useSidebar()
+  const location = useLocation()
+  const { isMobile, state } = useSidebar()
   const isCollapsed = state === "collapsed"
 
-  const mainMenuItems = [
-    {
-      title: "Dashboard",
-      icon: Home,
-      to: "/admin",
-      // Only active when exactly on /admin
-      isActive: (path: string) => path === '/admin',
-    },
-    {
-      title: "Work Orders",
-      icon: Wrench,
-      to: "/admin/work-orders",
-    },
-    {
-      title: "Quotes",
-      icon: MessagesSquare,
-      to: "/admin/quotes",
-    },
-    {
-      title: "Invoices",
-      icon: FileText,
-      to: "/admin/invoices",
-    },
-  ]
-
-  const managementMenuItems = [
-    {
-      title: "Service Types",
-      icon: Factory,
-      to: "/admin/service-types",
-    },
-    {
-      title: "Service Bays",
-      icon: CalendarDays,
-      to: "/admin/service-bays",
-    },
-    {
-      title: "Clients",
-      icon: ClipboardList,
-      to: "/admin/clients",
-    },
-    {
-      title: "Users",
-      icon: Users,
-      to: "/admin/users",
-    },
-  ]
-
-  const settingsMenuItems = [
-    {
-      title: "Business Settings",
-      icon: Settings,
-      to: "/admin/business-settings",
-    },
-  ]
-
-  const MenuItem = ({ item, onClick }: { item: typeof mainMenuItems[0], onClick?: () => void }) => {
-    const content = (
-      <NavLink 
+  const NavLink = ({ item }: { item: typeof items[0] }) => {
+    const link = (
+      <NavLink
         to={item.to}
-        onClick={onClick}
-        className={({ isActive }) => {
-          // Use custom isActive function for dashboard, otherwise use default isActive
-          const activeState = item.isActive ? 
-            item.isActive(window.location.pathname) : 
-            isActive
-
-          return cn(
-            "flex items-center gap-3 rounded-lg text-base font-medium min-w-0",
-            "px-4 py-3",
-            "transition-colors hover:bg-accent hover:text-accent-foreground",
-            activeState ? "bg-accent text-accent-foreground" : "text-foreground",
-            isCollapsed && "justify-center h-10 w-10 p-2"
-          )
-        }}
+        onClick={onNavigate}
+        className={cn(
+          "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-accent hover:text-accent-foreground min-w-0",
+          location.pathname === item.to ? "bg-accent text-accent-foreground" : "text-foreground",
+          isCollapsed && "justify-center px-2"
+        )}
       >
         <item.icon className="h-5 w-5 shrink-0" />
         {!isCollapsed && <span className="truncate">{item.title}</span>}
       </NavLink>
     )
 
-    if (isCollapsed) {
+    if (isCollapsed && !isMobile) {
       return (
         <Tooltip>
           <TooltipTrigger asChild>
-            {content}
+            {link}
           </TooltipTrigger>
           <TooltipContent 
             side="right" 
@@ -133,55 +110,16 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
       )
     }
 
-    return content
+    return link
   }
 
   return (
-    <div className="flex-1 overflow-hidden">
-      <SidebarGroup>
-        <SidebarGroupLabel>Main</SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu className="flex flex-col gap-2 p-4">
-            {mainMenuItems.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
-                  <MenuItem item={item} onClick={onNavigate} />
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-
-      <SidebarGroup>
-        <SidebarGroupLabel>Management</SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu className="flex flex-col gap-2 p-4">
-            {managementMenuItems.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
-                  <MenuItem item={item} onClick={onNavigate} />
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-
-      <SidebarGroup>
-        <SidebarGroupLabel>Settings</SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu className="flex flex-col gap-2 p-4">
-            {settingsMenuItems.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
-                  <MenuItem item={item} onClick={onNavigate} />
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-    </div>
+    <ScrollArea className="flex-1">
+      <nav className="flex flex-col gap-2 p-4">
+        {items.map((item) => (
+          <NavLink key={item.to} item={item} />
+        ))}
+      </nav>
+    </ScrollArea>
   )
 }
