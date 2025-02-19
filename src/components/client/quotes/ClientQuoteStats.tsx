@@ -3,8 +3,12 @@ import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FileText, Clock, CheckCircle, XCircle } from "lucide-react"
+import { useEffect } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 
 export function ClientQuoteStats() {
+  const queryClient = useQueryClient()
+
   const { data: stats = { total: 0, pending: 0, accepted: 0, rejected: 0 } } = useQuery({
     queryKey: ["clientQuoteStats"],
     queryFn: async () => {
@@ -37,6 +41,29 @@ export function ClientQuoteStats() {
       return stats
     }
   })
+
+  // Set up real-time subscription for quote updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'quote_requests'
+        },
+        () => {
+          // Invalidate and refetch quotes when any change occurs
+          queryClient.invalidateQueries({ queryKey: ["clientQuoteStats"] })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [queryClient])
 
   return (
     <div className="grid gap-4 md:grid-cols-4">
