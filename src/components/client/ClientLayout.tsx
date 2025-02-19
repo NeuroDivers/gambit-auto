@@ -80,7 +80,7 @@ export function ClientLayout({
   }
 
   return (
-    <SidebarProvider defaultCollapsible="icon" defaultOpen>
+    <SidebarProvider defaultState="expanded">
       <div className={cn("flex h-screen w-full overflow-hidden bg-background")}>
         <Sidebar>
           {sidebarContent}
