@@ -192,7 +192,6 @@ export type Database = {
           id: string
           last_name: string
           phone_number: string | null
-          role_id: string | null
           updated_at: string
           user_id: string | null
         }
@@ -205,7 +204,6 @@ export type Database = {
           id?: string
           last_name: string
           phone_number?: string | null
-          role_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -218,19 +216,10 @@ export type Database = {
           id?: string
           last_name?: string
           phone_number?: string | null
-          role_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "clients_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "roles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       employees: {
         Row: {
@@ -1469,13 +1458,6 @@ export type Database = {
       }
     }
     Functions: {
-      assign_user_role: {
-        Args: {
-          user_id: string
-          role_name: string
-        }
-        Returns: undefined
-      }
       can_be_assigned_to_bay: {
         Args: {
           role_id: string
@@ -1515,13 +1497,6 @@ export type Database = {
         }
         Returns: string
       }
-      create_role: {
-        Args: {
-          role_name: string
-          role_description?: string
-        }
-        Returns: string
-      }
       generate_invoice_number: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1529,16 +1504,6 @@ export type Database = {
       generate_quote_number: {
         Args: Record<PropertyKey, never>
         Returns: string
-      }
-      get_available_roles: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          id: string
-          name: string
-          description: string
-          created_at: string
-          updated_at: string
-        }[]
       }
       has_permission: {
         Args: {

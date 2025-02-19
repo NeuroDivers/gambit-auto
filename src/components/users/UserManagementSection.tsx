@@ -42,7 +42,7 @@ export const UserManagementSection = () => {
       </div>
       <CreateUserDialog 
         open={isCreateUserOpen} 
-        onOpenChange={setIsCreateUserOpen}
+        onOpenChange={setIsCreateUserOpen} 
       />
     </div>
   );
