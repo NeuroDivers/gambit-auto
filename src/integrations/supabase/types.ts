@@ -569,6 +569,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_profiles_roles"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "profiles_role_id_fkey"
             columns: ["role_id"]
             isOneToOne: false
@@ -1466,6 +1473,13 @@ export type Database = {
           p_business_profile_id?: string
         }
         Returns: string
+      }
+      create_user_role: {
+        Args: {
+          user_id: string
+          role_name: string
+        }
+        Returns: undefined
       }
       generate_invoice_number: {
         Args: Record<PropertyKey, never>
