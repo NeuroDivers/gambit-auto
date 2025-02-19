@@ -2,20 +2,6 @@
 import { useState, useEffect } from "react"
 import { supabase } from "@/integrations/supabase/client"
 
-interface RoleData {
-  id: string
-  name: string
-  nicename: string
-}
-
-interface ProfileResponse {
-  role: RoleData
-}
-
-interface ClientResponse {
-  role: RoleData
-}
-
 export const useAdminStatus = () => {
   const [isAdmin, setIsAdmin] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -29,7 +15,7 @@ export const useAdminStatus = () => {
           return
         }
 
-        // First check profiles table
+        // Check profiles table only
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select(`
@@ -40,25 +26,15 @@ export const useAdminStatus = () => {
             )
           `)
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
-        // Then check clients table
-        const { data: clientData, error: clientError } = await supabase
-          .from('clients')
-          .select(`
-            role:role_id (
-              id,
-              name,
-              nicename
-            )
-          `)
-          .eq('user_id', user.id)
-          .single();
+        if (profileError) {
+          console.error('Error checking admin status:', profileError);
+          setIsAdmin(false);
+          return;
+        }
 
-        // Get role from either profile or client
-        const userRole = (profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase() || 
-                        (clientData as unknown as ClientResponse)?.role?.name?.toLowerCase();
-        
+        const userRole = profileData?.role?.name?.toLowerCase();
         console.log("Checking admin status, user role:", userRole);
         
         // Consider both administrator and king as admin roles
