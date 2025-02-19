@@ -1,19 +1,11 @@
 
 import { useState } from "react"
-import { ServiceTypeDialog } from "@/components/services/ServiceTypeDialog"
-import { ServiceTypesList } from "@/components/services/ServiceTypesList"
+import { ServiceBaysList } from "@/components/service-bays/ServiceBaysList"
 import { toast } from "sonner"
 
 export default function ServiceBays() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("")
-  const [typeFilter, setTypeFilter] = useState<string>("")
-
-  const handleSuccess = () => {
-    setIsDialogOpen(false)
-    toast.success("Service type created successfully")
-  }
 
   return (
     <div className="space-y-6 p-6">
@@ -21,17 +13,7 @@ export default function ServiceBays() {
         <h1 className="text-3xl font-bold">Service Bays</h1>
       </div>
 
-      <ServiceTypesList 
-        onSearch={setSearchQuery}
-        onStatusFilter={setStatusFilter}
-        onTypeFilter={setTypeFilter}
-      />
-      
-      <ServiceTypeDialog 
-        open={isDialogOpen} 
-        onOpenChange={setIsDialogOpen}
-        onSuccess={handleSuccess}
-      />
+      <ServiceBaysList />
     </div>
   )
 }
