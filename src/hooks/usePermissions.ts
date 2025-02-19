@@ -32,7 +32,7 @@ interface ClientData {
 }
 
 export const usePermissions = () => {
-  const { data: currentUserRole } = useQuery({
+  const { data: currentUserRole } = useQuery<UserRole | null>({
     queryKey: ["current-user-role"],
     queryFn: async () => {
       try {
@@ -58,7 +58,7 @@ export const usePermissions = () => {
 
         if (!profileError && profileData?.roles) {
           console.log('Found profile role:', profileData.roles);
-          return profileData.roles;
+          return profileData.roles as UserRole;
         }
 
         // If no profile found or no role, check clients table
@@ -78,7 +78,7 @@ export const usePermissions = () => {
 
         if (!clientError && clientData?.roles) {
           console.log('Found client role:', clientData.roles);
-          return clientData.roles;
+          return clientData.roles as UserRole;
         }
 
         console.log('No role found in either profiles or clients table');
@@ -92,7 +92,7 @@ export const usePermissions = () => {
   });
 
   // Get all permissions
-  const { data: permissions } = useQuery({
+  const { data: permissions } = useQuery<RolePermission[]>({
     queryKey: ["permissions"],
     queryFn: async () => {
       const { data, error } = await supabase
