@@ -9,12 +9,25 @@ export const usePermissions = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
-      const { data: roles } = await supabase.from('available_roles')
-        .select('*')
-        .eq('name', user.app_metadata?.role)
+      // Get role from profiles table instead of app_metadata
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select(`
+          role_id,
+          role:role_id (
+            id,
+            name
+          )
+        `)
+        .eq('id', user.id)
         .single();
 
-      return roles;
+      if (profileError) {
+        console.error("Error fetching user role:", profileError);
+        return null;
+      }
+
+      return profile?.role;
     },
   });
 
@@ -36,8 +49,8 @@ export const usePermissions = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
 
-    // Admin has all permissions
-    if (user.app_metadata?.role === 'admin') return true;
+    // If user has admin role, grant all permissions
+    if (currentUserRole?.name === 'admin') return true;
 
     // Check specific permissions
     if (permissions) {
