@@ -17,20 +17,29 @@ export function ClientCard({
 }) {
   const navigate = useNavigate()
 
-  const handleCreateQuote = () => {
+  const handleCreateQuote = (e: React.MouseEvent) => {
+    e.stopPropagation()
     navigate('/admin/quotes/create', { 
       state: { preselectedClient: client }
     })
   }
 
-  const handleCreateInvoice = () => {
+  const handleCreateInvoice = (e: React.MouseEvent) => {
+    e.stopPropagation()
     navigate('/admin/invoices/create', { 
       state: { preselectedClient: client }
     })
   }
 
+  const handleCardClick = () => {
+    navigate(`/admin/clients/${client.id}`)
+  }
+
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow border-muted">
+    <Card 
+      className="overflow-hidden hover:shadow-lg transition-shadow border-muted cursor-pointer"
+      onClick={handleCardClick}
+    >
       <CardHeader className="space-y-0 pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center text-lg font-medium">
@@ -49,7 +58,10 @@ export function ClientCard({
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={onEdit}
+              onClick={(e) => {
+                e.stopPropagation()
+                onEdit()
+              }}
               className="hover:bg-primary/10 hover:text-primary"
             >
               Edit

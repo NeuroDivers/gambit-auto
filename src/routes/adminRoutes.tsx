@@ -1,4 +1,3 @@
-
 import { DashboardLayoutWrapper } from "@/components/dashboard/DashboardLayoutWrapper"
 import { PermissionGuard } from "@/components/auth/PermissionGuard"
 import Dashboard from "@/pages/admin/Dashboard"
@@ -17,6 +16,7 @@ import CreateInvoice from "@/pages/admin/CreateInvoice"
 import InvoiceDetails from "@/pages/admin/InvoiceDetails"
 import EditInvoice from "@/pages/admin/EditInvoice"
 import ClientManagement from "@/pages/admin/ClientManagement"
+import ClientDetails from "@/pages/admin/ClientDetails"
 import BusinessSettings from "@/pages/admin/BusinessSettings"
 import ProfileSettings from "@/pages/admin/ProfileSettings"
 import DeveloperSettings from "@/pages/admin/DeveloperSettings"
@@ -143,6 +143,14 @@ export const adminRoutes: RouteObject = {
       element: (
         <PermissionGuard resource="clients" type="page_access">
           <ClientManagement />
+        </PermissionGuard>
+      ),
+    },
+    {
+      path: "clients/:id",
+      element: (
+        <PermissionGuard resource="clients" type="page_access">
+          <ClientDetails />
         </PermissionGuard>
       ),
     },
