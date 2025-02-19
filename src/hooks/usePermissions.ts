@@ -47,18 +47,14 @@ export const usePermissions = () => {
           .from('profiles')
           .select(`
             id,
-            roles:role_id!roles (
-              id,
-              name,
-              nicename
-            )
+            roles:role_id(id, name, nicename)
           `)
           .eq('id', user.id)
           .single();
 
         if (!profileError && profileData?.roles) {
           console.log('Found profile role:', profileData.roles);
-          return profileData.roles as UserRole;
+          return profileData.roles;
         }
 
         // If no profile found or no role, check clients table
@@ -67,18 +63,14 @@ export const usePermissions = () => {
           .select(`
             id,
             user_id,
-            roles:role_id!roles (
-              id,
-              name,
-              nicename
-            )
+            roles:role_id(id, name, nicename)
           `)
           .eq('user_id', user.id)
           .single();
 
         if (!clientError && clientData?.roles) {
           console.log('Found client role:', clientData.roles);
-          return clientData.roles as UserRole;
+          return clientData.roles;
         }
 
         console.log('No role found in either profiles or clients table');
@@ -99,11 +91,7 @@ export const usePermissions = () => {
         .from("role_permissions")
         .select(`
           *,
-          roles:role_id!roles (
-            id,
-            name,
-            nicename
-          )
+          roles:role_id(id, name, nicename)
         `)
         .order('resource_name');
 
