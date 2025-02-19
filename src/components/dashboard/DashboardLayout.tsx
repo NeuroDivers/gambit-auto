@@ -4,6 +4,7 @@ import { DashboardSidebarNav } from "./sidebar/DashboardSidebarNav"
 import { DashboardSidebarHeader } from "./sidebar/DashboardSidebarHeader"
 import { Button } from "@/components/ui/button"
 import { LogOut } from "lucide-react"
+import { SidebarProvider } from "@/components/ui/sidebar"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -17,29 +18,34 @@ export function DashboardLayout({
   onLogout
 }: DashboardLayoutProps) {
   return (
-    <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 z-[80] bg-background w-72 border-r">
-        <DashboardSidebarHeader firstName={firstName} />
-        <div className="space-y-4 flex-1 py-4">
-          <DashboardSidebarNav />
-        </div>
-        <div className="p-4 border-t">
-          <Button 
-            variant="ghost" 
-            className="w-full justify-start gap-2" 
-            onClick={onLogout}
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </Button>
-        </div>
-      </aside>
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        {/* Sidebar */}
+        <aside className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 z-[80] bg-background w-72 border-r">
+          <DashboardSidebarHeader 
+            firstName={firstName} 
+            onLogout={onLogout}
+          />
+          <div className="space-y-4 flex-1 py-4">
+            <DashboardSidebarNav />
+          </div>
+          <div className="p-4 border-t">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start gap-2" 
+              onClick={onLogout}
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
+          </div>
+        </aside>
 
-      {/* Main content */}
-      <main className="flex-1 lg:pl-72">
-        {children}
-      </main>
-    </div>
+        {/* Main content */}
+        <main className="flex-1 lg:pl-72">
+          {children}
+        </main>
+      </div>
+    </SidebarProvider>
   )
 }

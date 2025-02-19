@@ -7,15 +7,10 @@ import { useTheme } from "next-themes";
 
 interface DashboardSidebarHeaderProps {
   firstName?: string | null;
-  role?: {
-    id: string;
-    name: string;
-    nicename: string;
-  } | null;
   onLogout: () => void;
 }
 
-export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardSidebarHeaderProps) {
+export function DashboardSidebarHeader({ firstName, onLogout }: DashboardSidebarHeaderProps) {
   const { state } = useSidebar();
   const { theme, systemTheme } = useTheme();
   const { data: businessProfile } = useQuery({
