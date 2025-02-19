@@ -26,13 +26,13 @@ interface UserRole {
 
 interface ProfileData {
   id: string;
-  role: UserRole;
+  roles: UserRole;
 }
 
 interface ClientData {
   id: string;
   user_id: string;
-  role: UserRole;
+  roles: UserRole;
 }
 
 export const usePermissions = () => {
@@ -51,14 +51,13 @@ export const usePermissions = () => {
           .from('profiles')
           .select(`
             id,
-            roles!role_id (
+            roles:roles!role_id (
               id,
               name,
               nicename
             )
           `)
           .eq('id', user.id)
-          .returns<ProfileData>()
           .maybeSingle();
 
         if (!profileError && profileData?.roles) {
@@ -72,14 +71,13 @@ export const usePermissions = () => {
           .select(`
             id,
             user_id,
-            roles!role_id (
+            roles:roles!role_id (
               id,
               name,
               nicename
             )
           `)
           .eq('user_id', user.id)
-          .returns<ClientData>()
           .maybeSingle();
 
         if (!clientError && clientData?.roles) {
@@ -105,7 +103,7 @@ export const usePermissions = () => {
         .from("role_permissions")
         .select(`
           *,
-          roles!role_id (
+          roles:roles!role_id (
             id,
             name,
             nicename
