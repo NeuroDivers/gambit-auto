@@ -30,7 +30,6 @@ export const useUserData = () => {
     queryKey: ["users"],
     queryFn: async () => {
       try {
-        // Fetch profiles with their roles using a join
         const { data: profiles, error: profilesError } = await supabase
           .from("profiles")
           .select(`
@@ -46,8 +45,6 @@ export const useUserData = () => {
           console.error("Error fetching profiles:", profilesError);
           throw profilesError;
         }
-
-        console.log("Raw profiles data:", profiles);
 
         if (!profiles) {
           console.log("No profiles found");
@@ -66,7 +63,6 @@ export const useUserData = () => {
           bio: profile.bio
         }));
 
-        console.log("Transformed users data:", users);
         return users;
       } catch (error) {
         console.error("Error in useUserData:", error);
@@ -74,6 +70,6 @@ export const useUserData = () => {
       }
     },
     staleTime: 1000 * 60, // Data considered fresh for 1 minute
-    refetchOnMount: true, // Refetch when component mounts
+    refetchOnMount: true,
   });
 };

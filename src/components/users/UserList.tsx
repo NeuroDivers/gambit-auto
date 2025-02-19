@@ -6,6 +6,7 @@ import { useUserData } from "./hooks/useUserData";
 import { useUserSubscription } from "./hooks/useUserSubscription";
 import { UserListHeader } from "./UserListHeader";
 import { useQueryClient } from "@tanstack/react-query";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface UserListProps {
   initialRoleFilter?: string;
@@ -32,12 +33,6 @@ export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
     console.error("Error loading users:", error);
   }
 
-  // Log current state for debugging
-  console.log("Current users data:", users);
-  console.log("Loading state:", isLoading);
-  console.log("Current role filter:", roleFilter);
-  console.log("Current search query:", searchQuery);
-
   const filteredUsers = users?.filter(user => {
     const matchesSearch = !searchQuery || 
       user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -50,7 +45,7 @@ export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
 
   if (isLoading) {
     return (
-      <div className="grid gap-4">
+      <div className="space-y-4">
         <Skeleton className="h-32 w-full" />
         <Skeleton className="h-32 w-full" />
         <Skeleton className="h-32 w-full" />
@@ -59,24 +54,26 @@ export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
   }
 
   return (
-    <div>
-      <UserListHeader
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        roleFilter={roleFilter}
-        onRoleFilterChange={setRoleFilter}
-        onRefresh={() => queryClient.invalidateQueries({ queryKey: ["users"] })}
-      />
-      <div className="grid gap-4">
-        {filteredUsers?.map((user) => (
-          <UserCard key={user.id} user={user} />
-        ))}
-        {(!filteredUsers || filteredUsers.length === 0) && (
-          <div className="text-center py-8 text-muted-foreground">
-            No users found matching your filters.
-          </div>
-        )}
+    <ScrollArea className="h-[calc(100vh-300px)]">
+      <div className="space-y-6">
+        <UserListHeader
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          roleFilter={roleFilter}
+          onRoleFilterChange={setRoleFilter}
+          onRefresh={() => queryClient.invalidateQueries({ queryKey: ["users"] })}
+        />
+        <div className="grid gap-4">
+          {filteredUsers?.map((user) => (
+            <UserCard key={user.id} user={user} />
+          ))}
+          {(!filteredUsers || filteredUsers.length === 0) && (
+            <div className="text-center py-8 text-muted-foreground">
+              No users found matching your filters.
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </ScrollArea>
   );
 };
