@@ -3,8 +3,6 @@ import { Sidebar, SidebarContent, SidebarProvider, SidebarRail, SidebarTrigger }
 import { cn } from "@/lib/utils"
 import { ClientSidebarNav } from "./sidebar/ClientSidebarNav"
 import { ClientSidebarHeader } from "./sidebar/ClientSidebarHeader"
-import { Menu, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useState } from "react"
 import { Header } from "../shared/Header"
