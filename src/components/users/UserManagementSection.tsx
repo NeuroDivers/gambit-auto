@@ -20,7 +20,8 @@ export const UserManagementSection = () => {
 
   return (
     <div className="space-y-8">      
-      <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
+      <div className="grid gap-8 grid-cols-1">
+        {/* Users Section */}
         <Card className="p-6 space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -36,15 +37,21 @@ export const UserManagementSection = () => {
           </div>
           <UserList initialRoleFilter={selectedRole} />
         </Card>
-        <div className="space-y-8">
+
+        {/* Role Management Section */}
+        <div className="grid gap-8 lg:grid-cols-2">
+          {/* Role Statistics */}
           <Card className="p-6">
             <RoleManagement onRoleSelect={handleRoleSelect} />
           </Card>
+          
+          {/* Role List and Management */}
           <Card className="p-6">
             <RoleList />
           </Card>
         </div>
       </div>
+
       <CreateUserDialog 
         open={isCreateUserOpen} 
         onOpenChange={setIsCreateUserOpen} 
