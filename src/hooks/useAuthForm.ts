@@ -123,30 +123,23 @@ export const useAuthForm = () => {
       }
 
       if (data?.user) {
-        // Check if user has a profile (internal staff)
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select(`
-            role:role_id (
-              name,
-              nicename
-            )
-          `)
-          .eq('id', data.user.id)
+        // Get user role using RPC function
+        const { data: roleData, error: roleError } = await supabase
+          .rpc('get_user_role', {
+            input_user_id: data.user.id
+          })
           .single();
 
-        if (profileError && profileError.code !== 'PGRST116') {
-          console.error('Error checking user role:', profileError);
-          throw profileError;
-        }
-
-        // If user has a profile, they're internal staff, otherwise they're a client
-        if (profileData?.role) {
-          console.log("Internal staff logged in, redirecting to admin");
-          navigate("/admin", { replace: true });
-        } else {
-          console.log("Client logged in, redirecting to client dashboard");
+        if (roleError) {
+          console.error('Error checking user role:', roleError);
+          // Default to client dashboard if role check fails
           navigate("/client", { replace: true });
+        } else {
+          if (roleData.user_type === 'staff') {
+            navigate("/admin", { replace: true });
+          } else {
+            navigate("/client", { replace: true });
+          }
         }
 
         toast({
