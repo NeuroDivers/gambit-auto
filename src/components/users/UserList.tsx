@@ -45,9 +45,8 @@ export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
       `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase().includes(searchQuery.toLowerCase());
     
     // Role filtering - make sure we're comparing the actual role name
-    const userRoleName = user.role?.name?.toLowerCase();
-    const currentFilter = roleFilter.toLowerCase();
-    const matchesRole = roleFilter === "all" || userRoleName === currentFilter;
+    const matchesRole = roleFilter === "all" || 
+      (user.role?.name && user.role.name.toLowerCase() === roleFilter.toLowerCase());
     
     return matchesSearch && matchesRole;
   });
@@ -90,6 +89,7 @@ export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
         }}
         roleFilter={roleFilter}
         onRoleFilterChange={(filter) => {
+          console.log("Role filter changed to:", filter); // Debug log
           setRoleFilter(filter);
           setCurrentPage(1); // Reset to first page when role filter changes
         }}
