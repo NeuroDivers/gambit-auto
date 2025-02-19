@@ -14,15 +14,16 @@ export const useAuthRedirect = () => {
   const location = useLocation();
 
   useEffect(() => {
-    let isSubscribed = true; // For cleanup
+    let isSubscribed = true;
 
     const checkUserType = async (userId: string) => {
       try {
+        // Use the RPC function instead of direct query to avoid join issues
         const { data: userRole, error } = await supabase
           .rpc('get_user_role', {
             input_user_id: userId
           })
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
         return userRole as UserRole;
@@ -33,44 +34,60 @@ export const useAuthRedirect = () => {
     };
 
     const redirectBasedOnRole = async (session: any) => {
-      if (!isSubscribed) return; // Don't redirect if component unmounted
+      if (!isSubscribed) return;
 
-      const userRole = await checkUserType(session.user.id);
-      const currentPath = location.pathname;
+      try {
+        const userRole = await checkUserType(session.user.id);
+        
+        if (!userRole) {
+          console.log("No role found, redirecting to auth");
+          navigate("/auth", { replace: true });
+          return;
+        }
 
-      // Skip redirect if already on correct path
-      if (userRole?.user_type === 'staff') {
-        if (!currentPath.startsWith('/admin') && currentPath !== '/auth') {
-          navigate("/admin", { replace: true });
+        const currentPath = location.pathname;
+        console.log("Current path:", currentPath, "User type:", userRole.user_type);
+
+        // Only redirect if not already on the correct path
+        if (userRole.user_type === 'staff') {
+          if (!currentPath.startsWith('/admin') && currentPath !== '/auth') {
+            navigate("/admin", { replace: true });
+          }
+        } else {
+          if (!currentPath.startsWith('/client') && currentPath !== '/auth') {
+            navigate("/client", { replace: true });
+          }
         }
-      } else {
-        if (!currentPath.startsWith('/client') && currentPath !== '/auth') {
-          navigate("/client", { replace: true });
-        }
+      } catch (error) {
+        console.error("Error in redirectBasedOnRole:", error);
+        navigate("/auth", { replace: true });
       }
     };
 
     const checkSession = async () => {
       if (!isSubscribed) return;
 
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error("Session check error:", error.message);
-        return;
-      }
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) throw error;
 
-      if (!session) {
-        // Only redirect to auth if not already there
+        if (!session) {
+          if (location.pathname !== '/auth') {
+            navigate("/auth", { replace: true });
+          }
+          return;
+        }
+
+        // Only redirect from auth page when we have a valid session
+        if (location.pathname === '/auth') {
+          await redirectBasedOnRole(session);
+        }
+      } catch (error) {
+        console.error("Error checking session:", error);
         if (location.pathname !== '/auth') {
           navigate("/auth", { replace: true });
         }
-        return;
-      }
-
-      // If on auth page with valid session, redirect based on role
-      if (location.pathname === '/auth') {
-        await redirectBasedOnRole(session);
       }
     };
 
