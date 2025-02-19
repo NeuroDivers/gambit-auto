@@ -7,6 +7,8 @@ export const businessFormSchema = z.object({
   phone_number: z.string().optional(),
   address: z.string().optional(),
   logo_url: z.string().url().optional().or(z.literal("")),
+  light_logo_url: z.string().url().optional().or(z.literal("")),
+  dark_logo_url: z.string().url().optional().or(z.literal("")),
 })
 
 export type BusinessFormValues = z.infer<typeof businessFormSchema>

@@ -17,7 +17,8 @@ interface BusinessFormProps {
 export function BusinessForm({ businessProfile }: BusinessFormProps) {
   const { toast } = useToast()
   const [isUploading, setIsUploading] = React.useState(false)
-  const [logoPreview, setLogoPreview] = React.useState<string | null>(null)
+  const [lightLogoPreview, setLightLogoPreview] = React.useState<string | null>(null)
+  const [darkLogoPreview, setDarkLogoPreview] = React.useState<string | null>(null)
   
   const form = useForm<BusinessFormValues>({
     resolver: zodResolver(businessFormSchema),
@@ -27,6 +28,8 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
       phone_number: "",
       address: "",
       logo_url: "",
+      light_logo_url: "",
+      dark_logo_url: "",
     }
   })
 
@@ -38,12 +41,15 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
         phone_number: businessProfile.phone_number || "",
         address: businessProfile.address || "",
         logo_url: businessProfile.logo_url || "",
+        light_logo_url: businessProfile.light_logo_url || "",
+        dark_logo_url: businessProfile.dark_logo_url || "",
       })
-      setLogoPreview(businessProfile.logo_url || null)
+      setLightLogoPreview(businessProfile.light_logo_url || null)
+      setDarkLogoPreview(businessProfile.dark_logo_url || null)
     }
   }, [businessProfile, form])
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (type: 'light' | 'dark') => async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
@@ -64,13 +70,18 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
         .from('business-logos')
         .getPublicUrl(fileName)
 
-      // Update the form
-      form.setValue('logo_url', publicUrl)
-      setLogoPreview(publicUrl)
+      // Update the form based on logo type
+      if (type === 'light') {
+        form.setValue('light_logo_url', publicUrl)
+        setLightLogoPreview(publicUrl)
+      } else {
+        form.setValue('dark_logo_url', publicUrl)
+        setDarkLogoPreview(publicUrl)
+      }
 
       toast({
         title: "Success",
-        description: "Logo uploaded successfully.",
+        description: `${type === 'light' ? 'Light' : 'Dark'} logo uploaded successfully.`,
       })
     } catch (error) {
       console.error("Error uploading logo:", error)
@@ -119,7 +130,8 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
         <LogoUploadSection
           form={form}
           isUploading={isUploading}
-          logoPreview={logoPreview}
+          lightLogoPreview={lightLogoPreview}
+          darkLogoPreview={darkLogoPreview}
           onFileUpload={handleFileUpload}
         />
 
