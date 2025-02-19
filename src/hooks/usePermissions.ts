@@ -11,24 +11,13 @@ interface RolePermission {
   description: string | null;
   created_at: string;
   updated_at: string;
-  roles?: UserRole;
+  role?: UserRole;
 }
 
 interface UserRole {
   id: string;
   name: string;
   nicename: string;
-}
-
-interface ProfileData {
-  id: string;
-  roles: UserRole;
-}
-
-interface ClientData {
-  id: string;
-  user_id: string;
-  roles: UserRole;
 }
 
 export const usePermissions = () => {
@@ -47,14 +36,18 @@ export const usePermissions = () => {
           .from('profiles')
           .select(`
             id,
-            roles:role_id(id, name, nicename)
+            role:role_id (
+              id,
+              name,
+              nicename
+            )
           `)
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (!profileError && profileData?.roles) {
-          console.log('Found profile role:', profileData.roles);
-          return profileData.roles;
+        if (!profileError && profileData?.role) {
+          console.log('Found profile role:', profileData.role);
+          return profileData.role;
         }
 
         // If no profile found or no role, check clients table
@@ -62,15 +55,18 @@ export const usePermissions = () => {
           .from('clients')
           .select(`
             id,
-            user_id,
-            roles:role_id(id, name, nicename)
+            role:role_id (
+              id,
+              name,
+              nicename
+            )
           `)
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (!clientError && clientData?.roles) {
-          console.log('Found client role:', clientData.roles);
-          return clientData.roles;
+        if (!clientError && clientData?.role) {
+          console.log('Found client role:', clientData.role);
+          return clientData.role;
         }
 
         console.log('No role found in either profiles or clients table');
@@ -91,7 +87,11 @@ export const usePermissions = () => {
         .from("role_permissions")
         .select(`
           *,
-          roles:role_id(id, name, nicename)
+          role:role_id (
+            id,
+            name,
+            nicename
+          )
         `)
         .order('resource_name');
 
