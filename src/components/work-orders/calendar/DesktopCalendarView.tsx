@@ -11,28 +11,26 @@ import { BlockedDate } from "./types"
 type DesktopCalendarViewProps = {
   currentDate: Date
   workOrders: WorkOrder[]
-  onDateChange?: (date: Date) => void
+  onDateChange?: (date: Date, e: React.MouseEvent) => void
   blockedDates: BlockedDate[]
 }
 
 export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blockedDates }: DesktopCalendarViewProps) {
   const [showMonthPicker, setShowMonthPicker] = useState(false)
 
-  const handlePreviousMonth = (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handlePreviousMonth = () => {
+    const prevMonth = new Date(currentDate)
+    prevMonth.setMonth(prevMonth.getMonth() - 1)
     if (onDateChange) {
-      const prevMonth = new Date(currentDate)
-      prevMonth.setMonth(prevMonth.getMonth() - 1)
-      onDateChange(prevMonth)
+      onDateChange(prevMonth, new Event('click') as unknown as React.MouseEvent)
     }
   }
 
-  const handleNextMonth = (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleNextMonth = () => {
+    const nextMonth = new Date(currentDate)
+    nextMonth.setMonth(nextMonth.getMonth() + 1)
     if (onDateChange) {
-      const nextMonth = new Date(currentDate)
-      nextMonth.setMonth(nextMonth.getMonth() + 1)
-      onDateChange(nextMonth)
+      onDateChange(nextMonth, new Event('click') as unknown as React.MouseEvent)
     }
   }
 
@@ -47,7 +45,7 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blo
   })
 
   return (
-    <div className="rounded-lg bg-card/50 p-4" onClick={e => e.stopPropagation()}>
+    <div className="rounded-lg bg-card/50 p-4">
       <div className="flex items-center justify-between mb-4">
         <Button 
           variant="ghost" 
@@ -59,21 +57,26 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blo
         >
           {format(currentDate, 'MMMM yyyy')}
         </Button>
-        <div 
-          className="flex items-center gap-2" 
-          onClick={e => e.stopPropagation()}
-        >
+        <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
             size="icon"
-            onClick={handlePreviousMonth}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              handlePreviousMonth()
+            }}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button 
             variant="outline" 
             size="icon"
-            onClick={handleNextMonth}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              handleNextMonth()
+            }}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>

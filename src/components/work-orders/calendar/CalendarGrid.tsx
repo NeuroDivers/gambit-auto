@@ -1,10 +1,9 @@
 
+import { useMediaQuery } from "@/hooks/use-mobile"
+import { DesktopCalendarView } from "./DesktopCalendarView"
+import { MobileCalendarView } from "./mobile/MobileCalendarView"
 import { WorkOrder } from "../types"
 import { useBlockedDates } from "./hooks/useBlockedDates"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { MobileCalendarView } from "@/components/work-orders/calendar/mobile/MobileCalendarView"
-import { DesktopCalendarView } from "./DesktopCalendarView"
-import { startOfToday } from "date-fns"
 
 type CalendarGridProps = {
   currentDate: Date
@@ -13,34 +12,32 @@ type CalendarGridProps = {
 }
 
 export function CalendarGrid({ currentDate, workOrders, onDateChange }: CalendarGridProps) {
-  const isMobile = useIsMobile()
-  const { blockedDates } = useBlockedDates()
-  
-  // Ensure currentDate is not in the past
-  const today = startOfToday()
-  const effectiveDate = currentDate < today ? today : currentDate
+  const isMobile = useMediaQuery("(max-width: 768px)")
+  const { data: blockedDates = [] } = useBlockedDates()
 
-  console.log("Calendar Grid Props:", { 
-    currentDate: effectiveDate, 
-    workOrdersCount: workOrders.length,
-    workOrders
-  })
+  const handleClick = (date: Date, e: React.MouseEvent) => {
+    // Only handle date clicks if it's not from a button click
+    if (!(e.target instanceof HTMLButtonElement)) {
+      onDateChange?.(date)
+    }
+  }
 
   if (isMobile) {
     return (
       <MobileCalendarView
-        currentDate={effectiveDate}
+        currentDate={currentDate}
         workOrders={workOrders}
-        onDateChange={onDateChange}
+        onDateChange={handleClick}
+        blockedDates={blockedDates}
       />
     )
   }
 
   return (
     <DesktopCalendarView
-      currentDate={effectiveDate}
+      currentDate={currentDate}
       workOrders={workOrders}
-      onDateChange={onDateChange}
+      onDateChange={handleClick}
       blockedDates={blockedDates}
     />
   )
