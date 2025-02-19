@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
@@ -28,7 +29,7 @@ export const useRoleForm = ({ role, onSuccess, onOpenChange }: UseRoleFormProps)
       if (!role?.id) return null;
       console.log("Fetching role data for:", role.id);
       const { data, error } = await supabase
-        .from("roles") // Changed from "available_roles" to "roles"
+        .from("roles")
         .select("*")
         .eq("id", role.id)
         .maybeSingle();

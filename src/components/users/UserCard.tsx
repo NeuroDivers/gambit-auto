@@ -65,10 +65,9 @@ export const UserCard = ({ user }: UserCardProps) => {
         </div>
       </div>
       <UserEditDialog
-        userId={user.id}
+        user={user}
         open={isEditing}
         onOpenChange={setIsEditing}
-        user={user}
       />
     </>
   );

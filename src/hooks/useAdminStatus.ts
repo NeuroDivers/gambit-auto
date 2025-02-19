@@ -1,33 +1,73 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react"
+import { supabase } from "@/integrations/supabase/client"
 
-type RoleResponse = {
-  role: {
-    name: string;
-  } | null;
+interface RoleData {
+  id: string
+  name: string
+  nicename: string
+}
+
+interface ProfileResponse {
+  role: RoleData
 }
 
 export const useAdminStatus = () => {
-  const { data: isAdmin, isLoading } = useQuery({
-    queryKey: ["isAdmin"],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return false;
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select(`
-          role:roles!role_id (
-            name
-          )
-        `)
-        .eq('id', user.id)
-        .maybeSingle();
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          setIsAdmin(false)
+          return
+        }
 
-      return (profile as RoleResponse)?.role?.name?.toLowerCase() === 'admin';
-    },
-  });
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select(`
+            role:role_id (
+              id,
+              name,
+              nicename
+            )
+          `)
+          .eq('id', user.id)
+          .single();
 
-  return { isAdmin: !!isAdmin, isLoading };
-};
+        if (profileError) {
+          console.error('Profile fetch error:', profileError);
+          setIsAdmin(false);
+          return;
+        }
+
+        const userRole = (profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase();
+        console.log("Checking admin status, user role:", userRole);
+        
+        // Consider both administrator and king as admin roles
+        setIsAdmin(userRole === 'administrator' || userRole === 'king');
+      } catch (error) {
+        console.error('Error checking admin status:', error)
+        setIsAdmin(false)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      checkAdminStatus()
+    })
+
+    checkAdminStatus()
+
+    // Cleanup subscription
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [])
+
+  return { isAdmin, isLoading }
+}

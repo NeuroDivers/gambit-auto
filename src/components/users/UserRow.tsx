@@ -64,7 +64,6 @@ export const UserRow = ({ user }: UserRowProps) => {
         />
       </div>
       <UserEditDialog
-        userId={user.id}
         user={user}
         open={isEditing}
         onOpenChange={setIsEditing}

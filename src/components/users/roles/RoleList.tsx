@@ -27,7 +27,7 @@ export const RoleList = () => {
     queryFn: async () => {
       console.log("Fetching roles...");
       const { data, error } = await supabase
-        .from("roles")  // Changed from "available_roles" to "roles"
+        .from("roles")
         .select("*")
         .order("name");
       

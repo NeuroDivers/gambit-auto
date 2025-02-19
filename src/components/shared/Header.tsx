@@ -24,7 +24,7 @@ interface HeaderProps {
 }
 
 export function Header({ firstName, role, onLogout }: HeaderProps) {
-  const isAdmin = role?.name.toLowerCase() === 'admin';
+  const isAdmin = role?.name?.toLowerCase() === 'administrator';
   const baseRoute = isAdmin ? '/admin' : '/client';
 
   return (

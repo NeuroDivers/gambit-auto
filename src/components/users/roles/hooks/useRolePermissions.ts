@@ -39,7 +39,7 @@ export const useRolePermissions = (roleId: string | null) => {
       if (!roleId) return null;
       
       const { data, error } = await supabase
-        .from("available_roles")
+        .from("roles")
         .select("*")
         .eq("id", roleId)
         .maybeSingle();
@@ -118,7 +118,7 @@ export const useRolePermissions = (roleId: string | null) => {
 
       // Perform the update
       const { error: updateError } = await supabase
-        .from("available_roles")
+        .from("roles")
         .update({ 
           can_be_assigned_to_bay: newValue,
           updated_at: new Date().toISOString()

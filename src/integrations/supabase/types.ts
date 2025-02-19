@@ -1458,13 +1458,6 @@ export type Database = {
       }
     }
     Functions: {
-      assign_user_role: {
-        Args: {
-          user_id: string
-          role_name: string
-        }
-        Returns: undefined
-      }
       can_be_assigned_to_bay: {
         Args: {
           role_id: string
@@ -1504,13 +1497,6 @@ export type Database = {
         }
         Returns: string
       }
-      create_role: {
-        Args: {
-          role_name: string
-          role_description?: string
-        }
-        Returns: string
-      }
       generate_invoice_number: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1518,16 +1504,6 @@ export type Database = {
       generate_quote_number: {
         Args: Record<PropertyKey, never>
         Returns: string
-      }
-      get_available_roles: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          id: string
-          name: string
-          description: string
-          created_at: string
-          updated_at: string
-        }[]
       }
       has_permission: {
         Args: {
