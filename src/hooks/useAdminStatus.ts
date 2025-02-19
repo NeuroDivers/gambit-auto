@@ -8,8 +8,9 @@ interface Role {
   nicename: string;
 }
 
-interface Profile {
+interface ProfileWithRole {
   id: string;
+  role_id: string;
   role: Role;
 }
 
@@ -31,6 +32,7 @@ export const useAdminStatus = () => {
           .from('profiles')
           .select(`
             id,
+            role_id,
             role:role_id!inner (
               id,
               name,
@@ -38,7 +40,7 @@ export const useAdminStatus = () => {
             )
           `)
           .eq('id', user.id)
-          .maybeSingle();
+          .maybeSingle<ProfileWithRole>();
 
         if (profileError) {
           console.error('Error checking admin status:', profileError);
