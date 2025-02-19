@@ -26,34 +26,43 @@ export const useAuthRedirect = () => {
         
         if (session) {
           console.log("Session found:", session);
-          // Get user role from profiles
-          const { data, error: profileError } = await supabase
-            .from("profiles")
-            .select(`
-              id,
-              role:role_id!inner (
+          try {
+            // Get user role from profiles
+            const { data, error: profileError } = await supabase
+              .from("profiles")
+              .select(`
                 id,
-                name,
-                nicename
-              )
-            `)
-            .eq("id", session.user.id)
-            .single<ProfileWithRole>();
+                role:role_id!inner (
+                  id,
+                  name,
+                  nicename
+                )
+              `)
+              .eq("id", session.user.id)
+              .single<ProfileWithRole>();
 
-          if (profileError) {
-            console.error("Profile fetch error:", profileError);
-            throw profileError;
-          }
+            if (profileError && profileError.code !== 'PGRST116') {
+              console.error("Profile fetch error:", profileError);
+              // If no profile found, assume it's a client
+              console.log("No profile found, redirecting to client dashboard");
+              navigate("/client", { replace: true });
+              return;
+            }
 
-          console.log("Profile data:", data);
+            console.log("Profile data:", data);
 
-          // Redirect based on role
-          if (data?.role?.name?.toLowerCase() === 'client') {
-            console.log("Redirecting to client dashboard");
+            // Redirect based on role
+            if (data?.role?.name?.toLowerCase() === 'client') {
+              console.log("Redirecting to client dashboard");
+              navigate("/client", { replace: true });
+            } else {
+              console.log("Redirecting to admin dashboard");
+              navigate("/admin", { replace: true });
+            }
+          } catch (error) {
+            // If any error occurs during profile check, default to client view
+            console.error("Error during profile check:", error);
             navigate("/client", { replace: true });
-          } else {
-            console.log("Redirecting to admin dashboard");
-            navigate("/admin", { replace: true });
           }
         }
       } catch (error: any) {
@@ -69,35 +78,42 @@ export const useAuthRedirect = () => {
         console.log("Auth state changed:", event, session);
         
         if (event === 'SIGNED_IN' && session) {
-          console.log("User signed in, fetching profile");
-          // Get user role
-          const { data, error: profileError } = await supabase
-            .from("profiles")
-            .select(`
-              id,
-              role:role_id!inner (
+          console.log("User signed in, checking profile");
+          try {
+            // Get user role
+            const { data, error: profileError } = await supabase
+              .from("profiles")
+              .select(`
                 id,
-                name,
-                nicename
-              )
-            `)
-            .eq("id", session.user.id)
-            .single<ProfileWithRole>();
+                role:role_id!inner (
+                  id,
+                  name,
+                  nicename
+                )
+              `)
+              .eq("id", session.user.id)
+              .single<ProfileWithRole>();
 
-          if (profileError) {
-            console.error("Profile fetch error:", profileError);
-            throw profileError;
-          }
+            if (profileError && profileError.code !== 'PGRST116') {
+              console.log("No profile found or error, redirecting to client dashboard");
+              navigate("/client", { replace: true });
+              return;
+            }
 
-          console.log("Profile data after sign in:", data);
+            console.log("Profile data after sign in:", data);
 
-          // Redirect based on role
-          if (data?.role?.name?.toLowerCase() === 'client') {
-            console.log("Redirecting to client dashboard");
+            // Redirect based on role
+            if (data?.role?.name?.toLowerCase() === 'client') {
+              console.log("Redirecting to client dashboard");
+              navigate("/client", { replace: true });
+            } else {
+              console.log("Redirecting to admin dashboard");
+              navigate("/admin", { replace: true });
+            }
+          } catch (error) {
+            // If any error occurs during profile check, default to client view
+            console.error("Error during profile check:", error);
             navigate("/client", { replace: true });
-          } else {
-            console.log("Redirecting to admin dashboard");
-            navigate("/admin", { replace: true });
           }
         } else if (event === 'SIGNED_OUT') {
           console.log("User signed out, redirecting to auth");
