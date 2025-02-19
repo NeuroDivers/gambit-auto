@@ -18,6 +18,7 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  CartesianGrid,
 } from "recharts"
 
 export default function ClientDetails() {
@@ -198,11 +199,36 @@ export default function ClientDetails() {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={client.monthlySpending}>
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="amount" fill="var(--primary)" />
+            <BarChart 
+              data={client.monthlySpending}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis 
+                dataKey="month" 
+                stroke="var(--muted-foreground)"
+                fontSize={12}
+              />
+              <YAxis 
+                stroke="var(--muted-foreground)"
+                fontSize={12}
+                tickFormatter={(value) => `$${value}`}
+              />
+              <Tooltip 
+                cursor={{ fill: 'var(--muted)' }}
+                contentStyle={{
+                  backgroundColor: 'var(--background)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '6px',
+                }}
+                formatter={(value: number) => [`$${value.toFixed(2)}`, 'Amount']}
+              />
+              <Bar 
+                dataKey="amount" 
+                fill="#9b87f5"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={50}
+              />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
