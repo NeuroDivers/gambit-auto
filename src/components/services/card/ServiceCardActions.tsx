@@ -1,6 +1,8 @@
 
 import { Button } from "@/components/ui/button"
 import { Pencil, Trash } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
+import { supabase } from "@/integrations/supabase/client"
 
 interface ServiceCardActionsProps {
   serviceId: string;

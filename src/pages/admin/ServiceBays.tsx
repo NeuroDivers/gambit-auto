@@ -1,5 +1,6 @@
+
 import { Button } from "@/components/ui/button"
-import { Plus, Loader2, Edit, Trash2, User, Wrench } from "lucide-react"
+import { Plus, Loader2, Edit, Trash, User, Wrench } from "lucide-react"
 import { useState, useEffect } from "react"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
