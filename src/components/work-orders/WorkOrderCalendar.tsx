@@ -1,6 +1,6 @@
 
 import { format, startOfMonth } from "date-fns"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { CalendarHeader } from "./calendar/CalendarHeader"
 import { CalendarGrid } from "./calendar/CalendarGrid"
 import { useWorkOrderData } from "./calendar/useWorkOrderData"
@@ -17,7 +17,12 @@ export function WorkOrderCalendar({ clientView = false }: WorkOrderCalendarProps
   const [currentDate, setCurrentDate] = useState(startOfMonth(new Date()))
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-  const { data: workOrders = [], isLoading } = useWorkOrderData()
+  const { data: workOrders = [], isLoading, refetch } = useWorkOrderData()
+
+  // Add effect to refetch on mount
+  useEffect(() => {
+    refetch()
+  }, [refetch])
 
   const handleMonthChange = (date: Date) => {
     setCurrentDate(date)
