@@ -30,28 +30,14 @@ export const AuthContent = ({
   onForgotPassword,
 }: AuthContentProps) => {
   return isLogin ? (
-    <>
-      <LoginForm
-        formData={formData}
-        loading={loading}
-        onSubmit={onSubmit}
-        onChange={onChange}
-        onGoogleSignIn={onGoogleSignIn}
-        onForgotPassword={onForgotPassword}
-      />
-      <div className="text-center">
-        <SignUpDialog
-          isOpen={isModalOpen}
-          onOpenChange={setIsModalOpen}
-          formData={formData}
-          loading={loading}
-          onSubmit={onSubmit}
-          onChange={onChange}
-          onSignInClick={onSignInClick}
-          onGoogleSignIn={onGoogleSignIn}
-        />
-      </div>
-    </>
+    <LoginForm
+      formData={formData}
+      loading={loading}
+      onSubmit={onSubmit}
+      onChange={onChange}
+      onGoogleSignIn={onGoogleSignIn}
+      onForgotPassword={onForgotPassword}
+    />
   ) : (
     <>
       <LoginForm
