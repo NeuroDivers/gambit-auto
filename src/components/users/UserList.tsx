@@ -6,7 +6,6 @@ import { useUserData } from "./hooks/useUserData";
 import { useUserSubscription } from "./hooks/useUserSubscription";
 import { UserListHeader } from "./UserListHeader";
 import { useQueryClient } from "@tanstack/react-query";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface UserListProps {
   initialRoleFilter?: string;
@@ -54,26 +53,24 @@ export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
   }
 
   return (
-    <ScrollArea className="h-[calc(100vh-300px)]">
-      <div className="space-y-6">
-        <UserListHeader
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          roleFilter={roleFilter}
-          onRoleFilterChange={setRoleFilter}
-          onRefresh={() => queryClient.invalidateQueries({ queryKey: ["users"] })}
-        />
-        <div className="grid gap-4">
-          {filteredUsers?.map((user) => (
-            <UserCard key={user.id} user={user} />
-          ))}
-          {(!filteredUsers || filteredUsers.length === 0) && (
-            <div className="text-center py-8 text-muted-foreground">
-              No users found matching your filters.
-            </div>
-          )}
-        </div>
+    <div className="space-y-6">
+      <UserListHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        roleFilter={roleFilter}
+        onRoleFilterChange={setRoleFilter}
+        onRefresh={() => queryClient.invalidateQueries({ queryKey: ["users"] })}
+      />
+      <div className="grid gap-4">
+        {filteredUsers?.map((user) => (
+          <UserCard key={user.id} user={user} />
+        ))}
+        {(!filteredUsers || filteredUsers.length === 0) && (
+          <div className="text-center py-8 text-muted-foreground">
+            No users found matching your filters.
+          </div>
+        )}
       </div>
-    </ScrollArea>
+    </div>
   );
 };

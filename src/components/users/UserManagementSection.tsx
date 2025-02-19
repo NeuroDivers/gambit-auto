@@ -4,10 +4,11 @@ import { UserList } from "./UserList";
 import { RoleManagement } from "./RoleManagement";
 import { CreateUserDialog } from "./CreateUserDialog";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { RoleList } from "./roles/RoleList";
 import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export const UserManagementSection = () => {
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
@@ -19,37 +20,52 @@ export const UserManagementSection = () => {
   };
 
   return (
-    <div className="space-y-8">      
-      <div className="grid gap-8 grid-cols-1">
-        {/* Users Section */}
-        <Card className="p-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-xl font-semibold mb-2 text-foreground">Users</h3>
-              <p className="text-sm text-muted-foreground">View and manage system users</p>
+    <div className="grid gap-8 grid-cols-1 xl:grid-cols-[1fr_400px]">
+      {/* Main Content - Users List */}
+      <div className="space-y-8">
+        <Card className="border-none shadow-md">
+          <div className="border-b p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold">System Users</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Manage and monitor user accounts
+                  </p>
+                </div>
+              </div>
+              {isAdmin && (
+                <Button onClick={() => setIsCreateUserOpen(true)} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Create User
+                </Button>
+              )}
             </div>
-            {isAdmin && (
-              <Button onClick={() => setIsCreateUserOpen(true)} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Create User
-              </Button>
-            )}
           </div>
-          <UserList initialRoleFilter={selectedRole} />
+          <ScrollArea className="h-[calc(100vh-320px)]">
+            <div className="p-6">
+              <UserList initialRoleFilter={selectedRole} />
+            </div>
+          </ScrollArea>
+        </Card>
+      </div>
+
+      {/* Sidebar - Role Management */}
+      <div className="space-y-8">
+        <Card className="border-none shadow-md">
+          <div className="border-b p-6">
+            <RoleManagement onRoleSelect={handleRoleSelect} />
+          </div>
         </Card>
 
-        {/* Role Management Section */}
-        <div className="grid gap-8 lg:grid-cols-2">
-          {/* Role Statistics */}
-          <Card className="p-6">
-            <RoleManagement onRoleSelect={handleRoleSelect} />
-          </Card>
-          
-          {/* Role List and Management */}
-          <Card className="p-6">
+        <Card className="border-none shadow-md">
+          <div className="p-6">
             <RoleList />
-          </Card>
-        </div>
+          </div>
+        </Card>
       </div>
 
       <CreateUserDialog 
