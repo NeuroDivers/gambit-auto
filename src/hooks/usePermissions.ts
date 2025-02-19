@@ -18,14 +18,19 @@ export const usePermissions = () => {
     queryKey: ["current-user-role"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      if (!user) {
+        console.log("No user found");
+        return null;
+      }
 
+      console.log("Fetching role for user:", user.id);
+      
       // Get role from profiles table instead of app_metadata
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select(`
           role_id,
-          role:role_id (
+          role:roles (
             id,
             name
           )
@@ -44,6 +49,7 @@ export const usePermissions = () => {
         return null;
       }
 
+      console.log("Found role:", profile.role);
       return profile.role;
     },
   });
@@ -52,7 +58,12 @@ export const usePermissions = () => {
     queryKey: ["role-permissions", currentUserRole?.id],
     enabled: !!currentUserRole?.id,
     queryFn: async () => {
-      if (!currentUserRole?.id) return [];
+      if (!currentUserRole?.id) {
+        console.log("No role ID available for permissions query");
+        return [];
+      }
+      
+      console.log("Fetching permissions for role:", currentUserRole.id);
       
       const { data, error } = await supabase
         .from('role_permissions')
@@ -64,6 +75,7 @@ export const usePermissions = () => {
         return [];
       }
         
+      console.log("Found permissions:", data);
       return data || [];
     },
   });
@@ -73,15 +85,20 @@ export const usePermissions = () => {
     if (!user) return false;
 
     // If user has admin role, grant all permissions
-    if (currentUserRole?.name === 'admin') return true;
+    if (currentUserRole?.name === 'admin') {
+      console.log("User is admin, granting all permissions");
+      return true;
+    }
 
     // Check specific permissions
     if (permissions) {
-      return permissions.some(p => 
+      const hasPermission = permissions.some(p => 
         p.resource_name === resource && 
         p.permission_type === type && 
         p.is_active
       );
+      console.log(`Checking permission for ${resource} (${type}):`, hasPermission);
+      return hasPermission;
     }
 
     return false;
