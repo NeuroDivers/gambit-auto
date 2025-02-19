@@ -118,7 +118,7 @@ export const useRolePermissions = (roleId: string | null) => {
 
       // Perform the update
       const { error: updateError } = await supabase
-        .from("roles")
+        .from("available_roles")
         .update({ 
           can_be_assigned_to_bay: newValue,
           updated_at: new Date().toISOString()
