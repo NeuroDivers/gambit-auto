@@ -29,15 +29,14 @@ export const useAdminStatus = () => {
           .from('profiles')
           .select(`
             id,
-            role_id!inner (
+            role_id (
               id,
               name,
               nicename
             )
           `)
           .eq('id', user.id)
-          .returns<ProfileWithRole>()
-          .maybeSingle();
+          .single();
 
         if (profileError) {
           console.error('Error checking admin status:', profileError);
