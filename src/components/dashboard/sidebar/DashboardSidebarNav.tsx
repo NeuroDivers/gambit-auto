@@ -20,12 +20,21 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from "@/components/ui/tooltip"
+import { useSidebar } from "@/components/ui/sidebar"
 
 interface DashboardSidebarNavProps {
   onNavigate?: () => void
 }
 
 export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
+  const { state } = useSidebar()
+  const isCollapsed = state === "collapsed"
+
   const mainMenuItems = [
     {
       title: "Dashboard",
@@ -80,8 +89,39 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
     },
   ]
 
+  const MenuItem = ({ item, onClick }: { item: typeof mainMenuItems[0], onClick?: () => void }) => {
+    const content = (
+      <NavLink 
+        to={item.to}
+        className={({ isActive }) => cn(
+          "w-full flex items-center gap-3 overflow-hidden",
+          isActive && "text-primary"
+        )}
+        onClick={onClick}
+      >
+        <item.icon className="h-5 w-5 shrink-0" />
+        <span className="truncate">{item.title}</span>
+      </NavLink>
+    )
+
+    if (isCollapsed) {
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {content}
+          </TooltipTrigger>
+          <TooltipContent side="right" align="center">
+            {item.title}
+          </TooltipContent>
+        </Tooltip>
+      )
+    }
+
+    return content
+  }
+
   return (
-    <div className="flex-1 overflow-auto">
+    <div className="flex-1 overflow-hidden">
       <SidebarGroup>
         <SidebarGroupLabel>Main</SidebarGroupLabel>
         <SidebarGroupContent>
@@ -89,17 +129,7 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
             {mainMenuItems.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
-                  <NavLink 
-                    to={item.to}
-                    className={({ isActive }) => cn(
-                      "w-full",
-                      isActive && "text-primary"
-                    )}
-                    onClick={onNavigate}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
-                  </NavLink>
+                  <MenuItem item={item} onClick={onNavigate} />
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
@@ -114,17 +144,7 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
             {managementMenuItems.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
-                  <NavLink 
-                    to={item.to}
-                    className={({ isActive }) => cn(
-                      "w-full",
-                      isActive && "text-primary"
-                    )}
-                    onClick={onNavigate}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
-                  </NavLink>
+                  <MenuItem item={item} onClick={onNavigate} />
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
@@ -139,17 +159,7 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
             {settingsMenuItems.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
-                  <NavLink 
-                    to={item.to}
-                    className={({ isActive }) => cn(
-                      "w-full",
-                      isActive && "text-primary"
-                    )}
-                    onClick={onNavigate}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
-                  </NavLink>
+                  <MenuItem item={item} onClick={onNavigate} />
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
