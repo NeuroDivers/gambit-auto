@@ -47,7 +47,7 @@ export function ClientList() {
             total,
             created_at
           ),
-          work_orders (
+          work_orders!work_orders_client_id_fkey (
             created_at
           )
         `)
