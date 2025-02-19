@@ -40,13 +40,25 @@ export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
 
   const filteredUsers = users?.filter(user => {
     // Name and email search
-    const matchesSearch = !searchQuery || 
-      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase().includes(searchQuery.toLowerCase());
+    const searchTerm = searchQuery.toLowerCase();
+    const fullName = `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase();
+    const email = (user.email || '').toLowerCase();
     
-    // Role filtering - make sure we're comparing the actual role name
+    const matchesSearch = searchTerm === '' || 
+      fullName.includes(searchTerm) || 
+      email.includes(searchTerm);
+    
+    // Role filtering
     const matchesRole = roleFilter === "all" || 
       (user.role?.name && user.role.name.toLowerCase() === roleFilter.toLowerCase());
+    
+    console.log('Filtering user:', {
+      user,
+      searchTerm,
+      matchesSearch,
+      roleFilter,
+      matchesRole
+    });
     
     return matchesSearch && matchesRole;
   });
