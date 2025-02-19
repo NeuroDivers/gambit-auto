@@ -36,7 +36,8 @@ export function AuthLayout({
 
   return (
     <div className="container relative min-h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
-      <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex">
+      {/* Dark sidebar - hidden on mobile, shown on lg screens */}
+      <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
         <div className="absolute inset-0 bg-zinc-900" />
         <div className="relative z-20 flex items-center text-lg font-medium">
           <img 
@@ -46,7 +47,9 @@ export function AuthLayout({
           />
         </div>
       </div>
-      <div className="lg:p-8">
+      
+      {/* Main content - full width on mobile, half width on lg screens */}
+      <div className="p-4 lg:p-8">
         <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
           <div className="flex flex-col items-center space-y-2 text-center">
             <div className="relative mx-auto h-32 w-32 bg-primary/10 rounded-lg mb-6">
