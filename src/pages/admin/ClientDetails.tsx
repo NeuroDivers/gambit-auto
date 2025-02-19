@@ -18,23 +18,33 @@ import {
   Tooltip,
 } from "recharts"
 
-interface ClientWithAuth extends Client {
-  last_sign_in_at?: string | null;
-}
-
 export default function ClientDetails() {
   const { id } = useParams()
 
   const { data: client, isLoading } = useQuery({
     queryKey: ['client', id],
     queryFn: async () => {
-      // Fetch client details with auth data
+      // Fetch client details with profile data for last sign in
       const { data: clientData, error: clientError } = await supabase
         .from('clients')
         .select(`
           *,
-          user:user_id (
+          profile:user_id (
             last_sign_in_at
+          ),
+          invoices (
+            id,
+            invoice_number,
+            total,
+            status,
+            created_at
+          ),
+          quotes (
+            id,
+            quote_number,
+            total,
+            status,
+            created_at
           )
         `)
         .eq('id', id)
@@ -56,7 +66,7 @@ export default function ClientDetails() {
       if (invoiceError) throw invoiceError
 
       // Process invoice data for the chart
-      const monthlySpending = invoiceData?.reduce((acc: any[], invoice) => {
+      const monthlySpending = invoiceData?.reduce((acc: Array<{month: string, amount: number}>, invoice) => {
         const month = new Date(invoice.created_at).toLocaleString('default', { month: 'short' })
         const existingMonth = acc.find(item => item.month === month)
         
@@ -68,11 +78,19 @@ export default function ClientDetails() {
         return acc
       }, []) || []
 
+      // Calculate totals
+      const total_spent = invoiceData?.reduce((sum, invoice) => sum + (invoice.total || 0), 0) || 0
+      const total_invoices = clientData?.invoices?.length || 0
+      const total_work_orders = 0 // We'll implement this when we add work orders
+
       return {
         ...clientData,
-        last_sign_in_at: clientData.user?.last_sign_in_at,
-        monthlySpending
-      } as ClientWithAuth
+        last_sign_in_at: clientData?.profile?.last_sign_in_at,
+        monthlySpending,
+        total_spent,
+        total_invoices,
+        total_work_orders
+      } as Client
     }
   })
 
