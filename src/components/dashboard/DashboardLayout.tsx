@@ -1,3 +1,4 @@
+
 import {
   Sheet,
   SheetClose,
@@ -10,10 +11,10 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Icons } from "@/components/ui/icons";
 import { Separator } from "@/components/ui/separator";
 import { ProfileCompletionDialog } from "../profile/ProfileCompletionDialog";
 import { NavLink } from "react-router-dom";
+import { LayoutDashboard } from "lucide-react";
 
 interface DashboardLayoutProps {
   firstName?: string | null
@@ -38,7 +39,7 @@ export function DashboardLayout({
       <div className="flex flex-col min-h-screen">
         <header className="flex h-16 items-center px-6">
           <NavLink to="/dashboard" className="flex items-center gap-2">
-            <Icons.logo className="h-6 w-6" />
+            <LayoutDashboard className="h-6 w-6" />
             <span className="font-semibold text-lg">Acme</span>
           </NavLink>
           <nav className="ml-auto flex items-center gap-4">
