@@ -64,10 +64,12 @@ export function DesktopCalendarView({
         <CalendarDayView date={selectedDate} workOrders={workOrders} />
       </div>
 
-      <BlockedDatesDialog
-        open={showBlockedDatesDialog}
-        onOpenChange={setShowBlockedDatesDialog}
-      />
+      {showBlockedDatesDialog && (
+        <BlockedDatesDialog
+          open={showBlockedDatesDialog}
+          onOpenChange={setShowBlockedDatesDialog}
+        />
+      )}
     </div>
   );
 }

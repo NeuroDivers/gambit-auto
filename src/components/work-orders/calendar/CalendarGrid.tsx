@@ -38,10 +38,9 @@ export function CalendarGrid({ currentDate, workOrders, onDateChange }: Calendar
 
   return (
     <DesktopCalendarView
-      currentDate={effectiveDate}
+      date={effectiveDate}
       workOrders={workOrders}
-      onDateChange={onDateChange}
-      blockedDates={blockedDates}
+      onDateSelect={onDateChange}
     />
   )
 }
