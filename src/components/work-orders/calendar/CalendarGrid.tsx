@@ -15,17 +15,12 @@ export function CalendarGrid({ currentDate, workOrders, onDateChange }: Calendar
   const isMobile = useIsMobile()
   const { blockedDates = [] } = useBlockedDates()
 
-  const handleClick = (date: Date) => {
-    onDateChange?.(date)
-  }
-
   if (isMobile) {
     return (
       <MobileCalendarView
         currentDate={currentDate}
         workOrders={workOrders}
-        onDateChange={handleClick}
-        blockedDates={blockedDates}
+        onDateChange={onDateChange}
       />
     )
   }
@@ -34,7 +29,7 @@ export function CalendarGrid({ currentDate, workOrders, onDateChange }: Calendar
     <DesktopCalendarView
       currentDate={currentDate}
       workOrders={workOrders}
-      onDateChange={handleClick}
+      onDateChange={onDateChange}
       blockedDates={blockedDates}
     />
   )

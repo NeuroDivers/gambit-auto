@@ -16,6 +16,7 @@ interface WorkOrderCalendarProps {
 export function WorkOrderCalendar({ clientView = false }: WorkOrderCalendarProps) {
   const [currentDate, setCurrentDate] = useState(startOfMonth(new Date()))
   const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const { data: workOrders = [], isLoading } = useWorkOrderData()
 
   const handlePrevMonth = () => {
@@ -32,7 +33,7 @@ export function WorkOrderCalendar({ clientView = false }: WorkOrderCalendarProps
 
   const handleDateClick = (date: Date) => {
     if (!clientView) {
-      setCurrentDate(date)
+      setSelectedDate(date)
       setShowCreateDialog(true)
     }
   }
@@ -59,7 +60,8 @@ export function WorkOrderCalendar({ clientView = false }: WorkOrderCalendarProps
         <div className="flex items-center justify-end">
           <CreateWorkOrderDialog 
             open={showCreateDialog} 
-            onOpenChange={setShowCreateDialog} 
+            onOpenChange={setShowCreateDialog}
+            defaultStartTime={selectedDate || undefined}
           />
         </div>
       )}
