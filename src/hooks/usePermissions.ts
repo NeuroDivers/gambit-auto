@@ -25,7 +25,7 @@ interface UserRole {
 }
 
 interface ProfileResponse {
-  roles: {
+  role: {
     id: string;
     name: string;
     nicename: string;
@@ -33,7 +33,7 @@ interface ProfileResponse {
 }
 
 interface ClientResponse {
-  roles: {
+  role: {
     id: string;
     name: string;
     nicename: string;
@@ -51,44 +51,46 @@ export const usePermissions = () => {
       }
 
       // Check profiles table first
-      const { data: profiles, error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select(`
-          roles:role_id (
+          role:role_id (
             id,
             name,
             nicename
           )
         `)
         .eq('id', user.id)
-        .returns<ProfileResponse[]>();
+        .single();
 
-      if (!profileError && profiles && profiles.length > 0 && profiles[0].roles) {
+      if (!profileError && profileData?.role) {
+        console.log('Found profile role:', profileData.role);
         return {
-          id: profiles[0].roles.id,
-          name: profiles[0].roles.name,
-          nicename: profiles[0].roles.nicename
+          id: profileData.role.id,
+          name: profileData.role.name,
+          nicename: profileData.role.nicename
         };
       }
 
       // If no profile found or no role, check clients table
-      const { data: clients, error: clientError } = await supabase
+      const { data: clientData, error: clientError } = await supabase
         .from('clients')
         .select(`
-          roles:role_id (
+          role:role_id (
             id,
             name,
             nicename
           )
         `)
         .eq('user_id', user.id)
-        .returns<ClientResponse[]>();
+        .single();
 
-      if (!clientError && clients && clients.length > 0 && clients[0].roles) {
+      if (!clientError && clientData?.role) {
+        console.log('Found client role:', clientData.role);
         return {
-          id: clients[0].roles.id,
-          name: clients[0].roles.name,
-          nicename: clients[0].roles.nicename
+          id: clientData.role.id,
+          name: clientData.role.name,
+          nicename: clientData.role.nicename
         };
       }
 
