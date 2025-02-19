@@ -26,13 +26,8 @@ export const useAuthRedirect = () => {
         return null;
       }
 
-      if (userRole) {
-        console.log("Found user role:", userRole);
-        return userRole as UserRole;
-      }
-
-      console.log("No user role found");
-      return null;
+      console.log("Found user role:", userRole);
+      return userRole as UserRole;
     };
 
     const checkSession = async () => {
@@ -41,52 +36,53 @@ export const useAuthRedirect = () => {
         console.error("Session check error:", error.message);
         return;
       }
-      
-      // If we're on the auth page and have no session, don't redirect
-      if (!session && location.pathname === '/auth') {
-        console.log("No session on auth page, staying here");
+
+      // If no session and not on auth page, redirect to auth
+      if (!session && location.pathname !== '/auth') {
+        console.log("No session, redirecting to auth");
+        navigate("/auth", { replace: true });
         return;
       }
-      
-      // If we have a session and we're on the auth page, redirect based on role
-      if (session && location.pathname === '/auth') {
-        console.log("Session found on auth page, checking user type...");
+
+      // If we have a session, check if we need to redirect
+      if (session) {
         const userRole = await checkUserType(session.user.id);
+        const isOnAuthPage = location.pathname === '/auth';
+        const isOnClientDashboard = location.pathname.startsWith('/client');
+        const isOnAdminDashboard = location.pathname.startsWith('/admin');
         
         if (userRole?.user_type === 'staff') {
-          console.log("Redirecting staff to admin dashboard");
-          navigate("/admin", { replace: true });
+          // For staff users
+          if (isOnAuthPage || isOnClientDashboard) {
+            console.log("Staff user, redirecting to admin dashboard");
+            navigate("/admin", { replace: true });
+          }
         } else {
-          // All other users (including clients and unknown roles) go to client dashboard
-          console.log("Redirecting to client dashboard");
-          navigate("/client", { replace: true });
+          // For client users
+          if (isOnAuthPage || isOnAdminDashboard) {
+            console.log("Client user, redirecting to client dashboard");
+            navigate("/client", { replace: true });
+          }
         }
-        return;
-      }
-      
-      // If we have no session and we're not on the auth page, redirect to auth
-      if (!session && location.pathname !== '/auth') {
-        console.log("No session found, redirecting to auth");
-        navigate("/auth", { replace: true });
       }
     };
 
+    // Initial check
     checkSession();
 
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("Auth state changed:", event, session?.user);
+        console.log("Auth state changed:", event);
         
         if (event === 'SIGNED_IN' && session) {
-          console.log("User signed in, checking user type");
           const userRole = await checkUserType(session.user.id);
           
           if (userRole?.user_type === 'staff') {
-            console.log("Redirecting staff to admin dashboard");
+            console.log("Staff signed in, redirecting to admin dashboard");
             navigate("/admin", { replace: true });
           } else {
-            // All other users (including clients and unknown roles) go to client dashboard
-            console.log("Redirecting to client dashboard");
+            console.log("Client signed in, redirecting to client dashboard");
             navigate("/client", { replace: true });
           }
         } else if (event === 'SIGNED_OUT') {
