@@ -1,5 +1,5 @@
 
-import { Sidebar, SidebarContent, SidebarProvider, SidebarRail } from "@/components/ui/sidebar"
+import { Sidebar, SidebarContent, SidebarProvider, SidebarRail, SidebarTrigger } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 import { ClientSidebarNav } from "./sidebar/ClientSidebarNav"
 import { ClientSidebarHeader } from "./sidebar/ClientSidebarHeader"
@@ -26,11 +26,14 @@ export function ClientLayout({
 
   const sidebarContent = (
     <SidebarContent>
-      <ClientSidebarHeader 
-        firstName={firstName}
-        role={role}
-        onLogout={onLogout}
-      />
+      <div className="flex items-center justify-between px-4 py-2">
+        <ClientSidebarHeader 
+          firstName={firstName}
+          role={role}
+          onLogout={onLogout}
+        />
+        <SidebarTrigger />
+      </div>
       <ClientSidebarNav onNavigate={() => setIsMobileMenuOpen(false)} />
     </SidebarContent>
   )

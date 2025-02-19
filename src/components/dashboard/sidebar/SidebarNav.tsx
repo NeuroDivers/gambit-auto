@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
 import { FileText, Calendar, Settings, Users, Wrench, User, Terminal, MessageSquare } from "lucide-react"
@@ -6,6 +5,8 @@ import { cn } from "@/lib/utils"
 import { usePermissions } from "@/hooks/usePermissions"
 import { useEffect, useState } from "react"
 import type { NavItem } from "./types"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { useSidebar } from "@/components/ui/sidebar"
 
 const allItems: NavItem[] = [
   {
@@ -82,12 +83,13 @@ export function SidebarNav({ className, onNavigate }: SidebarNavProps) {
   const { permissions, currentUserRole } = usePermissions()
   const [allowedItems, setAllowedItems] = useState<NavItem[]>([])
   const [allowedSettingsItems, setAllowedSettingsItems] = useState<NavItem[]>([])
+  const { isMobile, state } = useSidebar()
+  const isCollapsed = state === "collapsed"
 
   useEffect(() => {
     console.log("Current permissions:", permissions)
     console.log("Current user role:", currentUserRole)
 
-    // For administrators, show all items
     if (currentUserRole?.name?.toLowerCase() === 'administrator') {
       console.log("User is admin, showing all items")
       setAllowedItems(allItems)
@@ -129,45 +131,50 @@ export function SidebarNav({ className, onNavigate }: SidebarNavProps) {
     setAllowedSettingsItems(filteredSettingsItems)
   }, [permissions, currentUserRole])
 
+  const NavLink = ({ item }: { item: NavItem }) => {
+    const link = (
+      <Link
+        to={item.href}
+        onClick={onNavigate}
+        className={cn(
+          "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-primary hover:text-primary-foreground",
+          location.pathname === item.href 
+            ? "bg-primary text-primary-foreground" 
+            : "text-foreground"
+        )}
+      >
+        <item.icon className="h-5 w-5" />
+        <span>{item.title}</span>
+      </Link>
+    )
+
+    if (isCollapsed && !isMobile) {
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {link}
+          </TooltipTrigger>
+          <TooltipContent side="right" align="center">
+            {item.title}
+          </TooltipContent>
+        </Tooltip>
+      )
+    }
+
+    return link
+  }
+
   return (
     <nav className={cn("flex flex-col gap-2 p-4", className)}>
       <div className="space-y-2">
         {allowedItems.map((item) => (
-          <Link
-            key={item.href}
-            to={item.href}
-            onClick={onNavigate}
-            className={cn(
-              "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors",
-              "hover:bg-primary hover:text-primary-foreground",
-              location.pathname === item.href 
-                ? "bg-primary text-primary-foreground" 
-                : "text-foreground"
-            )}
-          >
-            <item.icon className="h-5 w-5" />
-            <span>{item.title}</span>
-          </Link>
+          <NavLink key={item.href} item={item} />
         ))}
       </div>
 
       <div className="mt-4 pt-4 border-t space-y-2">
         {allowedSettingsItems.map((item) => (
-          <Link
-            key={item.href}
-            to={item.href}
-            onClick={onNavigate}
-            className={cn(
-              "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors",
-              "hover:bg-primary hover:text-primary-foreground",
-              location.pathname === item.href 
-                ? "bg-primary text-primary-foreground" 
-                : "text-foreground"
-            )}
-          >
-            <item.icon className="h-5 w-5" />
-            <span>{item.title}</span>
-          </Link>
+          <NavLink key={item.href} item={item} />
         ))}
       </div>
     </nav>

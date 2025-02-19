@@ -1,5 +1,5 @@
 
-import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sidebar"
+import { Sidebar, SidebarContent, SidebarProvider, SidebarRail, SidebarTrigger } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 import { SidebarNav } from "./sidebar/SidebarNav"
 import { SidebarHeader } from "./sidebar/SidebarHeader"
@@ -29,11 +29,14 @@ export function DashboardLayout({
 
   const sidebarContent = (
     <SidebarContent className="flex flex-col h-full">
-      <SidebarHeader 
-        firstName={firstName}
-        role={role}
-        onLogout={onLogout}
-      />
+      <div className="flex items-center justify-between px-4 py-2">
+        <SidebarHeader 
+          firstName={firstName}
+          role={role}
+          onLogout={onLogout}
+        />
+        <SidebarTrigger />
+      </div>
       <SidebarNav className="flex-1" onNavigate={() => setIsMobileMenuOpen(false)} />
     </SidebarContent>
   )
@@ -58,7 +61,6 @@ export function DashboardLayout({
           </div>
         </header>
 
-        {/* Mobile Menu */}
         <div className={cn(
           "fixed inset-0 bg-background z-40 transform transition-transform duration-300 ease-in-out",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
@@ -68,7 +70,6 @@ export function DashboardLayout({
           </div>
         </div>
 
-        {/* Main Content */}
         <main className={cn(
           "flex-1 transition-all duration-300 ease-in-out",
           isMobileMenuOpen ? "opacity-50" : "opacity-100"
@@ -80,10 +81,11 @@ export function DashboardLayout({
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen>
       <div className={cn("flex h-screen w-full overflow-hidden")}>
         <Sidebar>
           {sidebarContent}
+          <SidebarRail />
         </Sidebar>
         <main className="flex-1 overflow-auto p-4">{children}</main>
       </div>
