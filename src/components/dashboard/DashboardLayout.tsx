@@ -83,7 +83,7 @@ export function DashboardLayout({
   }
 
   return (
-    <SidebarProvider defaultOpen>
+    <SidebarProvider defaultCollapsible="icon" defaultOpen>
       <div className={cn("flex h-screen w-full overflow-hidden")}>
         <Sidebar>
           {sidebarContent}
