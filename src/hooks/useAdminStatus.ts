@@ -12,14 +12,13 @@ export const useAdminStatus = () => {
       const { data: profile } = await supabase
         .from('profiles')
         .select(`
-          role:roles (
+          role:role_id (
             name
           )
         `)
         .eq('id', user.id)
         .maybeSingle();
 
-      // Fixed the property access
       return profile?.role?.name?.toLowerCase() === 'admin';
     },
   });
