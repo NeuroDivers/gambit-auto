@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserCard } from "./UserCard";
 import { useUserData } from "./hooks/useUserData";
@@ -18,11 +18,11 @@ export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
   const queryClient = useQueryClient();
   
   // Update roleFilter when initialRoleFilter changes
-  useState(() => {
+  useEffect(() => {
     if (initialRoleFilter !== roleFilter) {
       setRoleFilter(initialRoleFilter);
     }
-  });
+  }, [initialRoleFilter, roleFilter]);
   
   // Set up realtime subscriptions
   useUserSubscription();
@@ -32,16 +32,16 @@ export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
     console.error("Error loading users:", error);
   }
 
-  // Log current state
+  // Log current state for debugging
   console.log("Current users data:", users);
   console.log("Loading state:", isLoading);
   console.log("Current role filter:", roleFilter);
   console.log("Current search query:", searchQuery);
 
   const filteredUsers = users?.filter(user => {
-    const matchesSearch = searchQuery.toLowerCase() === "" || 
+    const matchesSearch = !searchQuery || 
       user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchQuery.toLowerCase());
+      `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesRole = roleFilter === "all" || user.role?.name === roleFilter;
     
