@@ -40,8 +40,8 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
       title: "Dashboard",
       icon: Home,
       to: "/admin",
-      // This makes the dashboard link active for any route starting with /admin
-      isActive: (path: string) => path.startsWith('/admin'),
+      // Only active when exactly on /admin
+      isActive: (path: string) => path === '/admin',
     },
     {
       title: "Work Orders",
