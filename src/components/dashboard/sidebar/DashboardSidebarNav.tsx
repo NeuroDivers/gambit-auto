@@ -94,15 +94,16 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
       <NavLink 
         to={item.to}
         className={({ isActive }) => cn(
-          "w-full flex items-center gap-3",
-          isActive && "text-primary"
+          "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-accent hover:text-accent-foreground min-w-0",
+          isActive ? "bg-accent text-accent-foreground" : "text-foreground",
+          isCollapsed && "justify-center px-2"
         )}
         onClick={onClick}
       >
         <item.icon className="h-5 w-5 shrink-0" />
         <span className={cn(
-          "truncate transition-opacity duration-200",
-          isCollapsed && "opacity-0 w-0 hidden"
+          "truncate",
+          isCollapsed && "hidden"
         )}>
           {item.title}
         </span>
