@@ -7,8 +7,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { FileText, Mail, Phone, Calendar, User, Car } from "lucide-react"
+import { FileText, Mail, Phone, Calendar, User } from "lucide-react"
 import { VehicleList } from "@/components/clients/vehicles/VehicleList"
+import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 import {
   Bar,
   BarChart,
@@ -94,49 +96,77 @@ export default function ClientDetails() {
     }
   })
 
-  if (isLoading) {
-    return <div>Loading...</div>
+  const handleSendMagicLink = async () => {
+    if (!client?.email) return
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: client.email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      })
+
+      if (error) throw error
+
+      toast.success("Magic link sent successfully!", {
+        description: "Check email for login instructions."
+      })
+    } catch (error: any) {
+      console.error("Error sending magic link:", error)
+      toast.error("Failed to send magic link", {
+        description: error.message
+      })
+    }
   }
 
-  if (!client) {
-    return <div>Client not found</div>
-  }
+  if (isLoading) return <div>Loading...</div>
+  if (!client) return <div>Client not found</div>
 
   return (
     <div className="p-6 space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex items-start gap-6">
-            <Avatar className="h-24 w-24 border-4 border-primary/20">
-              <AvatarImage src={`https://avatar.vercel.sh/${client.email}.png`} />
-              <AvatarFallback className="text-2xl">
-                {client.first_name[0]}{client.last_name[0]}
-              </AvatarFallback>
-            </Avatar>
-            <div className="space-y-1">
-              <CardTitle className="text-2xl">
-                {client.first_name} {client.last_name}
-              </CardTitle>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Mail className="h-4 w-4" />
-                {client.email}
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Phone className="h-4 w-4" />
-                {client.phone_number || 'No phone number'}
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <FileText className="h-4 w-4" />
-                {client.address || 'No address'}
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                Last sign in: {client.last_sign_in_at 
-                  ? new Date(client.last_sign_in_at).toLocaleDateString()
-                  : 'Never'
-                }
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-6">
+              <Avatar className="h-24 w-24 border-4 border-primary/20">
+                <AvatarImage src={`https://avatar.vercel.sh/${client.email}.png`} />
+                <AvatarFallback className="text-2xl">
+                  {client.first_name[0]}{client.last_name[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div className="space-y-1">
+                <CardTitle className="text-2xl">
+                  {client.first_name} {client.last_name}
+                </CardTitle>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Mail className="h-4 w-4" />
+                  {client.email}
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Phone className="h-4 w-4" />
+                  {client.phone_number || 'No phone number'}
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <FileText className="h-4 w-4" />
+                  {client.address || 'No address'}
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  Last sign in: {client.last_sign_in_at 
+                    ? new Date(client.last_sign_in_at).toLocaleDateString()
+                    : 'Never'
+                  }
+                </div>
               </div>
             </div>
+            <Button
+              onClick={handleSendMagicLink}
+              variant="outline"
+              className="ml-auto"
+            >
+              Send Magic Link
+            </Button>
           </div>
         </CardHeader>
       </Card>
