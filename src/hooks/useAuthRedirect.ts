@@ -20,44 +20,28 @@ export const useAuthRedirect = () => {
 
   useEffect(() => {
     const checkUserType = async (userId: string) => {
-      // First check if user is a staff member (has profile)
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select(`
-          id,
-          role:role_id!inner (
-            id,
-            name,
-            nicename
-          )
-        `)
-        .eq("id", userId)
-        .maybeSingle<ProfileWithRole>();
+      // Use the new get_user_role RPC function
+      const { data: userRole, error } = await supabase
+        .rpc('get_user_role', {
+          user_id: userId
+        })
+        .single();
 
-      if (profile?.role) {
-        console.log("Found staff profile with role:", profile.role);
-        return profile.role;
+      if (error) {
+        console.error("Error checking user role:", error);
+        return null;
       }
 
-      // If not a staff member, check if they're a client
-      const { data: client, error: clientError } = await supabase
-        .from("clients")
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (client) {
-        console.log("Found client:", client);
-        // Clients have a default role
-        return { name: "client", nicename: "Client" };
+      if (userRole) {
+        console.log("Found user role:", userRole);
+        return userRole;
       }
 
-      console.log("No profile or client found");
+      console.log("No user role found");
       return null;
     };
 
     const checkSession = async () => {
-      // Don't redirect if we're already on the auth page and there's no session
       const { data: { session }, error } = await supabase.auth.getSession();
       if (error) {
         console.error("Session check error:", error.message);
@@ -70,21 +54,23 @@ export const useAuthRedirect = () => {
         return;
       }
       
-      // If we're on the auth page and have a session, redirect appropriately
+      // If we have a session and we're on the auth page, redirect based on role
       if (session && location.pathname === '/auth') {
         console.log("Session found on auth page, checking user type...");
         const userRole = await checkUserType(session.user.id);
         
-        if (userRole?.name.toLowerCase() === 'client') {
+        if (userRole?.user_type === 'client') {
           console.log("Redirecting client to client dashboard");
           navigate("/client", { replace: true });
-        } else if (userRole) {
+        } else if (userRole?.user_type === 'staff') {
           console.log("Redirecting staff to admin dashboard");
           navigate("/admin", { replace: true });
         } else {
-          console.log("No role found, defaulting to client dashboard");
+          // If no role found but we have a session, assume client
+          console.log("No specific role found, defaulting to client dashboard");
           navigate("/client", { replace: true });
         }
+        return;
       }
       
       // If we have no session and we're not on the auth page, redirect to auth
@@ -98,20 +84,21 @@ export const useAuthRedirect = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("Auth state changed:", event, session);
+        console.log("Auth state changed:", event, session?.user);
         
         if (event === 'SIGNED_IN' && session) {
           console.log("User signed in, checking user type");
           const userRole = await checkUserType(session.user.id);
           
-          if (userRole?.name.toLowerCase() === 'client') {
+          if (userRole?.user_type === 'client') {
             console.log("Redirecting client to client dashboard");
             navigate("/client", { replace: true });
-          } else if (userRole) {
+          } else if (userRole?.user_type === 'staff') {
             console.log("Redirecting staff to admin dashboard");
             navigate("/admin", { replace: true });
           } else {
-            console.log("No role found, defaulting to client dashboard");
+            // If no role found but we have a session, assume client
+            console.log("No specific role found, defaulting to client dashboard");
             navigate("/client", { replace: true });
           }
         } else if (event === 'SIGNED_OUT') {
