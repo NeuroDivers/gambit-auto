@@ -23,9 +23,13 @@ interface ProfileData {
   role: UserRole
 }
 
-interface ProfileResponse {
+interface SupabaseProfileResponse {
   id: string
-  role: UserRole
+  role: {
+    id: string
+    name: string
+    nicename: string
+  }
 }
 
 export function PermissionGuard({ children, resource, type }: PermissionGuardProps) {
@@ -50,14 +54,17 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
           )
         `)
         .eq('id', user.id)
-        .maybeSingle()
-        .returns<ProfileResponse>()
+        .maybeSingle() as { data: SupabaseProfileResponse | null }
 
       if (!data || !data.role) return null
 
       const transformedData: ProfileData = {
         id: data.id,
-        role: data.role as UserRole // Type assertion here since we know the shape matches
+        role: {
+          id: data.role.id,
+          name: data.role.name,
+          nicename: data.role.nicename
+        }
       }
       console.log('Transformed profile data:', transformedData)
       return transformedData

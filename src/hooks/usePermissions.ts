@@ -9,9 +9,13 @@ interface Role {
   nicename: string;
 }
 
-interface ProfileResponse {
+interface SupabaseProfileResponse {
   role_id: string;
-  role: Role;
+  role: {
+    id: string;
+    name: string;
+    nicename: string;
+  }
 }
 
 export const usePermissions = () => {
@@ -37,16 +41,21 @@ export const usePermissions = () => {
           )
         `)
         .eq('id', user.id)
-        .maybeSingle()
-        .returns<ProfileResponse>();
+        .maybeSingle() as { data: SupabaseProfileResponse | null };
 
       if (!data || !data.role) {
         console.warn("No role found for user:", user.id);
         return null;
       }
 
-      console.log("Found role:", data.role);
-      return data.role;
+      const role: Role = {
+        id: data.role.id,
+        name: data.role.name,
+        nicename: data.role.nicename
+      };
+
+      console.log("Found role:", role);
+      return role;
     },
   });
 
