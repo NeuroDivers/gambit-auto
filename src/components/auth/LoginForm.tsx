@@ -3,12 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ForgotPasswordDialog } from "./ForgotPasswordDialog";
+import { AuthFormData } from "@/hooks/useAuthForm";
 
 interface LoginFormProps {
-  formData: {
-    email: string;
-    password: string;
-  };
+  formData: AuthFormData;
   loading: boolean;
   onSubmit: (e: React.FormEvent) => void;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -68,6 +66,34 @@ export const LoginForm = ({
       </div>
 
       <form onSubmit={onSubmit} className="space-y-4">
+        {!isLogin && (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Input
+                  type="text"
+                  name="firstName"
+                  placeholder="First Name"
+                  value={formData.firstName}
+                  onChange={onChange}
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Input
+                  type="text"
+                  name="lastName"
+                  placeholder="Last Name"
+                  value={formData.lastName}
+                  onChange={onChange}
+                  required
+                  disabled={loading}
+                />
+              </div>
+            </div>
+          </>
+        )}
         <div className="space-y-2">
           <Input
             type="email"
