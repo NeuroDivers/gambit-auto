@@ -20,9 +20,7 @@ export const RoleList = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [newRoleId, setNewRoleId] = useState<string>("");
   const { toast } = useToast();
-  const { isAdmin, isLoading: isAdminLoading } = useAdminStatus();
-
-  console.log("RoleList - isAdmin:", isAdmin); // Debug log
+  const { isAdmin } = useAdminStatus();
 
   const { data: roles, refetch, error } = useQuery({
     queryKey: ["roles"],
@@ -104,7 +102,6 @@ export const RoleList = () => {
         </div>
         {isAdmin && (
           <Button onClick={() => {
-            console.log("Create Role button clicked"); // Debug log
             setSelectedRole(null);
             setIsDialogOpen(true);
           }} className="gap-2">

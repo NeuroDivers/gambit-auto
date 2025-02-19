@@ -20,10 +20,7 @@ export const useRoleStats = () => {
         .from("roles")
         .select("name, nicename");
       
-      if (rolesError) {
-        console.error("Error fetching roles:", rolesError);
-        throw rolesError;
-      }
+      if (rolesError) throw rolesError;
       
       // Initialize stats with 0 for all roles
       const stats: RoleStats = {};
@@ -31,23 +28,20 @@ export const useRoleStats = () => {
         stats[role.name] = 0;
       });
 
-      // Count users for each role
-      const { data: profiles, error: profilesError } = await supabase
+      // Count users for each role by joining profiles with roles
+      const { data: profilesWithRoles, error: countError } = await supabase
         .from("profiles")
         .select(`
-          roles!profiles_role_id_fkey (
+          role:role_id (
             name
           )
         `);
       
-      if (profilesError) {
-        console.error("Error fetching profiles:", profilesError);
-        throw profilesError;
-      }
+      if (countError) throw countError;
 
       // Update counts for roles that have users
-      profiles.forEach((profile: any) => {
-        const roleName = profile.roles?.name;
+      profilesWithRoles.forEach((profile: any) => {
+        const roleName = profile.role?.name;
         if (roleName) {
           stats[roleName] = (stats[roleName] || 0) + 1;
         }

@@ -2,58 +2,72 @@
 import { useState, useEffect } from "react"
 import { supabase } from "@/integrations/supabase/client"
 
+interface RoleData {
+  id: string
+  name: string
+  nicename: string
+}
+
+interface ProfileResponse {
+  role: RoleData
+}
+
 export const useAdminStatus = () => {
   const [isAdmin, setIsAdmin] = useState(false)
-  const [isInternalStaff, setIsInternalStaff] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
-        // Get current user's role using the get_user_role RPC function
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) {
-          console.log("No user found");
           setIsAdmin(false)
-          setIsInternalStaff(false)
           return
         }
 
-        const { data: roleData, error: roleError } = await supabase
-          .rpc('get_user_role', {
-            input_user_id: user.id
-          })
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select(`
+            role:role_id (
+              id,
+              name,
+              nicename
+            )
+          `)
+          .eq('id', user.id)
+          .single();
 
-        if (roleError) {
-          console.error('Error checking role:', roleError)
-          setIsAdmin(false)
-          setIsInternalStaff(false)
-          return
+        if (profileError) {
+          console.error('Profile fetch error:', profileError);
+          setIsAdmin(false);
+          return;
         }
 
-        // If we have role data, check if user is administrator
-        if (roleData) {
-          console.log("User role data:", roleData)
-          const isAdminRole = roleData.role_name === 'administrator';
-          console.log("Is admin role:", isAdminRole);
-          setIsAdmin(isAdminRole)
-          setIsInternalStaff(roleData.user_type === 'staff')
-        } else {
-          console.log("No role data found");
-          setIsAdmin(false)
-          setIsInternalStaff(false)
-        }
+        const userRole = (profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase();
+        console.log("Checking admin status, user role:", userRole);
+        
+        // Consider both administrator and king as admin roles
+        setIsAdmin(userRole === 'administrator' || userRole === 'king');
       } catch (error) {
         console.error('Error checking admin status:', error)
         setIsAdmin(false)
-        setIsInternalStaff(false)
       } finally {
         setIsLoading(false)
       }
     }
 
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      checkAdminStatus()
+    })
+
     checkAdminStatus()
+
+    // Cleanup subscription
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [])
 
-  return { isAdmin, isInternalStaff, isLoading }
+  return { isAdmin, isLoading }
 }

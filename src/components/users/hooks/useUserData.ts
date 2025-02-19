@@ -1,7 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ProfilesTable } from "@/integrations/supabase/types/profiles";
 
 export type UserRole = {
   id: string;
@@ -11,65 +10,92 @@ export type UserRole = {
 
 export type User = {
   id: string;
-  email: string | null;
-  first_name?: string | null;
-  last_name?: string | null;
-  role?: UserRole | null;
-  avatar_url?: string | null;
-  phone_number?: string | null;
-  address?: string | null;
-  bio?: string | null;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  role?: UserRole;
 };
 
-type ProfileWithRole = ProfilesTable['Row'] & {
-  roles: UserRole | null;
+type ProfileResponse = {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  role: UserRole;
+};
+
+type ClientResponse = {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  user_id: string;
+  phone_number?: string;
+  address?: string;
 };
 
 export const useUserData = () => {
   return useQuery({
     queryKey: ["users"],
     queryFn: async () => {
-      try {
-        const { data: profiles, error: profilesError } = await supabase
-          .from("profiles")
-          .select(`
-            *,
-            roles!profiles_role_id_fkey (
-              id,
-              name,
-              nicename
-            )
-          `);
+      console.log("Fetching users...");
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select(`
+          id,
+          email,
+          first_name,
+          last_name,
+          role:role_id (
+            id,
+            name,
+            nicename
+          )
+        `)
+        .returns<ProfileResponse[]>();
 
-        if (profilesError) {
-          console.error("Error fetching profiles:", profilesError);
-          throw profilesError;
-        }
-
-        if (!profiles) {
-          console.log("No profiles found");
-          return [];
-        }
-
-        const users: User[] = (profiles as ProfileWithRole[]).map(profile => ({
-          id: profile.id,
-          email: profile.email,
-          first_name: profile.first_name,
-          last_name: profile.last_name,
-          role: profile.roles,
-          avatar_url: profile.avatar_url,
-          phone_number: profile.phone_number,
-          address: profile.address,
-          bio: profile.bio
-        }));
-
-        return users;
-      } catch (error) {
-        console.error("Error in useUserData:", error);
-        throw error;
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        throw profilesError;
       }
+
+      console.log("Fetched profiles:", profiles);
+
+      // Separate client profiles - we'll get their data from clients table
+      const clientProfiles = profiles.filter(profile => profile.role.name === 'client');
+      const nonClientProfiles = profiles.filter(profile => profile.role.name !== 'client');
+
+      // Get client data for client profiles
+      const { data: clients, error: clientsError } = await supabase
+        .from("clients")
+        .select("*")
+        .in('user_id', clientProfiles.map(p => p.id))
+        .returns<ClientResponse[]>();
+
+      if (clientsError) {
+        console.error("Error fetching clients:", clientsError);
+        throw clientsError;
+      }
+
+      // Map client profiles to include client data
+      const clientUsers = clientProfiles.map(profile => {
+        const clientData = clients.find(c => c.user_id === profile.id);
+        return {
+          id: profile.id,
+          email: clientData?.email || profile.email,
+          first_name: clientData?.first_name || profile.first_name,
+          last_name: clientData?.last_name || profile.last_name,
+          role: profile.role
+        } satisfies User;
+      });
+
+      // Combine non-client profiles with client users
+      const allUsers: User[] = [
+        ...nonClientProfiles,
+        ...clientUsers
+      ];
+
+      return allUsers;
     },
-    staleTime: 1000 * 60, // Data considered fresh for 1 minute
-    refetchOnMount: true,
   });
 };

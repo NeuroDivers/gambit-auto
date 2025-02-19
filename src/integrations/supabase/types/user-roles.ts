@@ -1,5 +1,7 @@
 
 import { Json } from './json';
+import { Database } from './database';
+import { ProfilesTable } from './profiles';
 
 // This interface represents the roles table
 export interface RolesTable {

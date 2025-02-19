@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect, useState } from "react"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Navigate } from "react-router-dom"
@@ -13,75 +12,86 @@ interface PermissionGuardProps {
 }
 
 interface UserRole {
-  role_name: string;
-  role_nicename: string;
-  user_type: string;
+  id: string
+  name: string
+  nicename: string
+}
+
+interface ProfileData {
+  id: string
+  role: UserRole
+}
+
+interface SupabaseProfileResponse {
+  id: string
+  role: UserRole[]
 }
 
 export function PermissionGuard({ children, resource, type }: PermissionGuardProps) {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null)
   const { checkPermission } = usePermissions()
 
-  // Get current user's role and type
-  const { data: userRole, isLoading: isLoadingRole } = useQuery({
+  // Get current user's role
+  const { data: profile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ['current-user-role'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return null
 
-      const { data, error } = await supabase
-        .rpc('get_user_role', {
-          user_id: user.id
-        })
+      const { data } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          role:role_id!inner (
+            id,
+            name,
+            nicename
+          )
+        `)
+        .eq('id', user.id)
         .single()
 
-      if (error) {
-        console.error('Error fetching user role:', error)
-        return null
+      // Transform the data to match our expected type
+      if (data) {
+        const supabaseData = data as SupabaseProfileResponse
+        // Since role is an array, take the first role (assuming there's only one)
+        if (supabaseData.role && supabaseData.role.length > 0) {
+          const transformedData: ProfileData = {
+            id: supabaseData.id,
+            role: {
+              id: supabaseData.role[0].id,
+              name: supabaseData.role[0].name,
+              nicename: supabaseData.role[0].nicename
+            }
+          }
+          console.log('Transformed profile data:', transformedData)
+          return transformedData
+        }
       }
-
-      console.log('User role data:', data)
-      return data as UserRole
+      return null
     }
   })
 
   useEffect(() => {
     const checkAccess = async () => {
-      // If user is an administrator, grant immediate access
-      if (userRole?.role_name?.toLowerCase() === 'administrator') {
+      // If user is administrator, grant immediate access
+      if (profile?.role?.name?.toLowerCase() === 'administrator') {
         console.log('User is admin, granting access')
         setHasPermission(true)
         return
       }
 
-      // If user is a client, check if resource is in allowed client resources
-      if (userRole?.user_type === 'client') {
-        const clientResources = ['client_dashboard', 'quotes', 'invoices', 'vehicles', 'bookings']
-        const hasAccess = clientResources.includes(resource)
-        console.log(`Client access to ${resource}:`, hasAccess)
-        setHasPermission(hasAccess)
-        return
-      }
-
-      // For staff members, check specific permission
-      if (userRole?.user_type === 'staff') {
-        const result = await checkPermission(resource, type)
-        console.log(`Staff permission check for ${resource}:`, result)
-        setHasPermission(result)
-        return
-      }
-
-      // If no role found, deny access
-      console.log('No role found, denying access')
-      setHasPermission(false)
+      // Otherwise check specific permission
+      const result = await checkPermission(resource, type)
+      setHasPermission(result)
     }
 
-    if (userRole) {
+    if (profile) {
       checkAccess()
     }
-  }, [userRole, resource, type, checkPermission])
+  }, [profile, resource, type, checkPermission])
 
-  if (isLoadingRole || hasPermission === null) {
+  if (isLoadingProfile || hasPermission === null) {
     return <LoadingScreen />
   }
 
