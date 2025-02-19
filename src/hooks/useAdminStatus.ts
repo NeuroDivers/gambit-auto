@@ -9,7 +9,12 @@ export const useAdminStatus = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
       
-      return user.app_metadata?.role === 'admin';
+      const { data: role } = await supabase.from('available_roles')
+        .select('*')
+        .eq('name', user.app_metadata?.role)
+        .single();
+        
+      return role?.name === 'admin';
     },
   });
 

@@ -15,12 +15,16 @@ import {
 
 interface HeaderProps {
   firstName?: string | null;
-  role?: string | null;
+  role?: {
+    id: string;
+    name: string;
+    nicename: string;
+  } | null;
   onLogout?: () => void;
 }
 
 export function Header({ firstName, role, onLogout }: HeaderProps) {
-  const isAdmin = role?.toLowerCase() === 'admin';
+  const isAdmin = role?.name.toLowerCase() === 'admin';
   const baseRoute = isAdmin ? '/admin' : '/client';
 
   return (
@@ -31,7 +35,7 @@ export function Header({ firstName, role, onLogout }: HeaderProps) {
         </span>
         {role && (
           <Badge variant="default" className="capitalize bg-primary text-primary-foreground">
-            {role}
+            {role.nicename}
           </Badge>
         )}
       </div>
