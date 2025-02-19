@@ -38,7 +38,7 @@ export function DashboardLayout({
       </div>
       <SidebarNav className="flex-1" onNavigate={() => setIsMobileMenuOpen(false)} />
       <div className="mt-auto border-t p-4">
-        <SidebarTrigger className="w-full justify-between" />
+        <SidebarTrigger size="sm" variant="ghost" className="mx-auto" />
       </div>
     </SidebarContent>
   )
