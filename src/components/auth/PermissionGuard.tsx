@@ -22,11 +22,6 @@ interface ProfileData {
   role: UserRole
 }
 
-interface SupabaseProfileResponse {
-  id: string
-  role: UserRole[]
-}
-
 export function PermissionGuard({ children, resource, type }: PermissionGuardProps) {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null)
   const { checkPermission } = usePermissions()
@@ -42,29 +37,23 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
         .from('profiles')
         .select(`
           id,
-          role:role_id!inner (
+          role:role_id (
             id,
             name,
             nicename
           )
         `)
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
 
-      // Transform the data to match our expected type
-      if (data) {
-        const transformedData: ProfileData = {
-          id: data.id,
-          role: {
-            id: data.role.id,
-            name: data.role.name,
-            nicename: data.role.nicename
-          }
-        }
-        console.log('Transformed profile data:', transformedData)
-        return transformedData
+      if (!data) return null
+
+      const transformedData: ProfileData = {
+        id: data.id,
+        role: data.role
       }
-      return null
+      console.log('Transformed profile data:', transformedData)
+      return transformedData
     }
   })
 

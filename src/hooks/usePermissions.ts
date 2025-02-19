@@ -6,6 +6,7 @@ import type { RolePermission } from "@/types/permissions";
 interface Role {
   id: string;
   name: string;
+  nicename: string;
 }
 
 interface ProfileResponse {
@@ -25,25 +26,19 @@ export const usePermissions = () => {
 
       console.log("Fetching role for user:", user.id);
       
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('profiles')
         .select(`
           role_id,
           role:roles (
             id,
-            name
+            name,
+            nicename
           )
         `)
         .eq('id', user.id)
-        .returns<ProfileResponse>()
         .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching user role:", error);
-        return null;
-      }
-
-      // Handle case where no profile or role is found
       if (!data || !data.role) {
         console.warn("No role found for user:", user.id);
         return null;
@@ -68,8 +63,7 @@ export const usePermissions = () => {
       const { data, error } = await supabase
         .from('role_permissions')
         .select('*')
-        .eq('role_id', currentUserRole.id)
-        .returns<RolePermission[]>();
+        .eq('role_id', currentUserRole.id);
 
       if (error) {
         console.error("Error fetching permissions:", error);
@@ -86,7 +80,7 @@ export const usePermissions = () => {
     if (!user) return false;
 
     // If user has admin role, grant all permissions
-    if (currentUserRole?.name === 'admin') {
+    if (currentUserRole?.name?.toLowerCase() === 'admin') {
       console.log("User is admin, granting all permissions");
       return true;
     }
