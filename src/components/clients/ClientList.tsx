@@ -42,6 +42,7 @@ export function ClientList() {
           phone_number,
           address,
           created_at,
+          updated_at,
           last_invoice_date,
           last_work_order_date,
           total_spent,
@@ -80,7 +81,8 @@ export function ClientList() {
         ...client,
         total_work_orders: client.total_work_orders || 0,
         total_invoices: client.total_invoices || 0,
-        total_spent: client.total_spent || 0
+        total_spent: client.total_spent || 0,
+        updated_at: client.updated_at || client.created_at // Ensure updated_at is always present
       })) as Client[]
     }
   })
