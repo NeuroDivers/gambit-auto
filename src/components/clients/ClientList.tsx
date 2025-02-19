@@ -43,11 +43,11 @@ export function ClientList() {
           address,
           created_at,
           updated_at,
-          invoices!inner (
+          invoices (
             total,
             created_at
           ),
-          work_orders!inner (
+          work_orders (
             created_at
           )
         `)
