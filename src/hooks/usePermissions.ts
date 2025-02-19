@@ -51,7 +51,7 @@ export const usePermissions = () => {
           )
         `)
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (!profileError && profileData?.role) {
         const role = profileData.role as unknown as UserRole;
@@ -73,7 +73,7 @@ export const usePermissions = () => {
           )
         `)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (!clientError && clientData?.role) {
         const role = clientData.role as unknown as UserRole;
