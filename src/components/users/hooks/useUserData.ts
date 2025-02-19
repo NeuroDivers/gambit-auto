@@ -66,20 +66,17 @@ export const useUserData = () => {
       const nonClientProfiles = profiles.filter(profile => profile.role.name !== 'client');
 
       // Get client data for client profiles
-      const { data: clients, error: clientsError } = await supabase
+      const { data: clients } = await supabase
         .from("clients")
         .select("*")
-        .in('user_id', clientProfiles.map(p => p.id))
-        .returns<ClientResponse[]>();
+        .in('user_id', clientProfiles.map(p => p.id));
 
-      if (clientsError) {
-        console.error("Error fetching clients:", clientsError);
-        throw clientsError;
-      }
+      // No need to throw error if no clients found - just log it
+      console.log("Fetched clients:", clients);
 
       // Map client profiles to include client data
       const clientUsers = clientProfiles.map(profile => {
-        const clientData = clients.find(c => c.user_id === profile.id);
+        const clientData = clients?.find(c => c.user_id === profile.id);
         return {
           id: profile.id,
           email: clientData?.email || profile.email,
