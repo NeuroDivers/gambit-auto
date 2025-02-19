@@ -29,7 +29,7 @@ type ClientResponse = {
   email: string;
   first_name: string;
   last_name: string;
-  user_id: string;
+  user_id?: string;
   phone_number?: string;
   address?: string;
   role: UserRole;
@@ -64,58 +64,42 @@ export const useUserData = () => {
         return [];
       }
 
-      console.log("Fetched profiles:", profiles);
-
-      // Separate client profiles - we'll get their data from clients table
-      const clientProfiles = profiles.filter(profile => profile.role?.name === 'client');
+      // Get all non-client profiles
       const nonClientProfiles = profiles.filter(profile => profile.role?.name !== 'client');
 
-      // Get client data for client profiles
-      let clients: ClientResponse[] = [];
-      if (clientProfiles.length > 0) {
-        try {
-          const { data: clientsData, error: clientsError } = await supabase
-            .from("clients")
-            .select(`
-              id,
-              email,
-              first_name,
-              last_name,
-              user_id,
-              phone_number,
-              address,
-              role:role_id (
-                id,
-                name,
-                nicename
-              )
-            `)
-            .in('user_id', clientProfiles.map(p => p.id))
-            .returns<ClientResponse[]>();
+      // Now fetch all clients directly (regardless of user_id)
+      const { data: clients, error: clientsError } = await supabase
+        .from("clients")
+        .select(`
+          id,
+          email,
+          first_name,
+          last_name,
+          user_id,
+          phone_number,
+          address,
+          role:role_id (
+            id,
+            name,
+            nicename
+          )
+        `)
+        .returns<ClientResponse[]>();
 
-          if (clientsError) {
-            console.error("Error fetching clients:", clientsError);
-          } else if (clientsData) {
-            clients = clientsData;
-          }
-        } catch (error) {
-          console.error("Error in clients query:", error);
-        }
+      if (clientsError) {
+        console.error("Error fetching clients:", clientsError);
       }
 
       console.log("Fetched clients:", clients);
 
-      // Map client profiles to include client data
-      const clientUsers = clientProfiles.map(profile => {
-        const clientData = clients.find(c => c.user_id === profile.id);
-        return {
-          id: profile.id,
-          email: clientData?.email || profile.email,
-          first_name: clientData?.first_name || profile.first_name,
-          last_name: clientData?.last_name || profile.last_name,
-          role: profile.role // Use profile role as the source of truth
-        } satisfies User;
-      });
+      // Map clients to User type
+      const clientUsers = (clients || []).map(client => ({
+        id: client.id, // Use client's own ID instead of user_id
+        email: client.email,
+        first_name: client.first_name,
+        last_name: client.last_name,
+        role: client.role
+      }));
 
       // Combine non-client profiles with client users
       const allUsers: User[] = [
