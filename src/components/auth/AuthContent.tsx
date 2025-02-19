@@ -1,7 +1,5 @@
 
-import { SignUpDialog } from "./SignUpDialog";
 import { LoginForm } from "./LoginForm";
-import { Button } from "@/components/ui/button";
 import { AuthFormData } from "@/hooks/useAuthForm";
 
 interface AuthContentProps {
@@ -19,13 +17,10 @@ interface AuthContentProps {
 
 export const AuthContent = ({
   isLogin,
-  isModalOpen,
-  setIsModalOpen,
   formData,
   loading,
   onSubmit,
   onChange,
-  onSignInClick,
   onGoogleSignIn,
   onForgotPassword,
 }: AuthContentProps) => {
@@ -37,6 +32,7 @@ export const AuthContent = ({
       onChange={onChange}
       onGoogleSignIn={onGoogleSignIn}
       onForgotPassword={onForgotPassword}
+      isLogin={isLogin}
     />
   );
 };

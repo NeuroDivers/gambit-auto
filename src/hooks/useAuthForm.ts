@@ -77,8 +77,10 @@ export const useAuthForm = () => {
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth`,
-        },
+          data: {
+            email: formData.email,
+          }
+        }
       });
 
       if (error) {
@@ -88,13 +90,16 @@ export const useAuthForm = () => {
         throw error;
       }
 
-      console.log("Sign up response:", data);
-
       if (data?.user) {
-        toast({
-          title: "Success!",
-          description: "Please check your email to verify your account.",
+        // Sign in the user immediately after signup
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
         });
+
+        if (signInError) throw signInError;
+
+        navigate("/dashboard");
       }
     } catch (error: any) {
       console.error("Sign up error:", error);
@@ -129,7 +134,7 @@ export const useAuthForm = () => {
         throw error;
       }
 
-      console.log("Sign in response:", data);
+      navigate("/dashboard");
       return data;
     } catch (error: any) {
       console.error("Sign in error:", error);
