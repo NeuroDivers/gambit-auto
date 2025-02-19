@@ -29,15 +29,17 @@ export function DashboardLayout({
 
   const sidebarContent = (
     <SidebarContent className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-2">
+      <div className="px-4 py-2">
         <SidebarHeader 
           firstName={firstName}
           role={role}
           onLogout={onLogout}
         />
-        <SidebarTrigger />
       </div>
       <SidebarNav className="flex-1" onNavigate={() => setIsMobileMenuOpen(false)} />
+      <div className="mt-auto border-t p-4">
+        <SidebarTrigger className="w-full justify-between" />
+      </div>
     </SidebarContent>
   )
 
