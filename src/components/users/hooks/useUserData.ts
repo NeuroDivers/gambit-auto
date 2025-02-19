@@ -32,6 +32,7 @@ type ClientResponse = {
   user_id: string;
   phone_number?: string;
   address?: string;
+  role?: UserRole;
 };
 
 export const useUserData = () => {
@@ -62,27 +63,48 @@ export const useUserData = () => {
       console.log("Fetched profiles:", profiles);
 
       // Separate client profiles - we'll get their data from clients table
-      const clientProfiles = profiles.filter(profile => profile.role.name === 'client');
-      const nonClientProfiles = profiles.filter(profile => profile.role.name !== 'client');
+      const clientProfiles = profiles.filter(profile => profile.role?.name === 'client');
+      const nonClientProfiles = profiles.filter(profile => profile.role?.name !== 'client');
 
       // Get client data for client profiles
-      const { data: clients } = await supabase
-        .from("clients")
-        .select("*")
-        .in('user_id', clientProfiles.map(p => p.id));
+      let clients: ClientResponse[] = [];
+      if (clientProfiles.length > 0) {
+        const { data: clientsData, error: clientsError } = await supabase
+          .from("clients")
+          .select(`
+            id,
+            email,
+            first_name,
+            last_name,
+            user_id,
+            phone_number,
+            address,
+            role:role_id (
+              id,
+              name,
+              nicename
+            )
+          `)
+          .in('user_id', clientProfiles.map(p => p.id));
 
-      // No need to throw error if no clients found - just log it
+        if (clientsError) {
+          console.error("Error fetching clients:", clientsError);
+        } else {
+          clients = clientsData || [];
+        }
+      }
+
       console.log("Fetched clients:", clients);
 
       // Map client profiles to include client data
       const clientUsers = clientProfiles.map(profile => {
-        const clientData = clients?.find(c => c.user_id === profile.id);
+        const clientData = clients.find(c => c.user_id === profile.id);
         return {
           id: profile.id,
           email: clientData?.email || profile.email,
           first_name: clientData?.first_name || profile.first_name,
           last_name: clientData?.last_name || profile.last_name,
-          role: profile.role
+          role: clientData?.role || profile.role
         } satisfies User;
       });
 
