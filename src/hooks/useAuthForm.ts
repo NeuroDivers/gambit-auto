@@ -26,48 +26,6 @@ export const useAuthForm = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const handleRoleBasedRedirect = async (userId: string) => {
-    try {
-      console.log("Checking user role for redirect...");
-      // Get user role from profiles
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select(`
-          role:role_id!inner (
-            name,
-            nicename
-          )
-        `)
-        .eq("id", userId)
-        .single<RoleData>();
-
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        throw profileError;
-      }
-
-      if (!profileData?.role) {
-        console.error("No role found for user");
-        throw new Error("No role found for user");
-      }
-
-      console.log("Profile data for redirect:", profileData);
-
-      // Redirect based on role
-      if (profileData.role.name.toLowerCase() === 'client') {
-        console.log("Redirecting to client dashboard");
-        navigate("/client", { replace: true });
-      } else {
-        console.log("Redirecting to admin dashboard");
-        navigate("/admin", { replace: true });
-      }
-    } catch (error) {
-      console.error("Error during role-based redirect:", error);
-      // Default to client route if role check fails
-      navigate("/client", { replace: true });
-    }
-  };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -123,25 +81,14 @@ export const useAuthForm = () => {
       }
 
       if (signUpData?.user) {
-        console.log("User signed up successfully, attempting immediate sign in");
-        // Sign in the user immediately after signup
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        });
-
-        if (signInError) throw signInError;
-
-        // Wait a moment for the session to be fully established
-        setTimeout(async () => {
-          // Redirect based on role
-          await handleRoleBasedRedirect(signUpData.user.id);
-        }, 1000);
-        
+        console.log("User signed up successfully");
         toast({
           title: "Welcome!",
-          description: "Your account has been created successfully.",
+          description: "Your account has been created successfully. Please check your email for verification.",
         });
+        
+        // By default, redirect to client route since all new signups are clients
+        navigate("/client", { replace: true });
       }
     } catch (error: any) {
       console.error("Sign up error:", error);
@@ -177,11 +124,36 @@ export const useAuthForm = () => {
       }
 
       if (data?.user) {
-        // Wait a moment for the session to be fully established
-        setTimeout(async () => {
-          // Redirect based on role
-          await handleRoleBasedRedirect(data.user.id);
-        }, 1000);
+        // Check if user has a profile (internal staff)
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select(`
+            role:role_id (
+              name,
+              nicename
+            )
+          `)
+          .eq('id', data.user.id)
+          .single<RoleData>();
+
+        if (profileError && profileError.code !== 'PGRST116') {
+          console.error('Error checking user role:', profileError);
+          throw profileError;
+        }
+
+        // If user has a profile, they're internal staff, otherwise they're a client
+        if (profileData?.role) {
+          console.log("Internal staff logged in, redirecting to admin");
+          navigate("/admin", { replace: true });
+        } else {
+          console.log("Client logged in, redirecting to client dashboard");
+          navigate("/client", { replace: true });
+        }
+
+        toast({
+          title: "Welcome back!",
+          description: "You have been successfully logged in.",
+        });
       }
       
       return data;
