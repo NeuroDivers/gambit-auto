@@ -34,7 +34,7 @@ export function Header({ firstName, role, onLogout }: HeaderProps) {
           Welcome, {firstName || 'Guest'}
         </span>
         {role && (
-          <Badge variant="secondary" className="capitalize">
+          <Badge variant="default" className="capitalize bg-primary text-primary-foreground">
             {role.nicename}
           </Badge>
         )}
