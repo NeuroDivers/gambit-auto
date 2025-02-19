@@ -103,7 +103,7 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
             isActive
 
           return cn(
-            "flex items-center gap-3 rounded-lg text-base font-medium transition-colors hover:bg-accent hover:text-accent-foreground w-full",
+            "flex items-center gap-3 rounded-lg text-base font-medium transition-colors hover:bg-accent hover:text-accent-foreground w-full overflow-hidden",
             "px-4 py-3",
             activeState ? "bg-accent text-accent-foreground" : "text-foreground",
             isCollapsed && "justify-center h-10 w-10 p-2"
@@ -111,7 +111,7 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
         }}
       >
         <item.icon className="h-5 w-5 shrink-0" />
-        {!isCollapsed && <span className="truncate w-full">{item.title}</span>}
+        {!isCollapsed && <span className="truncate text-ellipsis">{item.title}</span>}
       </NavLink>
     )
 
