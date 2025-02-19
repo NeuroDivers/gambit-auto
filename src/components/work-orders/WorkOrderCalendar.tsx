@@ -56,10 +56,7 @@ export function WorkOrderCalendar({ clientView = false }: WorkOrderCalendarProps
   return (
     <div className="space-y-6">
       {!clientView && (
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl md:text-3xl font-bold">
-            Work Orders - {format(currentDate, 'MMMM yyyy')}
-          </h1>
+        <div className="flex items-center justify-end">
           <CreateWorkOrderDialog 
             open={showCreateDialog} 
             onOpenChange={setShowCreateDialog} 
