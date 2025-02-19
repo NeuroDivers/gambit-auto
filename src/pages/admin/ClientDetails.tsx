@@ -1,3 +1,4 @@
+
 import { useParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -37,7 +38,7 @@ export default function ClientDetails() {
             status,
             created_at
           ),
-          quotes (
+          quotes!quotes_client_id_fkey (
             id,
             quote_number,
             total,
