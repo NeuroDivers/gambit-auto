@@ -215,11 +215,22 @@ export default function ClientDetails() {
                 tickFormatter={(value) => `$${value}`}
               />
               <Tooltip 
-                cursor={{ fill: 'var(--muted)' }}
+                cursor={false}
                 contentStyle={{
-                  backgroundColor: 'var(--background)',
-                  border: '1px solid var(--border)',
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
                   borderRadius: '6px',
+                  padding: '8px 12px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                }}
+                labelStyle={{
+                  color: 'hsl(var(--foreground))',
+                  fontWeight: 500,
+                  marginBottom: '4px',
+                }}
+                itemStyle={{
+                  color: 'hsl(var(--foreground))',
+                  fontSize: '14px',
                 }}
                 formatter={(value: number) => [`$${value.toFixed(2)}`, 'Amount']}
               />
