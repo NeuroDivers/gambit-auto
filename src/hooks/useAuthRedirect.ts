@@ -3,15 +3,10 @@ import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
-interface Role {
-  id: string;
-  name: string;
-  nicename: string;
-}
-
-type ProfileWithRole = {
-  id: string;
-  role: Role;
+interface UserRole {
+  role_name: string | null;
+  role_nicename: string | null;
+  user_type: string | null;
 }
 
 export const useAuthRedirect = () => {
@@ -20,10 +15,9 @@ export const useAuthRedirect = () => {
 
   useEffect(() => {
     const checkUserType = async (userId: string) => {
-      // Use the new get_user_role RPC function
       const { data: userRole, error } = await supabase
         .rpc('get_user_role', {
-          user_id: userId
+          input_user_id: userId
         })
         .single();
 
@@ -34,7 +28,7 @@ export const useAuthRedirect = () => {
 
       if (userRole) {
         console.log("Found user role:", userRole);
-        return userRole;
+        return userRole as UserRole;
       }
 
       console.log("No user role found");
@@ -59,15 +53,12 @@ export const useAuthRedirect = () => {
         console.log("Session found on auth page, checking user type...");
         const userRole = await checkUserType(session.user.id);
         
-        if (userRole?.user_type === 'client') {
-          console.log("Redirecting client to client dashboard");
-          navigate("/client", { replace: true });
-        } else if (userRole?.user_type === 'staff') {
+        if (userRole?.user_type === 'staff') {
           console.log("Redirecting staff to admin dashboard");
           navigate("/admin", { replace: true });
         } else {
-          // If no role found but we have a session, assume client
-          console.log("No specific role found, defaulting to client dashboard");
+          // All other users (including clients and unknown roles) go to client dashboard
+          console.log("Redirecting to client dashboard");
           navigate("/client", { replace: true });
         }
         return;
@@ -90,15 +81,12 @@ export const useAuthRedirect = () => {
           console.log("User signed in, checking user type");
           const userRole = await checkUserType(session.user.id);
           
-          if (userRole?.user_type === 'client') {
-            console.log("Redirecting client to client dashboard");
-            navigate("/client", { replace: true });
-          } else if (userRole?.user_type === 'staff') {
+          if (userRole?.user_type === 'staff') {
             console.log("Redirecting staff to admin dashboard");
             navigate("/admin", { replace: true });
           } else {
-            // If no role found but we have a session, assume client
-            console.log("No specific role found, defaulting to client dashboard");
+            // All other users (including clients and unknown roles) go to client dashboard
+            console.log("Redirecting to client dashboard");
             navigate("/client", { replace: true });
           }
         } else if (event === 'SIGNED_OUT') {
