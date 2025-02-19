@@ -221,36 +221,6 @@ export type Database = {
         }
         Relationships: []
       }
-      employees: {
-        Row: {
-          active: boolean | null
-          created_at: string
-          email: string
-          id: string
-          name: string
-          role: Database["public"]["Enums"]["user_role"]
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean | null
-          created_at?: string
-          email: string
-          id?: string
-          name: string
-          role?: Database["public"]["Enums"]["user_role"]
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean | null
-          created_at?: string
-          email?: string
-          id?: string
-          name?: string
-          role?: Database["public"]["Enums"]["user_role"]
-          updated_at?: string
-        }
-        Relationships: []
-      }
       invoice_items: {
         Row: {
           created_at: string
