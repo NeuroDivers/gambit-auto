@@ -48,17 +48,18 @@ export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
       fullName.includes(searchTerm) || 
       email.includes(searchTerm);
     
-    // Role filtering
-    const matchesRole = roleFilter === "all" || 
-      (user.role?.name && user.role.name.toLowerCase() === roleFilter.toLowerCase());
+    // Role filtering - ensure we're comparing role names correctly
+    const userRoleName = user.role?.name?.toLowerCase() || '';
+    const currentRoleFilter = roleFilter.toLowerCase();
     
     console.log('Filtering user:', {
       user,
-      searchTerm,
-      matchesSearch,
-      roleFilter,
-      matchesRole
+      userRoleName,
+      currentRoleFilter,
+      matchesRole: currentRoleFilter === 'all' || userRoleName === currentRoleFilter
     });
+    
+    const matchesRole = currentRoleFilter === 'all' || userRoleName === currentRoleFilter;
     
     return matchesSearch && matchesRole;
   });
