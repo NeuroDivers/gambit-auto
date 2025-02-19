@@ -31,7 +31,7 @@ export default function ClientDetails() {
         .from('clients')
         .select(`
           *,
-          profile:user_id (
+          profiles!clients_user_id_fkey (
             last_sign_in_at
           ),
           invoices (
@@ -87,7 +87,7 @@ export default function ClientDetails() {
 
       return {
         ...clientData,
-        last_sign_in_at: clientData?.profile?.last_sign_in_at,
+        last_sign_in_at: clientData?.profiles?.last_sign_in_at,
         monthlySpending,
         total_spent,
         total_invoices,
