@@ -80,14 +80,14 @@ export function ClientLayout({
   }
 
   return (
-    <SidebarProvider defaultState="expanded">
-      <div className={cn("flex h-screen w-full overflow-hidden bg-background")}>
+    <div className={cn("flex h-screen w-full overflow-hidden bg-background")}>
+      <SidebarProvider>
         <Sidebar>
           {sidebarContent}
           <SidebarRail />
         </Sidebar>
-        <main className="flex-1 overflow-auto p-4 bg-background">{children}</main>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+      <main className="flex-1 overflow-auto p-4 bg-background">{children}</main>
+    </div>
   )
 }
