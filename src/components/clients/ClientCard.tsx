@@ -37,7 +37,7 @@ export function ClientCard({
 
   return (
     <Card 
-      className="overflow-hidden transition-all duration-200 hover:border-primary/30"
+      className="bg-card border border-border/50 rounded-lg transition-all duration-200 hover:border-primary/30"
       onClick={handleCardClick}
     >
       <CardHeader className="space-y-0 pb-2">
@@ -62,7 +62,7 @@ export function ClientCard({
                 e.stopPropagation()
                 onEdit()
               }}
-              className="text-muted-foreground hover:text-primary"
+              className="text-muted-foreground hover:text-primary hover:bg-primary/10"
             >
               <UserCog className="h-4 w-4" />
             </Button>
@@ -92,7 +92,7 @@ export function ClientCard({
             <Button
               variant="outline"
               size="sm"
-              className="flex-1 gap-2 hover:bg-primary/10 hover:text-primary hover:border-primary/20"
+              className="flex-1 gap-2 text-muted-foreground hover:text-primary-foreground hover:bg-primary hover:border-primary"
               onClick={handleCreateQuote}
             >
               <Quote className="h-4 w-4" />
@@ -101,7 +101,7 @@ export function ClientCard({
             <Button
               variant="outline"
               size="sm"
-              className="flex-1 gap-2 hover:bg-primary/10 hover:text-primary hover:border-primary/20"
+              className="flex-1 gap-2 text-muted-foreground hover:text-primary-foreground hover:bg-primary hover:border-primary"
               onClick={handleCreateInvoice}
             >
               <FileText className="h-4 w-4" />
