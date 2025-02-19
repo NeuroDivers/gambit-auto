@@ -1,4 +1,3 @@
-
 import { useParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -26,14 +25,11 @@ export default function ClientDetails() {
   const { data: client, isLoading } = useQuery({
     queryKey: ['client', id],
     queryFn: async () => {
-      // Fetch client details with profile data for last sign in
+      // Fetch client details
       const { data: clientData, error: clientError } = await supabase
         .from('clients')
         .select(`
           *,
-          profiles!clients_user_id_fkey (
-            last_sign_in_at
-          ),
           invoices (
             id,
             invoice_number,
@@ -87,7 +83,6 @@ export default function ClientDetails() {
 
       return {
         ...clientData,
-        last_sign_in_at: clientData?.profiles?.last_sign_in_at,
         monthlySpending,
         total_spent,
         total_invoices,
