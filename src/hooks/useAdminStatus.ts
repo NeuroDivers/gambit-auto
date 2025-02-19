@@ -10,7 +10,7 @@ interface Role {
 
 interface Profile {
   id: string;
-  roles: Role;
+  role_id: Role;
 }
 
 export const useAdminStatus = () => {
@@ -31,7 +31,7 @@ export const useAdminStatus = () => {
           .from('profiles')
           .select(`
             id,
-            roles:role_id (
+            role_id:roles (
               id,
               name,
               nicename
@@ -46,13 +46,13 @@ export const useAdminStatus = () => {
           return;
         }
 
-        if (!data || !data.roles) {
+        if (!data || !data.role_id) {
           console.log("No profile or role data found - user is a client");
           setIsAdmin(false);
           return;
         }
 
-        const userRole = data.roles.name.toLowerCase();
+        const userRole = data.role_id.name.toLowerCase();
         console.log("Checking admin status, user role:", userRole);
         
         // Consider both administrator and king as admin roles
