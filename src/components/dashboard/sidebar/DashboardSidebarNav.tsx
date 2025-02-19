@@ -40,6 +40,8 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
       title: "Dashboard",
       icon: Home,
       to: "/admin",
+      // This makes the dashboard link active for any route starting with /admin
+      isActive: (path: string) => path.startsWith('/admin'),
     },
     {
       title: "Work Orders",
@@ -93,14 +95,24 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
     const content = (
       <NavLink 
         to={item.to}
-        className={({ isActive }) => cn(
-          "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-accent hover:text-accent-foreground min-w-0",
-          isActive ? "bg-accent text-accent-foreground" : "text-foreground",
-          isCollapsed && "justify-center px-2"
-        )}
+        className={({ isActive }) => {
+          // Use custom isActive function for dashboard, otherwise use default isActive
+          const activeState = item.isActive ? 
+            item.isActive(window.location.pathname) : 
+            isActive
+
+          return cn(
+            "flex items-center gap-3 rounded-lg px-4 py-2 text-base font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+            activeState ? "bg-accent text-accent-foreground" : "text-foreground",
+            isCollapsed && "h-9 w-9 p-0 justify-center"
+          )
+        }}
         onClick={onClick}
       >
-        <item.icon className="h-5 w-5 shrink-0" />
+        <item.icon className={cn(
+          "h-5 w-5 shrink-0",
+          isCollapsed && "h-4 w-4"
+        )} />
         <span className={cn(
           "truncate",
           isCollapsed && "hidden"
