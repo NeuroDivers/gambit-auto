@@ -20,18 +20,18 @@ interface UserRole {
   nicename: string;
 }
 
-interface ProfileResponse {
-  role: UserRole;
+type ProfileWithRole = {
+  role: UserRole | null;
 }
 
-interface ClientResponse {
-  role: UserRole;
+type ClientWithRole = {
+  role: UserRole | null;
 }
 
 export const usePermissions = () => {
-  const { data: currentUserRole } = useQuery<UserRole | null>({
+  const { data: currentUserRole, isLoading: isRoleLoading } = useQuery<UserRole | null>({
     queryKey: ["current-user-role"],
-    queryFn: async () => {
+    queryFn: async (): Promise<UserRole | null> => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -50,7 +50,7 @@ export const usePermissions = () => {
             )
           `)
           .eq('id', user.id)
-          .maybeSingle();
+          .maybeSingle<ProfileWithRole>();
 
         if (profileError) {
           console.error('Error fetching profile:', profileError);
@@ -70,7 +70,7 @@ export const usePermissions = () => {
             )
           `)
           .eq('user_id', user.id)
-          .maybeSingle();
+          .maybeSingle<ClientWithRole>();
 
         if (clientError) {
           console.error('Error fetching client:', clientError);
@@ -163,5 +163,6 @@ export const usePermissions = () => {
     permissions,
     checkPermission,
     currentUserRole,
+    isRoleLoading
   };
 };
