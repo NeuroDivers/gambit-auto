@@ -28,7 +28,9 @@ export function Header({ firstName, role, onLogout }: HeaderProps) {
     <header className="flex h-16 items-center px-6 border-b">
       <NavLink to="/dashboard" className="flex items-center gap-2">
         <LayoutDashboard className="h-6 w-6" />
-        <span className="font-semibold text-lg">Acme</span>
+        <span className="font-semibold text-lg">
+          Welcome, {firstName || 'Guest'}
+        </span>
       </NavLink>
       <nav className="ml-auto flex items-center gap-4">
         <DropdownMenu>
