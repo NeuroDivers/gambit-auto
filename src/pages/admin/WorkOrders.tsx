@@ -11,6 +11,7 @@ import { useAdminStatus } from "@/hooks/useAdminStatus"
 
 export default function WorkOrders() {
   const [view, setView] = React.useState<"list" | "calendar">("list")
+  const [showBlockedDates, setShowBlockedDates] = React.useState(false)
   const { isAdmin } = useAdminStatus()
 
   return (
@@ -27,7 +28,11 @@ export default function WorkOrders() {
                 <CalendarIcon className="h-4 w-4" />
               </ToggleGroupItem>
             </ToggleGroup>
-            {isAdmin && <BlockedDatesDialog />}
+            {isAdmin && (
+              <Button variant="outline" onClick={() => setShowBlockedDates(true)}>
+                Manage Blocked Dates
+              </Button>
+            )}
             <Link to="/admin/work-orders/create">
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
@@ -45,6 +50,11 @@ export default function WorkOrders() {
           <WorkOrderCalendar />
         </div>
       )}
+
+      <BlockedDatesDialog
+        open={showBlockedDates}
+        onOpenChange={setShowBlockedDates}
+      />
     </div>
   )
 }
