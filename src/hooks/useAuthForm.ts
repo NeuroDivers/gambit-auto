@@ -7,27 +7,66 @@ import { useLocation, useNavigate } from "react-router-dom";
 export interface AuthFormData {
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
 }
 
-interface UserRoleResponse {
-  role_name: string;
-  role_nicename: string;
-  user_type: string;
+interface RoleData {
+  role: {
+    name: string;
+    nicename: string;
+  };
 }
 
 export const useAuthForm = () => {
   const [formData, setFormData] = useState<AuthFormData>({
     email: "",
     password: "",
-    firstName: "",
-    lastName: ""
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const handleRoleBasedRedirect = async (userId: string) => {
+    try {
+      console.log("Checking user role for redirect...");
+      // Get user role from profiles
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select(`
+          role:role_id!inner (
+            name,
+            nicename
+          )
+        `)
+        .eq("id", userId)
+        .single<RoleData>();
+
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        throw profileError;
+      }
+
+      if (!profileData?.role) {
+        console.error("No role found for user");
+        throw new Error("No role found for user");
+      }
+
+      console.log("Profile data for redirect:", profileData);
+
+      // Redirect based on role
+      if (profileData.role.name.toLowerCase() === 'client') {
+        console.log("Redirecting to client dashboard");
+        navigate("/client", { replace: true });
+      } else {
+        console.log("Redirecting to admin dashboard");
+        navigate("/admin", { replace: true });
+      }
+    } catch (error) {
+      console.error("Error during role-based redirect:", error);
+      // Default to client route if role check fails
+      navigate("/client", { replace: true });
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -71,8 +110,6 @@ export const useAuthForm = () => {
         password: formData.password,
         options: {
           data: {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
             email: formData.email,
           }
         }
@@ -86,13 +123,25 @@ export const useAuthForm = () => {
       }
 
       if (signUpData?.user) {
-        console.log("User signed up successfully");
+        console.log("User signed up successfully, attempting immediate sign in");
+        // Sign in the user immediately after signup
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (signInError) throw signInError;
+
+        // Wait a moment for the session to be fully established
+        setTimeout(async () => {
+          // Redirect based on role
+          await handleRoleBasedRedirect(signUpData.user.id);
+        }, 1000);
+        
         toast({
           title: "Welcome!",
-          description: "Your account has been created successfully. Please check your email for verification.",
+          description: "Your account has been created successfully.",
         });
-        
-        navigate("/client", { replace: true });
       }
     } catch (error: any) {
       console.error("Sign up error:", error);
@@ -101,7 +150,6 @@ export const useAuthForm = () => {
         title: "Error",
         description: error.message,
       });
-      throw error;
     } finally {
       setLoading(false);
     }
@@ -129,29 +177,11 @@ export const useAuthForm = () => {
       }
 
       if (data?.user) {
-        // Get user role using RPC function with proper typing
-        const { data: roleData, error: roleError } = await supabase
-          .rpc('get_user_role', {
-            input_user_id: data.user.id
-          })
-          .single<UserRoleResponse>();
-
-        if (roleError) {
-          console.error('Error checking user role:', roleError);
-          // Default to client dashboard if role check fails
-          navigate("/client", { replace: true });
-        } else {
-          if (roleData?.user_type === 'staff') {
-            navigate("/admin", { replace: true });
-          } else {
-            navigate("/client", { replace: true });
-          }
-        }
-
-        toast({
-          title: "Welcome back!",
-          description: "You have been successfully logged in.",
-        });
+        // Wait a moment for the session to be fully established
+        setTimeout(async () => {
+          // Redirect based on role
+          await handleRoleBasedRedirect(data.user.id);
+        }, 1000);
       }
       
       return data;
@@ -172,8 +202,6 @@ export const useAuthForm = () => {
     setFormData({
       email: "",
       password: "",
-      firstName: "",
-      lastName: ""
     });
   };
 

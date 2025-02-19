@@ -14,21 +14,17 @@ interface RoleManagementProps {
 }
 
 export const RoleManagement = ({ onRoleSelect }: RoleManagementProps) => {
-  const { data: roleStats, isLoading } = useRoleStats();
+  const { data: roleStats } = useRoleStats();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { isAdmin } = useAdminStatus();
   useRoleSubscription();
-
-  if (isLoading) {
-    return <div>Loading role statistics...</div>;
-  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-xl font-semibold mb-2 text-foreground">Role Overview</h3>
-          <p className="text-sm text-muted-foreground">
+          <h3 className="text-xl font-semibold mb-2 text-white/[0.87]">Role Overview</h3>
+          <p className="text-sm text-white/60">
             Current distribution of user roles
           </p>
         </div>
@@ -40,25 +36,18 @@ export const RoleManagement = ({ onRoleSelect }: RoleManagementProps) => {
         )}
       </div>
       
-      {roleStats && Object.keys(roleStats).length > 0 ? (
-        <>
-          <RoleDistributionChart roleStats={roleStats} />
-          <div className="grid gap-4">
-            {Object.entries(roleStats).map(([role, count]) => (
-              <RoleStatsCard 
-                key={role} 
-                role={role} 
-                count={count} 
-                onRoleSelect={onRoleSelect}
-              />
-            ))}
-          </div>
-        </>
-      ) : (
-        <div className="text-center py-8 text-muted-foreground">
-          No roles found. {isAdmin && 'Click "Create Role" to add one.'}
-        </div>
-      )}
+      {roleStats && <RoleDistributionChart roleStats={roleStats} />}
+
+      <div className="grid gap-4">
+        {roleStats && Object.entries(roleStats).map(([role, count]) => (
+          <RoleStatsCard 
+            key={role} 
+            role={role} 
+            count={count} 
+            onRoleSelect={onRoleSelect}
+          />
+        ))}
+      </div>
 
       <RoleDialog 
         open={isDialogOpen} 

@@ -21,17 +21,15 @@ interface HeaderProps {
     nicename: string;
   } | null;
   onLogout?: () => void;
-  children?: React.ReactNode;
 }
 
-export function Header({ firstName, role, onLogout, children }: HeaderProps) {
+export function Header({ firstName, role, onLogout }: HeaderProps) {
   const isAdmin = role?.name?.toLowerCase() === 'administrator';
   const baseRoute = isAdmin ? '/admin' : '/client';
 
   return (
     <header className="flex h-16 items-center px-6 border-b">
-      <div className="flex items-center gap-4">
-        {children}
+      <div className="flex items-center gap-2">
         <span className="font-semibold text-lg">
           Welcome, {firstName || 'Guest'}
         </span>

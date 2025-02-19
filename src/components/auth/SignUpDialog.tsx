@@ -1,77 +1,79 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { LoginForm } from "./LoginForm";
-import { useState } from "react";
-import { AuthFormData, useAuthForm } from "@/hooks/useAuthForm";
 
 interface SignUpDialogProps {
-  open: boolean;
+  isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
+  formData: {
+    email: string;
+    password: string;
+  };
+  loading: boolean;
+  onSubmit: (e: React.FormEvent) => void;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSignInClick: () => void;
+  onGoogleSignIn: () => void;
 }
 
-export function SignUpDialog({ open, onOpenChange, onSuccess }: SignUpDialogProps) {
-  const [formData, setFormData] = useState<AuthFormData>({
-    email: "",
-    password: "",
-    firstName: "",
-    lastName: ""
-  });
-  const [loading, setLoading] = useState(false);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (loading) return;
-
-    setLoading(true);
-    try {
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-          },
-        },
-      });
-
-      if (error) throw error;
-
-      onOpenChange(false);
-      onSuccess?.();
-    } catch (error) {
-      console.error("Sign up error:", error);
-    } finally {
-      setLoading(false);
-    }
+export const SignUpDialog = ({
+  isOpen,
+  onOpenChange,
+  formData,
+  loading,
+  onSubmit,
+  onChange,
+  onSignInClick,
+  onGoogleSignIn,
+}: SignUpDialogProps) => {
+  // Since this is a sign-up dialog, we'll provide a no-op function for forgot password
+  const handleForgotPassword = () => {
+    onOpenChange(false); // Close the signup dialog
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogTrigger asChild>
+        <Button
+          type="button"
+          variant="link"
+          className="text-primary hover:underline"
+        >
+          Don't have an account? Sign up
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Create an account</DialogTitle>
+          <DialogTitle>Create Account</DialogTitle>
         </DialogHeader>
-        <LoginForm
-          formData={formData}
-          loading={loading}
-          onSubmit={handleSubmit}
-          onChange={handleInputChange}
-          onGoogleSignIn={() => {}}
-          onForgotPassword={() => {}}
-          isLogin={false}
-        />
+        <div className="space-y-4">
+          <LoginForm
+            formData={formData}
+            loading={loading}
+            onSubmit={onSubmit}
+            onChange={onChange}
+            onGoogleSignIn={onGoogleSignIn}
+            onForgotPassword={handleForgotPassword}
+          />
+          <div className="text-center">
+            <Button
+              type="button"
+              variant="link"
+              className="text-primary hover:underline"
+              onClick={onSignInClick}
+            >
+              Already have an account? Sign in
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
-}
+};
