@@ -1,101 +1,45 @@
 
-import { Sidebar, SidebarContent, SidebarProvider, SidebarRail, SidebarTrigger } from "@/components/ui/sidebar"
-import { cn } from "@/lib/utils"
-import { Header } from "../shared/Header"
+import React from "react"
 import { DashboardSidebarNav } from "./sidebar/DashboardSidebarNav"
 import { DashboardSidebarHeader } from "./sidebar/DashboardSidebarHeader"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { useState } from "react"
-import { ProfileCompletionDialog } from "../profile/ProfileCompletionDialog"
+import { Button } from "@/components/ui/button"
+import { LogOut } from "lucide-react"
 
 interface DashboardLayoutProps {
-  firstName?: string | null
-  role?: {
-    id: string
-    name: string
-    nicename: string
-  } | null
-  onLogout: () => void
   children: React.ReactNode
+  firstName?: string | null
+  onLogout: () => void
 }
 
 export function DashboardLayout({
-  firstName,
-  role,
-  onLogout,
   children,
+  firstName,
+  onLogout
 }: DashboardLayoutProps) {
-  const isMobile = useIsMobile()
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-
-  const sidebarContent = (
-    <SidebarContent className="flex flex-col h-full">
-      <div className="px-4 py-2">
-        <DashboardSidebarHeader 
-          firstName={firstName}
-          role={role}
-          onLogout={onLogout}
-        />
-      </div>
-      <DashboardSidebarNav onNavigate={() => setIsMobileMenuOpen(false)} />
-      <div className="mt-auto border-t p-4">
-        <SidebarTrigger size="sm" variant="ghost" className="mx-auto" />
-      </div>
-    </SidebarContent>
-  )
-
-  if (isMobile) {
-    return (
-      <div className={cn("min-h-screen w-full bg-background text-foreground")}>
-        <ProfileCompletionDialog />
-        <Header 
-          firstName={firstName}
-          role={role}
-          onLogout={onLogout}
-        />
-
-        <div className={cn(
-          "fixed inset-0 bg-background z-40 transform transition-transform duration-300 ease-in-out",
-          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        )}>
-          <div className="h-screen pt-16">
-            {sidebarContent}
-          </div>
-        </div>
-
-        <main className={cn(
-          "flex-1 p-4 transition-all duration-300 ease-in-out bg-background",
-          isMobileMenuOpen ? "opacity-50" : "opacity-100"
-        )}>
-          {children}
-        </main>
-      </div>
-    )
-  }
-
   return (
-    <SidebarProvider defaultOpen>
-      <div className={cn("flex h-screen w-full overflow-hidden bg-background")}
-        style={{ 
-          "--sidebar-width-icon": "4rem",
-        } as React.CSSProperties}
-      >
-        <ProfileCompletionDialog />
-        <Sidebar className="border-r" collapsible="icon">
-          {sidebarContent}
-          <SidebarRail />
-        </Sidebar>
-        <div className="flex-1 overflow-hidden flex flex-col">
-          <Header 
-            firstName={firstName}
-            role={role}
-            onLogout={onLogout}
-          />
-          <main className="flex-1 overflow-auto p-4 bg-background">
-            {children}
-          </main>
+    <div className="flex min-h-screen">
+      {/* Sidebar */}
+      <aside className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 z-[80] bg-background w-72 border-r">
+        <DashboardSidebarHeader firstName={firstName} />
+        <div className="space-y-4 flex-1 py-4">
+          <DashboardSidebarNav />
         </div>
-      </div>
-    </SidebarProvider>
+        <div className="p-4 border-t">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-2" 
+            onClick={onLogout}
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
+        </div>
+      </aside>
+
+      {/* Main content */}
+      <main className="flex-1 lg:pl-72">
+        {children}
+      </main>
+    </div>
   )
 }
