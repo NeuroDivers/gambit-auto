@@ -16,6 +16,24 @@ export type User = {
   role?: UserRole;
 };
 
+type ProfileResponse = {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  role: UserRole;
+};
+
+type ClientResponse = {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  user_id: string;
+  phone_number?: string;
+  address?: string;
+};
+
 export const useUserData = () => {
   return useQuery({
     queryKey: ["users"],
@@ -33,7 +51,8 @@ export const useUserData = () => {
             name,
             nicename
           )
-        `);
+        `)
+        .returns<ProfileResponse[]>();
 
       if (profilesError) {
         console.error("Error fetching profiles:", profilesError);
@@ -43,14 +62,15 @@ export const useUserData = () => {
       console.log("Fetched profiles:", profiles);
 
       // Separate client profiles - we'll get their data from clients table
-      const clientProfiles = profiles.filter(profile => profile.role?.name === 'client');
-      const nonClientProfiles = profiles.filter(profile => profile.role?.name !== 'client');
+      const clientProfiles = profiles.filter(profile => profile.role.name === 'client');
+      const nonClientProfiles = profiles.filter(profile => profile.role.name !== 'client');
 
       // Get client data for client profiles
       const { data: clients, error: clientsError } = await supabase
         .from("clients")
         .select("*")
-        .in('user_id', clientProfiles.map(p => p.id));
+        .in('user_id', clientProfiles.map(p => p.id))
+        .returns<ClientResponse[]>();
 
       if (clientsError) {
         console.error("Error fetching clients:", clientsError);
@@ -63,23 +83,17 @@ export const useUserData = () => {
         return {
           id: profile.id,
           email: clientData?.email || profile.email,
-          first_name: clientData?.first_name,
-          last_name: clientData?.last_name,
+          first_name: clientData?.first_name || profile.first_name,
+          last_name: clientData?.last_name || profile.last_name,
           role: profile.role
-        };
+        } satisfies User;
       });
 
       // Combine non-client profiles with client users
-      const allUsers = [
+      const allUsers: User[] = [
         ...nonClientProfiles,
         ...clientUsers
-      ].map(user => ({
-        id: user.id,
-        email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        role: user.role
-      })) as User[];
+      ];
 
       return allUsers;
     },
