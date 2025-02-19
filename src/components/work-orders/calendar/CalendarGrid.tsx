@@ -1,5 +1,5 @@
 
-import { useMediaQuery } from "@/hooks/use-mobile"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { DesktopCalendarView } from "./DesktopCalendarView"
 import { MobileCalendarView } from "./mobile/MobileCalendarView"
 import { WorkOrder } from "../types"
@@ -12,14 +12,11 @@ type CalendarGridProps = {
 }
 
 export function CalendarGrid({ currentDate, workOrders, onDateChange }: CalendarGridProps) {
-  const isMobile = useMediaQuery("(max-width: 768px)")
-  const { data: blockedDates = [] } = useBlockedDates()
+  const isMobile = useIsMobile()
+  const { blockedDates = [] } = useBlockedDates()
 
-  const handleClick = (date: Date, e: React.MouseEvent) => {
-    // Only handle date clicks if it's not from a button click
-    if (!(e.target instanceof HTMLButtonElement)) {
-      onDateChange?.(date)
-    }
+  const handleClick = (date: Date) => {
+    onDateChange?.(date)
   }
 
   if (isMobile) {

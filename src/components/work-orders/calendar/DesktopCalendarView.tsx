@@ -11,27 +11,27 @@ import { BlockedDate } from "./types"
 type DesktopCalendarViewProps = {
   currentDate: Date
   workOrders: WorkOrder[]
-  onDateChange?: (date: Date, e: React.MouseEvent) => void
+  onDateChange?: (date: Date) => void
   blockedDates: BlockedDate[]
 }
 
 export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blockedDates }: DesktopCalendarViewProps) {
   const [showMonthPicker, setShowMonthPicker] = useState(false)
 
-  const handlePreviousMonth = () => {
+  const handlePreviousMonth = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
     const prevMonth = new Date(currentDate)
     prevMonth.setMonth(prevMonth.getMonth() - 1)
-    if (onDateChange) {
-      onDateChange(prevMonth, new Event('click') as unknown as React.MouseEvent)
-    }
+    onDateChange?.(prevMonth)
   }
 
-  const handleNextMonth = () => {
+  const handleNextMonth = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
     const nextMonth = new Date(currentDate)
     nextMonth.setMonth(nextMonth.getMonth() + 1)
-    if (onDateChange) {
-      onDateChange(nextMonth, new Event('click') as unknown as React.MouseEvent)
-    }
+    onDateChange?.(nextMonth)
   }
 
   const monthStart = startOfMonth(currentDate)
@@ -61,22 +61,14 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange, blo
           <Button 
             variant="outline" 
             size="icon"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              handlePreviousMonth()
-            }}
+            onClick={handlePreviousMonth}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button 
             variant="outline" 
             size="icon"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              handleNextMonth()
-            }}
+            onClick={handleNextMonth}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
