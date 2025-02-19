@@ -1,3 +1,4 @@
+
 import { Tables } from "@/integrations/supabase/types"
 
 type InvoiceBusinessInfoProps = {
@@ -10,9 +11,9 @@ export function InvoiceBusinessInfo({ businessProfile, logo_url }: InvoiceBusine
 
   return (
     <div className="flex items-start gap-4 w-full md:w-auto">
-      {businessProfile.logo_url && (
+      {businessProfile.light_logo_url && (
         <img 
-          src={businessProfile.logo_url} 
+          src={businessProfile.light_logo_url} 
           alt="Business Logo" 
           className="h-16 w-16 object-contain"
           onError={(e) => {
