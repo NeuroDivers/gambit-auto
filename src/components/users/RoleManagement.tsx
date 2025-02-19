@@ -1,69 +1,65 @@
 
-import { useRoleStats } from "./hooks/useRoleStats";
-import { useRoleSubscription } from "./hooks/useRoleSubscription";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { RoleStatsCard } from "./RoleStatsCard";
-import { RoleDistributionChart } from "./RoleDistributionChart";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { useState } from "react";
-import { RoleDialog } from "./roles/RoleDialog";
-import { useAdminStatus } from "@/hooks/useAdminStatus";
 
 interface RoleManagementProps {
-  onRoleSelect?: (role: string) => void;
+  onRoleSelect: (role: string) => void;
 }
 
 export const RoleManagement = ({ onRoleSelect }: RoleManagementProps) => {
-  const { data: roleStats, isLoading } = useRoleStats();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { isAdmin } = useAdminStatus();
-  useRoleSubscription();
+  const { data: roleStats } = useQuery({
+    queryKey: ["roleStats"],
+    queryFn: async () => {
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select(`
+          roles!profiles_role_id_fkey (
+            name
+          )
+        `);
+      
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        throw profilesError;
+      }
 
-  if (isLoading) {
-    return <div>Loading role statistics...</div>;
-  }
+      // Count users by role
+      const stats: Record<string, number> = {};
+      profiles.forEach((profile: any) => {
+        const roleName = profile.roles?.name;
+        if (roleName) {
+          stats[roleName] = (stats[roleName] || 0) + 1;
+        }
+      });
+
+      return stats;
+    },
+  });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-xl font-semibold mb-2 text-foreground">Role Overview</h3>
-          <p className="text-sm text-muted-foreground">
-            Current distribution of user roles
-          </p>
-        </div>
-        {isAdmin && (
-          <Button onClick={() => setIsDialogOpen(true)} variant="outline" className="gap-2">
-            <Plus className="h-4 w-4" />
-            Create Role
-          </Button>
-        )}
+    <div className="space-y-4">
+      <div>
+        <h3 className="font-medium mb-2">Filter by Role</h3>
+        <p className="text-sm text-muted-foreground">
+          Select a role to filter the user list
+        </p>
       </div>
-      
-      {roleStats && Object.keys(roleStats).length > 0 ? (
-        <>
-          <RoleDistributionChart roleStats={roleStats} />
-          <div className="grid gap-4">
-            {Object.entries(roleStats).map(([role, count]) => (
-              <RoleStatsCard 
-                key={role} 
-                role={role} 
-                count={count} 
-                onRoleSelect={onRoleSelect}
-              />
-            ))}
-          </div>
-        </>
-      ) : (
-        <div className="text-center py-8 text-muted-foreground">
-          No roles found. {isAdmin && 'Click "Create Role" to add one.'}
-        </div>
-      )}
-
-      <RoleDialog 
-        open={isDialogOpen} 
-        onOpenChange={setIsDialogOpen}
-      />
+      <div className="space-y-4">
+        <RoleStatsCard
+          role="all"
+          count={Object.values(roleStats || {}).reduce((a, b) => a + b, 0)}
+          onRoleSelect={onRoleSelect}
+        />
+        {roleStats && Object.entries(roleStats).map(([role, count]) => (
+          <RoleStatsCard
+            key={role}
+            role={role}
+            count={count}
+            onRoleSelect={onRoleSelect}
+          />
+        ))}
+      </div>
     </div>
   );
 };
