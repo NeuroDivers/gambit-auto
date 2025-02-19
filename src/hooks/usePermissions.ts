@@ -8,7 +8,7 @@ interface Role {
   name: string;
 }
 
-interface Profile {
+interface ProfileResponse {
   role_id: string;
   role: Role;
 }
@@ -16,7 +16,7 @@ interface Profile {
 export const usePermissions = () => {
   const { data: currentUserRole, isLoading: isRoleLoading } = useQuery<Role | null>({
     queryKey: ["current-user-role"],
-    queryFn: async () => {
+    queryFn: async (): Promise<Role | null> => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         console.log("No user found");
@@ -25,8 +25,7 @@ export const usePermissions = () => {
 
       console.log("Fetching role for user:", user.id);
       
-      // Get role from profiles table instead of app_metadata
-      const { data: profile, error: profileError } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select(`
           role_id,
@@ -36,28 +35,29 @@ export const usePermissions = () => {
           )
         `)
         .eq('id', user.id)
+        .returns<ProfileResponse>()
         .maybeSingle();
 
-      if (profileError) {
-        console.error("Error fetching user role:", profileError);
+      if (error) {
+        console.error("Error fetching user role:", error);
         return null;
       }
 
       // Handle case where no profile or role is found
-      if (!profile || !profile.role) {
+      if (!data || !data.role) {
         console.warn("No role found for user:", user.id);
         return null;
       }
 
-      console.log("Found role:", profile.role);
-      return profile.role;
+      console.log("Found role:", data.role);
+      return data.role;
     },
   });
 
-  const { data: permissions, isLoading: isPermissionsLoading } = useQuery<RolePermission[]>({
+  const { data: permissions = [], isLoading: isPermissionsLoading } = useQuery<RolePermission[]>({
     queryKey: ["role-permissions", currentUserRole?.id],
     enabled: !!currentUserRole?.id,
-    queryFn: async () => {
+    queryFn: async (): Promise<RolePermission[]> => {
       if (!currentUserRole?.id) {
         console.log("No role ID available for permissions query");
         return [];
@@ -68,7 +68,8 @@ export const usePermissions = () => {
       const { data, error } = await supabase
         .from('role_permissions')
         .select('*')
-        .eq('role_id', currentUserRole.id);
+        .eq('role_id', currentUserRole.id)
+        .returns<RolePermission[]>();
 
       if (error) {
         console.error("Error fetching permissions:", error);
@@ -91,17 +92,13 @@ export const usePermissions = () => {
     }
 
     // Check specific permissions
-    if (permissions) {
-      const hasPermission = permissions.some(p => 
-        p.resource_name === resource && 
-        p.permission_type === type && 
-        p.is_active
-      );
-      console.log(`Checking permission for ${resource} (${type}):`, hasPermission);
-      return hasPermission;
-    }
-
-    return false;
+    const hasPermission = permissions.some(p => 
+      p.resource_name === resource && 
+      p.permission_type === type && 
+      p.is_active
+    );
+    console.log(`Checking permission for ${resource} (${type}):`, hasPermission);
+    return hasPermission;
   };
 
   return { 
