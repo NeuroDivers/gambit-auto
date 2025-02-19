@@ -7,6 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Outlet, Navigate } from "react-router-dom"
 import { DashboardLayout } from "./DashboardLayout"
 import { LoadingScreen } from "../shared/LoadingScreen"
+import { SidebarProvider } from "@/components/ui/sidebar"
 
 export function DashboardLayoutWrapper() {
   const navigate = useNavigate();
@@ -79,11 +80,13 @@ export function DashboardLayoutWrapper() {
   }
 
   return (
-    <DashboardLayout
-      firstName={profile?.first_name}
-      onLogout={handleLogout}
-    >
-      <Outlet />
-    </DashboardLayout>
+    <SidebarProvider>
+      <DashboardLayout
+        firstName={profile?.first_name}
+        onLogout={handleLogout}
+      >
+        <Outlet />
+      </DashboardLayout>
+    </SidebarProvider>
   );
 }
