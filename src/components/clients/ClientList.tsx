@@ -33,21 +33,14 @@ export function ClientList() {
     queryFn: async () => {
       console.log("Fetching clients...")
       let query = supabase
-        .from('client_statistics')
+        .from('clients')
         .select(`
-          id,
-          first_name,
-          last_name,
-          email,
-          phone_number,
-          address,
-          created_at,
-          updated_at,
-          last_invoice_date,
-          last_work_order_date,
-          total_spent,
-          total_invoices,
-          total_work_orders
+          *,
+          total_spent:invoices(sum(total)),
+          total_invoices:invoices(count(*)),
+          total_work_orders:work_orders(count(*)),
+          last_invoice_date:invoices(max(created_at)),
+          last_work_order_date:work_orders(max(created_at))
         `)
 
       // Apply search if present
@@ -58,13 +51,15 @@ export function ClientList() {
       // Apply sorting
       switch (sortBy) {
         case 'recent':
-          query = query.order('last_invoice_date', { ascending: false, nullsFirst: false })
+          query = query.order('created_at', { ascending: false })
           break
         case 'name':
           query = query.order('first_name', { ascending: true })
           break
         case 'activity':
-          query = query.order('last_work_order_date', { ascending: false, nullsFirst: false })
+          // Since we can't sort by a computed column directly,
+          // we'll sort by updated_at as a fallback
+          query = query.order('updated_at', { ascending: false })
           break
       }
       
@@ -79,10 +74,12 @@ export function ClientList() {
 
       return data.map(client => ({
         ...client,
-        total_work_orders: client.total_work_orders || 0,
-        total_invoices: client.total_invoices || 0,
-        total_spent: client.total_spent || 0,
-        updated_at: client.updated_at || client.created_at // Ensure updated_at is always present
+        // Extract aggregated values from the nested objects
+        total_work_orders: client.total_work_orders?.[0]?.count || 0,
+        total_invoices: client.total_invoices?.[0]?.count || 0,
+        total_spent: client.total_spent?.[0]?.sum || 0,
+        last_invoice_date: client.last_invoice_date?.[0]?.max || null,
+        last_work_order_date: client.last_work_order_date?.[0]?.max || null
       })) as Client[]
     }
   })
