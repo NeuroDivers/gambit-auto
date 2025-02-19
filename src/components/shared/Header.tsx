@@ -44,7 +44,7 @@ export function Header({ firstName, role, onLogout }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button 
               variant="ghost" 
-              className="relative h-8 w-8 rounded-full hover:bg-muted active:bg-muted focus:bg-muted"
+              className="relative h-8 w-8 rounded-full border hover:bg-[#7b39ed] hover:border-[#7b39ed] focus:bg-[#7b39ed] focus:border-[#7b39ed] active:bg-[#7b39ed] active:border-[#7b39ed] transition-colors"
             >
               <Avatar className="h-8 w-8">
                 <AvatarImage src="/avatars/01.png" alt="Avatar" />
