@@ -3,6 +3,17 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
+interface Role {
+  id: string;
+  name: string;
+  nicename: string;
+}
+
+interface Profile {
+  id: string;
+  role: Role;
+}
+
 export const useAuthRedirect = () => {
   const navigate = useNavigate();
 
@@ -26,7 +37,7 @@ export const useAuthRedirect = () => {
               )
             `)
             .eq("id", session.user.id)
-            .single();
+            .single<Profile>();
 
           if (profileError) {
             console.error("Profile fetch error:", profileError);
@@ -79,7 +90,7 @@ export const useAuthRedirect = () => {
               )
             `)
             .eq("id", session.user.id)
-            .single();
+            .single<Profile>();
 
           if (profileError) {
             console.error("Profile fetch error:", profileError);
