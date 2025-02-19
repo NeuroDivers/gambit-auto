@@ -1,61 +1,25 @@
 
-import { Shield } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useRoleStats } from "./hooks/useRoleStats";
 
-interface RoleStatsCardProps {
-  role: string;
-  count: number;
-  onRoleSelect?: (role: string) => void;
-}
+export const RoleStatsCard = () => {
+  const { data: roleStats, isLoading } = useRoleStats();
 
-export const RoleStatsCard = ({ role, count, onRoleSelect }: RoleStatsCardProps) => {
-  const { data: roleInfo } = useQuery({
-    queryKey: ["role", role],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("roles")
-        .select("nicename")
-        .eq("name", role)
-        .maybeSingle();
-      
-      if (error) {
-        console.error("Error fetching role info:", error);
-        return null;
-      }
-      
-      return data;
-    },
-  });
-
-  const handleClick = () => {
-    if (onRoleSelect) {
-      onRoleSelect(role);
-    }
-  };
-
-  // Format the role name nicely if no nicename is found
-  const displayName = roleInfo?.nicename || role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  if (isLoading) {
+    return <div>Loading stats...</div>;
+  }
 
   return (
-    <Card 
-      className="bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-200 cursor-pointer hover:bg-card/70"
-      onClick={handleClick}
-    >
+    <Card>
       <div className="p-6">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Shield className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <p className="text-lg font-semibold capitalize text-card-foreground">
-              {displayName}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {count} {count === 1 ? 'user' : 'users'}
-            </p>
-          </div>
+        <h3 className="text-lg font-semibold mb-4">Role Distribution</h3>
+        <div className="space-y-4">
+          {Object.entries(roleStats || {}).map(([role, count]) => (
+            <div key={role} className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">{role}</span>
+              <span className="text-sm font-medium">{count}</span>
+            </div>
+          ))}
         </div>
       </div>
     </Card>
