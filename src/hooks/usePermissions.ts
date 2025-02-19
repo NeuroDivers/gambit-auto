@@ -25,10 +25,15 @@ interface UserRole {
 }
 
 interface ProfileData {
+  id: string;
+  role_id: string;
   role: UserRole | null;
 }
 
 interface ClientData {
+  id: string;
+  user_id: string;
+  role_id: string;
   role: UserRole | null;
 }
 
@@ -47,7 +52,9 @@ export const usePermissions = () => {
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select(`
-            role:role_id (
+            id,
+            role_id,
+            role:roles (
               id,
               name,
               nicename
@@ -65,7 +72,10 @@ export const usePermissions = () => {
         const { data: clientData, error: clientError } = await supabase
           .from('clients')
           .select(`
-            role:role_id (
+            id,
+            user_id,
+            role_id,
+            role:roles (
               id,
               name,
               nicename
