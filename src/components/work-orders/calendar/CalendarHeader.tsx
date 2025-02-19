@@ -21,10 +21,6 @@ export function CalendarHeader({ currentDate, onPrevMonth, onNextMonth }: Calend
         <ChevronLeft className="h-4 w-4" />
       </Button>
       
-      <h2 className="text-xl font-semibold text-foreground hover:text-primary cursor-pointer">
-        {format(currentDate, 'MMMM yyyy')}
-      </h2>
-      
       <Button
         variant="ghost"
         size="icon"
