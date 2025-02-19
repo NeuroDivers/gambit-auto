@@ -94,13 +94,18 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
       <NavLink 
         to={item.to}
         className={({ isActive }) => cn(
-          "w-full flex items-center gap-3 overflow-hidden",
+          "w-full flex items-center gap-3",
           isActive && "text-primary"
         )}
         onClick={onClick}
       >
         <item.icon className="h-5 w-5 shrink-0" />
-        <span className="truncate">{item.title}</span>
+        <span className={cn(
+          "truncate transition-opacity duration-200",
+          isCollapsed && "opacity-0 w-0 hidden"
+        )}>
+          {item.title}
+        </span>
       </NavLink>
     )
 
