@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
 import { FileText, Calendar, Settings, Users, Wrench, User, Terminal, MessageSquare } from "lucide-react"
@@ -8,6 +7,7 @@ import { useEffect, useState } from "react"
 import type { NavItem } from "./types"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useSidebar } from "@/components/ui/sidebar"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 const allItems: NavItem[] = [
   {
@@ -138,13 +138,13 @@ export function SidebarNav({ className, onNavigate }: SidebarNavProps) {
         to={item.href}
         onClick={onNavigate}
         className={cn(
-          "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+          "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-accent hover:text-accent-foreground min-w-0",
           location.pathname === item.href ? "bg-accent text-accent-foreground" : "text-foreground",
           isCollapsed && "justify-center px-2"
         )}
       >
-        <item.icon className="h-5 w-5" />
-        {!isCollapsed && <span>{item.title}</span>}
+        <item.icon className="h-5 w-5 shrink-0" />
+        {!isCollapsed && <span className="truncate">{item.title}</span>}
       </Link>
     )
 
@@ -165,18 +165,20 @@ export function SidebarNav({ className, onNavigate }: SidebarNavProps) {
   }
 
   return (
-    <nav className={cn("flex flex-col gap-2 p-4", className)}>
-      <div className="space-y-2">
-        {allowedItems.map((item) => (
-          <NavLink key={item.href} item={item} />
-        ))}
-      </div>
+    <ScrollArea className={cn("flex-1", className)}>
+      <nav className="flex flex-col gap-2 p-4">
+        <div className="space-y-2">
+          {allowedItems.map((item) => (
+            <NavLink key={item.href} item={item} />
+          ))}
+        </div>
 
-      <div className="mt-4 pt-4 border-t space-y-2">
-        {allowedSettingsItems.map((item) => (
-          <NavLink key={item.href} item={item} />
-        ))}
-      </div>
-    </nav>
+        <div className="mt-4 pt-4 border-t space-y-2">
+          {allowedSettingsItems.map((item) => (
+            <NavLink key={item.href} item={item} />
+          ))}
+        </div>
+      </nav>
+    </ScrollArea>
   )
 }
