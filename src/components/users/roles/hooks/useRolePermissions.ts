@@ -39,7 +39,7 @@ export const useRolePermissions = (roleId: string | null) => {
       if (!roleId) return null;
       
       const { data, error } = await supabase
-        .from("roles")
+        .from("available_roles")
         .select("*")
         .eq("id", roleId)
         .maybeSingle();
