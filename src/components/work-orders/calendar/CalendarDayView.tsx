@@ -1,22 +1,36 @@
-import { format } from "date-fns"
+
+import { format, isValid } from "date-fns"
 import { WorkOrder } from "../types"
 import { WorkOrderCard } from "./WorkOrderCard"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Calendar } from "lucide-react"
 
 type CalendarDayViewProps = {
-  currentDate: Date
+  currentDate: Date | undefined
   workOrders: WorkOrder[]
 }
 
 export function CalendarDayView({ currentDate, workOrders }: CalendarDayViewProps) {
+  // Return early if no valid date is provided
+  if (!currentDate || !isValid(currentDate)) {
+    return (
+      <div className="space-y-4 bg-card/50 p-6 rounded-lg">
+        <div className="text-muted-foreground text-sm py-4 text-center">
+          Please select a valid date
+        </div>
+      </div>
+    )
+  }
+
   const scheduledWorkOrders = workOrders.filter(wo => wo.start_time)
   const unscheduledWorkOrders = workOrders.filter(wo => !wo.start_time)
 
   // Sort work orders by start time
   const sortedWorkOrders = [...scheduledWorkOrders].sort((a, b) => {
     if (!a.start_time || !b.start_time) return 0
-    return new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+    const dateA = new Date(a.start_time)
+    const dateB = new Date(b.start_time)
+    return isValid(dateA) && isValid(dateB) ? dateA.getTime() - dateB.getTime() : 0
   })
 
   return (
