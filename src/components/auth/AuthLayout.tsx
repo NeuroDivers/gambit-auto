@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
+import { LayoutDashboard } from "lucide-react"
 
 interface AuthLayoutProps {
   children: React.ReactNode
@@ -39,13 +40,15 @@ export function AuthLayout({
     <div className="container relative min-h-screen flex items-center justify-center">
       <div className="mx-auto w-full max-w-[350px] space-y-6">
         <div className="flex flex-col items-center space-y-2 text-center">
-          <div className="relative mx-auto h-32 w-32 bg-primary/10 rounded-lg mb-6">
-            {businessProfile?.light_logo_url && (
+          <div className="flex items-center justify-center">
+            {businessProfile?.light_logo_url ? (
               <img 
                 src={businessProfile.light_logo_url} 
                 alt="Business Logo" 
-                className="h-full w-full object-contain p-4"
+                className="h-32 w-32 object-contain"
               />
+            ) : (
+              <LayoutDashboard className="h-32 w-32 text-primary" />
             )}
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">
