@@ -1,6 +1,6 @@
 
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Role {
@@ -16,10 +16,16 @@ interface Profile {
 
 export const useAuthRedirect = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const checkSession = async () => {
       try {
+        // Don't check session on auth page to prevent redirect loop
+        if (location.pathname === '/auth') {
+          return;
+        }
+
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
         
@@ -57,8 +63,16 @@ export const useAuthRedirect = () => {
 
         console.log("Profile found:", profileData);
 
-        // Redirect based on role
+        // Prevent redirect loop by checking current path
         const roleName = profileData.role.name.toLowerCase();
+        const currentPath = location.pathname;
+        const targetPath = roleName === 'client' ? '/client' : '/admin';
+
+        if (currentPath === targetPath) {
+          return;
+        }
+
+        // Redirect based on role
         if (roleName === 'client') {
           navigate("/client", { replace: true });
         } else if (roleName === 'administrator' || roleName === 'admin') {
@@ -81,6 +95,11 @@ export const useAuthRedirect = () => {
         console.log("Auth state changed:", event, session);
         
         if (event === 'SIGNED_IN' && session?.user) {
+          // Don't refetch profile on auth page
+          if (location.pathname === '/auth') {
+            return;
+          }
+
           console.log("User signed in, fetching profile");
           // Get user profile and role
           const { data: profileData, error: profileError } = await supabase
@@ -110,8 +129,16 @@ export const useAuthRedirect = () => {
 
           console.log("Profile found after sign in:", profileData);
 
-          // Redirect based on role
+          // Prevent redirect loop by checking current path
           const roleName = profileData.role.name.toLowerCase();
+          const currentPath = location.pathname;
+          const targetPath = roleName === 'client' ? '/client' : '/admin';
+
+          if (currentPath === targetPath) {
+            return;
+          }
+
+          // Redirect based on role
           if (roleName === 'client') {
             navigate("/client", { replace: true });
           } else if (roleName === 'administrator' || roleName === 'admin') {
@@ -130,5 +157,5 @@ export const useAuthRedirect = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, location]);
 };
