@@ -31,9 +31,23 @@ export function ClientList() {
   const { data: clients, isLoading } = useQuery({
     queryKey: ['clients', debouncedSearch, sortBy],
     queryFn: async () => {
+      console.log("Fetching clients...")
       let query = supabase
         .from('client_statistics')
-        .select('*')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          email,
+          phone_number,
+          address,
+          created_at,
+          last_invoice_date,
+          last_work_order_date,
+          total_spent,
+          total_invoices,
+          total_work_orders
+        `)
 
       // Apply search if present
       if (debouncedSearch) {
@@ -55,7 +69,12 @@ export function ClientList() {
       
       const { data, error } = await query
       
-      if (error) throw error
+      if (error) {
+        console.error("Error fetching clients:", error)
+        throw error
+      }
+
+      console.log("Fetched clients:", data)
 
       return data.map(client => ({
         ...client,
@@ -130,28 +149,6 @@ export function ClientList() {
             key={client.id}
             client={client}
             onEdit={() => handleEdit(client)}
-            actions={
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => handleCreateQuote(client.id)}
-                >
-                  <Quote className="h-4 w-4" />
-                  Create Quote
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => handleCreateInvoice(client.id)}
-                >
-                  <FileText className="h-4 w-4" />
-                  Create Invoice
-                </Button>
-              </div>
-            }
           />
         ))}
       </div>
