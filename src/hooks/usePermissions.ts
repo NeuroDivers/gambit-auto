@@ -24,15 +24,6 @@ interface UserRole {
   nicename: string;
 }
 
-// Define the response type from Supabase
-interface RoleResponse {
-  role: {
-    id: string;
-    name: string;
-    nicename: string;
-  };
-}
-
 export const usePermissions = () => {
   const { data: currentUserRole } = useQuery({
     queryKey: ["current-user-role"],
@@ -44,46 +35,42 @@ export const usePermissions = () => {
       }
 
       // Check profiles table first
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profiles, error: profileError } = await supabase
         .from('profiles')
         .select(`
-          role:role_id (
+          roles:role_id (
             id,
             name,
             nicename
           )
         `)
-        .eq('id', user.id)
-        .maybeSingle();
+        .eq('id', user.id);
 
-      if (!profileError && profileData?.role) {
-        const role = profileData.role as unknown as UserRole;
+      if (!profileError && profiles?.[0]?.roles) {
         return {
-          id: role.id,
-          name: role.name,
-          nicename: role.nicename
+          id: profiles[0].roles.id,
+          name: profiles[0].roles.name,
+          nicename: profiles[0].roles.nicename
         };
       }
 
       // If no profile found or no role, check clients table
-      const { data: clientData, error: clientError } = await supabase
+      const { data: clients, error: clientError } = await supabase
         .from('clients')
         .select(`
-          role:role_id (
+          roles:role_id (
             id,
             name,
             nicename
           )
         `)
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .eq('user_id', user.id);
 
-      if (!clientError && clientData?.role) {
-        const role = clientData.role as unknown as UserRole;
+      if (!clientError && clients?.[0]?.roles) {
         return {
-          id: role.id,
-          name: role.name,
-          nicename: role.nicename
+          id: clients[0].roles.id,
+          name: clients[0].roles.name,
+          nicename: clients[0].roles.nicename
         };
       }
 
