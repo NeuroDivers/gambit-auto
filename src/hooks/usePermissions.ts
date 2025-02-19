@@ -25,6 +25,10 @@ type ProfileResponse = {
   role: UserRole;
 }
 
+type ClientRoleResponse = {
+  role: UserRole;
+}
+
 export const usePermissions = () => {
   const { data: currentUserRole, isLoading: isRoleLoading } = useQuery<UserRole | null>({
     queryKey: ["current-user-role"],
@@ -48,7 +52,7 @@ export const usePermissions = () => {
             )
           `)
           .eq('id', user.id)
-          .single<ProfileResponse>();
+          .maybeSingle<ProfileResponse>();
 
         if (!profileError && profileData?.role) {
           console.log('Found profile role:', profileData.role);
@@ -56,7 +60,7 @@ export const usePermissions = () => {
         }
 
         // If no profile role found, try to get client role
-        const { data: clientRole, error: clientError } = await supabase
+        const { data: clientData, error: clientError } = await supabase
           .from('clients')
           .select(`
             role:role_id (
@@ -66,11 +70,12 @@ export const usePermissions = () => {
             )
           `)
           .eq('user_id', user.id)
-          .maybeSingle();
+          .limit(1);
 
-        if (!clientError && clientRole?.role) {
-          console.log('Found client role:', clientRole.role);
-          return clientRole.role;
+        if (!clientError && clientData && clientData.length > 0) {
+          const clientRole = (clientData[0] as ClientRoleResponse).role;
+          console.log('Found client role:', clientRole);
+          return clientRole;
         }
 
         if (profileError) console.error('Error fetching profile:', profileError);
