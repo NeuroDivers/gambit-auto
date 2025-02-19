@@ -11,6 +11,7 @@ import {
   Users, 
   Wrench 
 } from "lucide-react"
+import { cn } from "@/lib/utils"
 import {
   SidebarGroup,
   SidebarGroupContent,
