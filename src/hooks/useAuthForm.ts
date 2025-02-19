@@ -7,19 +7,16 @@ import { useLocation, useNavigate } from "react-router-dom";
 export interface AuthFormData {
   email: string;
   password: string;
-}
-
-interface RoleData {
-  role: {
-    name: string;
-    nicename: string;
-  };
+  firstName: string;
+  lastName: string;
 }
 
 export const useAuthForm = () => {
   const [formData, setFormData] = useState<AuthFormData>({
     email: "",
     password: "",
+    firstName: "",
+    lastName: ""
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -68,6 +65,8 @@ export const useAuthForm = () => {
         password: formData.password,
         options: {
           data: {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
             email: formData.email,
           }
         }
@@ -87,7 +86,6 @@ export const useAuthForm = () => {
           description: "Your account has been created successfully. Please check your email for verification.",
         });
         
-        // By default, redirect to client route since all new signups are clients
         navigate("/client", { replace: true });
       }
     } catch (error: any) {
@@ -97,6 +95,7 @@ export const useAuthForm = () => {
         title: "Error",
         description: error.message,
       });
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -134,7 +133,7 @@ export const useAuthForm = () => {
             )
           `)
           .eq('id', data.user.id)
-          .single<RoleData>();
+          .single();
 
         if (profileError && profileError.code !== 'PGRST116') {
           console.error('Error checking user role:', profileError);
@@ -174,6 +173,8 @@ export const useAuthForm = () => {
     setFormData({
       email: "",
       password: "",
+      firstName: "",
+      lastName: ""
     });
   };
 
