@@ -28,7 +28,7 @@ export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
   const filteredUsers = users?.filter(user => {
     const matchesSearch = searchQuery.toLowerCase() === "" || 
       user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchQuery.toLowerCase());
+      `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesRole = roleFilter === "all" || user.role?.name === roleFilter;
     
