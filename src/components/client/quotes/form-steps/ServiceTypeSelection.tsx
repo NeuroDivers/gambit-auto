@@ -61,11 +61,11 @@ export function ServiceTypeSelection({
           >
             <div className="flex items-start justify-between w-full">
               <div className="space-y-1 text-left">
-                <p className="text-sm font-medium leading-none break-words">
+                <p className="text-sm font-medium leading-none">
                   {service.name}
                 </p>
                 {service.description && (
-                  <p className="text-sm text-muted-foreground break-words line-clamp-2">
+                  <p className="text-sm text-muted-foreground">
                     {service.description}
                   </p>
                 )}
