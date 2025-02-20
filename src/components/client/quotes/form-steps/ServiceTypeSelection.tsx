@@ -54,7 +54,7 @@ export function ServiceTypeSelection({
             type="button"
             variant="outline"
             className={cn(
-              "h-auto p-4 justify-start space-y-2",
+              "h-auto p-4 justify-start space-y-2 hover:text-white group",
               isSelected && "border-primary"
             )}
             onClick={() => toggleService(service)}
@@ -65,7 +65,7 @@ export function ServiceTypeSelection({
                   {service.name}
                 </p>
                 {service.description && (
-                  <p className="text-sm text-muted-foreground whitespace-normal break-words">
+                  <p className="text-sm text-muted-foreground whitespace-normal break-words group-hover:text-white/70">
                     {service.description}
                   </p>
                 )}
