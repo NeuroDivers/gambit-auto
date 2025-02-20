@@ -25,9 +25,22 @@ export const useAuthRedirect = () => {
         
         if (session) {
           console.log("Session found:", session);
-          // Get user role from profiles with more detailed logging
-          console.log("Fetching profile for user ID:", session.user.id);
           
+          // First try to get just the profile
+          const profileResult = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id)
+            .single();
+            
+          console.log("Basic profile query result:", profileResult);
+
+          if (profileResult.error) {
+            console.error("Basic profile fetch error:", profileResult.error);
+            throw profileResult.error;
+          }
+
+          // Then get the role information
           const { data, error: profileError } = await supabase
             .from("profiles")
             .select(`
@@ -41,12 +54,13 @@ export const useAuthRedirect = () => {
             .eq("id", session.user.id)
             .maybeSingle<ProfileWithRole>();
 
+          console.log("Full profile query result:", data);
+          console.log("Profile error if any:", profileError);
+
           if (profileError) {
             console.error("Profile fetch error:", profileError);
             throw profileError;
           }
-
-          console.log("Raw profile query result:", data);
 
           if (!data) {
             console.error("No profile found");
@@ -87,7 +101,22 @@ export const useAuthRedirect = () => {
         if (event === 'SIGNED_IN' && session) {
           console.log("User signed in, fetching profile for ID:", session.user.id);
           
-          // Get user role with more detailed logging
+          // First try to get just the profile
+          const profileResult = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id)
+            .single();
+            
+          console.log("Basic profile query result:", profileResult);
+
+          if (profileResult.error) {
+            console.error("Basic profile fetch error:", profileResult.error);
+            navigate("/auth", { replace: true });
+            return;
+          }
+
+          // Then get the role information
           const { data, error: profileError } = await supabase
             .from("profiles")
             .select(`
@@ -101,7 +130,8 @@ export const useAuthRedirect = () => {
             .eq("id", session.user.id)
             .maybeSingle<ProfileWithRole>();
 
-          console.log("Profile query result:", data);
+          console.log("Full profile query result:", data);
+          console.log("Profile error if any:", profileError);
 
           if (profileError) {
             console.error("Profile fetch error:", profileError);
