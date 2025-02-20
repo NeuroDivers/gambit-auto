@@ -1,4 +1,3 @@
-
 -- Create roles first
 INSERT INTO roles (name, nicename, description) 
 VALUES 
@@ -199,3 +198,7 @@ VALUES
   ('Bay 3', 'occupied'),
   ('Bay 4', 'maintenance');
 
+-- Add dark_logo_url and light_logo_url columns to business_profile
+ALTER TABLE IF EXISTS business_profile 
+ADD COLUMN IF NOT EXISTS dark_logo_url text,
+ADD COLUMN IF NOT EXISTS light_logo_url text;
