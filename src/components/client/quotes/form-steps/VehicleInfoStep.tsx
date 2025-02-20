@@ -9,11 +9,11 @@ import { NewVehicleForm } from "./components/NewVehicleForm"
 
 type VehicleInfoStepProps = {
   form: UseFormReturn<QuoteRequestFormData>
+  saveVehicle?: boolean
 }
 
-export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
+export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepProps) {
   const [useNewVehicle, setUseNewVehicle] = useState(true)
-  const [saveVehicle, setSaveVehicle] = useState(false)
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>()
 
   const { data: vehicles, isLoading } = useClientVehicles()
@@ -23,7 +23,6 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
 
     if (vehicleId === 'new') {
       setUseNewVehicle(true)
-      setSaveVehicle(false)
       form.setValue('vehicleInfo.make', '')
       form.setValue('vehicleInfo.model', '')
       form.setValue('vehicleInfo.year', 0)
@@ -38,7 +37,6 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
       form.setValue('vehicleInfo.year', selectedVehicle.year)
       form.setValue('vehicleInfo.vin', selectedVehicle.vin || '')
       setUseNewVehicle(false)
-      setSaveVehicle(false)
     }
   }
 
@@ -94,7 +92,7 @@ export function VehicleInfoStep({ form }: VehicleInfoStepProps) {
         <NewVehicleForm
           form={form}
           saveVehicle={saveVehicle}
-          onSaveVehicleChange={setSaveVehicle}
+          onSaveVehicleChange={() => {}}
           hasExistingVehicles={Boolean(vehicles?.length)}
         />
       )}
