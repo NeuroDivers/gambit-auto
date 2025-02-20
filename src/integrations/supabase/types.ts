@@ -111,10 +111,8 @@ export type Database = {
           business_hours: Json | null
           company_name: string
           created_at: string
-          dark_logo_url: string | null
           email: string | null
           id: string
-          light_logo_url: string | null
           logo_url: string | null
           phone_number: string | null
           updated_at: string
@@ -124,10 +122,8 @@ export type Database = {
           business_hours?: Json | null
           company_name: string
           created_at?: string
-          dark_logo_url?: string | null
           email?: string | null
           id?: string
-          light_logo_url?: string | null
           logo_url?: string | null
           phone_number?: string | null
           updated_at?: string
@@ -137,10 +133,8 @@ export type Database = {
           business_hours?: Json | null
           company_name?: string
           created_at?: string
-          dark_logo_url?: string | null
           email?: string | null
           id?: string
-          light_logo_url?: string | null
           logo_url?: string | null
           phone_number?: string | null
           updated_at?: string
