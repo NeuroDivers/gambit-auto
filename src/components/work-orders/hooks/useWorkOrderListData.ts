@@ -11,10 +11,18 @@ export function useWorkOrderListData() {
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
   const [assignWorkOrder, setAssignWorkOrder] = useState<WorkOrder | null>(null)
   const [assignBayWorkOrder, setAssignBayWorkOrder] = useState<WorkOrder | null>(null)
+  const [page, setPage] = useState(1)
+  const pageSize = 10
 
-  const { data: workOrders, isLoading, error } = useQuery({
-    queryKey: ['work-orders'],
+  const { data: workOrdersData, isLoading, error } = useQuery({
+    queryKey: ['work-orders', page, pageSize],
     queryFn: async () => {
+      // First, get total count with filters but no pagination
+      const { count } = await supabase
+        .from('work_orders')
+        .select('*', { count: 'exact', head: true });
+
+      // Then get paginated data
       const { data, error } = await supabase
         .from('work_orders')
         .select(`
@@ -27,10 +35,14 @@ export function useWorkOrderListData() {
             last_name
           )
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range((page - 1) * pageSize, page * pageSize - 1);
 
       if (error) throw error;
-      return data as WorkOrder[];
+      return {
+        workOrders: data as WorkOrder[],
+        totalCount: count || 0
+      };
     }
   });
 
@@ -116,7 +128,7 @@ export function useWorkOrderListData() {
     }
   };
 
-  const filteredWorkOrders = workOrders?.filter(order => {
+  const filteredWorkOrders = workOrdersData?.workOrders.filter(order => {
     const matchesSearch = (
       order.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -130,6 +142,8 @@ export function useWorkOrderListData() {
     return matchesSearch && matchesStatus;
   });
 
+  const totalPages = workOrdersData ? Math.ceil(workOrdersData.totalCount / pageSize) : 0;
+
   return {
     searchTerm,
     setSearchTerm,
@@ -141,12 +155,15 @@ export function useWorkOrderListData() {
     setAssignWorkOrder,
     assignBayWorkOrder,
     setAssignBayWorkOrder,
-    workOrders: filteredWorkOrders,
+    workOrders: filteredWorkOrders || [],
     isLoading,
     error,
     assignableUsers,
     serviceBays,
     handleAssignUser,
-    handleAssignBay
+    handleAssignBay,
+    page,
+    setPage,
+    totalPages
   };
 }

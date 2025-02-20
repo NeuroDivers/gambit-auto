@@ -40,7 +40,10 @@ export function WorkOrderList() {
     assignableUsers,
     serviceBays,
     handleAssignUser,
-    handleAssignBay
+    handleAssignBay,
+    page,
+    setPage,
+    totalPages
   } = useWorkOrderListData()
 
   const handleCreateInvoice = async (workOrderId: string) => {
@@ -176,6 +179,29 @@ export function WorkOrderList() {
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setPage(page - 1)}
+          disabled={page === 1}
+        >
+          Previous
+        </Button>
+        <div className="text-sm text-muted-foreground">
+          Page {page} of {totalPages}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setPage(page + 1)}
+          disabled={page === totalPages}
+        >
+          Next
+        </Button>
       </div>
 
       {selectedWorkOrder && (
