@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -28,6 +28,8 @@ export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebar
     }
   });
 
+  const initials = firstName ? firstName.charAt(0).toUpperCase() : '?';
+
   return (
     <div className="flex flex-col items-center py-4">
       {businessProfile?.light_logo_url ? (
@@ -42,9 +44,8 @@ export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebar
         />
       ) : (
         <Avatar className="h-16 w-16">
-          <AvatarImage src="/avatars/01.png" alt="Avatar" />
-          <AvatarFallback>
-            {firstName?.slice(0, 1).toUpperCase()}
+          <AvatarFallback className="bg-primary/10 text-primary text-xl">
+            {initials}
           </AvatarFallback>
         </Avatar>
       )}

@@ -1,7 +1,7 @@
 
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -26,6 +26,7 @@ interface HeaderProps {
 export function Header({ firstName, role, onLogout }: HeaderProps) {
   const isAdmin = role?.name?.toLowerCase() === 'administrator';
   const baseRoute = isAdmin ? '/admin' : '/client';
+  const initials = firstName ? firstName.charAt(0).toUpperCase() : '?';
 
   return (
     <header className="flex h-16 items-center px-6 border-b">
@@ -44,9 +45,8 @@ export function Header({ firstName, role, onLogout }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
               <Avatar className="h-8 w-8">
-                <AvatarImage src="/avatars/01.png" alt="Avatar" />
-                <AvatarFallback>
-                  {firstName?.slice(0, 1).toUpperCase()}
+                <AvatarFallback className="bg-primary/10 text-primary">
+                  {initials}
                 </AvatarFallback>
               </Avatar>
             </Button>
