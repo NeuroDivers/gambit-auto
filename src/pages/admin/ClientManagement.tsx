@@ -14,7 +14,7 @@ import { toast } from "sonner"
 export default function ClientManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
-  const { data: clientStats, isLoading, error } = useQuery({
+  const { data: clientStats, isLoading } = useQuery({
     queryKey: ['clientStats'],
     queryFn: async () => {
       console.log("Fetching client statistics...")
@@ -24,6 +24,7 @@ export default function ClientManagement() {
       
       if (error) {
         console.error("Error fetching client statistics:", error)
+        toast.error("Failed to load client statistics")
         throw error
       }
 
@@ -48,10 +49,6 @@ export default function ClientManagement() {
         totalSpent,
         totalWorkOrders
       }
-    },
-    onError: (error) => {
-      console.error("Error in client stats query:", error)
-      toast.error("Failed to load client statistics")
     }
   })
 
