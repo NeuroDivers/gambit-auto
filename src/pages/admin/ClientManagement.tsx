@@ -9,11 +9,12 @@ import { supabase } from "@/integrations/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/utils"
 import { Users, CreditCard, Calendar } from "lucide-react"
+import { toast } from "sonner"
 
 export default function ClientManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
-  const { data: clientStats } = useQuery({
+  const { data: clientStats, isLoading, error } = useQuery({
     queryKey: ['clientStats'],
     queryFn: async () => {
       console.log("Fetching client statistics...")
@@ -47,8 +48,15 @@ export default function ClientManagement() {
         totalSpent,
         totalWorkOrders
       }
+    },
+    onError: (error) => {
+      console.error("Error in client stats query:", error)
+      toast.error("Failed to load client statistics")
     }
   })
+
+  // Show loading state
+  const loadingValue = <div className="animate-pulse bg-muted h-8 w-20 rounded" />
 
   return (
     <div className="space-y-6 p-6">
@@ -67,9 +75,11 @@ export default function ClientManagement() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{clientStats?.totalClients || 0}</div>
+            <div className="text-2xl font-bold">
+              {isLoading ? loadingValue : clientStats?.totalClients || 0}
+            </div>
             <p className="text-xs text-muted-foreground">
-              {clientStats?.activeClients || 0} active in last 90 days
+              {isLoading ? loadingValue : `${clientStats?.activeClients || 0} active in last 90 days`}
             </p>
           </CardContent>
         </Card>
@@ -80,7 +90,9 @@ export default function ClientManagement() {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(clientStats?.totalSpent || 0)}</div>
+            <div className="text-2xl font-bold">
+              {isLoading ? loadingValue : formatCurrency(clientStats?.totalSpent || 0)}
+            </div>
             <p className="text-xs text-muted-foreground">
               Lifetime client spending
             </p>
@@ -93,7 +105,9 @@ export default function ClientManagement() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{clientStats?.totalWorkOrders || 0}</div>
+            <div className="text-2xl font-bold">
+              {isLoading ? loadingValue : clientStats?.totalWorkOrders || 0}
+            </div>
             <p className="text-xs text-muted-foreground">
               Total work orders completed
             </p>
@@ -107,7 +121,12 @@ export default function ClientManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(clientStats?.totalClients ? (clientStats.totalSpent / clientStats.totalClients) : 0)}
+              {isLoading 
+                ? loadingValue 
+                : formatCurrency(clientStats?.totalClients 
+                    ? (clientStats.totalSpent / clientStats.totalClients) 
+                    : 0
+                  )}
             </div>
             <p className="text-xs text-muted-foreground">
               Per client average
