@@ -11,7 +11,7 @@ interface QuoteRequestSheetProps {
 export function QuoteRequestSheet({ open, onOpenChange }: QuoteRequestSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-[900px] p-0">
+      <SheetContent side="right" className="w-full sm:max-w-[1200px] p-0">
         <ScrollArea className="h-full p-6">
           <MultiStepQuoteRequestForm onSuccess={() => onOpenChange(false)} />
         </ScrollArea>
