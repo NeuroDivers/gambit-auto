@@ -61,7 +61,7 @@ export function ServiceTypeSelection({
           >
             <div className="flex items-start justify-between w-full">
               <div className="space-y-1 text-left">
-                <p className="text-sm font-medium leading-none">
+                <p className="text-sm font-medium leading-none group-hover:text-white">
                   {service.name}
                 </p>
                 {service.description && (
