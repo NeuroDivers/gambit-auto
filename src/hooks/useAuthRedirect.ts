@@ -2,7 +2,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/integrations/supabase/types/database";
 
 interface Role {
   id: string;
@@ -38,7 +37,7 @@ export const useAuthRedirect = () => {
               )
             `)
             .eq("id", session.user.id)
-            .single<ProfileWithRole>();
+            .maybeSingle<ProfileWithRole>();
 
           if (profileError) {
             console.error("Profile fetch error:", profileError);
@@ -47,8 +46,14 @@ export const useAuthRedirect = () => {
 
           console.log("Profile data:", data);
 
+          if (!data) {
+            console.error("No profile found");
+            navigate("/auth", { replace: true });
+            return;
+          }
+
           // Redirect based on role
-          if (data?.role?.name?.toLowerCase() === 'client') {
+          if (data.role.name.toLowerCase() === 'client') {
             console.log("Redirecting to client dashboard");
             navigate("/client", { replace: true });
           } else {
@@ -82,17 +87,23 @@ export const useAuthRedirect = () => {
               )
             `)
             .eq("id", session.user.id)
-            .single<ProfileWithRole>();
+            .maybeSingle<ProfileWithRole>();
 
           if (profileError) {
             console.error("Profile fetch error:", profileError);
-            throw profileError;
+            return;
+          }
+
+          if (!data) {
+            console.error("No profile found");
+            navigate("/auth", { replace: true });
+            return;
           }
 
           console.log("Profile data after sign in:", data);
 
           // Redirect based on role
-          if (data?.role?.name?.toLowerCase() === 'client') {
+          if (data.role.name.toLowerCase() === 'client') {
             console.log("Redirecting to client dashboard");
             navigate("/client", { replace: true });
           } else {
