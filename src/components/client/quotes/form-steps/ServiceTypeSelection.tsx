@@ -65,7 +65,7 @@ export function ServiceTypeSelection({
                   {service.name}
                 </p>
                 {service.description && (
-                  <p className="text-sm text-muted-foreground whitespace-normal break-words group-hover:text-white/70">
+                  <p className="text-sm text-muted-foreground whitespace-normal break-words group-hover:text-white">
                     {service.description}
                   </p>
                 )}
