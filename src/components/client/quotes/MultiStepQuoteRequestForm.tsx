@@ -45,6 +45,11 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
         toast.error("Failed to submit quote request")
       }
     } else {
+      // Validate service selection before moving to next step
+      if (step === 1 && selectedServices.length === 0) {
+        toast.error("Please select at least one service before proceeding")
+        return
+      }
       nextStep()
     }
   }
@@ -86,7 +91,7 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
                           Enter your vehicle details to help us provide accurate service quotes.
                         </p>
                       </div>
-                      <VehicleInfoStep form={form as any} />
+                      <VehicleInfoStep form={form as any} saveVehicle={false} />
                     </div>
 
                     <div className="rounded-lg border bg-card p-6 space-y-6">
