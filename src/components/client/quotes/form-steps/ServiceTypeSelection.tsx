@@ -1,104 +1,80 @@
 
-import { ServiceType } from "@/integrations/supabase/types/service-types"
+import { Check } from "lucide-react"
 import { ServiceItemType } from "@/types/quote-request"
 import { Button } from "@/components/ui/button"
-import { Minus, Plus } from "lucide-react"
-import { useState } from "react"
+import { cn } from "@/lib/utils"
 
-type ServiceTypeSelectionProps = {
-  services: ServiceType[]
+interface ServiceTypeSelectionProps {
+  services: {
+    id: string
+    name: string
+    description: string | null
+  }[]
   selectedServices: ServiceItemType[]
   onServicesChange: (services: ServiceItemType[]) => void
 }
 
-export function ServiceTypeSelection({ 
-  services, 
-  selectedServices, 
-  onServicesChange 
+export function ServiceTypeSelection({
+  services,
+  selectedServices,
+  onServicesChange,
 }: ServiceTypeSelectionProps) {
-  const [quantities, setQuantities] = useState<Record<string, number>>({})
-
-  const handleAddService = (service: ServiceType) => {
-    const newService: ServiceItemType = {
-      service_id: service.id,
-      service_name: service.name,
-      quantity: 1,
-      unit_price: service.base_price || 0
-    }
-    onServicesChange([...selectedServices, newService])
-    setQuantities({ ...quantities, [service.id]: 1 })
-  }
-
-  const handleRemoveService = (serviceId: string) => {
-    onServicesChange(selectedServices.filter(s => s.service_id !== serviceId))
-    const newQuantities = { ...quantities }
-    delete newQuantities[serviceId]
-    setQuantities(newQuantities)
-  }
-
-  const handleUpdateQuantity = (serviceId: string, quantity: number) => {
-    const newQuantity = Math.max(1, quantity)
-    setQuantities({ ...quantities, [serviceId]: newQuantity })
-    onServicesChange(
-      selectedServices.map(s => 
-        s.service_id === serviceId 
-          ? { ...s, quantity: newQuantity }
-          : s
-      )
+  const toggleService = (service: { id: string; name: string }) => {
+    const isSelected = selectedServices.some(
+      (s) => s.service_id === service.id
     )
+
+    if (isSelected) {
+      onServicesChange(
+        selectedServices.filter((s) => s.service_id !== service.id)
+      )
+    } else {
+      onServicesChange([
+        ...selectedServices,
+        {
+          service_id: service.id,
+          service_name: service.name,
+          quantity: 1,
+          unit_price: 0,
+        },
+      ])
+    }
   }
 
   return (
-    <div className="space-y-4">
-      {services.map(service => {
-        const isSelected = selectedServices.some(s => s.service_id === service.id)
-        const quantity = quantities[service.id] || 1
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {services.map((service) => {
+        const isSelected = selectedServices.some(
+          (s) => s.service_id === service.id
+        )
 
         return (
-          <div 
-            key={service.id} 
-            className="flex items-center justify-between p-4 border rounded-lg"
+          <Button
+            key={service.id}
+            type="button"
+            variant="outline"
+            className={cn(
+              "h-auto p-4 justify-start space-y-2",
+              isSelected && "border-primary"
+            )}
+            onClick={() => toggleService(service)}
           >
-            <div>
-              <h3 className="font-medium">{service.name}</h3>
-              {service.description && (
-                <p className="text-sm text-muted-foreground">{service.description}</p>
-              )}
-            </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-start justify-between w-full">
+              <div className="space-y-1 text-left">
+                <p className="text-sm font-medium leading-none">
+                  {service.name}
+                </p>
+                {service.description && (
+                  <p className="text-sm text-muted-foreground">
+                    {service.description}
+                  </p>
+                )}
+              </div>
               {isSelected && (
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleUpdateQuantity(service.id, quantity - 1)}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <span className="w-8 text-center">{quantity}</span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleUpdateQuantity(service.id, quantity + 1)}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
+                <Check className="h-4 w-4 text-primary shrink-0" />
               )}
-              <Button
-                type="button"
-                variant={isSelected ? "destructive" : "outline"}
-                onClick={() => isSelected 
-                  ? handleRemoveService(service.id)
-                  : handleAddService(service)
-                }
-              >
-                {isSelected ? "Remove" : "Add"}
-              </Button>
             </div>
-          </div>
+          </Button>
         )
       })}
     </div>
