@@ -54,13 +54,13 @@ export function ServiceTypeSelection({
             type="button"
             variant="outline"
             className={cn(
-              "h-auto p-4 justify-start space-y-2 hover:border-primary hover:bg-transparent",
+              "h-auto p-4 justify-start space-y-2 hover:border-primary hover:bg-transparent relative",
               isSelected && "border-primary"
             )}
             onClick={() => toggleService(service)}
           >
-            <div className="flex items-start justify-between w-full">
-              <div className="space-y-1 text-left">
+            <div className="flex items-start w-full">
+              <div className="space-y-1 text-left flex-grow pr-6">
                 <p className="text-sm font-medium leading-none">
                   {service.name}
                 </p>
@@ -71,7 +71,7 @@ export function ServiceTypeSelection({
                 )}
               </div>
               {isSelected && (
-                <Check className="h-4 w-4 text-primary shrink-0" />
+                <Check className="h-4 w-4 text-primary shrink-0 absolute top-4 right-4" />
               )}
             </div>
           </Button>
