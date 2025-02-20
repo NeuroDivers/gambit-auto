@@ -63,6 +63,7 @@ export function WorkOrderDetailsDialog({
         .from('service_bays')
         .select('*')
         .eq('status', 'available')
+        .order('name')  // Add ordering here
       
       if (error) throw error
       return data
@@ -174,3 +175,4 @@ export function WorkOrderDetailsDialog({
     </Dialog>
   )
 }
+
