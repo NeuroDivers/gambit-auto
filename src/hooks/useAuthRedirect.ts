@@ -25,12 +25,14 @@ export const useAuthRedirect = () => {
         
         if (session) {
           console.log("Session found:", session);
-          // Get user role from profiles
+          // Get user role from profiles with more detailed logging
+          console.log("Fetching profile for user ID:", session.user.id);
+          
           const { data, error: profileError } = await supabase
             .from("profiles")
             .select(`
               id,
-              role:role_id!inner (
+              role:role_id (
                 id,
                 name,
                 nicename
@@ -44,13 +46,21 @@ export const useAuthRedirect = () => {
             throw profileError;
           }
 
-          console.log("Profile data:", data);
+          console.log("Raw profile query result:", data);
 
           if (!data) {
             console.error("No profile found");
             navigate("/auth", { replace: true });
             return;
           }
+
+          if (!data.role) {
+            console.error("No role found in profile:", data);
+            navigate("/auth", { replace: true });
+            return;
+          }
+
+          console.log("Profile data with role:", data);
 
           // Redirect based on role
           if (data.role.name.toLowerCase() === 'client') {
@@ -63,6 +73,7 @@ export const useAuthRedirect = () => {
         }
       } catch (error: any) {
         console.error("Session check error:", error.message);
+        navigate("/auth", { replace: true });
       }
     };
 
@@ -74,13 +85,14 @@ export const useAuthRedirect = () => {
         console.log("Auth state changed:", event, session);
         
         if (event === 'SIGNED_IN' && session) {
-          console.log("User signed in, fetching profile");
-          // Get user role
+          console.log("User signed in, fetching profile for ID:", session.user.id);
+          
+          // Get user role with more detailed logging
           const { data, error: profileError } = await supabase
             .from("profiles")
             .select(`
               id,
-              role:role_id!inner (
+              role:role_id (
                 id,
                 name,
                 nicename
@@ -89,8 +101,11 @@ export const useAuthRedirect = () => {
             .eq("id", session.user.id)
             .maybeSingle<ProfileWithRole>();
 
+          console.log("Profile query result:", data);
+
           if (profileError) {
             console.error("Profile fetch error:", profileError);
+            navigate("/auth", { replace: true });
             return;
           }
 
@@ -100,7 +115,13 @@ export const useAuthRedirect = () => {
             return;
           }
 
-          console.log("Profile data after sign in:", data);
+          if (!data.role) {
+            console.error("No role found in profile:", data);
+            navigate("/auth", { replace: true });
+            return;
+          }
+
+          console.log("Profile data with role:", data);
 
           // Redirect based on role
           if (data.role.name.toLowerCase() === 'client') {
