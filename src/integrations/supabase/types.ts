@@ -1448,6 +1448,30 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_statistics: {
+        Row: {
+          collected_revenue: number | null
+          overdue_invoices: number | null
+          paid_invoices: number | null
+          pending_invoices: number | null
+          pending_revenue: number | null
+          total_invoices: number | null
+          total_revenue: number | null
+        }
+        Relationships: []
+      }
+      quote_statistics: {
+        Row: {
+          accepted_quotes: number | null
+          draft_quotes: number | null
+          pending_requests: number | null
+          rejected_quotes: number | null
+          sent_quotes: number | null
+          total_quote_value: number | null
+          total_quotes: number | null
+        }
+        Relationships: []
+      }
       revenue_statistics: {
         Row: {
           collected_revenue: number | null
@@ -1456,6 +1480,18 @@ export type Database = {
           total_invoices: number | null
           total_revenue: number | null
           unpaid_invoices: number | null
+        }
+        Relationships: []
+      }
+      work_order_statistics: {
+        Row: {
+          active_bays: number | null
+          cancelled_work_orders: number | null
+          completed_work_orders: number | null
+          in_progress_work_orders: number | null
+          pending_work_orders: number | null
+          total_bays: number | null
+          total_work_orders: number | null
         }
         Relationships: []
       }
