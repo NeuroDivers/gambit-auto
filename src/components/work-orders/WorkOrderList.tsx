@@ -1,27 +1,16 @@
 
-import { Loader2, Pencil, FileText } from "lucide-react"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { format } from "date-fns"
-import { Button } from "@/components/ui/button"
+import { Loader2 } from "lucide-react"
 import { EditWorkOrderDialog } from "./EditWorkOrderDialog"
-import { useAdminStatus } from "@/hooks/useAdminStatus"
 import { WorkOrderFilters } from "./components/WorkOrderFilters"
 import { AssignmentSheet } from "./components/AssignmentSheet"
 import { useWorkOrderListData } from "./hooks/useWorkOrderListData"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
+import { WorkOrderTable } from "./components/WorkOrderTable"
+import { WorkOrderPagination } from "./components/WorkOrderPagination"
 
 export function WorkOrderList() {
-  const { isAdmin } = useAdminStatus()
   const navigate = useNavigate()
   const {
     searchTerm,
@@ -88,121 +77,19 @@ export function WorkOrderList() {
         onStatusFilterChange={setStatusFilter}
       />
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Client</TableHead>
-              <TableHead>Vehicle</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Assigned To</TableHead>
-              <TableHead>Bay</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {workOrders && workOrders.length > 0 ? (
-              workOrders.map((workOrder) => (
-                <TableRow key={workOrder.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">
-                        {workOrder.first_name} {workOrder.last_name}
-                      </p>
-                      <p className="text-sm text-muted-foreground">{workOrder.email}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={workOrder.status === 'completed' ? 'default' : 'secondary'}>
-                      {workOrder.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <span 
-                      className={`cursor-pointer ${!workOrder.assigned_to ? 'text-muted-foreground' : ''}`}
-                      onClick={() => setAssignWorkOrder(workOrder)}
-                    >
-                      {workOrder.assigned_to ? (
-                        `${workOrder.assigned_to.first_name} ${workOrder.assigned_to.last_name}`
-                      ) : (
-                        "Unassigned"
-                      )}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span 
-                      className={`cursor-pointer ${!workOrder.service_bays ? 'text-muted-foreground' : ''}`}
-                      onClick={() => setAssignBayWorkOrder(workOrder)}
-                    >
-                      {workOrder.service_bays ? (
-                        workOrder.service_bays.name
-                      ) : (
-                        "Not assigned"
-                      )}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {format(new Date(workOrder.created_at), 'MMM d, yyyy')}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleCreateInvoice(workOrder.id)}
-                      >
-                        <FileText className="h-4 w-4" />
-                      </Button>
-                      {isAdmin && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setSelectedWorkOrder(workOrder)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center">
-                  No work orders found
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <WorkOrderTable
+        workOrders={workOrders}
+        onAssignUser={setAssignWorkOrder}
+        onAssignBay={setAssignBayWorkOrder}
+        onEdit={setSelectedWorkOrder}
+        onCreateInvoice={handleCreateInvoice}
+      />
 
-      {/* Pagination Controls */}
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setPage(page - 1)}
-          disabled={page === 1}
-        >
-          Previous
-        </Button>
-        <div className="text-sm text-muted-foreground">
-          Page {page} of {totalPages}
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setPage(page + 1)}
-          disabled={page === totalPages}
-        >
-          Next
-        </Button>
-      </div>
+      <WorkOrderPagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
 
       {selectedWorkOrder && (
         <EditWorkOrderDialog
