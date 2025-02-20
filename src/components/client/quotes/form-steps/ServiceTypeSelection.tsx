@@ -65,7 +65,7 @@ export function ServiceTypeSelection({
                   {service.name}
                 </p>
                 {service.description && (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground whitespace-normal break-words">
                     {service.description}
                   </p>
                 )}
