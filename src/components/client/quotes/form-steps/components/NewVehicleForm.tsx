@@ -83,13 +83,12 @@ export function NewVehicleForm({ onSave, onCancel, defaultValues }: NewVehicleFo
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="vehicle_serial">VIN</Label>
+            <Label htmlFor="vehicle_serial">VIN (Optional)</Label>
             <Input
               id="vehicle_serial"
               name="vehicle_serial"
               value={formData.vehicle_serial}
               onChange={handleInputChange}
-              required
             />
           </div>
         </div>
@@ -101,22 +100,6 @@ export function NewVehicleForm({ onSave, onCancel, defaultValues }: NewVehicleFo
           />
           <Label htmlFor="save-vehicle">Save vehicle to my account</Label>
         </div>
-      </div>
-
-      <div className="flex justify-end space-x-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90"
-        >
-          Save
-        </button>
       </div>
     </form>
   )

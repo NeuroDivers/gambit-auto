@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { useClientVehicles } from "./hooks/useClientVehicles"
 import { VehicleSelector } from "./components/VehicleSelector"
 import { NewVehicleForm } from "./components/NewVehicleForm"
+import { toast } from "sonner"
 
 type VehicleInfoStepProps = {
   form: UseFormReturn<QuoteRequestFormData>
@@ -15,6 +16,7 @@ type VehicleInfoStepProps = {
 export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepProps) {
   const [useNewVehicle, setUseNewVehicle] = useState(true)
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>()
+  const [saveToAccount, setSaveToAccount] = useState(false)
 
   const { data: vehicles, isLoading } = useClientVehicles()
 
@@ -46,13 +48,14 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
       form.setValue('vehicleInfo.model', data.vehicle_model)
       form.setValue('vehicleInfo.year', parseInt(data.vehicle_year))
       form.setValue('vehicleInfo.vin', data.vehicle_serial)
+      setSaveToAccount(data.save_vehicle)
     } catch (error) {
       console.error('Error saving vehicle data:', error)
     }
   }
 
   const saveNewVehicle = async () => {
-    if (!saveVehicle || !useNewVehicle) return
+    if (!saveVehicle || !useNewVehicle || !saveToAccount) return
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -76,9 +79,16 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
         is_primary: !vehicles?.length
       }
 
-      await supabase.from('vehicles').insert(vehicleData)
+      const { error } = await supabase.from('vehicles').insert(vehicleData)
+      
+      if (error) {
+        toast.error("Failed to save vehicle")
+      } else {
+        toast.success("Vehicle saved to your account")
+      }
     } catch (error) {
       console.error('Error saving vehicle:', error)
+      toast.error("Failed to save vehicle")
     }
   }
 
