@@ -26,10 +26,12 @@ export function useVehicles(clientId: string) {
       // First, if this vehicle should be primary, unset any existing primary vehicles
       if (values.is_primary) {
         console.log("Unsetting existing primary vehicles for client:", clientId)
+        // First update all existing primary vehicles to not be primary
         const { error: updateError } = await supabase
           .from('vehicles')
           .update({ is_primary: false })
           .eq('client_id', clientId)
+          .eq('is_primary', true)
 
         if (updateError) {
           console.error("Error unsetting primary vehicles:", updateError)
@@ -37,7 +39,7 @@ export function useVehicles(clientId: string) {
         }
       }
 
-      // Then insert the new vehicle
+      // Then insert the new vehicle with the primary flag
       console.log("Inserting new vehicle with values:", { ...values, client_id: clientId })
       const { data, error } = await supabase
         .from('vehicles')
@@ -69,10 +71,12 @@ export function useVehicles(clientId: string) {
   const updateVehicle = useMutation({
     mutationFn: async ({ id, values }: { id: string; values: VehicleFormValues }) => {
       if (values.is_primary) {
+        // First update all existing primary vehicles to not be primary
         const { error: updateError } = await supabase
           .from('vehicles')
           .update({ is_primary: false })
           .eq('client_id', clientId)
+          .eq('is_primary', true)
           .neq('id', id)
 
         if (updateError) throw updateError
