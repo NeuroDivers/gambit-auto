@@ -68,7 +68,7 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
           render={({ field }) => (
             <FormItem className="flex flex-col space-y-2">
               <FormLabel>Status</FormLabel>
-              <div className="flex flex-row items-center justify-between space-x-2 rounded-lg border p-3 shadow-sm">
+              <div className="flex flex-row items-center justify-between space-x-2 rounded-lg p-3 shadow-sm">
                 <span className="text-sm font-normal">Active</span>
                 <FormControl>
                   <Switch
