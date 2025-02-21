@@ -18,7 +18,7 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>()
   const [saveToAccount, setSaveToAccount] = useState(false)
 
-  const { data: vehicles, isLoading } = useClientVehicles()
+  const { data: vehicles, isLoading, refetch } = useClientVehicles()
 
   const handleVehicleSelect = (vehicleId: string) => {
     setSelectedVehicleId(vehicleId)
@@ -50,18 +50,28 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
       form.setValue('vehicleInfo.year', parseInt(data.vehicle_year) || 0, { shouldValidate: true })
       form.setValue('vehicleInfo.vin', data.vehicle_serial, { shouldValidate: true })
       setSaveToAccount(data.save_vehicle)
+
+      // If save_vehicle is true, immediately save the vehicle
+      if (data.save_vehicle) {
+        await saveNewVehicle()
+      }
     } catch (error) {
-      console.error('Error saving vehicle data:', error)
+      console.error('Error handling vehicle data:', error)
+      toast.error("Failed to process vehicle data")
     }
   }
 
   const saveNewVehicle = async () => {
-    if (!saveVehicle || !useNewVehicle || !saveToAccount) return
+    if (!saveVehicle || !useNewVehicle || !saveToAccount) {
+      console.log('Skipping vehicle save:', { saveVehicle, useNewVehicle, saveToAccount })
+      return
+    }
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         console.error('No authenticated user found')
+        toast.error("Please sign in to save vehicles")
         return
       }
 
@@ -73,14 +83,24 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
 
       if (!client) {
         console.error('No client found for user')
+        toast.error("Client account not found")
         return
       }
 
       const yearValue = form.getValues('vehicleInfo.year')
+      const make = form.getValues('vehicleInfo.make')
+      const model = form.getValues('vehicleInfo.model')
+
+      if (!make || !model || !yearValue) {
+        console.error('Missing required vehicle information')
+        toast.error("Please fill in all required vehicle information")
+        return
+      }
+
       const vehicleData = {
         client_id: client.id,
-        make: form.getValues('vehicleInfo.make'),
-        model: form.getValues('vehicleInfo.model'),
+        make,
+        model,
         year: typeof yearValue === 'string' ? parseInt(yearValue) : yearValue,
         vin: form.getValues('vehicleInfo.vin') || null,
         is_primary: !vehicles?.length
@@ -96,6 +116,7 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
         toast.error("Failed to save vehicle")
       } else {
         toast.success("Vehicle saved to your account")
+        await refetch() // Refresh the vehicles list
       }
     } catch (error) {
       console.error('Error saving vehicle:', error)
@@ -103,10 +124,13 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
     }
   }
 
+  // Wrap the form's submit handler to ensure vehicle saving happens before form submission
   const originalSubmit = form.handleSubmit
   form.handleSubmit = (onValid: any) => {
     return originalSubmit(async (values: any) => {
-      await saveNewVehicle()
+      if (saveToAccount) {
+        await saveNewVehicle()
+      }
       return onValid(values)
     })
   }
