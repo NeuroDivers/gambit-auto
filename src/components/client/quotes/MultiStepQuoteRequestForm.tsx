@@ -53,6 +53,12 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
         throw new Error("Please fill in all required vehicle information")
       }
 
+      // Get existing vehicles to determine if this should be primary
+      const { data: existingVehicles } = await supabase
+        .from('vehicles')
+        .select('id')
+        .eq('client_id', client.id)
+
       const { error: saveError } = await supabase
         .from('vehicles')
         .insert([{
@@ -60,7 +66,8 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
           make: vehicleInfo.make,
           model: vehicleInfo.model,
           year: vehicleInfo.year,
-          vin: vehicleInfo.vin || null
+          vin: vehicleInfo.vin || null,
+          is_primary: !existingVehicles?.length // Make primary if no other vehicles exist
         }])
       
       if (saveError) throw saveError

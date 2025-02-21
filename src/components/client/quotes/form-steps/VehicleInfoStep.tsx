@@ -2,7 +2,6 @@
 import { UseFormReturn } from "react-hook-form"
 import { QuoteRequestFormData } from "@/hooks/quote-request/formSchema"
 import { useState } from "react"
-import { supabase } from "@/integrations/supabase/client"
 import { useClientVehicles } from "./hooks/useClientVehicles"
 import { VehicleSelector } from "./components/VehicleSelector"
 import { NewVehicleForm } from "./components/NewVehicleForm"
@@ -16,7 +15,6 @@ type VehicleInfoStepProps = {
 export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepProps) {
   const [useNewVehicle, setUseNewVehicle] = useState(true)
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>()
-  const [saveToAccount, setSaveToAccount] = useState(false)
 
   const { data: vehicles, isLoading } = useClientVehicles()
 
@@ -44,13 +42,16 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
 
   const handleSaveVehicle = async (data: any) => {
     try {
-      form.setValue('vehicleInfo.make', data.vehicle_make, { shouldValidate: true })
-      form.setValue('vehicleInfo.model', data.vehicle_model, { shouldValidate: true })
-      form.setValue('vehicleInfo.year', parseInt(data.vehicle_year) || 0, { shouldValidate: true })
-      form.setValue('vehicleInfo.vin', data.vehicle_serial, { shouldValidate: true })
-      setSaveToAccount(data.save_vehicle)
-      // Store save preference in form data
-      form.setValue('vehicleInfo.saveToAccount', data.save_vehicle)
+      // Update form values
+      const vehicleInfo = form.getValues('vehicleInfo')
+      form.setValue('vehicleInfo', {
+        ...vehicleInfo,
+        make: data.vehicle_make,
+        model: data.vehicle_model,
+        year: parseInt(data.vehicle_year) || 0,
+        vin: data.vehicle_serial,
+        saveToAccount: data.save_vehicle
+      }, { shouldValidate: true })
     } catch (error) {
       console.error('Error handling vehicle data:', error)
       toast.error("Failed to process vehicle data")

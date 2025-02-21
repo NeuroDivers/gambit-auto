@@ -36,6 +36,7 @@ export type QuoteRequestFormData = {
     model: string;
     year: number;
     vin: string;
+    saveToAccount?: boolean;
   };
   service_items: ServiceItemType[];
   description: string;
