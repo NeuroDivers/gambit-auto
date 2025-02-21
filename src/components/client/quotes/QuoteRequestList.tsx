@@ -3,6 +3,8 @@ import { Loader2 } from "lucide-react"
 import { QuoteRequestCard } from "./QuoteRequestCard"
 import type { QuoteRequest } from "@/types/quote-request"
 import { useQueryClient } from "@tanstack/react-query"
+import { useEffect } from "react"
+import { supabase } from "@/integrations/supabase/client"
 
 type QuoteRequestListProps = {
   quoteRequests: QuoteRequest[] | undefined
@@ -20,6 +22,31 @@ export function QuoteRequestList({
   onRejectEstimate,
 }: QuoteRequestListProps) {
   const queryClient = useQueryClient()
+
+  // Set up real-time subscription for quote updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'quote_requests'
+        },
+        (payload) => {
+          // Invalidate and refetch quotes when any change occurs
+          console.log('Quote request change detected:', payload)
+          queryClient.invalidateQueries({ queryKey: ["quoteRequests"] })
+        }
+      )
+      .subscribe()
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [queryClient])
 
   if (isLoading) {
     return (
