@@ -10,8 +10,13 @@ import { useVehicles } from "@/components/clients/vehicles/hooks/useVehicles"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 
+// Extend the form type to include our custom function
+type ExtendedFormType = UseFormReturn<QuoteRequestFormData> & {
+  saveVehicleToAccount?: () => Promise<void>
+}
+
 type VehicleInfoStepProps = {
-  form: UseFormReturn<QuoteRequestFormData>
+  form: ExtendedFormType
   saveVehicle?: boolean
 }
 
@@ -102,7 +107,7 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
   }
 
   // Expose the saveVehicleToAccount function to the parent form
-  form.saveVehicleToAccount = saveVehicleToAccount
+  ;(form as ExtendedFormType).saveVehicleToAccount = saveVehicleToAccount
 
   return (
     <div className="space-y-4">
