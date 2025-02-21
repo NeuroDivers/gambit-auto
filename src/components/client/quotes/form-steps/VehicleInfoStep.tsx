@@ -40,6 +40,17 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
     }
   }
 
+  const handleSaveVehicle = async (data: any) => {
+    try {
+      form.setValue('vehicleInfo.make', data.vehicle_make)
+      form.setValue('vehicleInfo.model', data.vehicle_model)
+      form.setValue('vehicleInfo.year', parseInt(data.vehicle_year))
+      form.setValue('vehicleInfo.vin', data.vehicle_serial)
+    } catch (error) {
+      console.error('Error saving vehicle data:', error)
+    }
+  }
+
   const saveNewVehicle = async () => {
     if (!saveVehicle || !useNewVehicle) return
 
@@ -90,10 +101,14 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
 
       {useNewVehicle && (
         <NewVehicleForm
-          form={form}
-          saveVehicle={saveVehicle}
-          onSaveVehicleChange={() => {}}
-          hasExistingVehicles={Boolean(vehicles?.length)}
+          onSave={handleSaveVehicle}
+          onCancel={() => setUseNewVehicle(false)}
+          defaultValues={{
+            vehicle_make: form.getValues('vehicleInfo.make'),
+            vehicle_model: form.getValues('vehicleInfo.model'),
+            vehicle_year: form.getValues('vehicleInfo.year')?.toString() || '',
+            vehicle_serial: form.getValues('vehicleInfo.vin')
+          }}
         />
       )}
     </div>
