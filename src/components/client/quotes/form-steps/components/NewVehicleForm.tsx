@@ -2,7 +2,6 @@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState, useEffect } from "react"
-import { toast } from "sonner"
 import { Switch } from "@/components/ui/switch"
 
 interface VehicleFormData {
@@ -13,7 +12,7 @@ interface VehicleFormData {
 }
 
 interface NewVehicleFormProps {
-  onSave: (data: VehicleFormData & { save_vehicle: boolean, is_primary: boolean }) => void
+  onSave: (data: VehicleFormData & { save_vehicle: boolean }) => void
   onCancel: () => void
   defaultValues?: Partial<VehicleFormData>
 }
@@ -27,7 +26,6 @@ export function NewVehicleForm({ onSave, onCancel, defaultValues }: NewVehicleFo
   })
 
   const [saveVehicle, setSaveVehicle] = useState(false)
-  const [isPrimary, setIsPrimary] = useState(false)
 
   // Update form data when default values change
   useEffect(() => {
@@ -47,24 +45,14 @@ export function NewVehicleForm({ onSave, onCancel, defaultValues }: NewVehicleFo
         [name]: value
       }
       // Just update the parent's form state without saving
-      onSave({ ...newData, save_vehicle: saveVehicle, is_primary: isPrimary })
+      onSave({ ...newData, save_vehicle: saveVehicle })
       return newData
     })
   }
 
   const handleSaveToggleChange = (checked: boolean) => {
     setSaveVehicle(checked)
-    if (!checked) {
-      setIsPrimary(false)
-    }
-    onSave({ ...formData, save_vehicle: checked, is_primary: checked ? isPrimary : false })
-  }
-
-  const handlePrimaryToggleChange = (checked: boolean) => {
-    setIsPrimary(checked)
-    if (saveVehicle) {
-      onSave({ ...formData, save_vehicle: true, is_primary: checked })
-    }
+    onSave({ ...formData, save_vehicle: checked })
   }
 
   return (
@@ -110,28 +98,20 @@ export function NewVehicleForm({ onSave, onCancel, defaultValues }: NewVehicleFo
               name="vehicle_serial"
               value={formData.vehicle_serial}
               onChange={handleInputChange}
+              placeholder="Enter VIN manually"
             />
+            <p className="text-sm text-muted-foreground">
+              Enter your vehicle's VIN number (if available)
+            </p>
           </div>
         </div>
-        <div className="flex flex-col space-y-4">
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="save-vehicle"
-              checked={saveVehicle}
-              onCheckedChange={handleSaveToggleChange}
-            />
-            <Label htmlFor="save-vehicle">Save vehicle to my account</Label>
-          </div>
-          {saveVehicle && (
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="primary-vehicle"
-                checked={isPrimary}
-                onCheckedChange={handlePrimaryToggleChange}
-              />
-              <Label htmlFor="primary-vehicle">Set as primary vehicle</Label>
-            </div>
-          )}
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="save-vehicle"
+            checked={saveVehicle}
+            onCheckedChange={handleSaveToggleChange}
+          />
+          <Label htmlFor="save-vehicle">Save vehicle to my account</Label>
         </div>
       </div>
     </form>
