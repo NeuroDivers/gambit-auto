@@ -18,6 +18,7 @@ type VehicleInfoStepProps = {
 export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepProps) {
   const [useNewVehicle, setUseNewVehicle] = useState(true)
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>()
+  const [pendingVehicleData, setPendingVehicleData] = useState<any>(null)
 
   const { data: vehicles, isLoading } = useClientVehicles()
 
@@ -69,31 +70,39 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
   }
 
   const handleSaveVehicle = async (data: any) => {
-    try {
-      // Update form values
-      form.setValue('vehicleInfo', {
-        make: data.vehicle_make,
-        model: data.vehicle_model,
-        year: parseInt(data.vehicle_year) || 0,
-        vin: data.vehicle_serial,
-        saveToAccount: data.save_vehicle
-      }, { shouldValidate: true })
+    // Update form values
+    form.setValue('vehicleInfo', {
+      make: data.vehicle_make,
+      model: data.vehicle_model,
+      year: parseInt(data.vehicle_year) || 0,
+      vin: data.vehicle_serial,
+      saveToAccount: data.save_vehicle
+    }, { shouldValidate: true })
 
-      // If saving to account, save the vehicle now
-      if (data.save_vehicle && client?.id) {
-        await addVehicle.mutateAsync({
-          make: data.vehicle_make,
-          model: data.vehicle_model,
-          year: parseInt(data.vehicle_year) || 0,
-          vin: data.vehicle_serial || undefined,
-          is_primary: data.is_primary
-        })
-      }
+    // Store the vehicle data to be saved when the form is submitted
+    setPendingVehicleData(data)
+  }
+
+  // This function will be called by the parent component when the form is actually submitted
+  const saveVehicleToAccount = async () => {
+    if (!pendingVehicleData?.save_vehicle || !client?.id) return
+
+    try {
+      await addVehicle.mutateAsync({
+        make: pendingVehicleData.vehicle_make,
+        model: pendingVehicleData.vehicle_model,
+        year: parseInt(pendingVehicleData.vehicle_year) || 0,
+        vin: pendingVehicleData.vehicle_serial || undefined,
+        is_primary: pendingVehicleData.is_primary
+      })
     } catch (error) {
-      console.error('Error handling vehicle data:', error)
-      toast.error("Failed to process vehicle data")
+      console.error('Error saving vehicle:', error)
+      toast.error("Failed to save vehicle to your account")
     }
   }
+
+  // Expose the saveVehicleToAccount function to the parent form
+  form.saveVehicleToAccount = saveVehicleToAccount
 
   return (
     <div className="space-y-4">
