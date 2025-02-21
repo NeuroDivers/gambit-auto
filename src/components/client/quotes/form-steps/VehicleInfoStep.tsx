@@ -43,7 +43,6 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
   }
 
   const handleSaveVehicle = async (data: any) => {
-    console.log("Saving vehicle data:", data)
     try {
       // Immediately update form values when the vehicle form changes
       form.setValue('vehicleInfo.make', data.vehicle_make, { shouldValidate: true })
@@ -61,15 +60,21 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) {
+        console.error('No authenticated user found')
+        return
+      }
 
       const { data: client } = await supabase
         .from('clients')
         .select('id')
         .eq('user_id', user.id)
-        .maybeSingle()
+        .single()
 
-      if (!client) return
+      if (!client) {
+        console.error('No client found for user')
+        return
+      }
 
       const yearValue = form.getValues('vehicleInfo.year')
       const vehicleData = {
@@ -81,11 +86,13 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
         is_primary: !vehicles?.length
       }
 
-      console.log("Saving vehicle to database:", vehicleData)
-      const { error } = await supabase.from('vehicles').insert(vehicleData)
+      console.log('Saving vehicle to database:', vehicleData)
+      const { error: saveError } = await supabase
+        .from('vehicles')
+        .insert([vehicleData])
       
-      if (error) {
-        console.error('Error saving vehicle:', error)
+      if (saveError) {
+        console.error('Error saving vehicle:', saveError)
         toast.error("Failed to save vehicle")
       } else {
         toast.success("Vehicle saved to your account")
