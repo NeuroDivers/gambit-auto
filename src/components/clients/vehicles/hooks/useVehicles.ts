@@ -23,33 +23,44 @@ export function useVehicles(clientId: string) {
 
   const addVehicle = useMutation({
     mutationFn: async (values: VehicleFormValues) => {
+      console.log("Adding vehicle with values:", { ...values, client_id: clientId })
+
       // First, if this vehicle should be primary, unset any existing primary vehicles
       if (values.is_primary) {
-        console.log("Unsetting existing primary vehicles for client:", clientId)
-        // First update all existing primary vehicles to not be primary
-        await supabase
+        console.log("Unsetting existing primary vehicles")
+        const { error: updateError } = await supabase
           .from('vehicles')
           .update({ is_primary: false })
           .eq('client_id', clientId)
+
+        if (updateError) {
+          console.error("Error unsetting primary vehicles:", updateError)
+          throw updateError
+        }
       }
 
-      // Then insert the new vehicle with the primary flag
-      console.log("Inserting new vehicle with values:", { ...values, client_id: clientId })
-      const { data, error } = await supabase
+      // Then insert the new vehicle
+      const { data, error: insertError } = await supabase
         .from('vehicles')
-        .insert([{ ...values, client_id: clientId }])
+        .insert([{ 
+          ...values, 
+          client_id: clientId,
+          is_primary: values.is_primary // Explicitly set is_primary
+        }])
         .select()
         .single()
 
-      if (error) {
-        console.error("Error inserting vehicle:", error)
-        throw error
+      if (insertError) {
+        console.error("Error inserting vehicle:", insertError)
+        throw insertError
       }
 
+      console.log("Successfully added vehicle:", data)
       return data
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['vehicles', clientId] })
+      console.log("Vehicle added successfully:", data)
       if (data.is_primary) {
         toast.success("Vehicle saved and set as primary")
       } else {
@@ -64,19 +75,33 @@ export function useVehicles(clientId: string) {
 
   const updateVehicle = useMutation({
     mutationFn: async ({ id, values }: { id: string; values: VehicleFormValues }) => {
+      console.log("Updating vehicle:", id, "with values:", values)
+
       if (values.is_primary) {
-        await supabase
+        console.log("Unsetting other primary vehicles")
+        const { error: updateError } = await supabase
           .from('vehicles')
           .update({ is_primary: false })
           .eq('client_id', clientId)
+          .neq('id', id)
+
+        if (updateError) {
+          console.error("Error unsetting other primary vehicles:", updateError)
+          throw updateError
+        }
       }
 
       const { error } = await supabase
         .from('vehicles')
-        .update(values)
+        .update({ ...values, is_primary: values.is_primary })
         .eq('id', id)
 
-      if (error) throw error
+      if (error) {
+        console.error("Error updating vehicle:", error)
+        throw error
+      }
+
+      console.log("Vehicle updated successfully")
       return Promise.resolve()
     },
     onSuccess: () => {
@@ -84,6 +109,7 @@ export function useVehicles(clientId: string) {
       toast.success("Vehicle updated successfully")
     },
     onError: (error) => {
+      console.error("Error updating vehicle:", error)
       toast.error(error.message)
     }
   })
