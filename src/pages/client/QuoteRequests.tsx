@@ -41,26 +41,60 @@ export default function QuoteRequests() {
 
   // Set up real-time subscription for quote updates
   useEffect(() => {
+    console.log('Setting up quote requests subscription')
     const channel = supabase
-      .channel('schema-db-changes')
+      .channel('quote-requests-changes')
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'quote_requests'
         },
         (payload) => {
-          // Invalidate and refetch quotes when any change occurs
+          console.log('New quote request inserted:', payload)
           queryClient.invalidateQueries({ queryKey: ["quoteRequests"] })
         }
       )
-      .subscribe()
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'quote_requests'
+        },
+        (payload) => {
+          console.log('Quote request updated:', payload)
+          queryClient.invalidateQueries({ queryKey: ["quoteRequests"] })
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'quote_requests'
+        },
+        (payload) => {
+          console.log('Quote request deleted:', payload)
+          queryClient.invalidateQueries({ queryKey: ["quoteRequests"] })
+        }
+      )
+      .subscribe((status) => {
+        console.log('Subscription status:', status)
+      })
 
     return () => {
+      console.log('Cleaning up quote requests subscription')
       supabase.removeChannel(channel)
     }
   }, [queryClient])
+
+  const handleDialogClose = () => {
+    setFormDialogOpen(false)
+    // Force a refresh of the quotes when the dialog closes
+    queryClient.invalidateQueries({ queryKey: ["quoteRequests"] })
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -89,7 +123,7 @@ export default function QuoteRequests() {
 
       <QuoteRequestFormDialog 
         open={formDialogOpen} 
-        onOpenChange={setFormDialogOpen} 
+        onOpenChange={handleDialogClose} 
       />
     </div>
   )
