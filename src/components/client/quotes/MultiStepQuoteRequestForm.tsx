@@ -91,7 +91,7 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
                           Enter your vehicle details to help us provide accurate service quotes.
                         </p>
                       </div>
-                      <VehicleInfoStep form={form as any} saveVehicle={false} />
+                      <VehicleInfoStep form={form as any} saveVehicle={true} />
                     </div>
 
                     <div className="rounded-lg border bg-card p-6 space-y-6">
