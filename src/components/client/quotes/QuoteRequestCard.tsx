@@ -55,11 +55,13 @@ export function QuoteRequestCard({
     try {
       setIsDeleting(true)
       
-      const response = await supabase.functions.invoke('delete-quote-request', {
-        body: { id: request.id }
-      })
+      // Delete quote request directly using Supabase client
+      const { error } = await supabase
+        .from('quote_requests')
+        .delete()
+        .eq('id', request.id)
 
-      if (response.error) throw response.error
+      if (error) throw error
 
       toast.success('Quote request deleted successfully')
       onDelete?.()
@@ -153,7 +155,11 @@ export function QuoteRequestCard({
                     size="sm"
                     disabled={isDeleting}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    {isDeleting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
