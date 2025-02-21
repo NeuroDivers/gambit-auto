@@ -2,10 +2,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Vehicle, VehicleFormValues } from "../types"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 export function useVehicles(clientId: string) {
-  const { toast } = useToast()
   const queryClient = useQueryClient()
 
   const { data: vehicles, isLoading } = useQuery({
@@ -24,50 +23,57 @@ export function useVehicles(clientId: string) {
 
   const addVehicle = useMutation({
     mutationFn: async (values: VehicleFormValues) => {
-      // If setting as primary, first unset any existing primary vehicle
+      // First, if this vehicle should be primary, unset any existing primary vehicles
       if (values.is_primary) {
+        console.log("Unsetting existing primary vehicles for client:", clientId)
         const { error: updateError } = await supabase
           .from('vehicles')
           .update({ is_primary: false })
           .eq('client_id', clientId)
-          .eq('is_primary', true)
 
-        if (updateError) throw updateError
+        if (updateError) {
+          console.error("Error unsetting primary vehicles:", updateError)
+          throw updateError
+        }
       }
 
-      const { error } = await supabase
+      // Then insert the new vehicle
+      console.log("Inserting new vehicle with values:", { ...values, client_id: clientId })
+      const { data, error } = await supabase
         .from('vehicles')
         .insert([{ ...values, client_id: clientId }])
+        .select()
+        .single()
 
-      if (error) throw error
-      return Promise.resolve()
+      if (error) {
+        console.error("Error inserting vehicle:", error)
+        throw error
+      }
+
+      return data
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['vehicles'] })
-      toast({
-        title: "Success",
-        description: "Vehicle added successfully",
-      })
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['vehicles', clientId] })
+      if (data.is_primary) {
+        toast.success("Vehicle saved and set as primary")
+      } else {
+        toast.success("Vehicle saved successfully")
+      }
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
+      console.error("Vehicle mutation error:", error)
+      toast.error("Failed to save vehicle")
     }
   })
 
   const updateVehicle = useMutation({
     mutationFn: async ({ id, values }: { id: string; values: VehicleFormValues }) => {
-      // If setting as primary, first unset any existing primary vehicle
       if (values.is_primary) {
         const { error: updateError } = await supabase
           .from('vehicles')
           .update({ is_primary: false })
           .eq('client_id', clientId)
-          .eq('is_primary', true)
-          .neq('id', id) // Don't update the current vehicle
+          .neq('id', id)
 
         if (updateError) throw updateError
       }
@@ -81,18 +87,11 @@ export function useVehicles(clientId: string) {
       return Promise.resolve()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['vehicles'] })
-      toast({
-        title: "Success",
-        description: "Vehicle updated successfully",
-      })
+      queryClient.invalidateQueries({ queryKey: ['vehicles', clientId] })
+      toast.success("Vehicle updated successfully")
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error(error.message)
     }
   })
 
@@ -107,18 +106,11 @@ export function useVehicles(clientId: string) {
       return Promise.resolve()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['vehicles'] })
-      toast({
-        title: "Success",
-        description: "Vehicle deleted successfully",
-      })
+      queryClient.invalidateQueries({ queryKey: ['vehicles', clientId] })
+      toast.success("Vehicle deleted successfully")
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error(error.message)
     }
   })
 
