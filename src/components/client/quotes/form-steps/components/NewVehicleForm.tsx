@@ -13,7 +13,7 @@ interface VehicleFormData {
 }
 
 interface NewVehicleFormProps {
-  onSave: (data: VehicleFormData & { save_vehicle: boolean, is_primary: boolean }) => void
+  onSave: (data: VehicleFormData & { save_vehicle: boolean }) => void
   onCancel: () => void
   defaultValues?: Partial<VehicleFormData>
 }
@@ -27,7 +27,6 @@ export function NewVehicleForm({ onSave, onCancel, defaultValues }: NewVehicleFo
   })
 
   const [saveVehicle, setSaveVehicle] = useState(false)
-  const [isPrimary, setIsPrimary] = useState(false)
 
   // Update form data when default values change
   useEffect(() => {
@@ -46,32 +45,17 @@ export function NewVehicleForm({ onSave, onCancel, defaultValues }: NewVehicleFo
         ...prev,
         [name]: value
       }
-      // Immediately notify parent of changes with current toggle states
-      onSave({ ...newData, save_vehicle: saveVehicle, is_primary: isPrimary })
+      // Immediately notify parent of changes
+      onSave({ ...newData, save_vehicle: saveVehicle })
       return newData
     })
   }
 
-  const handleSaveToggleChange = (checked: boolean) => {
+  const handleToggleChange = (checked: boolean) => {
     setSaveVehicle(checked)
-    // If turning off save vehicle, also turn off primary
-    if (!checked) {
-      setIsPrimary(false)
-    }
     toast.info(checked ? "Vehicle will be saved to your account" : "Vehicle won't be saved to your account")
     // Update parent with current data and new save preference
-    onSave({ 
-      ...formData, 
-      save_vehicle: checked, 
-      is_primary: checked ? isPrimary : false 
-    })
-  }
-
-  const handlePrimaryToggleChange = (checked: boolean) => {
-    setIsPrimary(checked)
-    toast.info(checked ? "Set as primary vehicle" : "Removed primary vehicle status")
-    // Update parent with current data and new primary status
-    onSave({ ...formData, save_vehicle: saveVehicle, is_primary: checked })
+    onSave({ ...formData, save_vehicle: checked })
   }
 
   return (
@@ -120,25 +104,13 @@ export function NewVehicleForm({ onSave, onCancel, defaultValues }: NewVehicleFo
             />
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-start sm:space-x-6 space-y-4 sm:space-y-0">
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="save-vehicle"
-              checked={saveVehicle}
-              onCheckedChange={handleSaveToggleChange}
-            />
-            <Label htmlFor="save-vehicle">Save vehicle to my account</Label>
-          </div>
-          {saveVehicle && (
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="primary-vehicle"
-                checked={isPrimary}
-                onCheckedChange={handlePrimaryToggleChange}
-              />
-              <Label htmlFor="primary-vehicle">Set as primary vehicle</Label>
-            </div>
-          )}
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="save-vehicle"
+            checked={saveVehicle}
+            onCheckedChange={handleToggleChange}
+          />
+          <Label htmlFor="save-vehicle">Save vehicle to my account</Label>
         </div>
       </div>
     </form>

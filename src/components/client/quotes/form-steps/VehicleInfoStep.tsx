@@ -53,8 +53,7 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
         model: data.vehicle_model,
         year: parseInt(data.vehicle_year) || 0,
         vin: data.vehicle_serial,
-        saveToAccount: data.save_vehicle,
-        isPrimary: data.is_primary
+        saveToAccount: data.save_vehicle
       }, { shouldValidate: true })
     } catch (error) {
       console.error('Error handling vehicle data:', error)

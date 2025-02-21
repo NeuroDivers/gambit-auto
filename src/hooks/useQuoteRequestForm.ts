@@ -48,9 +48,7 @@ export function useQuoteRequestForm() {
       make: defaultVehicle?.make ?? "",
       model: defaultVehicle?.model ?? "",
       year: defaultVehicle?.year ?? new Date().getFullYear(),
-      vin: defaultVehicle?.vin ?? "",
-      saveToAccount: false,
-      isPrimary: false
+      vin: defaultVehicle?.vin ?? ""
     },
     service_items: [] satisfies ServiceItemType[],
     description: "",
@@ -65,13 +63,11 @@ export function useQuoteRequestForm() {
   // Update form values when default vehicle is loaded
   useEffect(() => {
     if (defaultVehicle) {
-      form.setValue('vehicleInfo', {
+      form.setValue("vehicleInfo", {
         make: defaultVehicle.make,
         model: defaultVehicle.model,
         year: defaultVehicle.year,
-        vin: defaultVehicle.vin ?? "",
-        saveToAccount: false,
-        isPrimary: false
+        vin: defaultVehicle.vin ?? ""
       })
     }
   }, [defaultVehicle, form])
@@ -94,13 +90,8 @@ export function useQuoteRequestForm() {
 
   const onSubmit = useCallback(async (data: QuoteRequestFormData) => {
     try {
-      console.log("Starting quote request submission with data:", data)
-
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      if (sessionError) {
-        console.error("Session error:", sessionError)
-        throw sessionError
-      }
+      if (sessionError) throw sessionError
       if (!session) {
         toast.error("Please sign in to submit a quote request")
         navigate("/auth")
@@ -108,54 +99,19 @@ export function useQuoteRequestForm() {
       }
 
       // Get client ID
-      console.log("Fetching client ID for user:", session.user.id)
       const { data: clientData, error: clientError } = await supabase
         .from("clients")
         .select("id")
         .eq("user_id", session.user.id)
         .maybeSingle()
 
-      if (clientError) {
-        console.error("Client fetch error:", clientError)
-        throw clientError
-      }
+      if (clientError) throw clientError
       if (!clientData) {
-        console.error("No client account found for user:", session.user.id)
         toast.error("No client account found")
         return
       }
 
-      // If saving vehicle to account, create vehicle first
-      if (data.vehicleInfo.saveToAccount) {
-        console.log("Saving vehicle to account:", {
-          clientId: clientData.id,
-          vehicleInfo: data.vehicleInfo
-        })
-
-        const { error: vehicleError } = await supabase
-          .from("vehicles")
-          .insert({
-            client_id: clientData.id,
-            make: data.vehicleInfo.make,
-            model: data.vehicleInfo.model,
-            year: data.vehicleInfo.year,
-            vin: data.vehicleInfo.vin || null,
-            is_primary: data.vehicleInfo.isPrimary || false
-          })
-
-        if (vehicleError) {
-          console.error("Vehicle creation error:", vehicleError)
-          throw vehicleError
-        }
-      }
-
       // Create quote request
-      console.log("Creating quote request:", {
-        clientId: clientData.id,
-        serviceIds: data.service_items.map(item => item.service_id),
-        uploadedUrls
-      })
-
       const { error: insertError } = await supabase
         .from("quote_requests")
         .insert({
@@ -163,29 +119,23 @@ export function useQuoteRequestForm() {
           vehicle_make: data.vehicleInfo.make,
           vehicle_model: data.vehicleInfo.model,
           vehicle_year: data.vehicleInfo.year,
-          vehicle_vin: data.vehicleInfo.vin || null,
-          description: data.description || "",
+          vehicle_vin: data.vehicleInfo.vin,
+          description: data.description,
           service_ids: data.service_items.map(item => item.service_id),
-          service_details: data.service_details || {},
-          media_urls: uploadedUrls,
-          status: "pending"
+          service_details: data.service_details,
+          media_urls: uploadedUrls
         })
 
-      if (insertError) {
-        console.error("Quote request creation error:", insertError)
-        throw insertError
-      }
+      if (insertError) throw insertError
 
-      console.log("Quote request created successfully")
       // Clear form storage
       clearStoredForm()
-      
-      toast.success("Quote request submitted successfully!")
+
+      // Removed toast from here since it will be handled in the form component
       navigate("/client/quotes")
     } catch (error: any) {
       console.error("Error submitting quote request:", error)
-      toast.error(error.message || "Failed to submit quote request")
-      throw error
+      throw error // Re-throw the error to be handled by the form component
     }
   }, [navigate, clearStoredForm, uploadedUrls])
 
