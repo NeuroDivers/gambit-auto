@@ -43,11 +43,13 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
   }
 
   const handleSaveVehicle = async (data: any) => {
+    console.log("Saving vehicle data:", data)
     try {
-      form.setValue('vehicleInfo.make', data.vehicle_make)
-      form.setValue('vehicleInfo.model', data.vehicle_model)
-      form.setValue('vehicleInfo.year', parseInt(data.vehicle_year))
-      form.setValue('vehicleInfo.vin', data.vehicle_serial)
+      // Immediately update form values when the vehicle form changes
+      form.setValue('vehicleInfo.make', data.vehicle_make, { shouldValidate: true })
+      form.setValue('vehicleInfo.model', data.vehicle_model, { shouldValidate: true })
+      form.setValue('vehicleInfo.year', parseInt(data.vehicle_year) || 0, { shouldValidate: true })
+      form.setValue('vehicleInfo.vin', data.vehicle_serial, { shouldValidate: true })
       setSaveToAccount(data.save_vehicle)
     } catch (error) {
       console.error('Error saving vehicle data:', error)
@@ -79,9 +81,11 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
         is_primary: !vehicles?.length
       }
 
+      console.log("Saving vehicle to database:", vehicleData)
       const { error } = await supabase.from('vehicles').insert(vehicleData)
       
       if (error) {
+        console.error('Error saving vehicle:', error)
         toast.error("Failed to save vehicle")
       } else {
         toast.success("Vehicle saved to your account")

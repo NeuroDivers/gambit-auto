@@ -1,7 +1,7 @@
 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { Switch } from "@/components/ui/switch"
 
@@ -28,26 +28,38 @@ export function NewVehicleForm({ onSave, onCancel, defaultValues }: NewVehicleFo
 
   const [saveVehicle, setSaveVehicle] = useState(false)
 
+  // Update form data when default values change
+  useEffect(() => {
+    setFormData({
+      vehicle_make: defaultValues?.vehicle_make || "",
+      vehicle_model: defaultValues?.vehicle_model || "",
+      vehicle_year: defaultValues?.vehicle_year || "",
+      vehicle_serial: defaultValues?.vehicle_serial || "",
+    })
+  }, [defaultValues])
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSave({ ...formData, save_vehicle: saveVehicle })
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [name]: value
+      }
+      // Immediately notify parent of changes
+      onSave({ ...newData, save_vehicle: saveVehicle })
+      return newData
+    })
   }
 
   const handleToggleChange = (checked: boolean) => {
     setSaveVehicle(checked)
     toast.info(checked ? "Vehicle will be saved to your account" : "Vehicle won't be saved to your account")
+    // Update parent with current data and new save preference
+    onSave({ ...formData, save_vehicle: checked })
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form className="space-y-4">
       <div className="grid gap-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
