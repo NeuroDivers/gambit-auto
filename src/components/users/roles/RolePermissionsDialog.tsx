@@ -11,6 +11,8 @@ import { PermissionSection } from "./components/PermissionSection";
 import { groupPermissions } from "./types/permissions";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Users } from "lucide-react";
 
 interface RolePermissionsDialogProps {
   roleId: string | null;
@@ -41,8 +43,16 @@ export const RolePermissionsDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[1200px]">
-        <DialogHeader>
-          <DialogTitle>Manage Role Permissions</DialogTitle>
+        <DialogHeader className="space-y-4">
+          <div className="flex items-center gap-2">
+            <DialogTitle>Manage Role Permissions</DialogTitle>
+            {role && (
+              <Badge variant="secondary" className="gap-1">
+                <Users className="h-3 w-3" />
+                {role.nicename || role.name}
+              </Badge>
+            )}
+          </div>
         </DialogHeader>
         <ScrollArea className="h-[500px] pr-4">
           <div className="space-y-6">
