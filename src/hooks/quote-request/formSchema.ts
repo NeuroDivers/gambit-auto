@@ -6,7 +6,8 @@ const vehicleInfoSchema = z.object({
   make: z.string().min(1, "Make is required"),
   model: z.string().min(1, "Model is required"),
   year: z.number().min(1900, "Year must be after 1900"),
-  vin: z.string()
+  vin: z.string(),
+  saveToAccount: z.boolean().optional()
 }).required()
 
 const serviceItemSchema = z.object({

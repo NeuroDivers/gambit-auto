@@ -23,29 +23,32 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
 
     if (vehicleId === 'new') {
       setUseNewVehicle(true)
-      form.setValue('vehicleInfo.make', '')
-      form.setValue('vehicleInfo.model', '')
-      form.setValue('vehicleInfo.year', 0)
-      form.setValue('vehicleInfo.vin', '')
+      form.setValue('vehicleInfo', {
+        make: '',
+        model: '',
+        year: 0,
+        vin: '',
+        saveToAccount: false
+      })
       return
     }
 
     const selectedVehicle = vehicles?.find(v => v.id === vehicleId)
     if (selectedVehicle) {
-      form.setValue('vehicleInfo.make', selectedVehicle.make)
-      form.setValue('vehicleInfo.model', selectedVehicle.model)
-      form.setValue('vehicleInfo.year', selectedVehicle.year)
-      form.setValue('vehicleInfo.vin', selectedVehicle.vin || '')
+      form.setValue('vehicleInfo', {
+        make: selectedVehicle.make,
+        model: selectedVehicle.model,
+        year: selectedVehicle.year,
+        vin: selectedVehicle.vin || '',
+        saveToAccount: false
+      })
       setUseNewVehicle(false)
     }
   }
 
   const handleSaveVehicle = async (data: any) => {
     try {
-      // Update form values
-      const vehicleInfo = form.getValues('vehicleInfo')
       form.setValue('vehicleInfo', {
-        ...vehicleInfo,
         make: data.vehicle_make,
         model: data.vehicle_model,
         year: parseInt(data.vehicle_year) || 0,
