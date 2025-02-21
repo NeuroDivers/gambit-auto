@@ -48,7 +48,9 @@ export function useQuoteRequestForm() {
       make: defaultVehicle?.make ?? "",
       model: defaultVehicle?.model ?? "",
       year: defaultVehicle?.year ?? new Date().getFullYear(),
-      vin: defaultVehicle?.vin ?? ""
+      vin: defaultVehicle?.vin ?? "",
+      saveToAccount: false,
+      isPrimary: false
     },
     service_items: [] satisfies ServiceItemType[],
     description: "",
@@ -63,11 +65,13 @@ export function useQuoteRequestForm() {
   // Update form values when default vehicle is loaded
   useEffect(() => {
     if (defaultVehicle) {
-      form.setValue("vehicleInfo", {
+      form.setValue('vehicleInfo', {
         make: defaultVehicle.make,
         model: defaultVehicle.model,
         year: defaultVehicle.year,
-        vin: defaultVehicle.vin ?? ""
+        vin: defaultVehicle.vin ?? "",
+        saveToAccount: false,
+        isPrimary: false
       })
     }
   }, [defaultVehicle, form])
@@ -147,11 +151,10 @@ export function useQuoteRequestForm() {
       // Clear form storage
       clearStoredForm()
 
-      // Removed toast from here since it will be handled in the form component
       navigate("/client/quotes")
     } catch (error: any) {
       console.error("Error submitting quote request:", error)
-      throw error // Re-throw the error to be handled by the form component
+      throw error
     }
   }, [navigate, clearStoredForm, uploadedUrls])
 
