@@ -97,7 +97,8 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
         make: pendingVehicleData.vehicle_make,
         model: pendingVehicleData.vehicle_model,
         year: parseInt(pendingVehicleData.vehicle_year) || 0,
-        vin: pendingVehicleData.vehicle_serial || undefined
+        vin: pendingVehicleData.vehicle_serial || undefined,
+        is_primary: false // Explicitly set is_primary to false
       })
     } catch (error) {
       console.error('Error saving vehicle:', error)

@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState, useEffect } from "react"
 import { Switch } from "@/components/ui/switch"
+import { useVinLookup } from "@/hooks/useVinLookup"
 
 interface VehicleFormData {
   vehicle_make: string
@@ -27,6 +28,9 @@ export function NewVehicleForm({ onSave, onCancel, defaultValues }: NewVehicleFo
 
   const [saveVehicle, setSaveVehicle] = useState(false)
 
+  // Use VIN lookup hook
+  const { data: vinData, isLoading: isLookingUpVin } = useVinLookup(formData.vehicle_serial)
+
   // Update form data when default values change
   useEffect(() => {
     setFormData({
@@ -36,6 +40,20 @@ export function NewVehicleForm({ onSave, onCancel, defaultValues }: NewVehicleFo
       vehicle_serial: defaultValues?.vehicle_serial || "",
     })
   }, [defaultValues])
+
+  // Update form when VIN data is received
+  useEffect(() => {
+    if (vinData && !vinData.error && vinData.make && vinData.model && vinData.year) {
+      const newData = {
+        ...formData,
+        vehicle_make: vinData.make,
+        vehicle_model: vinData.model,
+        vehicle_year: vinData.year.toString(),
+      }
+      setFormData(newData)
+      onSave({ ...newData, save_vehicle: saveVehicle })
+    }
+  }, [vinData])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -92,17 +110,24 @@ export function NewVehicleForm({ onSave, onCancel, defaultValues }: NewVehicleFo
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="vehicle_serial">VIN (Optional)</Label>
+            <Label htmlFor="vehicle_serial">VIN</Label>
             <Input
               id="vehicle_serial"
               name="vehicle_serial"
               value={formData.vehicle_serial}
               onChange={handleInputChange}
-              placeholder="Enter VIN manually"
+              placeholder="Enter your VIN number"
+              className={isLookingUpVin ? "bg-muted" : ""}
             />
             <p className="text-sm text-muted-foreground">
-              Enter your vehicle's VIN number (if available)
+              {isLookingUpVin ? "Looking up VIN..." : 
+                "Enter your vehicle's 17-character VIN to automatically fill make, model, and year"}
             </p>
+            {vinData?.error && (
+              <p className="text-sm text-destructive">
+                {vinData.error}
+              </p>
+            )}
           </div>
         </div>
         <div className="flex items-center space-x-2">
