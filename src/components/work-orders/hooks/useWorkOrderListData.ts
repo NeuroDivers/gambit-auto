@@ -49,13 +49,14 @@ export function useWorkOrderListData() {
     queryFn: fetchWorkOrders
   });
 
-  // Set up real-time subscription
+  // Set up real-time subscription for all relevant tables
   useEffect(() => {
+    console.log("Setting up real-time subscriptions...")
     const channel = supabase
       .channel('work-orders-changes')
       .on(
         'postgres_changes',
-        {
+        { 
           event: '*',
           schema: 'public',
           table: 'work_orders'
@@ -65,9 +66,36 @@ export function useWorkOrderListData() {
           queryClient.invalidateQueries({ queryKey: ['work-orders'] })
         }
       )
-      .subscribe()
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles'
+        },
+        (payload) => {
+          console.log('Profile updated:', payload)
+          queryClient.invalidateQueries({ queryKey: ['work-orders'] })
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'service_bays'
+        },
+        (payload) => {
+          console.log('Service bay updated:', payload)
+          queryClient.invalidateQueries({ queryKey: ['work-orders'] })
+        }
+      )
+      .subscribe((status) => {
+        console.log("Subscription status:", status)
+      })
 
     return () => {
+      console.log("Cleaning up real-time subscriptions...")
       supabase.removeChannel(channel)
     }
   }, [queryClient])
