@@ -3,6 +3,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { UseFormReturn } from "react-hook-form";
 import * as z from "zod";
 import { useQuery } from "@tanstack/react-query";
@@ -14,6 +15,7 @@ const formSchema = z.object({
   description: z.string().optional(),
   pricing_model: z.enum(["flat_rate", "hourly", "variable"]),
   base_price: z.string().optional(),
+  discount_price: z.string().optional(),
   duration: z.string().optional(),
   service_type: z.enum(["standalone", "sub_service", "bundle"]),
   parent_service_id: z.string().optional()
@@ -43,22 +45,42 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
 
   return (
     <div className="space-y-4">
-      <FormField
-        control={form.control}
-        name="name"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Name</FormLabel>
-            <FormControl>
-              <Input 
-                id="service_name"
-                {...field} 
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="flex gap-4 items-start">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem className="flex-1">
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input 
+                  id="service_name"
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between space-x-2 space-y-0 rounded-lg border p-3 shadow-sm">
+              <FormLabel className="font-normal">Active</FormLabel>
+              <FormControl>
+                <Switch
+                  checked={field.value === "active"}
+                  onCheckedChange={(checked) => {
+                    field.onChange(checked ? "active" : "inactive");
+                  }}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+      </div>
 
       <FormField
         control={form.control}
@@ -118,31 +140,6 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
 
       <FormField
         control={form.control}
-        name="status"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Status</FormLabel>
-            <Select
-              onValueChange={field.onChange}
-              defaultValue={field.value}
-            >
-              <FormControl>
-                <SelectTrigger id="service_status">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
         name="pricing_model"
         render={({ field }) => (
           <FormItem>
@@ -167,25 +164,47 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="base_price"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Base Price</FormLabel>
-            <FormControl>
-              <Input
-                id="service_base_price"
-                {...field}
-                type="number"
-                step="0.01"
-                min="0"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="grid grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="base_price"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Base Price</FormLabel>
+              <FormControl>
+                <Input
+                  id="service_base_price"
+                  {...field}
+                  type="number"
+                  step="0.01"
+                  min="0"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="discount_price"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Discount Price</FormLabel>
+              <FormControl>
+                <Input
+                  id="service_discount_price"
+                  {...field}
+                  type="number"
+                  step="0.01"
+                  min="0"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
 
       <FormField
         control={form.control}

@@ -44,6 +44,7 @@ export const ServiceTypeDialog = ({
     description: "",
     pricing_model: "flat_rate",
     base_price: "",
+    discount_price: "",
     duration: "",
     service_type: "standalone"
   } as const;
@@ -61,6 +62,7 @@ export const ServiceTypeDialog = ({
         description: serviceType.description || "",
         pricing_model: serviceType.pricing_model || "flat_rate",
         base_price: serviceType.base_price?.toString() || "",
+        discount_price: serviceType.discount_price?.toString() || "",
         duration: serviceType.duration?.toString() || "",
         service_type: serviceType.service_type || "standalone",
         parent_service_id: serviceType.parent_service_id || undefined
@@ -78,6 +80,7 @@ export const ServiceTypeDialog = ({
         description: values.description || null,
         pricing_model: values.pricing_model,
         base_price: values.base_price ? parseFloat(values.base_price) : null,
+        discount_price: values.discount_price ? parseFloat(values.discount_price) : null,
         duration: values.duration ? parseInt(values.duration) : null,
         service_type: values.service_type,
         hierarchy_type: values.service_type === 'sub_service' ? 'sub' : 'main',
@@ -104,7 +107,6 @@ export const ServiceTypeDialog = ({
         description: `Successfully ${isEditing ? "updated" : "created"} service type "${values.name}"`
       });
 
-      // Reset form if it's a new service type
       if (!isEditing) {
         form.reset(defaultValues);
       }
