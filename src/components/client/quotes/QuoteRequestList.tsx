@@ -30,7 +30,7 @@ export function QuoteRequestList({
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
           schema: 'public',
           table: 'quote_requests'
         },
