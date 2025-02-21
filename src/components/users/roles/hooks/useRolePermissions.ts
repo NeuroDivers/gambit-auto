@@ -105,22 +105,26 @@ export const useRolePermissions = (roleId: string | null) => {
     }
   };
 
-  const handleBayAssignmentToggle = async (newValue: boolean) => {
+  const handleAssignmentToggle = async (type: 'bay' | 'work_orders', newValue: boolean) => {
     if (!roleId || isUpdating) return;
 
     setIsUpdating(true);
     try {
+      const updateData = type === 'bay' 
+        ? { can_be_assigned_to_bay: newValue }
+        : { can_be_assigned_work_orders: newValue };
+
       // Optimistically update the UI
       queryClient.setQueryData(["role", roleId], (oldData: any) => {
         if (!oldData) return oldData;
-        return { ...oldData, can_be_assigned_to_bay: newValue };
+        return { ...oldData, ...updateData };
       });
 
       // Perform the update
       const { error: updateError } = await supabase
         .from("roles")
         .update({ 
-          can_be_assigned_to_bay: newValue,
+          ...updateData,
           updated_at: new Date().toISOString()
         })
         .eq("id", roleId);
@@ -130,13 +134,14 @@ export const useRolePermissions = (roleId: string | null) => {
         throw updateError;
       }
 
+      const feature = type === 'bay' ? 'service bays' : 'work orders';
       const action = newValue ? "enabled" : "disabled";
       toast({
-        title: "Bay assignment updated",
-        description: `This role ${newValue ? "can now" : "can no longer"} be assigned to service bays. Bay assignment has been ${action}.`,
+        title: `Assignment permission updated`,
+        description: `This role ${newValue ? "can now" : "can no longer"} be assigned to ${feature}.`,
       });
     } catch (error: any) {
-      console.error("Bay assignment update error:", error);
+      console.error("Assignment update error:", error);
       
       // Revert optimistic update
       queryClient.invalidateQueries({ 
@@ -144,7 +149,7 @@ export const useRolePermissions = (roleId: string | null) => {
       });
       
       toast({
-        title: "Error updating bay assignment",
+        title: "Error updating assignment permission",
         description: error.message,
         variant: "destructive",
       });
@@ -159,6 +164,6 @@ export const useRolePermissions = (roleId: string | null) => {
     isUpdating,
     role,
     handlePermissionToggle,
-    handleBayAssignmentToggle
+    handleAssignmentToggle
   };
 };
