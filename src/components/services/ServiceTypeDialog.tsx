@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -108,6 +109,7 @@ export const ServiceTypeDialog = ({
         form.reset(defaultValues);
       }
       onSuccess();
+      onOpenChange(false);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -119,27 +121,31 @@ export const ServiceTypeDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-background border-border max-w-3xl">
+      <DialogContent className="bg-background border-border sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Edit Service Type" : "Create Service Type"}
           </DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <ServiceTypeFormFields form={form} />
-            
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                {isEditing ? "Update" : "Create"}
-              </Button>
-            </div>
-          </form>
-        </Form>
+        <ScrollArea className="max-h-[80vh]">
+          <div className="p-1">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <ServiceTypeFormFields form={form} />
+                
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                    {isEditing ? "Update" : "Create"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
