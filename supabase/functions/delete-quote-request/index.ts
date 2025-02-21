@@ -57,10 +57,11 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ message: 'Quote request deleted successfully' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
 
   } catch (error) {
+    console.error('Error in delete-quote-request function:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
