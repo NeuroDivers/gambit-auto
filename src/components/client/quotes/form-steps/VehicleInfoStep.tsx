@@ -85,10 +85,7 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
     }, { shouldValidate: true })
 
     // Store the vehicle data to be saved when the form is submitted
-    setPendingVehicleData({
-      ...data,
-      is_primary: data.save_vehicle && data.is_primary // Only set as primary if save_vehicle is true
-    })
+    setPendingVehicleData(data)
   }
 
   // This function will be called by the parent component when the form is actually submitted
@@ -96,28 +93,13 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
     if (!pendingVehicleData?.save_vehicle || !client?.id) return
 
     try {
-      // Check if there are any existing vehicles
-      const { data: existingVehicles } = await supabase
-        .from('vehicles')
-        .select('id')
-        .eq('client_id', client.id)
-
-      // If no existing vehicles, set this one as primary regardless of the switch
-      const shouldBePrimary = !existingVehicles?.length || pendingVehicleData.is_primary
-
       await addVehicle.mutateAsync({
         make: pendingVehicleData.vehicle_make,
         model: pendingVehicleData.vehicle_model,
         year: parseInt(pendingVehicleData.vehicle_year) || 0,
         vin: pendingVehicleData.vehicle_serial || undefined,
-        is_primary: shouldBePrimary
+        is_primary: pendingVehicleData.is_primary
       })
-
-      if (shouldBePrimary) {
-        toast.success("Vehicle saved and set as primary")
-      } else {
-        toast.success("Vehicle saved successfully")
-      }
     } catch (error) {
       console.error('Error saving vehicle:', error)
       toast.error("Failed to save vehicle to your account")
