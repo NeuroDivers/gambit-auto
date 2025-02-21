@@ -46,8 +46,8 @@ export function NewVehicleForm({ onSave, onCancel, defaultValues }: NewVehicleFo
         ...prev,
         [name]: value
       }
-      // Immediately notify parent of changes
-      onSave({ ...newData, save_vehicle: saveVehicle, is_primary: isPrimary })
+      // Only update form values, don't trigger save
+      onSave({ ...newData, save_vehicle: false, is_primary: false })
       return newData
     })
   }
@@ -58,15 +58,17 @@ export function NewVehicleForm({ onSave, onCancel, defaultValues }: NewVehicleFo
       setIsPrimary(false)
     }
     toast.info(checked ? "Vehicle will be saved to your account" : "Vehicle won't be saved to your account")
-    // Update parent with current data and new save preference
+    // Now we trigger the save with the current preferences
     onSave({ ...formData, save_vehicle: checked, is_primary: checked ? isPrimary : false })
   }
 
   const handlePrimaryToggleChange = (checked: boolean) => {
     setIsPrimary(checked)
     toast.info(checked ? "Vehicle will be set as primary" : "Vehicle won't be set as primary")
-    // Update parent with current data and new primary preference
-    onSave({ ...formData, save_vehicle: saveVehicle, is_primary: checked })
+    // Only update primary status if we're saving the vehicle
+    if (saveVehicle) {
+      onSave({ ...formData, save_vehicle: true, is_primary: checked })
+    }
   }
 
   return (
