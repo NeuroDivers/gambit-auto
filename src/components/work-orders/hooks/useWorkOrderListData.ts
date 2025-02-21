@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { WorkOrder } from "../types"
@@ -14,7 +14,7 @@ export function useWorkOrderListData() {
   const [page, setPage] = useState(1)
   const pageSize = 10
 
-  const { data: workOrdersData, isLoading, error } = useQuery({
+  const { data: workOrdersData, isLoading, error, refetch } = useQuery({
     queryKey: ['work-orders', page, pageSize],
     queryFn: async () => {
       // First, get total count with filters but no pagination
@@ -46,13 +46,36 @@ export function useWorkOrderListData() {
     }
   });
 
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('work-orders-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'work_orders'
+        },
+        () => {
+          console.log('Work order updated, refetching...')
+          refetch()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [refetch])
+
   const { data: assignableUsers } = useQuery({
     queryKey: ["assignable-users"],
     queryFn: async () => {
       const { data: assignableRoles, error: rolesError } = await supabase
         .from('roles')
         .select('*')
-        .eq('can_be_assigned_to_bay', true)
+        .eq('can_be_assigned_work_orders', true)
 
       if (rolesError) throw rolesError
 
@@ -84,6 +107,7 @@ export function useWorkOrderListData() {
         .from('service_bays')
         .select('*')
         .eq('status', 'available')
+        .order('name')
       
       if (error) throw error
       return data
