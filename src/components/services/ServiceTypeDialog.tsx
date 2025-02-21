@@ -23,6 +23,7 @@ interface ServiceTypeDialogProps {
     duration: number | null;
     pricing_model?: 'flat_rate' | 'hourly' | 'variable';
     base_price?: number | null;
+    discount_price?: number | null;
     service_type?: 'standalone' | 'sub_service' | 'bundle';
     parent_service_id?: string | null;
   } | null;

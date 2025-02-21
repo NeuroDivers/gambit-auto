@@ -1,4 +1,3 @@
-
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -67,16 +66,19 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
           control={form.control}
           name="status"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between space-x-2 space-y-0 rounded-lg border p-3 shadow-sm">
-              <FormLabel className="font-normal">Active</FormLabel>
-              <FormControl>
-                <Switch
-                  checked={field.value === "active"}
-                  onCheckedChange={(checked) => {
-                    field.onChange(checked ? "active" : "inactive");
-                  }}
-                />
-              </FormControl>
+            <FormItem className="flex flex-col space-y-2">
+              <FormLabel>Status</FormLabel>
+              <div className="flex flex-row items-center justify-between space-x-2 rounded-lg border p-3 shadow-sm">
+                <span className="text-sm font-normal">Active</span>
+                <FormControl>
+                  <Switch
+                    checked={field.value === "active"}
+                    onCheckedChange={(checked) => {
+                      field.onChange(checked ? "active" : "inactive");
+                    }}
+                  />
+                </FormControl>
+              </div>
             </FormItem>
           )}
         />
