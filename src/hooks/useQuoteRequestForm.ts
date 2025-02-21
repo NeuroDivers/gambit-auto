@@ -111,6 +111,22 @@ export function useQuoteRequestForm() {
         return
       }
 
+      // If saving vehicle to account, create vehicle first
+      if (data.vehicleInfo.saveToAccount) {
+        const { error: vehicleError } = await supabase
+          .from("vehicles")
+          .insert({
+            client_id: clientData.id,
+            make: data.vehicleInfo.make,
+            model: data.vehicleInfo.model,
+            year: data.vehicleInfo.year,
+            vin: data.vehicleInfo.vin || null,
+            is_primary: data.vehicleInfo.isPrimary || false
+          })
+
+        if (vehicleError) throw vehicleError
+      }
+
       // Create quote request
       const { error: insertError } = await supabase
         .from("quote_requests")

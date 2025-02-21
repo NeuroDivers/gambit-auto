@@ -46,7 +46,7 @@ export function NewVehicleForm({ onSave, onCancel, defaultValues }: NewVehicleFo
         ...prev,
         [name]: value
       }
-      // Immediately notify parent of changes
+      // Immediately notify parent of changes with current toggle states
       onSave({ ...newData, save_vehicle: saveVehicle, is_primary: isPrimary })
       return newData
     })
@@ -54,9 +54,17 @@ export function NewVehicleForm({ onSave, onCancel, defaultValues }: NewVehicleFo
 
   const handleSaveToggleChange = (checked: boolean) => {
     setSaveVehicle(checked)
+    // If turning off save vehicle, also turn off primary
+    if (!checked) {
+      setIsPrimary(false)
+    }
     toast.info(checked ? "Vehicle will be saved to your account" : "Vehicle won't be saved to your account")
     // Update parent with current data and new save preference
-    onSave({ ...formData, save_vehicle: checked, is_primary: isPrimary })
+    onSave({ 
+      ...formData, 
+      save_vehicle: checked, 
+      is_primary: checked ? isPrimary : false 
+    })
   }
 
   const handlePrimaryToggleChange = (checked: boolean) => {
@@ -112,7 +120,7 @@ export function NewVehicleForm({ onSave, onCancel, defaultValues }: NewVehicleFo
             />
           </div>
         </div>
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-start sm:space-x-6 space-y-4 sm:space-y-0">
           <div className="flex items-center space-x-2">
             <Switch
               id="save-vehicle"
