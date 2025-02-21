@@ -11,6 +11,7 @@ import { motion } from "framer-motion"
 import { Progress } from "@/components/ui/progress"
 import { ServiceTypeSelection } from "./form-steps/ServiceTypeSelection"
 import { toast } from "sonner"
+import { supabase } from "@/integrations/supabase/client"
 import type { QuoteRequestFormData, ServiceItemType } from "@/types/quote-request"
 
 type Props = {
@@ -35,9 +36,50 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
 
   const progress = (step / totalSteps) * 100
 
+  const saveNewVehicle = async (vehicleInfo: any) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error("Please sign in to save vehicles")
+
+      const { data: client } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+
+      if (!client) throw new Error("Client account not found")
+
+      if (!vehicleInfo.make || !vehicleInfo.model || !vehicleInfo.year) {
+        throw new Error("Please fill in all required vehicle information")
+      }
+
+      const { error: saveError } = await supabase
+        .from('vehicles')
+        .insert([{
+          client_id: client.id,
+          make: vehicleInfo.make,
+          model: vehicleInfo.model,
+          year: vehicleInfo.year,
+          vin: vehicleInfo.vin || null
+        }])
+      
+      if (saveError) throw saveError
+      
+      toast.success("Vehicle saved to your account")
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save vehicle")
+      throw error
+    }
+  }
+
   const handleSubmit = async (data: QuoteRequestFormData) => {
     if (step === totalSteps) {
       try {
+        // If vehicle should be saved, do it before submitting the quote request
+        if (data.vehicleInfo.saveToAccount) {
+          await saveNewVehicle(data.vehicleInfo)
+        }
+        
         await onSubmit(data)
         toast.success("Quote request submitted successfully!")
         onSuccess?.()
