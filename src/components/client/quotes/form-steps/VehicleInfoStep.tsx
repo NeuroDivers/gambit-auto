@@ -1,7 +1,7 @@
 
 import { UseFormReturn } from "react-hook-form"
 import { QuoteRequestFormData } from "@/hooks/quote-request/formSchema"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { useClientVehicles } from "./hooks/useClientVehicles"
 import { VehicleSelector } from "./components/VehicleSelector"
@@ -17,11 +17,13 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
   const [useNewVehicle, setUseNewVehicle] = useState(true)
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>()
   const [saveToAccount, setSaveToAccount] = useState(false)
+  const vehicleSaved = useRef(false)
 
   const { data: vehicles, isLoading, refetch } = useClientVehicles()
 
   const handleVehicleSelect = (vehicleId: string) => {
     setSelectedVehicleId(vehicleId)
+    vehicleSaved.current = false // Reset saved state when selecting a new vehicle
 
     if (vehicleId === 'new') {
       setUseNewVehicle(true)
@@ -50,11 +52,6 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
       form.setValue('vehicleInfo.year', parseInt(data.vehicle_year) || 0, { shouldValidate: true })
       form.setValue('vehicleInfo.vin', data.vehicle_serial, { shouldValidate: true })
       setSaveToAccount(data.save_vehicle)
-
-      // If save_vehicle is true, immediately save the vehicle
-      if (data.save_vehicle) {
-        await saveNewVehicle()
-      }
     } catch (error) {
       console.error('Error handling vehicle data:', error)
       toast.error("Failed to process vehicle data")
@@ -62,8 +59,13 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
   }
 
   const saveNewVehicle = async () => {
-    if (!saveVehicle || !useNewVehicle || !saveToAccount) {
-      console.log('Skipping vehicle save:', { saveVehicle, useNewVehicle, saveToAccount })
+    if (!saveVehicle || !useNewVehicle || !saveToAccount || vehicleSaved.current) {
+      console.log('Skipping vehicle save:', { 
+        saveVehicle, 
+        useNewVehicle, 
+        saveToAccount, 
+        alreadySaved: vehicleSaved.current 
+      })
       return
     }
 
@@ -115,6 +117,7 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
         console.error('Error saving vehicle:', saveError)
         toast.error("Failed to save vehicle")
       } else {
+        vehicleSaved.current = true // Mark vehicle as saved
         toast.success("Vehicle saved to your account")
         await refetch() // Refresh the vehicles list
       }
@@ -128,7 +131,7 @@ export function VehicleInfoStep({ form, saveVehicle = true }: VehicleInfoStepPro
   const originalSubmit = form.handleSubmit
   form.handleSubmit = (onValid: any) => {
     return originalSubmit(async (values: any) => {
-      if (saveToAccount) {
+      if (saveToAccount && !vehicleSaved.current) {
         await saveNewVehicle()
       }
       return onValid(values)
