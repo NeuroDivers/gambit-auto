@@ -881,6 +881,7 @@ export type Database = {
       roles: {
         Row: {
           can_be_assigned_to_bay: boolean
+          can_be_assigned_work_orders: boolean
           created_at: string
           description: string | null
           id: string
@@ -891,6 +892,7 @@ export type Database = {
         }
         Insert: {
           can_be_assigned_to_bay?: boolean
+          can_be_assigned_work_orders?: boolean
           created_at?: string
           description?: string | null
           id?: string
@@ -901,6 +903,7 @@ export type Database = {
         }
         Update: {
           can_be_assigned_to_bay?: boolean
+          can_be_assigned_work_orders?: boolean
           created_at?: string
           description?: string | null
           id?: string

@@ -1,11 +1,12 @@
 
-import { useState, useEffect } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useState, useEffect, useCallback } from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { WorkOrder } from "../types"
 import { toast } from "sonner"
 
 export function useWorkOrderListData() {
+  const queryClient = useQueryClient()
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
@@ -14,36 +15,38 @@ export function useWorkOrderListData() {
   const [page, setPage] = useState(1)
   const pageSize = 10
 
-  const { data: workOrdersData, isLoading, error, refetch } = useQuery({
+  const fetchWorkOrders = useCallback(async () => {
+    // First, get total count with filters but no pagination
+    const { count } = await supabase
+      .from('work_orders')
+      .select('*', { count: 'exact', head: true });
+
+    // Then get paginated data
+    const { data, error } = await supabase
+      .from('work_orders')
+      .select(`
+        *,
+        service_bays!fk_work_orders_assigned_bay (
+          name
+        ),
+        assigned_to:profiles!assigned_profile_id (
+          first_name,
+          last_name
+        )
+      `)
+      .order('created_at', { ascending: false })
+      .range((page - 1) * pageSize, page * pageSize - 1);
+
+    if (error) throw error;
+    return {
+      workOrders: data as WorkOrder[],
+      totalCount: count || 0
+    };
+  }, [page, pageSize]);
+
+  const { data: workOrdersData, isLoading, error } = useQuery({
     queryKey: ['work-orders', page, pageSize],
-    queryFn: async () => {
-      // First, get total count with filters but no pagination
-      const { count } = await supabase
-        .from('work_orders')
-        .select('*', { count: 'exact', head: true });
-
-      // Then get paginated data
-      const { data, error } = await supabase
-        .from('work_orders')
-        .select(`
-          *,
-          service_bays!fk_work_orders_assigned_bay (
-            name
-          ),
-          assigned_to:profiles!assigned_profile_id (
-            first_name,
-            last_name
-          )
-        `)
-        .order('created_at', { ascending: false })
-        .range((page - 1) * pageSize, page * pageSize - 1);
-
-      if (error) throw error;
-      return {
-        workOrders: data as WorkOrder[],
-        totalCount: count || 0
-      };
-    }
+    queryFn: fetchWorkOrders
   });
 
   // Set up real-time subscription
@@ -57,9 +60,9 @@ export function useWorkOrderListData() {
           schema: 'public',
           table: 'work_orders'
         },
-        () => {
-          console.log('Work order updated, refetching...')
-          refetch()
+        (payload) => {
+          console.log('Work order updated:', payload)
+          queryClient.invalidateQueries({ queryKey: ['work-orders'] })
         }
       )
       .subscribe()
@@ -67,7 +70,7 @@ export function useWorkOrderListData() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [refetch])
+  }, [queryClient])
 
   const { data: assignableUsers } = useQuery({
     queryKey: ["assignable-users"],
@@ -127,6 +130,7 @@ export function useWorkOrderListData() {
 
       toast.success("User assigned successfully");
       setAssignWorkOrder(null);
+      // The real-time subscription will handle the UI update
     } catch (error) {
       console.error('Error assigning user:', error);
       toast.error("Failed to assign user");
@@ -146,6 +150,7 @@ export function useWorkOrderListData() {
 
       toast.success("Bay assigned successfully");
       setAssignBayWorkOrder(null);
+      // The real-time subscription will handle the UI update
     } catch (error) {
       console.error('Error assigning bay:', error);
       toast.error("Failed to assign bay");
