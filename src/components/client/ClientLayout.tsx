@@ -6,6 +6,8 @@ import { ClientSidebarHeader } from "./sidebar/ClientSidebarHeader"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useState } from "react"
 import { Header } from "../shared/Header"
+import { Menu } from "lucide-react"
+import { Button } from "../ui/button"
 
 interface ClientLayoutProps {
   children: React.ReactNode
@@ -49,7 +51,18 @@ export function ClientLayout({
         firstName={firstName}
         role={role}
         onLogout={onLogout}
-      />
+        className="flex justify-between items-center"
+      >
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Toggle Menu</span>
+        </Button>
+      </Header>
 
       <div className={cn(
         "fixed inset-0 bg-background z-40 transform transition-transform duration-300 ease-in-out",
