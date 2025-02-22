@@ -20,6 +20,8 @@ export function WorkOrderList() {
     setSearchTerm,
     statusFilter,
     setStatusFilter,
+    assignmentFilter,
+    setAssignmentFilter,
     selectedWorkOrder,
     setSelectedWorkOrder,
     assignWorkOrder,
@@ -37,23 +39,6 @@ export function WorkOrderList() {
     setPage,
     totalPages
   } = useWorkOrderListData()
-
-  const handleCreateInvoice = async (workOrderId: string) => {
-    try {
-      const { data, error } = await supabase.rpc(
-        'create_invoice_from_work_order',
-        { work_order_id: workOrderId }
-      )
-
-      if (error) throw error
-
-      toast.success("Invoice created successfully")
-      navigate(`/admin/invoices/${data}/edit`)
-    } catch (error: any) {
-      console.error('Error creating invoice:', error)
-      toast.error("Failed to create invoice")
-    }
-  }
 
   if (isLoading) {
     return (
@@ -78,6 +63,8 @@ export function WorkOrderList() {
         onSearchChange={setSearchTerm}
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
+        assignmentFilter={assignmentFilter}
+        onAssignmentFilterChange={setAssignmentFilter}
       />
 
       {isMobile ? (

@@ -8,13 +8,17 @@ interface WorkOrderFiltersProps {
   onSearchChange: (value: string) => void
   statusFilter: string
   onStatusFilterChange: (value: string) => void
+  assignmentFilter: string
+  onAssignmentFilterChange: (value: string) => void
 }
 
 export function WorkOrderFilters({
   searchTerm,
   onSearchChange,
   statusFilter,
-  onStatusFilterChange
+  onStatusFilterChange,
+  assignmentFilter,
+  onAssignmentFilterChange
 }: WorkOrderFiltersProps) {
   return (
     <div className="flex flex-col sm:flex-row gap-4 p-4">
@@ -37,6 +41,18 @@ export function WorkOrderFilters({
           <SelectItem value="approved">Approved</SelectItem>
           <SelectItem value="rejected">Rejected</SelectItem>
           <SelectItem value="completed">Completed</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select value={assignmentFilter} onValueChange={onAssignmentFilterChange}>
+        <SelectTrigger className="w-full sm:w-[180px]">
+          <SelectValue placeholder="Filter by assignment" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Assignments</SelectItem>
+          <SelectItem value="unassigned-user">Unassigned User</SelectItem>
+          <SelectItem value="assigned-user">Assigned User</SelectItem>
+          <SelectItem value="unassigned-bay">Unassigned Bay</SelectItem>
+          <SelectItem value="assigned-bay">Assigned Bay</SelectItem>
         </SelectContent>
       </Select>
     </div>

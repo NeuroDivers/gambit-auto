@@ -9,6 +9,7 @@ export function useWorkOrderListData() {
   const queryClient = useQueryClient()
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [assignmentFilter, setAssignmentFilter] = useState<string>("all")
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
   const [assignWorkOrder, setAssignWorkOrder] = useState<WorkOrder | null>(null)
   const [assignBayWorkOrder, setAssignBayWorkOrder] = useState<WorkOrder | null>(null)
@@ -196,16 +197,32 @@ export function useWorkOrderListData() {
 
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
 
-    return matchesSearch && matchesStatus;
-  });
+    // Add assignment filtering logic
+    const matchesAssignment = (() => {
+      switch (assignmentFilter) {
+        case "unassigned-user":
+          return !order.assigned_profile_id;
+        case "assigned-user":
+          return !!order.assigned_profile_id;
+        case "unassigned-bay":
+          return !order.assigned_bay_id;
+        case "assigned-bay":
+          return !!order.assigned_bay_id;
+        default:
+          return true;
+      }
+    })();
 
-  const totalPages = workOrdersData ? Math.ceil(workOrdersData.totalCount / pageSize) : 0;
+    return matchesSearch && matchesStatus && matchesAssignment;
+  });
 
   return {
     searchTerm,
     setSearchTerm,
     statusFilter,
     setStatusFilter,
+    assignmentFilter,
+    setAssignmentFilter,
     selectedWorkOrder,
     setSelectedWorkOrder,
     assignWorkOrder,
