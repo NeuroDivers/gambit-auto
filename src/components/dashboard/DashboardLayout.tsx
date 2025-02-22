@@ -44,8 +44,8 @@ export function DashboardLayout({
     </SidebarContent>
   )
 
-  if (isMobile) {
-    return (
+  const content = isMobile ? (
+    <SidebarProvider>
       <div className={cn("min-h-screen w-full bg-background text-foreground")}>
         <ProfileCompletionDialog />
         <Header 
@@ -70,11 +70,9 @@ export function DashboardLayout({
           {children}
         </main>
       </div>
-    )
-  }
-
-  return (
-    <SidebarProvider defaultOpen>
+    </SidebarProvider>
+  ) : (
+    <SidebarProvider>
       <div className={cn("flex h-screen w-full overflow-hidden bg-background")}
         style={{ 
           "--sidebar-width-icon": "4rem",
@@ -98,4 +96,6 @@ export function DashboardLayout({
       </div>
     </SidebarProvider>
   )
+
+  return content
 }
