@@ -6,6 +6,7 @@ import { ServiceTypesList } from "@/components/services/ServiceTypesList"
 import { toast } from "sonner"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { SidebarProvider, Sidebar, SidebarContent, SidebarInset, SidebarRail } from "@/components/ui/sidebar"
 
 export default function ServiceTypes() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -15,7 +16,6 @@ export default function ServiceTypes() {
   const { checkPermission } = usePermissions()
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
 
-  // Check permission when component mounts
   useEffect(() => {
     const checkAccess = async () => {
       const hasPermission = await checkPermission("service_types", "page_access")
@@ -54,22 +54,34 @@ export default function ServiceTypes() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Service Types</h1>
-      </div>
+    <SidebarProvider>
+      <div className="flex w-full">
+        <Sidebar collapsible="icon">
+          <SidebarContent>
+            {/* Sidebar content can be added here */}
+          </SidebarContent>
+          <SidebarRail />
+        </Sidebar>
+        <div className="flex-1">
+          <div className="space-y-6 p-6">
+            <div className="flex items-center justify-between">
+              <h1 className="text-3xl font-bold">Service Types</h1>
+            </div>
 
-      <ServiceTypesList 
-        onSearch={setSearchQuery}
-        onStatusFilter={setStatusFilter}
-        onTypeFilter={setTypeFilter}
-      />
-      
-      <ServiceTypeDialog 
-        open={isDialogOpen} 
-        onOpenChange={setIsDialogOpen}
-        onSuccess={handleSuccess}
-      />
-    </div>
+            <ServiceTypesList 
+              onSearch={setSearchQuery}
+              onStatusFilter={setStatusFilter}
+              onTypeFilter={setTypeFilter}
+            />
+            
+            <ServiceTypeDialog 
+              open={isDialogOpen} 
+              onOpenChange={setIsDialogOpen}
+              onSuccess={handleSuccess}
+            />
+          </div>
+        </div>
+      </div>
+    </SidebarProvider>
   )
 }
