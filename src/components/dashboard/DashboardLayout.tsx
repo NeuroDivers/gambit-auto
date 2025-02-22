@@ -7,7 +7,7 @@ import { DashboardSidebarHeader } from "./sidebar/DashboardSidebarHeader"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useState } from "react"
 import { ProfileCompletionDialog } from "../profile/ProfileCompletionDialog"
-import { Menu } from "lucide-react"
+import { Menu, X } from "lucide-react"
 import { Button } from "../ui/button"
 
 interface DashboardLayoutProps {
@@ -67,11 +67,28 @@ export function DashboardLayout({
           </Button>
         </Header>
 
+        {/* Backdrop for closing menu */}
+        {isMobileMenuOpen && (
+          <div
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
+
         <div className={cn(
           "fixed inset-0 bg-background z-40 transform transition-transform duration-300 ease-in-out",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}>
-          <div className="h-screen pt-16">
+          <div className="h-screen pt-16 relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-4 top-4"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <X className="h-5 w-5" />
+              <span className="sr-only">Close Menu</span>
+            </Button>
             {sidebarContent}
           </div>
         </div>
