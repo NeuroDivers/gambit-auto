@@ -27,6 +27,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
   const [email, setEmail] = useState("")
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
+  const [password, setPassword] = useState("")
   const [role, setRole] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -54,12 +55,12 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
 
     try {
       setIsSubmitting(true)
-      console.log("Creating user with values:", { email, firstName, lastName, role })
+      console.log("Creating user with values:", { email, firstName, lastName, role, password })
       
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
           email,
-          password: "defaultPassword123!", // This should be changed by the user on first login
+          password,
           role,
           firstName,
           lastName
@@ -89,6 +90,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       setEmail("")
       setFirstName("")
       setLastName("")
+      setPassword("")
       setRole("")
       onOpenChange(false)
     } catch (error: any) {
@@ -132,6 +134,13 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
+          <Input
+            id="password"
+            placeholder="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
           <Select value={role} onValueChange={setRole}>
             <SelectTrigger id="role">
               <SelectValue placeholder="Select role" />
@@ -154,7 +163,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
           </Button>
           <Button 
             onClick={handleCreateUser} 
-            disabled={isLoading || isSubmitting || !email || !firstName || !lastName || !role}
+            disabled={isLoading || isSubmitting || !email || !firstName || !lastName || !role || !password}
           >
             Create User
           </Button>
