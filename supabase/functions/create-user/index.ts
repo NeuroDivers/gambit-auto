@@ -39,13 +39,6 @@ serve(async (req) => {
       )
     }
 
-    // Check if user already exists in auth
-    const { data: existingUser } = await supabaseClient.auth.admin.listUsers()
-    const userExists = existingUser.users.some(u => u.email === email)
-    if (userExists) {
-      throw new Error('User with this email already exists')
-    }
-
     // Create the auth user
     const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
       email,
@@ -53,61 +46,43 @@ serve(async (req) => {
       email_confirm: true
     })
 
-    if (authError || !authData.user) {
+    if (authError) {
+      // If error is about duplicate user, return specific message
+      if (authError.message.includes('already registered')) {
+        throw new Error('User with this email already exists')
+      }
       console.error('Error creating auth user:', authError)
       throw new Error(authError?.message || 'Failed to create auth user')
+    }
+
+    if (!authData.user) {
+      throw new Error('No user data returned from auth creation')
     }
 
     const user = authData.user
     console.log('Auth user created successfully:', user.id)
 
-    // Check if profile already exists
-    const { data: existingProfile } = await supabaseClient
+    // Create the profile entry
+    console.log('Creating new profile')
+    const { error: profileError } = await supabaseClient
       .from('profiles')
-      .select('id')
-      .eq('id', user.id)
-      .single()
+      .insert({
+        id: user.id,
+        email: user.email,
+        first_name: firstName,
+        last_name: lastName,
+        role_id: role,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
 
-    if (existingProfile) {
-      console.log('Profile already exists, updating it')
-      const { error: updateError } = await supabaseClient
-        .from('profiles')
-        .update({
-          email: user.email,
-          first_name: firstName,
-          last_name: lastName,
-          role_id: role,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id)
-
-      if (updateError) {
-        console.error('Error updating profile:', updateError)
-        await supabaseClient.auth.admin.deleteUser(user.id)
-        throw new Error(`Failed to update profile: ${updateError.message}`)
-      }
-    } else {
-      console.log('Creating new profile')
-      const { error: profileError } = await supabaseClient
-        .from('profiles')
-        .insert({
-          id: user.id,
-          email: user.email,
-          first_name: firstName,
-          last_name: lastName,
-          role_id: role,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-
-      if (profileError) {
-        console.error('Error creating profile:', profileError)
-        await supabaseClient.auth.admin.deleteUser(user.id)
-        throw new Error(`Failed to create profile: ${profileError.message}`)
-      }
+    if (profileError) {
+      console.error('Error creating profile:', profileError)
+      await supabaseClient.auth.admin.deleteUser(user.id)
+      throw new Error(`Failed to create profile: ${profileError.message}`)
     }
 
-    console.log('Profile created/updated successfully for user:', user.id)
+    console.log('Profile created successfully for user:', user.id)
 
     return new Response(
       JSON.stringify({ 
