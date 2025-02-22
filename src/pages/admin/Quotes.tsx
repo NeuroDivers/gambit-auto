@@ -1,6 +1,6 @@
 
 import * as React from "react"
-import { useState } from "react" // Add this import
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
@@ -21,6 +21,7 @@ import { QuoteFilters } from "./quotes/QuoteFilters"
 import { QuotesTable } from "./quotes/QuotesTable"
 import { QuoteRequestsTable } from "./quotes/QuoteRequestsTable"
 import { QuoteMobileList } from "@/components/quotes/QuoteMobileList"
+import { QuoteRequestMobileList } from "@/components/quotes/QuoteRequestMobileList"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 export default function Quotes() {
@@ -176,23 +177,30 @@ export default function Quotes() {
 
         <TabsContent value="requests" className="space-y-4">
           <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Vehicle</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Services</TableHead>
-                  <TableHead>Created</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <QuoteRequestsTable 
-                  requests={filteredRequests || []} 
-                  onRowClick={handleRowClick}
-                />
-              </TableBody>
-            </Table>
+            {isMobile ? (
+              <QuoteRequestMobileList 
+                requests={filteredRequests || []}
+                onRowClick={handleRowClick}
+              />
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Vehicle</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Services</TableHead>
+                    <TableHead>Created</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <QuoteRequestsTable 
+                    requests={filteredRequests || []} 
+                    onRowClick={handleRowClick}
+                  />
+                </TableBody>
+              </Table>
+            )}
           </div>
         </TabsContent>
       </Tabs>
