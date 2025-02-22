@@ -41,11 +41,11 @@ export default function WorkOrders() {
 
   return (
     <div>
-      <div className="space-y-6 p-6">
+      <div className="space-y-6 p-4 sm:p-6">
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <h1 className="text-3xl font-bold">Work Orders</h1>
-            <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex flex-wrap items-center gap-4">
               <ToggleGroup type="single" value={view} onValueChange={(value) => value && setView(value as "list" | "calendar")}>
                 <ToggleGroupItem value="list" aria-label="List view">
                   <List className="h-4 w-4" />
@@ -55,8 +55,8 @@ export default function WorkOrders() {
                 </ToggleGroupItem>
               </ToggleGroup>
               {isAdmin && <BlockedDatesDialog />}
-              <Link to="/admin/work-orders/create">
-                <Button>
+              <Link to="/admin/work-orders/create" className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto">
                   <Plus className="mr-2 h-4 w-4" />
                   New Work Order
                 </Button>
@@ -64,7 +64,7 @@ export default function WorkOrders() {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Orders</CardTitle>

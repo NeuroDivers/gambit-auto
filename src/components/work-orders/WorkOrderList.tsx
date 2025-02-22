@@ -9,9 +9,12 @@ import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
 import { WorkOrderTable } from "./components/WorkOrderTable"
 import { WorkOrderPagination } from "./components/WorkOrderPagination"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { WorkOrderMobileList } from "./components/WorkOrderMobileList"
 
 export function WorkOrderList() {
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
   const {
     searchTerm,
     setSearchTerm,
@@ -77,13 +80,23 @@ export function WorkOrderList() {
         onStatusFilterChange={setStatusFilter}
       />
 
-      <WorkOrderTable
-        workOrders={workOrders}
-        onAssignUser={setAssignWorkOrder}
-        onAssignBay={setAssignBayWorkOrder}
-        onEdit={setSelectedWorkOrder}
-        onCreateInvoice={handleCreateInvoice}
-      />
+      {isMobile ? (
+        <WorkOrderMobileList
+          workOrders={workOrders}
+          onAssignUser={setAssignWorkOrder}
+          onAssignBay={setAssignBayWorkOrder}
+          onEdit={setSelectedWorkOrder}
+          onCreateInvoice={handleCreateInvoice}
+        />
+      ) : (
+        <WorkOrderTable
+          workOrders={workOrders}
+          onAssignUser={setAssignWorkOrder}
+          onAssignBay={setAssignBayWorkOrder}
+          onEdit={setSelectedWorkOrder}
+          onCreateInvoice={handleCreateInvoice}
+        />
+      )}
 
       <WorkOrderPagination
         page={page}
