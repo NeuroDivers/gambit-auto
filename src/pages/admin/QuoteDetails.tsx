@@ -5,14 +5,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { Loader2, ArrowLeft } from "lucide-react"
 import { format } from "date-fns"
 import { PageTitle } from "@/components/shared/PageTitle"
@@ -20,6 +13,7 @@ import { PageTitle } from "@/components/shared/PageTitle"
 export default function QuoteDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
 
   const { data: quote, isLoading, error } = useQuery({
     queryKey: ['quote', id],
@@ -152,32 +146,52 @@ export default function QuoteDetails() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Service</TableHead>
-                      <TableHead className="text-right">Quantity</TableHead>
-                      <TableHead className="text-right">Price</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+              {isMobile ? (
+                <div className="space-y-4">
+                  {quote.quote_items?.map((item) => (
+                    <div key={item.id} className="border-b pb-4">
+                      <div className="font-medium">{item.service_name}</div>
+                      <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
+                        <div className="text-muted-foreground">Quantity:</div>
+                        <div className="text-right">{item.quantity}</div>
+                        <div className="text-muted-foreground">Price:</div>
+                        <div className="text-right">${item.unit_price.toFixed(2)}</div>
+                        <div className="text-muted-foreground">Total:</div>
+                        <div className="text-right">${(item.quantity * item.unit_price).toFixed(2)}</div>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="border-t pt-4 flex justify-between font-medium">
+                    <span>Total</span>
+                    <span>${quote.total.toFixed(2)}</span>
+                  </div>
+                </div>
+              ) : (
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-2">Service</th>
+                      <th className="text-right py-2">Quantity</th>
+                      <th className="text-right py-2">Price</th>
+                      <th className="text-right py-2">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {quote.quote_items?.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.service_name}</TableCell>
-                        <TableCell className="text-right">{item.quantity}</TableCell>
-                        <TableCell className="text-right">${item.unit_price.toFixed(2)}</TableCell>
-                        <TableCell className="text-right">${(item.quantity * item.unit_price).toFixed(2)}</TableCell>
-                      </TableRow>
+                      <tr key={item.id} className="border-b">
+                        <td className="py-2">{item.service_name}</td>
+                        <td className="text-right py-2">{item.quantity}</td>
+                        <td className="text-right py-2">${item.unit_price.toFixed(2)}</td>
+                        <td className="text-right py-2">${(item.quantity * item.unit_price).toFixed(2)}</td>
+                      </tr>
                     ))}
-                    <TableRow>
-                      <TableCell colSpan={3} className="text-right font-medium">Total</TableCell>
-                      <TableCell className="text-right font-medium">${quote.total.toFixed(2)}</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
+                    <tr>
+                      <td colSpan={3} className="text-right py-2 font-medium">Total</td>
+                      <td className="text-right py-2 font-medium">${quote.total.toFixed(2)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              )}
               
               {quote.notes && (
                 <div>
