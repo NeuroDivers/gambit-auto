@@ -7,7 +7,7 @@ interface AssignmentSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   items: Array<{ id: string; name: string }>
-  onAssign: (id: string) => void
+  onAssign: (id: string | null) => void
 }
 
 export function AssignmentSheet({
@@ -24,6 +24,13 @@ export function AssignmentSheet({
           <SheetTitle>{title}</SheetTitle>
         </SheetHeader>
         <div className="mt-6 space-y-4">
+          <Button
+            variant="outline"
+            className="w-full justify-start text-muted-foreground hover:text-foreground"
+            onClick={() => onAssign(null)}
+          >
+            Unassign {title.toLowerCase()}
+          </Button>
           {items?.map((item) => (
             <Button
               key={item.id}
