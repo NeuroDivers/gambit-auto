@@ -46,66 +46,66 @@ export function ClientLayout({
   )
 
   const content = isMobile ? (
-    <div className={cn("min-h-screen w-full bg-background text-foreground")}>
-      <Header 
-        firstName={firstName}
-        role={role}
-        onLogout={onLogout}
-        className="flex justify-between items-center"
-      >
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        >
-          <Menu className="h-5 w-5" />
-          <span className="sr-only">Toggle Menu</span>
-        </Button>
-      </Header>
-
-      <div className={cn(
-        "fixed inset-0 bg-background z-40 transform transition-transform duration-300 ease-in-out",
-        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
-        <div className="h-screen pt-16">
-          {sidebarContent}
-        </div>
-      </div>
-
-      <main className={cn(
-        "flex-1 p-4 transition-all duration-300 ease-in-out bg-background",
-        isMobileMenuOpen ? "opacity-50" : "opacity-100"
-      )}>
-        {children}
-      </main>
-    </div>
-  ) : (
-    <div className={cn("flex h-screen w-full overflow-hidden bg-background")}
-      style={{ 
-        "--sidebar-width-icon": "4rem",
-      } as React.CSSProperties}
-    >
-      <Sidebar className="border-r" collapsible="icon">
-        {sidebarContent}
-        <SidebarRail />
-      </Sidebar>
-      <div className="flex-1 overflow-hidden flex flex-col">
+    <SidebarProvider>
+      <div className={cn("min-h-screen w-full bg-background text-foreground")}>
         <Header 
           firstName={firstName}
           role={role}
           onLogout={onLogout}
-        />
-        <main className="flex-1 overflow-auto p-4 bg-background">
+          className="flex justify-between items-center"
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle Menu</span>
+          </Button>
+        </Header>
+
+        <div className={cn(
+          "fixed inset-0 bg-background z-40 transform transition-transform duration-300 ease-in-out",
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        )}>
+          <div className="h-screen pt-16">
+            {sidebarContent}
+          </div>
+        </div>
+
+        <main className={cn(
+          "flex-1 p-4 transition-all duration-300 ease-in-out bg-background",
+          isMobileMenuOpen ? "opacity-50" : "opacity-100"
+        )}>
           {children}
         </main>
       </div>
-    </div>
-  )
-
-  return (
-    <SidebarProvider defaultOpen>
-      {content}
+    </SidebarProvider>
+  ) : (
+    <SidebarProvider>
+      <div className={cn("flex h-screen w-full overflow-hidden bg-background")}
+        style={{ 
+          "--sidebar-width-icon": "4rem",
+        } as React.CSSProperties}
+      >
+        <Sidebar className="border-r" collapsible="icon">
+          {sidebarContent}
+          <SidebarRail />
+        </Sidebar>
+        <div className="flex-1 overflow-hidden flex flex-col">
+          <Header 
+            firstName={firstName}
+            role={role}
+            onLogout={onLogout}
+          />
+          <main className="flex-1 overflow-auto p-4 bg-background">
+            {children}
+          </main>
+        </div>
+      </div>
     </SidebarProvider>
   )
+
+  return content
 }
