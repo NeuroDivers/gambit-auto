@@ -14,6 +14,8 @@ export type Client = {
   total_invoices?: number
   total_work_orders?: number
   last_sign_in_at?: string | null
+  last_invoice_date?: number | null
+  last_work_order_date?: number | null
   monthlySpending?: Array<{
     month: string
     amount: number

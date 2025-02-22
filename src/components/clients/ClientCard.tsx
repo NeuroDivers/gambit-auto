@@ -3,7 +3,8 @@ import { Client } from "./types"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
-import { Pencil, Trash } from "lucide-react"
+import { Pencil, Trash, FileText, Quote } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 interface ClientCardProps {
   client: Client
@@ -12,6 +13,8 @@ interface ClientCardProps {
 }
 
 export function ClientCard({ client, onEdit, onDelete }: ClientCardProps) {
+  const navigate = useNavigate()
+
   return (
     <Card>
       <CardHeader>
@@ -44,6 +47,26 @@ export function ClientCard({ client, onEdit, onDelete }: ClientCardProps) {
         {client.address && (
           <p className="text-sm text-muted-foreground">{client.address}</p>
         )}
+        <div className="flex gap-2 mt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={() => navigate('/admin/quotes/create', { state: { preselectedClient: client } })}
+          >
+            <Quote className="h-4 w-4" />
+            Create Quote
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={() => navigate('/admin/invoices/create', { state: { preselectedClient: client } })}
+          >
+            <FileText className="h-4 w-4" />
+            Create Invoice
+          </Button>
+        </div>
       </CardContent>
       <CardFooter className="flex flex-col items-start gap-2">
         <div className="flex justify-between w-full text-sm">
@@ -56,7 +79,7 @@ export function ClientCard({ client, onEdit, onDelete }: ClientCardProps) {
         </div>
         <div className="flex justify-between w-full text-sm">
           <span>Total Spent:</span>
-          <span>${client.total_spent.toFixed(2)}</span>
+          <span>${client.total_spent?.toFixed(2) || '0.00'}</span>
         </div>
         {client.last_invoice_date && (
           <div className="flex justify-between w-full text-sm">
