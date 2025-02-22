@@ -34,7 +34,7 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
       id: index,
       name,
       value,
-      displayName: displayName.length > 20 ? `${displayName.slice(0, 20)}...` : displayName
+      displayName
     };
   });
 
@@ -50,11 +50,11 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
         
         <div className="h-[400px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+            <PieChart margin={{ top: 20, right: 20, bottom: 60, left: 20 }}>
               <Pie
                 data={chartData}
                 cx="50%"
-                cy="40%"
+                cy="35%"
                 innerRadius={60}
                 outerRadius={80}
                 paddingAngle={5}
@@ -89,25 +89,21 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
                 ]}
               />
               <Legend 
-                verticalAlign="bottom" 
-                layout="horizontal"
+                verticalAlign="bottom"
+                layout="vertical"
                 align="center"
-                height={60}
                 iconType="circle"
                 formatter={(value) => {
                   if (typeof value === 'string') {
-                    return value;
+                    const label = value.length > 30 ? `${value.slice(0, 30)}...` : value;
+                    return <span className="text-sm text-foreground">{label}</span>;
                   }
                   return '';
                 }}
                 wrapperStyle={{
-                  color: 'var(--foreground)',
-                  paddingTop: '16px',
+                  paddingTop: '24px',
                   width: '100%',
                   maxWidth: '100%',
-                  overflowX: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
                 }}
               />
             </PieChart>
