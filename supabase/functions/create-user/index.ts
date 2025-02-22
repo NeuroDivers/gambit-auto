@@ -80,25 +80,24 @@ serve(async (req) => {
     const user = authData.user
     console.log('Auth user created successfully:', user.id)
 
-    // Create the profile entry
-    console.log('Creating new profile')
+    // Update the profile entry
+    console.log('Updating profile with role and user info')
     const { error: profileError } = await supabaseClient
       .from('profiles')
-      .insert({
-        id: user.id,
-        email: user.email,
+      .update({
         first_name: firstName,
         last_name: lastName,
         role_id: role
       })
+      .eq('id', user.id)
 
     if (profileError) {
-      console.error('Error creating profile:', profileError)
-      // Clean up by deleting the auth user if profile creation fails
+      console.error('Error updating profile:', profileError)
+      // Clean up by deleting the auth user if profile update fails
       await supabaseClient.auth.admin.deleteUser(user.id)
       return new Response(
         JSON.stringify({ 
-          error: `Failed to create profile: ${profileError.message}` 
+          error: `Failed to update profile: ${profileError.message}` 
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -107,12 +106,12 @@ serve(async (req) => {
       )
     }
 
-    console.log('Profile created successfully for user:', user.id)
+    console.log('Profile updated successfully for user:', user.id)
 
     return new Response(
       JSON.stringify({ 
         user,
-        message: 'User and profile created successfully' 
+        message: 'User created successfully' 
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
