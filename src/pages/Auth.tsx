@@ -6,7 +6,6 @@ import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useAuthForm } from "@/hooks/useAuthForm";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Navigate } from "react-router-dom";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
