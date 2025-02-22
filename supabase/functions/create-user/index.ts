@@ -31,7 +31,9 @@ serve(async (req) => {
     // Validate required fields
     if (!email || !password || !role) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: email, password, or role' }),
+        JSON.stringify({ 
+          error: 'Missing required fields: email, password, or role' 
+        }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400
@@ -39,24 +41,40 @@ serve(async (req) => {
       )
     }
 
-    // Create the auth user
+    // Create the auth user first
     const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
       email,
       password,
-      email_confirm: true
+      email_confirm: true,
+      user_metadata: {
+        first_name: firstName,
+        last_name: lastName
+      }
     })
 
     if (authError) {
-      // If error is about duplicate user, return specific message
-      if (authError.message.includes('already registered')) {
-        throw new Error('User with this email already exists')
-      }
       console.error('Error creating auth user:', authError)
-      throw new Error(authError?.message || 'Failed to create auth user')
+      return new Response(
+        JSON.stringify({ 
+          error: authError.message 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      )
     }
 
     if (!authData.user) {
-      throw new Error('No user data returned from auth creation')
+      return new Response(
+        JSON.stringify({ 
+          error: 'No user data returned from auth creation' 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      )
     }
 
     const user = authData.user
@@ -71,15 +89,22 @@ serve(async (req) => {
         email: user.email,
         first_name: firstName,
         last_name: lastName,
-        role_id: role,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        role_id: role
       })
 
     if (profileError) {
       console.error('Error creating profile:', profileError)
+      // Clean up by deleting the auth user if profile creation fails
       await supabaseClient.auth.admin.deleteUser(user.id)
-      throw new Error(`Failed to create profile: ${profileError.message}`)
+      return new Response(
+        JSON.stringify({ 
+          error: `Failed to create profile: ${profileError.message}` 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      )
     }
 
     console.log('Profile created successfully for user:', user.id)
