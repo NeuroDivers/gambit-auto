@@ -6,34 +6,45 @@ import { WorkOrder } from "../types"
 
 export function useWorkOrderQueries(page: number, pageSize: number) {
   const fetchWorkOrders = useCallback(async () => {
-    const { count } = await supabase
-      .from('work_orders')
-      .select('*', { count: 'exact', head: true });
+    try {
+      const { count } = await supabase
+        .from('work_orders')
+        .select('*', { count: 'exact', head: true })
 
-    const { data, error } = await supabase
-      .from('work_orders')
-      .select(`
-        *,
-        service_bays!fk_work_orders_assigned_bay (
-          name
-        ),
-        assigned_to:profiles!assigned_profile_id (
-          first_name,
-          last_name
-        )
-      `)
-      .order('created_at', { ascending: false })
-      .range((page - 1) * pageSize, page * pageSize - 1);
+      const { data, error } = await supabase
+        .from('work_orders')
+        .select(`
+          *,
+          service_bays!fk_work_orders_assigned_bay (
+            name
+          ),
+          assigned_to:profiles!assigned_profile_id (
+            first_name,
+            last_name
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .range((page - 1) * pageSize, page * pageSize - 1)
 
-    if (error) throw error;
-    return {
-      workOrders: data as WorkOrder[],
-      totalCount: count || 0
-    };
-  }, [page, pageSize]);
+      if (error) throw error
+
+      return {
+        workOrders: data as WorkOrder[],
+        totalCount: count || 0
+      }
+    } catch (error) {
+      console.error('Error fetching work orders:', error)
+      throw error
+    }
+  }, [page, pageSize])
+
+  const { data: workOrdersData, isLoading, error } = useQuery({
+    queryKey: ['work-orders', page, pageSize],
+    queryFn: fetchWorkOrders
+  })
 
   const { data: assignableUsers } = useQuery({
-    queryKey: ["assignable-users"],
+    queryKey: ['assignable-users'],
     queryFn: async () => {
       const { data: assignableRoles, error: rolesError } = await supabase
         .from('roles')
@@ -61,10 +72,10 @@ export function useWorkOrderQueries(page: number, pageSize: number) {
       if (error) throw error
       return profiles
     }
-  });
+  })
 
   const { data: serviceBays } = useQuery({
-    queryKey: ["service-bays"],
+    queryKey: ['service-bays'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('service_bays')
@@ -75,18 +86,13 @@ export function useWorkOrderQueries(page: number, pageSize: number) {
       if (error) throw error
       return data
     }
-  });
-
-  const { data: workOrdersData, isLoading, error } = useQuery({
-    queryKey: ['work-orders', page, pageSize],
-    queryFn: fetchWorkOrders
-  });
+  })
 
   return {
     workOrdersData,
     isLoading,
     error,
     assignableUsers,
-    serviceBays,
+    serviceBays
   }
 }
