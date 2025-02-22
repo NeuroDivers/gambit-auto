@@ -7,7 +7,6 @@ import { useState } from "react";
 import { ServiceStatusFilter, ServiceTypeFilter } from "@/types/service-types";
 import { ServiceFilters } from "./filters/ServiceFilters";
 import { useServiceTypes, ServiceType } from "./hooks/useServiceTypes";
-import { SidebarRail } from "@/components/ui/sidebar";
 
 interface ServiceTypesListProps {
   searchQuery?: string;
@@ -53,7 +52,7 @@ export const ServiceTypesList = ({
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {serviceTypes?.map(service => (
           <ServiceTypeCard
             key={service.id}
@@ -80,8 +79,6 @@ export const ServiceTypesList = ({
           refetch();
         }}
       />
-
-      <SidebarRail />
     </div>
   );
 };
