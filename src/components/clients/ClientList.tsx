@@ -1,5 +1,5 @@
 
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
 import { FileText, Quote, Search } from "lucide-react"
@@ -10,6 +10,17 @@ import { useNavigate } from "react-router-dom"
 import { ClientCard } from "./ClientCard"
 import { Client } from "./types"
 import { Input } from "@/components/ui/input"
+import { toast } from "sonner"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { 
   Select,
   SelectContent,
@@ -22,11 +33,13 @@ import { useDebounce } from "@/hooks/useDebounce"
 export function ClientList() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [sortBy, setSortBy] = useState<string>("recent")
   const debouncedSearch = useDebounce(searchQuery, 300)
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ['clients', debouncedSearch, sortBy],
@@ -112,6 +125,27 @@ export function ClientList() {
     }
   })
 
+  const deleteClient = useMutation({
+    mutationFn: async (clientId: string) => {
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', clientId)
+
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] })
+      toast.success("Client deleted successfully")
+      setDeleteDialogOpen(false)
+      setSelectedClient(null)
+    },
+    onError: (error) => {
+      console.error('Error deleting client:', error)
+      toast.error("Failed to delete client")
+    }
+  })
+
   if (isLoading) {
     return <div>Loading...</div>
   }
@@ -119,6 +153,17 @@ export function ClientList() {
   const handleEdit = (client: Client) => {
     setSelectedClient(client)
     setEditDialogOpen(true)
+  }
+
+  const handleDelete = (client: Client) => {
+    setSelectedClient(client)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDelete = () => {
+    if (selectedClient) {
+      deleteClient.mutate(selectedClient.id)
+    }
   }
 
   return (
@@ -154,6 +199,7 @@ export function ClientList() {
             key={client.id}
             client={client}
             onEdit={() => handleEdit(client)}
+            onDelete={() => handleDelete(client)}
           />
         ))}
       </div>
@@ -170,6 +216,26 @@ export function ClientList() {
           onOpenChange={setEditDialogOpen}
         />
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete {selectedClient?.first_name} {selectedClient?.last_name} and all associated data. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
