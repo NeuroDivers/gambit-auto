@@ -1,6 +1,4 @@
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
   Table,
   TableBody,
@@ -9,10 +7,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { FileText, Pencil } from "lucide-react"
-import { format } from "date-fns"
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
+import { 
+  MoreHorizontal, 
+  UserCheck, 
+  Warehouse,
+  FileEdit,
+  Receipt 
+} from "lucide-react"
 import { WorkOrder } from "../types"
-import { useAdminStatus } from "@/hooks/useAdminStatus"
+import { formatDate } from "@/lib/utils"
+import { WorkOrderStatusSelect } from "./WorkOrderStatusSelect"
 
 interface WorkOrderTableProps {
   workOrders: WorkOrder[]
@@ -27,102 +38,84 @@ export function WorkOrderTable({
   onAssignUser,
   onAssignBay,
   onEdit,
-  onCreateInvoice
+  onCreateInvoice,
 }: WorkOrderTableProps) {
-  const { isAdmin } = useAdminStatus()
-
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Client</TableHead>
-            <TableHead>Vehicle</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Assigned To</TableHead>
-            <TableHead>Bay</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Customer</TableHead>
+          <TableHead>Vehicle</TableHead>
+          <TableHead>Assigned To</TableHead>
+          <TableHead>Bay</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Created</TableHead>
+          <TableHead>Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {workOrders.map((order) => (
+          <TableRow key={order.id}>
+            <TableCell>
+              <div>
+                <div className="font-medium">
+                  {order.first_name} {order.last_name}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {order.email}
+                </div>
+              </div>
+            </TableCell>
+            <TableCell>
+              {order.vehicle_year} {order.vehicle_make} {order.vehicle_model}
+            </TableCell>
+            <TableCell>
+              {order.assigned_to ? (
+                `${order.assigned_to.first_name} ${order.assigned_to.last_name}`
+              ) : (
+                <span className="text-muted-foreground">Unassigned</span>
+              )}
+            </TableCell>
+            <TableCell>
+              {order.service_bays?.name || (
+                <span className="text-muted-foreground">Unassigned</span>
+              )}
+            </TableCell>
+            <TableCell>
+              <WorkOrderStatusSelect workOrder={order} />
+            </TableCell>
+            <TableCell>{formatDate(order.created_at)}</TableCell>
+            <TableCell>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-8 w-8 p-0">
+                    <span className="sr-only">Open menu</span>
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onAssignUser(order)}>
+                    <UserCheck className="mr-2 h-4 w-4" />
+                    Assign User
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onAssignBay(order)}>
+                    <Warehouse className="mr-2 h-4 w-4" />
+                    Assign Bay
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onEdit(order)}>
+                    <FileEdit className="mr-2 h-4 w-4" />
+                    Edit Details
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onCreateInvoice(order.id)}>
+                    <Receipt className="mr-2 h-4 w-4" />
+                    Create Invoice
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TableCell>
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {workOrders && workOrders.length > 0 ? (
-            workOrders.map((workOrder) => (
-              <TableRow key={workOrder.id}>
-                <TableCell>
-                  <div>
-                    <p className="font-medium">
-                      {workOrder.first_name} {workOrder.last_name}
-                    </p>
-                    <p className="text-sm text-muted-foreground">{workOrder.email}</p>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={workOrder.status === 'completed' ? 'default' : 'secondary'}>
-                    {workOrder.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <span 
-                    className={`cursor-pointer ${!workOrder.assigned_to ? 'text-muted-foreground' : ''}`}
-                    onClick={() => onAssignUser(workOrder)}
-                  >
-                    {workOrder.assigned_to ? (
-                      `${workOrder.assigned_to.first_name} ${workOrder.assigned_to.last_name}`
-                    ) : (
-                      "Unassigned"
-                    )}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <span 
-                    className={`cursor-pointer ${!workOrder.service_bays ? 'text-muted-foreground' : ''}`}
-                    onClick={() => onAssignBay(workOrder)}
-                  >
-                    {workOrder.service_bays ? (
-                      workOrder.service_bays.name
-                    ) : (
-                      "Not assigned"
-                    )}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  {format(new Date(workOrder.created_at), 'MMM d, yyyy')}
-                </TableCell>
-                <TableCell>
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onCreateInvoice(workOrder.id)}
-                    >
-                      <FileText className="h-4 w-4" />
-                    </Button>
-                    {isAdmin && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onEdit(workOrder)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={7} className="text-center">
-                No work orders found
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
+        ))}
+      </TableBody>
+    </Table>
   )
 }
