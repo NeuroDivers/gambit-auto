@@ -31,7 +31,7 @@ export function ClientList() {
   const { data: clients, isLoading } = useQuery({
     queryKey: ['clients', debouncedSearch, sortBy],
     queryFn: async () => {
-      console.log("Fetching clients...")
+      console.log("Fetching clients with search:", debouncedSearch, "sort:", sortBy)
       let query = supabase
         .from('clients')
         .select(`
@@ -77,14 +77,14 @@ export function ClientList() {
         throw error
       }
 
-      console.log("Fetched clients:", clientData)
+      console.log("Raw client data from database:", clientData)
 
       // Transform the data to include the calculated fields
-      return (clientData || []).map(client => {
+      const transformedData = (clientData || []).map(client => {
         const invoices = client.invoices || []
         const workOrders = client.work_orders || []
         
-        return {
+        const transformed = {
           id: client.id,
           first_name: client.first_name,
           last_name: client.last_name,
@@ -103,7 +103,12 @@ export function ClientList() {
             ? Math.max(...workOrders.map(wo => new Date(wo.created_at).getTime()))
             : null
         } as Client
+
+        console.log("Transformed client data:", transformed)
+        return transformed
       })
+
+      return transformedData
     }
   })
 
@@ -114,28 +119,6 @@ export function ClientList() {
   const handleEdit = (client: Client) => {
     setSelectedClient(client)
     setEditDialogOpen(true)
-  }
-
-  const handleCreateQuote = (clientId: string) => {
-    const client = clients?.find(c => c.id === clientId)
-    if (client) {
-      navigate('/quotes/create', { 
-        state: { 
-          preselectedClient: client 
-        }
-      })
-    }
-  }
-
-  const handleCreateInvoice = (clientId: string) => {
-    const client = clients?.find(c => c.id === clientId)
-    if (client) {
-      navigate('/invoices/create', { 
-        state: { 
-          preselectedClient: client 
-        }
-      })
-    }
   }
 
   return (
