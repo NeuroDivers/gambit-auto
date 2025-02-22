@@ -34,7 +34,7 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
       id: index,
       name,
       value,
-      displayName
+      displayName: displayName.length > 20 ? `${displayName.slice(0, 20)}...` : displayName
     };
   });
 
@@ -50,11 +50,11 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
         
         <div className="h-[400px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
+            <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
               <Pie
                 data={chartData}
                 cx="50%"
-                cy="45%"
+                cy="40%"
                 innerRadius={60}
                 outerRadius={80}
                 paddingAngle={5}
@@ -90,7 +90,9 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
               />
               <Legend 
                 verticalAlign="bottom" 
-                height={48}
+                layout="horizontal"
+                align="center"
+                height={60}
                 iconType="circle"
                 formatter={(value) => {
                   if (typeof value === 'string') {
@@ -100,7 +102,12 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
                 }}
                 wrapperStyle={{
                   color: 'var(--foreground)',
-                  paddingTop: '16px'
+                  paddingTop: '16px',
+                  width: '100%',
+                  maxWidth: '100%',
+                  overflowX: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
                 }}
               />
             </PieChart>
