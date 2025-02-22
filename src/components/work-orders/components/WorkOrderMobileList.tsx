@@ -2,7 +2,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { FileText, Pencil, Tool, User, Warehouse } from "lucide-react"
+import { FileText, Pencil, Wrench, User, Warehouse } from "lucide-react"
 import { format } from "date-fns"
 import { WorkOrder } from "../types"
 import { useAdminStatus } from "@/hooks/useAdminStatus"
@@ -49,7 +49,7 @@ export function WorkOrderMobileList({
           <div className="space-y-2">
             <div className="text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
-                <Tool className="h-4 w-4" />
+                <Wrench className="h-4 w-4" />
                 {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
               </div>
             </div>
