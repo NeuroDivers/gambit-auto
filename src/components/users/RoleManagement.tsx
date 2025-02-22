@@ -22,18 +22,7 @@ export const RoleManagement = ({
   } = useAdminStatus();
   useRoleSubscription();
   return <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-xl font-semibold mb-2 text-white/[0.87]">Role Overview</h3>
-          <p className="text-sm text-white/60">
-            Current distribution of user roles
-          </p>
-        </div>
-        {isAdmin && <Button onClick={() => setIsDialogOpen(true)} variant="outline" className="gap-2">
-            <Plus className="h-4 w-4" />
-            Create Role
-          </Button>}
-      </div>
+      
       
       {roleStats && <RoleDistributionChart roleStats={roleStats} />}
 
