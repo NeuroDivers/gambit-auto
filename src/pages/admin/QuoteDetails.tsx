@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -80,19 +81,32 @@ export default function QuoteDetails() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center gap-4">
+    <div className="space-y-6 p-4 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center gap-4">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => navigate(-1)}
+          className="self-start"
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <PageTitle 
-          title={`Quote ${quote.quote_number}`}
-          description="View and manage quote details"
-        />
+        <div className="flex flex-col md:flex-row md:items-center justify-between w-full gap-4">
+          <PageTitle 
+            title={`Quote ${quote.quote_number}`}
+            description="View and manage quote details"
+          />
+          <Badge 
+            variant={
+              quote.status === 'accepted' ? 'default' : 
+              quote.status === 'rejected' ? 'destructive' : 
+              'secondary'
+            }
+            className="self-start md:self-center"
+          >
+            {quote.status}
+          </Badge>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -133,43 +147,33 @@ export default function QuoteDetails() {
         </Card>
 
         <Card className="md:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle>Quote Details</CardTitle>
-            <Badge 
-              variant={
-                quote.status === 'accepted' ? 'default' : 
-                quote.status === 'rejected' ? 'destructive' : 
-                'secondary'
-              }
-            >
-              {quote.status}
-            </Badge>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div>
-                <p className="font-medium mb-2">Services</p>
+              <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Service</TableHead>
-                      <TableHead>Quantity</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Total</TableHead>
+                      <TableHead className="text-right">Quantity</TableHead>
+                      <TableHead className="text-right">Price</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {quote.quote_items?.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell>{item.service_name}</TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>${item.unit_price.toFixed(2)}</TableCell>
-                        <TableCell>${(item.quantity * item.unit_price).toFixed(2)}</TableCell>
+                        <TableCell className="text-right">{item.quantity}</TableCell>
+                        <TableCell className="text-right">${item.unit_price.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">${(item.quantity * item.unit_price).toFixed(2)}</TableCell>
                       </TableRow>
                     ))}
                     <TableRow>
                       <TableCell colSpan={3} className="text-right font-medium">Total</TableCell>
-                      <TableCell className="font-medium">${quote.total.toFixed(2)}</TableCell>
+                      <TableCell className="text-right font-medium">${quote.total.toFixed(2)}</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
@@ -193,7 +197,7 @@ export default function QuoteDetails() {
         </Card>
       </div>
 
-      <div className="flex justify-end gap-4">
+      <div className="flex flex-col sm:flex-row justify-end gap-4">
         <Button 
           variant="outline"
           onClick={() => navigate(`/admin/quotes/${id}/edit`)}
