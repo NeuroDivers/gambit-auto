@@ -25,8 +25,8 @@ export const RoleCard = ({
 
   return (
     <Card key={role.id} className="p-4">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
+      <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+        <div className="space-y-2 flex-grow">
           <h4 className="font-medium text-card-foreground">{role.nicename}</h4>
           <p className="text-sm text-muted-foreground">{role.name}</p>
           {role.description && (
@@ -38,7 +38,7 @@ export const RoleCard = ({
           </div>
         </div>
         {isAdmin && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 justify-end sm:flex-col">
             <Button
               variant="ghost"
               size="icon"

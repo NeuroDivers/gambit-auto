@@ -50,8 +50,8 @@ export const UserCard = ({ user }: UserCardProps) => {
 
   return (
     <>
-      <div className="bg-card border border-border/50 rounded-lg p-6 transition-all duration-200 hover:border-primary/30">
-        <div className="flex items-start justify-between">
+      <div className="bg-card border border-border/50 rounded-lg p-4 transition-all duration-200 hover:border-primary/30">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <UserAvatar
             displayName={displayName}
             email={user.email}

@@ -18,16 +18,16 @@ export const UserManagementSection = () => {
   };
 
   return (
-    <div className="space-y-8">      
-      <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
+    <div className="space-y-4">      
+      <div className="flex flex-col gap-4">
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h3 className="text-xl font-semibold mb-2 text-foreground">Users</h3>
               <p className="text-sm text-muted-foreground">View and manage system users</p>
             </div>
             {isAdmin && (
-              <Button onClick={() => setIsCreateUserOpen(true)} className="gap-2">
+              <Button onClick={() => setIsCreateUserOpen(true)} className="gap-2 w-full sm:w-auto">
                 <Plus className="h-4 w-4" />
                 Create User
               </Button>
@@ -35,7 +35,7 @@ export const UserManagementSection = () => {
           </div>
           <UserList initialRoleFilter={selectedRole} />
         </div>
-        <div className="space-y-8">
+        <div className="space-y-4">
           <RoleManagement onRoleSelect={handleRoleSelect} />
           <RoleList />
         </div>
