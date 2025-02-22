@@ -15,19 +15,48 @@ serve(async (req) => {
 
   try {
     // Initialize Supabase Client with Service Role Key
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
-    // Parse request body
-    const { email, password = "defaultPassword123!", role, firstName, lastName } = await req.json()
-
-    if (!email || !role) {
-      throw new Error('Missing required fields: email or role')
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing Supabase environment variables')
     }
 
-    console.log('Creating user:', { email, role, firstName, lastName })
+    const supabaseClient = createClient(supabaseUrl, supabaseKey)
+
+    // Parse request body
+    const requestBody = await req.json()
+    const { email, password, role, firstName, lastName } = requestBody
+
+    // Validate required fields
+    if (!email || !password || !role) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required fields: email, password, or role' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      )
+    }
+
+    console.log('Creating user with email:', email)
+
+    // First check if user already exists
+    const { data: existingUser } = await supabaseClient
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (existingUser) {
+      return new Response(
+        JSON.stringify({ error: 'A user with this email already exists' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      )
+    }
 
     // Create the user using Supabase Admin API
     const { data: { user }, error: createUserError } = await supabaseClient.auth.admin.createUser({
@@ -40,8 +69,14 @@ serve(async (req) => {
       }
     })
 
-    if (createUserError) throw createUserError
-    if (!user) throw new Error('User creation failed')
+    if (createUserError) {
+      console.error('Error creating auth user:', createUserError)
+      throw createUserError
+    }
+
+    if (!user) {
+      throw new Error('User creation failed - no user ID returned')
+    }
 
     // Insert user details into profiles table
     const { error: profileError } = await supabaseClient
@@ -51,10 +86,15 @@ serve(async (req) => {
         email: user.email,
         first_name: firstName,
         last_name: lastName,
-        role_id: role // Use the role ID directly
+        role_id: role
       })
 
-    if (profileError) throw profileError
+    if (profileError) {
+      console.error('Error creating profile:', profileError)
+      // If profile creation fails, try to clean up the auth user
+      await supabaseClient.auth.admin.deleteUser(user.id)
+      throw profileError
+    }
 
     console.log('User created successfully:', user.id)
 
@@ -66,7 +106,7 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    console.error('Error processing user request:', error.message)
+    console.error('Error processing user request:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
