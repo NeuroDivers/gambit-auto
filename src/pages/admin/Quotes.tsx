@@ -1,5 +1,4 @@
-
-import { useState } from "react"
+import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
@@ -19,12 +18,15 @@ import type { QuoteRequest } from "@/types/quote-request"
 import { QuoteFilters } from "./quotes/QuoteFilters"
 import { QuotesTable } from "./quotes/QuotesTable"
 import { QuoteRequestsTable } from "./quotes/QuoteRequestsTable"
+import { QuoteMobileList } from "@/components/quotes/QuoteMobileList"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 export default function Quotes() {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState("quotes")
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
 
   const { data: quotes, isLoading: isLoadingQuotes, error: quotesError } = useQuery({
     queryKey: ['quotes'],
@@ -142,24 +144,31 @@ export default function Quotes() {
 
         <TabsContent value="quotes" className="space-y-4">
           <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Quote #</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Vehicle</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Created</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <QuotesTable 
-                  quotes={filteredQuotes || []} 
-                  onRowClick={handleRowClick}
-                />
-              </TableBody>
-            </Table>
+            {isMobile ? (
+              <QuoteMobileList 
+                quotes={filteredQuotes || []}
+                onRowClick={handleRowClick}
+              />
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Quote #</TableHead>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Vehicle</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Created</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <QuotesTable 
+                    quotes={filteredQuotes || []} 
+                    onRowClick={handleRowClick}
+                  />
+                </TableBody>
+              </Table>
+            )}
           </div>
         </TabsContent>
 

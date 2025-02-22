@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
@@ -20,11 +19,14 @@ import { PageTitle } from "@/components/shared/PageTitle"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Invoice } from "@/components/invoices/types"
+import { InvoiceMobileList } from "@/components/invoices/InvoiceMobileList"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 export default function Invoices() {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [searchTerm, setSearchTerm] = useState("")
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
 
   const { data: invoices, isLoading, error } = useQuery({
     queryKey: ['invoices'],
@@ -111,67 +113,74 @@ export default function Invoices() {
         </div>
 
         <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Invoice #</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Created</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredInvoices && filteredInvoices.length > 0 ? (
-                filteredInvoices.map((invoice) => (
-                  <TableRow 
-                    key={invoice.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => handleRowClick(invoice.id)}
-                  >
-                    <TableCell className="font-medium">
-                      {invoice.invoice_number}
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">
-                          {invoice.customer_first_name} {invoice.customer_last_name}
-                        </p>
-                        <p className="text-sm text-muted-foreground">{invoice.customer_email}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={
-                          invoice.status === 'paid' ? 'default' : 
-                          invoice.status === 'overdue' ? 'destructive' : 
-                          'secondary'
-                        }
-                      >
-                        {invoice.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      ${invoice.total.toFixed(2)}
-                    </TableCell>
-                    <TableCell>
-                      {invoice.due_date ? format(new Date(invoice.due_date), 'MMM d, yyyy') : '-'}
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(invoice.created_at), 'MMM d, yyyy')}
+          {isMobile ? (
+            <InvoiceMobileList 
+              invoices={filteredInvoices || []}
+              onRowClick={handleRowClick}
+            />
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Invoice #</TableHead>
+                  <TableHead>Client</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Due Date</TableHead>
+                  <TableHead>Created</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredInvoices && filteredInvoices.length > 0 ? (
+                  filteredInvoices.map((invoice) => (
+                    <TableRow 
+                      key={invoice.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleRowClick(invoice.id)}
+                    >
+                      <TableCell className="font-medium">
+                        {invoice.invoice_number}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">
+                            {invoice.customer_first_name} {invoice.customer_last_name}
+                          </p>
+                          <p className="text-sm text-muted-foreground">{invoice.customer_email}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={
+                            invoice.status === 'paid' ? 'default' : 
+                            invoice.status === 'overdue' ? 'destructive' : 
+                            'secondary'
+                          }
+                        >
+                          {invoice.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        ${invoice.total.toFixed(2)}
+                      </TableCell>
+                      <TableCell>
+                        {invoice.due_date ? format(new Date(invoice.due_date), 'MMM d, yyyy') : '-'}
+                      </TableCell>
+                      <TableCell>
+                        {format(new Date(invoice.created_at), 'MMM d, yyyy')}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center">
+                      No invoices found
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center">
-                    No invoices found
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
+          )}
         </div>
       </div>
     </div>
