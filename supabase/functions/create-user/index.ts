@@ -26,6 +26,7 @@ serve(async (req) => {
 
     // Parse request body
     const { email, password, role, firstName, lastName } = await req.json()
+    console.log("Received data:", { email, role, firstName, lastName })
 
     // Validate required fields
     if (!email || !password || !role) {
@@ -37,8 +38,6 @@ serve(async (req) => {
         }
       )
     }
-
-    console.log('Starting user creation process for:', email)
 
     // Create the auth user first
     const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
@@ -55,43 +54,37 @@ serve(async (req) => {
     const user = authData.user
     console.log('Auth user created successfully:', user.id)
 
-    try {
-      // Create the profile entry
-      const { error: profileError } = await supabaseClient
-        .from('profiles')
-        .insert({
-          id: user.id,
-          email: user.email,
-          first_name: firstName,
-          last_name: lastName,
-          role_id: role
-        })
+    // Create the profile entry
+    const { error: profileError } = await supabaseClient
+      .from('profiles')
+      .insert({
+        id: user.id,
+        email: user.email,
+        first_name: firstName,
+        last_name: lastName,
+        role_id: role
+      })
 
-      if (profileError) {
-        console.error('Error creating profile:', profileError)
-        // Clean up auth user if profile creation fails
-        await supabaseClient.auth.admin.deleteUser(user.id)
-        throw new Error(`Failed to create profile: ${profileError.message}`)
-      }
-
-      console.log('Profile created successfully for user:', user.id)
-
-      return new Response(
-        JSON.stringify({ 
-          user,
-          message: 'User and profile created successfully' 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
-      )
-    } catch (error) {
-      console.error('Error in profile creation:', error)
-      // Attempt to clean up auth user
+    if (profileError) {
+      console.error('Error creating profile:', profileError)
+      // Clean up auth user if profile creation fails
       await supabaseClient.auth.admin.deleteUser(user.id)
-      throw error
+      throw new Error(`Failed to create profile: ${profileError.message}`)
     }
+
+    console.log('Profile created successfully for user:', user.id)
+
+    return new Response(
+      JSON.stringify({ 
+        user,
+        message: 'User and profile created successfully' 
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200 
+      }
+    )
+
   } catch (error) {
     console.error('Error in create-user function:', error)
     return new Response(
