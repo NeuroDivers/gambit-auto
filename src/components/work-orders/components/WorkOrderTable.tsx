@@ -69,14 +69,20 @@ export function WorkOrderTable({
             <TableCell>
               {order.vehicle_year} {order.vehicle_make} {order.vehicle_model}
             </TableCell>
-            <TableCell>
+            <TableCell 
+              onClick={() => onAssignUser(order)}
+              className="cursor-pointer hover:bg-muted"
+            >
               {order.assigned_to ? (
                 `${order.assigned_to.first_name} ${order.assigned_to.last_name}`
               ) : (
                 <span className="text-muted-foreground">Unassigned</span>
               )}
             </TableCell>
-            <TableCell>
+            <TableCell 
+              onClick={() => onAssignBay(order)}
+              className="cursor-pointer hover:bg-muted"
+            >
               {order.service_bays?.name || (
                 <span className="text-muted-foreground">Unassigned</span>
               )}
