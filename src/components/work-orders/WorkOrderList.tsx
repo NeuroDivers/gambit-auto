@@ -5,8 +5,6 @@ import { WorkOrderFilters } from "./components/WorkOrderFilters"
 import { AssignmentSheet } from "./components/AssignmentSheet"
 import { useWorkOrderListData } from "./hooks/useWorkOrderListData"
 import { useNavigate } from "react-router-dom"
-import { toast } from "sonner"
-import { supabase } from "@/integrations/supabase/client"
 import { WorkOrderTable } from "./components/WorkOrderTable"
 import { WorkOrderPagination } from "./components/WorkOrderPagination"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -35,6 +33,7 @@ export function WorkOrderList() {
     serviceBays,
     handleAssignUser,
     handleAssignBay,
+    handleCreateInvoice,
     page,
     setPage,
     totalPages

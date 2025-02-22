@@ -1,12 +1,13 @@
-
 import { useState, useEffect, useCallback } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { WorkOrder } from "../types"
 import { toast } from "sonner"
+import { useNavigate } from "react-router-dom"
 
 export function useWorkOrderListData() {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [assignmentFilter, setAssignmentFilter] = useState<string>("all")
@@ -17,12 +18,10 @@ export function useWorkOrderListData() {
   const pageSize = 10
 
   const fetchWorkOrders = useCallback(async () => {
-    // First, get total count with filters but no pagination
     const { count } = await supabase
       .from('work_orders')
       .select('*', { count: 'exact', head: true });
 
-    // Then get paginated data
     const { data, error } = await supabase
       .from('work_orders')
       .select(`
@@ -50,7 +49,6 @@ export function useWorkOrderListData() {
     queryFn: fetchWorkOrders
   });
 
-  // Set up real-time subscription for all relevant tables
   useEffect(() => {
     console.log("Setting up real-time subscriptions...")
     const channel = supabase
@@ -159,7 +157,6 @@ export function useWorkOrderListData() {
 
       toast.success("User assigned successfully");
       setAssignWorkOrder(null);
-      // The real-time subscription will handle the UI update
     } catch (error) {
       console.error('Error assigning user:', error);
       toast.error("Failed to assign user");
@@ -179,10 +176,26 @@ export function useWorkOrderListData() {
 
       toast.success("Bay assigned successfully");
       setAssignBayWorkOrder(null);
-      // The real-time subscription will handle the UI update
     } catch (error) {
       console.error('Error assigning bay:', error);
       toast.error("Failed to assign bay");
+    }
+  };
+
+  const handleCreateInvoice = async (workOrderId: string) => {
+    try {
+      const { data, error } = await supabase.rpc(
+        'create_invoice_from_work_order',
+        { work_order_id: workOrderId }
+      )
+
+      if (error) throw error
+
+      toast.success("Invoice created successfully")
+      navigate(`/admin/invoices/${data}/edit`)
+    } catch (error: any) {
+      console.error('Error creating invoice:', error)
+      toast.error("Failed to create invoice")
     }
   };
 
@@ -197,7 +210,6 @@ export function useWorkOrderListData() {
 
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
 
-    // Add assignment filtering logic
     const matchesAssignment = (() => {
       switch (assignmentFilter) {
         case "unassigned-user":
@@ -215,6 +227,8 @@ export function useWorkOrderListData() {
 
     return matchesSearch && matchesStatus && matchesAssignment;
   });
+
+  const totalPages = workOrdersData ? Math.ceil(workOrdersData.totalCount / pageSize) : 0;
 
   return {
     searchTerm,
@@ -236,6 +250,7 @@ export function useWorkOrderListData() {
     serviceBays,
     handleAssignUser,
     handleAssignBay,
+    handleCreateInvoice,
     page,
     setPage,
     totalPages
