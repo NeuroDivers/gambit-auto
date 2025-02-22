@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { PageTitle } from "@/components/shared/PageTitle"
 import { ArrowLeft } from "lucide-react"
 import { Client } from "@/components/clients/types"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { CustomerInfoSection } from "@/components/quotes/form-sections/CustomerInfoSection"
 import { VehicleInfoSection } from "@/components/quotes/form-sections/VehicleInfoSection"
 import { ServicesSection } from "@/components/quotes/form-sections/ServicesSection"
@@ -41,14 +41,15 @@ export default function CreateQuote() {
   const navigate = useNavigate()
   const location = useLocation()
   const { preselectedClient } = location.state as LocationState || {}
+  const initialized = useRef(false)
   
   const form = useForm<FormData>({
     defaultValues: {
-      customer_first_name: preselectedClient?.first_name || "",
-      customer_last_name: preselectedClient?.last_name || "",
-      customer_email: preselectedClient?.email || "",
-      customer_phone: preselectedClient?.phone_number || "",
-      customer_address: preselectedClient?.address || "",
+      customer_first_name: "",
+      customer_last_name: "",
+      customer_email: "",
+      customer_phone: "",
+      customer_address: "",
       vehicle_make: "",
       vehicle_model: "",
       vehicle_year: new Date().getFullYear(),
@@ -58,9 +59,18 @@ export default function CreateQuote() {
     }
   })
 
-  // Fetch default vehicle if client is preselected
+  // Set client information only once on initial mount
   useEffect(() => {
-    if (preselectedClient?.id) {
+    if (!initialized.current && preselectedClient) {
+      console.log("Setting preselected client data:", preselectedClient)
+      form.setValue('customer_first_name', preselectedClient.first_name)
+      form.setValue('customer_last_name', preselectedClient.last_name)
+      form.setValue('customer_email', preselectedClient.email)
+      form.setValue('customer_phone', preselectedClient.phone_number || '')
+      form.setValue('customer_address', preselectedClient.address || '')
+      initialized.current = true
+
+      // Fetch default vehicle if client is preselected
       const fetchDefaultVehicle = async () => {
         const { data: vehicles, error } = await supabase
           .from('vehicles')
@@ -75,6 +85,7 @@ export default function CreateQuote() {
         }
 
         if (vehicles) {
+          console.log("Setting vehicle data:", vehicles)
           form.setValue('vehicle_make', vehicles.make)
           form.setValue('vehicle_model', vehicles.model)
           form.setValue('vehicle_year', vehicles.year)
@@ -84,7 +95,7 @@ export default function CreateQuote() {
 
       fetchDefaultVehicle()
     }
-  }, [preselectedClient?.id, form])
+  }, [preselectedClient, form])
 
   const onSubmit = async (data: FormData) => {
     try {
