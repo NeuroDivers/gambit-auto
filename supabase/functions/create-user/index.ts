@@ -8,6 +8,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -20,43 +21,15 @@ serve(async (req) => {
     )
 
     // Parse request body
-    const { email, password, role, firstName, lastName, action = 'create' } = await req.json()
+    const { email, password = "defaultPassword123!", role, firstName, lastName } = await req.json()
 
-    console.log(`Processing ${action} request for user:`, email)
-
-    if (action === 'reset_password') {
-      if (!email || !password) {
-        throw new Error('Missing required fields: email or password')
-      }
-
-      // Update user password using admin API
-      const { data: { user }, error: updateError } = await supabaseClient.auth.admin.updateUserById(
-        (await supabaseClient.auth.admin.listUsers()).data.users.find(u => u.email === email)?.id || '',
-        { password }
-      )
-
-      if (updateError) throw updateError
-      if (!user) throw new Error('User not found')
-
-      console.log('Password updated successfully for user:', email)
-
-      return new Response(
-        JSON.stringify({ user }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
-      )
+    if (!email || !role) {
+      throw new Error('Missing required fields: email or role')
     }
 
-    // Handle user creation (existing code)
-    if (!email || !password || !role) {
-      throw new Error('Missing required fields: email, password, or role')
-    }
+    console.log('Creating user:', { email, role, firstName, lastName })
 
-    console.log('Creating user:', { email, role })
-
-    // Create the user using Supabase Admin API (does not affect current session)
+    // Create the user using Supabase Admin API
     const { data: { user }, error: createUserError } = await supabaseClient.auth.admin.createUser({
       email,
       password,
@@ -78,17 +51,10 @@ serve(async (req) => {
         email: user.email,
         first_name: firstName,
         last_name: lastName,
+        role_id: role // Use the role ID directly
       })
 
     if (profileError) throw profileError
-
-    // Assign the correct role using a Postgres function
-    const { error: roleError } = await supabaseClient.rpc('create_user_role', {
-      user_id: user.id,
-      role_name: role
-    })
-
-    if (roleError) throw roleError
 
     console.log('User created successfully:', user.id)
 
