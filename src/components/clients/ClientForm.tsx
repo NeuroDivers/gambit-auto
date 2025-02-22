@@ -73,19 +73,12 @@ export function ClientForm({ client, onSuccess }: ClientFormProps) {
 
       await queryClient.invalidateQueries({ queryKey: ["clients"] })
       
-      toast({
-        title: "Success",
-        description: client ? "Client updated successfully" : "Client created successfully",
-      })
+      toast.success(client ? "Client updated successfully" : "Client created successfully")
 
       onSuccess?.()
     } catch (error: any) {
       console.error("Error saving client:", error)
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error(error.message)
     }
   }
 
