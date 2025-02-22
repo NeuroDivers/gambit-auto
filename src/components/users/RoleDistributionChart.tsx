@@ -13,7 +13,6 @@ interface RoleDistributionChartProps {
 }
 
 export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps) => {
-  // Fetch role names to display proper labels
   const { data: roleNames } = useQuery({
     queryKey: ["roleNames"],
     queryFn: async () => {
@@ -29,7 +28,6 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
     }
   });
 
-  // Transform the roleStats object into an array format for Recharts
   const chartData = Object.entries(roleStats).map(([name, value], index) => {
     const displayName = roleNames?.[name] || name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     return {
@@ -50,13 +48,13 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
           <p className="text-sm text-muted-foreground">Total users: {total}</p>
         </div>
         
-        <div className="h-[300px] w-full">
+        <div className="h-[400px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={chartData}
                 cx="50%"
-                cy="50%"
+                cy="45%"
                 innerRadius={60}
                 outerRadius={80}
                 paddingAngle={5}
@@ -91,8 +89,8 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
                 ]}
               />
               <Legend 
-                verticalAlign="bottom"
-                height={36}
+                verticalAlign="bottom" 
+                height={48}
                 iconType="circle"
                 formatter={(value) => {
                   if (typeof value === 'string') {
@@ -101,7 +99,8 @@ export const RoleDistributionChart = ({ roleStats }: RoleDistributionChartProps)
                   return '';
                 }}
                 wrapperStyle={{
-                  color: 'var(--foreground)'
+                  color: 'var(--foreground)',
+                  paddingTop: '16px'
                 }}
               />
             </PieChart>
