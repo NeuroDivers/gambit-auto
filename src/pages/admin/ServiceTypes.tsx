@@ -6,7 +6,7 @@ import { ServiceTypesList } from "@/components/services/ServiceTypesList"
 import { toast } from "sonner"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { SidebarProvider, Sidebar, SidebarContent, SidebarInset, SidebarRail } from "@/components/ui/sidebar"
+import { SidebarProvider, Sidebar, SidebarContent, SidebarInset } from "@/components/ui/sidebar"
 
 export default function ServiceTypes() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -56,13 +56,12 @@ export default function ServiceTypes() {
   return (
     <SidebarProvider>
       <div className="flex w-full">
-        <Sidebar collapsible="icon">
+        <Sidebar>
           <SidebarContent>
-            {/* Sidebar content can be added here */}
+            {/* Add your sidebar content here */}
           </SidebarContent>
-          <SidebarRail />
         </Sidebar>
-        <div className="flex-1">
+        <SidebarInset>
           <div className="space-y-6 p-6">
             <div className="flex items-center justify-between">
               <h1 className="text-3xl font-bold">Service Types</h1>
@@ -80,8 +79,8 @@ export default function ServiceTypes() {
               onSuccess={handleSuccess}
             />
           </div>
-        </div>
+        </SidebarInset>
       </div>
     </SidebarProvider>
-  )
+  );
 }
