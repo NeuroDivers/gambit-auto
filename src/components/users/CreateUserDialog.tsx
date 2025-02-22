@@ -67,7 +67,10 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
         },
       })
 
-      if (error) throw error
+      if (error) {
+        console.error('Error creating user:', error)
+        throw error
+      }
 
       if (!data?.user?.id) {
         throw new Error('User creation failed - no user ID returned')
@@ -86,18 +89,28 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
         description: "User created successfully. They will receive a verification email.",
       })
 
-      // Reset form
+      // Reset form and close dialog
       setEmail("")
       setFirstName("")
       setLastName("")
       setPassword("")
       setRole("")
       onOpenChange(false)
+
     } catch (error: any) {
       console.error('Error creating user:', error)
+      
+      // Handle specific error messages from the Edge Function
+      const errorMessage = error.message || error.error?.message || error.error || 'Failed to create user'
+      
+      // Check for common error patterns and provide user-friendly messages
+      const userFriendlyMessage = errorMessage.includes('already registered') 
+        ? 'A user with this email address already exists.'
+        : errorMessage
+
       toast({
         title: "Error",
-        description: error.message || 'Failed to create user',
+        description: userFriendlyMessage,
         variant: "destructive",
       })
     } finally {
