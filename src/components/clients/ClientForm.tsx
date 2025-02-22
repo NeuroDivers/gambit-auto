@@ -6,7 +6,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "../ui/input"
 import { Button } from "../ui/button"
 import { Client, ClientFormValues } from "./types"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
 import { useQueryClient } from "@tanstack/react-query"
 
@@ -24,7 +24,6 @@ interface ClientFormProps {
 }
 
 export function ClientForm({ client, onSuccess }: ClientFormProps) {
-  const { toast } = useToast()
   const queryClient = useQueryClient()
 
   const form = useForm<ClientFormValues>({
@@ -51,6 +50,8 @@ export function ClientForm({ client, onSuccess }: ClientFormProps) {
         ...values,
         phone_number: values.phone_number || null,
         address: values.address || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }
 
       if (client) {
@@ -65,7 +66,7 @@ export function ClientForm({ client, onSuccess }: ClientFormProps) {
         console.log("Creating client with data:", dataToUpdate)
         const { error } = await supabase
           .from("clients")
-          .insert(dataToUpdate)
+          .insert([dataToUpdate])
 
         if (error) throw error
       }
