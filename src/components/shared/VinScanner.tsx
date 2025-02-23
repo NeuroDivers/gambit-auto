@@ -27,6 +27,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const workerRef = useRef<any>(null)
   const isScanning = useRef(false)
 
+  const handleScanSuccess = (scannedValue: string) => {
+    if (/^[A-HJ-NPR-Z0-9]{17}$/i.test(scannedValue)) {
+      onScan(scannedValue.toUpperCase())
+      toast.success("VIN scanned successfully")
+      handleClose()
+    }
+  }
+
   const stopCamera = () => {
     isScanning.current = false
     if (streamRef.current) {
@@ -38,6 +46,69 @@ export function VinScanner({ onScan }: VinScannerProps) {
       readerRef.current = null
     }
     setIsCameraActive(false)
+  }
+
+  const captureFrame = () => {
+    if (!videoRef.current || !canvasRef.current) return null
+
+    const canvas = canvasRef.current
+    const video = videoRef.current
+    const ctx = canvas.getContext('2d')
+    
+    if (!ctx) return null
+
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    
+    return canvas.toDataURL('image/png')
+  }
+
+  const startOCRScanning = async () => {
+    if (!isCameraActive || !workerRef.current || !isScanning.current) return
+
+    try {
+      const frameData = captureFrame()
+      if (!frameData) {
+        if (isScanning.current) {
+          requestAnimationFrame(startOCRScanning)
+        }
+        return
+      }
+
+      const { data: { text } } = await workerRef.current.recognize(frameData)
+      const vinMatch = text.match(/[A-HJ-NPR-Z0-9]{17}/i)
+      
+      if (vinMatch) {
+        const scannedValue = vinMatch[0]
+        handleScanSuccess(scannedValue)
+      } else if (isScanning.current) {
+        requestAnimationFrame(startOCRScanning)
+      }
+    } catch (error) {
+      console.error('OCR error:', error)
+      if (isScanning.current) {
+        requestAnimationFrame(startOCRScanning)
+      }
+    }
+  }
+
+  const startScanning = async () => {
+    if (!videoRef.current || !readerRef.current || !isCameraActive || !isScanning.current) return
+
+    try {
+      const result = await readerRef.current.decodeFromVideoElement(videoRef.current)
+      if (result) {
+        const scannedValue = result.getText().trim()
+        handleScanSuccess(scannedValue)
+      } else if (isScanning.current) {
+        requestAnimationFrame(() => startScanning())
+      }
+    } catch (error) {
+      if (isScanning.current) {
+        requestAnimationFrame(() => startScanning())
+      }
+    }
   }
 
   const startCamera = async () => {
@@ -57,7 +128,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
         await videoRef.current.play()
         
         if (scanMode === 'barcode') {
-          // Initialize barcode reader
           const hints = new Map<DecodeHintType, any>();
           hints.set(DecodeHintType.POSSIBLE_FORMATS, [
             BarcodeFormat.CODE_39,
@@ -70,7 +140,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
           isScanning.current = true
           startScanning()
         } else {
-          // Initialize OCR
           workerRef.current = await createWorker('eng')
           isScanning.current = true
           startOCRScanning()
@@ -80,98 +149,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
       console.error('Error accessing camera:', error)
       toast.error("Could not access camera. Please check camera permissions.")
       setIsDialogOpen(false)
-    }
-  }
-
-  const captureFrame = () => {
-    if (!videoRef.current || !canvasRef.current) return null
-
-    const canvas = canvasRef.current
-    const video = videoRef.current
-    const ctx = canvas.getContext('2d')
-    
-    if (!ctx) return null
-
-    // Match canvas size to video
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-    
-    // Draw the current video frame
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-    
-    return canvas.toDataURL('image/png')
-  }
-
-  const startOCRScanning = async () => {
-    if (!isCameraActive || !workerRef.current || !isScanning.current) return
-
-    try {
-      const frameData = captureFrame()
-      if (!frameData) {
-        if (isScanning.current) {
-          requestAnimationFrame(startOCRScanning)
-        }
-        return
-      }
-
-      const { data: { text } } = await workerRef.current.recognize(frameData)
-      
-      // Look for VIN-like pattern in the recognized text
-      const vinMatch = text.match(/[A-HJ-NPR-Z0-9]{17}/i)
-      
-      if (vinMatch) {
-        const scannedValue = vinMatch[0]
-        if (/^[A-HJ-NPR-Z0-9]{17}$/i.test(scannedValue)) {
-          onScan(scannedValue.toUpperCase())
-          toast.success("VIN scanned successfully")
-          handleClose()
-          return
-        }
-      }
-      
-      // No valid VIN found, continue scanning
-      if (isScanning.current) {
-        requestAnimationFrame(startOCRScanning)
-      }
-    } catch (error) {
-      console.error('OCR error:', error)
-      if (isScanning.current) {
-        requestAnimationFrame(startOCRScanning)
-      }
-    }
-  }
-
-  const startScanning = async () => {
-    if (!videoRef.current || !readerRef.current || !isCameraActive || !isScanning.current) return
-
-    try {
-      const result = await readerRef.current.decodeFromVideoElement(videoRef.current)
-      if (result) {
-        const scannedValue = result.getText().trim()
-        
-        // Basic VIN validation (17 characters, alphanumeric)
-        if (/^[A-HJ-NPR-Z0-9]{17}$/i.test(scannedValue)) {
-          onScan(scannedValue.toUpperCase())
-          toast.success("VIN scanned successfully")
-          handleClose()
-        } else {
-          console.log("Invalid VIN format:", scannedValue)
-          // Continue scanning if invalid
-          if (isScanning.current) {
-            requestAnimationFrame(() => startScanning())
-          }
-        }
-      } else {
-        // No result found, continue scanning
-        if (isScanning.current) {
-          requestAnimationFrame(() => startScanning())
-        }
-      }
-    } catch (error) {
-      // Error usually means no barcode found, continue scanning
-      if (isScanning.current) {
-        requestAnimationFrame(() => startScanning())
-      }
     }
   }
 
