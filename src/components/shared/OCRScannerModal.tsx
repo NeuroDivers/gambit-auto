@@ -65,19 +65,15 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
     
-    // Draw the full frame
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
     
-    // Calculate dimensions for the center area
     const centerWidth = canvas.width * 0.7
     const centerHeight = canvas.height * 0.3
     const x = (canvas.width - centerWidth) / 2
     const y = (canvas.height - centerHeight) / 2
     
-    // Get the image data for just the center portion
     const imageData = ctx.getImageData(x, y, centerWidth, centerHeight)
     
-    // Create a new canvas for the cropped area
     const croppedCanvas = document.createElement('canvas')
     croppedCanvas.width = centerWidth
     croppedCanvas.height = centerHeight
@@ -93,7 +89,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
     try {
       setIsInitializing(true)
       const recognizer = await pipeline(
-        'text-recognition',
+        'text-to-text',
         'microsoft/trocr-small-printed'
       )
       recognizerRef.current = recognizer
