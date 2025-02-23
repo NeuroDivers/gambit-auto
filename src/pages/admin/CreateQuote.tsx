@@ -164,8 +164,8 @@ export default function CreateQuote() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <PageTitle 
-          title="Create Quote"
-          description="Create a new quote for a customer"
+          title="Create Estimate"
+          description="Create a new estimate for a customer"
         />
       </div>
 
@@ -185,7 +185,7 @@ export default function CreateQuote() {
               Cancel
             </Button>
             <Button type="submit">
-              Create Quote
+              Create Estimate
             </Button>
           </div>
         </form>

@@ -120,21 +120,21 @@ export default function Quotes() {
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <PageTitle 
-          title="Quotes" 
-          description="Manage quotes and quote requests"
+          title="Estimates" 
+          description="Manage estimates and estimate requests"
         />
         <Link to="/admin/quotes/create">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
-            New Quote
+            New Estimate
           </Button>
         </Link>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
-          <TabsTrigger value="quotes">Quotes</TabsTrigger>
-          <TabsTrigger value="requests">Quote Requests</TabsTrigger>
+          <TabsTrigger value="quotes">Estimates</TabsTrigger>
+          <TabsTrigger value="requests">Estimate Requests</TabsTrigger>
         </TabsList>
 
         <QuoteFilters
@@ -156,7 +156,7 @@ export default function Quotes() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Quote #</TableHead>
+                    <TableHead>Estimate #</TableHead>
                     <TableHead>Client</TableHead>
                     <TableHead>Vehicle</TableHead>
                     <TableHead>Status</TableHead>
