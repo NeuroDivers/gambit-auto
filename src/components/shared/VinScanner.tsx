@@ -15,79 +15,21 @@ interface VinScannerProps {
 }
 
 export function VinScanner({ onScan }: VinScannerProps) {
-  const [scanning, setScanning] = useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isCameraActive, setIsCameraActive] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
 
-  const stopScanning = () => {
+  const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
     }
-    setScanning(false)
+    setIsCameraActive(false)
   }
 
-  useEffect(() => {
-    return () => {
-      stopScanning()
-    }
-  }, [])
-
-  const processFrame = async () => {
-    if (!videoRef.current || !canvasRef.current || !scanning) return
-
-    const canvas = canvasRef.current
-    const video = videoRef.current
-    const ctx = canvas.getContext('2d')
-    
-    if (!ctx) return
-
-    // Match canvas size to video feed
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-
-    // Draw the current video frame
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-
-    try {
-      // Use Tesseract.js or similar OCR library here
-      // For now, we'll simulate finding a VIN by detecting if there's enough contrast
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-      const data = imageData.data
-      
-      // Simple contrast detection
-      let totalBrightness = 0
-      for (let i = 0; i < data.length; i += 4) {
-        const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3
-        totalBrightness += brightness
-      }
-      
-      const averageBrightness = totalBrightness / (data.length / 4)
-      
-      // If we detect significant contrast, assume we found a VIN
-      if (Math.abs(averageBrightness - 128) > 50) {
-        // In a real implementation, we would:
-        // 1. Use OCR to detect text in the image
-        // 2. Look for a 17-character pattern matching VIN format
-        // 3. Validate the VIN using checksum
-        const simulatedVin = "1HGCM82633A123456" // Example VIN
-        stopScanning()
-        onScan(simulatedVin)
-        toast.success("VIN scanned successfully")
-        return
-      }
-    } catch (error) {
-      console.error('Error processing frame:', error)
-    }
-
-    // Continue processing frames
-    if (scanning) {
-      requestAnimationFrame(processFrame)
-    }
-  }
-
-  const handleScan = async () => {
+  const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
@@ -97,24 +39,64 @@ export function VinScanner({ onScan }: VinScannerProps) {
         } 
       })
       
-      if (!videoRef.current) return
-      
-      videoRef.current.srcObject = stream
-      streamRef.current = stream
-      setScanning(true)
-
-      // Wait for video to be ready
-      videoRef.current.onloadedmetadata = () => {
-        if (!videoRef.current) return
-        videoRef.current.play()
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        streamRef.current = stream
+        setIsCameraActive(true)
+        await videoRef.current.play()
         processFrame()
       }
     } catch (error) {
       console.error('Error accessing camera:', error)
-      toast.error("Could not access camera")
-      setScanning(false)
+      toast.error("Could not access camera. Please check camera permissions.")
+      setIsDialogOpen(false)
     }
   }
+
+  const processFrame = () => {
+    if (!videoRef.current || !canvasRef.current || !isCameraActive) return
+
+    const canvas = canvasRef.current
+    const video = videoRef.current
+    const ctx = canvas.getContext('2d')
+    
+    if (!ctx) return
+
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+    // For demo purposes, simulate finding a VIN after 3 seconds
+    setTimeout(() => {
+      if (isCameraActive) {
+        const simulatedVin = "1HGCM82633A123456"
+        onScan(simulatedVin)
+        toast.success("VIN scanned successfully")
+        handleClose()
+      }
+    }, 3000)
+
+    if (isCameraActive) {
+      requestAnimationFrame(processFrame)
+    }
+  }
+
+  const handleClose = () => {
+    stopCamera()
+    setIsDialogOpen(false)
+  }
+
+  const handleOpen = async () => {
+    setIsDialogOpen(true)
+    await startCamera()
+  }
+
+  useEffect(() => {
+    return () => {
+      stopCamera()
+    }
+  }, [])
 
   return (
     <>
@@ -122,13 +104,13 @@ export function VinScanner({ onScan }: VinScannerProps) {
         type="button" 
         variant="outline" 
         size="icon"
-        onClick={handleScan}
+        onClick={handleOpen}
         className="shrink-0"
       >
         <Camera className="h-4 w-4" />
       </Button>
 
-      <Dialog open={scanning} onOpenChange={(open) => !open && stopScanning()}>
+      <Dialog open={isDialogOpen} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="p-4">
             <DialogTitle>Scan VIN</DialogTitle>
@@ -139,11 +121,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
               className="absolute inset-0 h-full w-full object-cover"
               playsInline
               autoPlay
+              muted
             />
             <canvas
               ref={canvasRef}
-              className="absolute inset-0 h-full w-full object-cover"
-              style={{ display: 'none' }}
+              className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
             <div className="absolute inset-0 border-2 border-primary opacity-50" />
             {/* VIN scanning guide overlay */}
