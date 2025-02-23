@@ -14,6 +14,10 @@ import {
 import { cn } from "@/lib/utils"
 import { useSidebar } from "@/components/ui/sidebar"
 
+interface DashboardSidebarNavProps {
+  onNavigate?: () => void
+}
+
 const items = [
   {
     title: "Dashboard",
@@ -57,7 +61,7 @@ const items = [
   },
 ]
 
-export function DashboardSidebarNav() {
+export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
   const location = useLocation()
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
@@ -68,6 +72,7 @@ export function DashboardSidebarNav() {
         <Link
           key={item.href}
           to={item.href}
+          onClick={() => onNavigate?.()}
           className={cn(
             "flex items-center gap-3 rounded-lg px-3 py-2 text-base transition-colors",
             location.pathname === item.href
