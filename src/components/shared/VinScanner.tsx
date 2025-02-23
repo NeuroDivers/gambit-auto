@@ -1,3 +1,4 @@
+
 import { Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -95,7 +96,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
       const worker = await createWorker()
       await worker.load()
       await worker.reinitialize('eng', 1, {
-        tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789'
+        tessedit_char_blacklist: '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~',
+        preserve_interword_spaces: '0'
       })
       console.log('OCR worker initialized')
       return worker
