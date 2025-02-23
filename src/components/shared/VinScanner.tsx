@@ -74,6 +74,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
   }
 
   const startOCRScanning = async () => {
+    addLog(`Starting OCR scan with states - Camera Active: ${isCameraActive}, Worker Ready: ${!!workerRef.current}, Scanning Enabled: ${isScanning}`)
+    
     if (!isCameraActive) {
       addLog('Scanning canceled: camera is not active')
       return
@@ -154,8 +156,12 @@ export function VinScanner({ onScan }: VinScannerProps) {
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         streamRef.current = stream
+        addLog('Setting camera active state...')
         setIsCameraActive(true)
-        addLog('Camera activated')
+        
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        addLog(`Camera active state is now: ${isCameraActive}`)
         
         await new Promise((resolve) => {
           if (videoRef.current) {
@@ -168,8 +174,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
         
         addLog('Starting OCR initialization...')
         workerRef.current = await initializeWorker()
-        addLog('Worker reference created, setting scanning to true')
+        addLog('Worker reference created')
+        
+        addLog('Setting scanning state to true...')
         setIsScanning(true)
+        
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        addLog(`Current states - Camera Active: ${isCameraActive}, Scanning: ${isScanning}`)
         addLog('Beginning frame scanning...')
         startOCRScanning()
       }
