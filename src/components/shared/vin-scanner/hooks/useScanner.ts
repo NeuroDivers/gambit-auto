@@ -2,7 +2,6 @@
 import { useState, useRef, useEffect } from "react"
 import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from '@zxing/library'
 import { createWorker } from 'tesseract.js'
-import type { Worker } from 'tesseract.js'
 import { toast } from "sonner"
 import { validateVin } from "../utils/vinValidation"
 import { captureFrame } from "../utils/imageProcessing"
@@ -12,6 +11,20 @@ interface UseScannerProps {
   onClose: () => void
 }
 
+// Define a complete interface for the Tesseract worker
+interface TesseractWorker {
+  load: () => Promise<void>
+  loadLanguage: (lang: string) => Promise<void>
+  initialize: (lang: string) => Promise<void>
+  setParameters: (params: Record<string, any>) => Promise<void>
+  terminate: () => Promise<void>
+  recognize: (image: string | HTMLCanvasElement) => Promise<{
+    data: {
+      text: string
+    }
+  }>
+}
+
 export function useScanner({ onScan, onClose }: UseScannerProps) {
   const [isCameraActive, setIsCameraActive] = useState(false)
   const [scanMode, setScanMode] = useState<'barcode' | 'ocr'>('barcode')
@@ -19,7 +32,7 @@ export function useScanner({ onScan, onClose }: UseScannerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const readerRef = useRef<BrowserMultiFormatReader | null>(null)
-  const workerRef = useRef<Worker | null>(null)
+  const workerRef = useRef<TesseractWorker | null>(null)
   const isScanning = useRef(false)
 
   const startOCRScanning = async () => {
@@ -101,14 +114,14 @@ export function useScanner({ onScan, onClose }: UseScannerProps) {
 
   const initOCR = async () => {
     try {
-      const worker = await createWorker()
+      const worker = await createWorker() as unknown as TesseractWorker
       await worker.load()
       await worker.loadLanguage('eng')
       await worker.initialize('eng')
       await worker.setParameters({
         tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789'
       })
-      return worker as Worker
+      return worker
     } catch (error) {
       console.error('Error initializing OCR:', error)
       throw error
