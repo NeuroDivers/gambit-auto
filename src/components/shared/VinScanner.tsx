@@ -1,6 +1,7 @@
+
 import { Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 import {
   Dialog,
@@ -45,39 +46,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
     setIsScanning(false)
   }
 
-  const captureFrame = () => {
-    if (!videoRef.current || !canvasRef.current) {
-      addLog('Video or canvas reference not available')
-      return null
-    }
-
-    const canvas = canvasRef.current
-    const video = videoRef.current
-    const ctx = canvas.getContext('2d')
-    
-    if (!ctx) {
-      addLog('Could not get canvas context')
-      return null
-    }
-
-    if (video.readyState !== video.HAVE_ENOUGH_DATA) {
-      addLog('Video not ready for capture')
-      return null
-    }
-
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-    
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-    
-    return canvas.toDataURL('image/png')
-  }
-
-  const startOCRScanning = async () => {
+  const startOCRScanning = useCallback(async () => {
     addLog(`Starting OCR scan with states - Camera Active: ${isCameraActive}, Worker Ready: ${!!workerRef.current}, Scanning Enabled: ${isScanning}`)
     
-    if (!isCameraActive) {
-      addLog('Scanning canceled: camera is not active')
+    if (!streamRef.current) {
+      addLog('Scanning canceled: no active stream')
       return
     }
     if (!workerRef.current) {
@@ -128,19 +101,34 @@ export function VinScanner({ onScan }: VinScannerProps) {
         scanningRef.current = requestAnimationFrame(startOCRScanning)
       }
     }
-  }
+  }, [isCameraActive, isScanning, onScan])
 
-  const initializeWorker = async () => {
-    try {
-      addLog('Initializing OCR worker...')
-      const worker = await createWorker()
-      await worker.reinitialize('eng')
-      addLog('OCR worker initialized')
-      return worker
-    } catch (error) {
-      addLog(`Error initializing OCR worker: ${error}`)
-      throw error
+  const captureFrame = () => {
+    if (!videoRef.current || !canvasRef.current) {
+      addLog('Video or canvas reference not available')
+      return null
     }
+
+    const canvas = canvasRef.current
+    const video = videoRef.current
+    const ctx = canvas.getContext('2d')
+    
+    if (!ctx) {
+      addLog('Could not get canvas context')
+      return null
+    }
+
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+      addLog('Video not ready for capture')
+      return null
+    }
+
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    
+    return canvas.toDataURL('image/png')
   }
 
   const startCamera = async () => {
@@ -156,12 +144,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         streamRef.current = stream
-        addLog('Setting camera active state...')
-        setIsCameraActive(true)
-        
-        await new Promise(resolve => setTimeout(resolve, 100))
-        
-        addLog(`Camera active state is now: ${isCameraActive}`)
+        addLog('Stream acquired, initializing camera...')
         
         await new Promise((resolve) => {
           if (videoRef.current) {
@@ -176,19 +159,27 @@ export function VinScanner({ onScan }: VinScannerProps) {
         workerRef.current = await initializeWorker()
         addLog('Worker reference created')
         
-        addLog('Setting scanning state to true...')
         setIsScanning(true)
-        
-        await new Promise(resolve => setTimeout(resolve, 100))
-        
-        addLog(`Current states - Camera Active: ${isCameraActive}, Scanning: ${isScanning}`)
-        addLog('Beginning frame scanning...')
+        addLog('Scanning enabled, beginning frame capture...')
         startOCRScanning()
       }
     } catch (error) {
       addLog(`Error accessing camera: ${error}`)
       toast.error("Could not access camera. Please check camera permissions.")
       setIsDialogOpen(false)
+    }
+  }
+
+  const initializeWorker = async () => {
+    try {
+      addLog('Initializing OCR worker...')
+      const worker = await createWorker()
+      await worker.reinitialize('eng')
+      addLog('OCR worker initialized')
+      return worker
+    } catch (error) {
+      addLog(`Error initializing OCR worker: ${error}`)
+      throw error
     }
   }
 
@@ -213,6 +204,15 @@ export function VinScanner({ onScan }: VinScannerProps) {
       handleClose()
     }
   }, [])
+
+  // Effect to track stream status
+  useEffect(() => {
+    if (streamRef.current) {
+      setIsCameraActive(true)
+    } else {
+      setIsCameraActive(false)
+    }
+  }, [streamRef.current])
 
   return (
     <>
