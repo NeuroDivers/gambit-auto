@@ -22,9 +22,9 @@ export default function Quotes() {
 
   const handleRowClick = (id: string, type: 'quote' | 'request') => {
     if (type === 'quote') {
-      navigate(`/admin/quotes/${id}`)
+      navigate(`/admin/estimates/${id}`)
     } else {
-      navigate(`/admin/quotes/requests/${id}`)
+      navigate(`/admin/estimates/requests/${id}`)
     }
   }
 
@@ -51,7 +51,7 @@ export default function Quotes() {
           title="Estimates" 
           description="Manage estimates and estimate requests"
         />
-        <Link to="/admin/quotes/create">
+        <Link to="/admin/estimates/create">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             New Estimate

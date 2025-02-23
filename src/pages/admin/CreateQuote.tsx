@@ -198,7 +198,7 @@ export default function CreateQuote() {
       }
 
       toast.success("Estimate created successfully")
-      navigate(`/admin/quotes/${quote?.id}`)
+      navigate(`/admin/estimates/${quote?.id}`)
     } catch (error: any) {
       console.error('Error creating estimate:', error)
       toast.error("Failed to create estimate")
@@ -211,7 +211,7 @@ export default function CreateQuote() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/admin/estimates')}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
