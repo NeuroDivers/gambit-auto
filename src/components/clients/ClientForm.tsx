@@ -1,4 +1,3 @@
-
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { Form } from "@/components/ui/form"
@@ -20,7 +19,7 @@ export function ClientForm({ client, onSuccess }: ClientFormProps) {
 
   const form = useForm<ClientFormValues>({
     resolver: zodResolver(clientFormSchema),
-    defaultValues: {
+    defaultValues: client || {
       first_name: "",
       last_name: "",
       email: "",
@@ -37,18 +36,7 @@ export function ClientForm({ client, onSuccess }: ClientFormProps) {
   useEffect(() => {
     if (client) {
       console.log("Setting form values with:", client) // Debug log
-      form.reset({
-        first_name: client.first_name || "",
-        last_name: client.last_name || "",
-        email: client.email || "",
-        phone_number: client.phone_number || "",
-        unit_number: client.unit_number || "",
-        street_address: client.street_address || "",
-        city: client.city || "",
-        state_province: client.state_province || "",
-        postal_code: client.postal_code || "",
-        country: client.country || "",
-      })
+      form.reset(client, { keepDefaultValues: true })
     }
   }, [client, form])
 
