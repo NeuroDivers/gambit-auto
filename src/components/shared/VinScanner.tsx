@@ -1,4 +1,3 @@
-
 import { Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -135,41 +134,57 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        } 
-      })
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        streamRef.current = stream
-        setIsCameraActive(true)
-        await videoRef.current.play()
+      const stream = await Promise.race([
+        navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Camera access timeout')), 10000)
+        )
+      ]) as MediaStream
+
+      if (!videoRef.current) return
+
+      videoRef.current.srcObject = stream
+      streamRef.current = stream
+
+      await Promise.race([
+        new Promise<void>((resolve) => {
+          if (!videoRef.current) return
+          videoRef.current.onloadedmetadata = () => resolve()
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Video load timeout')), 5000)
+        )
+      ])
+
+      await videoRef.current.play()
+      setIsCameraActive(true)
+
+      if (scanMode === 'barcode') {
+        const hints = new Map<DecodeHintType, any>()
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+          BarcodeFormat.CODE_39,
+          BarcodeFormat.CODE_128,
+          BarcodeFormat.DATA_MATRIX
+        ])
+        hints.set(DecodeHintType.TRY_HARDER, true)
         
-        if (scanMode === 'barcode') {
-          const hints = new Map<DecodeHintType, any>();
-          hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-            BarcodeFormat.CODE_39,
-            BarcodeFormat.CODE_128,
-            BarcodeFormat.DATA_MATRIX
-          ]);
-          hints.set(DecodeHintType.TRY_HARDER, true);
-          
-          readerRef.current = new BrowserMultiFormatReader(hints)
-          isScanning.current = true
-          startScanning()
-        } else {
-          await initializeWorker()
-          isScanning.current = true
-          startOCRScanning()
-        }
+        readerRef.current = new BrowserMultiFormatReader(hints)
+        isScanning.current = true
+        startScanning()
+      } else {
+        await initializeWorker()
+        isScanning.current = true
+        startOCRScanning()
       }
     } catch (error) {
       console.error('Error accessing camera:', error)
-      toast.error("Could not access camera. Please check camera permissions.")
+      toast.error("Could not access camera. Please check camera permissions and try again.")
       handleClose()
     }
   }
