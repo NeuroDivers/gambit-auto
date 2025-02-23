@@ -1,4 +1,3 @@
-
 import { FileSearch } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -70,23 +69,19 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
     
     if (!ctx) return null
 
-    // Set canvas size to match video dimensions
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
     
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
     
-    // Get the center portion of the image for better OCR
     const centerWidth = canvas.width * 0.7
     const centerHeight = canvas.height * 0.3
     const x = (canvas.width - centerWidth) / 2
     const y = (canvas.height - centerHeight) / 2
     
-    // Draw a white background for better contrast
     ctx.fillStyle = 'white'
     ctx.fillRect(x, y, centerWidth, centerHeight)
     
-    // Draw the cropped video frame
     ctx.drawImage(
       video,
       x, y, centerWidth, centerHeight,  // source rectangle
@@ -101,10 +96,9 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       await cleanupWorker()
       setIsInitializing(true)
       
-      workerRef.current = await createWorker()
+      const worker = await createWorker('eng')
+      workerRef.current = worker
       
-      await workerRef.current.loadLanguage('eng')
-      await workerRef.current.initialize('eng')
       await workerRef.current.setParameters({
         tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789',
       })
@@ -134,7 +128,6 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       const { data: { text } } = await workerRef.current.recognize(frameData)
       console.log('OCR detected text:', text)
       
-      // Clean up the text and look for VIN patterns
       const cleanedText = text.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
       const matches = cleanedText.match(/[A-HJ-NPR-Z0-9]{17}/gi)
       
