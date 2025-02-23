@@ -10,8 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
-import { Progress } from "@/components/ui/progress"
-import { createWorker, PSM, CreateWorkerOptions } from 'tesseract.js'
+import { createWorker, PSM } from 'tesseract.js'
 
 interface OCRScannerModalProps {
   onScan: (vin: string) => void
@@ -22,7 +21,6 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
   const [isCameraActive, setIsCameraActive] = useState(false)
   const [isInitializing, setIsInitializing] = useState(false)
   const [detectedText, setDetectedText] = useState("")
-  const [scanProgress, setScanProgress] = useState(0)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -62,7 +60,6 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
     }
     setIsCameraActive(false)
     setDetectedText("")
-    setScanProgress(0)
   }
 
   const captureFrame = () => {
@@ -100,18 +97,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
   const initializeOCR = async () => {
     try {
       setIsInitializing(true)
-      
-      const workerOptions: CreateWorkerOptions = {
-        logger: progress => {
-          if (typeof progress === 'number') {
-            setScanProgress(progress * 100)
-          } else if ('progress' in progress) {
-            setScanProgress((progress.progress || 0) * 100)
-          }
-        }
-      }
-      
-      const worker = await createWorker(workerOptions)
+      const worker = await createWorker()
       
       // Initialize with language
       await worker.load()
@@ -147,9 +133,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
         return
       }
 
-      setScanProgress(25)
       const { data: { text } } = await workerRef.current.recognize(frameCanvas)
-      setScanProgress(75)
       
       console.log('Detected text:', text)
       
@@ -161,15 +145,11 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
         if (matches && matches.length > 0) {
           for (const match of matches) {
             if (validateVin(match)) {
-              setScanProgress(100)
               handleScanSuccess(match)
               return
             }
           }
         }
-        setScanProgress(Math.min((cleanedText.length / 17) * 100, 90))
-      } else {
-        setScanProgress(0)
       }
       
       if (isScanning.current) {
@@ -177,7 +157,6 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       }
     } catch (error) {
       console.error('OCR error:', error)
-      setScanProgress(0)
       if (isScanning.current) {
         setTimeout(() => startScanning(), 500)
       }
@@ -296,9 +275,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
               className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
             <div 
-              className={`absolute inset-[15%] border-2 border-dashed transition-colors duration-200 ${
-                scanProgress > 50 ? 'border-green-500' : 'border-primary'
-              }`}
+              className="absolute inset-[15%] border-2 border-dashed border-primary"
             >
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
                 Center VIN text here
@@ -312,14 +289,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
                 </div>
               </div>
             )}
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent p-4 space-y-2">
-              <div className="w-full bg-black/30 rounded-lg p-2">
-                <div className="flex justify-between items-center text-xs text-white mb-1">
-                  <span>Scan Progress</span>
-                  <span>{Math.round(scanProgress)}%</span>
-                </div>
-                <Progress value={scanProgress} className="h-2" />
-              </div>
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent p-4">
               <p className="text-white text-center text-sm">
                 {detectedText ? `Detected: ${detectedText}` : 'No text detected'}
               </p>
