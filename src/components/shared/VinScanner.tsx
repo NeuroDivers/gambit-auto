@@ -1,6 +1,7 @@
+
 import { Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useState, useRef, useEffect, useCallback } from "react"
+import { useState, useRef, useEffect } from "react"
 import { toast } from "sonner"
 import {
   Dialog,
@@ -100,6 +101,24 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }
 
+  const validateVIN = (vin: string): boolean => {
+    // VIN must be exactly 17 characters
+    if (vin.length !== 17) return false;
+
+    // VIN can only contain letters (except I, O, Q) and numbers
+    const validVINPattern = /^[A-HJ-NPR-Z0-9]{17}$/i;
+    if (!validVINPattern.test(vin)) return false;
+
+    // Check for common OCR mistakes (0 vs O, 1 vs I, etc.)
+    const suspiciousPatterns = [
+      /[O0]{3,}/i,  // Too many zeros or O's in a row
+      /[1I]{3,}/i,  // Too many ones or I's in a row
+      /(.)\1{4,}/i, // Any character repeated more than 4 times
+    ];
+
+    return !suspiciousPatterns.some(pattern => pattern.test(vin));
+  }
+
   const startOCRScanning = async (immediateScanning?: boolean) => {
     const shouldScan = immediateScanning ?? isScanning
 
@@ -123,20 +142,31 @@ export function VinScanner({ onScan }: VinScannerProps) {
       }
 
       addLog('Frame captured, starting OCR recognition...')
-      const { data: { text } } = await workerRef.current.recognize(frameData)
-      addLog(`Detected text: ${text}`)
+      const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
+      addLog(`Detected text: ${text} (confidence: ${confidence}%)`)
       
+      // Only process text if confidence is above threshold
+      if (confidence < 60) {
+        addLog('Low confidence detection, skipping...')
+        if (shouldScan) {
+          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+        }
+        return
+      }
+
       const cleanedText = text.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
       const vinMatch = cleanedText.match(/[A-HJ-NPR-Z0-9]{17}/i)
       
       if (vinMatch) {
-        const scannedValue = vinMatch[0]
-        if (/^[A-HJ-NPR-Z0-9]{17}$/i.test(scannedValue)) {
+        const scannedValue = vinMatch[0].toUpperCase()
+        if (validateVIN(scannedValue)) {
           addLog('Valid VIN detected!')
-          onScan(scannedValue.toUpperCase())
+          onScan(scannedValue)
           toast.success("VIN scanned successfully")
           handleClose()
           return
+        } else {
+          addLog('Potential VIN found but failed validation checks')
         }
       }
       
