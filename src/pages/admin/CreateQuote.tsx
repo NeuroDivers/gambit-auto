@@ -206,7 +206,7 @@ export default function CreateQuote() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 md:p-6 p-2">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -234,20 +234,23 @@ export default function CreateQuote() {
             </Button>
           </div>
 
-          <CustomerInfoSection form={form} />
-          <VehicleInfoSection form={form} />
-          <ServicesSection form={form} />
-          <NotesSection form={form} />
+          <div className="grid grid-cols-1 gap-6">
+            <CustomerInfoSection form={form} />
+            <VehicleInfoSection form={form} />
+            <ServicesSection form={form} />
+            <NotesSection form={form} />
+          </div>
 
-          <div className="flex justify-end gap-4">
+          <div className="flex flex-col sm:flex-row justify-end gap-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => navigate(-1)}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" className="w-full sm:w-auto">
               Create Estimate
             </Button>
           </div>
@@ -255,7 +258,7 @@ export default function CreateQuote() {
       </Form>
 
       <Dialog open={searchDialogOpen} onOpenChange={setSearchDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Search Customers</DialogTitle>
           </DialogHeader>

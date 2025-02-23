@@ -129,22 +129,23 @@ export function VinScanner({ onScan }: VinScannerProps) {
       </Button>
 
       <Dialog open={scanning} onOpenChange={(open) => !open && stopScanning()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="p-4">
             <DialogTitle>Scan VIN</DialogTitle>
           </DialogHeader>
-          <div className="relative aspect-video w-full overflow-hidden rounded-lg">
+          <div className="relative aspect-video w-full overflow-hidden">
             <video
               ref={videoRef}
               className="absolute inset-0 h-full w-full object-cover"
               playsInline
+              autoPlay
             />
             <canvas
               ref={canvasRef}
               className="absolute inset-0 h-full w-full object-cover"
               style={{ display: 'none' }}
             />
-            <div className="absolute inset-0 border-2 border-primary opacity-50 rounded-lg" />
+            <div className="absolute inset-0 border-2 border-primary opacity-50" />
             {/* VIN scanning guide overlay */}
             <div className="absolute inset-[15%] border-2 border-dashed border-primary-foreground/70">
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
