@@ -12,7 +12,7 @@ interface EditClientDialogProps {
 export function EditClientDialog({ client, open, onOpenChange }: EditClientDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Edit Client</DialogTitle>
         </DialogHeader>

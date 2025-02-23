@@ -1,3 +1,4 @@
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { Form } from "@/components/ui/form"
@@ -19,13 +20,26 @@ export function ClientForm({ client, onSuccess }: ClientFormProps) {
   console.log("Client data received:", client) // Debug log
 
   const form = useForm<ClientFormValues>({
-    resolver: zodResolver(clientFormSchema)
+    resolver: zodResolver(clientFormSchema),
+    defaultValues: {
+      first_name: client?.first_name || "",
+      last_name: client?.last_name || "",
+      email: client?.email || "",
+      phone_number: client?.phone_number || "",
+      unit_number: client?.unit_number || "",
+      street_address: client?.street_address || "",
+      city: client?.city || "",
+      state_province: client?.state_province || "",
+      postal_code: client?.postal_code || "",
+      country: client?.country || "",
+    }
   })
 
+  // Reset form when client data changes
   useEffect(() => {
     if (client) {
       console.log("Setting form values with:", client)
-      const defaultValues = {
+      form.reset({
         first_name: client.first_name || "",
         last_name: client.last_name || "",
         email: client.email || "",
@@ -36,8 +50,7 @@ export function ClientForm({ client, onSuccess }: ClientFormProps) {
         state_province: client.state_province || "",
         postal_code: client.postal_code || "",
         country: client.country || "",
-      }
-      form.reset(defaultValues)
+      })
     }
   }, [client])
 
@@ -122,7 +135,7 @@ export function ClientForm({ client, onSuccess }: ClientFormProps) {
   }
 
   return (
-    <ScrollArea className="h-[600px] w-full max-w-2xl mx-auto">
+    <ScrollArea className="h-[500px]">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-6">
           <ClientFormFields form={form} />
