@@ -27,8 +27,9 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
   const isScanning = useRef(false)
 
   const handleScanSuccess = (scannedValue: string) => {
-    if (/^[A-HJ-NPR-Z0-9]{17}$/i.test(scannedValue)) {
-      onScan(scannedValue.toUpperCase())
+    const cleanedValue = scannedValue.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
+    if (/^[A-HJ-NPR-Z0-9]{17}$/i.test(cleanedValue)) {
+      onScan(cleanedValue.toUpperCase())
       toast.success("VIN text scanned successfully")
       handleClose()
     }
@@ -61,7 +62,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
   }
 
   const captureFrame = () => {
-    if (!videoRef.current || !canvasRef.current) return null
+    if (!videoRef.current || !canvasRef.current || !videoRef.current.videoWidth) return null
 
     const canvas = canvasRef.current
     const video = videoRef.current
@@ -73,13 +74,24 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
     
-    // Flip horizontally if using front camera
-    if (window.matchMedia('(max-width: 768px)').matches) {
-      ctx.translate(canvas.width, 0)
-      ctx.scale(-1, 1)
-    }
-    
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    
+    // Get the center portion of the image for better OCR
+    const centerWidth = canvas.width * 0.7
+    const centerHeight = canvas.height * 0.3
+    const x = (canvas.width - centerWidth) / 2
+    const y = (canvas.height - centerHeight) / 2
+    
+    // Draw a white background for better contrast
+    ctx.fillStyle = 'white'
+    ctx.fillRect(x, y, centerWidth, centerHeight)
+    
+    // Draw the cropped video frame
+    ctx.drawImage(
+      video,
+      x, y, centerWidth, centerHeight,  // source rectangle
+      x, y, centerWidth, centerHeight   // destination rectangle
+    )
     
     return canvas.toDataURL('image/png', 1.0)
   }
@@ -88,15 +100,25 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
     try {
       await cleanupWorker()
       setIsInitializing(true)
-      workerRef.current = await createWorker('eng', 1, {
-        logger: m => console.log(m),
+      
+      workerRef.current = await createWorker({
+        logger: m => console.log('Tesseract:', m),
         errorHandler: err => console.error('Tesseract error:', err)
       })
+      
+      await workerRef.current.loadLanguage('eng')
+      await workerRef.current.initialize('eng')
+      await workerRef.current.setParameters({
+        tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789',
+      })
+      
       setIsInitializing(false)
+      return true
     } catch (error) {
       console.error('Error initializing Tesseract worker:', error)
       toast.error("Failed to initialize text recognition")
       handleClose()
+      return false
     }
   }
 
@@ -107,17 +129,17 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       const frameData = captureFrame()
       if (!frameData) {
         if (isScanning.current) {
-          requestAnimationFrame(startOCRScanning)
+          requestAnimationFrame(() => startOCRScanning())
         }
         return
       }
 
       const { data: { text } } = await workerRef.current.recognize(frameData)
-      console.log('OCR detected text:', text) // Debug log
+      console.log('OCR detected text:', text)
       
-      // Look for VIN patterns in the text
-      const vinPattern = /[A-HJ-NPR-Z0-9]{17}/gi
-      const matches = text.match(vinPattern)
+      // Clean up the text and look for VIN patterns
+      const cleanedText = text.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
+      const matches = cleanedText.match(/[A-HJ-NPR-Z0-9]{17}/gi)
       
       if (matches && matches.length > 0) {
         for (const match of matches) {
@@ -129,12 +151,12 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       }
       
       if (isScanning.current) {
-        requestAnimationFrame(startOCRScanning)
+        requestAnimationFrame(() => startOCRScanning())
       }
     } catch (error) {
       console.error('OCR error:', error)
       if (isScanning.current) {
-        requestAnimationFrame(startOCRScanning)
+        requestAnimationFrame(() => startOCRScanning())
       }
     }
   }
@@ -143,42 +165,45 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
     try {
       setIsInitializing(true)
       
-      // Try to get the rear camera first
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const constraints = {
         video: {
           facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          frameRate: { ideal: 60 }
         }
-      })
-
+      }
+      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
+      
       if (!videoRef.current) return
-
+      
       videoRef.current.srcObject = stream
       streamRef.current = stream
-
-      // Wait for video to be ready
+      
       await new Promise<void>((resolve, reject) => {
-        if (!videoRef.current) return reject()
+        if (!videoRef.current) return reject(new Error('Video element not found'))
         
         const timeoutId = setTimeout(() => {
           reject(new Error('Video initialization timeout'))
         }, 10000)
-
+        
         videoRef.current.onloadedmetadata = () => {
           clearTimeout(timeoutId)
           resolve()
         }
       })
-
+      
       await videoRef.current.play()
       setIsCameraActive(true)
-      setIsInitializing(false)
       
-      // Initialize OCR worker after camera is ready
-      await initializeWorker()
-      isScanning.current = true
-      startOCRScanning()
+      const workerInitialized = await initializeWorker()
+      if (workerInitialized) {
+        isScanning.current = true
+        startOCRScanning()
+      }
+      
+      setIsInitializing(false)
     } catch (error) {
       console.error('Error accessing camera:', error)
       toast.error("Could not access camera. Please check camera permissions and try again.")
@@ -231,7 +256,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
               Position the VIN text within the frame and hold steady
             </DialogDescription>
           </DialogHeader>
-          <div className="relative aspect-video w-full overflow-hidden">
+          <div className="relative aspect-video w-full overflow-hidden bg-black">
             <video
               ref={videoRef}
               className="absolute inset-0 h-full w-full object-cover"
@@ -243,14 +268,10 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
               ref={canvasRef}
               className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
-            <div className="absolute inset-0 border-2 border-primary opacity-50" />
-            <div className="absolute inset-[15%] border-2 border-dashed border-primary-foreground/70">
+            <div className="absolute inset-[15%] border-2 border-dashed border-primary">
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
-                Position VIN text here
+                Center VIN text here
               </div>
-              <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-px bg-primary-foreground/70" />
-              <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-px bg-primary-foreground/70" />
-              <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-4 h-4 border-2 border-primary-foreground/70" />
             </div>
             {isInitializing && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/80">
