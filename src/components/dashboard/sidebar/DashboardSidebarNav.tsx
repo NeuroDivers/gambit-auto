@@ -55,6 +55,11 @@ const items = [
     icon: Store,
   },
   {
+    title: "Users",
+    href: "/admin/users",
+    icon: Users,
+  },
+  {
     title: "Settings",
     href: "/admin/settings",
     icon: Settings,
