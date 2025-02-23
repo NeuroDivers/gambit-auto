@@ -101,10 +101,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       await cleanupWorker()
       setIsInitializing(true)
       
-      workerRef.current = await createWorker({
-        logger: m => console.log('Tesseract:', m),
-        errorHandler: err => console.error('Tesseract error:', err)
-      })
+      workerRef.current = await createWorker()
       
       await workerRef.current.loadLanguage('eng')
       await workerRef.current.initialize('eng')
