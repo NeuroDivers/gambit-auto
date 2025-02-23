@@ -1,4 +1,3 @@
-
 import { FileSearch, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -11,7 +10,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { Progress } from "@/components/ui/progress"
-import { pipeline, Pipeline } from "@huggingface/transformers"
+import { pipeline } from "@huggingface/transformers"
 
 interface OCRScannerModalProps {
   onScan: (vin: string) => void
@@ -26,7 +25,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
-  const recognizerRef = useRef<Pipeline | null>(null)
+  const recognizerRef = useRef<any>(null)
   const isScanning = useRef(false)
 
   const handleScanSuccess = (scannedValue: string) => {
@@ -93,10 +92,9 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
   const initializeRecognizer = async () => {
     try {
       setIsInitializing(true)
-      // Initialize the OCR pipeline with a small and efficient model
       const recognizer = await pipeline(
-        'text-detection',
-        'Xenova/trocr-small-printed'
+        'text-recognition',
+        'microsoft/trocr-small-printed'
       )
       recognizerRef.current = recognizer
       setIsInitializing(false)
@@ -124,8 +122,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       const result = await recognizerRef.current(frameCanvas)
       console.log('Detected text:', result)
       
-      // The model returns an object with a text property
-      const detectedText = result.text || ''
+      const detectedText = typeof result === 'string' ? result : result.text || ''
       const cleanedText = detectedText.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
       setDetectedText(cleanedText || "No text detected")
       
