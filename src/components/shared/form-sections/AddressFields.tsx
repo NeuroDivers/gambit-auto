@@ -9,7 +9,7 @@ interface AddressFieldsProps {
   fieldPrefix?: string
 }
 
-export function AddressFields({ form, fieldPrefix = "customer_" }: AddressFieldsProps) {
+export function AddressFields({ form, fieldPrefix = "" }: AddressFieldsProps) {
   return (
     <div className="space-y-4">
       <FormLabel>Address Search</FormLabel>
