@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useSidebar } from "@/components/ui/sidebar"
+import { Separator } from "@/components/ui/separator"
 
 interface DashboardSidebarNavProps {
   onNavigate?: () => void
@@ -20,49 +21,69 @@ interface DashboardSidebarNavProps {
 
 const items = [
   {
-    title: "Dashboard",
-    href: "/admin",
-    icon: LayoutGrid,
+    section: "Overview",
+    items: [
+      {
+        title: "Dashboard",
+        href: "/admin",
+        icon: LayoutGrid,
+      },
+    ],
   },
   {
-    title: "Estimates",
-    href: "/admin/estimates",
-    icon: FileText,
+    section: "Work Management",
+    items: [
+      {
+        title: "Estimates",
+        href: "/admin/estimates",
+        icon: FileText,
+      },
+      {
+        title: "Work Orders",
+        href: "/admin/work-orders",
+        icon: ClipboardList,
+      },
+      {
+        title: "Calendar",
+        href: "/admin/calendar",
+        icon: Calendar,
+      },
+    ],
   },
   {
-    title: "Work Orders",
-    href: "/admin/work-orders",
-    icon: ClipboardList,
+    section: "Business",
+    items: [
+      {
+        title: "Clients",
+        href: "/admin/clients",
+        icon: Users,
+      },
+      {
+        title: "Service Types",
+        href: "/admin/service-types",
+        icon: Wrench,
+      },
+      {
+        title: "Service Bays",
+        href: "/admin/service-bays",
+        icon: Store,
+      },
+    ],
   },
   {
-    title: "Clients",
-    href: "/admin/clients",
-    icon: Users,
-  },
-  {
-    title: "Calendar",
-    href: "/admin/calendar",
-    icon: Calendar,
-  },
-  {
-    title: "Service Types",
-    href: "/admin/service-types",
-    icon: Wrench,
-  },
-  {
-    title: "Service Bays",
-    href: "/admin/service-bays",
-    icon: Store,
-  },
-  {
-    title: "Users",
-    href: "/admin/users",
-    icon: Users,
-  },
-  {
-    title: "Settings",
-    href: "/admin/settings",
-    icon: Settings,
+    section: "Administration",
+    items: [
+      {
+        title: "Users",
+        href: "/admin/users",
+        icon: Users,
+      },
+      {
+        title: "Settings",
+        href: "/admin/settings",
+        icon: Settings,
+      },
+    ],
   },
 ]
 
@@ -72,23 +93,37 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
   const isCollapsed = state === "collapsed"
 
   return (
-    <nav className="flex flex-col gap-2 p-4">
-      {items.map((item) => (
-        <Link
-          key={item.href}
-          to={item.href}
-          onClick={() => onNavigate?.()}
-          className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 text-base transition-colors",
-            location.pathname === item.href
-              ? "bg-accent text-accent-foreground"
-              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-            isCollapsed && "justify-center py-3 px-2"
+    <nav className="flex flex-col gap-4 py-4">
+      {items.map((section, index) => (
+        <div key={section.section} className="px-3">
+          {!isCollapsed && (
+            <h4 className="mb-2 px-2 text-xs font-semibold tracking-tight text-muted-foreground">
+              {section.section}
+            </h4>
           )}
-        >
-          <item.icon className="h-5 w-5 shrink-0" />
-          {!isCollapsed && <span>{item.title}</span>}
-        </Link>
+          <div className="space-y-1">
+            {section.items.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                onClick={() => onNavigate?.()}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                  location.pathname === item.href
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                  isCollapsed && "justify-center py-3 px-2"
+                )}
+              >
+                <item.icon className="h-4 w-4 shrink-0" />
+                {!isCollapsed && <span>{item.title}</span>}
+              </Link>
+            ))}
+          </div>
+          {index < items.length - 1 && !isCollapsed && (
+            <Separator className="my-4" />
+          )}
+        </div>
       ))}
     </nav>
   )
