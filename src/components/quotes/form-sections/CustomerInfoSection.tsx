@@ -52,7 +52,7 @@ export function CustomerInfoSection({ form }: CustomerInfoSectionProps) {
         if (postal) form.setValue('customer_postal_code', postal)
         if (country) form.setValue('customer_country', country)
       }
-    })
+    }, 'result')
 
     setGeocoder(geocoderInstance)
 
