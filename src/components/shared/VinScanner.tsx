@@ -74,10 +74,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
     if (!videoRef.current || !readerRef.current || !isCameraActive) return
 
     try {
-      // Using the correct method name: decodeFromVideoElement
       const result = await readerRef.current.decodeFromVideoElement(videoRef.current)
-      if (result && result.text) {
-        const scannedValue = result.text.trim()
+      if (result) {
+        const scannedValue = result.getText().trim()
         
         // Basic VIN validation (17 characters, alphanumeric)
         if (/^[A-HJ-NPR-Z0-9]{17}$/i.test(scannedValue)) {
