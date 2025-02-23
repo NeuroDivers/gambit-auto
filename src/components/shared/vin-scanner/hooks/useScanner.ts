@@ -1,7 +1,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from '@zxing/library'
-import { createWorker } from 'tesseract.js'
+import { createWorker, Worker } from 'tesseract.js'
 import { toast } from "sonner"
 import { validateVin } from "../utils/vinValidation"
 import { captureFrame } from "../utils/imageProcessing"
@@ -18,7 +18,7 @@ export function useScanner({ onScan, onClose }: UseScannerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const readerRef = useRef<BrowserMultiFormatReader | null>(null)
-  const workerRef = useRef<any>(null)
+  const workerRef = useRef<Worker | null>(null)
   const isScanning = useRef(false)
 
   const startOCRScanning = async () => {
