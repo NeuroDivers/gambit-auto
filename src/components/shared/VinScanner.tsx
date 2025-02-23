@@ -144,6 +144,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         addLog('Starting OCR initialization...')
         workerRef.current = await initializeWorker()
         setIsScanning(true)
+        addLog('Beginning frame scanning...')
         startOCRScanning()
       }
     } catch (error) {
