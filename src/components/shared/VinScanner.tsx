@@ -152,17 +152,25 @@ export function VinScanner({ onScan }: VinScannerProps) {
       videoRef.current.srcObject = stream
       streamRef.current = stream
 
-      await Promise.race([
-        new Promise<void>((resolve) => {
-          if (!videoRef.current) return
+      await new Promise<void>((resolve) => {
+        if (!videoRef.current) return resolve()
+        
+        if (videoRef.current.readyState >= 1) {
+          resolve()
+        } else {
           videoRef.current.onloadedmetadata = () => resolve()
-        }),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Video load timeout')), 5000)
-        )
-      ])
+        }
 
-      await videoRef.current.play()
+        setTimeout(() => resolve(), 1000)
+      })
+
+      try {
+        await videoRef.current.play()
+      } catch (playError) {
+        console.error('Error playing video:', playError)
+        throw new Error('Failed to start video playback')
+      }
+
       setIsCameraActive(true)
 
       if (scanMode === 'barcode') {
