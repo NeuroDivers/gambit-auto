@@ -1,4 +1,3 @@
-
 import { FileSearch } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -85,16 +84,31 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
     const x = (canvas.width - centerWidth) / 2
     const y = (canvas.height - centerHeight) / 2
     
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
-    ctx.fillRect(x, y, centerWidth, centerHeight)
+    const imageData = ctx.getImageData(x, y, centerWidth, centerHeight)
     
-    ctx.drawImage(
-      video,
-      x, y, centerWidth, centerHeight,
-      x, y, centerWidth, centerHeight
-    )
+    const croppedCanvas = document.createElement('canvas')
+    croppedCanvas.width = centerWidth
+    croppedCanvas.height = centerHeight
+    const croppedCtx = croppedCanvas.getContext('2d')
     
-    return canvas.toDataURL('image/png', 1.0)
+    if (!croppedCtx) return null
+    
+    croppedCtx.putImageData(imageData, 0, 0)
+    
+    const processedData = croppedCtx.getImageData(0, 0, centerWidth, centerHeight)
+    const data = processedData.data
+    
+    for (let i = 0; i < data.length; i += 4) {
+      const avg = (data[i] + data[i + 1] + data[i + 2]) / 3
+      const mapped = avg > 127 ? 255 : 0
+      data[i] = mapped
+      data[i + 1] = mapped
+      data[i + 2] = mapped
+    }
+    
+    croppedCtx.putImageData(processedData, 0, 0)
+    
+    return croppedCanvas.toDataURL('image/png', 1.0)
   }
 
   const initializeWorker = async () => {
@@ -126,7 +140,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       const frameData = captureFrame()
       if (!frameData) {
         if (isScanning.current) {
-          requestAnimationFrame(() => startOCRScanning())
+          setTimeout(() => startOCRScanning(), 500)
         }
         return
       }
@@ -137,7 +151,6 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       const cleanedText = text.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
       setDetectedText(cleanedText || "No text detected")
       
-      // Calculate confidence based on text length and VIN pattern match
       let confidence = 0
       if (cleanedText.length > 0) {
         confidence = Math.min((cleanedText.length / 17) * 100, 100)
@@ -154,12 +167,12 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       setScanProgress(confidence)
       
       if (isScanning.current) {
-        requestAnimationFrame(() => startOCRScanning())
+        setTimeout(() => startOCRScanning(), 500)
       }
     } catch (error) {
       console.error('OCR error:', error)
       if (isScanning.current) {
-        requestAnimationFrame(() => startOCRScanning())
+        setTimeout(() => startOCRScanning(), 500)
       }
     }
   }
