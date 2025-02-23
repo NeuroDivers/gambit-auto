@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import { Link } from "react-router-dom"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -50,8 +51,8 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold">Welcome to your Dashboard</h1>
           <p className="text-muted-foreground mt-2">Here's what's happening in your business today.</p>
         </div>
-        <Link to="/admin/work-orders/create">
-          <Button>Create Work Order</Button>
+        <Link to="/admin/work-orders/create" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto">Create Work Order</Button>
         </Link>
       </div>
 
