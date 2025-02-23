@@ -72,10 +72,11 @@ export function ClientForm({ client, onSuccess }: ClientFormProps) {
 
     geocoder.current.on('result', (e: any) => {
       const result = e.result
+      console.log('Geocoder result:', result)
       
-      if (result.properties?.address) {
-        form.setValue('street_address', result.properties.address)
-      }
+      // Extract street address from the place name
+      const streetAddress = result.place_name.split(',')[0]
+      form.setValue('street_address', streetAddress)
       
       if (result.context) {
         const city = result.context.find((c: any) => c.id.includes('place'))?.text
