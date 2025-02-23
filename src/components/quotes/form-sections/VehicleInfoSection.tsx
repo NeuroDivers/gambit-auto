@@ -31,6 +31,31 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
         <CardTitle>Vehicle Information</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* VIN Section - Full Width */}
+        <FormField
+          control={form.control}
+          name="vehicle_vin"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                VIN
+                <span className="text-xs text-muted-foreground ml-2">(Auto-fills vehicle info)</span>
+              </FormLabel>
+              <FormControl>
+                <div className="space-y-2">
+                  <Input {...field} placeholder="Enter VIN" />
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <BarcodeScannerModal onScan={(vin) => field.onChange(vin)} />
+                    <OCRScannerModal onScan={(vin) => field.onChange(vin)} />
+                  </div>
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Make and Model Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -79,6 +104,7 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
           />
         </div>
 
+        {/* Year Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -101,27 +127,6 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
                     )}
                   </div>
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="vehicle_vin"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  VIN
-                  <span className="text-xs text-muted-foreground ml-2">(Auto-fills vehicle info)</span>
-                </FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Enter VIN" />
-                </FormControl>
-                <div className="flex flex-col sm:flex-row gap-2 mt-2">
-                  <BarcodeScannerModal onScan={(vin) => field.onChange(vin)} />
-                  <OCRScannerModal onScan={(vin) => field.onChange(vin)} />
-                </div>
                 <FormMessage />
               </FormItem>
             )}
