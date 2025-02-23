@@ -27,62 +27,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const workerRef = useRef<any>(null)
   const isScanning = useRef(false)
 
-  const stopCamera = () => {
-    isScanning.current = false
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop())
-      streamRef.current = null
-    }
-    if (readerRef.current) {
-      readerRef.current.reset()
-      readerRef.current = null
-    }
-    setIsCameraActive(false)
-  }
-
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        } 
-      })
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        streamRef.current = stream
-        setIsCameraActive(true)
-        await videoRef.current.play()
-        
-        if (scanMode === 'barcode') {
-          // Initialize barcode reader
-          const hints = new Map<DecodeHintType, any>();
-          hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-            BarcodeFormat.CODE_39,
-            BarcodeFormat.CODE_128,
-            BarcodeFormat.DATA_MATRIX
-          ]);
-          hints.set(DecodeHintType.TRY_HARDER, true);
-          
-          readerRef.current = new BrowserMultiFormatReader(hints)
-          isScanning.current = true
-          startScanning()
-        } else {
-          // Initialize OCR
-          workerRef.current = await createWorker('eng')
-          isScanning.current = true
-          startOCRScanning()
-        }
-      }
-    } catch (error) {
-      console.error('Error accessing camera:', error)
-      toast.error("Could not access camera. Please check camera permissions.")
-      setIsDialogOpen(false)
-    }
-  }
-
   const captureFrame = () => {
     if (!videoRef.current || !canvasRef.current) return null
 
@@ -92,29 +36,56 @@ export function VinScanner({ onScan }: VinScannerProps) {
     
     if (!ctx) return null
 
-    // Match canvas size to video
+    // Set canvas dimensions to match video dimensions
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
     
-    // Draw the current video frame
+    // Draw the video frame onto the canvas
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+    // Apply image processing for better OCR
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    const processed = processImageForOCR(imageData)
+    ctx.putImageData(processed, 0, 0)
     
-    return canvas.toDataURL('image/png')
+    return canvas
+  }
+
+  const processImageForOCR = (imageData: ImageData) => {
+    const data = imageData.data
+    
+    // Convert to grayscale and increase contrast
+    for (let i = 0; i < data.length; i += 4) {
+      const avg = (data[i] + data[i + 1] + data[i + 2]) / 3
+      const adjusted = avg > 127 ? 255 : 0 // Binary threshold
+      data[i] = adjusted     // R
+      data[i + 1] = adjusted // G
+      data[i + 2] = adjusted // B
+    }
+    
+    return imageData
   }
 
   const startOCRScanning = async () => {
     if (!isCameraActive || !workerRef.current || !isScanning.current) return
 
     try {
-      const frameData = captureFrame()
-      if (!frameData) {
+      const canvas = captureFrame()
+      if (!canvas) {
         if (isScanning.current) {
           requestAnimationFrame(startOCRScanning)
         }
         return
       }
 
-      const { data: { text } } = await workerRef.current.recognize(frameData)
+      // Get processed image data as blob
+      const blob = await new Promise<Blob>((resolve) => {
+        canvas.toBlob((blob) => {
+          resolve(blob!)
+        }, 'image/png')
+      })
+
+      const { data: { text } } = await workerRef.current.recognize(blob)
       
       // Look for VIN-like pattern in the recognized text
       const vinMatch = text.match(/[A-HJ-NPR-Z0-9]{17}/i)
@@ -172,6 +143,67 @@ export function VinScanner({ onScan }: VinScannerProps) {
       if (isScanning.current) {
         requestAnimationFrame(() => startScanning())
       }
+    }
+  }
+
+  const stopCamera = () => {
+    isScanning.current = false
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
+    }
+    if (readerRef.current) {
+      readerRef.current.reset()
+      readerRef.current = null
+    }
+    setIsCameraActive(false)
+  }
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
+      })
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        streamRef.current = stream
+        setIsCameraActive(true)
+        await videoRef.current.play()
+        
+        if (scanMode === 'barcode') {
+          // Initialize barcode reader
+          const hints = new Map<DecodeHintType, any>();
+          hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+            BarcodeFormat.CODE_39,
+            BarcodeFormat.CODE_128,
+            BarcodeFormat.DATA_MATRIX
+          ]);
+          hints.set(DecodeHintType.TRY_HARDER, true);
+          
+          readerRef.current = new BrowserMultiFormatReader(hints)
+          isScanning.current = true
+          startScanning()
+        } else {
+          // Initialize OCR
+          workerRef.current = await createWorker()
+          await workerRef.current.loadLanguage('eng')
+          await workerRef.current.initialize('eng')
+          await workerRef.current.setParameters({
+            tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789'
+          })
+          isScanning.current = true
+          startOCRScanning()
+        }
+      }
+    } catch (error) {
+      console.error('Error accessing camera:', error)
+      toast.error("Could not access camera. Please check camera permissions.")
+      setIsDialogOpen(false)
     }
   }
 
