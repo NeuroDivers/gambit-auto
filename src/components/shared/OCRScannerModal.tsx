@@ -102,18 +102,17 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
   const initializeOCR = async () => {
     try {
       setIsInitializing(true)
-      const worker = await createWorker({
-        logger: progress => {
-          if (progress.status === 'recognizing text') {
-            setScanProgress(progress.progress * 100)
-          }
-        }
-      })
+      const worker = await createWorker()
       
       await worker.loadLanguage('eng')
       await worker.initialize('eng')
       await worker.setParameters({
         tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789',
+        tessjs_create_tsv: '0',
+        tessjs_create_pdf: '0',
+        tessjs_create_hocr: '0',
+        tessjs_create_box: '0',
+        tessedit_pageseg_mode: '1',
       })
       
       workerRef.current = worker
@@ -139,7 +138,10 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
         return
       }
 
+      setScanProgress(25) // Start progress
       const { data: { text } } = await workerRef.current.recognize(frameCanvas)
+      setScanProgress(75) // Update progress after recognition
+      
       console.log('Detected text:', text)
       
       const cleanedText = text.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
@@ -150,12 +152,15 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
         if (matches && matches.length > 0) {
           for (const match of matches) {
             if (validateVin(match)) {
+              setScanProgress(100)
               handleScanSuccess(match)
               return
             }
           }
         }
-        setScanProgress(Math.min((cleanedText.length / 17) * 100, 100))
+        setScanProgress(Math.min((cleanedText.length / 17) * 100, 90))
+      } else {
+        setScanProgress(0)
       }
       
       if (isScanning.current) {
@@ -163,6 +168,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       }
     } catch (error) {
       console.error('OCR error:', error)
+      setScanProgress(0)
       if (isScanning.current) {
         setTimeout(() => startScanning(), 500)
       }
