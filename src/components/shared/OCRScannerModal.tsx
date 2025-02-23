@@ -1,3 +1,4 @@
+
 import { FileSearch, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -99,13 +100,17 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
   const initializeOCR = async () => {
     try {
       setIsInitializing(true)
-      const worker = createWorker()
+      const worker = await createWorker()
       
-      worker.progress = (p: number) => {
+      const onProgress = (p: number) => {
         setScanProgress(p * 100)
       }
+
+      worker.on('progress', onProgress)
       
       // Initialize with language
+      await worker.load()
+      await worker.loadLanguage('eng')
       await worker.initialize('eng')
       
       // Set parameters after initialization
