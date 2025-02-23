@@ -18,6 +18,7 @@ interface VinScannerProps {
 export function VinScanner({ onScan }: VinScannerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isCameraActive, setIsCameraActive] = useState(false)
+  const [isScanning, setIsScanning] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -29,6 +30,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       streamRef.current = null
     }
     setIsCameraActive(false)
+    setIsScanning(false)
   }
 
   const captureFrame = () => {
@@ -51,19 +53,24 @@ export function VinScanner({ onScan }: VinScannerProps) {
   }
 
   const startOCRScanning = async () => {
-    if (!isCameraActive || !workerRef.current) return
+    if (!isCameraActive || !workerRef.current || !isScanning) return
 
     try {
+      console.log('Scanning frame...')
       const frameData = captureFrame()
       if (!frameData) {
-        requestAnimationFrame(startOCRScanning)
+        if (isScanning) {
+          requestAnimationFrame(startOCRScanning)
+        }
         return
       }
 
       const { data: { text } } = await workerRef.current.recognize(frameData)
+      console.log('Detected text:', text)
       
       // Look for VIN-like pattern in the recognized text
-      const vinMatch = text.match(/[A-HJ-NPR-Z0-9]{17}/i)
+      const cleanedText = text.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
+      const vinMatch = cleanedText.match(/[A-HJ-NPR-Z0-9]{17}/i)
       
       if (vinMatch) {
         const scannedValue = vinMatch[0]
@@ -76,10 +83,32 @@ export function VinScanner({ onScan }: VinScannerProps) {
       }
       
       // No valid VIN found, continue scanning
-      requestAnimationFrame(startOCRScanning)
+      if (isScanning) {
+        requestAnimationFrame(startOCRScanning)
+      }
     } catch (error) {
       console.error('OCR error:', error)
-      requestAnimationFrame(startOCRScanning)
+      if (isScanning) {
+        requestAnimationFrame(startOCRScanning)
+      }
+    }
+  }
+
+  const initializeWorker = async () => {
+    try {
+      console.log('Initializing OCR worker...')
+      const worker = await createWorker()
+      await worker.load()
+      await worker.loadLanguage('eng')
+      await worker.initialize('eng')
+      await worker.setParameters({
+        tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789',
+      })
+      console.log('OCR worker initialized')
+      return worker
+    } catch (error) {
+      console.error('Error initializing OCR worker:', error)
+      throw error
     }
   }
 
@@ -97,10 +126,20 @@ export function VinScanner({ onScan }: VinScannerProps) {
         videoRef.current.srcObject = stream
         streamRef.current = stream
         setIsCameraActive(true)
+        
+        // Wait for video to be ready
+        await new Promise((resolve) => {
+          if (videoRef.current) {
+            videoRef.current.onloadedmetadata = resolve
+          }
+        })
+        
         await videoRef.current.play()
         
-        // Initialize OCR
-        workerRef.current = await createWorker('eng')
+        // Initialize OCR worker
+        console.log('Starting OCR initialization...')
+        workerRef.current = await initializeWorker()
+        setIsScanning(true)
         startOCRScanning()
       }
     } catch (error) {
