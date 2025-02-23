@@ -74,8 +74,16 @@ export function VinScanner({ onScan }: VinScannerProps) {
   }
 
   const startOCRScanning = async () => {
-    if (!isCameraActive || !workerRef.current || !isScanning) {
-      addLog('Scanning canceled: camera inactive or worker not ready')
+    if (!isCameraActive) {
+      addLog('Scanning canceled: camera is not active')
+      return
+    }
+    if (!workerRef.current) {
+      addLog('Scanning canceled: OCR worker is not initialized')
+      return
+    }
+    if (!isScanning) {
+      addLog('Scanning canceled: scanning is not enabled')
       return
     }
 
@@ -160,6 +168,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         
         addLog('Starting OCR initialization...')
         workerRef.current = await initializeWorker()
+        addLog('Worker reference created, setting scanning to true')
         setIsScanning(true)
         addLog('Beginning frame scanning...')
         startOCRScanning()
