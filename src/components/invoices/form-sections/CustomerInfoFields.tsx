@@ -54,7 +54,7 @@ export function CustomerInfoFields({
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-4">
         <div>
           <Label htmlFor="customerFirstName">First Name</Label>
           <Input
@@ -64,6 +64,7 @@ export function CustomerInfoFields({
             placeholder="Enter first name..."
           />
         </div>
+
         <div>
           <Label htmlFor="customerLastName">Last Name</Label>
           <Input
@@ -73,38 +74,38 @@ export function CustomerInfoFields({
             placeholder="Enter last name..."
           />
         </div>
-      </div>
 
-      <div>
-        <Label htmlFor="customerEmail">Email</Label>
-        <Input
-          id="customerEmail"
-          type="email"
-          value={customerEmail}
-          onChange={(e) => setCustomerEmail(e.target.value)}
-          placeholder="Enter email..."
-        />
-      </div>
+        <div>
+          <Label htmlFor="customerEmail">Email</Label>
+          <Input
+            id="customerEmail"
+            type="email"
+            value={customerEmail}
+            onChange={(e) => setCustomerEmail(e.target.value)}
+            placeholder="Enter email..."
+          />
+        </div>
 
-      <div>
-        <Label htmlFor="customerPhone">Phone</Label>
-        <Input
-          id="customerPhone"
-          type="tel"
-          value={customerPhone}
-          onChange={(e) => setCustomerPhone(e.target.value)}
-          placeholder="Enter phone number..."
-        />
-      </div>
+        <div>
+          <Label htmlFor="customerPhone">Phone</Label>
+          <Input
+            id="customerPhone"
+            type="tel"
+            value={customerPhone}
+            onChange={(e) => setCustomerPhone(e.target.value)}
+            placeholder="Enter phone number..."
+          />
+        </div>
 
-      <div>
-        <Label htmlFor="customerAddress">Address</Label>
-        <Input
-          id="customerAddress"
-          value={customerAddress}
-          onChange={(e) => setCustomerAddress(e.target.value)}
-          placeholder="Enter address..."
-        />
+        <div>
+          <Label htmlFor="customerAddress">Address</Label>
+          <Input
+            id="customerAddress"
+            value={customerAddress}
+            onChange={(e) => setCustomerAddress(e.target.value)}
+            placeholder="Enter address..."
+          />
+        </div>
       </div>
     </div>
   )
