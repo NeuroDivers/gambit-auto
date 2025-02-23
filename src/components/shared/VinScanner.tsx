@@ -92,14 +92,18 @@ export function VinScanner({ onScan }: VinScannerProps) {
     
     if (!ctx) return null
 
-    // Match canvas size to video
+    // Set canvas dimensions to match video dimensions
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
+
+    // Clear the canvas before drawing
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
     
     // Draw the current video frame
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
     
-    return canvas.toDataURL('image/png')
+    // Get the actual canvas data instead of data URL
+    return canvas.toDataURL('image/png', 1.0)
   }
 
   const startOCRScanning = async () => {
@@ -114,7 +118,18 @@ export function VinScanner({ onScan }: VinScannerProps) {
         return
       }
 
-      const { data: { text } } = await workerRef.current.recognize(frameData)
+      // Create an image element to ensure the data is valid
+      const img = new Image()
+      img.src = frameData
+
+      // Wait for the image to load before processing
+      await new Promise((resolve, reject) => {
+        img.onload = resolve
+        img.onerror = reject
+      })
+
+      const { data: { text } } = await workerRef.current.recognize(img)
+      console.log('OCR Text:', text) // Debug log to see recognized text
       
       // Look for VIN-like pattern in the recognized text
       const vinMatch = text.match(/[A-HJ-NPR-Z0-9]{17}/i)
