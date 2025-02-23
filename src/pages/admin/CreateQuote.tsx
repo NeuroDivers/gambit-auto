@@ -207,18 +207,20 @@ export default function CreateQuote() {
 
   return (
     <div className="space-y-6 p-6 md:p-6 p-2">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate('/admin/estimates')}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <PageTitle 
-          title="Create Estimate"
-          description="Create a new estimate for a customer"
-        />
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/admin/estimates')}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <PageTitle 
+            title="Create Estimate"
+            description="Create a new estimate for a customer"
+          />
+        </div>
       </div>
 
       <Form {...form}>
@@ -228,6 +230,7 @@ export default function CreateQuote() {
               type="button"
               variant="outline"
               onClick={() => setSearchDialogOpen(true)}
+              className="w-full sm:w-auto"
             >
               <Search className="mr-2 h-4 w-4" />
               Search Customers
