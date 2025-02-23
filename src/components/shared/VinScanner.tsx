@@ -98,11 +98,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
     try {
       console.log('Initializing OCR worker...')
       const worker = await createWorker()
+      // Load and initialize in one step with the language
       await worker.load()
-      await worker.loadLanguage('eng')
-      await worker.initialize('eng')
-      await worker.setParameters({
-        tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789',
+      await worker.loadConfig({
+        lang: 'eng',
+        tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789'
       })
       console.log('OCR worker initialized')
       return worker
