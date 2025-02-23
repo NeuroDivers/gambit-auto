@@ -25,6 +25,7 @@ export type EstimateFormValues = {
 export type Estimate = {
   id: string
   estimate_number: string
+  quote_number: string  // Added for backward compatibility
   created_at: string
   status: string
   notes: string | null
@@ -41,6 +42,7 @@ export type Estimate = {
   vehicle_year: number | null
   vehicle_vin: string | null
   estimate_items: EstimateItem[]
+  quote_items: EstimateItem[]  // Added for backward compatibility
 }
 
 // Maintain backward compatibility
