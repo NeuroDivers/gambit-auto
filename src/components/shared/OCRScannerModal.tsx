@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog"
 import { createWorker } from 'tesseract.js'
 
@@ -18,6 +19,7 @@ interface OCRScannerModalProps {
 export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isCameraActive, setIsCameraActive] = useState(false)
+  const [isInitializing, setIsInitializing] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -67,16 +69,35 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
     
     if (!ctx) return null
 
+    // Set canvas size to match video dimensions
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
+    
+    // Flip horizontally if using front camera
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      ctx.translate(canvas.width, 0)
+      ctx.scale(-1, 1)
+    }
+    
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
     
-    return canvas.toDataURL('image/png')
+    return canvas.toDataURL('image/png', 1.0)
   }
 
   const initializeWorker = async () => {
-    await cleanupWorker()
-    workerRef.current = await createWorker('eng')
+    try {
+      await cleanupWorker()
+      setIsInitializing(true)
+      workerRef.current = await createWorker('eng', 1, {
+        logger: m => console.log(m),
+        errorHandler: err => console.error('Tesseract error:', err)
+      })
+      setIsInitializing(false)
+    } catch (error) {
+      console.error('Error initializing Tesseract worker:', error)
+      toast.error("Failed to initialize text recognition")
+      handleClose()
+    }
   }
 
   const startOCRScanning = async () => {
@@ -92,12 +113,22 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       }
 
       const { data: { text } } = await workerRef.current.recognize(frameData)
-      const vinMatch = text.match(/[A-HJ-NPR-Z0-9]{17}/i)
+      console.log('OCR detected text:', text) // Debug log
       
-      if (vinMatch) {
-        const scannedValue = vinMatch[0]
-        handleScanSuccess(scannedValue)
-      } else if (isScanning.current) {
+      // Look for VIN patterns in the text
+      const vinPattern = /[A-HJ-NPR-Z0-9]{17}/gi
+      const matches = text.match(vinPattern)
+      
+      if (matches && matches.length > 0) {
+        for (const match of matches) {
+          if (/^[A-HJ-NPR-Z0-9]{17}$/i.test(match)) {
+            handleScanSuccess(match)
+            return
+          }
+        }
+      }
+      
+      if (isScanning.current) {
         requestAnimationFrame(startOCRScanning)
       }
     } catch (error) {
@@ -110,50 +141,48 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
 
   const startCamera = async () => {
     try {
-      const stream = await Promise.race([
-        navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: 'environment',
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }
-        }),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Camera access timeout')), 10000)
-        )
-      ]) as MediaStream
+      setIsInitializing(true)
+      
+      // Try to get the rear camera first
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      })
 
       if (!videoRef.current) return
 
       videoRef.current.srcObject = stream
       streamRef.current = stream
 
-      await new Promise<void>((resolve) => {
-        if (!videoRef.current) return resolve()
+      // Wait for video to be ready
+      await new Promise<void>((resolve, reject) => {
+        if (!videoRef.current) return reject()
         
-        if (videoRef.current.readyState >= 1) {
-          resolve()
-        } else {
-          videoRef.current.onloadedmetadata = () => resolve()
-        }
+        const timeoutId = setTimeout(() => {
+          reject(new Error('Video initialization timeout'))
+        }, 10000)
 
-        setTimeout(() => resolve(), 1000)
+        videoRef.current.onloadedmetadata = () => {
+          clearTimeout(timeoutId)
+          resolve()
+        }
       })
 
-      try {
-        await videoRef.current.play()
-      } catch (playError) {
-        console.error('Error playing video:', playError)
-        throw new Error('Failed to start video playback')
-      }
-
+      await videoRef.current.play()
       setIsCameraActive(true)
+      setIsInitializing(false)
+      
+      // Initialize OCR worker after camera is ready
       await initializeWorker()
       isScanning.current = true
       startOCRScanning()
     } catch (error) {
       console.error('Error accessing camera:', error)
       toast.error("Could not access camera. Please check camera permissions and try again.")
+      setIsInitializing(false)
       handleClose()
     }
   }
@@ -162,6 +191,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
     isScanning.current = false
     await stopCamera()
     setIsDialogOpen(false)
+    setIsInitializing(false)
   }
 
   const handleOpen = async () => {
@@ -197,6 +227,9 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="p-4">
             <DialogTitle>Scan VIN Text</DialogTitle>
+            <DialogDescription>
+              Position the VIN text within the frame and hold steady
+            </DialogDescription>
           </DialogHeader>
           <div className="relative aspect-video w-full overflow-hidden">
             <video
@@ -219,9 +252,17 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
               <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-px bg-primary-foreground/70" />
               <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-4 h-4 border-2 border-primary-foreground/70" />
             </div>
+            {isInitializing && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+                <div className="text-center space-y-2">
+                  <FileSearch className="h-8 w-8 animate-pulse mx-auto" />
+                  <p className="text-sm">Initializing camera and OCR...</p>
+                </div>
+              </div>
+            )}
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent p-4">
               <p className="text-white text-center text-sm">
-                Position the VIN text within the frame
+                Hold the camera steady while scanning
               </p>
             </div>
           </div>
