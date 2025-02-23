@@ -1,3 +1,4 @@
+
 import { FileSearch, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -9,7 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
-import { createWorker, PSM } from 'tesseract.js'
+import { createWorker, PSM, OEM } from 'tesseract.js'
 
 interface OCRScannerModalProps {
   onScan: (vin: string) => void
@@ -98,7 +99,11 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       setIsInitializing(true)
       const worker = await createWorker()
       
-      await worker.initialize('eng', {
+      // Initialize with default OEM mode
+      await worker.initialize('eng')
+      
+      // Set parameters after initialization
+      await worker.setParameters({
         tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789',
         tessedit_pageseg_mode: PSM.SINGLE_LINE,
       })
