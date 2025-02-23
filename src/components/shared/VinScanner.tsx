@@ -1,3 +1,4 @@
+
 import { Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -22,11 +23,15 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const workerRef = useRef<any>(null)
+  const scanningRef = useRef<number>()
 
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
+    }
+    if (scanningRef.current) {
+      cancelAnimationFrame(scanningRef.current)
     }
     setIsCameraActive(false)
     setIsScanning(false)
@@ -41,9 +46,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
     
     if (!ctx) return null
 
+    // Make sure we use the actual video dimensions
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
     
+    // Draw the current frame
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
     
     return canvas.toDataURL('image/png')
@@ -57,7 +64,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       const frameData = captureFrame()
       if (!frameData) {
         if (isScanning) {
-          requestAnimationFrame(startOCRScanning)
+          scanningRef.current = requestAnimationFrame(startOCRScanning)
         }
         return
       }
@@ -79,12 +86,12 @@ export function VinScanner({ onScan }: VinScannerProps) {
       }
       
       if (isScanning) {
-        requestAnimationFrame(startOCRScanning)
+        scanningRef.current = requestAnimationFrame(startOCRScanning)
       }
     } catch (error) {
       console.error('OCR error:', error)
       if (isScanning) {
-        requestAnimationFrame(startOCRScanning)
+        scanningRef.current = requestAnimationFrame(startOCRScanning)
       }
     }
   }
@@ -118,17 +125,20 @@ export function VinScanner({ onScan }: VinScannerProps) {
         streamRef.current = stream
         setIsCameraActive(true)
         
+        // Wait for video metadata to load
         await new Promise((resolve) => {
           if (videoRef.current) {
             videoRef.current.onloadedmetadata = resolve
           }
         })
         
+        // Start playing the video
         await videoRef.current.play()
         
         console.log('Starting OCR initialization...')
         workerRef.current = await initializeWorker()
         setIsScanning(true)
+        // Start scanning immediately
         startOCRScanning()
       }
     } catch (error) {
@@ -152,6 +162,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
     await startCamera()
   }
 
+  // Clean up on unmount
   useEffect(() => {
     return () => {
       handleClose()
