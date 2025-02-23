@@ -1,3 +1,4 @@
+
 import { FileSearch, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -27,6 +28,13 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
   const streamRef = useRef<MediaStream | null>(null)
   const workerRef = useRef<any>(null)
   const isScanning = useRef(false)
+  const progressRef = useRef(0)
+
+  useEffect(() => {
+    if (progressRef.current !== scanProgress) {
+      setScanProgress(progressRef.current)
+    }
+  }, [progressRef.current])
 
   const validateVin = (vin: string): boolean => {
     const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/i
@@ -102,7 +110,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       const worker = await createWorker({
         logger: m => {
           if (m.status === 'recognizing text') {
-            setScanProgress((m.progress || 0) * 100)
+            progressRef.current = (m.progress || 0) * 100
           }
         }
       })
