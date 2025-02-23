@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import { Client } from "./types"
 import { clientFormSchema, ClientFormValues } from "./schemas/clientFormSchema"
 import { ClientFormFields } from "./form/ClientFormFields"
+import { useEffect } from "react"
 
 type ClientFormProps = {
   client?: Client
@@ -33,7 +34,7 @@ export function ClientForm({ client, onSuccess }: ClientFormProps) {
 
   async function onSubmit(values: ClientFormValues) {
     try {
-      if (client) {
+      if (client?.id) {
         // Update existing client
         const { error } = await supabase
           .from("clients")
@@ -54,24 +55,54 @@ export function ClientForm({ client, onSuccess }: ClientFormProps) {
         if (error) throw error
         toast.success("Client updated successfully")
       } else {
-        // Create new client
-        const { error } = await supabase
+        // Check if client exists by email
+        const { data: existingClient, error: checkError } = await supabase
           .from("clients")
-          .insert({
-            first_name: values.first_name,
-            last_name: values.last_name,
-            email: values.email,
-            phone_number: values.phone_number,
-            unit_number: values.unit_number,
-            street_address: values.street_address,
-            city: values.city,
-            state_province: values.state_province,
-            postal_code: values.postal_code,
-            country: values.country,
-          })
+          .select("id")
+          .eq("email", values.email)
+          .maybeSingle()
 
-        if (error) throw error
-        toast.success("Client created successfully")
+        if (checkError) throw checkError
+
+        if (existingClient) {
+          // Update existing client found by email
+          const { error } = await supabase
+            .from("clients")
+            .update({
+              first_name: values.first_name,
+              last_name: values.last_name,
+              phone_number: values.phone_number,
+              unit_number: values.unit_number,
+              street_address: values.street_address,
+              city: values.city,
+              state_province: values.state_province,
+              postal_code: values.postal_code,
+              country: values.country,
+            })
+            .eq("id", existingClient.id)
+
+          if (error) throw error
+          toast.success("Client updated successfully")
+        } else {
+          // Create new client
+          const { error } = await supabase
+            .from("clients")
+            .insert({
+              first_name: values.first_name,
+              last_name: values.last_name,
+              email: values.email,
+              phone_number: values.phone_number,
+              unit_number: values.unit_number,
+              street_address: values.street_address,
+              city: values.city,
+              state_province: values.state_province,
+              postal_code: values.postal_code,
+              country: values.country,
+            })
+
+          if (error) throw error
+          toast.success("Client created successfully")
+        }
       }
 
       onSuccess?.()
