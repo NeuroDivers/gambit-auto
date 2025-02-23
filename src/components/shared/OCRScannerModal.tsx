@@ -1,3 +1,4 @@
+
 import { FileSearch } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -10,6 +11,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { createWorker } from 'tesseract.js'
+import { Progress } from "@/components/ui/progress"
 
 interface OCRScannerModalProps {
   onScan: (vin: string) => void
@@ -19,6 +21,8 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isCameraActive, setIsCameraActive] = useState(false)
   const [isInitializing, setIsInitializing] = useState(false)
+  const [detectedText, setDetectedText] = useState("")
+  const [scanProgress, setScanProgress] = useState(0)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -58,6 +62,8 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
     }
     await cleanupWorker()
     setIsCameraActive(false)
+    setDetectedText("")
+    setScanProgress(0)
   }
 
   const captureFrame = () => {
@@ -79,13 +85,13 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
     const x = (canvas.width - centerWidth) / 2
     const y = (canvas.height - centerHeight) / 2
     
-    ctx.fillStyle = 'white'
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
     ctx.fillRect(x, y, centerWidth, centerHeight)
     
     ctx.drawImage(
       video,
-      x, y, centerWidth, centerHeight,  // source rectangle
-      x, y, centerWidth, centerHeight   // destination rectangle
+      x, y, centerWidth, centerHeight,
+      x, y, centerWidth, centerHeight
     )
     
     return canvas.toDataURL('image/png', 1.0)
@@ -129,16 +135,23 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       console.log('OCR detected text:', text)
       
       const cleanedText = text.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
-      const matches = cleanedText.match(/[A-HJ-NPR-Z0-9]{17}/gi)
+      setDetectedText(cleanedText || "No text detected")
       
-      if (matches && matches.length > 0) {
-        for (const match of matches) {
-          if (/^[A-HJ-NPR-Z0-9]{17}$/i.test(match)) {
-            handleScanSuccess(match)
-            return
+      // Calculate confidence based on text length and VIN pattern match
+      let confidence = 0
+      if (cleanedText.length > 0) {
+        confidence = Math.min((cleanedText.length / 17) * 100, 100)
+        const matches = cleanedText.match(/[A-HJ-NPR-Z0-9]{17}/gi)
+        if (matches && matches.length > 0) {
+          for (const match of matches) {
+            if (/^[A-HJ-NPR-Z0-9]{17}$/i.test(match)) {
+              handleScanSuccess(match)
+              return
+            }
           }
         }
       }
+      setScanProgress(confidence)
       
       if (isScanning.current) {
         requestAnimationFrame(() => startOCRScanning())
@@ -160,7 +173,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
           facingMode: 'environment',
           width: { ideal: 1920 },
           height: { ideal: 1080 },
-          frameRate: { ideal: 60 }
+          frameRate: { ideal: 30 }
         }
       }
       
@@ -258,7 +271,11 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
               ref={canvasRef}
               className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
-            <div className="absolute inset-[15%] border-2 border-dashed border-primary">
+            <div 
+              className={`absolute inset-[15%] border-2 border-dashed transition-colors duration-200 ${
+                scanProgress > 50 ? 'border-green-500' : 'border-primary'
+              }`}
+            >
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
                 Center VIN text here
               </div>
@@ -271,9 +288,16 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
                 </div>
               </div>
             )}
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent p-4">
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent p-4 space-y-2">
+              <div className="w-full bg-black/30 rounded-lg p-2">
+                <div className="flex justify-between items-center text-xs text-white mb-1">
+                  <span>Scan Progress</span>
+                  <span>{Math.round(scanProgress)}%</span>
+                </div>
+                <Progress value={scanProgress} className="h-2" />
+              </div>
               <p className="text-white text-center text-sm">
-                Hold the camera steady while scanning
+                {detectedText ? `Detected: ${detectedText}` : 'No text detected'}
               </p>
             </div>
           </div>
