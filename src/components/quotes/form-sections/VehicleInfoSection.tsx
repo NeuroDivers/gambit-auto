@@ -6,7 +6,8 @@ import { UseFormReturn } from "react-hook-form"
 import { useVinLookup } from "@/hooks/useVinLookup"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
-import { VinScanner } from "@/components/shared/VinScanner"
+import { BarcodeScannerModal } from "@/components/shared/BarcodeScannerModal"
+import { OCRScannerModal } from "@/components/shared/OCRScannerModal"
 
 interface VehicleInfoSectionProps {
   form: UseFormReturn<any>
@@ -115,11 +116,12 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
                   <span className="text-xs text-muted-foreground ml-2">(Auto-fills vehicle info)</span>
                 </FormLabel>
                 <FormControl>
-                  <div className="flex gap-2">
-                    <Input {...field} placeholder="Enter VIN" />
-                    <VinScanner onScan={(vin) => field.onChange(vin)} />
-                  </div>
+                  <Input {...field} placeholder="Enter VIN" />
                 </FormControl>
+                <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                  <BarcodeScannerModal onScan={(vin) => field.onChange(vin)} />
+                  <OCRScannerModal onScan={(vin) => field.onChange(vin)} />
+                </div>
                 <FormMessage />
               </FormItem>
             )}
