@@ -1,7 +1,8 @@
 
 import { useState, useRef, useEffect } from "react"
 import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from '@zxing/library'
-import { createWorker, Worker } from 'tesseract.js'
+import { createWorker } from 'tesseract.js'
+import type { Worker } from 'tesseract.js'
 import { toast } from "sonner"
 import { validateVin } from "../utils/vinValidation"
 import { captureFrame } from "../utils/imageProcessing"
@@ -107,7 +108,7 @@ export function useScanner({ onScan, onClose }: UseScannerProps) {
       await worker.setParameters({
         tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789'
       })
-      return worker
+      return worker as Worker
     } catch (error) {
       console.error('Error initializing OCR:', error)
       throw error
