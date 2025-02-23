@@ -1,4 +1,3 @@
-
 import { FileSearch, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -30,11 +29,9 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
   const isScanning = useRef(false)
 
   const validateVin = (vin: string): boolean => {
-    // Basic VIN validation
     const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/i
     if (!vinRegex.test(vin)) return false
 
-    // Check manufacturer code (first 3 characters)
     const wmi = vin.substring(0, 3).toUpperCase()
     const validWMIs = ['1HD', '1VW', 'JTD', 'WBA', '2HM', '3FA', '1G1', 'WDD']
     if (!validWMIs.includes(wmi)) return false
@@ -108,11 +105,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       await worker.initialize('eng')
       await worker.setParameters({
         tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789',
-        tessjs_create_tsv: '0',
-        tessjs_create_pdf: '0',
-        tessjs_create_hocr: '0',
-        tessjs_create_box: '0',
-        tessedit_pageseg_mode: PSM.SINGLE_LINE, // Using the correct enum value
+        tessedit_pageseg_mode: PSM.SINGLE_LINE,
       })
       
       workerRef.current = worker
@@ -138,9 +131,9 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
         return
       }
 
-      setScanProgress(25) // Start progress
+      setScanProgress(25)
       const { data: { text } } = await workerRef.current.recognize(frameCanvas)
-      setScanProgress(75) // Update progress after recognition
+      setScanProgress(75)
       
       console.log('Detected text:', text)
       
