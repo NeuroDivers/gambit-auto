@@ -9,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from '@zxing/library'
 import { createWorker } from 'tesseract.js'
 
 interface VinScannerProps {
@@ -19,11 +18,9 @@ interface VinScannerProps {
 export function VinScanner({ onScan }: VinScannerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isCameraActive, setIsCameraActive] = useState(false)
-  const [scanMode, setScanMode] = useState<'barcode' | 'ocr'>('barcode')
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
-  const readerRef = useRef<BrowserMultiFormatReader | null>(null)
   const workerRef = useRef<any>(null)
 
   const stopCamera = () => {
@@ -31,52 +28,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
     }
-    if (readerRef.current) {
-      readerRef.current.reset()
-      readerRef.current = null
-    }
     setIsCameraActive(false)
-  }
-
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        } 
-      })
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        streamRef.current = stream
-        setIsCameraActive(true)
-        await videoRef.current.play()
-        
-        if (scanMode === 'barcode') {
-          // Initialize barcode reader
-          const hints = new Map<DecodeHintType, any>();
-          hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-            BarcodeFormat.CODE_39,
-            BarcodeFormat.CODE_128,
-            BarcodeFormat.DATA_MATRIX
-          ]);
-          hints.set(DecodeHintType.TRY_HARDER, true);
-          
-          readerRef.current = new BrowserMultiFormatReader(hints)
-          startScanning()
-        } else {
-          // Initialize OCR
-          workerRef.current = await createWorker('eng')
-          startOCRScanning()
-        }
-      }
-    } catch (error) {
-      console.error('Error accessing camera:', error)
-      toast.error("Could not access camera. Please check camera permissions.")
-      setIsDialogOpen(false)
-    }
   }
 
   const captureFrame = () => {
@@ -131,31 +83,30 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }
 
-  const startScanning = async () => {
-    if (!videoRef.current || !readerRef.current || !isCameraActive) return
-
+  const startCamera = async () => {
     try {
-      const result = await readerRef.current.decodeFromVideoElement(videoRef.current)
-      if (result) {
-        const scannedValue = result.getText().trim()
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
+      })
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        streamRef.current = stream
+        setIsCameraActive(true)
+        await videoRef.current.play()
         
-        // Basic VIN validation (17 characters, alphanumeric)
-        if (/^[A-HJ-NPR-Z0-9]{17}$/i.test(scannedValue)) {
-          onScan(scannedValue.toUpperCase())
-          toast.success("VIN scanned successfully")
-          handleClose()
-        } else {
-          console.log("Invalid VIN format:", scannedValue)
-          // Continue scanning if invalid
-          requestAnimationFrame(() => startScanning())
-        }
-      } else {
-        // No result found, continue scanning
-        requestAnimationFrame(() => startScanning())
+        // Initialize OCR
+        workerRef.current = await createWorker('eng')
+        startOCRScanning()
       }
     } catch (error) {
-      // Error usually means no barcode found, continue scanning
-      requestAnimationFrame(() => startScanning())
+      console.error('Error accessing camera:', error)
+      toast.error("Could not access camera. Please check camera permissions.")
+      setIsDialogOpen(false)
     }
   }
 
@@ -171,17 +122,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const handleOpen = async () => {
     setIsDialogOpen(true)
     await startCamera()
-  }
-
-  const toggleScanMode = () => {
-    setScanMode(prev => {
-      const newMode = prev === 'barcode' ? 'ocr' : 'barcode'
-      if (isCameraActive) {
-        stopCamera()
-        startCamera()
-      }
-      return newMode
-    })
   }
 
   useEffect(() => {
@@ -204,13 +144,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
       <Dialog open={isDialogOpen} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="p-4 space-y-4">
-            <DialogTitle>
-              {scanMode === 'barcode' ? 'Scan VIN Barcode' : 'Scan VIN Text'}
-            </DialogTitle>
-            <Button variant="secondary" onClick={toggleScanMode} className="w-full">
-              Switch to {scanMode === 'barcode' ? 'Text Scanner (OCR)' : 'Barcode Scanner'}
-            </Button>
+          <DialogHeader className="p-4">
+            <DialogTitle>Scan VIN Text</DialogTitle>
           </DialogHeader>
           <div className="relative aspect-video w-full overflow-hidden">
             <video
@@ -224,11 +159,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
               ref={canvasRef}
               className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
-            <div className="absolute inset-0 border-2 border-primary opacity-50" />
-            {/* Scanning guide overlay */}
             <div className="absolute inset-[15%] border-2 border-dashed border-primary-foreground/70">
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
-                Position VIN {scanMode === 'barcode' ? 'barcode' : 'text'} here
+                Position VIN text here
               </div>
               <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-px bg-primary-foreground/70" />
               <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-px bg-primary-foreground/70" />
@@ -236,7 +169,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
             </div>
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent p-4">
               <p className="text-white text-center text-sm">
-                Position the VIN {scanMode === 'barcode' ? 'barcode' : 'text'} within the frame
+                Position the VIN text within the frame
               </p>
             </div>
           </div>
