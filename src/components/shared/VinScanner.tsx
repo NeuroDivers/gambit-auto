@@ -38,12 +38,17 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const stopCamera = () => {
     isScanning.current = false
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current.getTracks().forEach(track => {
+        track.stop()
+      })
       streamRef.current = null
     }
     if (readerRef.current) {
       readerRef.current.reset()
       readerRef.current = null
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
     }
     setIsCameraActive(false)
   }
@@ -148,7 +153,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
     } catch (error) {
       console.error('Error accessing camera:', error)
       toast.error("Could not access camera. Please check camera permissions.")
-      setIsDialogOpen(false)
+      handleClose()
     }
   }
 
@@ -180,6 +185,13 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }, [])
 
+  // Add new useEffect to handle dialog state changes
+  useEffect(() => {
+    if (!isDialogOpen) {
+      handleClose()
+    }
+  }, [isDialogOpen])
+
   return (
     <>
       <Button 
@@ -192,7 +204,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         <Camera className="h-4 w-4" />
       </Button>
 
-      <Dialog open={isDialogOpen} onOpenChange={handleClose}>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="p-4 space-y-4">
             <DialogTitle>
