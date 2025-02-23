@@ -76,16 +76,13 @@ export function VinScanner({ onScan }: VinScannerProps) {
         addLog('Setting scanning state...')
         await new Promise<void>(resolve => {
           setIsScanning(true)
-          requestAnimationFrame(() => {
-            addLog(`Scanning state set to true`)
-            resolve()
-          })
+          resolve()
         })
-
-        requestAnimationFrame(() => {
-          addLog('Starting OCR scanning...')
-          startOCRScanning()
-        })
+        
+        await new Promise(resolve => setTimeout(resolve, 0))
+        
+        addLog(`Starting OCR scanning with scanning state: ${isScanning}`)
+        startOCRScanning()
       }
     } catch (error) {
       addLog(`Error accessing camera: ${error}`)
@@ -107,7 +104,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }
 
-  const startOCRScanning = useCallback(async () => {
+  const startOCRScanning = async () => {
     if (!streamRef.current || !workerRef.current || !isScanning) {
       addLog(`Scanning prerequisites not met:`)
       addLog(`- Stream exists: ${!!streamRef.current}`)
@@ -155,7 +152,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         scanningRef.current = requestAnimationFrame(startOCRScanning)
       }
     }
-  }, [isScanning, onScan])
+  }
 
   const captureFrame = () => {
     if (!videoRef.current || !canvasRef.current) {
