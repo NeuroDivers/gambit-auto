@@ -26,7 +26,7 @@ const items = [
   },
   {
     title: "Estimates",
-    href: "/admin/quotes",
+    href: "/admin/estimates",
     icon: FileText,
   },
   {
