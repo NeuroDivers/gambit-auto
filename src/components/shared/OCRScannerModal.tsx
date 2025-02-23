@@ -1,4 +1,5 @@
-import { FileSearch } from "lucide-react"
+
+import { FileSearch, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
 import { toast } from "sonner"
@@ -9,8 +10,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
-import { createWorker } from 'tesseract.js'
 import { Progress } from "@/components/ui/progress"
+import { pipeline, Pipeline } from "@huggingface/transformers"
 
 interface OCRScannerModalProps {
   onScan: (vin: string) => void
@@ -25,7 +26,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
-  const workerRef = useRef<any>(null)
+  const recognizerRef = useRef<Pipeline | null>(null)
   const isScanning = useRef(false)
 
   const handleScanSuccess = (scannedValue: string) => {
@@ -34,17 +35,6 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       onScan(cleanedValue.toUpperCase())
       toast.success("VIN text scanned successfully")
       handleClose()
-    }
-  }
-
-  const cleanupWorker = async () => {
-    if (workerRef.current) {
-      try {
-        await workerRef.current.terminate()
-      } catch (error) {
-        console.error('Error terminating worker:', error)
-      }
-      workerRef.current = null
     }
   }
 
@@ -59,7 +49,6 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
     if (videoRef.current) {
       videoRef.current.srcObject = null
     }
-    await cleanupWorker()
     setIsCameraActive(false)
     setDetectedText("")
     setScanProgress(0)
@@ -77,15 +66,19 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
     
+    // Draw the full frame
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
     
+    // Calculate dimensions for the center area
     const centerWidth = canvas.width * 0.7
     const centerHeight = canvas.height * 0.3
     const x = (canvas.width - centerWidth) / 2
     const y = (canvas.height - centerHeight) / 2
     
+    // Get the image data for just the center portion
     const imageData = ctx.getImageData(x, y, centerWidth, centerHeight)
     
+    // Create a new canvas for the cropped area
     const croppedCanvas = document.createElement('canvas')
     croppedCanvas.width = centerWidth
     croppedCanvas.height = centerHeight
@@ -94,61 +87,46 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
     if (!croppedCtx) return null
     
     croppedCtx.putImageData(imageData, 0, 0)
-    
-    const processedData = croppedCtx.getImageData(0, 0, centerWidth, centerHeight)
-    const data = processedData.data
-    
-    for (let i = 0; i < data.length; i += 4) {
-      const avg = (data[i] + data[i + 1] + data[i + 2]) / 3
-      const mapped = avg > 127 ? 255 : 0
-      data[i] = mapped
-      data[i + 1] = mapped
-      data[i + 2] = mapped
-    }
-    
-    croppedCtx.putImageData(processedData, 0, 0)
-    
-    return croppedCanvas.toDataURL('image/png', 1.0)
+    return croppedCanvas
   }
 
-  const initializeWorker = async () => {
+  const initializeRecognizer = async () => {
     try {
-      await cleanupWorker()
       setIsInitializing(true)
-      
-      const worker = await createWorker('eng')
-      workerRef.current = worker
-      
-      await workerRef.current.setParameters({
-        tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789',
-      })
-      
+      // Initialize the OCR pipeline with a small and efficient model
+      const recognizer = await pipeline(
+        'text-detection',
+        'Xenova/trocr-small-printed'
+      )
+      recognizerRef.current = recognizer
       setIsInitializing(false)
       return true
     } catch (error) {
-      console.error('Error initializing Tesseract worker:', error)
+      console.error('Error initializing text recognizer:', error)
       toast.error("Failed to initialize text recognition")
       handleClose()
       return false
     }
   }
 
-  const startOCRScanning = async () => {
-    if (!isCameraActive || !workerRef.current || !isScanning.current) return
+  const startScanning = async () => {
+    if (!isCameraActive || !recognizerRef.current || !isScanning.current) return
 
     try {
-      const frameData = captureFrame()
-      if (!frameData) {
+      const frameCanvas = captureFrame()
+      if (!frameCanvas) {
         if (isScanning.current) {
-          setTimeout(() => startOCRScanning(), 500)
+          setTimeout(() => startScanning(), 500)
         }
         return
       }
 
-      const { data: { text } } = await workerRef.current.recognize(frameData)
-      console.log('OCR detected text:', text)
+      const result = await recognizerRef.current(frameCanvas)
+      console.log('Detected text:', result)
       
-      const cleanedText = text.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
+      // The model returns an object with a text property
+      const detectedText = result.text || ''
+      const cleanedText = detectedText.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
       setDetectedText(cleanedText || "No text detected")
       
       let confidence = 0
@@ -167,12 +145,12 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       setScanProgress(confidence)
       
       if (isScanning.current) {
-        setTimeout(() => startOCRScanning(), 500)
+        setTimeout(() => startScanning(), 500)
       }
     } catch (error) {
-      console.error('OCR error:', error)
+      console.error('Text recognition error:', error)
       if (isScanning.current) {
-        setTimeout(() => startOCRScanning(), 500)
+        setTimeout(() => startScanning(), 500)
       }
     }
   }
@@ -213,10 +191,10 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       await videoRef.current.play()
       setIsCameraActive(true)
       
-      const workerInitialized = await initializeWorker()
-      if (workerInitialized) {
+      const recognizerInitialized = await initializeRecognizer()
+      if (recognizerInitialized) {
         isScanning.current = true
-        startOCRScanning()
+        startScanning()
       }
       
       setIsInitializing(false)
@@ -296,8 +274,8 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
             {isInitializing && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/80">
                 <div className="text-center space-y-2">
-                  <FileSearch className="h-8 w-8 animate-pulse mx-auto" />
-                  <p className="text-sm">Initializing camera and OCR...</p>
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+                  <p className="text-sm">Initializing camera and text recognition...</p>
                 </div>
               </div>
             )}
