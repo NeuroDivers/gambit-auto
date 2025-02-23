@@ -37,7 +37,18 @@ export function ClientForm({ client, onSuccess }: ClientFormProps) {
         // Update existing client
         const { error } = await supabase
           .from("clients")
-          .update(values)
+          .update({
+            first_name: values.first_name,
+            last_name: values.last_name,
+            email: values.email,
+            phone_number: values.phone_number,
+            unit_number: values.unit_number,
+            street_address: values.street_address,
+            city: values.city,
+            state_province: values.state_province,
+            postal_code: values.postal_code,
+            country: values.country,
+          })
           .eq("id", client.id)
 
         if (error) throw error
@@ -46,7 +57,18 @@ export function ClientForm({ client, onSuccess }: ClientFormProps) {
         // Create new client
         const { error } = await supabase
           .from("clients")
-          .insert(values)
+          .insert({
+            first_name: values.first_name,
+            last_name: values.last_name,
+            email: values.email,
+            phone_number: values.phone_number,
+            unit_number: values.unit_number,
+            street_address: values.street_address,
+            city: values.city,
+            state_province: values.state_province,
+            postal_code: values.postal_code,
+            country: values.country,
+          })
 
         if (error) throw error
         toast.success("Client created successfully")
