@@ -1,4 +1,3 @@
-
 import { Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -19,11 +18,20 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isCameraActive, setIsCameraActive] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
+  const [logs, setLogs] = useState<string[]>([])
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const workerRef = useRef<any>(null)
   const scanningRef = useRef<number>()
+  const logsEndRef = useRef<HTMLDivElement>(null)
+
+  const addLog = (message: string) => {
+    setLogs(prev => [...prev, message])
+    setTimeout(() => {
+      logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, 100)
+  }
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -46,11 +54,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
     
     if (!ctx) return null
 
-    // Make sure we use the actual video dimensions
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
     
-    // Draw the current frame
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
     
     return canvas.toDataURL('image/png')
@@ -60,7 +66,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
     if (!isCameraActive || !workerRef.current || !isScanning) return
 
     try {
-      console.log('Scanning frame...')
+      addLog('Scanning frame...')
       const frameData = captureFrame()
       if (!frameData) {
         if (isScanning) {
@@ -70,7 +76,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       }
 
       const { data: { text } } = await workerRef.current.recognize(frameData)
-      console.log('Detected text:', text)
+      addLog(`Detected text: ${text}`)
       
       const cleanedText = text.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
       const vinMatch = cleanedText.match(/[A-HJ-NPR-Z0-9]{17}/i)
@@ -78,6 +84,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       if (vinMatch) {
         const scannedValue = vinMatch[0]
         if (/^[A-HJ-NPR-Z0-9]{17}$/i.test(scannedValue)) {
+          addLog('Valid VIN detected!')
           onScan(scannedValue.toUpperCase())
           toast.success("VIN scanned successfully")
           handleClose()
@@ -89,7 +96,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         scanningRef.current = requestAnimationFrame(startOCRScanning)
       }
     } catch (error) {
-      console.error('OCR error:', error)
+      addLog(`OCR error: ${error}`)
       if (isScanning) {
         scanningRef.current = requestAnimationFrame(startOCRScanning)
       }
@@ -98,14 +105,13 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const initializeWorker = async () => {
     try {
-      console.log('Initializing OCR worker...')
+      addLog('Initializing OCR worker...')
       const worker = await createWorker()
-      await worker.load()
       await worker.reinitialize('eng')
-      console.log('OCR worker initialized')
+      addLog('OCR worker initialized')
       return worker
     } catch (error) {
-      console.error('Error initializing OCR worker:', error)
+      addLog(`Error initializing OCR worker: ${error}`)
       throw error
     }
   }
@@ -124,25 +130,24 @@ export function VinScanner({ onScan }: VinScannerProps) {
         videoRef.current.srcObject = stream
         streamRef.current = stream
         setIsCameraActive(true)
+        addLog('Camera activated')
         
-        // Wait for video metadata to load
         await new Promise((resolve) => {
           if (videoRef.current) {
             videoRef.current.onloadedmetadata = resolve
           }
         })
         
-        // Start playing the video
         await videoRef.current.play()
+        addLog('Video stream started')
         
-        console.log('Starting OCR initialization...')
+        addLog('Starting OCR initialization...')
         workerRef.current = await initializeWorker()
         setIsScanning(true)
-        // Start scanning immediately
         startOCRScanning()
       }
     } catch (error) {
-      console.error('Error accessing camera:', error)
+      addLog(`Error accessing camera: ${error}`)
       toast.error("Could not access camera. Please check camera permissions.")
       setIsDialogOpen(false)
     }
@@ -155,14 +160,15 @@ export function VinScanner({ onScan }: VinScannerProps) {
       workerRef.current = null
     }
     setIsDialogOpen(false)
+    setLogs([])
   }
 
   const handleOpen = async () => {
     setIsDialogOpen(true)
+    setLogs([])
     await startCamera()
   }
 
-  // Clean up on unmount
   useEffect(() => {
     return () => {
       handleClose()
@@ -210,6 +216,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
               <p className="text-white text-center text-sm">
                 Position the VIN text within the frame
               </p>
+            </div>
+          </div>
+          <div className="bg-muted p-4 max-h-32 overflow-y-auto text-xs font-mono">
+            <div className="space-y-1">
+              {logs.map((log, index) => (
+                <div key={index} className="text-muted-foreground">{log}</div>
+              ))}
+              <div ref={logsEndRef} />
             </div>
           </div>
         </DialogContent>
