@@ -15,7 +15,7 @@ export function AddressFields({ form, fieldPrefix = "" }: AddressFieldsProps) {
       <FormLabel>Address Search</FormLabel>
       <AddressAutocomplete form={form} fieldPrefix={fieldPrefix} />
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name={`${fieldPrefix}street_address`}
@@ -43,9 +43,7 @@ export function AddressFields({ form, fieldPrefix = "" }: AddressFieldsProps) {
             </FormItem>
           )}
         />
-      </div>
 
-      <div className="grid grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name={`${fieldPrefix}city`}
@@ -73,9 +71,7 @@ export function AddressFields({ form, fieldPrefix = "" }: AddressFieldsProps) {
             </FormItem>
           )}
         />
-      </div>
 
-      <div className="grid grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name={`${fieldPrefix}postal_code`}

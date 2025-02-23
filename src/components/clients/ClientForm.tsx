@@ -8,6 +8,7 @@ import { Client } from "./types"
 import { clientFormSchema, ClientFormValues } from "./schemas/clientFormSchema"
 import { ClientFormFields } from "./form/ClientFormFields"
 import { useEffect } from "react"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 type ClientFormProps = {
   client?: Client
@@ -18,27 +19,27 @@ export function ClientForm({ client, onSuccess }: ClientFormProps) {
   console.log("Client data received:", client) // Debug log
 
   const form = useForm<ClientFormValues>({
-    resolver: zodResolver(clientFormSchema),
-    defaultValues: client || {
-      first_name: "",
-      last_name: "",
-      email: "",
-      phone_number: "",
-      unit_number: "",
-      street_address: "",
-      city: "",
-      state_province: "",
-      postal_code: "",
-      country: "",
-    },
+    resolver: zodResolver(clientFormSchema)
   })
 
   useEffect(() => {
     if (client) {
-      console.log("Setting form values with:", client) // Debug log
-      form.reset(client, { keepDefaultValues: true })
+      console.log("Setting form values with:", client)
+      const defaultValues = {
+        first_name: client.first_name || "",
+        last_name: client.last_name || "",
+        email: client.email || "",
+        phone_number: client.phone_number || "",
+        unit_number: client.unit_number || "",
+        street_address: client.street_address || "",
+        city: client.city || "",
+        state_province: client.state_province || "",
+        postal_code: client.postal_code || "",
+        country: client.country || "",
+      }
+      form.reset(defaultValues)
     }
-  }, [client, form])
+  }, [client])
 
   async function onSubmit(values: ClientFormValues) {
     try {
@@ -121,13 +122,15 @@ export function ClientForm({ client, onSuccess }: ClientFormProps) {
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <ClientFormFields form={form} />
-        <Button type="submit" className="w-full">
-          {client ? "Update Client" : "Create Client"}
-        </Button>
-      </form>
-    </Form>
+    <ScrollArea className="h-[600px] w-full max-w-2xl mx-auto">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-6">
+          <ClientFormFields form={form} />
+          <Button type="submit" className="w-full">
+            {client ? "Update Client" : "Create Client"}
+          </Button>
+        </form>
+      </Form>
+    </ScrollArea>
   )
 }
