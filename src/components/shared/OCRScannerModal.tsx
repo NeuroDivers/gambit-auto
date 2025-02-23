@@ -1,3 +1,4 @@
+
 import { FileSearch, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -10,7 +11,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { Progress } from "@/components/ui/progress"
-import { pipeline } from "@huggingface/transformers"
+import { createWorker } from 'tesseract.js'
 
 interface OCRScannerModalProps {
   onScan: (vin: string) => void
@@ -25,14 +26,27 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
-  const recognizerRef = useRef<any>(null)
+  const workerRef = useRef<any>(null)
   const isScanning = useRef(false)
 
+  const validateVin = (vin: string): boolean => {
+    // Basic VIN validation
+    const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/i
+    if (!vinRegex.test(vin)) return false
+
+    // Check manufacturer code (first 3 characters)
+    const wmi = vin.substring(0, 3).toUpperCase()
+    const validWMIs = ['1HD', '1VW', 'JTD', 'WBA', '2HM', '3FA', '1G1', 'WDD']
+    if (!validWMIs.includes(wmi)) return false
+
+    return true
+  }
+
   const handleScanSuccess = (scannedValue: string) => {
-    const cleanedValue = scannedValue.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
-    if (/^[A-HJ-NPR-Z0-9]{17}$/i.test(cleanedValue)) {
-      onScan(cleanedValue.toUpperCase())
-      toast.success("VIN text scanned successfully")
+    const cleanedValue = scannedValue.replace(/[^A-HJ-NPR-Z0-9]/gi, '').toUpperCase()
+    if (validateVin(cleanedValue)) {
+      onScan(cleanedValue)
+      toast.success("VIN scanned successfully")
       handleClose()
     }
   }
@@ -85,29 +99,36 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
     return croppedCanvas
   }
 
-  const initializeRecognizer = async () => {
+  const initializeOCR = async () => {
     try {
       setIsInitializing(true)
-      const recognizer = await pipeline(
-        'image-to-text',
-        'Xenova/vit-gpt2-image-captioning',
-        {
-          revision: 'main'
+      const worker = await createWorker({
+        logger: progress => {
+          if (progress.status === 'recognizing text') {
+            setScanProgress(progress.progress * 100)
+          }
         }
-      )
-      recognizerRef.current = recognizer
+      })
+      
+      await worker.loadLanguage('eng')
+      await worker.initialize('eng')
+      await worker.setParameters({
+        tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789',
+      })
+      
+      workerRef.current = worker
       setIsInitializing(false)
       return true
     } catch (error) {
-      console.error('Error initializing text recognizer:', error)
-      toast.error("Failed to initialize text recognition")
+      console.error('Error initializing OCR:', error)
+      toast.error("Failed to initialize OCR")
       handleClose()
       return false
     }
   }
 
   const startScanning = async () => {
-    if (!isCameraActive || !recognizerRef.current || !isScanning.current) return
+    if (!isCameraActive || !workerRef.current || !isScanning.current) return
 
     try {
       const frameCanvas = captureFrame()
@@ -118,34 +139,30 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
         return
       }
 
-      const result = await recognizerRef.current(frameCanvas)
-      console.log('Detected text:', result)
+      const { data: { text } } = await workerRef.current.recognize(frameCanvas)
+      console.log('Detected text:', text)
       
-      const detectedText = Array.isArray(result) ? result[0]?.generated_text || '' : 
-                          (typeof result === 'string' ? result : result?.generated_text || '')
-      const cleanedText = detectedText.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
+      const cleanedText = text.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
       setDetectedText(cleanedText || "No text detected")
       
-      let confidence = 0
       if (cleanedText.length > 0) {
-        confidence = Math.min((cleanedText.length / 17) * 100, 100)
         const matches = cleanedText.match(/[A-HJ-NPR-Z0-9]{17}/gi)
         if (matches && matches.length > 0) {
           for (const match of matches) {
-            if (/^[A-HJ-NPR-Z0-9]{17}$/i.test(match)) {
+            if (validateVin(match)) {
               handleScanSuccess(match)
               return
             }
           }
         }
+        setScanProgress(Math.min((cleanedText.length / 17) * 100, 100))
       }
-      setScanProgress(confidence)
       
       if (isScanning.current) {
         setTimeout(() => startScanning(), 500)
       }
     } catch (error) {
-      console.error('Text recognition error:', error)
+      console.error('OCR error:', error)
       if (isScanning.current) {
         setTimeout(() => startScanning(), 500)
       }
@@ -188,8 +205,8 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       await videoRef.current.play()
       setIsCameraActive(true)
       
-      const recognizerInitialized = await initializeRecognizer()
-      if (recognizerInitialized) {
+      const ocrInitialized = await initializeOCR()
+      if (ocrInitialized) {
         isScanning.current = true
         startScanning()
       }
@@ -205,6 +222,10 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
 
   const handleClose = async () => {
     isScanning.current = false
+    if (workerRef.current) {
+      await workerRef.current.terminate()
+      workerRef.current = null
+    }
     await stopCamera()
     setIsDialogOpen(false)
     setIsInitializing(false)
@@ -272,7 +293,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
               <div className="absolute inset-0 flex items-center justify-center bg-background/80">
                 <div className="text-center space-y-2">
                   <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-                  <p className="text-sm">Initializing camera and text recognition...</p>
+                  <p className="text-sm">Initializing camera and OCR...</p>
                 </div>
               </div>
             )}
