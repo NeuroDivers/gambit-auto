@@ -1,9 +1,8 @@
-
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { UseFormReturn } from "react-hook-form"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder'
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css'
 
@@ -27,41 +26,53 @@ interface CustomerInfoSectionProps {
 export function CustomerInfoSection({ form }: CustomerInfoSectionProps) {
   const [geocoder, setGeocoder] = useState<any>(null)
 
+  // Create a stable callback for the result handler
+  const handleResult = useCallback((e: any) => {
+    const result = e.result
+    if (result.properties?.address) {
+      form.setValue('customer_street_address', result.properties.address)
+    }
+    if (result.context) {
+      const city = result.context.find((c: any) => c.id.includes('place'))?.text
+      const state = result.context.find((c: any) => c.id.includes('region'))?.text
+      const postal = result.context.find((c: any) => c.id.includes('postcode'))?.text
+      const country = result.context.find((c: any) => c.id.includes('country'))?.text
+
+      if (city) form.setValue('customer_city', city)
+      if (state) form.setValue('customer_state_province', state)
+      if (postal) form.setValue('customer_postal_code', postal)
+      if (country) form.setValue('customer_country', country)
+    }
+  }, [form])
+
   useEffect(() => {
+    const token = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN
+    
+    if (!token) {
+      console.error('Mapbox access token is not configured')
+      return
+    }
+
     // Initialize Mapbox geocoder
     const geocoderInstance = new MapboxGeocoder({
-      accessToken: import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || '',
+      accessToken: token,
       countries: 'US,CA',
       types: 'address',
       placeholder: 'Enter address'
     })
 
-    geocoderInstance.on('result', (e: any) => {
-      const result = e.result
-      if (result.properties?.address) {
-        form.setValue('customer_street_address', result.properties.address)
-      }
-      if (result.context) {
-        const city = result.context.find((c: any) => c.id.includes('place'))?.text
-        const state = result.context.find((c: any) => c.id.includes('region'))?.text
-        const postal = result.context.find((c: any) => c.id.includes('postcode'))?.text
-        const country = result.context.find((c: any) => c.id.includes('country'))?.text
-
-        if (city) form.setValue('customer_city', city)
-        if (state) form.setValue('customer_state_province', state)
-        if (postal) form.setValue('customer_postal_code', postal)
-        if (country) form.setValue('customer_country', country)
-      }
-    }, 'result')
+    // Add the result event listener
+    geocoderInstance.on('result', handleResult)
 
     setGeocoder(geocoderInstance)
 
+    // Cleanup
     return () => {
       if (geocoderInstance) {
-        geocoderInstance.off('result')
+        geocoderInstance.off('result', handleResult)
       }
     }
-  }, [form])
+  }, [handleResult])
 
   return (
     <Card>
