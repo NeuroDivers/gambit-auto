@@ -98,6 +98,22 @@ export function useScanner({ onScan, onClose }: UseScannerProps) {
     setIsCameraActive(false)
   }
 
+  const initOCR = async () => {
+    try {
+      const worker = await createWorker()
+      await worker.load()
+      await worker.loadLanguage('eng')
+      await worker.initialize('eng')
+      await worker.setParameters({
+        tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789'
+      })
+      return worker
+    } catch (error) {
+      console.error('Error initializing OCR:', error)
+      throw error
+    }
+  }
+
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -130,17 +146,14 @@ export function useScanner({ onScan, onClose }: UseScannerProps) {
               isScanning.current = true
               startScanning()
             } else {
-              workerRef.current = await createWorker()
-              await workerRef.current.loadLanguage('eng')
-              await workerRef.current.initialize('eng')
-              await workerRef.current.setParameters({
-                tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789'
-              })
+              workerRef.current = await initOCR()
               isScanning.current = true
               startOCRScanning()
             }
           } catch (error) {
             console.error('Error starting video:', error)
+            toast.error("Failed to initialize scanner. Please try again.")
+            onClose()
           }
         }
       }
