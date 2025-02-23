@@ -1,4 +1,3 @@
-
 import { FileSearch, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -93,8 +92,6 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
         'image-to-text',
         'Xenova/vit-gpt2-image-captioning',
         {
-          quantized: true,
-          device: 'cpu',
           revision: 'main'
         }
       )
