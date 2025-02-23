@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 
 interface DashboardSidebarHeaderProps {
   firstName?: string | null;
@@ -52,6 +54,16 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
       ) : (
         <div className="text-2xl font-bold">Admin Panel</div>
       )}
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        className="mt-4" 
+        onClick={onLogout}
+        title="Sign out"
+      >
+        <LogOut className="h-4 w-4" />
+        <span className="sr-only">Sign out</span>
+      </Button>
     </div>
   );
 }
