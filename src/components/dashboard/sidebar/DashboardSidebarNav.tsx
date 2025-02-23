@@ -80,7 +80,7 @@ const items = [
       },
       {
         title: "Settings",
-        href: "/admin/settings",
+        href: "/admin/business-settings",
         icon: Settings,
       },
     ],
