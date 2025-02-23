@@ -46,13 +46,24 @@ export function VinScanner({ onScan }: VinScannerProps) {
   }
 
   const captureFrame = () => {
-    if (!videoRef.current || !canvasRef.current) return null
+    if (!videoRef.current || !canvasRef.current) {
+      addLog('Video or canvas reference not available')
+      return null
+    }
 
     const canvas = canvasRef.current
     const video = videoRef.current
     const ctx = canvas.getContext('2d')
     
-    if (!ctx) return null
+    if (!ctx) {
+      addLog('Could not get canvas context')
+      return null
+    }
+
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+      addLog('Video not ready for capture')
+      return null
+    }
 
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
@@ -63,18 +74,23 @@ export function VinScanner({ onScan }: VinScannerProps) {
   }
 
   const startOCRScanning = async () => {
-    if (!isCameraActive || !workerRef.current || !isScanning) return
+    if (!isCameraActive || !workerRef.current || !isScanning) {
+      addLog('Scanning canceled: camera inactive or worker not ready')
+      return
+    }
 
     try {
-      addLog('Scanning frame...')
+      addLog('Attempting to capture frame...')
       const frameData = captureFrame()
       if (!frameData) {
+        addLog('No frame data captured, retrying...')
         if (isScanning) {
           scanningRef.current = requestAnimationFrame(startOCRScanning)
         }
         return
       }
 
+      addLog('Frame captured, starting OCR recognition...')
       const { data: { text } } = await workerRef.current.recognize(frameData)
       addLog(`Detected text: ${text}`)
       
@@ -92,6 +108,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         }
       }
       
+      addLog('No valid VIN found, continuing scan...')
       if (isScanning) {
         scanningRef.current = requestAnimationFrame(startOCRScanning)
       }
