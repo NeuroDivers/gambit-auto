@@ -1,4 +1,3 @@
-
 import { FileSearch, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -99,13 +98,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       setIsInitializing(true)
       const worker = await createWorker()
       
-      // Initialize with language
-      await worker.load()
-      await worker.loadLanguage('eng')
-      await worker.initialize('eng')
-      
-      // Set parameters after initialization
-      await worker.setParameters({
+      await worker.initialize('eng', {
         tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789',
         tessedit_pageseg_mode: PSM.SINGLE_LINE,
       })
