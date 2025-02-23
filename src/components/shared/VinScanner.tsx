@@ -74,15 +74,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
         addLog('Worker reference created')
         
         addLog('Setting scanning state...')
-        await new Promise<void>(resolve => {
-          setIsScanning(true)
-          resolve()
-        })
+        let isCurrentlyScanning = true
+        setIsScanning(isCurrentlyScanning)
         
-        await new Promise(resolve => setTimeout(resolve, 0))
-        
-        addLog(`Starting OCR scanning with scanning state: ${isScanning}`)
-        startOCRScanning()
+        addLog(`Starting OCR scanning...`)
+        await startOCRScanning(isCurrentlyScanning)
       }
     } catch (error) {
       addLog(`Error accessing camera: ${error}`)
@@ -104,12 +100,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }
 
-  const startOCRScanning = async () => {
-    if (!streamRef.current || !workerRef.current || !isScanning) {
+  const startOCRScanning = async (immediateScanning?: boolean) => {
+    const shouldScan = immediateScanning ?? isScanning
+
+    if (!streamRef.current || !workerRef.current || !shouldScan) {
       addLog(`Scanning prerequisites not met:`)
       addLog(`- Stream exists: ${!!streamRef.current}`)
       addLog(`- Worker exists: ${!!workerRef.current}`)
-      addLog(`- Scanning enabled: ${isScanning}`)
+      addLog(`- Scanning enabled: ${shouldScan}`)
       return
     }
 
@@ -118,8 +116,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
       const frameData = captureFrame()
       if (!frameData) {
         addLog('No frame data captured, retrying...')
-        if (isScanning) {
-          scanningRef.current = requestAnimationFrame(startOCRScanning)
+        if (shouldScan) {
+          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
         }
         return
       }
@@ -143,13 +141,13 @@ export function VinScanner({ onScan }: VinScannerProps) {
       }
       
       addLog('No valid VIN found, continuing scan...')
-      if (isScanning) {
-        scanningRef.current = requestAnimationFrame(startOCRScanning)
+      if (shouldScan) {
+        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
       }
     } catch (error) {
       addLog(`OCR error: ${error}`)
-      if (isScanning) {
-        scanningRef.current = requestAnimationFrame(startOCRScanning)
+      if (shouldScan) {
+        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
       }
     }
   }
