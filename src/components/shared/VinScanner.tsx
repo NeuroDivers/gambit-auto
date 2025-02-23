@@ -29,7 +29,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       streamRef.current = null
     }
     if (readerRef.current) {
-      readerRef.current.stopAsyncDecode()
+      readerRef.current.reset()
       readerRef.current = null
     }
     setIsCameraActive(false)
@@ -74,7 +74,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
     if (!videoRef.current || !readerRef.current || !isCameraActive) return
 
     try {
-      const result = await readerRef.current.decodeOnceFromVideoElement(videoRef.current)
+      // Using the correct method name: decodeFromVideoElement
+      const result = await readerRef.current.decodeFromVideoElement(videoRef.current)
       if (result && result.text) {
         const scannedValue = result.text.trim()
         
