@@ -9,7 +9,12 @@ export const profileFormSchema = z.object({
     message: "Last name must be at least 2 characters.",
   }),
   phone_number: z.string().optional(),
-  address: z.string().optional(),
+  unit_number: z.string().optional(),
+  street_address: z.string().optional(),
+  city: z.string().optional(),
+  state_province: z.string().optional(),
+  postal_code: z.string().optional(),
+  country: z.string().optional(),
   bio: z.string().optional(),
 })
 

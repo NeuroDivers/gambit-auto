@@ -80,23 +80,92 @@ export function PersonalInfoForm({ form, onSubmit, role }: PersonalInfoFormProps
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Address</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="123 Main St, City, Country" 
-                  className="min-h-[80px] resize-none"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="unit_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Unit/Apt number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Apt 4B" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="street_address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Street address</FormLabel>
+                  <FormControl>
+                    <Input placeholder="123 Main St" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <FormField
+              control={form.control}
+              name="city"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>City</FormLabel>
+                  <FormControl>
+                    <Input placeholder="New York" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="state_province"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>State/Province</FormLabel>
+                  <FormControl>
+                    <Input placeholder="NY" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="postal_code"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Postal code</FormLabel>
+                  <FormControl>
+                    <Input placeholder="10001" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="country"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Country</FormLabel>
+                <FormControl>
+                  <Input placeholder="United States" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}

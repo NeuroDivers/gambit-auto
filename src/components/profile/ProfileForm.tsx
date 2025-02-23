@@ -28,7 +28,12 @@ export function ProfileForm({ role }: ProfileFormProps) {
       first_name: "",
       last_name: "",
       phone_number: "",
-      address: "",
+      unit_number: "",
+      street_address: "",
+      city: "",
+      state_province: "",
+      postal_code: "",
+      country: "",
       bio: "",
     },
   })
@@ -58,7 +63,12 @@ export function ProfileForm({ role }: ProfileFormProps) {
           first_name: profile.first_name || "",
           last_name: profile.last_name || "",
           phone_number: profile.phone_number || "",
-          address: profile.address || "",
+          unit_number: profile.unit_number || "",
+          street_address: profile.street_address || "",
+          city: profile.city || "",
+          state_province: profile.state_province || "",
+          postal_code: profile.postal_code || "",
+          country: profile.country || "",
           bio: profile.bio || "",
         })
       }
@@ -78,7 +88,12 @@ export function ProfileForm({ role }: ProfileFormProps) {
           first_name: values.first_name,
           last_name: values.last_name,
           phone_number: values.phone_number,
-          address: values.address,
+          unit_number: values.unit_number,
+          street_address: values.street_address,
+          city: values.city,
+          state_province: values.state_province,
+          postal_code: values.postal_code,
+          country: values.country,
           bio: values.bio,
         })
         .eq('id', user.id)

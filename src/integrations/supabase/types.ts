@@ -583,39 +583,57 @@ export type Database = {
           address: string | null
           avatar_url: string | null
           bio: string | null
+          city: string | null
+          country: string | null
           created_at: string
           email: string | null
           first_name: string | null
           id: string
           last_name: string | null
           phone_number: string | null
+          postal_code: string | null
           role_id: string
+          state_province: string | null
+          street_address: string | null
+          unit_number: string | null
           updated_at: string
         }
         Insert: {
           address?: string | null
           avatar_url?: string | null
           bio?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           email?: string | null
           first_name?: string | null
           id: string
           last_name?: string | null
           phone_number?: string | null
+          postal_code?: string | null
           role_id: string
+          state_province?: string | null
+          street_address?: string | null
+          unit_number?: string | null
           updated_at?: string
         }
         Update: {
           address?: string | null
           avatar_url?: string | null
           bio?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           email?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
           phone_number?: string | null
+          postal_code?: string | null
           role_id?: string
+          state_province?: string | null
+          street_address?: string | null
+          unit_number?: string | null
           updated_at?: string
         }
         Relationships: [
