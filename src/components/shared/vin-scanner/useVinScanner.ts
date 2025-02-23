@@ -119,11 +119,40 @@ export function useVinScanner({ onScan }: { onScan: (vin: string) => void }) {
     setIsCameraActive(false)
   }
 
+  const initializeScanner = async () => {
+    if (scanMode === 'barcode') {
+      const hints = new Map<DecodeHintType, any>();
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.CODE_39,
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.DATA_MATRIX
+      ]);
+      hints.set(DecodeHintType.TRY_HARDER, true);
+      
+      readerRef.current = new BrowserMultiFormatReader(hints)
+      isScanning.current = true
+      startScanning()
+    } else {
+      if (!workerRef.current) {
+        workerRef.current = await createWorker('eng')
+      }
+      isScanning.current = true
+      startOCRScanning()
+    }
+  }
+
   const switchMode = async () => {
     isScanning.current = false
-    stopCamera()
+    
+    // Clear existing scanner instances but keep the camera stream
+    if (readerRef.current) {
+      readerRef.current.reset()
+      readerRef.current = null
+    }
+
     setScanMode(prev => prev === 'barcode' ? 'ocr' : 'barcode')
-    await startCamera()
+    await initializeScanner()
+    scheduleNextModeSwitch()
   }
 
   const scheduleNextModeSwitch = () => {
@@ -153,25 +182,7 @@ export function useVinScanner({ onScan }: { onScan: (vin: string) => void }) {
         streamRef.current = stream
         setIsCameraActive(true)
         await videoRef.current.play()
-        
-        if (scanMode === 'barcode') {
-          const hints = new Map<DecodeHintType, any>();
-          hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-            BarcodeFormat.CODE_39,
-            BarcodeFormat.CODE_128,
-            BarcodeFormat.DATA_MATRIX
-          ]);
-          hints.set(DecodeHintType.TRY_HARDER, true);
-          
-          readerRef.current = new BrowserMultiFormatReader(hints)
-          isScanning.current = true
-          startScanning()
-        } else {
-          workerRef.current = await createWorker('eng')
-          isScanning.current = true
-          startOCRScanning()
-        }
-
+        await initializeScanner()
         scheduleNextModeSwitch()
       }
     } catch (error) {
