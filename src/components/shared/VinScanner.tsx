@@ -1,4 +1,3 @@
-
 import { Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -42,11 +41,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
     
     if (!ctx) return null
 
-    // Match canvas size to video
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
     
-    // Draw the current video frame
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
     
     return canvas.toDataURL('image/png')
@@ -68,7 +65,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
       const { data: { text } } = await workerRef.current.recognize(frameData)
       console.log('Detected text:', text)
       
-      // Look for VIN-like pattern in the recognized text
       const cleanedText = text.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
       const vinMatch = cleanedText.match(/[A-HJ-NPR-Z0-9]{17}/i)
       
@@ -82,7 +78,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
         }
       }
       
-      // No valid VIN found, continue scanning
       if (isScanning) {
         requestAnimationFrame(startOCRScanning)
       }
@@ -98,10 +93,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
     try {
       console.log('Initializing OCR worker...')
       const worker = await createWorker()
-      // Load and initialize in one step with the language
       await worker.load()
-      await worker.loadConfig({
-        lang: 'eng',
+      await worker.reinitialize('eng', 1, {
         tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789'
       })
       console.log('OCR worker initialized')
@@ -127,7 +120,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
         streamRef.current = stream
         setIsCameraActive(true)
         
-        // Wait for video to be ready
         await new Promise((resolve) => {
           if (videoRef.current) {
             videoRef.current.onloadedmetadata = resolve
@@ -136,7 +128,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
         
         await videoRef.current.play()
         
-        // Initialize OCR worker
         console.log('Starting OCR initialization...')
         workerRef.current = await initializeWorker()
         setIsScanning(true)
