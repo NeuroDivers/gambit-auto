@@ -42,3 +42,7 @@ export type Estimate = {
   vehicle_vin: string | null
   estimate_items: EstimateItem[]
 }
+
+// Maintain backward compatibility
+export type Quote = Estimate
+export type QuoteFormValues = EstimateFormValues
