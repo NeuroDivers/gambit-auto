@@ -33,6 +33,16 @@ export function AddressAutocomplete({ setValue }: AddressAutocompleteProps) {
     container.innerHTML = ''
     container.appendChild(geocoder.current.onAdd())
 
+    // Add custom styles for the geocoder input
+    const style = document.createElement('style')
+    style.textContent = `
+      .mapboxgl-ctrl-geocoder {
+        width: 100% !important;
+        max-width: none !important;
+      }
+    `
+    document.head.appendChild(style)
+
     geocoder.current.on('result', (e: any) => {
       const result = e.result
       console.log('Geocoder result:', result)
@@ -58,6 +68,8 @@ export function AddressAutocomplete({ setValue }: AddressAutocompleteProps) {
       if (geocoder.current) {
         geocoder.current.onRemove()
       }
+      // Clean up the added style
+      style.remove()
     }
   }, [setValue])
 
