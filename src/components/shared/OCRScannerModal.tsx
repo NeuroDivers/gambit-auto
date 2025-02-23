@@ -91,7 +91,12 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       setIsInitializing(true)
       const recognizer = await pipeline(
         'image-to-text',
-        'microsoft/trocr-small-printed'
+        'Xenova/vit-gpt2-image-captioning',
+        {
+          quantized: true,
+          device: 'cpu',
+          revision: 'main'
+        }
       )
       recognizerRef.current = recognizer
       setIsInitializing(false)
@@ -119,8 +124,8 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       const result = await recognizerRef.current(frameCanvas)
       console.log('Detected text:', result)
       
-      // Handle both string and object responses
-      const detectedText = Array.isArray(result) ? result[0]?.text || '' : (typeof result === 'string' ? result : result?.text || '')
+      const detectedText = Array.isArray(result) ? result[0]?.generated_text || '' : 
+                          (typeof result === 'string' ? result : result?.generated_text || '')
       const cleanedText = detectedText.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
       setDetectedText(cleanedText || "No text detected")
       
