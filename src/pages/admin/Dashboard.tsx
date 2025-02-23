@@ -45,7 +45,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Welcome to your Dashboard</h1>
           <p className="text-muted-foreground mt-2">Here's what's happening in your business today.</p>
