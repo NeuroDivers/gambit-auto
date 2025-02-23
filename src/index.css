@@ -78,24 +78,21 @@
 
   /* Custom Scrollbar Styling */
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    @apply w-1.5 h-1.5;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-muted;
-    border-radius: 5px;
+    @apply bg-transparent;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-primary/50 hover:bg-primary/70 transition-colors;
-    border-radius: 5px;
+    @apply bg-muted-foreground/20 hover:bg-muted-foreground/40 transition-colors rounded-full;
   }
 
   /* Firefox */
   * {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--primary)) hsl(var(--muted));
+    scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
   }
 
   /* Ensure proper text color contrast for form elements */
@@ -131,4 +128,3 @@
     @apply text-primary-foreground;
   }
 }
-
