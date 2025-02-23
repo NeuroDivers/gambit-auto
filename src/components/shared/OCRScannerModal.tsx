@@ -1,4 +1,3 @@
-
 import { FileSearch, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -100,7 +99,13 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
   const initializeOCR = async () => {
     try {
       setIsInitializing(true)
-      const worker = await createWorker()
+      const worker = await createWorker({
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            setScanProgress((m.progress || 0) * 100)
+          }
+        }
+      })
       
       // Initialize with language
       await worker.initialize('eng')
@@ -109,13 +114,6 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       await worker.setParameters({
         tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789',
         tessedit_pageseg_mode: PSM.SINGLE_LINE,
-      })
-      
-      // Add progress listener after initialization
-      worker.subscribe('progress', (progress: any) => {
-        if (progress.status === 'recognizing text') {
-          setScanProgress((progress.progress || 0) * 100)
-        }
       })
       
       workerRef.current = worker
