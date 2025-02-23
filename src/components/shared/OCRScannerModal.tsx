@@ -11,7 +11,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { Progress } from "@/components/ui/progress"
-import { createWorker, PSM } from 'tesseract.js'
+import { createWorker, PSM, CreateWorkerOptions } from 'tesseract.js'
 
 interface OCRScannerModalProps {
   onScan: (vin: string) => void
@@ -100,13 +100,18 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
   const initializeOCR = async () => {
     try {
       setIsInitializing(true)
-      const worker = await createWorker()
       
-      const onProgress = (p: number) => {
-        setScanProgress(p * 100)
+      const workerOptions: CreateWorkerOptions = {
+        logger: progress => {
+          if (typeof progress === 'number') {
+            setScanProgress(progress * 100)
+          } else if ('progress' in progress) {
+            setScanProgress((progress.progress || 0) * 100)
+          }
+        }
       }
-
-      worker.on('progress', onProgress)
+      
+      const worker = await createWorker(workerOptions)
       
       // Initialize with language
       await worker.load()
