@@ -25,8 +25,10 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const streamRef = useRef<MediaStream | null>(null)
   const readerRef = useRef<BrowserMultiFormatReader | null>(null)
   const workerRef = useRef<any>(null)
+  const isScanning = useRef(false)
 
   const stopCamera = () => {
+    isScanning.current = false
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
@@ -65,10 +67,12 @@ export function VinScanner({ onScan }: VinScannerProps) {
           hints.set(DecodeHintType.TRY_HARDER, true);
           
           readerRef.current = new BrowserMultiFormatReader(hints)
+          isScanning.current = true
           startScanning()
         } else {
           // Initialize OCR
           workerRef.current = await createWorker('eng')
+          isScanning.current = true
           startOCRScanning()
         }
       }
@@ -99,12 +103,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
   }
 
   const startOCRScanning = async () => {
-    if (!isCameraActive || !workerRef.current) return
+    if (!isCameraActive || !workerRef.current || !isScanning.current) return
 
     try {
       const frameData = captureFrame()
       if (!frameData) {
-        requestAnimationFrame(startOCRScanning)
+        if (isScanning.current) {
+          requestAnimationFrame(startOCRScanning)
+        }
         return
       }
 
@@ -124,15 +130,19 @@ export function VinScanner({ onScan }: VinScannerProps) {
       }
       
       // No valid VIN found, continue scanning
-      requestAnimationFrame(startOCRScanning)
+      if (isScanning.current) {
+        requestAnimationFrame(startOCRScanning)
+      }
     } catch (error) {
       console.error('OCR error:', error)
-      requestAnimationFrame(startOCRScanning)
+      if (isScanning.current) {
+        requestAnimationFrame(startOCRScanning)
+      }
     }
   }
 
   const startScanning = async () => {
-    if (!videoRef.current || !readerRef.current || !isCameraActive) return
+    if (!videoRef.current || !readerRef.current || !isCameraActive || !isScanning.current) return
 
     try {
       const result = await readerRef.current.decodeFromVideoElement(videoRef.current)
@@ -147,19 +157,26 @@ export function VinScanner({ onScan }: VinScannerProps) {
         } else {
           console.log("Invalid VIN format:", scannedValue)
           // Continue scanning if invalid
-          requestAnimationFrame(() => startScanning())
+          if (isScanning.current) {
+            requestAnimationFrame(() => startScanning())
+          }
         }
       } else {
         // No result found, continue scanning
-        requestAnimationFrame(() => startScanning())
+        if (isScanning.current) {
+          requestAnimationFrame(() => startScanning())
+        }
       }
     } catch (error) {
       // Error usually means no barcode found, continue scanning
-      requestAnimationFrame(() => startScanning())
+      if (isScanning.current) {
+        requestAnimationFrame(() => startScanning())
+      }
     }
   }
 
   const handleClose = async () => {
+    isScanning.current = false
     stopCamera()
     if (workerRef.current) {
       await workerRef.current.terminate()
@@ -173,15 +190,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
     await startCamera()
   }
 
-  const toggleScanMode = () => {
-    setScanMode(prev => {
-      const newMode = prev === 'barcode' ? 'ocr' : 'barcode'
-      if (isCameraActive) {
-        stopCamera()
-        startCamera()
-      }
-      return newMode
-    })
+  const toggleScanMode = async () => {
+    isScanning.current = false
+    stopCamera()
+    setScanMode(prev => prev === 'barcode' ? 'ocr' : 'barcode')
+    await startCamera()
   }
 
   useEffect(() => {
