@@ -22,7 +22,17 @@ export default function ClientDetails() {
       const { data: clientData, error: clientError } = await supabase
         .from('clients')
         .select(`
-          *,
+          id,
+          first_name,
+          last_name,
+          email,
+          phone_number,
+          unit_number,
+          street_address,
+          city,
+          state_province,
+          postal_code,
+          country,
           invoices (
             id,
             invoice_number,
