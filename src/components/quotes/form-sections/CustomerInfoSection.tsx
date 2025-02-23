@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { UseFormReturn } from "react-hook-form"
 import { useEffect, useState } from "react"
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder'
+import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css'
 
 type FormData = {
   customer_first_name: string
@@ -29,15 +30,16 @@ export function CustomerInfoSection({ form }: CustomerInfoSectionProps) {
   useEffect(() => {
     // Initialize Mapbox geocoder
     const geocoderInstance = new MapboxGeocoder({
-      accessToken: process.env.MAPBOX_ACCESS_TOKEN || '',
+      accessToken: import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || '',
       countries: 'US,CA',
       types: 'address',
+      placeholder: 'Enter address'
     })
 
     geocoderInstance.on('result', (e: any) => {
       const result = e.result
-      if (result.address) {
-        form.setValue('customer_street_address', result.address)
+      if (result.properties?.address) {
+        form.setValue('customer_street_address', result.properties.address)
       }
       if (result.context) {
         const city = result.context.find((c: any) => c.id.includes('place'))?.text

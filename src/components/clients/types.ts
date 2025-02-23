@@ -5,6 +5,12 @@ export type Client = {
   last_name: string
   email: string
   phone_number?: string | null
+  unit_number?: string | null
+  street_address?: string | null
+  city?: string | null
+  state_province?: string | null
+  postal_code?: string | null
+  country?: string | null
   address?: string | null
   created_at: string
   updated_at: string
