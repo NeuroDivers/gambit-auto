@@ -40,30 +40,32 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
     : businessProfile?.light_logo_url;
 
   return (
-    <div className="flex flex-col items-center py-4">
-      {logoUrl ? (
-        <img 
-          src={logoUrl}
-          alt="Business Logo"
-          className={`w-auto object-contain transition-all duration-300 ${state === 'expanded' ? 'h-24' : 'h-16'}`}
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.style.display = 'none';
-          }}
-        />
-      ) : (
-        <div className="text-2xl font-bold">Admin Panel</div>
-      )}
+    <div className="relative py-4">
       <Button 
         variant="ghost" 
         size="icon" 
-        className="mt-4" 
+        className="absolute right-2 top-2" 
         onClick={onLogout}
         title="Sign out"
       >
         <LogOut className="h-4 w-4" />
         <span className="sr-only">Sign out</span>
       </Button>
+      <div className="flex flex-col items-center">
+        {logoUrl ? (
+          <img 
+            src={logoUrl}
+            alt="Business Logo"
+            className={`w-auto object-contain transition-all duration-300 ${state === 'expanded' ? 'h-24' : 'h-16'}`}
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+            }}
+          />
+        ) : (
+          <div className="text-2xl font-bold">Admin Panel</div>
+        )}
+      </div>
     </div>
   );
 }
