@@ -11,7 +11,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { Progress } from "@/components/ui/progress"
-import { createWorker } from 'tesseract.js'
+import { createWorker, PSM } from 'tesseract.js'
 
 interface OCRScannerModalProps {
   onScan: (vin: string) => void
@@ -112,7 +112,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
         tessjs_create_pdf: '0',
         tessjs_create_hocr: '0',
         tessjs_create_box: '0',
-        tessedit_pageseg_mode: '1',
+        tessedit_pageseg_mode: PSM.SINGLE_LINE, // Using the correct enum value
       })
       
       workerRef.current = worker
