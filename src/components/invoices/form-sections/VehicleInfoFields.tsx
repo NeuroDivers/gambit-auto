@@ -4,8 +4,7 @@ import { Label } from "@/components/ui/label"
 import { useVinLookup } from "@/hooks/useVinLookup"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
-import { BarcodeScannerModal } from "@/components/shared/BarcodeScannerModal"
-import { OCRScannerModal } from "@/components/shared/OCRScannerModal"
+import { VinScanner } from "@/components/shared/VinScanner"
 
 type VehicleInfoFieldsProps = {
   vehicleMake: string
@@ -107,7 +106,7 @@ export function VehicleInfoFields({
           Vehicle VIN
           <span className="text-xs text-muted-foreground ml-2">(Auto-fills vehicle info)</span>
         </Label>
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex gap-2">
           <Input
             id="vehicleVin"
             value={vehicleVin}
@@ -115,10 +114,7 @@ export function VehicleInfoFields({
             placeholder="Enter vehicle VIN..."
             autoComplete="off"
           />
-          <div className="flex flex-col sm:flex-row gap-2">
-            <BarcodeScannerModal onScan={setVehicleVin} />
-            <OCRScannerModal onScan={setVehicleVin} />
-          </div>
+          <VinScanner onScan={(vin) => setVehicleVin(vin)} />
         </div>
       </div>
     </div>

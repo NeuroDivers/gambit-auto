@@ -6,8 +6,7 @@ import { useVinLookup } from "@/hooks/useVinLookup"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { WorkOrderFormValues } from "../types"
-import { BarcodeScannerModal } from "@/components/shared/BarcodeScannerModal"
-import { OCRScannerModal } from "@/components/shared/OCRScannerModal"
+import { VinScanner } from "@/components/shared/VinScanner"
 
 type VehicleInfoFieldsProps = {
   control: Control<WorkOrderFormValues>
@@ -36,10 +35,11 @@ export function VehicleInfoFields({ control, watch, setValue, disabled }: Vehicl
           name="vehicle_make"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vehicle Make</FormLabel>
+              <FormLabel htmlFor="vehicle_make">Vehicle Make</FormLabel>
               <FormControl>
                 <div className="relative">
                   <Input 
+                    id="vehicle_make"
                     placeholder="Enter vehicle make" 
                     {...field}
                     autoComplete="off"
@@ -59,10 +59,11 @@ export function VehicleInfoFields({ control, watch, setValue, disabled }: Vehicl
           name="vehicle_model"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vehicle Model</FormLabel>
+              <FormLabel htmlFor="vehicle_model">Vehicle Model</FormLabel>
               <FormControl>
                 <div className="relative">
                   <Input 
+                    id="vehicle_model"
                     placeholder="Enter vehicle model" 
                     {...field}
                     autoComplete="off"
@@ -84,10 +85,11 @@ export function VehicleInfoFields({ control, watch, setValue, disabled }: Vehicl
           name="vehicle_year"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vehicle Year</FormLabel>
+              <FormLabel htmlFor="vehicle_year">Vehicle Year</FormLabel>
               <FormControl>
                 <div className="relative">
                   <Input 
+                    id="vehicle_year"
                     type="number" 
                     placeholder="Enter vehicle year"
                     {...field}
@@ -109,22 +111,20 @@ export function VehicleInfoFields({ control, watch, setValue, disabled }: Vehicl
           name="vehicle_serial"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>
+              <FormLabel htmlFor="vehicle_serial">
                 Vehicle VIN
                 <span className="text-xs text-muted-foreground ml-2">(Auto-fills vehicle info)</span>
               </FormLabel>
               <FormControl>
-                <div className="space-y-2">
+                <div className="flex gap-2">
                   <Input 
+                    id="vehicle_serial"
                     placeholder="Enter vehicle VIN" 
                     {...field}
                     autoComplete="off"
                     disabled={disabled}
                   />
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <BarcodeScannerModal onScan={(vin) => field.onChange(vin)} />
-                    <OCRScannerModal onScan={(vin) => field.onChange(vin)} />
-                  </div>
+                  <VinScanner onScan={(vin) => field.onChange(vin)} />
                 </div>
               </FormControl>
               <FormMessage />

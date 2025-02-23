@@ -6,8 +6,7 @@ import { UseFormReturn } from "react-hook-form"
 import { useVinLookup } from "@/hooks/useVinLookup"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
-import { BarcodeScannerModal } from "@/components/shared/BarcodeScannerModal"
-import { OCRScannerModal } from "@/components/shared/OCRScannerModal"
+import { VinScanner } from "@/components/shared/VinScanner"
 
 interface VehicleInfoSectionProps {
   form: UseFormReturn<any>
@@ -31,31 +30,6 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
         <CardTitle>Vehicle Information</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* VIN Section - Full Width */}
-        <FormField
-          control={form.control}
-          name="vehicle_vin"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                VIN
-                <span className="text-xs text-muted-foreground ml-2">(Auto-fills vehicle info)</span>
-              </FormLabel>
-              <FormControl>
-                <div className="space-y-2">
-                  <Input {...field} placeholder="Enter VIN" />
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <BarcodeScannerModal onScan={(vin) => field.onChange(vin)} />
-                    <OCRScannerModal onScan={(vin) => field.onChange(vin)} />
-                  </div>
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Make and Model Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -104,7 +78,6 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
           />
         </div>
 
-        {/* Year Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -125,6 +98,26 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
                     {isLoadingVin && (
                       <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
                     )}
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="vehicle_vin"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  VIN
+                  <span className="text-xs text-muted-foreground ml-2">(Auto-fills vehicle info)</span>
+                </FormLabel>
+                <FormControl>
+                  <div className="flex gap-2">
+                    <Input {...field} placeholder="Enter VIN" />
+                    <VinScanner onScan={(vin) => field.onChange(vin)} />
                   </div>
                 </FormControl>
                 <FormMessage />
