@@ -6,6 +6,7 @@ import { useVinLookup } from "@/hooks/useVinLookup"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { WorkOrderFormValues } from "../types"
+import { VinScanner } from "@/components/shared/VinScanner"
 
 type VehicleInfoFieldsProps = {
   control: Control<WorkOrderFormValues>
@@ -115,13 +116,16 @@ export function VehicleInfoFields({ control, watch, setValue, disabled }: Vehicl
                 <span className="text-xs text-muted-foreground ml-2">(Auto-fills vehicle info)</span>
               </FormLabel>
               <FormControl>
-                <Input 
-                  id="vehicle_serial"
-                  placeholder="Enter vehicle VIN" 
-                  {...field}
-                  autoComplete="off"
-                  disabled={disabled}
-                />
+                <div className="flex gap-2">
+                  <Input 
+                    id="vehicle_serial"
+                    placeholder="Enter vehicle VIN" 
+                    {...field}
+                    autoComplete="off"
+                    disabled={disabled}
+                  />
+                  <VinScanner onScan={(vin) => field.onChange(vin)} />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>

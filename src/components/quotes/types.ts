@@ -1,5 +1,5 @@
 
-export type QuoteItem = {
+export type EstimateItem = {
   service_id: string
   service_name: string
   description: string
@@ -7,10 +7,10 @@ export type QuoteItem = {
   unit_price: number
 }
 
-export type QuoteFormValues = {
+export type EstimateFormValues = {
   notes: string
   status: string
-  service_items: QuoteItem[]
+  service_items: EstimateItem[]
   customer_first_name: string
   customer_last_name: string
   customer_email: string
@@ -22,9 +22,9 @@ export type QuoteFormValues = {
   vehicle_vin: string
 }
 
-export type Quote = {
+export type Estimate = {
   id: string
-  quote_number: string
+  estimate_number: string
   created_at: string
   status: string
   notes: string | null
@@ -40,5 +40,5 @@ export type Quote = {
   vehicle_model: string | null
   vehicle_year: number | null
   vehicle_vin: string | null
-  quote_items: QuoteItem[]
+  estimate_items: EstimateItem[]
 }

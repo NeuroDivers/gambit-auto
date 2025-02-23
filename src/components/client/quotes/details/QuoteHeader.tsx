@@ -27,7 +27,7 @@ export function QuoteHeader({ quoteRequest, onBack }: QuoteHeaderProps) {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h2 className="text-2xl font-semibold">Quote Request Details</h2>
+        <h2 className="text-2xl font-semibold">Estimate Request Details</h2>
       </div>
       <Badge variant={statusVariant[quoteRequest.status as keyof typeof statusVariant]}>
         {quoteRequest.status}

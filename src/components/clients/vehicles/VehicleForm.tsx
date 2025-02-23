@@ -1,4 +1,3 @@
-
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -11,6 +10,7 @@ import { Switch } from "../../ui/switch"
 import { useVinLookup } from "@/hooks/useVinLookup"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
+import { VinScanner } from "@/components/shared/VinScanner"
 
 const formSchema = z.object({
   make: z.string().min(1, "Make is required"),
@@ -140,7 +140,10 @@ export function VehicleForm({ vehicle, clientId, onSubmit }: VehicleFormProps) {
                   <span className="text-xs text-muted-foreground ml-2">(Optional - Auto-fills vehicle info)</span>
                 </FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <div className="flex gap-2">
+                    <Input {...field} />
+                    <VinScanner onScan={(vin) => field.onChange(vin)} />
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
