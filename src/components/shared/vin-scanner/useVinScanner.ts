@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react"
 import { toast } from "sonner"
 import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from '@zxing/library'
@@ -16,6 +15,7 @@ export function useVinScanner({ onScan }: { onScan: (vin: string) => void }) {
   const readerRef = useRef<BrowserMultiFormatReader | null>(null)
   const workerRef = useRef<any>(null)
   const isScanning = useRef(false)
+  const modeSwitchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const captureFrame = () => {
     if (!videoRef.current || !canvasRef.current) return null
@@ -92,16 +92,12 @@ export function useVinScanner({ onScan }: { onScan: (vin: string) => void }) {
           onScan(scannedValue.toUpperCase())
           toast.success("VIN scanned successfully")
           handleClose()
-        } else {
-          console.log("Invalid VIN format:", scannedValue)
-          if (isScanning.current) {
-            requestAnimationFrame(() => startScanning())
-          }
+          return
         }
-      } else {
-        if (isScanning.current) {
-          requestAnimationFrame(() => startScanning())
-        }
+      }
+      
+      if (isScanning.current) {
+        requestAnimationFrame(() => startScanning())
       }
     } catch (error) {
       if (isScanning.current) {
@@ -121,6 +117,25 @@ export function useVinScanner({ onScan }: { onScan: (vin: string) => void }) {
       readerRef.current = null
     }
     setIsCameraActive(false)
+  }
+
+  const switchMode = async () => {
+    isScanning.current = false
+    stopCamera()
+    setScanMode(prev => prev === 'barcode' ? 'ocr' : 'barcode')
+    await startCamera()
+  }
+
+  const scheduleNextModeSwitch = () => {
+    if (modeSwitchTimeoutRef.current) {
+      clearTimeout(modeSwitchTimeoutRef.current)
+    }
+
+    modeSwitchTimeoutRef.current = setTimeout(() => {
+      if (isScanning.current) {
+        switchMode()
+      }
+    }, 3000)
   }
 
   const startCamera = async () => {
@@ -156,6 +171,8 @@ export function useVinScanner({ onScan }: { onScan: (vin: string) => void }) {
           isScanning.current = true
           startOCRScanning()
         }
+
+        scheduleNextModeSwitch()
       }
     } catch (error) {
       console.error('Error accessing camera:', error)
@@ -166,6 +183,9 @@ export function useVinScanner({ onScan }: { onScan: (vin: string) => void }) {
 
   const handleClose = async () => {
     isScanning.current = false
+    if (modeSwitchTimeoutRef.current) {
+      clearTimeout(modeSwitchTimeoutRef.current)
+    }
     stopCamera()
     if (workerRef.current) {
       await workerRef.current.terminate()
@@ -179,11 +199,8 @@ export function useVinScanner({ onScan }: { onScan: (vin: string) => void }) {
     await startCamera()
   }
 
-  const toggleScanMode = async () => {
-    isScanning.current = false
-    stopCamera()
-    setScanMode(prev => prev === 'barcode' ? 'ocr' : 'barcode')
-    await startCamera()
+  const toggleScanMode = () => {
+    return
   }
 
   useEffect(() => {

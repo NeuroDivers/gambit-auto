@@ -21,8 +21,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
     videoRef,
     canvasRef,
     handleClose,
-    handleOpen,
-    toggleScanMode
+    handleOpen
   } = useVinScanner({ onScan })
 
   return (
@@ -39,13 +38,10 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
       <Dialog open={isDialogOpen} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="p-4 space-y-4">
+          <DialogHeader className="p-4">
             <DialogTitle>
-              {scanMode === 'barcode' ? 'Scan VIN Barcode' : 'Scan VIN Text'}
+              Scanning for VIN ({scanMode === 'barcode' ? 'Barcode' : 'Text'})
             </DialogTitle>
-            <Button variant="secondary" onClick={toggleScanMode} className="w-full">
-              Switch to {scanMode === 'barcode' ? 'Text Scanner (OCR)' : 'Barcode Scanner'}
-            </Button>
           </DialogHeader>
           <div className="relative aspect-video w-full overflow-hidden">
             <video
