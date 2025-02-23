@@ -1,3 +1,4 @@
+
 import { DashboardLayoutWrapper } from "@/components/dashboard/DashboardLayoutWrapper"
 import { PermissionGuard } from "@/components/auth/PermissionGuard"
 import Dashboard from "@/pages/admin/Dashboard"
@@ -55,6 +56,14 @@ export const adminRoutes: RouteObject = {
       ),
     },
     {
+      path: "calendar",
+      element: (
+        <PermissionGuard resource="work_orders" type="page_access">
+          <WorkOrders />
+        </PermissionGuard>
+      ),
+    },
+    {
       path: "service-types",
       element: (
         <PermissionGuard resource="service_types" type="page_access">
@@ -79,7 +88,7 @@ export const adminRoutes: RouteObject = {
       ),
     },
     {
-      path: "quotes",
+      path: "estimates",
       element: (
         <PermissionGuard resource="quotes" type="page_access">
           <Quotes />
@@ -87,7 +96,7 @@ export const adminRoutes: RouteObject = {
       ),
     },
     {
-      path: "quotes/:id",
+      path: "estimates/:id",
       element: (
         <PermissionGuard resource="quotes" type="page_access">
           <QuoteDetails />
@@ -95,7 +104,7 @@ export const adminRoutes: RouteObject = {
       ),
     },
     {
-      path: "quotes/requests/:id",
+      path: "estimates/requests/:id",
       element: (
         <PermissionGuard resource="quotes" type="page_access">
           <QuoteRequestDetails />
@@ -103,7 +112,7 @@ export const adminRoutes: RouteObject = {
       ),
     },
     {
-      path: "quotes/create",
+      path: "estimates/create",
       element: <CreateQuote />,
     },
     {
