@@ -100,11 +100,15 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
   const initializeOCR = async () => {
     try {
       setIsInitializing(true)
-      const worker = await createWorker()
+      const worker = await createWorker({
+        logger: progress => {
+          if (progress.status === 'recognizing text') {
+            setScanProgress((progress.progress || 0) * 100)
+          }
+        }
+      })
       
-      // Use the correct method to load and initialize
-      await worker.load()
-      await worker.loadLanguage('eng')
+      // Initialize with language
       await worker.initialize('eng')
       
       // Set parameters after initialization
