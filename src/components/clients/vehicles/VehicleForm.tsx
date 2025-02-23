@@ -1,3 +1,4 @@
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -10,7 +11,8 @@ import { Switch } from "../../ui/switch"
 import { useVinLookup } from "@/hooks/useVinLookup"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
-import { VinScanner } from "@/components/shared/VinScanner"
+import { BarcodeScannerModal } from "@/components/shared/BarcodeScannerModal"
+import { OCRScannerModal } from "@/components/shared/OCRScannerModal"
 
 const formSchema = z.object({
   make: z.string().min(1, "Make is required"),
@@ -142,7 +144,8 @@ export function VehicleForm({ vehicle, clientId, onSubmit }: VehicleFormProps) {
                 <FormControl>
                   <div className="flex gap-2">
                     <Input {...field} />
-                    <VinScanner onScan={(vin) => field.onChange(vin)} />
+                    <BarcodeScannerModal onScan={(vin) => field.onChange(vin)} />
+                    <OCRScannerModal onScan={(vin) => field.onChange(vin)} />
                   </div>
                 </FormControl>
                 <FormMessage />
