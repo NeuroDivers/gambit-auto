@@ -189,36 +189,54 @@ export type Database = {
         Row: {
           access_token: string | null
           address: string | null
+          city: string | null
+          country: string | null
           created_at: string
           email: string
           first_name: string
           id: string
           last_name: string
           phone_number: string | null
+          postal_code: string | null
+          state_province: string | null
+          street_address: string | null
+          unit_number: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
           access_token?: string | null
           address?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           email: string
           first_name: string
           id?: string
           last_name: string
           phone_number?: string | null
+          postal_code?: string | null
+          state_province?: string | null
+          street_address?: string | null
+          unit_number?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           access_token?: string | null
           address?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           email?: string
           first_name?: string
           id?: string
           last_name?: string
           phone_number?: string | null
+          postal_code?: string | null
+          state_province?: string | null
+          street_address?: string | null
+          unit_number?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -747,10 +765,16 @@ export type Database = {
           client_id: string | null
           created_at: string
           customer_address: string | null
+          customer_city: string | null
+          customer_country: string | null
           customer_email: string | null
           customer_first_name: string | null
           customer_last_name: string | null
           customer_phone: string | null
+          customer_postal_code: string | null
+          customer_state_province: string | null
+          customer_street_address: string | null
+          customer_unit_number: string | null
           id: string
           notes: string | null
           quote_number: string
@@ -768,10 +792,16 @@ export type Database = {
           client_id?: string | null
           created_at?: string
           customer_address?: string | null
+          customer_city?: string | null
+          customer_country?: string | null
           customer_email?: string | null
           customer_first_name?: string | null
           customer_last_name?: string | null
           customer_phone?: string | null
+          customer_postal_code?: string | null
+          customer_state_province?: string | null
+          customer_street_address?: string | null
+          customer_unit_number?: string | null
           id?: string
           notes?: string | null
           quote_number: string
@@ -789,10 +819,16 @@ export type Database = {
           client_id?: string | null
           created_at?: string
           customer_address?: string | null
+          customer_city?: string | null
+          customer_country?: string | null
           customer_email?: string | null
           customer_first_name?: string | null
           customer_last_name?: string | null
           customer_phone?: string | null
+          customer_postal_code?: string | null
+          customer_state_province?: string | null
+          customer_street_address?: string | null
+          customer_unit_number?: string | null
           id?: string
           notes?: string | null
           quote_number?: string

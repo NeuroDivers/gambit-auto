@@ -3,12 +3,27 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { UseFormReturn } from "react-hook-form"
+import { useVinLookup } from "@/hooks/useVinLookup"
+import { useEffect } from "react"
+import { Loader2 } from "lucide-react"
+import { VinScanner } from "@/components/shared/VinScanner"
 
 interface VehicleInfoSectionProps {
   form: UseFormReturn<any>
 }
 
 export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
+  const vin = form.watch('vehicle_vin')
+  const { data: vinData, isLoading: isLoadingVin } = useVinLookup(vin)
+
+  useEffect(() => {
+    if (vinData && !vinData.error) {
+      if (vinData.make) form.setValue('vehicle_make', vinData.make)
+      if (vinData.model) form.setValue('vehicle_model', vinData.model)
+      if (vinData.year) form.setValue('vehicle_year', vinData.year)
+    }
+  }, [vinData, form])
+
   return (
     <Card>
       <CardHeader>
@@ -23,12 +38,22 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
               <FormItem>
                 <FormLabel>Make</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <div className="relative">
+                    <Input 
+                      {...field} 
+                      disabled={isLoadingVin}
+                      placeholder="e.g. Toyota" 
+                    />
+                    {isLoadingVin && (
+                      <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="vehicle_model"
@@ -36,7 +61,16 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
               <FormItem>
                 <FormLabel>Model</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <div className="relative">
+                    <Input 
+                      {...field} 
+                      disabled={isLoadingVin}
+                      placeholder="e.g. Camry" 
+                    />
+                    {isLoadingVin && (
+                      <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -52,24 +86,39 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
               <FormItem>
                 <FormLabel>Year</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
-                    {...field}
-                    onChange={e => field.onChange(parseInt(e.target.value))}
-                  />
+                  <div className="relative">
+                    <Input 
+                      type="number"
+                      {...field}
+                      disabled={isLoadingVin}
+                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+                      min={1900}
+                      max={new Date().getFullYear() + 1}
+                    />
+                    {isLoadingVin && (
+                      <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="vehicle_vin"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>VIN (Optional)</FormLabel>
+                <FormLabel>
+                  VIN
+                  <span className="text-xs text-muted-foreground ml-2">(Auto-fills vehicle info)</span>
+                </FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <div className="flex gap-2">
+                    <Input {...field} placeholder="Enter VIN" />
+                    <VinScanner onScan={(vin) => field.onChange(vin)} />
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
