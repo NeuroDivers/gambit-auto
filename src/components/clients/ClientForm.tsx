@@ -16,6 +16,8 @@ type ClientFormProps = {
 }
 
 export function ClientForm({ client, onSuccess }: ClientFormProps) {
+  console.log("Client data received:", client) // Debug log
+
   const form = useForm<ClientFormValues>({
     resolver: zodResolver(clientFormSchema),
     defaultValues: {
@@ -32,13 +34,13 @@ export function ClientForm({ client, onSuccess }: ClientFormProps) {
     },
   })
 
-  // Use useEffect to set form values when client prop changes
   useEffect(() => {
     if (client) {
+      console.log("Setting form values with:", client) // Debug log
       form.reset({
-        first_name: client.first_name,
-        last_name: client.last_name,
-        email: client.email,
+        first_name: client.first_name || "",
+        last_name: client.last_name || "",
+        email: client.email || "",
         phone_number: client.phone_number || "",
         unit_number: client.unit_number || "",
         street_address: client.street_address || "",
