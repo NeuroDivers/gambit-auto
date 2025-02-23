@@ -9,7 +9,7 @@ interface ServicesSectionProps {
 
 export function ServicesSection({ form }: ServicesSectionProps) {
   return (
-    <Card>
+    <Card className="sm:p-4 p-0 border-0 sm:border">
       <CardHeader>
         <CardTitle>Services</CardTitle>
       </CardHeader>

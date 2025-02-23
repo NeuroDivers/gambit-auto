@@ -67,7 +67,7 @@ export function ServiceSelectionField({
   }
 
   const updatePrice = (index: number, price: number) => {
-    if (isClient) return // Prevent price updates for clients
+    if (isClient) return
     const newServices = [...services]
     newServices[index] = { ...newServices[index], unit_price: price }
     onServicesChange(newServices)
@@ -75,12 +75,12 @@ export function ServiceSelectionField({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <Select
           onValueChange={(value) => addService(value)}
           disabled={disabled || isLoading}
         >
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-full sm:w-[200px]">
             <SelectValue placeholder="Add service" />
           </SelectTrigger>
           <SelectContent>
@@ -97,10 +97,10 @@ export function ServiceSelectionField({
       {services.length > 0 && (
         <div className="space-y-2">
           {services.map((service, index) => (
-            <div key={index} className="flex items-center gap-4 p-2 border rounded">
+            <div key={index} className="flex flex-col gap-4 p-2 border rounded">
               <div className="flex-1">
                 <p className="font-medium">{service.service_name}</p>
-                <div className="mt-2 flex gap-4">
+                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor={`quantity-${index}`}>Quantity</Label>
                     <Input
@@ -109,7 +109,7 @@ export function ServiceSelectionField({
                       min="1"
                       value={service.quantity}
                       onChange={(e) => updateQuantity(index, parseInt(e.target.value) || 1)}
-                      className="w-24"
+                      className="w-full"
                       disabled={disabled}
                     />
                   </div>
@@ -123,7 +123,7 @@ export function ServiceSelectionField({
                         step="0.01"
                         value={service.unit_price}
                         onChange={(e) => updatePrice(index, parseFloat(e.target.value) || 0)}
-                        className="w-24"
+                        className="w-full"
                         disabled={disabled}
                       />
                     </div>
@@ -136,6 +136,7 @@ export function ServiceSelectionField({
                 size="sm"
                 onClick={() => removeService(index)}
                 disabled={disabled}
+                className="w-full sm:w-auto"
               >
                 Remove
               </Button>
