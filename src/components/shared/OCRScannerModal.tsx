@@ -1,3 +1,4 @@
+
 import { FileSearch, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -89,7 +90,7 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
     try {
       setIsInitializing(true)
       const recognizer = await pipeline(
-        'text-to-text',
+        'image-to-text',
         'microsoft/trocr-small-printed'
       )
       recognizerRef.current = recognizer
@@ -118,7 +119,8 @@ export function OCRScannerModal({ onScan }: OCRScannerModalProps) {
       const result = await recognizerRef.current(frameCanvas)
       console.log('Detected text:', result)
       
-      const detectedText = typeof result === 'string' ? result : result.text || ''
+      // Handle both string and object responses
+      const detectedText = Array.isArray(result) ? result[0]?.text || '' : (typeof result === 'string' ? result : result?.text || '')
       const cleanedText = detectedText.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
       setDetectedText(cleanedText || "No text detected")
       
