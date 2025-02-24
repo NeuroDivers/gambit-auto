@@ -1,4 +1,4 @@
-import { Camera, Barcode, Focus } from "lucide-react"
+import { Camera, Barcode } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
 import { toast } from "sonner"
@@ -10,18 +10,11 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { createWorker } from 'tesseract.js'
-import { BrowserMultiFormatReader } from '@zxing/library'
+import { BrowserMultiFormatReader, Result } from '@zxing/library'
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { Slider } from "@/components/ui/slider"
 
 interface VinScannerProps {
   onScan: (vin: string) => void
-}
-
-interface ScanResult {
-  text: string;
-  confidence: number;
-  timestamp: number;
 }
 
 export function VinScanner({ onScan }: VinScannerProps) {
@@ -30,8 +23,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const [isScanning, setIsScanning] = useState(false)
   const [scanMode, setScanMode] = useState<'text' | 'barcode'>('text')
   const [logs, setLogs] = useState<string[]>([])
-  const [focusDistance, setFocusDistance] = useState(0)
-  const [scanResults, setScanResults] = useState<ScanResult[]>([])
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -41,14 +32,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const scanningRef = useRef<number>()
   const logsEndRef = useRef<HTMLDivElement>(null)
 
-  const ocrConfig = {
-    tessedit_char_whitelist: '0123456789ABCDEFGHJKLMNPRSTUVWXYZ',
-    tessedit_ocr_engine_mode: 1, // Neural net LSTM only
-    preserve_interword_spaces: '1',
-    textord_heavy_nr: '1',
-    textord_min_linesize: '2.5',
-  }
-
   const addLog = (message: string) => {
     setLogs(prev => [...prev, message])
     setTimeout(() => {
@@ -56,92 +39,12 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }, 100)
   }
 
-  const applyImageProcessing = (canvas: HTMLCanvasElement): string => {
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return canvas.toDataURL()
-
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-    const data = imageData.data
-
-    for (let i = 0; i < data.length; i += 4) {
-      const avg = (data[i] + data[i + 1] + data[i + 2]) / 3
-      data[i] = data[i + 1] = data[i + 2] = avg
-    }
-
-    const sharpenKernel = [
-      0, -1, 0,
-      -1, 5, -1,
-      0, -1, 0
-    ]
-    const sharpenedData = new Uint8ClampedArray(data.length)
-    for (let y = 1; y < canvas.height - 1; y++) {
-      for (let x = 1; x < canvas.width - 1; x++) {
-        let r = 0, g = 0, b = 0
-        for (let ky = -1; ky <= 1; ky++) {
-          for (let kx = -1; kx <= 1; kx++) {
-            const idx = ((y + ky) * canvas.width + (x + kx)) * 4
-            const weight = sharpenKernel[(ky + 1) * 3 + (kx + 1)]
-            r += data[idx] * weight
-            g += data[idx + 1] * weight
-            b += data[idx + 2] * weight
-          }
-        }
-        const idx = (y * canvas.width + x) * 4
-        sharpenedData[idx] = Math.min(255, Math.max(0, r))
-        sharpenedData[idx + 1] = Math.min(255, Math.max(0, g))
-        sharpenedData[idx + 2] = Math.min(255, Math.max(0, b))
-        sharpenedData[idx + 3] = data[idx + 3]
-      }
-    }
-
-    const contrast = 1.5
-    for (let i = 0; i < sharpenedData.length; i += 4) {
-      for (let j = 0; j < 3; j++) {
-        const pixel = sharpenedData[i + j]
-        const newPixel = ((pixel / 255 - 0.5) * contrast + 0.5) * 255
-        sharpenedData[i + j] = Math.min(255, Math.max(0, newPixel))
-      }
-    }
-
-    const processedImageData = new ImageData(sharpenedData, canvas.width, canvas.height)
-    ctx.putImageData(processedImageData, 0, 0)
-
-    return canvas.toDataURL()
-  }
-
-  const validateScanResults = (results: ScanResult[]): string | null => {
-    if (results.length < 3) return null
-
-    const resultGroups = results.reduce((acc, curr) => {
-      if (!acc[curr.text]) {
-        acc[curr.text] = { count: 0, totalConfidence: 0 }
-      }
-      acc[curr.text].count++
-      acc[curr.text].totalConfidence += curr.confidence
-      return acc
-    }, {} as Record<string, { count: number; totalConfidence: number }>)
-
-    let bestResult: { text: string; count: number; avgConfidence: number } | null = null
-    for (const [text, stats] of Object.entries(resultGroups)) {
-      const avgConfidence = stats.totalConfidence / stats.count
-      if (stats.count >= 2 && avgConfidence > 70) {
-        if (!bestResult || stats.count > bestResult.count || 
-            (stats.count === bestResult.count && avgConfidence > bestResult.avgConfidence)) {
-          bestResult = { text, count: stats.count, avgConfidence }
-        }
-      }
-    }
-
-    return bestResult?.text || null
-  }
-
   const initializeWorker = async () => {
     try {
       addLog('Initializing OCR worker...')
       const worker = await createWorker()
       await worker.reinitialize('eng')
-      await worker.setParameters(ocrConfig)
-      addLog('OCR worker initialized with custom parameters')
+      addLog('OCR worker initialized')
       return worker
     } catch (error) {
       addLog(`Error initializing OCR worker: ${error}`)
@@ -149,30 +52,31 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }
 
-  const handleFocusChange = async (value: number[]) => {
-    if (!streamRef.current) return
-    setFocusDistance(value[0])
-
-    const videoTrack = streamRef.current.getVideoTracks()[0]
-    try {
-      await videoTrack.applyConstraints({})
-      addLog(`Focus value changed to: ${value[0]}`)
-    } catch (error) {
-      addLog(`Focus adjustment not supported: ${error}`)
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
     }
+    if (scanningRef.current) {
+      cancelAnimationFrame(scanningRef.current)
+    }
+    if (barcodeReaderRef.current) {
+      barcodeReaderRef.current.reset()
+      barcodeReaderRef.current = null
+    }
+    setIsCameraActive(false)
+    setIsScanning(false)
   }
 
   const startCamera = async () => {
     try {
-      const constraints: MediaStreamConstraints = {
-        video: {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
           facingMode: 'environment',
           width: { ideal: 1280 },
           height: { ideal: 720 }
-        }
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
+        } 
+      })
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream
@@ -187,18 +91,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
         
         await videoRef.current.play()
         addLog('Video stream started')
-
-        const videoTrack = stream.getVideoTracks()[0]
-        try {
-          const capabilities = videoTrack.getCapabilities?.()
-          if (capabilities) {
-            const constraints: MediaTrackConstraints = {}
-            await videoTrack.applyConstraints(constraints)
-            addLog('Applied optimal camera settings')
-          }
-        } catch (error) {
-          addLog('Advanced camera settings not supported')
-        }
 
         if (scanMode === 'text') {
           addLog('Starting OCR initialization...')
@@ -301,6 +193,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         return false
       }
 
+      // Check if the VIN decoder found basic vehicle information
       const makeResult = results.find((r: any) => r.Variable === 'Make' && r.Value && r.Value !== 'null')
       const modelResult = results.find((r: any) => r.Variable === 'Model' && r.Value && r.Value !== 'null')
       const yearResult = results.find((r: any) => r.Variable === 'Model Year' && r.Value && r.Value !== 'null')
@@ -317,6 +210,43 @@ export function VinScanner({ onScan }: VinScannerProps) {
       addLog(`NHTSA API error: ${error}`)
       return false
     }
+  }
+
+  const preprocessImage = (canvas: HTMLCanvasElement): string => {
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return canvas.toDataURL()
+
+    // Get image data
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    const data = imageData.data
+
+    // Calculate average brightness of the image
+    let totalBrightness = 0
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i]
+      const g = data[i + 1]
+      const b = data[i + 2]
+      // Calculate brightness using perceived brightness formula
+      const brightness = (r * 0.299 + g * 0.587 + b * 0.114) / 255
+      totalBrightness += brightness
+    }
+    const averageBrightness = totalBrightness / (data.length / 4)
+
+    // If the background is light (high brightness), invert the colors
+    if (averageBrightness > 0.5) {
+      addLog('Light background detected, inverting colors')
+      for (let i = 0; i < data.length; i += 4) {
+        data[i] = 255 - data[i]         // Invert red
+        data[i + 1] = 255 - data[i + 1] // Invert green
+        data[i + 2] = 255 - data[i + 2] // Invert blue
+        // Alpha channel remains unchanged
+      }
+      ctx.putImageData(imageData, 0, 0)
+      return canvas.toDataURL()
+    }
+
+    addLog('Dark background detected, keeping original colors')
+    return canvas.toDataURL()
   }
 
   const captureFrame = () => {
@@ -339,11 +269,13 @@ export function VinScanner({ onScan }: VinScannerProps) {
       return null
     }
 
+    // Calculate the scanning area (center rectangle)
     const scanAreaWidth = video.videoWidth * 0.7
     const scanAreaHeight = video.videoHeight * 0.15
     const startX = (video.videoWidth - scanAreaWidth) / 2
     const startY = (video.videoHeight - scanAreaHeight) / 2
 
+    // Create a temporary canvas for the cropped area
     const tempCanvas = document.createElement('canvas')
     tempCanvas.width = scanAreaWidth
     tempCanvas.height = scanAreaHeight
@@ -354,13 +286,15 @@ export function VinScanner({ onScan }: VinScannerProps) {
       return null
     }
 
+    // Draw only the region of interest to the temporary canvas
     tempCtx.drawImage(
       video,
       startX, startY, scanAreaWidth, scanAreaHeight,
       0, 0, scanAreaWidth, scanAreaHeight
     )
 
-    return applyImageProcessing(tempCanvas)
+    // Preprocess the image before returning
+    return preprocessImage(tempCanvas)
   }
 
   const startOCRScanning = async (immediateScanning?: boolean) => {
@@ -389,29 +323,39 @@ export function VinScanner({ onScan }: VinScannerProps) {
       const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
       addLog(`Detected text: ${text} (confidence: ${confidence}%)`)
       
-      const cleanedText = text.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, '')
-      if (cleanedText.length === 17) {
-        setScanResults(prev => [
-          ...prev.slice(-4),
-          { text: cleanedText, confidence, timestamp: Date.now() }
-        ])
+      if (confidence < 50) {
+        addLog('Low confidence detection, skipping...')
+        if (shouldScan) {
+          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+        }
+        return
+      }
 
-        const validatedVin = validateScanResults(scanResults)
-        if (validatedVin && validateVIN(validatedVin)) {
-          addLog('Multiple consistent scans detected')
+      // Convert to uppercase and remove non-alphanumeric characters
+      const cleanedText = text.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, '')
+      
+      // Only process if exactly 17 characters
+      if (cleanedText.length === 17) {
+        if (validateVIN(cleanedText)) {
+          addLog('Initial VIN format validation passed')
           
-          const isValidVin = await validateVinWithNHTSA(validatedVin)
+          // Add NHTSA validation
+          const isValidVin = await validateVinWithNHTSA(cleanedText)
           
           if (isValidVin) {
             addLog('NHTSA validation passed!')
-            onScan(validatedVin)
+            onScan(cleanedText)
             toast.success("VIN scanned and validated successfully")
             handleClose()
             return
           } else {
             addLog('Failed NHTSA validation, continuing scan...')
           }
+        } else {
+          addLog('Failed initial VIN format validation')
         }
+      } else {
+        addLog(`Invalid length (${cleanedText.length}), expecting 17 characters`)
       }
       
       if (shouldScan) {
@@ -423,22 +367,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
         scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
       }
     }
-  }
-
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop())
-      streamRef.current = null
-    }
-    if (scanningRef.current) {
-      cancelAnimationFrame(scanningRef.current)
-    }
-    if (barcodeReaderRef.current) {
-      barcodeReaderRef.current.reset()
-      barcodeReaderRef.current = null
-    }
-    setIsCameraActive(false)
-    setIsScanning(false)
   }
 
   const handleClose = async () => {
@@ -538,21 +466,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
               <p className="text-white text-center text-sm">
                 Position the {scanMode === 'text' ? 'VIN text' : 'barcode'} within the frame
               </p>
-            </div>
-          </div>
-          <div className="p-4 space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Focus className="h-4 w-4" />
-                <span className="text-sm font-medium">Focus Control</span>
-              </div>
-              <Slider
-                value={[focusDistance]}
-                onValueChange={handleFocusChange}
-                max={1}
-                step={0.1}
-                className="w-full"
-              />
             </div>
           </div>
           <div className="bg-muted p-4 max-h-32 overflow-y-auto text-xs font-mono">
