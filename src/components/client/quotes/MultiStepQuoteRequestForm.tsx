@@ -8,8 +8,6 @@ import { FormNavigation } from './form-steps/FormNavigation'
 import { useQuoteRequestSubmission } from '@/hooks/quote-request/useQuoteRequestSubmission'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Progress } from '@/components/ui/progress'
-import type { ServiceFormData } from '@/types/service-item'
-import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface Props {

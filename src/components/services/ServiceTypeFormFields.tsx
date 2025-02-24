@@ -13,6 +13,9 @@ export const formSchema = z.object({
   base_price: z.string().refine(value => !value || !isNaN(parseFloat(value)), {
     message: "Base price must be a valid number"
   }),
+  discount_price: z.string().refine(value => !value || !isNaN(parseFloat(value)), {
+    message: "Discount price must be a valid number"
+  }).optional(),
   estimated_time: z.string().refine(value => !value || !isNaN(parseInt(value)), {
     message: "Estimated time must be a valid number"
   }),
