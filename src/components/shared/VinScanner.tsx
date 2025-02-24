@@ -46,7 +46,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       await worker.reinitialize('eng')
       await worker.setParameters({
         tessedit_char_whitelist: '0123456789ABCDEFGHJKLMNPRSTUVWXYZ',
-        tessedit_ocr_engine_mode: '2',
+        tessedit_ocr_engine_mode: '3', // Changed to "Default" + "Neural nets LSTM only"
         tessjs_create_pdf: '0',
         tessjs_create_hocr: '0',
         debug_file: '/dev/null',
@@ -54,11 +54,16 @@ export function VinScanner({ onScan }: VinScannerProps) {
         tessedit_do_invert: '0',
         textord_heavy_nr: '1',
         textord_min_linesize: '2.5',
-        thresh_binarization: 'otsu',
-        tessedit_dpi: isMobile ? '200' : '70',
+        tessjs_image_pre_proc: isMobile ? 'auto' : 'none',
+        thresholding_method: '1', // Otsu adaptive thresholding
+        textord_extension_perm: '1',
+        language_model_ngram_on: '1',
+        tessjs_vin_mode: '1',
+        tessjs_image_dpi: isMobile ? '300' : '150', // Increased DPI
+        tessedit_dpi: isMobile ? '300' : '150',
       })
 
-      addLog('OCR worker initialized with mobile-optimized parameters')
+      addLog('OCR worker initialized with enhanced parameters')
       return worker
     } catch (error) {
       addLog(`Error initializing OCR worker: ${error}`)
@@ -192,7 +197,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
       const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
       addLog(`Detected text: ${text} (confidence: ${confidence}%)`)
       
-      if (confidence < 50) {
+      // Lowered confidence threshold slightly but added more validation
+      if (confidence < 45) {
         if (shouldScan) {
           scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
         }
