@@ -48,13 +48,19 @@ export function VinScanner({ onScan }: VinScannerProps) {
       await worker.setParameters({
         tessedit_char_whitelist: '0123456789ABCDEFGHJKLMNPRSTUVWXYZ',
         tessedit_ocr_engine_mode: '1',
-        tessedit_pageseg_mode: PSM.SINGLE_LINE, // Using proper enum value for single line mode
+        tessedit_pageseg_mode: PSM.SINGLE_LINE,
         tessjs_create_pdf: '0',
         tessjs_create_hocr: '0',
         preserve_interword_spaces: '0',
         tessedit_fast_mode: '0',
         textord_heavy_nr: '1',
-        tessedit_optimize_enable: '1'
+        tessedit_optimize_enable: '1',
+        user_defined_dpi: '300', // Set DPI to 300 for optimal scanning
+        thresholding_method: '1', // Otsu thresholding for better contrast
+        textord_min_linesize: '2.5', // Minimum text size to detect
+        textord_default_pix_height: '30', // Default pixel height for text
+        edges_boxarea: '0.9', // Increase edge detection sensitivity
+        edges_max_children_per_outline: '45' // Maximum segments per character
       })
       addLog('OCR worker initialized with optimized settings')
       return worker
