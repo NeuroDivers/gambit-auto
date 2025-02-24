@@ -1,12 +1,18 @@
-import { ServiceItemType } from '@/types/service-item'
+import { ServiceItemType } from "@/types/service-item"
 
-interface ServiceItemsFieldProps {
+export interface ServiceItemsFieldProps {
   services: ServiceItemType[]
   onChange: (services: ServiceItemType[]) => void
   disabled?: boolean
+  showCommission?: boolean
 }
 
-export function ServiceItemsField({ services, onChange, disabled }: ServiceItemsFieldProps) {
+export function ServiceItemsField({
+  services,
+  onChange,
+  disabled,
+  showCommission
+}: ServiceItemsFieldProps) {
   const handleAdd = (service: Partial<ServiceItemType>) => {
     const newService: ServiceItemType = {
       service_id: service.service_id || '',

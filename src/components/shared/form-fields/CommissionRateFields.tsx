@@ -1,4 +1,5 @@
 
+import { UseFormReturn } from "react-hook-form"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import {
@@ -9,21 +10,27 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-interface CommissionRateFieldsProps {
-  serviceIndex: number
+export interface CommissionRateFieldsProps {
+  serviceIndex?: number
   value: {
     rate: number | null
     type: 'percentage' | 'flat' | null
   }
   onChange: (value: { rate: number | null; type: 'percentage' | 'flat' | null }) => void
   disabled?: boolean
+  form?: UseFormReturn<any>
+  namePrefix?: string
+  label?: string
 }
 
 export function CommissionRateFields({
   serviceIndex,
   value,
   onChange,
-  disabled
+  disabled,
+  form,
+  namePrefix,
+  label = "Commission"
 }: CommissionRateFieldsProps) {
   return (
     <div className="space-y-2">

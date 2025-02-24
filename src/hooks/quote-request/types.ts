@@ -1,9 +1,12 @@
-
 import { ServiceFormData } from "@/types/service-item"
 
 export interface FormStorage {
   step: number
   data: ServiceFormData
+  vehicle_make?: string
+  vehicle_model?: string
+  vehicle_year?: number
+  vehicle_vin?: string
 }
 
 export type QuoteRequestStatus = "pending" | "estimated" | "accepted" | "rejected" | "converted"

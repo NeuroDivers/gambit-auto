@@ -1,4 +1,3 @@
-
 import { ServiceItemType } from "@/types/service-item"
 import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
@@ -20,15 +19,17 @@ import { UseFormReturn } from "react-hook-form"
 type ServiceSelectionFieldProps = {
   services: ServiceItemType[]
   onChange: (services: ServiceItemType[]) => void
+  onServicesChange?: (services: ServiceItemType[]) => void // For backward compatibility
   disabled?: boolean
   isClient?: boolean
   showCommission?: boolean
   allowPriceEdit?: boolean
 }
 
-export function ServiceSelectionField({ 
+export function ServiceSelectionField({
   services = [],
   onChange,
+  onServicesChange,
   disabled = false,
   isClient = false,
   showCommission = false,
@@ -73,6 +74,13 @@ export function ServiceSelectionField({
     const newServices = [...services]
     newServices[index] = { ...newServices[index], ...updates }
     onChange(newServices)
+  }
+
+  const handleChange = (newServices: ServiceItemType[]) => {
+    onChange(newServices)
+    if (onServicesChange) {
+      onServicesChange(newServices)
+    }
   }
 
   return (
