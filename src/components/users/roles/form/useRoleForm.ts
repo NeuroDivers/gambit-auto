@@ -22,7 +22,6 @@ export const useRoleForm = ({ role, onSuccess, onOpenChange }: UseRoleFormProps)
       name: "",
       nicename: "",
       description: "",
-      can_be_assigned_to_bay: false,
       default_dashboard: "client"
     }
   })
@@ -34,7 +33,6 @@ export const useRoleForm = ({ role, onSuccess, onOpenChange }: UseRoleFormProps)
         name: role.name,
         nicename: role.nicename,
         description: role.description ?? "",
-        can_be_assigned_to_bay: role.can_be_assigned_to_bay,
         default_dashboard: role.default_dashboard
       })
     } else {
@@ -42,7 +40,6 @@ export const useRoleForm = ({ role, onSuccess, onOpenChange }: UseRoleFormProps)
         name: "",
         nicename: "",
         description: "",
-        can_be_assigned_to_bay: false,
         default_dashboard: "client"
       })
     }
@@ -57,7 +54,6 @@ export const useRoleForm = ({ role, onSuccess, onOpenChange }: UseRoleFormProps)
             name: values.name,
             nicename: values.nicename,
             description: values.description,
-            can_be_assigned_to_bay: values.can_be_assigned_to_bay,
             default_dashboard: values.default_dashboard,
             updated_at: new Date().toISOString()
           })
@@ -71,7 +67,6 @@ export const useRoleForm = ({ role, onSuccess, onOpenChange }: UseRoleFormProps)
             name: values.name,
             nicename: values.nicename,
             description: values.description,
-            can_be_assigned_to_bay: values.can_be_assigned_to_bay,
             default_dashboard: values.default_dashboard
           })
 
