@@ -3,6 +3,7 @@ import { Link } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { LayoutDashboard } from "lucide-react"
+import { useTheme } from "next-themes"
 
 interface AuthLayoutProps {
   children: React.ReactNode
@@ -23,6 +24,7 @@ export function AuthLayout({
   footerText,
   footerAction,
 }: AuthLayoutProps) {
+  const { theme, systemTheme } = useTheme()
   const { data: businessProfile } = useQuery({
     queryKey: ['business-profile'],
     queryFn: async () => {
@@ -36,14 +38,20 @@ export function AuthLayout({
     }
   })
 
+  // For system theme, use systemTheme to determine dark/light
+  const currentTheme = theme === 'system' ? systemTheme : theme
+  const logoUrl = currentTheme === 'dark' 
+    ? businessProfile?.dark_logo_url 
+    : businessProfile?.light_logo_url
+
   return (
     <div className="container relative min-h-screen flex items-center justify-center">
       <div className="mx-auto w-full max-w-[350px] space-y-6">
         <div className="flex flex-col items-center space-y-2 text-center">
-          {businessProfile?.light_logo_url && (
+          {logoUrl && (
             <img 
-              src={businessProfile.light_logo_url} 
-              alt={businessProfile.company_name || "Business Logo"} 
+              src={logoUrl}
+              alt={businessProfile?.company_name || "Business Logo"} 
               className="h-16 w-16 object-contain"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
