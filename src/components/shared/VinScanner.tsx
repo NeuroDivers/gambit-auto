@@ -25,6 +25,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const [isScanning, setIsScanning] = useState(false)
   const [scanMode, setScanMode] = useState<'text' | 'barcode'>('text')
   const [logs, setLogs] = useState<string[]>([])
+  const [textDetected, setTextDetected] = useState(false)
+  const [textPosition, setTextPosition] = useState<'good' | 'too-far' | 'too-close' | null>(null)
   const isMobile = useIsMobile()
 
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -356,7 +358,32 @@ export function VinScanner({ onScan }: VinScannerProps) {
       0, 0, scanAreaWidth, scanAreaHeight
     )
 
+    const imageData = tempCtx.getImageData(0, 0, scanAreaWidth, scanAreaHeight)
+    const { textFound, isProperSize } = analyzeTextPosition(imageData)
+    setTextDetected(textFound)
+    setTextPosition(isProperSize)
+
     return preprocessImage(tempCanvas)
+  }
+
+  const analyzeTextPosition = (imageData: ImageData) => {
+    const data = imageData.data
+    let darkPixels = 0
+    let totalPixels = data.length / 4
+
+    for (let i = 0; i < data.length; i += 4) {
+      const brightness = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114)
+      if (brightness < 127) darkPixels++
+    }
+
+    const darkPixelRatio = darkPixels / totalPixels
+    const textFound = darkPixelRatio > 0.01
+    
+    let isProperSize = 'good' as const
+    if (darkPixelRatio < 0.01) isProperSize = 'too-far' as const
+    if (darkPixelRatio > 0.3) isProperSize = 'too-close' as const
+
+    return { textFound, isProperSize }
   }
 
   const startOCRScanning = async (immediateScanning?: boolean) => {
@@ -513,18 +540,32 @@ export function VinScanner({ onScan }: VinScannerProps) {
               ref={canvasRef}
               className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
-            <div className={`absolute inset-x-[${isMobile ? '10%' : '15%'}] top-1/2 -translate-y-1/2 h-[${isMobile ? '20%' : '15%'}] border-2 border-dashed border-primary-foreground/70`}>
+            <div 
+              className={cn(
+                "absolute inset-x-[15%] top-1/2 -translate-y-1/2 h-[15%] border-2 border-dashed transition-colors duration-300",
+                textDetected ? "border-green-500" : "border-primary-foreground/70"
+              )}
+            >
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
                 Position {scanMode === 'text' ? 'VIN text' : 'barcode'} here
               </div>
               <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-px bg-primary-foreground/70" />
               <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-px bg-primary-foreground/70" />
               <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-4 h-4 border-2 border-primary-foreground/70" />
-            </div>
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent p-4">
-              <p className="text-white text-center text-sm">
-                Position the {scanMode === 'text' ? 'VIN text' : 'barcode'} within the frame
-              </p>
+              {textPosition && (
+                <div 
+                  className={cn(
+                    "absolute -bottom-12 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap",
+                    textPosition === 'too-close' ? "text-yellow-400" : 
+                    textPosition === 'too-far' ? "text-yellow-400" : 
+                    "text-green-400"
+                  )}
+                >
+                  {textPosition === 'too-close' ? "Move camera further away" :
+                   textPosition === 'too-far' ? "Move camera closer" :
+                   "Good position"}
+                </div>
+              )}
             </div>
           </div>
           <div className="bg-muted p-4 max-h-32 overflow-y-auto text-xs font-mono">
