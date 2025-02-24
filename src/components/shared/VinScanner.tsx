@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
-import { createWorker } from 'tesseract.js'
+import { createWorker, PSM } from 'tesseract.js'
 import { BrowserMultiFormatReader, Result } from '@zxing/library'
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 
@@ -123,7 +123,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
       if (videoRef.current) {
         addLog('Starting barcode scanning...')
         
-        // Create a continuous scanning loop
         const scanLoop = async () => {
           try {
             if (!videoRef.current || !barcodeReaderRef.current) return;
@@ -149,13 +148,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
             }
           }
           
-          // Continue scanning if dialog is still open
           if (isDialogOpen) {
             requestAnimationFrame(scanLoop)
           }
         }
         
-        // Start the scanning loop
         scanLoop()
       }
     } catch (error) {
@@ -165,14 +162,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
   }
 
   const validateVIN = (vin: string): boolean => {
-    // VIN must be exactly 17 characters
     if (vin.length !== 17) return false;
 
-    // VIN can only contain letters (except I, O, Q) and numbers
     const validVINPattern = /^[A-HJ-NPR-Z0-9]{17}$/i;
     if (!validVINPattern.test(vin)) return false;
 
-    // Check for common OCR mistakes (0 vs O, 1 vs I, etc.)
     const suspiciousPatterns = [
       /[O0]{3,}/i,  // Too many zeros or O's in a row
       /[1I]{3,}/i,  // Too many ones or I's in a row
@@ -208,7 +202,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
       const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
       addLog(`Detected text: ${text} (confidence: ${confidence}%)`)
       
-      // Only process text if confidence is above threshold
       if (confidence < 60) {
         addLog('Low confidence detection, skipping...')
         if (shouldScan) {
@@ -267,8 +260,19 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
+
+    const scanAreaWidth = video.videoWidth * 0.7
+    const scanAreaHeight = video.videoHeight * 0.1
+    const startX = (video.videoWidth - scanAreaWidth) / 2
+    const startY = (video.videoHeight - scanAreaHeight) / 2
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
     
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    ctx.drawImage(
+      video,
+      startX, startY, scanAreaWidth, scanAreaHeight,
+      0, 0, canvas.width, canvas.height
+    )
     
     return canvas.toDataURL('image/png')
   }
@@ -292,7 +296,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const handleScanModeChange = async (value: string) => {
     if (value === 'text' || value === 'barcode') {
       setScanMode(value)
-      // Restart camera with new mode
       stopCamera()
       setLogs([])
       await startCamera()
@@ -359,7 +362,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
               ref={canvasRef}
               className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
-            <div className="absolute inset-[15%] border-2 border-dashed border-primary-foreground/70">
+            <div className="absolute inset-x-[15%] top-1/2 -translate-y-1/2 h-[10%] border-2 border-dashed border-primary-foreground/70">
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
                 Position {scanMode === 'text' ? 'VIN text' : 'barcode'} here
               </div>
