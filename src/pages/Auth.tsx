@@ -17,12 +17,22 @@ export default function Auth() {
     handleSubmit,
     handleChange,
     handleSignInClick,
+    handleSignUpClick,
     handleGoogleSignIn,
     handleForgotPassword,
   } = useAuthForm()
 
   return (
-    <AuthLayout>
+    <AuthLayout 
+      title={isLogin ? "Welcome Back" : "Create Account"}
+      subtitle={isLogin ? "Sign in to access your account" : "Sign up to get started"}
+      footerText={isLogin ? "Don't have an account?" : "Already have an account?"}
+      footerAction={{
+        text: isLogin ? "Sign up" : "Sign in",
+        href: "#",
+        onClick: isLogin ? handleSignUpClick : handleSignInClick
+      }}
+    >
       <AuthContent
         isLogin={isLogin}
         isModalOpen={isModalOpen}

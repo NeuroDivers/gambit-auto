@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -22,9 +21,80 @@ export const useAuthForm = () => {
     password: "",
   });
   const [loading, setLoading] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSignInClick = () => {
+    setIsLogin(true);
+    resetForm();
+  };
+
+  const handleSignUpClick = () => {
+    setIsLogin(false);
+    resetForm();
+  };
+
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please enter your email address",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Password reset email sent! Please check your inbox.",
+      });
+    } catch (error: any) {
+      console.error("Password reset error:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to send reset password email",
+      });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (isLogin) {
+      try {
+        const result = await handleSignIn(e);
+        console.log("Sign in result:", result);
+      } catch (error) {
+        console.error("Sign in error:", error);
+      }
+    } else {
+      try {
+        const result = await handleSignUp(e);
+        console.log("Sign up result:", result);
+      } catch (error) {
+        console.error("Sign up error:", error);
+      }
+    }
+  };
 
   const handleRoleBasedRedirect = async (userId: string) => {
     try {
@@ -68,14 +138,6 @@ export const useAuthForm = () => {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true);
@@ -93,6 +155,49 @@ export const useAuthForm = () => {
         title: "Error",
         description: error.message,
       });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loading) return;
+    setLoading(true);
+
+    try {
+      console.log("Attempting sign in with:", formData.email);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (error) {
+        if (error.message === "Invalid login credentials") {
+          throw new Error(
+            "Invalid email or password. Please check your credentials and try again."
+          );
+        }
+        throw error;
+      }
+
+      if (data?.user) {
+        // Wait a moment for the session to be fully established
+        setTimeout(async () => {
+          // Redirect based on role
+          await handleRoleBasedRedirect(data.user.id);
+        }, 1000);
+      }
+      
+      return data;
+    } catch (error: any) {
+      console.error("Sign in error:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -155,49 +260,6 @@ export const useAuthForm = () => {
     }
   };
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (loading) return;
-    setLoading(true);
-
-    try {
-      console.log("Attempting sign in with:", formData.email);
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (error) {
-        if (error.message === "Invalid login credentials") {
-          throw new Error(
-            "Invalid email or password. Please check your credentials and try again."
-          );
-        }
-        throw error;
-      }
-
-      if (data?.user) {
-        // Wait a moment for the session to be fully established
-        setTimeout(async () => {
-          // Redirect based on role
-          await handleRoleBasedRedirect(data.user.id);
-        }, 1000);
-      }
-      
-      return data;
-    } catch (error: any) {
-      console.error("Sign in error:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message,
-      });
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const resetForm = () => {
     setFormData({
       email: "",
@@ -206,12 +268,17 @@ export const useAuthForm = () => {
   };
 
   return {
+    isLogin,
+    isModalOpen,
+    setIsModalOpen,
     formData,
     loading,
-    handleInputChange,
-    handleSignIn,
-    handleSignUp,
+    handleSubmit,
+    handleChange,
+    handleSignInClick,
+    handleSignUpClick,
     handleGoogleSignIn,
+    handleForgotPassword,
     resetForm,
   };
 };
