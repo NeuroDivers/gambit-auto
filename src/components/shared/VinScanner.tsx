@@ -160,7 +160,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
           zoom: value[0]
         }]
       })
-      addLog(`Focus/zoom adjusted to: ${value[0]}`)
+      addLog(`Focus adjusted to: ${value[0]}`)
     } catch (error) {
       addLog(`Focus adjustment not supported: ${error}`)
     }
@@ -172,10 +172,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         video: {
           facingMode: 'environment',
           width: { ideal: 1280 },
-          height: { ideal: 720 },
-          advanced: [{
-            zoom: 1.0
-          }]
+          height: { ideal: 720 }
         }
       }
 
@@ -199,10 +196,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
         try {
           const capabilities = videoTrack.getCapabilities?.()
           if (capabilities) {
-            const constraints: MediaTrackConstraints = {
-              zoom: capabilities.zoom?.max ?? undefined
-            }
-            await videoTrack.applyConstraints({ advanced: [constraints] })
+            const constraints: MediaTrackConstraints = {}
+            await videoTrack.applyConstraints(constraints)
             addLog('Applied optimal camera settings')
           }
         } catch (error) {
