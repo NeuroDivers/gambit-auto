@@ -1,3 +1,4 @@
+
 import { Camera, Barcode } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -196,11 +197,13 @@ export function VinScanner({ onScan }: VinScannerProps) {
       return null
     }
 
-    const scanAreaWidth = video.videoWidth * 0.7
-    const scanAreaHeight = video.videoHeight * 0.15
+    // Calculate the scanning area (center rectangle)
+    const scanAreaWidth = video.videoWidth * 0.7 // 70% of video width
+    const scanAreaHeight = video.videoHeight * 0.075 // Reduced to 7.5% of video height
     const startX = (video.videoWidth - scanAreaWidth) / 2
     const startY = (video.videoHeight - scanAreaHeight) / 2
 
+    // Create a temporary canvas for the cropped area
     const tempCanvas = document.createElement('canvas')
     tempCanvas.width = scanAreaWidth
     tempCanvas.height = scanAreaHeight
@@ -211,6 +214,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       return null
     }
 
+    // Draw only the region of interest to the temporary canvas
     tempCtx.drawImage(
       video,
       startX, startY, scanAreaWidth, scanAreaHeight,
@@ -254,23 +258,24 @@ export function VinScanner({ onScan }: VinScannerProps) {
         return
       }
 
-      const cleanedText = text.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
-      const vinMatch = cleanedText.match(/[A-HJ-NPR-Z0-9]{17}/i)
+      // Convert to uppercase and remove non-alphanumeric characters
+      const cleanedText = text.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, '')
       
-      if (vinMatch) {
-        const scannedValue = vinMatch[0].toUpperCase()
-        if (validateVIN(scannedValue)) {
+      // Only process if exactly 17 characters
+      if (cleanedText.length === 17) {
+        if (validateVIN(cleanedText)) {
           addLog('Valid VIN detected!')
-          onScan(scannedValue)
+          onScan(cleanedText)
           toast.success("VIN scanned successfully")
           handleClose()
           return
         } else {
           addLog('Potential VIN found but failed validation checks')
         }
+      } else {
+        addLog(`Invalid length (${cleanedText.length}), expecting 17 characters`)
       }
       
-      addLog('No valid VIN found, continuing scan...')
       if (shouldScan) {
         scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
       }
@@ -367,7 +372,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
               ref={canvasRef}
               className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
-            <div className="absolute inset-[15%] border-2 border-dashed border-primary-foreground/70">
+            <div className="absolute inset-x-[15%] top-1/2 -translate-y-1/2 h-[7.5%] border-2 border-dashed border-primary-foreground/70">
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
                 Position {scanMode === 'text' ? 'VIN text' : 'barcode'} here
               </div>
