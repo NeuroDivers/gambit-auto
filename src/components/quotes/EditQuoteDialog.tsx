@@ -1,34 +1,20 @@
 
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { QuoteForm } from "./QuoteForm"
-import { Quote } from "./types"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import type { Estimate } from "./types"
 
 interface EditQuoteDialogProps {
-  quote: Quote
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  quote: Estimate
   onSuccess?: () => void
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export function EditQuoteDialog({ quote, open, onOpenChange, onSuccess }: EditQuoteDialogProps) {
-  const handleSuccess = () => {
-    onOpenChange(false) // Close the dialog on success
-    onSuccess?.() // Call the parent's success handler if provided
-  }
-
+export function EditQuoteDialog({ quote, onSuccess, open, onOpenChange }: EditQuoteDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl">
-        <DialogHeader>
-          <DialogTitle>Edit Quote {quote.quote_number}</DialogTitle>
-          <DialogDescription>
-            Make changes to the quote details below.
-          </DialogDescription>
-        </DialogHeader>
-        <ScrollArea className="h-[calc(100vh-12rem)] pr-4">
-          <QuoteForm quote={quote} onSuccess={handleSuccess} />
-        </ScrollArea>
+        <QuoteForm quote={quote} onSuccess={onSuccess} />
       </DialogContent>
     </Dialog>
   )
