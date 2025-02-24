@@ -123,7 +123,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
       if (videoRef.current) {
         addLog('Starting barcode scanning...')
         
-        // Create a continuous scanning loop
         const scanLoop = async () => {
           try {
             if (!videoRef.current || !barcodeReaderRef.current) return;
@@ -149,13 +148,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
             }
           }
           
-          // Continue scanning if dialog is still open
           if (isDialogOpen) {
             requestAnimationFrame(scanLoop)
           }
         }
         
-        // Start the scanning loop
         scanLoop()
       }
     } catch (error) {
@@ -165,14 +162,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
   }
 
   const validateVIN = (vin: string): boolean => {
-    // VIN must be exactly 17 characters
     if (vin.length !== 17) return false;
 
-    // VIN can only contain letters (except I, O, Q) and numbers
     const validVINPattern = /^[A-HJ-NPR-Z0-9]{17}$/i;
     if (!validVINPattern.test(vin)) return false;
 
-    // Check for common OCR mistakes (0 vs O, 1 vs I, etc.)
     const suspiciousPatterns = [
       /[O0]{3,}/i,  // Too many zeros or O's in a row
       /[1I]{3,}/i,  // Too many ones or I's in a row
@@ -180,6 +174,50 @@ export function VinScanner({ onScan }: VinScannerProps) {
     ];
 
     return !suspiciousPatterns.some(pattern => pattern.test(vin));
+  }
+
+  const captureFrame = () => {
+    if (!videoRef.current || !canvasRef.current) {
+      addLog('Video or canvas reference not available')
+      return null
+    }
+
+    const canvas = canvasRef.current
+    const video = videoRef.current
+    const ctx = canvas.getContext('2d')
+    
+    if (!ctx) {
+      addLog('Could not get canvas context')
+      return null
+    }
+
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+      addLog('Video not ready for capture')
+      return null
+    }
+
+    const scanAreaWidth = video.videoWidth * 0.7
+    const scanAreaHeight = video.videoHeight * 0.15
+    const startX = (video.videoWidth - scanAreaWidth) / 2
+    const startY = (video.videoHeight - scanAreaHeight) / 2
+
+    const tempCanvas = document.createElement('canvas')
+    tempCanvas.width = scanAreaWidth
+    tempCanvas.height = scanAreaHeight
+    const tempCtx = tempCanvas.getContext('2d')
+
+    if (!tempCtx) {
+      addLog('Could not get temporary canvas context')
+      return null
+    }
+
+    tempCtx.drawImage(
+      video,
+      startX, startY, scanAreaWidth, scanAreaHeight,
+      0, 0, scanAreaWidth, scanAreaHeight
+    )
+    
+    return tempCanvas.toDataURL('image/png')
   }
 
   const startOCRScanning = async (immediateScanning?: boolean) => {
@@ -208,8 +246,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
       addLog(`Detected text: ${text} (confidence: ${confidence}%)`)
       
-      // Only process text if confidence is above threshold
-      if (confidence < 60) {
+      if (confidence < 75) {
         addLog('Low confidence detection, skipping...')
         if (shouldScan) {
           scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
@@ -245,34 +282,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }
 
-  const captureFrame = () => {
-    if (!videoRef.current || !canvasRef.current) {
-      addLog('Video or canvas reference not available')
-      return null
-    }
-
-    const canvas = canvasRef.current
-    const video = videoRef.current
-    const ctx = canvas.getContext('2d')
-    
-    if (!ctx) {
-      addLog('Could not get canvas context')
-      return null
-    }
-
-    if (video.readyState !== video.HAVE_ENOUGH_DATA) {
-      addLog('Video not ready for capture')
-      return null
-    }
-
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-    
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-    
-    return canvas.toDataURL('image/png')
-  }
-
   const handleClose = async () => {
     stopCamera()
     if (workerRef.current) {
@@ -292,7 +301,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const handleScanModeChange = async (value: string) => {
     if (value === 'text' || value === 'barcode') {
       setScanMode(value)
-      // Restart camera with new mode
       stopCamera()
       setLogs([])
       await startCamera()
