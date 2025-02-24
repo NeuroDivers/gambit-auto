@@ -155,7 +155,7 @@ export function ServiceSelectionField({
                         form={{
                           control: {
                             register: () => ({
-                              name: `services.${index}.commission_rate`,
+                              name: `services[${index}].commission_rate`,
                               value: service.commission_rate ?? null,
                               onChange: async (e: any) => {
                                 await updateCommission(index, 'commission_rate', e.target.value)
@@ -164,14 +164,36 @@ export function ServiceSelectionField({
                               onBlur: () => Promise.resolve(true),
                               ref: () => {}
                             }),
-                            _subjects: { array: [], watch: {} },
+                            _subjects: {
+                              watch: { subject: { subscribe: () => ({ unsubscribe: () => {} }) } },
+                              array: { subject: { subscribe: () => ({ unsubscribe: () => {} }) } },
+                              state: { subject: { subscribe: () => ({ unsubscribe: () => {} }) } }
+                            },
                             _removeUnmounted: () => {},
-                            _names: { mount: "", unMount: "", array: "", watch: "" },
-                            _state: {},
-                            _options: {},
+                            _names: {
+                              mount: new Set(),
+                              unMount: new Set(),
+                              array: new Set(),
+                              watch: new Set()
+                            },
+                            _state: { mount: true, action: false, watch: false },
+                            _options: { shouldUnmount: true, shouldUnregister: true },
                             _formValues: {},
                             _getWatch: () => ({}),
-                            _formState: {},
+                            _formState: {
+                              isDirty: false,
+                              isLoading: false,
+                              isSubmitted: false,
+                              isSubmitSuccessful: false,
+                              isSubmitting: false,
+                              isValidating: false,
+                              isValid: false,
+                              submitCount: 0,
+                              dirtyFields: {},
+                              touchedFields: {},
+                              errors: {},
+                              defaultValues: {}
+                            },
                             _defaultValues: {}
                           }
                         }}

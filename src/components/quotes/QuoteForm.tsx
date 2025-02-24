@@ -36,7 +36,7 @@ type FormData = {
   notes: string
 }
 
-export function QuoteForm({ onSuccess }: { onSuccess?: () => void }) {
+export function QuoteForm({ quote, onSuccess }: { quote?: Estimate; onSuccess?: () => void }) {
   const navigate = useNavigate()
 
   const form = useForm<FormData>({

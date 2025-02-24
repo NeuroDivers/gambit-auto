@@ -99,17 +99,17 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
   }
 
   const handleServiceChange = (services: ServiceItemType[]) => {
-    const validServices = services.map(service => ({
+    const validServices: ServiceItemType[] = services.map(service => ({
       service_id: service.service_id,
       service_name: service.service_name,
-      quantity: service.quantity || 1,
-      unit_price: service.unit_price || 0,
-      commission_rate: service.commission_rate || null,
-      commission_type: service.commission_type || null,
-      description: service.description || ""
+      quantity: service.quantity,
+      unit_price: service.unit_price,
+      commission_rate: service.commission_rate ?? null,
+      commission_type: service.commission_type ?? null,
+      description: service.description ?? ""
     }))
     
-    form.setValue('service_items', validServices)
+    form.setValue('service_items', validServices, { shouldValidate: true })
   }
 
   return (
