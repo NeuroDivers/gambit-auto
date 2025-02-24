@@ -12,6 +12,7 @@ import {
 import { createWorker } from 'tesseract.js'
 import { BrowserMultiFormatReader, Result } from '@zxing/library'
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { PSM } from 'tesseract.js'
 
 interface VinScannerProps {
   onScan: (vin: string) => void
@@ -52,7 +53,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         textord_space_size_is_variable: '0', // Fixed space size for VIN format
         textord_minimum_spacing_factor: '0.5', // Tighter character spacing
         preserve_interword_spaces: '0', // Ignore word spacing for VIN
-        tessedit_pageseg_mode: '7', // Treat input as single line of text
+        tessedit_pageseg_mode: PSM.SINGLE_LINE, // Treat input as single line of text
         tessjs_create_pdf: '0', // Disable PDF output for speed
         tessjs_create_hocr: '0', // Disable HOCR output for speed
         debug_file: '/dev/null', // Disable debug file output
