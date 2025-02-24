@@ -28,7 +28,6 @@ interface HeaderProps {
 
 export function Header({ firstName, role, onLogout, className, children }: HeaderProps) {
   const isAdmin = role?.name?.toLowerCase() === 'administrator';
-  const baseRoute = isAdmin ? '/admin' : '/client';
   const initials = firstName ? firstName.charAt(0).toUpperCase() : '?';
 
   return (
@@ -59,11 +58,11 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <NavLink to={`${baseRoute}/profile-settings`} className="w-full">Profile Settings</NavLink>
+              <NavLink to="/profile-settings" className="w-full">Profile Settings</NavLink>
             </DropdownMenuItem>
             {isAdmin && (
               <DropdownMenuItem>
-                <NavLink to="/admin/users" className="w-full">Manage Users</NavLink>
+                <NavLink to="/users" className="w-full">Manage Users</NavLink>
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
