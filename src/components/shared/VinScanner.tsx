@@ -1,19 +1,15 @@
-import { Camera, Barcode } from "lucide-react"
+
+import { Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
 import { toast } from "sonner"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog"
-import { createWorker } from 'tesseract.js'
-import { BrowserMultiFormatReader, Result } from '@zxing/library'
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { PSM } from 'tesseract.js'
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { createWorker, PSM } from 'tesseract.js'
+import { BrowserMultiFormatReader } from '@zxing/library'
 import { useIsMobile } from "@/hooks/use-mobile"
+import { validateVIN, validateVinWithNHTSA } from "@/utils/vin-validation"
+import { preprocessImage } from "@/utils/image-processing"
+import { ScannerOverlay } from "./vin-scanner/ScannerOverlay"
 
 interface VinScannerProps {
   onScan: (vin: string) => void
@@ -50,16 +46,16 @@ export function VinScanner({ onScan }: VinScannerProps) {
       await worker.reinitialize('eng')
       await worker.setParameters({
         tessedit_char_whitelist: '0123456789ABCDEFGHJKLMNPRSTUVWXYZ',
-        tessedit_ocr_engine_mode: '2', // LSTM neural network mode
+        tessedit_ocr_engine_mode: '2',
         tessjs_create_pdf: '0',
         tessjs_create_hocr: '0',
         debug_file: '/dev/null',
         tessedit_pageseg_mode: PSM.SINGLE_LINE,
-        tessedit_do_invert: '0', // Let preprocessing handle inversion
-        textord_heavy_nr: '1', // Enable noise removal
-        textord_min_linesize: '2.5', // Adjust for mobile camera resolution
-        thresh_binarization: 'otsu', // Use Otsu's method for binarization
-        tessedit_dpi: isMobile ? '200' : '70', // Adjust DPI based on device
+        tessedit_do_invert: '0',
+        textord_heavy_nr: '1',
+        textord_min_linesize: '2.5',
+        thresh_binarization: 'otsu',
+        tessedit_dpi: isMobile ? '200' : '70',
       })
 
       addLog('OCR worker initialized with mobile-optimized parameters')
@@ -102,22 +98,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
         streamRef.current = stream
         addLog('Stream acquired, initializing camera...')
         
-        const videoTrack = stream.getVideoTracks()[0]
-        if (videoTrack && isMobile) {
-          try {
-            const capabilities = videoTrack.getCapabilities();
-            const settings = videoTrack.getSettings();
-            const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
-            
-            addLog('Camera capabilities: ' + JSON.stringify(capabilities));
-            addLog('Current settings: ' + JSON.stringify(settings));
-            addLog('Supported constraints: ' + JSON.stringify(supportedConstraints));
-            
-          } catch (error) {
-            addLog('Could not get camera capabilities: ' + error)
-          }
-        }
-
         await new Promise((resolve) => {
           if (videoRef.current) {
             videoRef.current.onloadedmetadata = resolve
@@ -132,7 +112,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
           workerRef.current = await initializeWorker()
           addLog('Worker reference created')
           
-          addLog('Setting scanning state...')
           let isCurrentlyScanning = true
           setIsScanning(isCurrentlyScanning)
           
@@ -173,8 +152,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
                 toast.success("VIN scanned successfully")
                 handleClose()
                 return
-              } else {
-                addLog('Invalid VIN format detected')
               }
             }
           } catch (error: any) {
@@ -196,123 +173,58 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }
 
-  const validateVIN = (vin: string): boolean => {
-    if (vin.length !== 17) return false;
+  const startOCRScanning = async (immediateScanning?: boolean) => {
+    const shouldScan = immediateScanning ?? isScanning
 
-    const validVINPattern = /^[A-HJ-NPR-Z0-9]{17}$/i;
-    if (!validVINPattern.test(vin)) return false;
+    if (!streamRef.current || !workerRef.current || !shouldScan) {
+      return
+    }
 
-    const suspiciousPatterns = [
-      /[O0]{3,}/i,  // Too many zeros or O's in a row
-      /[1I]{3,}/i,  // Too many ones or I's in a row
-      /(.)\1{4,}/i, // Any character repeated more than 4 times
-    ];
-
-    return !suspiciousPatterns.some(pattern => pattern.test(vin));
-  }
-
-  const validateVinWithNHTSA = async (vin: string): Promise<boolean> => {
     try {
-      addLog('Validating VIN with NHTSA API...')
-      const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`)
-      if (!response.ok) {
-        addLog('NHTSA API request failed')
-        return false
+      const frameData = captureFrame()
+      if (!frameData) {
+        if (shouldScan) {
+          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+        }
+        return
       }
 
-      const data = await response.json()
-      const results = data.Results
-
-      if (!Array.isArray(results)) {
-        addLog('Invalid response format from NHTSA API')
-        return false
-      }
-
-      const makeResult = results.find((r: any) => r.Variable === 'Make' && r.Value && r.Value !== 'null')
-      const modelResult = results.find((r: any) => r.Variable === 'Model' && r.Value && r.Value !== 'null')
-      const yearResult = results.find((r: any) => r.Variable === 'Model Year' && r.Value && r.Value !== 'null')
-
-      const isValid = !!(makeResult && modelResult && yearResult)
-      addLog(`NHTSA Validation result: ${isValid ? 'Valid' : 'Invalid'} VIN`)
+      const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
+      addLog(`Detected text: ${text} (confidence: ${confidence}%)`)
       
-      if (isValid) {
-        addLog(`Detected vehicle: ${yearResult.Value} ${makeResult.Value} ${modelResult.Value}`)
+      if (confidence < 50) {
+        if (shouldScan) {
+          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+        }
+        return
       }
 
-      return isValid
+      const cleanedText = text.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, '')
+      
+      if (cleanedText.length === 17 && validateVIN(cleanedText)) {
+        const isValidVin = await validateVinWithNHTSA(cleanedText)
+        
+        if (isValidVin) {
+          onScan(cleanedText)
+          toast.success("VIN scanned and validated successfully")
+          handleClose()
+          return
+        }
+      }
+      
+      if (shouldScan) {
+        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+      }
     } catch (error) {
-      addLog(`NHTSA API error: ${error}`)
-      return false
-    }
-  }
-
-  const preprocessImage = (canvas: HTMLCanvasElement): string => {
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return canvas.toDataURL()
-
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-    const data = imageData.data
-
-    let totalBrightness = 0
-    let minBrightness = 255
-    let maxBrightness = 0
-
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i]
-      const g = data[i + 1]
-      const b = data[i + 2]
-      const brightness = (r * 0.299 + g * 0.587 + b * 0.114)
-      totalBrightness += brightness
-      minBrightness = Math.min(minBrightness, brightness)
-      maxBrightness = Math.max(maxBrightness, brightness)
-    }
-
-    const averageBrightness = totalBrightness / (data.length / 4)
-    const contrast = maxBrightness - minBrightness
-
-    addLog(`Image analysis - Brightness: ${Math.round(averageBrightness)}, Contrast: ${Math.round(contrast)}`)
-
-    const shouldInvert = averageBrightness > 200 && contrast < 100
-    if (shouldInvert) {
-      addLog('High brightness detected, inverting colors')
-      for (let i = 0; i < data.length; i += 4) {
-        data[i] = 255 - data[i]         // Invert red
-        data[i + 1] = 255 - data[i + 1] // Invert green
-        data[i + 2] = 255 - data[i + 2] // Invert blue
+      addLog(`OCR error: ${error}`)
+      if (shouldScan) {
+        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
       }
     }
-
-    const contrastFactor = 1.2 // Increase contrast by 20%
-    for (let i = 0; i < data.length; i += 4) {
-      for (let j = 0; j < 3; j++) {
-        const value = data[i + j]
-        const normalized = (value / 255 - 0.5) * contrastFactor + 0.5
-        data[i + j] = Math.max(0, Math.min(255, Math.round(normalized * 255)))
-      }
-    }
-
-    const sharpenKernel = [
-      0, -1, 0,
-      -1, 5, -1,
-      0, -1, 0
-    ]
-    const tempCanvas = document.createElement('canvas')
-    tempCanvas.width = canvas.width
-    tempCanvas.height = canvas.height
-    const tempCtx = tempCanvas.getContext('2d')
-    if (tempCtx) {
-      tempCtx.putImageData(imageData, 0, 0)
-      ctx.filter = 'contrast(120%) brightness(105%)'
-      ctx.drawImage(tempCanvas, 0, 0)
-    }
-
-    addLog('Image preprocessing completed')
-    return canvas.toDataURL()
   }
 
   const captureFrame = () => {
     if (!videoRef.current || !canvasRef.current) {
-      addLog('Video or canvas reference not available')
       return null
     }
 
@@ -320,13 +232,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
     const video = videoRef.current
     const ctx = canvas.getContext('2d')
     
-    if (!ctx) {
-      addLog('Could not get canvas context')
-      return null
-    }
-
-    if (video.readyState !== video.HAVE_ENOUGH_DATA) {
-      addLog('Video not ready for capture')
+    if (!ctx || video.readyState !== video.HAVE_ENOUGH_DATA) {
       return null
     }
 
@@ -341,7 +247,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
     const tempCtx = tempCanvas.getContext('2d')
 
     if (!tempCtx) {
-      addLog('Could not get temporary canvas context')
       return null
     }
 
@@ -352,75 +257,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
     )
 
     return preprocessImage(tempCanvas)
-  }
-
-  const startOCRScanning = async (immediateScanning?: boolean) => {
-    const shouldScan = immediateScanning ?? isScanning
-
-    if (!streamRef.current || !workerRef.current || !shouldScan) {
-      addLog(`Scanning prerequisites not met:`)
-      addLog(`- Stream exists: ${!!streamRef.current}`)
-      addLog(`- Worker exists: ${!!workerRef.current}`)
-      addLog(`- Scanning enabled: ${shouldScan}`)
-      return
-    }
-
-    try {
-      addLog('Attempting to capture frame...')
-      const frameData = captureFrame()
-      if (!frameData) {
-        addLog('No frame data captured, retrying...')
-        if (shouldScan) {
-          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
-        }
-        return
-      }
-
-      addLog('Frame captured, starting OCR recognition...')
-      const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
-      addLog(`Detected text: ${text} (confidence: ${confidence}%)`)
-      
-      if (confidence < 50) {
-        addLog('Low confidence detection, skipping...')
-        if (shouldScan) {
-          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
-        }
-        return
-      }
-
-      const cleanedText = text.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, '')
-      
-      if (cleanedText.length === 17) {
-        if (validateVIN(cleanedText)) {
-          addLog('Initial VIN format validation passed')
-          
-          const isValidVin = await validateVinWithNHTSA(cleanedText)
-          
-          if (isValidVin) {
-            addLog('NHTSA validation passed!')
-            onScan(cleanedText)
-            toast.success("VIN scanned and validated successfully")
-            handleClose()
-            return
-          } else {
-            addLog('Failed NHTSA validation, continuing scan...')
-          }
-        } else {
-          addLog('Failed initial VIN format validation')
-        }
-      } else {
-        addLog(`Invalid length (${cleanedText.length}), expecting 17 characters`)
-      }
-      
-      if (shouldScan) {
-        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
-      }
-    } catch (error) {
-      addLog(`OCR error: ${error}`)
-      if (shouldScan) {
-        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
-      }
-    }
   }
 
   const handleClose = async () => {
@@ -454,14 +290,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }, [])
 
-  useEffect(() => {
-    if (streamRef.current) {
-      setIsCameraActive(true)
-    } else {
-      setIsCameraActive(false)
-    }
-  }, [streamRef.current])
-
   return (
     <>
       <Button 
@@ -471,31 +299,17 @@ export function VinScanner({ onScan }: VinScannerProps) {
         onClick={handleOpen}
         className="shrink-0"
       >
-        <Camera className="h-4 w-4" />
+        <Camera className="h
+
+-4 w-4" />
       </Button>
 
       <Dialog open={isDialogOpen} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="p-4 space-y-4">
-            <DialogTitle>Scan VIN</DialogTitle>
-            <DialogDescription>
-              <ToggleGroup
-                type="single"
-                value={scanMode}
-                onValueChange={handleScanModeChange}
-                className="flex justify-center"
-              >
-                <ToggleGroupItem value="text" aria-label="Text scanner">
-                  <Camera className="h-4 w-4 mr-2" />
-                  Text
-                </ToggleGroupItem>
-                <ToggleGroupItem value="barcode" aria-label="Barcode scanner">
-                  <Barcode className="h-4 w-4 mr-2" />
-                  Barcode
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </DialogDescription>
-          </DialogHeader>
+          <ScannerOverlay
+            scanMode={scanMode}
+            onScanModeChange={handleScanModeChange}
+          />
           <div className="relative aspect-video w-full overflow-hidden">
             <video
               ref={videoRef}
