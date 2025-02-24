@@ -1,4 +1,3 @@
-
 import { DashboardLayoutWrapper } from "@/components/dashboard/DashboardLayoutWrapper"
 import { PermissionGuard } from "@/components/auth/PermissionGuard"
 import Dashboard from "@/pages/admin/Dashboard"
@@ -93,6 +92,14 @@ export const adminRoutes: RouteObject = {
       element: (
         <PermissionGuard resource="users" type="page_access">
           <SystemRoles />
+        </PermissionGuard>
+      ),
+    },
+    {
+      path: "system-roles/:roleId/permissions",
+      element: (
+        <PermissionGuard resource="users" type="page_access">
+          <RolePermissions />
         </PermissionGuard>
       ),
     },

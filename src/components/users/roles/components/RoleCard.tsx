@@ -1,68 +1,56 @@
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Pencil, Shield, Trash2, Users } from "lucide-react";
-import { Role } from "../types/role";
-import { useRoleStats } from "../../hooks/useRoleStats";
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Shield, Trash2 } from "lucide-react"
+import { Role } from "../types/role"
+import { useNavigate } from "react-router-dom"
 
 interface RoleCardProps {
-  role: Role;
-  isAdmin: boolean;
-  onEdit: (role: Role) => void;
-  onDelete: (role: Role) => void;
-  onManagePermissions: (role: Role) => void;
+  role: Role
+  isAdmin: boolean
+  onEdit: (role: Role) => void
+  onDelete: (role: Role) => void
 }
 
-export const RoleCard = ({ 
-  role, 
-  isAdmin, 
-  onEdit, 
-  onDelete, 
-  onManagePermissions 
-}: RoleCardProps) => {
-  const { data: roleStats } = useRoleStats();
-  const userCount = roleStats ? roleStats[role.name] || 0 : 0;
-
+export function RoleCard({ role, isAdmin, onEdit, onDelete }: RoleCardProps) {
+  const navigate = useNavigate()
+  
   return (
-    <Card key={role.id} className="p-4">
-      <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-        <div className="space-y-2 flex-grow">
-          <h4 className="font-medium text-card-foreground">{role.nicename}</h4>
-          <p className="text-sm text-muted-foreground">{role.name}</p>
-          {role.description && (
-            <p className="text-sm text-muted-foreground">{role.description}</p>
-          )}
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Users className="h-4 w-4" />
-            <span>{userCount} {userCount === 1 ? 'user' : 'users'}</span>
-          </div>
+    <Card>
+      <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+        <div className="flex items-center gap-2 font-semibold">
+          <Shield className="h-4 w-4" />
+          {role.nicename}
         </div>
-        {isAdmin && (
-          <div className="flex gap-2 justify-end sm:flex-col">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onManagePermissions(role)}
-            >
-              <Shield className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onEdit(role)}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onDelete(role)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
+        {isAdmin && role.name !== 'admin' && (
+          <Button
+            variant="destructive"
+            size="icon"
+            onClick={() => onDelete(role)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         )}
-      </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">{role.description || 'No description provided.'}</p>
+        <div className="flex justify-between items-center">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onEdit(role)}
+          >
+            Edit Role
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => navigate(`/admin/system-roles/${role.id}/permissions`)}
+          >
+            Manage Permissions
+          </Button>
+        </div>
+      </CardContent>
     </Card>
-  );
-};
+  )
+}

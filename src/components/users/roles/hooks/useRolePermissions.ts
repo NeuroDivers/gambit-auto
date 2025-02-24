@@ -57,13 +57,11 @@ export const useRolePermissions = (roleId: string | null) => {
     console.log("Updating permission:", permission.id, "to value:", newValue);
     
     try {
-      // Optimistically update the UI
       queryClient.setQueryData(["role-permissions", roleId], (oldData: Permission[] | undefined) => {
         if (!oldData) return oldData;
         return oldData.map(p => p.id === permission.id ? { ...p, is_active: newValue } : p);
       });
 
-      // Perform the update
       const { error: updateError } = await supabase
         .from("role_permissions")
         .update({ 
@@ -72,12 +70,8 @@ export const useRolePermissions = (roleId: string | null) => {
         })
         .eq("id", permission.id);
 
-      if (updateError) {
-        console.error("Update error:", updateError);
-        throw updateError;
-      }
+      if (updateError) throw updateError;
 
-      // Toast success message
       const resourceName = permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
       const permissionType = permission.permission_type.toLowerCase().replace(/_/g, ' ');
       const action = newValue ? "enabled" : "disabled";
@@ -90,13 +84,53 @@ export const useRolePermissions = (roleId: string | null) => {
     } catch (error: any) {
       console.error("Permission update error:", error);
       
-      // Revert optimistic update
       queryClient.invalidateQueries({ 
         queryKey: ["role-permissions", roleId]
       });
       
       toast({
         title: "Error updating permission",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleDashboardChange = async (dashboard: "admin" | "staff" | "client") => {
+    if (!roleId || isUpdating) return;
+
+    setIsUpdating(true);
+    try {
+      queryClient.setQueryData(["role", roleId], (oldData: any) => {
+        if (!oldData) return oldData;
+        return { ...oldData, default_dashboard: dashboard };
+      });
+
+      const { error } = await supabase
+        .from("roles")
+        .update({ 
+          default_dashboard: dashboard,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", roleId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Default dashboard updated",
+        description: `Users with this role will now see the ${dashboard} dashboard by default.`,
+      });
+    } catch (error: any) {
+      console.error("Dashboard update error:", error);
+      
+      queryClient.invalidateQueries({ 
+        queryKey: ["role", roleId]
+      });
+      
+      toast({
+        title: "Error updating default dashboard",
         description: error.message,
         variant: "destructive",
       });
@@ -114,13 +148,11 @@ export const useRolePermissions = (roleId: string | null) => {
         ? { can_be_assigned_to_bay: newValue }
         : { can_be_assigned_work_orders: newValue };
 
-      // Optimistically update the UI
       queryClient.setQueryData(["role", roleId], (oldData: any) => {
         if (!oldData) return oldData;
         return { ...oldData, ...updateData };
       });
 
-      // Perform the update
       const { error: updateError } = await supabase
         .from("roles")
         .update({ 
@@ -129,10 +161,7 @@ export const useRolePermissions = (roleId: string | null) => {
         })
         .eq("id", roleId);
 
-      if (updateError) {
-        console.error("Update error:", updateError);
-        throw updateError;
-      }
+      if (updateError) throw updateError;
 
       const feature = type === 'bay' ? 'service bays' : 'work orders';
       const action = newValue ? "enabled" : "disabled";
@@ -143,7 +172,6 @@ export const useRolePermissions = (roleId: string | null) => {
     } catch (error: any) {
       console.error("Assignment update error:", error);
       
-      // Revert optimistic update
       queryClient.invalidateQueries({ 
         queryKey: ["role", roleId]
       });
@@ -164,6 +192,7 @@ export const useRolePermissions = (roleId: string | null) => {
     isUpdating,
     role,
     handlePermissionToggle,
-    handleAssignmentToggle
+    handleAssignmentToggle,
+    handleDashboardChange
   };
 };
