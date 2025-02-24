@@ -4,40 +4,43 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { RoleForm } from "./form/RoleForm";
-import { useRoleForm } from "./form/useRoleForm";
+} from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { RoleForm } from "./form/RoleForm"
+import { useRoleForm } from "./form/useRoleForm"
 
 interface RoleDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
   role?: {
-    id: string;
-    name: string;
-    nicename: string;
-    description: string | null;
-    can_be_assigned_to_bay: boolean;
-  } | null;
-  onSuccess?: () => void;
+    id: string
+    name: string
+    nicename: string
+    description: string | null
+    can_be_assigned_to_bay: boolean
+    default_dashboard: "admin" | "staff" | "client"
+  } | null
+  onSuccess?: () => void
 }
 
 export const RoleDialog = ({ open, onOpenChange, role, onSuccess }: RoleDialogProps) => {
-  const { form, onSubmit } = useRoleForm({ role, onSuccess, onOpenChange });
+  const { form, onSubmit } = useRoleForm({ role, onSuccess, onOpenChange })
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{role ? "Edit Role" : "Create Role"}</DialogTitle>
         </DialogHeader>
-
-        <RoleForm
-          form={form}
-          onSubmit={onSubmit}
-          onCancel={() => onOpenChange(false)}
-          mode={role ? 'edit' : 'create'}
-        />
+        <ScrollArea className="flex-1 pr-4">
+          <RoleForm
+            form={form}
+            onSubmit={onSubmit}
+            onCancel={() => onOpenChange(false)}
+            mode={role ? 'edit' : 'create'}
+          />
+        </ScrollArea>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}

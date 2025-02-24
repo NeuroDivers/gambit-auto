@@ -1,38 +1,50 @@
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { type RoleFormValues } from "./RoleFormSchema";
-import { type UseFormReturn } from "react-hook-form";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { UseFormReturn } from "react-hook-form"
+import { RoleFormValues } from "./RoleFormSchema"
 
 interface RoleFormProps {
-  form: UseFormReturn<RoleFormValues>;
-  onSubmit: (values: RoleFormValues) => Promise<void>;
-  onCancel: () => void;
-  mode: 'create' | 'edit';
+  form: UseFormReturn<RoleFormValues>
+  onSubmit: (values: RoleFormValues) => void
+  onCancel: () => void
+  mode: 'create' | 'edit'
 }
 
-export const RoleForm = ({ form, onSubmit, onCancel, mode }: RoleFormProps) => {
+export function RoleForm({ form, onSubmit, onCancel, mode }: RoleFormProps) {
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Technical Name</FormLabel>
+              <FormLabel>System Name</FormLabel>
               <FormControl>
-                <Input placeholder="Enter role name (e.g. project_manager)" {...field} />
+                <Input placeholder="admin" {...field} />
               </FormControl>
+              <FormDescription>
+                Internal name used by the system (lowercase, no spaces)
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -45,8 +57,11 @@ export const RoleForm = ({ form, onSubmit, onCancel, mode }: RoleFormProps) => {
             <FormItem>
               <FormLabel>Display Name</FormLabel>
               <FormControl>
-                <Input placeholder="Enter display name (e.g. Project Manager)" {...field} />
+                <Input placeholder="Administrator" {...field} />
               </FormControl>
+              <FormDescription>
+                User-friendly name displayed in the interface
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -59,26 +74,76 @@ export const RoleForm = ({ form, onSubmit, onCancel, mode }: RoleFormProps) => {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea 
-                  placeholder="Enter role description"
-                  {...field}
-                  value={field.value || ""}
-                />
+                <Textarea placeholder="Role description..." {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
+        <FormField
+          control={form.control}
+          name="default_dashboard"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Default Dashboard</FormLabel>
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select default dashboard" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="admin">Admin Dashboard</SelectItem>
+                  <SelectItem value="staff">Staff Dashboard</SelectItem>
+                  <SelectItem value="client">Client Dashboard</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                The dashboard users with this role will see after logging in
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="can_be_assigned_to_bay"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">Bay Assignment</FormLabel>
+                <FormDescription>
+                  Allow users with this role to be assigned to service bays
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+          >
             Cancel
           </Button>
           <Button type="submit">
-            {mode === 'edit' ? "Update" : "Create"}
+            {mode === 'create' ? 'Create Role' : 'Update Role'}
           </Button>
         </div>
       </form>
     </Form>
-  );
-};
+  )
+}
