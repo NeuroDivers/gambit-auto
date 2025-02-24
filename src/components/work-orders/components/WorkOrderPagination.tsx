@@ -13,6 +13,8 @@ export function WorkOrderPagination({
   totalPages,
   onPageChange
 }: WorkOrderPaginationProps) {
+  const paginationRef = useRef<HTMLDivElement>(null)
+
   const handlePageChange = (newPage: number) => {
     onPageChange(newPage)
     
@@ -27,10 +29,20 @@ export function WorkOrderPagination({
       // Fallback to window scroll if section not found
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
+
+    // Also scroll the pagination controls into view
+    if (paginationRef.current) {
+      setTimeout(() => {
+        paginationRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        })
+      }, 100) // Small delay to ensure content has updated
+    }
   }
 
   return (
-    <div className="flex items-center justify-end space-x-2 py-4">
+    <div ref={paginationRef} className="flex items-center justify-end space-x-2 py-4">
       <Button
         variant="outline"
         size="sm"
