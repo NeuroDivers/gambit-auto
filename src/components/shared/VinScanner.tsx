@@ -92,12 +92,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         facingMode: 'environment',
         width: { ideal: isMobile ? 1920 : 1280 },
         height: { ideal: isMobile ? 1080 : 720 },
-        frameRate: { ideal: 30 },
-        advanced: [{
-          focus: 'continuous',
-          exposure: 'continuous',
-          whiteBalance: 'continuous',
-        }]
+        frameRate: { ideal: 30 }
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({ video: constraints })
@@ -110,16 +105,25 @@ export function VinScanner({ onScan }: VinScannerProps) {
         const videoTrack = stream.getVideoTracks()[0]
         if (videoTrack && isMobile) {
           try {
-            const advancedConstraints: MediaTrackConstraints = {
-              advanced: [{
-                focus: 'continuous',
-                exposure: 'continuous'
-              }]
+            const capabilities = videoTrack.getCapabilities();
+            const settings = videoTrack.getSettings();
+            
+            const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
+            
+            let newConstraints: MediaTrackConstraints = {};
+            
+            if (supportedConstraints.brightness) {
+              newConstraints.brightness = { ideal: 100 };
             }
-            await videoTrack.applyConstraints(advancedConstraints)
-            addLog('Applied mobile-optimized camera settings')
+            
+            if (Object.keys(newConstraints).length > 0) {
+              await videoTrack.applyConstraints(newConstraints);
+              addLog('Applied supported camera settings');
+            } else {
+              addLog('No additional camera settings supported');
+            }
           } catch (error) {
-            addLog('Could not apply advanced camera settings: ' + error)
+            addLog('Could not apply camera settings: ' + error)
           }
         }
 
