@@ -1,4 +1,3 @@
-
 import { useCallback, useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { supabase } from "@/integrations/supabase/client"
@@ -45,12 +44,13 @@ export function useQuoteRequestForm() {
 
   const initialValues: QuoteRequestFormData = {
     vehicleInfo: {
-      make: defaultVehicle?.make ?? "",
-      model: defaultVehicle?.model ?? "",
-      year: defaultVehicle?.year ?? new Date().getFullYear(),
-      vin: defaultVehicle?.vin ?? ""
+      make: "",
+      model: "",
+      year: new Date().getFullYear(),
+      vin: "",
+      saveToAccount: false
     },
-    service_items: [] satisfies ServiceItemType[],
+    service_items: [] as ServiceItemType[],
     description: "",
     service_details: {}
   }

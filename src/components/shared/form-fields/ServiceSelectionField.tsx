@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { CommissionRateFields } from "@/components/shared/form-fields/CommissionRateFields"
+import { UseFormReturn } from "react-hook-form"
 
 type ServiceSelectionFieldProps = {
   services: ServiceItemType[]
@@ -50,7 +51,9 @@ export function ServiceSelectionField({
       service_id: service.id,
       service_name: service.name,
       quantity: 1,
-      unit_price: service.base_price || 0
+      unit_price: service.base_price || 0,
+      commission_rate: null,
+      commission_type: null
     }
 
     onServicesChange([...services, newService])
@@ -148,15 +151,15 @@ export function ServiceSelectionField({
                       <CommissionRateFields
                         form={{
                           control: {
-                            register: (name: string) => ({
-                              value: service.commission_rate,
+                            register: (name: any) => ({
+                              value: service.commission_rate || null,
                               onChange: async (e: any) => {
                                 await updateCommission(index, 'commission_rate', e.target.value)
                                 return true
                               },
-                              onBlur: async () => Promise.resolve(),
+                              onBlur: async () => Promise.resolve(true),
                               ref: () => {},
-                              name: name
+                              name
                             })
                           }
                         }}
