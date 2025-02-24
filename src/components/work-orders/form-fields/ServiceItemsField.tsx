@@ -1,42 +1,26 @@
+import { ServiceItemType } from '@/types/service-item'
 
-import { ServiceItemType as WorkOrderServiceItemType } from "../types"
-import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
-import { ServiceItemType as FormServiceItemType } from "@/hooks/quote-request/formSchema"
-
-export type ServiceItemsFieldProps = {
-  services: WorkOrderServiceItemType[]
-  onServicesChange: (services: WorkOrderServiceItemType[]) => void
+interface ServiceItemsFieldProps {
+  services: ServiceItemType[]
+  onChange: (services: ServiceItemType[]) => void
   disabled?: boolean
-  showCommission?: boolean
 }
 
-export function ServiceItemsField({ services, onServicesChange, disabled, showCommission }: ServiceItemsFieldProps) {
-  const handleServicesChange = (updatedServices: FormServiceItemType[]) => {
-    const workOrderServices: WorkOrderServiceItemType[] = updatedServices.map(service => ({
-      service_id: service.service_id,
-      service_name: service.service_name,
-      quantity: service.quantity,
-      unit_price: service.unit_price,
-      commission_rate: service.commission_rate ?? null,
-      commission_type: service.commission_type ?? null
-    }))
-    
-    console.log('Service items changed:', workOrderServices)
-    onServicesChange(workOrderServices)
+export function ServiceItemsField({ services, onChange, disabled }: ServiceItemsFieldProps) {
+  const handleAdd = (service: Partial<ServiceItemType>) => {
+    const newService: ServiceItemType = {
+      service_id: service.service_id || '',
+      service_name: service.service_name || '',
+      quantity: service.quantity || 1,
+      unit_price: service.unit_price || 0,
+      commission_rate: service.commission_rate || null,
+      commission_type: service.commission_type || null,
+      description: service.description || ''
+    }
+    onChange([...services, newService])
   }
 
   return (
-    <div className="space-y-4">
-      <ServiceSelectionField
-        services={services.map(service => ({
-          ...service,
-          commission_rate: service.commission_rate ?? null,
-          commission_type: service.commission_type ?? null
-        }))}
-        onServicesChange={handleServicesChange}
-        disabled={disabled}
-        showCommission={showCommission}
-      />
-    </div>
+    <div>Service Items Field</div>
   )
 }

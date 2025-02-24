@@ -14,7 +14,7 @@ interface VehicleFormData {
 
 interface NewVehicleFormProps {
   onSave: (data: VehicleFormData & { save_vehicle: boolean }) => void
-  onCancel: () => void
+  onCancel?: () => void
   defaultValues?: Partial<VehicleFormData>
 }
 

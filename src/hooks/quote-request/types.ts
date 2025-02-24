@@ -1,29 +1,23 @@
 
-import { ServiceItemType } from "@/components/work-orders/types"
-import { QuoteRequestFormData } from "@/components/client/quotes/form-steps/types"
-import { UseFormReturn } from "react-hook-form"
+import { ServiceFormData } from "@/types/service-item"
 
-export type UseQuoteRequestFormReturn = {
-  form: UseFormReturn<QuoteRequestFormData>
-  step: number
-  totalSteps: number
-  services: any[]
-  selectedServices: ServiceItemType[]
-  uploading: boolean
-  isSubmitting: boolean
-  handleImageUpload: (files: FileList, serviceId: string) => Promise<void>
-  handleImageRemove: (url: string, serviceId: string) => void
-  onSubmit: (values: QuoteRequestFormData) => Promise<void>
-  nextStep: () => void
-  prevStep: () => void
+export type QuoteRequestStatus = "pending" | "estimated" | "accepted" | "rejected" | "converted"
+
+export interface QuoteRequest {
+  id: string
+  client_id: string
+  status: QuoteRequestStatus
+  vehicle_make: string | null
+  vehicle_model: string | null
+  vehicle_year: number | null
+  vehicle_vin: string | null
+  description: string | null
+  service_ids: string[]
+  service_details: Record<string, any>
+  created_at: string
 }
 
-export type FormStorage = {
-  vehicle_make: string
-  vehicle_model: string
-  vehicle_year: string
-  vehicle_vin: string
-  service_items: ServiceItemType[]
-  description: string
-  service_details: Record<string, any>
+export interface QuoteRequestState {
+  step: number
+  data: ServiceFormData
 }

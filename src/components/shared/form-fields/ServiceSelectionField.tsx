@@ -1,4 +1,4 @@
-import { ServiceItemType } from "@/hooks/quote-request/formSchema"
+import { ServiceItemType } from "@/types/service-item"
 import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -165,9 +165,9 @@ export function ServiceSelectionField({
                               ref: () => {}
                             }),
                             _subjects: {
-                              watch: { subject: { subscribe: () => ({ unsubscribe: () => {} }) } },
-                              array: { subject: { subscribe: () => ({ unsubscribe: () => {} }) } },
-                              state: { subject: { subscribe: () => ({ unsubscribe: () => {} }) } }
+                              watch: { subscribe: () => ({ unsubscribe: () => {} }) },
+                              array: { subscribe: () => ({ unsubscribe: () => {} }) },
+                              state: { subscribe: () => ({ unsubscribe: () => {} }) }
                             },
                             _removeUnmounted: () => {},
                             _names: {

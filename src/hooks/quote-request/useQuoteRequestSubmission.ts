@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { useQuery } from '@tanstack/react-query'
+import { useForm } from 'react-hook-form'
 import type { ServiceFormData } from '@/types/service-item'
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
@@ -9,7 +10,24 @@ import { useNavigate } from 'react-router-dom'
 export function useQuoteRequestSubmission() {
   const [step, setStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [selectedServiceId, setSelectedServiceId] = useState("")
   const navigate = useNavigate()
+
+  const form = useForm<ServiceFormData>({
+    defaultValues: {
+      vehicleInfo: {
+        make: '',
+        model: '',
+        year: new Date().getFullYear(),
+        vin: '',
+        saveToAccount: false,
+      },
+      service_items: [],
+      description: '',
+      service_details: {},
+    }
+  })
 
   const { data: services } = useQuery({
     queryKey: ['services'],
@@ -23,6 +41,24 @@ export function useQuoteRequestSubmission() {
       return data
     }
   })
+
+  const handleImageUpload = async (files: FileList): Promise<string[]> => {
+    try {
+      setUploading(true)
+      // Implement image upload logic here
+      return ["placeholder_url"]
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleImageRemove = (url: string) => {
+    // Implement image removal logic here
+  }
+
+  const onVehicleSave = async (vehicleInfo: ServiceFormData['vehicleInfo']) => {
+    // Implement vehicle save logic here
+  }
 
   const handleSubmit = async (data: ServiceFormData) => {
     try {
@@ -76,11 +112,17 @@ export function useQuoteRequestSubmission() {
   const prevStep = () => setStep(prev => Math.max(prev - 1, 1))
 
   return {
+    form,
     step,
     totalSteps,
     services,
     isSubmitting,
+    uploading,
     handleSubmit,
+    handleImageUpload,
+    handleImageRemove,
+    onVehicleSave,
+    selectedServiceId,
     nextStep,
     prevStep
   }
