@@ -5,6 +5,7 @@ import { protectedRoutes } from "./routes/protectedRoutes"
 import NotFound from "./pages/NotFound"
 import PublicInvoiceView from "./pages/PublicInvoiceView"
 import Auth from "./pages/Auth"
+import UserDetails from "./pages/UserDetails"
 
 export const router = createBrowserRouter([
   {
@@ -15,6 +16,10 @@ export const router = createBrowserRouter([
   {
     path: "/auth",
     element: <Auth />,
+  },
+  {
+    path: "/users/:id",
+    element: <UserDetails />,
   },
   ...authRoutes,
   {
