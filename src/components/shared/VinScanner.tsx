@@ -1,3 +1,4 @@
+
 import { Camera, Barcode } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -9,7 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
-import { createWorker } from 'tesseract.js'
+import { createWorker, PSM } from 'tesseract.js'
 import { BrowserMultiFormatReader, Result } from '@zxing/library'
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 
@@ -47,7 +48,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       await worker.setParameters({
         tessedit_char_whitelist: '0123456789ABCDEFGHJKLMNPRSTUVWXYZ',
         tessedit_ocr_engine_mode: '1',
-        tessedit_pageseg_mode: '7',
+        tessedit_pageseg_mode: PSM.SINGLE_LINE, // Using proper enum value for single line mode
         tessjs_create_pdf: '0',
         tessjs_create_hocr: '0',
         preserve_interword_spaces: '0',
