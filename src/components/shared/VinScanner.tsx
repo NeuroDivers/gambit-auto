@@ -46,24 +46,35 @@ export function VinScanner({ onScan }: VinScannerProps) {
       await worker.reinitialize('eng')
       await worker.setParameters({
         tessedit_char_whitelist: '0123456789ABCDEFGHJKLMNPRSTUVWXYZ',
-        tessedit_ocr_engine_mode: '3', // Changed to "Default" + "Neural nets LSTM only"
+        tessedit_ocr_engine_mode: '3', // Neural nets LSTM only
         tessjs_create_pdf: '0',
         tessjs_create_hocr: '0',
         debug_file: '/dev/null',
         tessedit_pageseg_mode: PSM.SINGLE_LINE,
         tessedit_do_invert: '0',
         textord_heavy_nr: '1',
+        load_system_dawg: '0',
+        load_freq_dawg: '0',
         textord_min_linesize: '2.5',
-        tessjs_image_pre_proc: isMobile ? 'auto' : 'none',
-        thresholding_method: '1', // Otsu adaptive thresholding
+        tessjs_image_pre_proc: 'auto',
+        thresholding_method: '1',
         textord_extension_perm: '1',
         language_model_ngram_on: '1',
         tessjs_vin_mode: '1',
-        tessjs_image_dpi: isMobile ? '300' : '150', // Increased DPI
-        tessedit_dpi: isMobile ? '300' : '150',
+        tessjs_image_dpi: '300',
+        tessedit_dpi: '300',
+        // Additional parameters for better accuracy
+        chop_enable: 'T',
+        use_new_state_cost: 'F',
+        segment_segcost_rating: 'F',
+        enable_new_segsearch: '1',
+        segsearch_max_fixed_pitch_char_wh_ratio: '2.0',
+        tessedit_minimal_rejection: 'T',
+        tessedit_zero_rejection: 'T',
+        tessedit_char_blacklist: 'IiOo',
       })
 
-      addLog('OCR worker initialized with enhanced parameters')
+      addLog('OCR worker initialized with maximum accuracy parameters')
       return worker
     } catch (error) {
       addLog(`Error initializing OCR worker: ${error}`)
@@ -195,18 +206,19 @@ export function VinScanner({ onScan }: VinScannerProps) {
       }
 
       const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
-      addLog(`Detected text: ${text} (confidence: ${confidence}%)`)
       
-      // Lowered confidence threshold slightly but added more validation
-      if (confidence < 45) {
+      // Clean the text first for better logging
+      const cleanedText = text.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, '')
+      addLog(`Detected text: ${cleanedText} (confidence: ${confidence}%)`)
+      
+      // More lenient confidence threshold but stricter validation
+      if (confidence < 40 || cleanedText.length < 15) {
         if (shouldScan) {
           scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
         }
         return
       }
 
-      const cleanedText = text.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, '')
-      
       if (cleanedText.length === 17 && validateVIN(cleanedText)) {
         const isValidVin = await validateVinWithNHTSA(cleanedText)
         
