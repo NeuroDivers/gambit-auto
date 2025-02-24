@@ -358,7 +358,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
               ref={canvasRef}
               className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
-            <div className="absolute inset-[15%] border-2 border-dashed border-primary-foreground/70">
+            <div className="absolute inset-x-[15%] inset-y-[40%] border-2 border-dashed border-primary-foreground/70">
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
                 Position {scanMode === 'text' ? 'VIN text' : 'barcode'} here
               </div>
