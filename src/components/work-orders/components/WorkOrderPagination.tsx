@@ -12,12 +12,18 @@ export function WorkOrderPagination({
   totalPages,
   onPageChange
 }: WorkOrderPaginationProps) {
+  const handlePageChange = (newPage: number) => {
+    onPageChange(newPage)
+    // Scroll to top smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   return (
     <div className="flex items-center justify-end space-x-2 py-4">
       <Button
         variant="outline"
         size="sm"
-        onClick={() => onPageChange(page - 1)}
+        onClick={() => handlePageChange(page - 1)}
         disabled={page === 1}
       >
         Previous
@@ -28,7 +34,7 @@ export function WorkOrderPagination({
       <Button
         variant="outline"
         size="sm"
-        onClick={() => onPageChange(page + 1)}
+        onClick={() => handlePageChange(page + 1)}
         disabled={page === totalPages}
       >
         Next
