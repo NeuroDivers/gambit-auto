@@ -41,10 +41,24 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const initializeWorker = async () => {
     try {
-      addLog('Initializing OCR worker...')
+      addLog('Initializing OCR worker with VIN optimizations...')
       const worker = await createWorker()
+      
+      // Configure OCR settings specifically for VIN recognition
       await worker.reinitialize('eng')
-      addLog('OCR worker initialized')
+      await worker.setParameters({
+        tessedit_char_whitelist: '0123456789ABCDEFGHJKLMNPRSTUVWXYZ', // Valid VIN characters only
+        tessedit_ocr_engine_mode: '2', // LSTM neural network mode
+        textord_space_size_is_variable: '0', // Fixed space size for VIN format
+        textord_minimum_spacing_factor: '0.5', // Tighter character spacing
+        preserve_interword_spaces: '0', // Ignore word spacing for VIN
+        tessedit_pageseg_mode: '7', // Treat input as single line of text
+        tessjs_create_pdf: '0', // Disable PDF output for speed
+        tessjs_create_hocr: '0', // Disable HOCR output for speed
+        debug_file: '/dev/null', // Disable debug file output
+      })
+
+      addLog('OCR worker initialized with VIN-specific parameters')
       return worker
     } catch (error) {
       addLog(`Error initializing OCR worker: ${error}`)
