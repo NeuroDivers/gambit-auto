@@ -18,24 +18,22 @@ interface Props {
 
 export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
   const {
+    form,
     step,
     totalSteps,
     services,
     isSubmitting,
-    handleSubmit
+    uploading,
+    handleSubmit,
+    nextStep,
+    prevStep,
+    handleImageUpload,
+    handleImageRemove,
+    onVehicleSave,
+    selectedServiceId
   } = useQuoteRequestSubmission()
 
   const progress = (step / totalSteps) * 100
-
-  const onSubmitForm = async (data: ServiceFormData) => {
-    try {
-      await handleSubmit(data)
-      toast.success("Quote request submitted successfully!")
-      onSuccess?.()
-    } catch (error) {
-      toast.error("Failed to submit quote request")
-    }
-  }
 
   return (
     <Card className="border-none shadow-none bg-transparent">
@@ -51,7 +49,7 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
         <Progress value={progress} className="h-2" />
       </CardHeader>
       <CardContent>
-        <QuoteFormProvider onSubmit={onSubmitForm}>
+        <QuoteFormProvider onSubmit={handleSubmit}>
           <div className="space-y-8">
             <AnimatePresence mode="wait">
               {step === 1 && (
@@ -61,7 +59,10 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
                   exit={{ opacity: 0, y: -20 }}
                   className="space-y-6"
                 >
-                  <VehicleInfoStep />
+                  <VehicleInfoStep 
+                    form={form} 
+                    onVehicleSave={onVehicleSave} 
+                  />
                   <ServiceSelectionForm services={services || []} />
                 </motion.div>
               )}
@@ -72,7 +73,13 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                 >
-                  <ServiceDetailsStep />
+                  <ServiceDetailsStep
+                    form={form}
+                    services={services || []}
+                    serviceId={selectedServiceId}
+                    onImageUpload={handleImageUpload}
+                    onImageRemove={handleImageRemove}
+                  />
                 </motion.div>
               )}
 
@@ -82,7 +89,10 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                 >
-                  <SummaryStep />
+                  <SummaryStep 
+                    form={form} 
+                    services={services || []} 
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -90,7 +100,10 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
             <FormNavigation
               step={step}
               totalSteps={totalSteps}
+              onNext={nextStep}
+              onPrevious={prevStep}
               isSubmitting={isSubmitting}
+              uploading={uploading}
             />
           </div>
         </QuoteFormProvider>

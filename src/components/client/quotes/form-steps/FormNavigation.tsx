@@ -1,15 +1,7 @@
 
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react"
-
-interface FormNavigationProps {
-  step: number
-  totalSteps: number
-  onNext: () => void
-  onPrevious: () => void
-  isSubmitting: boolean
-  uploading: boolean
-}
+import type { FormNavigationProps } from "./types"
 
 export function FormNavigation({
   step,

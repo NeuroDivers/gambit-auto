@@ -1,28 +1,13 @@
 
-import { UseFormReturn } from "react-hook-form"
-import { QuoteRequestFormData } from "@/types/quote-request"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { InfoIcon } from "lucide-react"
-
-type SummaryStepProps = {
-  form: UseFormReturn<QuoteRequestFormData>
-  services: any[]
-}
+import { SummaryStepProps } from "./types"
 
 export function SummaryStep({ form, services }: SummaryStepProps) {
-  const { watch } = form
-  const values = watch()
+  const values = form.watch()
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold mb-4">Review Your Quote Request</h2>
-        <Alert variant="warning" className="mb-4">
-          <InfoIcon className="h-4 w-4" />
-          <AlertDescription>
-            Prices shown are starting from estimates. Final pricing may vary based on vehicle condition and specific requirements.
-          </AlertDescription>
-        </Alert>
         <div className="space-y-4">
           <div className="space-y-2">
             <h3 className="text-base font-medium">Vehicle Information</h3>
@@ -80,7 +65,7 @@ export function SummaryStep({ form, services }: SummaryStepProps) {
                       <div className="mt-4">
                         <div className="text-sm font-medium mb-2">Attached Images:</div>
                         <div className="flex flex-wrap gap-2">
-                          {details.images.map((url, imageIndex) => (
+                          {details.images.map((url: string, imageIndex: number) => (
                             <img
                               key={imageIndex}
                               src={url}
@@ -96,15 +81,6 @@ export function SummaryStep({ form, services }: SummaryStepProps) {
               })}
             </div>
           </div>
-
-          {values.description && (
-            <div className="space-y-2">
-              <h3 className="text-base font-medium">Additional Notes</h3>
-              <p className="text-sm text-muted-foreground">
-                {values.description}
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </div>
