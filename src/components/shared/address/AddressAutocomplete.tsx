@@ -35,12 +35,52 @@ export function AddressAutocomplete({ form, fieldPrefix = "" }: AddressAutocompl
       container.innerHTML = ''
       container.appendChild(geocoder.current.onAdd())
 
-      // Add custom styles for the geocoder input
+      // Add custom styles for the geocoder input including dark theme support
       const style = document.createElement('style')
       style.textContent = `
         .mapboxgl-ctrl-geocoder {
           width: 100% !important;
           max-width: none !important;
+          background-color: hsl(var(--background)) !important;
+          border: 1px solid hsl(var(--border)) !important;
+          border-radius: 0.5rem !important;
+        }
+        
+        .mapboxgl-ctrl-geocoder--input {
+          background-color: hsl(var(--background)) !important;
+          color: hsl(var(--foreground)) !important;
+          padding: 0.5rem 1rem !important;
+          height: 2.5rem !important;
+        }
+        
+        .mapboxgl-ctrl-geocoder--input:focus {
+          outline: 2px solid hsl(var(--ring)) !important;
+          outline-offset: -1px !important;
+        }
+
+        .mapboxgl-ctrl-geocoder--icon {
+          fill: hsl(var(--muted-foreground)) !important;
+        }
+
+        .mapboxgl-ctrl-geocoder--button {
+          background: hsl(var(--secondary)) !important;
+        }
+
+        .mapboxgl-ctrl-geocoder--suggestion {
+          color: hsl(var(--foreground)) !important;
+          background: hsl(var(--background)) !important;
+        }
+
+        .mapboxgl-ctrl-geocoder--suggestion-title {
+          color: hsl(var(--foreground)) !important;
+        }
+
+        .mapboxgl-ctrl-geocoder--suggestion-address {
+          color: hsl(var(--muted-foreground)) !important;
+        }
+
+        .mapboxgl-ctrl-geocoder--suggestion:hover {
+          background-color: hsl(var(--accent)) !important;
         }
       `
       document.head.appendChild(style)
@@ -75,7 +115,6 @@ export function AddressAutocomplete({ form, fieldPrefix = "" }: AddressAutocompl
     }
   }, [form, fieldPrefix])
 
-  // Let's add some helper text to make it clear this is optional
   return (
     <div>
       <div ref={geocoderContainerRef} className="mb-2" />
