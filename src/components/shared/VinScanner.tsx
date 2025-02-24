@@ -1,3 +1,4 @@
+
 import { Camera, Barcode } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -10,10 +11,13 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { createWorker } from 'tesseract.js'
-import { BrowserMultiFormatReader, Result } from '@zxing/library'
+import { BrowserMultiFormatReader } from '@zxing/library'
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { PSM } from 'tesseract.js'
 import { useIsMobile } from "@/hooks/use-mobile"
+import { cn } from "@/lib/utils"
+
+type TextPosition = 'good' | 'too-far' | 'too-close'
 
 interface VinScannerProps {
   onScan: (vin: string) => void
@@ -26,7 +30,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const [scanMode, setScanMode] = useState<'text' | 'barcode'>('text')
   const [logs, setLogs] = useState<string[]>([])
   const [textDetected, setTextDetected] = useState(false)
-  const [textPosition, setTextPosition] = useState<'good' | 'too-far' | 'too-close' | null>(null)
+  const [textPosition, setTextPosition] = useState<TextPosition | null>(null)
   const isMobile = useIsMobile()
 
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -379,9 +383,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
     const darkPixelRatio = darkPixels / totalPixels
     const textFound = darkPixelRatio > 0.01
     
-    let isProperSize = 'good' as const
-    if (darkPixelRatio < 0.01) isProperSize = 'too-far' as const
-    if (darkPixelRatio > 0.3) isProperSize = 'too-close' as const
+    let isProperSize: TextPosition = 'good'
+    if (darkPixelRatio < 0.01) isProperSize = 'too-far'
+    if (darkPixelRatio > 0.3) isProperSize = 'too-close'
 
     return { textFound, isProperSize }
   }
