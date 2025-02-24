@@ -40,41 +40,48 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const initializeWorker = async () => {
     try {
-      addLog('Initializing OCR worker with enhanced VIN optimizations...')
+      addLog('Initializing OCR worker with VIN-specific font optimizations...')
       const worker = await createWorker()
       
       await worker.reinitialize('eng')
       await worker.setParameters({
+        // Specific whitelist for VIN characters (no I,O,Q)
         tessedit_char_whitelist: '0123456789ABCDEFGHJKLMNPRSTUVWXYZ',
         tessedit_ocr_engine_mode: '3', // Neural nets LSTM only
         tessjs_create_pdf: '0',
         tessjs_create_hocr: '0',
         debug_file: '/dev/null',
         tessedit_pageseg_mode: PSM.SINGLE_LINE,
-        tessedit_do_invert: '0',
-        textord_heavy_nr: '1',
+        // Font-specific optimizations
+        classify_bln_numeric_mode: '1',
+        textord_pitch_range: '0',  // Fixed pitch for OCR-B font
+        textord_fixed_pitch_threshold: '0',
+        edges_children_fix: '1',
+        edges_max_children_per_outline: '40',
+        edges_min_nonhole: '40',
+        edges_patharea_ratio: '2.0',
+        // OCR-B specific settings
+        assume_fixed_pitch: '1',
+        textord_space_size_is_variable: '0',
+        textord_words_default_fixed_space: '1',
+        textord_min_linesize: '5', // OCR-B is typically well-defined
+        classify_character_fragments: 'F',
+        // Enhanced segmentation for fixed-width characters
+        segsearch_max_fixed_pitch_char_wh_ratio: '1.1',
+        // Disable dictionary to rely on pure character recognition
         load_system_dawg: '0',
         load_freq_dawg: '0',
-        textord_min_linesize: '2.5',
-        tessjs_image_pre_proc: 'auto',
-        thresholding_method: '1',
-        textord_extension_perm: '1',
-        language_model_ngram_on: '1',
-        tessjs_vin_mode: '1',
+        // High DPI for better character separation
         tessjs_image_dpi: '300',
         tessedit_dpi: '300',
-        // Additional parameters for better accuracy
-        chop_enable: 'T',
-        use_new_state_cost: 'F',
-        segment_segcost_rating: 'F',
-        enable_new_segsearch: '1',
-        segsearch_max_fixed_pitch_char_wh_ratio: '2.0',
+        // Minimal rejection for fixed-font characters
         tessedit_minimal_rejection: 'T',
         tessedit_zero_rejection: 'T',
-        tessedit_char_blacklist: 'IiOo',
+        // Blacklist commonly confused characters
+        tessedit_char_blacklist: 'IiOoQq',
       })
 
-      addLog('OCR worker initialized with maximum accuracy parameters')
+      addLog('OCR worker initialized with VIN font optimizations')
       return worker
     } catch (error) {
       addLog(`Error initializing OCR worker: ${error}`)
