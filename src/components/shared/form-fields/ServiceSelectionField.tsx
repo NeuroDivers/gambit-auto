@@ -154,7 +154,7 @@ export function ServiceSelectionField({
                                 await updateCommission(index, 'commission_rate', e.target.value)
                                 return true
                               },
-                              onBlur: () => {},
+                              onBlur: async () => Promise.resolve(),
                               ref: () => {},
                               name: name
                             })

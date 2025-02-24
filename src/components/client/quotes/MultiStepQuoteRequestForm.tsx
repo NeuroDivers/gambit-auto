@@ -12,7 +12,7 @@ import { Progress } from "@/components/ui/progress"
 import { ServiceTypeSelection } from "./form-steps/ServiceTypeSelection"
 import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
-import type { QuoteRequestFormData, ServiceItemType } from "@/types/quote-request"
+import type { QuoteRequestFormData, ServiceItemType } from "@/hooks/quote-request/formSchema"
 
 type Props = {
   onSuccess?: () => void;
@@ -36,7 +36,7 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
 
   const progress = (step / totalSteps) * 100
 
-  const saveNewVehicle = async (vehicleInfo: any) => {
+  const saveNewVehicle = async (vehicleInfo: QuoteRequestFormData['vehicleInfo']) => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("Please sign in to save vehicles")
@@ -53,7 +53,6 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
         throw new Error("Please fill in all required vehicle information")
       }
 
-      // Get existing vehicles to determine if this should be primary
       const { data: existingVehicles } = await supabase
         .from('vehicles')
         .select('id')
@@ -67,7 +66,7 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
           model: vehicleInfo.model,
           year: vehicleInfo.year,
           vin: vehicleInfo.vin || null,
-          is_primary: !existingVehicles?.length // Make primary if no other vehicles exist
+          is_primary: !existingVehicles?.length
         }])
       
       if (saveError) throw saveError
@@ -82,7 +81,6 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
   const handleSubmit = async (data: QuoteRequestFormData) => {
     if (step === totalSteps) {
       try {
-        // If vehicle should be saved, do it before submitting the quote request
         if (data.vehicleInfo.saveToAccount) {
           await saveNewVehicle(data.vehicleInfo)
         }
@@ -94,7 +92,6 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
         toast.error("Failed to submit quote request")
       }
     } else {
-      // Validate service selection before moving to next step
       if (step === 1 && selectedServices.length === 0) {
         toast.error("Please select at least one service before proceeding")
         return
@@ -140,7 +137,7 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
                           Enter your vehicle details to help us provide accurate service quotes.
                         </p>
                       </div>
-                      <VehicleInfoStep form={form as any} saveVehicle={true} />
+                      <VehicleInfoStep form={form} saveVehicle={true} />
                     </div>
 
                     <div className="rounded-lg border bg-card p-6 space-y-6">
@@ -168,7 +165,7 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
                     className="rounded-lg border bg-card p-6"
                   >
                     <ServiceDetailsStep 
-                      form={form as any}
+                      form={form}
                       services={services || []}
                       serviceId={selectedServices[step - 2].service_id}
                       onImageUpload={handleImageUpload}
