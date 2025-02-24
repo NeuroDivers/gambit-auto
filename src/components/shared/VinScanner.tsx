@@ -176,6 +176,42 @@ export function VinScanner({ onScan }: VinScannerProps) {
     return !suspiciousPatterns.some(pattern => pattern.test(vin));
   }
 
+  const validateVinWithNHTSA = async (vin: string): Promise<boolean> => {
+    try {
+      addLog('Validating VIN with NHTSA API...')
+      const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`)
+      if (!response.ok) {
+        addLog('NHTSA API request failed')
+        return false
+      }
+
+      const data = await response.json()
+      const results = data.Results
+
+      if (!Array.isArray(results)) {
+        addLog('Invalid response format from NHTSA API')
+        return false
+      }
+
+      // Check if the VIN decoder found basic vehicle information
+      const makeResult = results.find((r: any) => r.Variable === 'Make' && r.Value && r.Value !== 'null')
+      const modelResult = results.find((r: any) => r.Variable === 'Model' && r.Value && r.Value !== 'null')
+      const yearResult = results.find((r: any) => r.Variable === 'Model Year' && r.Value && r.Value !== 'null')
+
+      const isValid = !!(makeResult && modelResult && yearResult)
+      addLog(`NHTSA Validation result: ${isValid ? 'Valid' : 'Invalid'} VIN`)
+      
+      if (isValid) {
+        addLog(`Detected vehicle: ${yearResult.Value} ${makeResult.Value} ${modelResult.Value}`)
+      }
+
+      return isValid
+    } catch (error) {
+      addLog(`NHTSA API error: ${error}`)
+      return false
+    }
+  }
+
   const preprocessImage = (canvas: HTMLCanvasElement): string => {
     const ctx = canvas.getContext('2d')
     if (!ctx) return canvas.toDataURL()
@@ -301,13 +337,22 @@ export function VinScanner({ onScan }: VinScannerProps) {
       // Only process if exactly 17 characters
       if (cleanedText.length === 17) {
         if (validateVIN(cleanedText)) {
-          addLog('Valid VIN detected!')
-          onScan(cleanedText)
-          toast.success("VIN scanned successfully")
-          handleClose()
-          return
+          addLog('Initial VIN format validation passed')
+          
+          // Add NHTSA validation
+          const isValidVin = await validateVinWithNHTSA(cleanedText)
+          
+          if (isValidVin) {
+            addLog('NHTSA validation passed!')
+            onScan(cleanedText)
+            toast.success("VIN scanned and validated successfully")
+            handleClose()
+            return
+          } else {
+            addLog('Failed NHTSA validation, continuing scan...')
+          }
         } else {
-          addLog('Potential VIN found but failed validation checks')
+          addLog('Failed initial VIN format validation')
         }
       } else {
         addLog(`Invalid length (${cleanedText.length}), expecting 17 characters`)
