@@ -4,23 +4,33 @@ import { useNavigate } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 
-interface Role {
-  id: string
-  name: string
-  nicename: string
-}
-
-type ProfileWithRole = {
-  id: string
-  role: Role
-}
-
 export const useAuthRedirect = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
     const checkPermissionsAndRedirect = async (userId: string) => {
-      // Check permissions in order of priority
+      // Get user's default dashboard preference
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('default_dashboard')
+        .eq('id', userId)
+        .single()
+
+      const defaultDashboard = profile?.default_dashboard || 'client'
+
+      // First check if user has permission for their preferred dashboard
+      const { data: hasDashboardAccess } = await supabase.rpc('has_permission', {
+        user_id: userId,
+        resource: `${defaultDashboard}_dashboard`,
+        perm_type: 'page_access'
+      })
+
+      if (hasDashboardAccess) {
+        navigate(`/${defaultDashboard}`, { replace: true })
+        return
+      }
+
+      // If no access to preferred dashboard, fall back to permission hierarchy
       const { data: adminAccess } = await supabase.rpc('has_permission', {
         user_id: userId,
         resource: 'admin_dashboard',

@@ -19,13 +19,13 @@ export const useUserEditSubmit = ({ userId, currentRole, onSuccess }: UseUserEdi
     try {
       console.log("Updating profile for user:", userId, "with values:", values);
       
-      // Update the profile with the new role_id directly since we're now passing the role ID
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
           first_name: values.first_name,
           last_name: values.last_name,
-          role_id: values.role
+          role_id: values.role,
+          default_dashboard: values.default_dashboard
         })
         .eq("id", userId);
 
