@@ -1,3 +1,4 @@
+
 import { Camera, Barcode } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -44,7 +45,24 @@ export function VinScanner({ onScan }: VinScannerProps) {
       addLog('Initializing OCR worker...')
       const worker = await createWorker()
       await worker.reinitialize('eng')
-      addLog('OCR worker initialized')
+      await worker.setParameters({
+        tessedit_char_whitelist: '0123456789ABCDEFGHJKLMNPRSTUVWXYZ',
+        tessedit_ocr_engine_mode: '1',
+        tessedit_pageseg_mode: PSM.SINGLE_LINE,
+        tessjs_create_pdf: '0',
+        tessjs_create_hocr: '0',
+        preserve_interword_spaces: '0',
+        tessedit_fast_mode: '0',
+        textord_heavy_nr: '1',
+        tessedit_optimize_enable: '1',
+        user_defined_dpi: '600', // Increased DPI to 600 for higher resolution scanning
+        thresholding_method: '1', // Otsu thresholding for better contrast
+        textord_min_linesize: '2.5', // Minimum text size to detect
+        textord_default_pix_height: '30', // Default pixel height for text
+        edges_boxarea: '0.9', // Increase edge detection sensitivity
+        edges_max_children_per_outline: '45' // Maximum segments per character
+      })
+      addLog('OCR worker initialized with optimized settings')
       return worker
     } catch (error) {
       addLog(`Error initializing OCR worker: ${error}`)
@@ -74,7 +92,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
         video: { 
           facingMode: 'environment',
           width: { ideal: 1280 },
-          height: { ideal: 720 }
+          height: { ideal: 720 },
+          frameRate: { ideal: 30 },
+          aspectRatio: { ideal: 16/9 }
         } 
       })
       
@@ -168,12 +188,54 @@ export function VinScanner({ onScan }: VinScannerProps) {
     if (!validVINPattern.test(vin)) return false;
 
     const suspiciousPatterns = [
-      /[O0]{3,}/i,  // Too many zeros or O's in a row
-      /[1I]{3,}/i,  // Too many ones or I's in a row
-      /(.)\1{4,}/i, // Any character repeated more than 4 times
+      /[O0]{3,}/i, 
+      /[1I]{3,}/i, 
+      /(.)\1{4,}/i,
     ];
 
     return !suspiciousPatterns.some(pattern => pattern.test(vin));
+  }
+
+  const captureFrame = () => {
+    if (!videoRef.current || !canvasRef.current) {
+      addLog('Video or canvas reference not available')
+      return null
+    }
+
+    const canvas = canvasRef.current
+    const video = videoRef.current
+    const ctx = canvas.getContext('2d')
+    
+    if (!ctx) {
+      addLog('Could not get canvas context')
+      return null
+    }
+
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+      addLog('Video not ready for capture')
+      return null
+    }
+
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    const data = imageData.data
+    
+    for (let i = 0; i < data.length; i += 4) {
+      const avg = (data[i] + data[i + 1] + data[i + 2]) / 3
+      const adjusted = avg > 127 ? 255 : 0
+      data[i] = adjusted
+      data[i + 1] = adjusted
+      data[i + 2] = adjusted
+    }
+    
+    ctx.putImageData(imageData, 0, 0)
+    
+    return canvas.toDataURL('image/png')
   }
 
   const startOCRScanning = async (immediateScanning?: boolean) => {
@@ -200,33 +262,45 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
       addLog('Frame captured, starting OCR recognition...')
       const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
-      addLog(`Detected text: ${text} (confidence: ${confidence}%)`)
-      
-      if (confidence < 60) {
-        addLog('Low confidence detection, skipping...')
-        if (shouldScan) {
-          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
-        }
-        return
-      }
 
-      const cleanedText = text.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
-      const vinMatch = cleanedText.match(/[A-HJ-NPR-Z0-9]{17}/i)
+      const cleanedText = text.replace(/[^A-HJ-NPR-Z0-9]/gi, '').toUpperCase()
+      addLog(`Raw text detected: ${text}`)
+      addLog(`Cleaned text: ${cleanedText}`)
+      addLog(`Confidence: ${confidence}%`)
       
-      if (vinMatch) {
-        const scannedValue = vinMatch[0].toUpperCase()
-        if (validateVIN(scannedValue)) {
-          addLog('Valid VIN detected!')
-          onScan(scannedValue)
-          toast.success("VIN scanned successfully")
-          handleClose()
-          return
-        } else {
-          addLog('Potential VIN found but failed validation checks')
+      const potentialVins = cleanedText.match(/[A-HJ-NPR-Z0-9]{17}/g)
+      
+      if (potentialVins && potentialVins.length > 0) {
+        for (const vin of potentialVins) {
+          addLog(`Checking potential VIN: ${vin}`)
+          
+          if (validateVIN(vin)) {
+            addLog('Valid VIN detected!')
+            onScan(vin)
+            toast.success("VIN scanned successfully")
+            handleClose()
+            return
+          } else {
+            addLog('VIN format invalid, continuing scan...')
+          }
+        }
+      } else if (confidence >= 60) {
+        const longerMatches = cleanedText.match(/[A-HJ-NPR-Z0-9]{15,19}/g)
+        if (longerMatches) {
+          for (const match of longerMatches) {
+            const possibleVin = match.slice(0, 17)
+            addLog(`Checking possible VIN from longer match: ${possibleVin}`)
+            if (validateVIN(possibleVin)) {
+              addLog('Valid VIN detected from longer match!')
+              onScan(possibleVin)
+              toast.success("VIN scanned successfully")
+              handleClose()
+              return
+            }
+          }
         }
       }
       
-      addLog('No valid VIN found, continuing scan...')
       if (shouldScan) {
         scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
       }
@@ -236,45 +310,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
         scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
       }
     }
-  }
-
-  const captureFrame = () => {
-    if (!videoRef.current || !canvasRef.current) {
-      addLog('Video or canvas reference not available')
-      return null
-    }
-
-    const canvas = canvasRef.current
-    const video = videoRef.current
-    const ctx = canvas.getContext('2d')
-    
-    if (!ctx) {
-      addLog('Could not get canvas context')
-      return null
-    }
-
-    if (video.readyState !== video.HAVE_ENOUGH_DATA) {
-      addLog('Video not ready for capture')
-      return null
-    }
-
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-
-    const scanAreaWidth = video.videoWidth * 0.7
-    const scanAreaHeight = video.videoHeight * 0.1
-    const startX = (video.videoWidth - scanAreaWidth) / 2
-    const startY = (video.videoHeight - scanAreaHeight) / 2
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    
-    ctx.drawImage(
-      video,
-      startX, startY, scanAreaWidth, scanAreaHeight,
-      0, 0, canvas.width, canvas.height
-    )
-    
-    return canvas.toDataURL('image/png')
   }
 
   const handleClose = async () => {
@@ -362,7 +397,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
               ref={canvasRef}
               className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
-            <div className="absolute inset-x-[15%] top-1/2 -translate-y-1/2 h-[10%] border-2 border-dashed border-primary-foreground/70">
+            <div className="absolute inset-x-[15%] inset-y-[40%] border-2 border-dashed border-primary-foreground/70">
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
                 Position {scanMode === 'text' ? 'VIN text' : 'barcode'} here
               </div>
