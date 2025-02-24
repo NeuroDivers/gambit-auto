@@ -1,3 +1,4 @@
+
 import { DashboardLayoutWrapper } from "@/components/dashboard/DashboardLayoutWrapper"
 import { PermissionGuard } from "@/components/auth/PermissionGuard"
 import Dashboard from "@/pages/dashboard/Dashboard"
@@ -130,7 +131,11 @@ export const protectedRoutes: RouteObject = {
     },
     {
       path: "estimates/create",
-      element: <CreateQuote />,
+      element: (
+        <PermissionGuard resource="quotes" type="page_access">
+          <CreateQuote />
+        </PermissionGuard>
+      ),
     },
     {
       path: "invoices",
