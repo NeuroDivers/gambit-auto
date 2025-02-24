@@ -45,6 +45,80 @@ export const useRolePermissions = (roleId: string | null) => {
     enabled: !!roleId,
   })
 
+  const handleBayAssignmentToggle = async (newValue: boolean) => {
+    if (!roleId || isUpdating) return
+    setIsUpdating(true)
+
+    try {
+      queryClient.setQueryData(["role", roleId], (oldData: any) => {
+        if (!oldData) return oldData
+        return { ...oldData, can_be_assigned_to_bay: newValue }
+      })
+
+      const { error } = await supabase
+        .from("roles")
+        .update({ 
+          can_be_assigned_to_bay: newValue,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", roleId)
+
+      if (error) throw error
+
+      toast({
+        title: "Role updated",
+        description: `Bay assignment ${newValue ? 'enabled' : 'disabled'} for this role.`,
+      })
+    } catch (error: any) {
+      console.error("Bay assignment update error:", error)
+      queryClient.invalidateQueries({ queryKey: ["role", roleId] })
+      toast({
+        title: "Error updating bay assignment",
+        description: error.message,
+        variant: "destructive",
+      })
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleWorkOrderAssignmentToggle = async (newValue: boolean) => {
+    if (!roleId || isUpdating) return
+    setIsUpdating(true)
+
+    try {
+      queryClient.setQueryData(["role", roleId], (oldData: any) => {
+        if (!oldData) return oldData
+        return { ...oldData, can_be_assigned_work_orders: newValue }
+      })
+
+      const { error } = await supabase
+        .from("roles")
+        .update({ 
+          can_be_assigned_work_orders: newValue,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", roleId)
+
+      if (error) throw error
+
+      toast({
+        title: "Role updated",
+        description: `Work order assignment ${newValue ? 'enabled' : 'disabled'} for this role.`,
+      })
+    } catch (error: any) {
+      console.error("Work order assignment update error:", error)
+      queryClient.invalidateQueries({ queryKey: ["role", roleId] })
+      toast({
+        title: "Error updating work order assignment",
+        description: error.message,
+        variant: "destructive",
+      })
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
   const handlePermissionToggle = async (permission: Permission, newValue: boolean) => {
     if (isUpdating) return
     
@@ -139,6 +213,8 @@ export const useRolePermissions = (roleId: string | null) => {
     isUpdating,
     role,
     handlePermissionToggle,
-    handleDashboardChange
+    handleDashboardChange,
+    handleBayAssignmentToggle,
+    handleWorkOrderAssignmentToggle
   }
 }

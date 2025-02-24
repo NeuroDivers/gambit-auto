@@ -9,6 +9,7 @@ import { ChevronLeft, Users, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 
 export default function RolePermissions() {
   const navigate = useNavigate()
@@ -20,6 +21,8 @@ export default function RolePermissions() {
     role,
     handlePermissionToggle,
     handleDashboardChange,
+    handleBayAssignmentToggle,
+    handleWorkOrderAssignmentToggle
   } = useRolePermissions(roleId || null)
 
   if (isLoading) {
@@ -83,6 +86,41 @@ export default function RolePermissions() {
                 <SelectItem value="client">Client Dashboard</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+        </div>
+
+        {/* System Role Permissions */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-primary">
+            System Role Permissions
+          </h3>
+          <div className="grid gap-4">
+            <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+              <div className="space-y-0.5">
+                <Label>Bay Assignment</Label>
+                <p className="text-sm text-muted-foreground">
+                  Allow users with this role to be assigned to service bays
+                </p>
+              </div>
+              <Switch
+                checked={role?.can_be_assigned_to_bay}
+                onCheckedChange={handleBayAssignmentToggle}
+                disabled={isUpdating}
+              />
+            </div>
+            <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+              <div className="space-y-0.5">
+                <Label>Work Order Assignment</Label>
+                <p className="text-sm text-muted-foreground">
+                  Allow users with this role to be assigned work orders
+                </p>
+              </div>
+              <Switch
+                checked={role?.can_be_assigned_work_orders}
+                onCheckedChange={handleWorkOrderAssignmentToggle}
+                disabled={isUpdating}
+              />
+            </div>
           </div>
         </div>
 
