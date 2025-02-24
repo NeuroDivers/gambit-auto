@@ -1,4 +1,3 @@
-
 import { Camera, Barcode } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -341,8 +340,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
       return null
     }
 
-    const scanAreaWidth = video.videoWidth * (isMobile ? 0.8 : 0.7)
-    const scanAreaHeight = video.videoHeight * (isMobile ? 0.2 : 0.15)
+    const scanAreaWidth = video.videoWidth * (isMobile ? 0.7 : 0.7)
+    const scanAreaHeight = video.videoHeight * 0.15
     const startX = (video.videoWidth - scanAreaWidth) / 2
     const startY = (video.videoHeight - scanAreaHeight) / 2
 
@@ -367,27 +366,52 @@ export function VinScanner({ onScan }: VinScannerProps) {
     setTextDetected(textFound)
     setTextPosition(isProperSize)
 
-    return preprocessImage(tempCanvas)
+    if (textFound && isProperSize === 'good') {
+      return preprocessImage(tempCanvas)
+    }
+
+    return null
   }
 
   const analyzeTextPosition = (imageData: ImageData) => {
     const data = imageData.data
     let darkPixels = 0
     let totalPixels = data.length / 4
+    let darkPixelDistribution = new Array(10).fill(0)
 
     for (let i = 0; i < data.length; i += 4) {
       const brightness = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114)
-      if (brightness < 127) darkPixels++
+      if (brightness < 127) {
+        darkPixels++
+        const pixelIndex = Math.floor((i / 4) % imageData.width)
+        const section = Math.floor((pixelIndex / imageData.width) * 10)
+        darkPixelDistribution[section]++
+      }
     }
 
     const darkPixelRatio = darkPixels / totalPixels
-    const textFound = darkPixelRatio > 0.01
-    
-    let isProperSize: TextPosition = 'good'
-    if (darkPixelRatio < 0.01) isProperSize = 'too-far'
-    if (darkPixelRatio > 0.3) isProperSize = 'too-close'
+    const textFound = darkPixelRatio > 0.01 && darkPixelRatio < 0.4
 
-    return { textFound, isProperSize }
+    const hasGoodDistribution = darkPixelDistribution.every(section => 
+      section > 0 && section < (totalPixels / 10) * 0.5
+    )
+
+    let isProperSize: TextPosition = 'good'
+    
+    if (darkPixelRatio < 0.02) {
+      isProperSize = 'too-far'
+    } else if (darkPixelRatio > 0.25) {
+      isProperSize = 'too-close'
+    } else if (!hasGoodDistribution) {
+      isProperSize = 'too-far'
+    }
+
+    addLog(`Dark pixel ratio: ${(darkPixelRatio * 100).toFixed(2)}% - Position: ${isProperSize}`)
+
+    return { 
+      textFound: textFound && hasGoodDistribution,
+      isProperSize 
+    }
   }
 
   const startOCRScanning = async (immediateScanning?: boolean) => {
@@ -547,7 +571,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
             <div 
               className={cn(
                 "absolute inset-x-[15%] top-1/2 -translate-y-1/2 h-[15%] border-2 border-dashed transition-colors duration-300",
-                textDetected ? "border-green-500" : "border-primary-foreground/70"
+                textDetected && textPosition === 'good' ? "border-green-500" : "border-primary-foreground/70"
               )}
             >
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
