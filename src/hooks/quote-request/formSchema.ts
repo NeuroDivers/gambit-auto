@@ -9,7 +9,7 @@ export interface ServiceItemType {
   unit_price: number
   commission_rate: number | null
   commission_type: 'percentage' | 'flat' | null
-  description?: string // Added to make it compatible with InvoiceItem
+  description?: string
 }
 
 const vehicleInfoSchema = z.object({
@@ -33,8 +33,8 @@ const serviceItemSchema = z.object({
 export const formSchema = z.object({
   vehicleInfo: vehicleInfoSchema,
   service_items: z.array(serviceItemSchema),
-  description: z.string(),
-  service_details: z.record(z.any())
+  description: z.string().default(""),
+  service_details: z.record(z.any()).default({})
 }).required()
 
 export type QuoteRequestFormData = z.infer<typeof formSchema>

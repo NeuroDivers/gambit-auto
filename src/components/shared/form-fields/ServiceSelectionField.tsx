@@ -1,3 +1,4 @@
+
 import { ServiceItemType } from "@/hooks/quote-request/formSchema"
 import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
@@ -14,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { CommissionRateFields } from "@/components/shared/form-fields/CommissionRateFields"
-import { UseFormReturn } from "react-hook-form"
+import { UseFormReturn, UseFormRegister } from "react-hook-form"
 
 type ServiceSelectionFieldProps = {
   services: ServiceItemType[]
@@ -22,6 +23,7 @@ type ServiceSelectionFieldProps = {
   disabled?: boolean
   isClient?: boolean
   showCommission?: boolean
+  allowPriceEdit?: boolean
 }
 
 export function ServiceSelectionField({ 
@@ -29,7 +31,8 @@ export function ServiceSelectionField({
   onServicesChange,
   disabled = false,
   isClient = false,
-  showCommission = false
+  showCommission = false,
+  allowPriceEdit = false
 }: ServiceSelectionFieldProps) {
   const { data: availableServices = [], isLoading } = useQuery({
     queryKey: ["services"],
@@ -53,7 +56,8 @@ export function ServiceSelectionField({
       quantity: 1,
       unit_price: service.base_price || 0,
       commission_rate: null,
-      commission_type: null
+      commission_type: null,
+      description: ""
     }
 
     onServicesChange([...services, newService])

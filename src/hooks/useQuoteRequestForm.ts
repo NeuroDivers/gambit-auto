@@ -57,7 +57,8 @@ export function useQuoteRequestForm() {
 
   const form = useForm<QuoteRequestFormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialValues
+    defaultValues: initialValues,
+    mode: 'onChange'
   })
 
   // Update form values when default vehicle is loaded
