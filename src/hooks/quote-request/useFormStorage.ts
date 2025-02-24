@@ -1,41 +1,70 @@
-
+import { useEffect, useState } from "react"
 import { FormStorage } from "./types"
+import { ServiceFormData } from "@/types/service-item"
 
-const STORAGE_KEY = 'quote_request_form_data'
+const storageKey = "quote-form-data"
 
 export function useFormStorage() {
-  const loadSavedFormData = (): FormStorage => {
-    const savedData = localStorage.getItem(STORAGE_KEY)
-    if (savedData) {
-      try {
-        return JSON.parse(savedData)
-      } catch (error) {
-        console.error('Error parsing saved form data:', error)
-        localStorage.removeItem(STORAGE_KEY)
-      }
+  const [data, setDataState] = useState<ServiceFormData | null>(null)
+  const [step, setStepState] = useState(1)
+
+  useEffect(() => {
+    const storedData = localStorage.getItem(storageKey)
+    if (storedData) {
+      const parsedData: FormStorage = JSON.parse(storedData)
+      setDataState(parsedData.data)
+      setStepState(parsedData.step)
     }
-    return {
-      vehicle_make: "",
-      vehicle_model: "",
-      vehicle_year: new Date().getFullYear().toString(),
-      vehicle_vin: "",
+  }, [])
+
+  const getData = (): ServiceFormData => {
+    const storedData = localStorage.getItem(storageKey)
+    return storedData ? JSON.parse(storedData) : {
+      vehicleInfo: {
+        make: '',
+        model: '',
+        year: new Date().getFullYear(),
+        vin: '',
+        saveToAccount: false,
+      },
       service_items: [],
-      description: "",
+      description: '',
       service_details: {}
     }
   }
 
-  const saveFormData = (data: any) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+  const setStep = (step: number) => {
+    setStepState(step)
+    const storedData = getData()
+    localStorage.setItem(storageKey, JSON.stringify({ step, data: storedData }))
   }
 
-  const clearFormData = () => {
-    localStorage.removeItem(STORAGE_KEY)
+  const setData = (data: Partial<ServiceFormData>) => {
+    const storedData = getData()
+    const newData = {
+      ...storedData,
+      ...data,
+      vehicleInfo: {
+        ...storedData.vehicleInfo,
+        ...data.vehicleInfo,
+        year: data.vehicleInfo?.year ? Number(data.vehicleInfo.year) : storedData.vehicleInfo?.year
+      }
+    }
+    localStorage.setItem(storageKey, JSON.stringify(newData))
+  }
+
+  const clearStorage = () => {
+    localStorage.removeItem(storageKey)
+    setDataState(null)
+    setStepState(1)
   }
 
   return {
-    loadSavedFormData,
-    saveFormData,
-    clearFormData
+    data,
+    step,
+    setStep,
+    setData,
+    getData,
+    clearStorage
   }
 }

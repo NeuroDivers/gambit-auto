@@ -1,4 +1,3 @@
-
 import { useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { useQuery } from '@tanstack/react-query'
@@ -6,8 +5,9 @@ import { useForm } from 'react-hook-form'
 import type { ServiceFormData } from '@/types/service-item'
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
+import { useMutation, UseMutationResult } from "@tanstack/react-query"
 
-export function useQuoteRequestSubmission() {
+export function useQuoteRequestSubmission(): UseMutationResult<any, Error, ServiceFormData> {
   const [step, setStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploading, setUploading] = useState(false)
