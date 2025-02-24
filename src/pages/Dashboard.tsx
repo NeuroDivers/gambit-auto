@@ -1,103 +1,54 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs";
-import { WorkOrderCalendar } from "@/components/work-orders/WorkOrderCalendar";
-import { WorkOrdersSection } from "@/components/work-orders/sections/WorkOrdersSection";
-import { useToast } from "@/hooks/use-toast";
 
-interface UserRole {
-  id: string;
-  name: string;
-  nicename: string;
-}
-
-interface UserProfile {
-  role: UserRole;
-}
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
+import AdminDashboard from "./admin/Dashboard"
+import StaffDashboard from "./staff/Dashboard"
+import ClientDashboard from "./client/Dashboard"
+import { LoadingScreen } from "@/components/shared/LoadingScreen"
+import { Navigate } from "react-router-dom"
 
 export default function Dashboard() {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  
-  const { data: session, isLoading: sessionLoading } = useQuery({
-    queryKey: ["session"],
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ["profile"],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session;
-    },
-  });
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error("No user found")
 
-  // Fetch user role with proper typing
-  const { data: profile, isLoading: profileLoading } = useQuery<UserProfile>({
-    queryKey: ["profile", session?.user?.id],
-    enabled: !!session?.user?.id,
-    queryFn: async () => {
-      const { data: profileData, error } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select(`
+          *,
           role:role_id (
             id,
             name,
-            nicename
+            nicename,
+            default_dashboard
           )
         `)
-        .eq("id", session?.user?.id)
-        .single();
+        .eq("id", user.id)
+        .single()
 
-      if (error) throw error;
-      
-      if (!profileData?.role) throw new Error("Profile or role not found");
-
-      // Ensure we're returning a single role object, not an array
-      return {
-        role: profileData.role as unknown as UserRole
-      };
+      if (error) throw error
+      return data
     },
-  });
+  })
 
-  useEffect(() => {
-    if (!sessionLoading && !session) {
-      navigate("/auth");
-    }
-  }, [session, navigate, sessionLoading]);
-
-  useEffect(() => {
-    if (!profileLoading && profile?.role?.name?.toLowerCase() === 'client') {
-      navigate("/client");
-    }
-  }, [profile, navigate, profileLoading]);
-
-  // Show loading screen while checking session and profile
-  if (sessionLoading || profileLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-pulse text-primary/60 text-lg">Loading...</div>
-      </div>
-    );
+  if (isLoading) {
+    return <LoadingScreen />
   }
 
-  if (!session) {
-    return null;
+  if (!profile?.role) {
+    return <Navigate to="/auth" replace />
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
-      <div className="container mx-auto py-12 px-0 sm:px-8">
-        <div className="px-6">
-          <div className="mb-8">
-            <PageBreadcrumbs />
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-          </div>
-        </div>
-        <div className="max-w-[1600px] mx-auto">
-          <div className="grid grid-cols-1 gap-8">
-            <WorkOrderCalendar />
-            <WorkOrdersSection />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  // Render the appropriate dashboard based on the user's role
+  switch (profile.role.default_dashboard) {
+    case "admin":
+      return <AdminDashboard />
+    case "staff":
+      return <StaffDashboard />
+    case "client":
+    default:
+      return <ClientDashboard />
+  }
 }

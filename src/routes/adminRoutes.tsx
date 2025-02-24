@@ -1,3 +1,4 @@
+
 import { DashboardLayoutWrapper } from "@/components/dashboard/DashboardLayoutWrapper"
 import { PermissionGuard } from "@/components/auth/PermissionGuard"
 import Dashboard from "@/pages/admin/Dashboard"
@@ -8,6 +9,7 @@ import ServiceTypes from "@/pages/admin/ServiceTypes"
 import ServiceBays from "@/pages/admin/ServiceBays"
 import UserManagement from "@/pages/admin/UserManagement"
 import SystemRoles from "@/pages/admin/SystemRoles"
+import RolePermissions from "@/pages/admin/RolePermissions"
 import Quotes from "@/pages/admin/Quotes"
 import CreateQuote from "@/pages/admin/CreateQuote"
 import QuoteDetails from "@/pages/admin/QuoteDetails"
@@ -199,5 +201,5 @@ export const adminRoutes: RouteObject = {
         </PermissionGuard>
       ),
     },
-  ]
+  ],
 }
