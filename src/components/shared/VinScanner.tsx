@@ -74,7 +74,13 @@ export function VinScanner({ onScan }: VinScannerProps) {
         video: { 
           facingMode: 'environment',
           width: { ideal: 1280 },
-          height: { ideal: 720 }
+          height: { ideal: 720 },
+          frameRate: { ideal: 30 },
+          advanced: [
+            { brightness: { ideal: 100 }},
+            { contrast: { ideal: 100 }},
+            { sharpness: { ideal: 100 }}
+          ]
         } 
       })
       
@@ -123,7 +129,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
       if (videoRef.current) {
         addLog('Starting barcode scanning...')
         
-        // Create a continuous scanning loop
         const scanLoop = async () => {
           try {
             if (!videoRef.current || !barcodeReaderRef.current) return;
@@ -149,13 +154,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
             }
           }
           
-          // Continue scanning if dialog is still open
           if (isDialogOpen) {
             requestAnimationFrame(scanLoop)
           }
         }
         
-        // Start the scanning loop
         scanLoop()
       }
     } catch (error) {
@@ -165,18 +168,15 @@ export function VinScanner({ onScan }: VinScannerProps) {
   }
 
   const validateVIN = (vin: string): boolean => {
-    // VIN must be exactly 17 characters
     if (vin.length !== 17) return false;
 
-    // VIN can only contain letters (except I, O, Q) and numbers
     const validVINPattern = /^[A-HJ-NPR-Z0-9]{17}$/i;
     if (!validVINPattern.test(vin)) return false;
 
-    // Check for common OCR mistakes (0 vs O, 1 vs I, etc.)
     const suspiciousPatterns = [
-      /[O0]{3,}/i,  // Too many zeros or O's in a row
-      /[1I]{3,}/i,  // Too many ones or I's in a row
-      /(.)\1{4,}/i, // Any character repeated more than 4 times
+      /[O0]{3,}/i, 
+      /[1I]{3,}/i, 
+      /(.)\1{4,}/i,
     ];
 
     return !suspiciousPatterns.some(pattern => pattern.test(vin));
@@ -205,11 +205,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
       }
 
       addLog('Frame captured, starting OCR recognition...')
-      const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
+      const { data: { text, confidence } } = await workerRef.current.recognize(frameData, {
+        tessedit_char_whitelist: '0123456789ABCDEFGHJKLMNPRSTUVWXYZ',
+        tessedit_pageseg_mode: '7',
+        tessedit_ocr_engine_mode: '2'
+      })
       addLog(`Detected text: ${text} (confidence: ${confidence}%)`)
       
-      // Lower confidence threshold from 60% to 40%
-      if (confidence < 40) {
+      if (confidence < 60) {
         addLog('Low confidence detection, skipping...')
         if (shouldScan) {
           scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
@@ -292,7 +295,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const handleScanModeChange = async (value: string) => {
     if (value === 'text' || value === 'barcode') {
       setScanMode(value)
-      // Restart camera with new mode
       stopCamera()
       setLogs([])
       await startCamera()
