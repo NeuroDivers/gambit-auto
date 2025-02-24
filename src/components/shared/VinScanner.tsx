@@ -199,7 +199,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
     // Calculate the scanning area (center rectangle)
     const scanAreaWidth = video.videoWidth * 0.7 // 70% of video width
-    const scanAreaHeight = video.videoHeight * 0.075 // Reduced to 7.5% of video height
+    const scanAreaHeight = video.videoHeight * 0.15 // 15% of video height (doubled from 7.5%)
     const startX = (video.videoWidth - scanAreaWidth) / 2
     const startY = (video.videoHeight - scanAreaHeight) / 2
 
@@ -217,8 +217,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
     // Draw only the region of interest to the temporary canvas
     tempCtx.drawImage(
       video,
-      startX, startY, scanAreaWidth, scanAreaHeight,
-      0, 0, scanAreaWidth, scanAreaHeight
+      startX, startY, scanAreaWidth, scanAreaHeight, // Source rectangle
+      0, 0, scanAreaWidth, scanAreaHeight // Destination rectangle
     )
     
     return tempCanvas.toDataURL('image/png')
@@ -372,7 +372,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
               ref={canvasRef}
               className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
-            <div className="absolute inset-x-[15%] top-1/2 -translate-y-1/2 h-[7.5%] border-2 border-dashed border-primary-foreground/70">
+            <div className="absolute inset-x-[15%] top-1/2 -translate-y-1/2 h-[15%] border-2 border-dashed border-primary-foreground/70">
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
                 Position {scanMode === 'text' ? 'VIN text' : 'barcode'} here
               </div>
