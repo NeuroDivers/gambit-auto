@@ -1,4 +1,3 @@
-
 import { ServiceItemType } from "@/hooks/quote-request/formSchema"
 import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
@@ -155,7 +154,7 @@ export function ServiceSelectionField({
                       <CommissionRateFields
                         form={{
                           control: {
-                            register: (name: string) => ({
+                            register: (name: any) => ({
                               value: service.commission_rate ?? null,
                               onChange: async (e: any) => {
                                 await updateCommission(index, 'commission_rate', e.target.value)
@@ -163,16 +162,7 @@ export function ServiceSelectionField({
                               },
                               onBlur: async () => Promise.resolve(true),
                               ref: () => {},
-                              name,
-                              _subjects: { array: [], watch: {} },
-                              _removeUnmounted: () => {},
-                              _names: { mount: "", unMount: "", array: "", watch: "" },
-                              _state: {},
-                              _options: {},
-                              _formValues: {},
-                              _getWatch: () => ({}),
-                              _formState: {},
-                              _defaultValues: {}
+                              name
                             })
                           }
                         }}

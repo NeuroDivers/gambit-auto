@@ -1,4 +1,3 @@
-
 import { Form } from "@/components/ui/form"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { VehicleInfoStep } from "./form-steps/VehicleInfoStep"
@@ -6,16 +5,15 @@ import { ServiceDetailsStep } from "./form-steps/ServiceDetailsStep"
 import { SummaryStep } from "./form-steps/SummaryStep"
 import { FormNavigation } from "./form-steps/FormNavigation"
 import { useQuoteRequestForm } from "@/hooks/useQuoteRequestForm"
-import { AnimatePresence } from "framer-motion"
-import { motion } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { Progress } from "@/components/ui/progress"
 import { ServiceTypeSelection } from "./form-steps/ServiceTypeSelection"
 import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
-import type { QuoteRequestFormData, ServiceItemType } from "@/hooks/quote-request/formSchema"
+import { QuoteRequestFormData, ServiceItemType } from "@/hooks/quote-request/formSchema"
 
 type Props = {
-  onSuccess?: () => void;
+  onSuccess?: () => void
 }
 
 export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
@@ -101,17 +99,7 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
   }
 
   const handleServiceChange = (services: ServiceItemType[]) => {
-    const validServices = services.map(service => ({
-      service_id: service.service_id,
-      service_name: service.service_name,
-      quantity: service.quantity,
-      unit_price: service.unit_price,
-      commission_rate: service.commission_rate ?? null,
-      commission_type: service.commission_type ?? null,
-      description: service.description ?? ""
-    }))
-    
-    form.setValue('service_items', validServices, {
+    form.setValue('service_items', services, {
       shouldValidate: true
     })
   }

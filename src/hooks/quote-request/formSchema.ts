@@ -32,7 +32,7 @@ const serviceItemSchema = z.object({
 
 export const formSchema = z.object({
   vehicleInfo: vehicleInfoSchema,
-  service_items: z.array(serviceItemSchema),
+  service_items: z.array(serviceItemSchema).default([]),
   description: z.string().default(""),
   service_details: z.record(z.any()).default({})
 }).required()
