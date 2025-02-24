@@ -112,8 +112,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
             
             let newConstraints: MediaTrackConstraints = {};
             
-            if (supportedConstraints.brightness) {
-              newConstraints.brightness = { ideal: 100 };
+            if (supportedConstraints.torch) {
+              newConstraints.torch = true;
             }
             
             if (Object.keys(newConstraints).length > 0) {
