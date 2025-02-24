@@ -11,7 +11,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { createWorker } from 'tesseract.js'
-import { BrowserMultiFormatReader } from '@zxing/library'
+import { BrowserMultiFormatReader, Result } from '@zxing/library'
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 
 interface VinScannerProps {
@@ -40,6 +40,19 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }, 100)
   }
 
+  const initializeWorker = async () => {
+    try {
+      addLog('Initializing OCR worker...')
+      const worker = await createWorker()
+      await worker.reinitialize('eng')
+      addLog('OCR worker initialized')
+      return worker
+    } catch (error) {
+      addLog(`Error initializing OCR worker: ${error}`)
+      throw error
+    }
+  }
+
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
@@ -49,7 +62,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       cancelAnimationFrame(scanningRef.current)
     }
     if (barcodeReaderRef.current) {
-      barcodeReaderRef.current.stopAsyncDecode()
+      barcodeReaderRef.current.reset()
       barcodeReaderRef.current = null
     }
     setIsCameraActive(false)
@@ -110,25 +123,41 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
       if (videoRef.current) {
         addLog('Starting barcode scanning...')
-        await codeReader.decodeFromVideoElement(videoRef.current, (result: any) => {
-          if (result) {
-            const scannedValue = result.text
-            addLog(`Barcode detected: ${scannedValue}`)
+        
+        // Create a continuous scanning loop
+        const scanLoop = async () => {
+          try {
+            if (!videoRef.current || !barcodeReaderRef.current) return;
             
-            if (validateVIN(scannedValue)) {
-              addLog('Valid VIN detected!')
-              onScan(scannedValue.toUpperCase())
-              toast.success("VIN scanned successfully")
-              handleClose()
-            } else {
-              addLog('Invalid VIN format detected')
+            const result = await barcodeReaderRef.current.decodeOnce(videoRef.current);
+            if (result?.getText()) {
+              const scannedValue = result.getText()
+              addLog(`Barcode detected: ${scannedValue}`)
+              
+              if (validateVIN(scannedValue)) {
+                addLog('Valid VIN detected!')
+                onScan(scannedValue.toUpperCase())
+                toast.success("VIN scanned successfully")
+                handleClose()
+                return
+              } else {
+                addLog('Invalid VIN format detected')
+              }
+            }
+          } catch (error: any) {
+            if (error?.name !== 'NotFoundException') {
+              addLog(`Barcode scan error: ${error}`)
             }
           }
-        }, (error: any) => {
-          if (error?.name !== 'NotFoundException') {
-            addLog(`Barcode scan error: ${error}`)
+          
+          // Continue scanning if dialog is still open
+          if (isDialogOpen) {
+            requestAnimationFrame(scanLoop)
           }
-        })
+        }
+        
+        // Start the scanning loop
+        scanLoop()
       }
     } catch (error) {
       addLog(`Error initializing barcode scanner: ${error}`)
