@@ -366,11 +366,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
     setTextDetected(textFound)
     setTextPosition(isProperSize)
 
-    if (textFound && isProperSize === 'good') {
-      return preprocessImage(tempCanvas)
-    }
-
-    return null
+    return preprocessImage(tempCanvas)
   }
 
   const analyzeTextPosition = (imageData: ImageData) => {
@@ -390,20 +386,18 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
 
     const darkPixelRatio = darkPixels / totalPixels
-    const textFound = darkPixelRatio > 0.01 && darkPixelRatio < 0.4
+    const textFound = darkPixelRatio > 0.01 && darkPixelRatio < 0.6
 
-    const hasGoodDistribution = darkPixelDistribution.every(section => 
-      section > 0 && section < (totalPixels / 10) * 0.5
+    const hasGoodDistribution = darkPixelDistribution.some(section => 
+      section > 0 && section < (totalPixels / 10) * 0.8
     )
 
     let isProperSize: TextPosition = 'good'
     
-    if (darkPixelRatio < 0.02) {
+    if (darkPixelRatio < 0.01) {
       isProperSize = 'too-far'
-    } else if (darkPixelRatio > 0.25) {
+    } else if (darkPixelRatio > 0.45) {
       isProperSize = 'too-close'
-    } else if (!hasGoodDistribution) {
-      isProperSize = 'too-far'
     }
 
     addLog(`Dark pixel ratio: ${(darkPixelRatio * 100).toFixed(2)}% - Position: ${isProperSize}`)
