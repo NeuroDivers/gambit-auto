@@ -76,11 +76,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
           width: { ideal: 1280 },
           height: { ideal: 720 },
           frameRate: { ideal: 30 },
-          advanced: [
-            { brightness: { ideal: 100 }},
-            { contrast: { ideal: 100 }},
-            { sharpness: { ideal: 100 }}
-          ]
+          aspectRatio: { ideal: 16/9 },
+          resizeMode: 'crop-and-scale'
         } 
       })
       
