@@ -91,20 +91,20 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const startCamera = async () => {
     try {
-      const constraints = {
-        video: {
-          facingMode: 'environment',
-          width: { ideal: isMobile ? 1920 : 1280 },
-          height: { ideal: isMobile ? 1080 : 720 },
-          frameRate: { ideal: 30 },
+      const constraints: MediaTrackConstraints = {
+        facingMode: 'environment',
+        width: { ideal: isMobile ? 1920 : 1280 },
+        height: { ideal: isMobile ? 1080 : 720 },
+        frameRate: { ideal: 30 },
+        // Advanced constraints are properly typed in MediaTrackConstraints
+        advanced: [{
           focusMode: 'continuous',
-          // Mobile-specific camera settings
           exposureMode: 'continuous',
           whiteBalanceMode: 'continuous',
-        }
+        }]
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
+      const stream = await navigator.mediaDevices.getUserMedia({ video: constraints })
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream
@@ -115,13 +115,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
         const videoTrack = stream.getVideoTracks()[0]
         if (videoTrack && isMobile) {
           try {
-            await videoTrack.applyConstraints({
-              advanced: [
-                { autoFocus: "continuous" },
-                { exposureMode: "continuous" },
-                { focusDistance: 0.33 } // Optimize for typical VIN reading distance
-              ]
-            })
+            // Use proper constraint types
+            const advancedConstraints: MediaTrackConstraints = {
+              advanced: [{
+                focusMode: 'continuous',
+                exposureMode: 'continuous'
+              }]
+            }
+            await videoTrack.applyConstraints(advancedConstraints)
             addLog('Applied mobile-optimized camera settings')
           } catch (error) {
             addLog('Could not apply advanced camera settings: ' + error)
