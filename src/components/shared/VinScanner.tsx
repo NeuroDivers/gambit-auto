@@ -107,23 +107,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
           try {
             const capabilities = videoTrack.getCapabilities();
             const settings = videoTrack.getSettings();
-            
             const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
             
-            let newConstraints: MediaTrackConstraints = {};
+            addLog('Camera capabilities: ' + JSON.stringify(capabilities));
+            addLog('Current settings: ' + JSON.stringify(settings));
+            addLog('Supported constraints: ' + JSON.stringify(supportedConstraints));
             
-            if (supportedConstraints.torch) {
-              newConstraints.torch = true;
-            }
-            
-            if (Object.keys(newConstraints).length > 0) {
-              await videoTrack.applyConstraints(newConstraints);
-              addLog('Applied supported camera settings');
-            } else {
-              addLog('No additional camera settings supported');
-            }
           } catch (error) {
-            addLog('Could not apply camera settings: ' + error)
+            addLog('Could not get camera capabilities: ' + error)
           }
         }
 
