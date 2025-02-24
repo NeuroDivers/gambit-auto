@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import { Link } from "react-router-dom"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,8 +13,9 @@ import {
 } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
+import { formatCurrency } from "@/lib/utils"
 
-export default function Dashboard() {
+export function AdminDashboard({ profile }: { profile: any }) {
   // Fetch work order statistics
   const { data: workOrderStats } = useQuery({
     queryKey: ["work-order-stats"],
@@ -51,7 +51,7 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold">Welcome to your Dashboard</h1>
           <p className="text-muted-foreground mt-2">Here's what's happening in your business today.</p>
         </div>
-        <Link to="/admin/work-orders/create" className="w-full sm:w-auto">
+        <Link to="/work-orders/create" className="w-full sm:w-auto">
           <Button className="w-full sm:w-auto">Create Work Order</Button>
         </Link>
       </div>
@@ -121,7 +121,7 @@ export default function Dashboard() {
             <Wrench className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <Link to="/admin/work-orders">
+            <Link to="/work-orders">
               <Button className="w-full" variant="outline">View Work Orders</Button>
             </Link>
           </CardContent>
@@ -133,7 +133,7 @@ export default function Dashboard() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <Link to="/admin/work-orders">
+            <Link to="/work-orders">
               <Button className="w-full" variant="outline">View Schedule</Button>
             </Link>
           </CardContent>
@@ -145,7 +145,7 @@ export default function Dashboard() {
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <Link to="/admin/quotes">
+            <Link to="/quotes">
               <Button className="w-full" variant="outline">Manage Estimates</Button>
             </Link>
           </CardContent>
@@ -157,7 +157,7 @@ export default function Dashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <Link to="/admin/clients">
+            <Link to="/clients">
               <Button className="w-full" variant="outline">Manage Clients</Button>
             </Link>
           </CardContent>
@@ -174,7 +174,7 @@ export default function Dashboard() {
             <div className="text-muted-foreground text-sm">
               View your recent work orders in the Work Orders section
             </div>
-            <Link to="/admin/work-orders" className="block mt-4">
+            <Link to="/work-orders" className="block mt-4">
               <Button variant="outline" className="w-full">View All Work Orders</Button>
             </Link>
           </CardContent>
@@ -188,7 +188,7 @@ export default function Dashboard() {
             <div className="text-muted-foreground text-sm">
               Check your recent invoices in the Invoices section
             </div>
-            <Link to="/admin/invoices" className="block mt-4">
+            <Link to="/invoices" className="block mt-4">
               <Button variant="outline" className="w-full">View All Invoices</Button>
             </Link>
           </CardContent>

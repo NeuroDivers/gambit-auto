@@ -8,24 +8,7 @@ import { formatDistanceToNow } from "date-fns"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
-export default function ClientDashboard() {
-  // Fetch client profile
-  const { data: profile, isLoading: profileLoading } = useQuery({
-    queryKey: ["profile"],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("No user found")
-      
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle()
-      
-      return profileData
-    },
-  })
-
+export function ClientDashboard({ profile }: { profile: any }) {
   // Fetch client's quotes and quote requests
   const { data: quotes, isLoading: quotesLoading } = useQuery({
     queryKey: ["client-quotes"],
@@ -84,7 +67,7 @@ export default function ClientDashboard() {
     },
   })
 
-  const isLoading = profileLoading || quotesLoading || invoicesLoading
+  const isLoading = quotesLoading || invoicesLoading
 
   if (isLoading) {
     return (

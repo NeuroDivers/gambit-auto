@@ -1,9 +1,7 @@
 
 import { createBrowserRouter } from "react-router-dom"
 import { authRoutes } from "./routes/authRoutes"
-import { adminRoutes } from "./routes/adminRoutes"
-import { clientRoutes } from "./routes/clientRoutes"
-import { staffRoutes } from "./routes/staffRoutes"
+import { protectedRoutes } from "./routes/protectedRoutes"
 import NotFound from "./pages/NotFound"
 import PublicInvoiceView from "./pages/PublicInvoiceView"
 import Auth from "./pages/Auth"
@@ -23,9 +21,7 @@ export const router = createBrowserRouter([
     path: "/invoices/public/:id",
     element: <PublicInvoiceView />,
   },
-  adminRoutes,
-  clientRoutes,
-  staffRoutes,
+  protectedRoutes,
   {
     path: "*",
     element: <NotFound />,

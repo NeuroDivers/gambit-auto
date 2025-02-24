@@ -9,58 +9,15 @@ export const useAuthRedirect = () => {
 
   useEffect(() => {
     const checkPermissionsAndRedirect = async (userId: string) => {
-      // Get user's default dashboard preference
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('default_dashboard')
-        .eq('id', userId)
-        .single()
-
-      const defaultDashboard = profile?.default_dashboard || 'client'
-
-      // First check if user has permission for their preferred dashboard
+      // Get user's role and permissions
       const { data: hasDashboardAccess } = await supabase.rpc('has_permission', {
         user_id: userId,
-        resource: `${defaultDashboard}_dashboard`,
+        resource: 'dashboard',
         perm_type: 'page_access'
       })
 
       if (hasDashboardAccess) {
-        navigate(`/${defaultDashboard}`, { replace: true })
-        return
-      }
-
-      // If no access to preferred dashboard, fall back to permission hierarchy
-      const { data: adminAccess } = await supabase.rpc('has_permission', {
-        user_id: userId,
-        resource: 'admin_dashboard',
-        perm_type: 'page_access'
-      })
-
-      if (adminAccess) {
-        navigate("/admin", { replace: true })
-        return
-      }
-
-      const { data: staffAccess } = await supabase.rpc('has_permission', {
-        user_id: userId,
-        resource: 'staff_dashboard',
-        perm_type: 'page_access'
-      })
-
-      if (staffAccess) {
-        navigate("/staff", { replace: true })
-        return
-      }
-
-      const { data: clientAccess } = await supabase.rpc('has_permission', {
-        user_id: userId,
-        resource: 'client_dashboard',
-        perm_type: 'page_access'
-      })
-
-      if (clientAccess) {
-        navigate("/client", { replace: true })
+        navigate("/dashboard", { replace: true })
         return
       }
 

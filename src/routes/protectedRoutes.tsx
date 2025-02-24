@@ -1,7 +1,6 @@
-
 import { DashboardLayoutWrapper } from "@/components/dashboard/DashboardLayoutWrapper"
 import { PermissionGuard } from "@/components/auth/PermissionGuard"
-import Dashboard from "@/pages/admin/Dashboard"
+import Dashboard from "@/pages/dashboard/Dashboard"
 import WorkOrders from "@/pages/admin/WorkOrders"
 import CreateWorkOrder from "@/pages/admin/CreateWorkOrder"
 import EditWorkOrder from "@/pages/admin/EditWorkOrder"
@@ -25,12 +24,12 @@ import ProfileSettings from "@/pages/admin/ProfileSettings"
 import DeveloperSettings from "@/pages/admin/DeveloperSettings"
 import { RouteObject } from "react-router-dom"
 
-export const adminRoutes: RouteObject = {
-  path: "/admin",
+export const protectedRoutes: RouteObject = {
+  path: "/",
   element: <DashboardLayoutWrapper />,
   children: [
     {
-      path: "",
+      path: "dashboard",
       element: <Dashboard />,
     },
     {
