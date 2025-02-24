@@ -1,54 +1,43 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import AdminDashboard from "./admin/Dashboard"
-import StaffDashboard from "./staff/Dashboard"
-import ClientDashboard from "./client/Dashboard"
+import { AdminDashboard } from "@/pages/dashboard/templates/AdminDashboard"
+import { StaffDashboard } from "@/pages/dashboard/templates/StaffDashboard"
+import { ClientDashboard } from "@/pages/dashboard/templates/ClientDashboard"
+import { usePermissions } from "@/hooks/usePermissions"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
-import { Navigate } from "react-router-dom"
 
 export default function Dashboard() {
-  const { data: profile, isLoading } = useQuery({
+  const { currentUserRole } = usePermissions()
+
+  const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("No user found")
-
-      const { data, error } = await supabase
+      
+      const { data: profileData } = await supabase
         .from("profiles")
-        .select(`
-          *,
-          role:role_id (
-            id,
-            name,
-            nicename,
-            default_dashboard
-          )
-        `)
+        .select("*")
         .eq("id", user.id)
-        .single()
-
-      if (error) throw error
-      return data
+        .maybeSingle()
+      
+      return profileData
     },
   })
 
-  if (isLoading) {
+  if (profileLoading) {
     return <LoadingScreen />
   }
 
-  if (!profile?.role) {
-    return <Navigate to="/auth" replace />
+  // Determine which dashboard template to show based on user role
+  if (currentUserRole?.name?.toLowerCase() === 'administrator') {
+    return <AdminDashboard profile={profile} />
   }
 
-  // Render the appropriate dashboard based on the user's role
-  switch (profile.role.default_dashboard) {
-    case "admin":
-      return <AdminDashboard />
-    case "staff":
-      return <StaffDashboard />
-    case "client":
-    default:
-      return <ClientDashboard />
+  if (currentUserRole?.name?.toLowerCase() === 'staff') {
+    return <StaffDashboard profile={profile} />
   }
+
+  return <ClientDashboard profile={profile} />
 }
