@@ -1,5 +1,6 @@
 
 import { Button } from "@/components/ui/button"
+import { useEffect, useRef } from "react"
 
 interface WorkOrderPaginationProps {
   page: number
@@ -14,8 +15,18 @@ export function WorkOrderPagination({
 }: WorkOrderPaginationProps) {
   const handlePageChange = (newPage: number) => {
     onPageChange(newPage)
-    // Scroll to top smoothly
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    
+    // For mobile, find the work orders section and scroll it into view
+    const workOrdersSection = document.querySelector('.space-y-4') // This targets the work orders container
+    if (workOrdersSection) {
+      workOrdersSection.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      })
+    } else {
+      // Fallback to window scroll if section not found
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
   }
 
   return (
