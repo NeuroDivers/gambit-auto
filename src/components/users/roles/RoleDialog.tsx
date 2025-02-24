@@ -5,7 +5,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { RoleForm } from "./form/RoleForm"
 import { useRoleForm } from "./form/useRoleForm"
 import { Role } from "./types/role"
@@ -26,18 +25,18 @@ export const RoleDialog = ({ open, onOpenChange, role, onSuccess }: RoleDialogPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] flex flex-col">
+      <DialogContent className="max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>{role ? "Edit Role" : "Create Role"}</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="flex-1 pr-4">
+        <div className="flex-1 overflow-y-auto pr-6 -mr-6">
           <RoleForm
             form={form}
             onSubmit={onSubmit}
             onCancel={() => onOpenChange(false)}
             mode={role ? 'edit' : 'create'}
           />
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   )

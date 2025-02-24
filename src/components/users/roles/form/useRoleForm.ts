@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { roleFormSchema, RoleFormValues } from "./RoleFormSchema"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 
 interface UseRoleFormProps {
   role?: {
@@ -22,21 +22,24 @@ interface UseRoleFormProps {
 export const useRoleForm = ({ role, onSuccess, onOpenChange }: UseRoleFormProps) => {
   const { toast } = useToast()
 
-  const form = useForm<RoleFormValues>({
-    resolver: zodResolver(roleFormSchema),
-    defaultValues: {
-      name: "",
-      nicename: "",
-      description: "",
-      can_be_assigned_to_bay: false,
-      default_dashboard: "client"
-    }
-  })
+  const form = useMemo(
+    () =>
+      useForm<RoleFormValues>({
+        resolver: zodResolver(roleFormSchema),
+        defaultValues: {
+          name: "",
+          nicename: "",
+          description: "",
+          can_be_assigned_to_bay: false,
+          default_dashboard: "client"
+        }
+      }),
+    [] // Empty dependencies since we want to create the form only once
+  )
 
   // Reset form with role data when role changes
   useEffect(() => {
     if (role) {
-      console.log("Resetting form with role:", role)
       form.reset({
         name: role.name,
         nicename: role.nicename,
