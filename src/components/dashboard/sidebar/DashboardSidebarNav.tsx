@@ -9,7 +9,8 @@ import {
   ClipboardList, 
   Store, 
   Wrench,
-  LayoutGrid 
+  LayoutGrid,
+  Shield
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useSidebar } from "@/components/ui/sidebar"
@@ -77,6 +78,11 @@ const items = [
         title: "Users",
         href: "/admin/users",
         icon: Users,
+      },
+      {
+        title: "System Roles",
+        href: "/admin/system-roles",
+        icon: Shield,
       },
       {
         title: "Settings",

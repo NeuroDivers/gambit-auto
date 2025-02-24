@@ -8,6 +8,7 @@ import EditWorkOrder from "@/pages/admin/EditWorkOrder"
 import ServiceTypes from "@/pages/admin/ServiceTypes"
 import ServiceBays from "@/pages/admin/ServiceBays"
 import UserManagement from "@/pages/admin/UserManagement"
+import SystemRoles from "@/pages/admin/SystemRoles"
 import Quotes from "@/pages/admin/Quotes"
 import CreateQuote from "@/pages/admin/CreateQuote"
 import QuoteDetails from "@/pages/admin/QuoteDetails"
@@ -84,6 +85,14 @@ export const adminRoutes: RouteObject = {
       element: (
         <PermissionGuard resource="users" type="page_access">
           <UserManagement />
+        </PermissionGuard>
+      ),
+    },
+    {
+      path: "system-roles",
+      element: (
+        <PermissionGuard resource="users" type="page_access">
+          <SystemRoles />
         </PermissionGuard>
       ),
     },

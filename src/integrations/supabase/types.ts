@@ -1176,6 +1176,7 @@ export type Database = {
           can_be_assigned_to_bay: boolean
           can_be_assigned_work_orders: boolean
           created_at: string
+          default_dashboard: string | null
           description: string | null
           id: string
           name: string
@@ -1187,6 +1188,7 @@ export type Database = {
           can_be_assigned_to_bay?: boolean
           can_be_assigned_work_orders?: boolean
           created_at?: string
+          default_dashboard?: string | null
           description?: string | null
           id?: string
           name: string
@@ -1198,6 +1200,7 @@ export type Database = {
           can_be_assigned_to_bay?: boolean
           can_be_assigned_work_orders?: boolean
           created_at?: string
+          default_dashboard?: string | null
           description?: string | null
           id?: string
           name?: string

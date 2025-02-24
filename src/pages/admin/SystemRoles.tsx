@@ -3,17 +3,10 @@ import { useState, useEffect } from "react"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Users, ShieldAlert } from "lucide-react"
-import { UserList } from "@/components/users/UserList"
+import { RoleList } from "@/components/users/roles/RoleList"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { CreateUserDialog } from "@/components/users/CreateUserDialog"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
-import { useAdminStatus } from "@/hooks/useAdminStatus"
 
-export default function UserManagement() {
-  const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState("all");
-  const { isAdmin } = useAdminStatus();
+export default function SystemRoles() {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
   const { checkPermission } = usePermissions()
 
@@ -45,7 +38,7 @@ export default function UserManagement() {
             </div>
           </CardHeader>
           <CardContent>
-            <p>You don't have permission to access user management.</p>
+            <p>You don't have permission to access system roles management.</p>
           </CardContent>
         </Card>
       </div>
@@ -57,31 +50,21 @@ export default function UserManagement() {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold">User Management</h1>
+            <h1 className="text-3xl font-bold">System Roles</h1>
             <p className="text-muted-foreground">
-              Manage system users and their roles
+              Manage system roles and their permissions
             </p>
           </div>
-          {isAdmin && (
-            <Button onClick={() => setIsCreateUserOpen(true)} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Create User
-            </Button>
-          )}
         </div>
         <Alert>
           <Users className="h-4 w-4" />
-          <AlertTitle>User Management</AlertTitle>
+          <AlertTitle>Role Management</AlertTitle>
           <AlertDescription>
-            Add, edit, and manage users in the system. Assign roles to control their access and permissions.
+            Define roles with specific permissions and access levels. Each role determines what users can do in the system.
           </AlertDescription>
         </Alert>
       </div>
-      <UserList initialRoleFilter={selectedRole} />
-      <CreateUserDialog 
-        open={isCreateUserOpen} 
-        onOpenChange={setIsCreateUserOpen} 
-      />
+      <RoleList />
     </div>
   )
 }
