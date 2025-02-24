@@ -59,7 +59,7 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <NavLink to={`${baseRoute}/settings`} className="w-full">Profile Settings</NavLink>
+              <NavLink to={`${baseRoute}/profile-settings`} className="w-full">Profile Settings</NavLink>
             </DropdownMenuItem>
             {isAdmin && (
               <DropdownMenuItem>
