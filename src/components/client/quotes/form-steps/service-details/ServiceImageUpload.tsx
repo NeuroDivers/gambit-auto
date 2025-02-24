@@ -2,12 +2,7 @@
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Upload, X } from "lucide-react"
-
-type ServiceImageUploadProps = {
-  images: string[]
-  onImageUpload: (files: FileList) => Promise<void>
-  onImageRemove: (url: string) => void
-}
+import type { ServiceImageUploadProps } from "./types"
 
 export function ServiceImageUpload({ images, onImageUpload, onImageRemove }: ServiceImageUploadProps) {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

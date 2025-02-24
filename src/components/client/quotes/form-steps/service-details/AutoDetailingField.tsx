@@ -2,15 +2,9 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { UseFormReturn } from "react-hook-form"
-import { QuoteRequestFormData } from "../types"
+import type { ServiceDetailFieldProps } from "./types"
 
-type AutoDetailingFieldProps = {
-  form: UseFormReturn<QuoteRequestFormData>
-  serviceId: string
-}
-
-export function AutoDetailingField({ form, serviceId }: AutoDetailingFieldProps) {
+export function AutoDetailingField({ form, serviceId }: ServiceDetailFieldProps) {
   return (
     <FormField
       control={form.control}
@@ -44,4 +38,3 @@ export function AutoDetailingField({ form, serviceId }: AutoDetailingFieldProps)
     />
   )
 }
-

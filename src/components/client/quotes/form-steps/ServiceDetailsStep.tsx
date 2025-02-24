@@ -1,7 +1,7 @@
 
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Textarea } from "@/components/ui/textarea"
-import { ServiceDetailsStepProps } from "./types"
+import type { ServiceDetailsStepProps } from "./types"
 import { ServiceImageUpload } from "./service-details/ServiceImageUpload"
 import { PPFPackageField } from "./service-details/PPFPackageField"
 import { WindowTintField } from "./service-details/WindowTintField"
