@@ -10,13 +10,10 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { createWorker } from 'tesseract.js'
-import { BrowserMultiFormatReader } from '@zxing/library'
+import { BrowserMultiFormatReader, Result } from '@zxing/library'
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { PSM } from 'tesseract.js'
 import { useIsMobile } from "@/hooks/use-mobile"
-import { cn } from "@/lib/utils"
-
-type TextPosition = 'good' | 'too-far' | 'too-close'
 
 interface VinScannerProps {
   onScan: (vin: string) => void
@@ -28,8 +25,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const [isScanning, setIsScanning] = useState(false)
   const [scanMode, setScanMode] = useState<'text' | 'barcode'>('text')
   const [logs, setLogs] = useState<string[]>([])
-  const [textDetected, setTextDetected] = useState(false)
-  const [textPosition, setTextPosition] = useState<TextPosition | null>(null)
   const isMobile = useIsMobile()
 
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -275,29 +270,24 @@ export function VinScanner({ onScan }: VinScannerProps) {
     const averageBrightness = totalBrightness / (data.length / 4)
     const contrast = maxBrightness - minBrightness
 
-    addLog(`Image analysis - Avg Brightness: ${Math.round(averageBrightness)}, Contrast: ${Math.round(contrast)}`)
+    addLog(`Image analysis - Brightness: ${Math.round(averageBrightness)}, Contrast: ${Math.round(contrast)}`)
 
-    const shouldInvert = averageBrightness > 127 && contrast > 50
-    
+    const shouldInvert = averageBrightness > 200 && contrast < 100
     if (shouldInvert) {
-      addLog('Bright background detected, inverting colors for better OCR')
+      addLog('High brightness detected, inverting colors')
       for (let i = 0; i < data.length; i += 4) {
         data[i] = 255 - data[i]         // Invert red
         data[i + 1] = 255 - data[i + 1] // Invert green
         data[i + 2] = 255 - data[i + 2] // Invert blue
       }
-    } else {
-      addLog('Dark background detected, enhancing contrast')
     }
 
-    const contrastFactor = shouldInvert ? 1.2 : 1.5
-    const midpoint = 127
-
+    const contrastFactor = 1.2 // Increase contrast by 20%
     for (let i = 0; i < data.length; i += 4) {
       for (let j = 0; j < 3; j++) {
         const value = data[i + j]
-        const normalized = (value - midpoint) * contrastFactor + midpoint
-        data[i + j] = Math.max(0, Math.min(255, Math.round(normalized)))
+        const normalized = (value / 255 - 0.5) * contrastFactor + 0.5
+        data[i + j] = Math.max(0, Math.min(255, Math.round(normalized * 255)))
       }
     }
 
@@ -312,11 +302,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
     const tempCtx = tempCanvas.getContext('2d')
     if (tempCtx) {
       tempCtx.putImageData(imageData, 0, 0)
-      ctx.filter = `contrast(${shouldInvert ? 120 : 150}%) brightness(${shouldInvert ? 105 : 95}%)`
+      ctx.filter = 'contrast(120%) brightness(105%)'
       ctx.drawImage(tempCanvas, 0, 0)
     }
 
-    addLog(`Image preprocessing completed with${shouldInvert ? ' color inversion' : ' contrast enhancement'}`)
+    addLog('Image preprocessing completed')
     return canvas.toDataURL()
   }
 
@@ -340,8 +330,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
       return null
     }
 
-    const scanAreaWidth = video.videoWidth * (isMobile ? 0.7 : 0.7)
-    const scanAreaHeight = video.videoHeight * 0.15
+    const scanAreaWidth = video.videoWidth * (isMobile ? 0.8 : 0.7)
+    const scanAreaHeight = video.videoHeight * (isMobile ? 0.2 : 0.15)
     const startX = (video.videoWidth - scanAreaWidth) / 2
     const startY = (video.videoHeight - scanAreaHeight) / 2
 
@@ -361,51 +351,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       0, 0, scanAreaWidth, scanAreaHeight
     )
 
-    const imageData = tempCtx.getImageData(0, 0, scanAreaWidth, scanAreaHeight)
-    const { textFound, isProperSize } = analyzeTextPosition(imageData)
-    setTextDetected(textFound)
-    setTextPosition(isProperSize)
-
     return preprocessImage(tempCanvas)
-  }
-
-  const analyzeTextPosition = (imageData: ImageData) => {
-    const data = imageData.data
-    let darkPixels = 0
-    let totalPixels = data.length / 4
-    let darkPixelDistribution = new Array(10).fill(0)
-
-    for (let i = 0; i < data.length; i += 4) {
-      const brightness = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114)
-      if (brightness < 127) {
-        darkPixels++
-        const pixelIndex = Math.floor((i / 4) % imageData.width)
-        const section = Math.floor((pixelIndex / imageData.width) * 10)
-        darkPixelDistribution[section]++
-      }
-    }
-
-    const darkPixelRatio = darkPixels / totalPixels
-    const textFound = darkPixelRatio > 0.01 && darkPixelRatio < 0.6
-
-    const hasGoodDistribution = darkPixelDistribution.some(section => 
-      section > 0 && section < (totalPixels / 10) * 0.8
-    )
-
-    let isProperSize: TextPosition = 'good'
-    
-    if (darkPixelRatio < 0.01) {
-      isProperSize = 'too-far'
-    } else if (darkPixelRatio > 0.45) {
-      isProperSize = 'too-close'
-    }
-
-    addLog(`Dark pixel ratio: ${(darkPixelRatio * 100).toFixed(2)}% - Position: ${isProperSize}`)
-
-    return { 
-      textFound: textFound && hasGoodDistribution,
-      isProperSize 
-    }
   }
 
   const startOCRScanning = async (immediateScanning?: boolean) => {
@@ -562,32 +508,18 @@ export function VinScanner({ onScan }: VinScannerProps) {
               ref={canvasRef}
               className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
-            <div 
-              className={cn(
-                "absolute inset-x-[15%] top-1/2 -translate-y-1/2 h-[15%] border-2 border-dashed transition-colors duration-300",
-                textDetected && textPosition === 'good' ? "border-green-500" : "border-primary-foreground/70"
-              )}
-            >
+            <div className={`absolute inset-x-[${isMobile ? '10%' : '15%'}] top-1/2 -translate-y-1/2 h-[${isMobile ? '20%' : '15%'}] border-2 border-dashed border-primary-foreground/70`}>
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
                 Position {scanMode === 'text' ? 'VIN text' : 'barcode'} here
               </div>
               <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-px bg-primary-foreground/70" />
               <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-px bg-primary-foreground/70" />
               <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-4 h-4 border-2 border-primary-foreground/70" />
-              {textPosition && (
-                <div 
-                  className={cn(
-                    "absolute -bottom-12 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap",
-                    textPosition === 'too-close' ? "text-yellow-400" : 
-                    textPosition === 'too-far' ? "text-yellow-400" : 
-                    "text-green-400"
-                  )}
-                >
-                  {textPosition === 'too-close' ? "Move camera further away" :
-                   textPosition === 'too-far' ? "Move camera closer" :
-                   "Good position"}
-                </div>
-              )}
+            </div>
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent p-4">
+              <p className="text-white text-center text-sm">
+                Position the {scanMode === 'text' ? 'VIN text' : 'barcode'} within the frame
+              </p>
             </div>
           </div>
           <div className="bg-muted p-4 max-h-32 overflow-y-auto text-xs font-mono">
