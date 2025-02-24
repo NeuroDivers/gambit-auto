@@ -270,24 +270,29 @@ export function VinScanner({ onScan }: VinScannerProps) {
     const averageBrightness = totalBrightness / (data.length / 4)
     const contrast = maxBrightness - minBrightness
 
-    addLog(`Image analysis - Brightness: ${Math.round(averageBrightness)}, Contrast: ${Math.round(contrast)}`)
+    addLog(`Image analysis - Avg Brightness: ${Math.round(averageBrightness)}, Contrast: ${Math.round(contrast)}`)
 
-    const shouldInvert = averageBrightness > 200 && contrast < 100
+    const shouldInvert = averageBrightness > 127 && contrast > 50
+    
     if (shouldInvert) {
-      addLog('High brightness detected, inverting colors')
+      addLog('Bright background detected, inverting colors for better OCR')
       for (let i = 0; i < data.length; i += 4) {
         data[i] = 255 - data[i]         // Invert red
         data[i + 1] = 255 - data[i + 1] // Invert green
         data[i + 2] = 255 - data[i + 2] // Invert blue
       }
+    } else {
+      addLog('Dark background detected, enhancing contrast')
     }
 
-    const contrastFactor = 1.2 // Increase contrast by 20%
+    const contrastFactor = shouldInvert ? 1.2 : 1.5
+    const midpoint = 127
+
     for (let i = 0; i < data.length; i += 4) {
       for (let j = 0; j < 3; j++) {
         const value = data[i + j]
-        const normalized = (value / 255 - 0.5) * contrastFactor + 0.5
-        data[i + j] = Math.max(0, Math.min(255, Math.round(normalized * 255)))
+        const normalized = (value - midpoint) * contrastFactor + midpoint
+        data[i + j] = Math.max(0, Math.min(255, Math.round(normalized)))
       }
     }
 
@@ -302,11 +307,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
     const tempCtx = tempCanvas.getContext('2d')
     if (tempCtx) {
       tempCtx.putImageData(imageData, 0, 0)
-      ctx.filter = 'contrast(120%) brightness(105%)'
+      ctx.filter = `contrast(${shouldInvert ? 120 : 150}%) brightness(${shouldInvert ? 105 : 95}%)`
       ctx.drawImage(tempCanvas, 0, 0)
     }
 
-    addLog('Image preprocessing completed')
+    addLog(`Image preprocessing completed with${shouldInvert ? ' color inversion' : ' contrast enhancement'}`)
     return canvas.toDataURL()
   }
 
