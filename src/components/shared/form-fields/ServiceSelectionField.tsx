@@ -1,4 +1,3 @@
-
 import { ServiceItemType } from "@/hooks/quote-request/formSchema"
 import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
@@ -14,19 +13,22 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { CommissionRateFields } from "@/components/shared/form-fields/CommissionRateFields"
 
 type ServiceSelectionFieldProps = {
   services: ServiceItemType[]
   onServicesChange: (services: ServiceItemType[]) => void
   disabled?: boolean
   isClient?: boolean
+  showCommission?: boolean
 }
 
 export function ServiceSelectionField({ 
   services = [],
   onServicesChange,
   disabled = false,
-  isClient = false
+  isClient = false,
+  showCommission = false
 }: ServiceSelectionFieldProps) {
   const { data: availableServices = [], isLoading } = useQuery({
     queryKey: ["services"],
@@ -70,6 +72,15 @@ export function ServiceSelectionField({
     if (isClient) return
     const newServices = [...services]
     newServices[index] = { ...newServices[index], unit_price: price }
+    onServicesChange(newServices)
+  }
+
+  const updateCommission = (index: number, field: 'commission_rate' | 'commission_type', value: any) => {
+    const newServices = [...services]
+    newServices[index] = { 
+      ...newServices[index], 
+      [field]: field === 'commission_rate' ? Number(value) : value 
+    }
     onServicesChange(newServices)
   }
 
@@ -124,6 +135,26 @@ export function ServiceSelectionField({
                         value={service.unit_price}
                         onChange={(e) => updatePrice(index, parseFloat(e.target.value) || 0)}
                         className="w-full"
+                        disabled={disabled}
+                      />
+                    </div>
+                  )}
+                  
+                  {showCommission && (
+                    <div className="col-span-2">
+                      <CommissionRateFields
+                        form={{
+                          ...form,
+                          control: {
+                            ...form.control,
+                            register: () => ({
+                              value: service.commission_rate,
+                              onChange: (e: any) => updateCommission(index, 'commission_rate', e.target.value)
+                            })
+                          }
+                        }}
+                        namePrefix={`services.${index}.`}
+                        label="Service Commission Override"
                         disabled={disabled}
                       />
                     </div>

@@ -7,6 +7,7 @@ import { UseFormReturn } from "react-hook-form";
 import * as z from "zod";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { CommissionRateFields } from "@/components/shared/form-fields/CommissionRateFields";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -24,9 +25,10 @@ type FormData = z.infer<typeof formSchema>;
 
 interface ServiceTypeFormFieldsProps {
   form: UseFormReturn<FormData>;
+  isEditing?: boolean;
 }
 
-export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
+export function ServiceTypeFormFields({ form, isEditing = false }: ServiceTypeFormFieldsProps) {
   const { data: standaloneServices } = useQuery({
     queryKey: ["standaloneServices"],
     queryFn: async () => {
@@ -43,7 +45,7 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="grid gap-4">
       <div className="flex gap-4 items-start">
         <FormField
           control={form.control}
@@ -244,8 +246,13 @@ export const ServiceTypeFormFields = ({ form }: ServiceTypeFormFieldsProps) => {
           </FormItem>
         )}
       />
+
+      <CommissionRateFields
+        form={form}
+        label="Default Service Commission Rate"
+      />
     </div>
   );
-};
+}
 
 export { formSchema };
