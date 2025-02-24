@@ -157,12 +157,10 @@ export function VinScanner({ onScan }: VinScannerProps) {
     try {
       await videoTrack.applyConstraints({
         advanced: [{
-          ...(typeof videoTrack.getCapabilities?.()?.focusDistance !== 'undefined' && {
-            focusDistance: value[0]
-          })
-        }] as MediaTrackConstraints[]
+          zoom: value[0]
+        }]
       })
-      addLog(`Focus distance adjusted to: ${value[0]}`)
+      addLog(`Focus/zoom adjusted to: ${value[0]}`)
     } catch (error) {
       addLog(`Focus adjustment not supported: ${error}`)
     }
@@ -175,13 +173,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
           facingMode: 'environment',
           width: { ideal: 1280 },
           height: { ideal: 720 },
-          ...(typeof MediaTrackConstraints !== 'undefined' && {
-            advanced: [{
-              autoFocus: 'continuous',
-              exposureMode: 'continuous',
-              whiteBalance: 'continuous'
-            }]
-          })
+          advanced: [{
+            zoom: 1.0
+          }]
         }
       }
 
@@ -205,13 +199,10 @@ export function VinScanner({ onScan }: VinScannerProps) {
         try {
           const capabilities = videoTrack.getCapabilities?.()
           if (capabilities) {
-            await videoTrack.applyConstraints({
-              advanced: [{
-                brightness: capabilities.brightness?.max ?? undefined,
-                contrast: capabilities.contrast?.max ?? undefined,
-                sharpness: capabilities.sharpness?.max ?? undefined
-              }]
-            })
+            const constraints: MediaTrackConstraints = {
+              zoom: capabilities.zoom?.max ?? undefined
+            }
+            await videoTrack.applyConstraints({ advanced: [constraints] })
             addLog('Applied optimal camera settings')
           }
         } catch (error) {
