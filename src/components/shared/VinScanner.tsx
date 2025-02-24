@@ -206,33 +206,38 @@ export function VinScanner({ onScan }: VinScannerProps) {
         tessedit_pageseg_mode: '7',
         tessedit_ocr_engine_mode: '2'
       })
-      addLog(`Detected text: ${text} (confidence: ${confidence}%)`)
-      
-      if (confidence < 60) {
-        addLog('Low confidence detection, skipping...')
-        if (shouldScan) {
-          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
-        }
-        return
-      }
 
       const cleanedText = text.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
-      const vinMatch = cleanedText.match(/[A-HJ-NPR-Z0-9]{17}/i)
+      addLog(`Raw text detected: ${text}`)
+      addLog(`Cleaned text: ${cleanedText}`)
+      addLog(`Confidence: ${confidence}%`)
       
-      if (vinMatch) {
-        const scannedValue = vinMatch[0].toUpperCase()
-        if (validateVIN(scannedValue)) {
-          addLog('Valid VIN detected!')
-          onScan(scannedValue)
-          toast.success("VIN scanned successfully")
-          handleClose()
-          return
+      if (confidence >= 60) {
+        addLog('High confidence detection found!')
+        const potentialVins = cleanedText.match(/[A-HJ-NPR-Z0-9]{17}/gi)
+        
+        if (potentialVins && potentialVins.length > 0) {
+          for (const vin of potentialVins) {
+            const upperVin = vin.toUpperCase()
+            addLog(`Checking potential VIN: ${upperVin}`)
+            
+            if (validateVIN(upperVin)) {
+              addLog('Valid VIN detected!')
+              onScan(upperVin)
+              toast.success("VIN scanned successfully")
+              handleClose()
+              return
+            } else {
+              addLog('VIN format invalid, continuing scan...')
+            }
+          }
         } else {
-          addLog('Potential VIN found but failed validation checks')
+          addLog('No 17-character sequence found in text')
         }
+      } else {
+        addLog('Low confidence detection, continuing scan...')
       }
       
-      addLog('No valid VIN found, continuing scan...')
       if (shouldScan) {
         scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
       }
