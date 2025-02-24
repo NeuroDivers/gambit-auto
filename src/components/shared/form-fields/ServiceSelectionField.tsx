@@ -77,12 +77,15 @@ export function ServiceSelectionField({
   }
 
   const updateCommission = (index: number, field: 'commission_rate' | 'commission_type', value: any) => {
-    const newServices = [...services]
-    newServices[index] = { 
-      ...newServices[index], 
-      [field]: field === 'commission_rate' ? Number(value) : value 
-    }
-    onServicesChange(newServices)
+    return new Promise<void>((resolve) => {
+      const newServices = [...services]
+      newServices[index] = { 
+        ...newServices[index], 
+        [field]: field === 'commission_rate' ? Number(value) : value 
+      }
+      onServicesChange(newServices)
+      resolve()
+    })
   }
 
   return (
@@ -148,7 +151,10 @@ export function ServiceSelectionField({
                           control: {
                             register: () => ({
                               value: service.commission_rate,
-                              onChange: (e: any) => updateCommission(index, 'commission_rate', e.target.value)
+                              onChange: async (e: any) => {
+                                await updateCommission(index, 'commission_rate', e.target.value)
+                                return true
+                              }
                             })
                           }
                         }}

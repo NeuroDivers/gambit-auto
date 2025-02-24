@@ -1,4 +1,3 @@
-
 export type InvoiceItem = {
   service_id: string
   package_id?: string | null
@@ -6,6 +5,8 @@ export type InvoiceItem = {
   description: string
   quantity: number
   unit_price: number
+  commission_rate?: number | null
+  commission_type?: 'percentage' | 'flat' | null
 }
 
 export type InvoiceFormValues = {

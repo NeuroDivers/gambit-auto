@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { InvoiceItem } from "../types"
@@ -6,13 +5,14 @@ import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 
-interface InvoiceItemsFieldsProps {
+export interface InvoiceItemsFieldsProps {
   items: InvoiceItem[]
   setItems: (items: InvoiceItem[]) => void
   allowPriceEdit?: boolean
+  showCommission?: boolean
 }
 
-export function InvoiceItemsFields({ items, setItems, allowPriceEdit = false }: InvoiceItemsFieldsProps) {
+export function InvoiceItemsFields({ items, setItems, allowPriceEdit = false, showCommission = false }: InvoiceItemsFieldsProps) {
   const handleQuantityChange = (index: number, value: string) => {
     const newItems = [...items]
     newItems[index] = {
