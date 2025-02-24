@@ -151,15 +151,24 @@ export function ServiceSelectionField({
                       <CommissionRateFields
                         form={{
                           control: {
-                            register: (name: any) => ({
-                              value: service.commission_rate || null,
+                            register: (name: string) => ({
+                              value: service.commission_rate ?? null,
                               onChange: async (e: any) => {
                                 await updateCommission(index, 'commission_rate', e.target.value)
                                 return true
                               },
                               onBlur: async () => Promise.resolve(true),
                               ref: () => {},
-                              name
+                              name,
+                              _subjects: { array: [], watch: {} },
+                              _removeUnmounted: () => {},
+                              _names: { mount: "", unMount: "", array: "", watch: "" },
+                              _state: {},
+                              _options: {},
+                              _formValues: {},
+                              _getWatch: () => ({}),
+                              _formState: {},
+                              _defaultValues: {}
                             })
                           }
                         }}

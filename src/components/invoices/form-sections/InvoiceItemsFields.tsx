@@ -4,6 +4,7 @@ import { InvoiceItem } from "../types"
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
+import { ServiceItemType } from "@/hooks/quote-request/formSchema"
 
 export interface InvoiceItemsFieldsProps {
   items: InvoiceItem[]
@@ -13,6 +14,19 @@ export interface InvoiceItemsFieldsProps {
 }
 
 export function InvoiceItemsFields({ items, setItems, allowPriceEdit = false, showCommission = false }: InvoiceItemsFieldsProps) {
+  const handleServiceChange = (services: ServiceItemType[]) => {
+    const invoiceItems: InvoiceItem[] = services.map(service => ({
+      service_id: service.service_id,
+      service_name: service.service_name,
+      quantity: service.quantity,
+      unit_price: service.unit_price,
+      commission_rate: service.commission_rate,
+      commission_type: service.commission_type,
+      description: service.description || ""
+    }))
+    setItems(invoiceItems)
+  }
+
   const handleQuantityChange = (index: number, value: string) => {
     const newItems = [...items]
     newItems[index] = {
@@ -38,8 +52,14 @@ export function InvoiceItemsFields({ items, setItems, allowPriceEdit = false, sh
   return (
     <div className="space-y-6">
       <ServiceSelectionField 
-        services={items}
-        onServicesChange={setItems}
+        services={items.map(item => ({
+          ...item,
+          commission_rate: item.commission_rate ?? null,
+          commission_type: item.commission_type ?? null
+        }))}
+        onServicesChange={handleServiceChange}
+        allowPriceEdit={allowPriceEdit}
+        showCommission={showCommission}
       />
 
       {items?.length > 0 && (

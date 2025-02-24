@@ -9,6 +9,7 @@ export interface ServiceItemType {
   unit_price: number
   commission_rate: number | null
   commission_type: 'percentage' | 'flat' | null
+  description?: string // Added to make it compatible with InvoiceItem
 }
 
 const vehicleInfoSchema = z.object({
@@ -25,7 +26,8 @@ const serviceItemSchema = z.object({
   quantity: z.number().min(1, "Quantity must be at least 1"),
   unit_price: z.number().min(0, "Price cannot be negative"),
   commission_rate: z.number().nullable(),
-  commission_type: z.enum(['percentage', 'flat']).nullable()
+  commission_type: z.enum(['percentage', 'flat']).nullable(),
+  description: z.string().optional()
 }).required()
 
 export const formSchema = z.object({
