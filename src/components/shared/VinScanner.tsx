@@ -44,7 +44,18 @@ export function VinScanner({ onScan }: VinScannerProps) {
       addLog('Initializing OCR worker...')
       const worker = await createWorker()
       await worker.reinitialize('eng')
-      addLog('OCR worker initialized')
+      await worker.setParameters({
+        tessedit_char_whitelist: '0123456789ABCDEFGHJKLMNPRSTUVWXYZ',
+        tessedit_ocr_engine_mode: '1',
+        tessedit_pageseg_mode: '7',
+        tessjs_create_pdf: '0',
+        tessjs_create_hocr: '0',
+        preserve_interword_spaces: '0',
+        tessedit_fast_mode: '0',
+        textord_heavy_nr: '1',
+        tessedit_optimize_enable: '1'
+      })
+      addLog('OCR worker initialized with optimized settings')
       return worker
     } catch (error) {
       addLog(`Error initializing OCR worker: ${error}`)
@@ -178,89 +189,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
     return !suspiciousPatterns.some(pattern => pattern.test(vin));
   }
 
-  const startOCRScanning = async (immediateScanning?: boolean) => {
-    const shouldScan = immediateScanning ?? isScanning
-
-    if (!streamRef.current || !workerRef.current || !shouldScan) {
-      addLog(`Scanning prerequisites not met:`)
-      addLog(`- Stream exists: ${!!streamRef.current}`)
-      addLog(`- Worker exists: ${!!workerRef.current}`)
-      addLog(`- Scanning enabled: ${shouldScan}`)
-      return
-    }
-
-    try {
-      addLog('Attempting to capture frame...')
-      const frameData = captureFrame()
-      if (!frameData) {
-        addLog('No frame data captured, retrying...')
-        if (shouldScan) {
-          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
-        }
-        return
-      }
-
-      addLog('Frame captured, starting OCR recognition...')
-      const { data: { text, confidence } } = await workerRef.current.recognize(frameData, {
-        tessedit_char_whitelist: '0123456789ABCDEFGHJKLMNPRSTUVWXYZ',
-        tessedit_pageseg_mode: '7',
-        tessedit_ocr_engine_mode: '1',
-        tessjs_create_pdf: '0',
-        tessjs_create_hocr: '0',
-        tessedit_do_invert: '0',
-        tessedit_image_border: '0',
-        textord_heavy_nr: '1',
-        textord_min_linesize: '3',
-        preserve_interword_spaces: '1',
-        tessedit_pageseg_fixed_pitch: '0',
-        tessedit_fast_mode: '0',
-        tessedit_optimize_enable: '1',
-        tessedit_tess_adaption_mode: '3',
-        debug_file: '/dev/null'
-      })
-
-      const cleanedText = text.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
-      addLog(`Raw text detected: ${text}`)
-      addLog(`Cleaned text: ${cleanedText}`)
-      addLog(`Confidence: ${confidence}%`)
-      
-      if (confidence >= 60) {
-        addLog('High confidence detection found!')
-        const potentialVins = cleanedText.match(/[A-HJ-NPR-Z0-9]{17}/gi)
-        
-        if (potentialVins && potentialVins.length > 0) {
-          for (const vin of potentialVins) {
-            const upperVin = vin.toUpperCase()
-            addLog(`Checking potential VIN: ${upperVin}`)
-            
-            if (validateVIN(upperVin)) {
-              addLog('Valid VIN detected!')
-              onScan(upperVin)
-              toast.success("VIN scanned successfully")
-              handleClose()
-              return
-            } else {
-              addLog('VIN format invalid, continuing scan...')
-            }
-          }
-        } else {
-          addLog('No 17-character sequence found in text')
-        }
-      } else {
-        addLog('Low confidence detection, continuing scan...')
-      }
-      
-      if (shouldScan) {
-        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
-      }
-    } catch (error) {
-      addLog(`OCR error: ${error}`)
-      if (shouldScan) {
-        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
-      }
-    }
-  }
-
   const captureFrame = () => {
     if (!videoRef.current || !canvasRef.current) {
       addLog('Video or canvas reference not available')
@@ -284,9 +212,97 @@ export function VinScanner({ onScan }: VinScannerProps) {
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
     
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
     
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    const data = imageData.data
+    
+    for (let i = 0; i < data.length; i += 4) {
+      const avg = (data[i] + data[i + 1] + data[i + 2]) / 3
+      const adjusted = avg > 127 ? 255 : 0
+      data[i] = adjusted
+      data[i + 1] = adjusted
+      data[i + 2] = adjusted
+    }
+    
+    ctx.putImageData(imageData, 0, 0)
+    
     return canvas.toDataURL('image/png')
+  }
+
+  const startOCRScanning = async (immediateScanning?: boolean) => {
+    const shouldScan = immediateScanning ?? isScanning
+
+    if (!streamRef.current || !workerRef.current || !shouldScan) {
+      addLog(`Scanning prerequisites not met:`)
+      addLog(`- Stream exists: ${!!streamRef.current}`)
+      addLog(`- Worker exists: ${!!workerRef.current}`)
+      addLog(`- Scanning enabled: ${shouldScan}`)
+      return
+    }
+
+    try {
+      addLog('Attempting to capture frame...')
+      const frameData = captureFrame()
+      if (!frameData) {
+        addLog('No frame data captured, retrying...')
+        if (shouldScan) {
+          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+        }
+        return
+      }
+
+      addLog('Frame captured, starting OCR recognition...')
+      const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
+
+      const cleanedText = text.replace(/[^A-HJ-NPR-Z0-9]/gi, '').toUpperCase()
+      addLog(`Raw text detected: ${text}`)
+      addLog(`Cleaned text: ${cleanedText}`)
+      addLog(`Confidence: ${confidence}%`)
+      
+      const potentialVins = cleanedText.match(/[A-HJ-NPR-Z0-9]{17}/g)
+      
+      if (potentialVins && potentialVins.length > 0) {
+        for (const vin of potentialVins) {
+          addLog(`Checking potential VIN: ${vin}`)
+          
+          if (validateVIN(vin)) {
+            addLog('Valid VIN detected!')
+            onScan(vin)
+            toast.success("VIN scanned successfully")
+            handleClose()
+            return
+          } else {
+            addLog('VIN format invalid, continuing scan...')
+          }
+        }
+      } else if (confidence >= 60) {
+        const longerMatches = cleanedText.match(/[A-HJ-NPR-Z0-9]{15,19}/g)
+        if (longerMatches) {
+          for (const match of longerMatches) {
+            const possibleVin = match.slice(0, 17)
+            addLog(`Checking possible VIN from longer match: ${possibleVin}`)
+            if (validateVIN(possibleVin)) {
+              addLog('Valid VIN detected from longer match!')
+              onScan(possibleVin)
+              toast.success("VIN scanned successfully")
+              handleClose()
+              return
+            }
+          }
+        }
+      }
+      
+      if (shouldScan) {
+        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+      }
+    } catch (error) {
+      addLog(`OCR error: ${error}`)
+      if (shouldScan) {
+        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+      }
+    }
   }
 
   const handleClose = async () => {
