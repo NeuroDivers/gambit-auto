@@ -157,9 +157,10 @@ export function VinScanner({ onScan }: VinScannerProps) {
     try {
       await videoTrack.applyConstraints({
         advanced: [{
-          focusMode: 'manual',
-          focusDistance: value[0]
-        }]
+          ...(typeof videoTrack.getCapabilities?.()?.focusDistance !== 'undefined' && {
+            focusDistance: value[0]
+          })
+        }] as MediaTrackConstraints[]
       })
       addLog(`Focus distance adjusted to: ${value[0]}`)
     } catch (error) {
@@ -169,16 +170,22 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
+      const constraints: MediaStreamConstraints = {
+        video: {
           facingMode: 'environment',
           width: { ideal: 1280 },
           height: { ideal: 720 },
-          focusMode: 'continuous',
-          exposureMode: 'continuous',
-          exposureCompensation: 0.5
-        } 
-      })
+          ...(typeof MediaTrackConstraints !== 'undefined' && {
+            advanced: [{
+              autoFocus: 'continuous',
+              exposureMode: 'continuous',
+              whiteBalance: 'continuous'
+            }]
+          })
+        }
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream
@@ -193,6 +200,23 @@ export function VinScanner({ onScan }: VinScannerProps) {
         
         await videoRef.current.play()
         addLog('Video stream started')
+
+        const videoTrack = stream.getVideoTracks()[0]
+        try {
+          const capabilities = videoTrack.getCapabilities?.()
+          if (capabilities) {
+            await videoTrack.applyConstraints({
+              advanced: [{
+                brightness: capabilities.brightness?.max ?? undefined,
+                contrast: capabilities.contrast?.max ?? undefined,
+                sharpness: capabilities.sharpness?.max ?? undefined
+              }]
+            })
+            addLog('Applied optimal camera settings')
+          }
+        } catch (error) {
+          addLog('Advanced camera settings not supported')
+        }
 
         if (scanMode === 'text') {
           addLog('Starting OCR initialization...')
