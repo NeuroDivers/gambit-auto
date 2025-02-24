@@ -26,7 +26,7 @@ const items = [
     items: [
       {
         title: "Dashboard",
-        href: "/admin",
+        href: "/dashboard",
         icon: LayoutGrid,
       },
     ],
@@ -36,17 +36,17 @@ const items = [
     items: [
       {
         title: "Estimates",
-        href: "/admin/estimates",
+        href: "/estimates",
         icon: FileText,
       },
       {
         title: "Work Orders",
-        href: "/admin/work-orders",
+        href: "/work-orders",
         icon: ClipboardList,
       },
       {
         title: "Calendar",
-        href: "/admin/calendar",
+        href: "/calendar",
         icon: Calendar,
       },
     ],
@@ -56,17 +56,17 @@ const items = [
     items: [
       {
         title: "Clients",
-        href: "/admin/clients",
+        href: "/clients",
         icon: Users,
       },
       {
         title: "Service Types",
-        href: "/admin/service-types",
+        href: "/service-types",
         icon: Wrench,
       },
       {
         title: "Service Bays",
-        href: "/admin/service-bays",
+        href: "/service-bays",
         icon: Store,
       },
     ],
@@ -76,17 +76,17 @@ const items = [
     items: [
       {
         title: "Users",
-        href: "/admin/users",
+        href: "/users",
         icon: Users,
       },
       {
         title: "System Roles",
-        href: "/admin/system-roles",
+        href: "/system-roles",
         icon: Shield,
       },
       {
         title: "Settings",
-        href: "/admin/business-settings",
+        href: "/business-settings",
         icon: Settings,
       },
     ],
