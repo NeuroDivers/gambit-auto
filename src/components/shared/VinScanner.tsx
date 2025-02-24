@@ -287,7 +287,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
       addLog(`Detected text: ${text} (confidence: ${confidence}%)`)
       
-      if (confidence < 75) {
+      if (confidence < 50) {
         addLog('Low confidence detection, skipping...')
         if (shouldScan) {
           scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
