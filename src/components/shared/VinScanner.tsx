@@ -55,7 +55,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         tessedit_fast_mode: '0',
         textord_heavy_nr: '1',
         tessedit_optimize_enable: '1',
-        user_defined_dpi: '300', // Set DPI to 300 for optimal scanning
+        user_defined_dpi: '600', // Increased DPI to 600 for higher resolution scanning
         thresholding_method: '1', // Otsu thresholding for better contrast
         textord_min_linesize: '2.5', // Minimum text size to detect
         textord_default_pix_height: '30', // Default pixel height for text
