@@ -204,7 +204,19 @@ export function VinScanner({ onScan }: VinScannerProps) {
       const { data: { text, confidence } } = await workerRef.current.recognize(frameData, {
         tessedit_char_whitelist: '0123456789ABCDEFGHJKLMNPRSTUVWXYZ',
         tessedit_pageseg_mode: '7',
-        tessedit_ocr_engine_mode: '2'
+        tessedit_ocr_engine_mode: '1',
+        tessjs_create_pdf: '0',
+        tessjs_create_hocr: '0',
+        tessedit_do_invert: '0',
+        tessedit_image_border: '0',
+        textord_heavy_nr: '1',
+        textord_min_linesize: '3',
+        preserve_interword_spaces: '1',
+        tessedit_pageseg_fixed_pitch: '0',
+        tessedit_fast_mode: '0',
+        tessedit_optimize_enable: '1',
+        tessedit_tess_adaption_mode: '3',
+        debug_file: '/dev/null'
       })
 
       const cleanedText = text.replace(/[^A-HJ-NPR-Z0-9]/gi, '')
