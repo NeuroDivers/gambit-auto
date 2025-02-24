@@ -1,4 +1,3 @@
-
 import { Camera, Barcode } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -24,7 +23,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const [isScanning, setIsScanning] = useState(false)
   const [scanMode, setScanMode] = useState<'text' | 'barcode'>('text')
   const [logs, setLogs] = useState<string[]>([])
-  
+
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -177,6 +176,43 @@ export function VinScanner({ onScan }: VinScannerProps) {
     return !suspiciousPatterns.some(pattern => pattern.test(vin));
   }
 
+  const preprocessImage = (canvas: HTMLCanvasElement): string => {
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return canvas.toDataURL()
+
+    // Get image data
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    const data = imageData.data
+
+    // Calculate average brightness of the image
+    let totalBrightness = 0
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i]
+      const g = data[i + 1]
+      const b = data[i + 2]
+      // Calculate brightness using perceived brightness formula
+      const brightness = (r * 0.299 + g * 0.587 + b * 0.114) / 255
+      totalBrightness += brightness
+    }
+    const averageBrightness = totalBrightness / (data.length / 4)
+
+    // If the background is light (high brightness), invert the colors
+    if (averageBrightness > 0.5) {
+      addLog('Light background detected, inverting colors')
+      for (let i = 0; i < data.length; i += 4) {
+        data[i] = 255 - data[i]         // Invert red
+        data[i + 1] = 255 - data[i + 1] // Invert green
+        data[i + 2] = 255 - data[i + 2] // Invert blue
+        // Alpha channel remains unchanged
+      }
+      ctx.putImageData(imageData, 0, 0)
+      return canvas.toDataURL()
+    }
+
+    addLog('Dark background detected, keeping original colors')
+    return canvas.toDataURL()
+  }
+
   const captureFrame = () => {
     if (!videoRef.current || !canvasRef.current) {
       addLog('Video or canvas reference not available')
@@ -198,8 +234,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
 
     // Calculate the scanning area (center rectangle)
-    const scanAreaWidth = video.videoWidth * 0.7 // 70% of video width
-    const scanAreaHeight = video.videoHeight * 0.15 // 15% of video height (doubled from 7.5%)
+    const scanAreaWidth = video.videoWidth * 0.7
+    const scanAreaHeight = video.videoHeight * 0.15
     const startX = (video.videoWidth - scanAreaWidth) / 2
     const startY = (video.videoHeight - scanAreaHeight) / 2
 
@@ -217,11 +253,12 @@ export function VinScanner({ onScan }: VinScannerProps) {
     // Draw only the region of interest to the temporary canvas
     tempCtx.drawImage(
       video,
-      startX, startY, scanAreaWidth, scanAreaHeight, // Source rectangle
-      0, 0, scanAreaWidth, scanAreaHeight // Destination rectangle
+      startX, startY, scanAreaWidth, scanAreaHeight,
+      0, 0, scanAreaWidth, scanAreaHeight
     )
-    
-    return tempCanvas.toDataURL('image/png')
+
+    // Preprocess the image before returning
+    return preprocessImage(tempCanvas)
   }
 
   const startOCRScanning = async (immediateScanning?: boolean) => {
