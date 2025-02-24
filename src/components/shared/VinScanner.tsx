@@ -1,4 +1,3 @@
-
 import { Camera, Barcode } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -48,7 +47,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
       addLog('Initializing OCR worker with enhanced VIN optimizations...')
       const worker = await createWorker()
       
-      // Enhanced OCR settings for better mobile performance
       await worker.reinitialize('eng')
       await worker.setParameters({
         tessedit_char_whitelist: '0123456789ABCDEFGHJKLMNPRSTUVWXYZ',
@@ -56,7 +54,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
         tessjs_create_pdf: '0',
         tessjs_create_hocr: '0',
         debug_file: '/dev/null',
-        // Mobile-optimized parameters
         tessedit_pageseg_mode: PSM.SINGLE_LINE,
         tessedit_do_invert: '0', // Let preprocessing handle inversion
         textord_heavy_nr: '1', // Enable noise removal
@@ -96,11 +93,10 @@ export function VinScanner({ onScan }: VinScannerProps) {
         width: { ideal: isMobile ? 1920 : 1280 },
         height: { ideal: isMobile ? 1080 : 720 },
         frameRate: { ideal: 30 },
-        // Advanced constraints are properly typed in MediaTrackConstraints
         advanced: [{
-          focusMode: 'continuous',
-          exposureMode: 'continuous',
-          whiteBalanceMode: 'continuous',
+          focus: 'continuous',
+          exposure: 'continuous',
+          whiteBalance: 'continuous',
         }]
       }
 
@@ -111,15 +107,13 @@ export function VinScanner({ onScan }: VinScannerProps) {
         streamRef.current = stream
         addLog('Stream acquired, initializing camera...')
         
-        // Configure video track settings for mobile
         const videoTrack = stream.getVideoTracks()[0]
         if (videoTrack && isMobile) {
           try {
-            // Use proper constraint types
             const advancedConstraints: MediaTrackConstraints = {
               advanced: [{
-                focusMode: 'continuous',
-                exposureMode: 'continuous'
+                focus: 'continuous',
+                exposure: 'continuous'
               }]
             }
             await videoTrack.applyConstraints(advancedConstraints)
@@ -239,7 +233,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
         return false
       }
 
-      // Check if the VIN decoder found basic vehicle information
       const makeResult = results.find((r: any) => r.Variable === 'Make' && r.Value && r.Value !== 'null')
       const modelResult = results.find((r: any) => r.Variable === 'Model' && r.Value && r.Value !== 'null')
       const yearResult = results.find((r: any) => r.Variable === 'Model Year' && r.Value && r.Value !== 'null')
@@ -262,11 +255,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
     const ctx = canvas.getContext('2d')
     if (!ctx) return canvas.toDataURL()
 
-    // Get image data
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
     const data = imageData.data
 
-    // Calculate average brightness and contrast
     let totalBrightness = 0
     let minBrightness = 255
     let maxBrightness = 0
@@ -286,7 +277,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
     addLog(`Image analysis - Brightness: ${Math.round(averageBrightness)}, Contrast: ${Math.round(contrast)}`)
 
-    // Determine if we need to invert colors
     const shouldInvert = averageBrightness > 200 && contrast < 100
     if (shouldInvert) {
       addLog('High brightness detected, inverting colors')
@@ -297,7 +287,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
       }
     }
 
-    // Apply contrast enhancement
     const contrastFactor = 1.2 // Increase contrast by 20%
     for (let i = 0; i < data.length; i += 4) {
       for (let j = 0; j < 3; j++) {
@@ -307,7 +296,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
       }
     }
 
-    // Apply sharpening
     const sharpenKernel = [
       0, -1, 0,
       -1, 5, -1,
@@ -347,13 +335,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
       return null
     }
 
-    // Calculate the scanning area (center rectangle)
-    const scanAreaWidth = video.videoWidth * (isMobile ? 0.8 : 0.7) // Wider scan area on mobile
-    const scanAreaHeight = video.videoHeight * (isMobile ? 0.2 : 0.15) // Taller scan area on mobile
+    const scanAreaWidth = video.videoWidth * (isMobile ? 0.8 : 0.7)
+    const scanAreaHeight = video.videoHeight * (isMobile ? 0.2 : 0.15)
     const startX = (video.videoWidth - scanAreaWidth) / 2
     const startY = (video.videoHeight - scanAreaHeight) / 2
 
-    // Create a temporary canvas for the cropped area
     const tempCanvas = document.createElement('canvas')
     tempCanvas.width = scanAreaWidth
     tempCanvas.height = scanAreaHeight
@@ -364,14 +350,12 @@ export function VinScanner({ onScan }: VinScannerProps) {
       return null
     }
 
-    // Draw only the region of interest to the temporary canvas
     tempCtx.drawImage(
       video,
       startX, startY, scanAreaWidth, scanAreaHeight,
       0, 0, scanAreaWidth, scanAreaHeight
     )
 
-    // Preprocess the image before returning
     return preprocessImage(tempCanvas)
   }
 
@@ -409,15 +393,12 @@ export function VinScanner({ onScan }: VinScannerProps) {
         return
       }
 
-      // Convert to uppercase and remove non-alphanumeric characters
       const cleanedText = text.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, '')
       
-      // Only process if exactly 17 characters
       if (cleanedText.length === 17) {
         if (validateVIN(cleanedText)) {
           addLog('Initial VIN format validation passed')
           
-          // Add NHTSA validation
           const isValidVin = await validateVinWithNHTSA(cleanedText)
           
           if (isValidVin) {
