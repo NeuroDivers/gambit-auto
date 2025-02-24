@@ -1,84 +1,73 @@
 
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Role } from "../types/role";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { useToast } from "@/hooks/use-toast"
+import { supabase } from "@/integrations/supabase/client"
 
 interface DeleteRoleDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  selectedRole: Role | null;
-  roles: Role[];
-  newRoleId: string;
-  onNewRoleSelect: (value: string) => void;
-  onDelete: (roleId: string) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  roleId?: string
+  onSuccess?: () => void
 }
 
-export const DeleteRoleDialog = ({
+export function DeleteRoleDialog({
   open,
   onOpenChange,
-  selectedRole,
-  roles,
-  newRoleId,
-  onNewRoleSelect,
-  onDelete,
-}: DeleteRoleDialogProps) => {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Delete Role</DialogTitle>
-          <DialogDescription>
-            Please select a new role to assign to users with the {selectedRole?.nicename} role.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="py-4">
-          <Select
-            value={newRoleId}
-            onValueChange={onNewRoleSelect}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a role" />
-            </SelectTrigger>
-            <SelectContent>
-              {roles?.filter(role => role.id !== selectedRole?.id).map((role) => (
-                <SelectItem key={role.id} value={role.id}>
-                  {role.nicename}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+  roleId,
+  onSuccess,
+}: DeleteRoleDialogProps) {
+  const { toast } = useToast()
 
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={() => selectedRole && onDelete(selectedRole.id)}
-          >
-            Delete Role
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
+  const handleDelete = async () => {
+    if (!roleId) return
+
+    try {
+      const { error } = await supabase
+        .from("roles")
+        .delete()
+        .eq("id", roleId)
+
+      if (error) throw error
+
+      toast({
+        title: "Role deleted",
+        description: "The role has been successfully deleted",
+      })
+
+      onSuccess?.()
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      })
+    }
+  }
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete the role
+            and remove it from all users.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}

@@ -1,5 +1,5 @@
 
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { RoleCard } from "./components/RoleCard"
 import { RoleDialog } from "./RoleDialog"
@@ -15,6 +15,7 @@ export function RoleList() {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const { isAdmin } = useAdminStatus()
+  const queryClient = useQueryClient()
 
   const { data: roles, isLoading } = useQuery({
     queryKey: ["roles"],
@@ -37,6 +38,13 @@ export function RoleList() {
   const handleDeleteClick = (role: Role) => {
     setSelectedRole(role)
     setIsDeleteDialogOpen(true)
+  }
+
+  const handleDialogClose = () => {
+    setSelectedRole(null)
+    setIsCreateDialogOpen(false)
+    setIsDeleteDialogOpen(false)
+    queryClient.invalidateQueries({ queryKey: ["roles"] })
   }
 
   if (isLoading) {
@@ -70,14 +78,14 @@ export function RoleList() {
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
         role={selectedRole}
-        onClose={() => setSelectedRole(null)}
+        onSuccess={handleDialogClose}
       />
 
       <DeleteRoleDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        role={selectedRole}
-        onClose={() => setSelectedRole(null)}
+        roleId={selectedRole?.id}
+        onSuccess={handleDialogClose}
       />
     </>
   )
