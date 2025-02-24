@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -44,29 +45,29 @@ export function FormSections({
           <div>
             <Label htmlFor="first_name">First Name</Label>
             <Input id="first_name" placeholder="John" {...form.register("first_name")} />
-            {form.formState.errors.first_name && (
-              <p className="text-red-500 text-sm">{form.formState.errors.first_name.message}</p>
+            {form.formState.errors.first_name?.message && (
+              <p className="text-red-500 text-sm">{String(form.formState.errors.first_name.message)}</p>
             )}
           </div>
           <div>
             <Label htmlFor="last_name">Last Name</Label>
             <Input id="last_name" placeholder="Doe" {...form.register("last_name")} />
-            {form.formState.errors.last_name && (
-              <p className="text-red-500 text-sm">{form.formState.errors.last_name.message}</p>
+            {form.formState.errors.last_name?.message && (
+              <p className="text-red-500 text-sm">{String(form.formState.errors.last_name.message)}</p>
             )}
           </div>
           <div>
             <Label htmlFor="email">Email</Label>
             <Input id="email" type="email" placeholder="john.doe@example.com" {...form.register("email")} />
-            {form.formState.errors.email && (
-              <p className="text-red-500 text-sm">{form.formState.errors.email.message}</p>
+            {form.formState.errors.email?.message && (
+              <p className="text-red-500 text-sm">{String(form.formState.errors.email.message)}</p>
             )}
           </div>
           <div>
             <Label htmlFor="phone_number">Phone Number</Label>
             <Input id="phone_number" placeholder="555-123-4567" {...form.register("phone_number")} />
-            {form.formState.errors.phone_number && (
-              <p className="text-red-500 text-sm">{form.formState.errors.phone_number.message}</p>
+            {form.formState.errors.phone_number?.message && (
+              <p className="text-red-500 text-sm">{String(form.formState.errors.phone_number.message)}</p>
             )}
           </div>
           <div>
@@ -83,15 +84,15 @@ export function FormSections({
                 <SelectItem value="email">Email</SelectItem>
               </SelectContent>
             </Select>
-            {form.formState.errors.contact_preference && (
-              <p className="text-red-500 text-sm">{form.formState.errors.contact_preference.message}</p>
+            {form.formState.errors.contact_preference?.message && (
+              <p className="text-red-500 text-sm">{String(form.formState.errors.contact_preference.message)}</p>
             )}
           </div>
           <div>
             <Label htmlFor="address">Address</Label>
             <Input id="address" placeholder="123 Main St" {...form.register("address")} />
-            {form.formState.errors.address && (
-              <p className="text-red-500 text-sm">{form.formState.errors.address.message}</p>
+            {form.formState.errors.address?.message && (
+              <p className="text-red-500 text-sm">{String(form.formState.errors.address.message)}</p>
             )}
           </div>
         </CardContent>
@@ -105,15 +106,15 @@ export function FormSections({
           <div>
             <Label htmlFor="vehicle_make">Vehicle Make</Label>
             <Input id="vehicle_make" placeholder="Toyota" {...form.register("vehicle_make")} />
-            {form.formState.errors.vehicle_make && (
-              <p className="text-red-500 text-sm">{form.formState.errors.vehicle_make.message}</p>
+            {form.formState.errors.vehicle_make?.message && (
+              <p className="text-red-500 text-sm">{String(form.formState.errors.vehicle_make.message)}</p>
             )}
           </div>
           <div>
             <Label htmlFor="vehicle_model">Vehicle Model</Label>
             <Input id="vehicle_model" placeholder="Camry" {...form.register("vehicle_model")} />
-            {form.formState.errors.vehicle_model && (
-              <p className="text-red-500 text-sm">{form.formState.errors.vehicle_model.message}</p>
+            {form.formState.errors.vehicle_model?.message && (
+              <p className="text-red-500 text-sm">{String(form.formState.errors.vehicle_model.message)}</p>
             )}
           </div>
           <div>
@@ -124,15 +125,15 @@ export function FormSections({
               placeholder="2023"
               {...form.register("vehicle_year", { valueAsNumber: true })}
             />
-            {form.formState.errors.vehicle_year && (
-              <p className="text-red-500 text-sm">{form.formState.errors.vehicle_year.message}</p>
+            {form.formState.errors.vehicle_year?.message && (
+              <p className="text-red-500 text-sm">{String(form.formState.errors.vehicle_year.message)}</p>
             )}
           </div>
           <div>
             <Label htmlFor="vehicle_serial">Vehicle Serial Number</Label>
             <Input id="vehicle_serial" placeholder="VIN or Serial Number" {...form.register("vehicle_serial")} />
-            {form.formState.errors.vehicle_serial && (
-              <p className="text-red-500 text-sm">{form.formState.errors.vehicle_serial.message}</p>
+            {form.formState.errors.vehicle_serial?.message && (
+              <p className="text-red-500 text-sm">{String(form.formState.errors.vehicle_serial.message)}</p>
             )}
           </div>
         </CardContent>

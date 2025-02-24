@@ -6,9 +6,10 @@ export type ServiceItemsFieldProps = {
   services: ServiceItemType[]
   onServicesChange: (services: ServiceItemType[]) => void
   disabled?: boolean
+  showCommission?: boolean
 }
 
-export function ServiceItemsField({ services, onServicesChange, disabled }: ServiceItemsFieldProps) {
+export function ServiceItemsField({ services, onServicesChange, disabled, showCommission }: ServiceItemsFieldProps) {
   const handleServicesChange = (updatedServices: ServiceItemType[]) => {
     console.log('Service items changed:', updatedServices);
     onServicesChange(updatedServices);
@@ -20,6 +21,7 @@ export function ServiceItemsField({ services, onServicesChange, disabled }: Serv
         services={services}
         onServicesChange={handleServicesChange}
         disabled={disabled}
+        showCommission={showCommission}
       />
     </div>
   );

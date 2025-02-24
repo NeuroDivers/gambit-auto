@@ -27,7 +27,7 @@ export interface WorkOrder {
     last_name: string;
   };
   address: string;
-  timeframe: "flexible" | "asap" | "within_week" | "within_month";  // Removed optional modifier (?)
+  timeframe: "flexible" | "asap" | "within_week" | "within_month";
 }
 
 export interface ServiceItemType {
@@ -35,6 +35,8 @@ export interface ServiceItemType {
   service_name: string;
   quantity: number;
   unit_price: number;
+  commission_rate?: number | null;
+  commission_type?: 'percentage' | 'flat' | null;
 }
 
 export interface WorkOrderFormValues {
