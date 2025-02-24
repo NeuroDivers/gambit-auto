@@ -450,6 +450,8 @@ export type Database = {
       }
       invoice_items: {
         Row: {
+          commission_rate: number | null
+          commission_type: string | null
           created_at: string
           description: string | null
           id: string
@@ -464,6 +466,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          commission_rate?: number | null
+          commission_type?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -478,6 +482,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          commission_rate?: number | null
+          commission_type?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -1786,6 +1792,8 @@ export type Database = {
       }
       work_order_services: {
         Row: {
+          commission_rate: number | null
+          commission_type: string | null
           created_at: string
           id: string
           main_service_id: string | null
@@ -1797,6 +1805,8 @@ export type Database = {
           work_order_id: string
         }
         Insert: {
+          commission_rate?: number | null
+          commission_type?: string | null
           created_at?: string
           id?: string
           main_service_id?: string | null
@@ -1808,6 +1818,8 @@ export type Database = {
           work_order_id: string
         }
         Update: {
+          commission_rate?: number | null
+          commission_type?: string | null
           created_at?: string
           id?: string
           main_service_id?: string | null
@@ -2065,6 +2077,12 @@ export type Database = {
         Args: {
           p_work_order_id: string
           p_invoice_id?: string
+        }
+        Returns: undefined
+      }
+      calculate_invoice_commission: {
+        Args: {
+          p_invoice_id: string
         }
         Returns: undefined
       }
