@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { roleFormSchema, RoleFormValues } from "./RoleFormSchema"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
-import { useEffect, useMemo } from "react"
+import { useCallback } from "react"
 
 interface UseRoleFormProps {
   role?: {
@@ -22,43 +22,18 @@ interface UseRoleFormProps {
 export const useRoleForm = ({ role, onSuccess, onOpenChange }: UseRoleFormProps) => {
   const { toast } = useToast()
 
-  const form = useMemo(
-    () =>
-      useForm<RoleFormValues>({
-        resolver: zodResolver(roleFormSchema),
-        defaultValues: {
-          name: "",
-          nicename: "",
-          description: "",
-          can_be_assigned_to_bay: false,
-          default_dashboard: "client"
-        }
-      }),
-    [] // Empty dependencies since we want to create the form only once
-  )
-
-  // Reset form with role data when role changes
-  useEffect(() => {
-    if (role) {
-      form.reset({
-        name: role.name,
-        nicename: role.nicename,
-        description: role.description || "",
-        can_be_assigned_to_bay: role.can_be_assigned_to_bay,
-        default_dashboard: role.default_dashboard
-      })
-    } else {
-      form.reset({
-        name: "",
-        nicename: "",
-        description: "",
-        can_be_assigned_to_bay: false,
-        default_dashboard: "client"
-      })
+  const form = useForm<RoleFormValues>({
+    resolver: zodResolver(roleFormSchema),
+    defaultValues: {
+      name: role?.name ?? "",
+      nicename: role?.nicename ?? "",
+      description: role?.description ?? "",
+      can_be_assigned_to_bay: role?.can_be_assigned_to_bay ?? false,
+      default_dashboard: role?.default_dashboard ?? "client"
     }
-  }, [role, form])
+  })
 
-  const onSubmit = async (values: RoleFormValues) => {
+  const onSubmit = useCallback(async (values: RoleFormValues) => {
     try {
       if (role) {
         const { error } = await supabase
@@ -102,7 +77,7 @@ export const useRoleForm = ({ role, onSuccess, onOpenChange }: UseRoleFormProps)
         variant: "destructive"
       })
     }
-  }
+  }, [role, onSuccess, onOpenChange, toast])
 
   return {
     form,
