@@ -4,17 +4,11 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { roleFormSchema, RoleFormValues } from "./RoleFormSchema"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
-import { useCallback } from "react"
+import { useCallback, useEffect } from "react"
+import { Role } from "../types/role"
 
 interface UseRoleFormProps {
-  role?: {
-    id: string
-    name: string
-    nicename: string
-    description: string | null
-    can_be_assigned_to_bay: boolean
-    default_dashboard: "admin" | "staff" | "client"
-  } | null
+  role?: Role | null
   onSuccess?: () => void
   onOpenChange: (open: boolean) => void
 }
@@ -25,13 +19,34 @@ export const useRoleForm = ({ role, onSuccess, onOpenChange }: UseRoleFormProps)
   const form = useForm<RoleFormValues>({
     resolver: zodResolver(roleFormSchema),
     defaultValues: {
-      name: role?.name ?? "",
-      nicename: role?.nicename ?? "",
-      description: role?.description ?? "",
-      can_be_assigned_to_bay: role?.can_be_assigned_to_bay ?? false,
-      default_dashboard: role?.default_dashboard ?? "client"
+      name: "",
+      nicename: "",
+      description: "",
+      can_be_assigned_to_bay: false,
+      default_dashboard: "client"
     }
   })
+
+  // Reset form when role changes
+  useEffect(() => {
+    if (role) {
+      form.reset({
+        name: role.name,
+        nicename: role.nicename,
+        description: role.description ?? "",
+        can_be_assigned_to_bay: role.can_be_assigned_to_bay,
+        default_dashboard: role.default_dashboard
+      })
+    } else {
+      form.reset({
+        name: "",
+        nicename: "",
+        description: "",
+        can_be_assigned_to_bay: false,
+        default_dashboard: "client"
+      })
+    }
+  }, [role, form])
 
   const onSubmit = useCallback(async (values: RoleFormValues) => {
     try {
