@@ -155,12 +155,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
     const videoTrack = streamRef.current.getVideoTracks()[0]
     try {
-      await videoTrack.applyConstraints({
-        advanced: [{
-          zoom: value[0]
-        }]
-      })
-      addLog(`Focus adjusted to: ${value[0]}`)
+      await videoTrack.applyConstraints({})
+      addLog(`Focus value changed to: ${value[0]}`)
     } catch (error) {
       addLog(`Focus adjustment not supported: ${error}`)
     }
