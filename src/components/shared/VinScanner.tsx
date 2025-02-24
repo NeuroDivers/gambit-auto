@@ -76,8 +76,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
           width: { ideal: 1280 },
           height: { ideal: 720 },
           frameRate: { ideal: 30 },
-          aspectRatio: { ideal: 16/9 },
-          resizeMode: 'crop-and-scale'
+          aspectRatio: { ideal: 16/9 }
         } 
       })
       
