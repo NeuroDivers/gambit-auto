@@ -41,17 +41,15 @@ export function AuthLayout({
       <div className="mx-auto w-full max-w-[350px] space-y-6">
         <div className="flex flex-col items-center space-y-2 text-center">
           {businessProfile?.light_logo_url && (
-            <div className="w-16 h-16 rounded-lg overflow-hidden bg-background dark:bg-muted">
-              <img 
-                src={businessProfile.light_logo_url} 
-                alt={businessProfile.company_name || "Business Logo"} 
-                className="h-full w-full object-contain p-2 transition-opacity dark:opacity-90" 
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                }}
-              />
-            </div>
+            <img 
+              src={businessProfile.light_logo_url} 
+              alt={businessProfile.company_name || "Business Logo"} 
+              className="h-16 w-16 object-contain"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+              }}
+            />
           )}
           <h1 className="text-2xl font-semibold tracking-tight">
             {title}
