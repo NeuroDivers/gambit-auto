@@ -1,11 +1,32 @@
+
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { CommissionRateFields } from "@/components/shared/form-fields/CommissionRateFields"
 import { UseFormReturn } from "react-hook-form"
+import * as z from "zod"
 
-export function ServiceTypeFormFields({ form }: { form: UseFormReturn<any> }) {
+export const formSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string().optional(),
+  base_price: z.string().refine(value => !value || !isNaN(parseFloat(value)), {
+    message: "Base price must be a valid number"
+  }),
+  estimated_time: z.string().refine(value => !value || !isNaN(parseInt(value)), {
+    message: "Estimated time must be a valid number"
+  }),
+  status: z.enum(["active", "inactive"]),
+  commission_rate: z.number().nullable(),
+  commission_type: z.enum(["percentage", "flat"]).nullable(),
+  service_type: z.enum(["standalone", "sub_service", "bundle"]).default("standalone"),
+  parent_service_id: z.string().optional(),
+  pricing_model: z.enum(["flat_rate", "hourly", "variable"]).default("flat_rate")
+})
+
+export type ServiceTypeFormValues = z.infer<typeof formSchema>
+
+export function ServiceTypeFormFields({ form }: { form: UseFormReturn<ServiceTypeFormValues> }) {
   const commissionRate = form.watch('commission_rate')
   const commissionType = form.watch('commission_type')
 

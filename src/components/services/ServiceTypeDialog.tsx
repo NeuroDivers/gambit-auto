@@ -1,33 +1,32 @@
 
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form } from "@/components/ui/form";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/hooks/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { supabase } from "@/integrations/supabase/client";
-import { ServiceTypeFormFields, formSchema } from "./ServiceTypeFormFields";
-import * as z from "zod";
-import { useEffect } from "react";
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Form } from "@/components/ui/form"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { useToast } from "@/hooks/use-toast"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { supabase } from "@/integrations/supabase/client"
+import { ServiceTypeFormFields, formSchema, ServiceTypeFormValues } from "./ServiceTypeFormFields"
+import { useEffect } from "react"
 
 interface ServiceTypeDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
   serviceType?: {
-    id: string;
-    name: string;
-    status: 'active' | 'inactive';
-    description: string | null;
-    price: number | null;
-    duration: number | null;
-    pricing_model?: 'flat_rate' | 'hourly' | 'variable';
-    base_price?: number | null;
-    discount_price?: number | null;
-    service_type?: 'standalone' | 'sub_service' | 'bundle';
-    parent_service_id?: string | null;
-  } | null;
-  onSuccess: () => void;
+    id: string
+    name: string
+    status: 'active' | 'inactive'
+    description: string | null
+    price: number | null
+    duration: number | null
+    pricing_model?: 'flat_rate' | 'hourly' | 'variable'
+    base_price?: number | null
+    discount_price?: number | null
+    service_type?: 'standalone' | 'sub_service' | 'bundle'
+    parent_service_id?: string | null
+  } | null
+  onSuccess: () => void
 }
 
 export const ServiceTypeDialog = ({
@@ -36,24 +35,26 @@ export const ServiceTypeDialog = ({
   serviceType,
   onSuccess
 }: ServiceTypeDialogProps) => {
-  const { toast } = useToast();
-  const isEditing = !!serviceType;
+  const { toast } = useToast()
+  const isEditing = !!serviceType
 
-  const defaultValues = {
+  const defaultValues: Partial<ServiceTypeFormValues> = {
     name: "",
     status: "active",
     description: "",
     pricing_model: "flat_rate",
     base_price: "",
     discount_price: "",
-    duration: "",
-    service_type: "standalone"
-  } as const;
+    estimated_time: "",
+    service_type: "standalone",
+    commission_rate: null,
+    commission_type: null
+  }
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<ServiceTypeFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues
-  });
+  })
 
   useEffect(() => {
     if (serviceType) {
@@ -64,16 +65,18 @@ export const ServiceTypeDialog = ({
         pricing_model: serviceType.pricing_model || "flat_rate",
         base_price: serviceType.base_price?.toString() || "",
         discount_price: serviceType.discount_price?.toString() || "",
-        duration: serviceType.duration?.toString() || "",
+        estimated_time: serviceType.duration?.toString() || "",
         service_type: serviceType.service_type || "standalone",
-        parent_service_id: serviceType.parent_service_id || undefined
-      });
+        parent_service_id: serviceType.parent_service_id || undefined,
+        commission_rate: null,
+        commission_type: null
+      })
     } else {
-      form.reset(defaultValues);
+      form.reset(defaultValues)
     }
-  }, [serviceType, form]);
+  }, [serviceType, form])
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: ServiceTypeFormValues) => {
     try {
       const data = {
         name: values.name,
@@ -82,45 +85,47 @@ export const ServiceTypeDialog = ({
         pricing_model: values.pricing_model,
         base_price: values.base_price ? parseFloat(values.base_price) : null,
         discount_price: values.discount_price ? parseFloat(values.discount_price) : null,
-        duration: values.duration ? parseInt(values.duration) : null,
+        duration: values.estimated_time ? parseInt(values.estimated_time) : null,
         service_type: values.service_type,
         hierarchy_type: values.service_type === 'sub_service' ? 'sub' : 'main',
         requires_main_service: values.service_type === 'sub_service',
         can_be_standalone: values.service_type !== 'sub_service',
-        parent_service_id: values.parent_service_id || null
-      };
+        parent_service_id: values.parent_service_id || null,
+        commission_rate: values.commission_rate,
+        commission_type: values.commission_type
+      }
 
       if (isEditing && serviceType) {
         const { error } = await supabase
           .from("service_types")
           .update(data)
-          .eq("id", serviceType.id);
-        if (error) throw error;
+          .eq("id", serviceType.id)
+        if (error) throw error
       } else {
         const { error } = await supabase
           .from("service_types")
-          .insert([data]);
-        if (error) throw error;
+          .insert([data])
+        if (error) throw error
       }
 
       toast({
         title: `Service type ${isEditing ? "updated" : "created"}`,
         description: `Successfully ${isEditing ? "updated" : "created"} service type "${values.name}"`
-      });
+      })
 
       if (!isEditing) {
-        form.reset(defaultValues);
+        form.reset(defaultValues)
       }
-      onSuccess();
-      onOpenChange(false);
+      onSuccess()
+      onOpenChange(false)
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
         description: error.message
-      });
+      })
     }
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -151,5 +156,5 @@ export const ServiceTypeDialog = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
