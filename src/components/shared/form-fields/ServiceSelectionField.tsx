@@ -1,3 +1,4 @@
+
 import { ServiceItemType } from "@/types/service-item"
 import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
@@ -14,11 +15,11 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { CommissionRateFields } from "@/components/shared/form-fields/CommissionRateFields"
-import { UseFormReturn, UseFormRegister } from "react-hook-form"
+import { UseFormReturn } from "react-hook-form"
 
 type ServiceSelectionFieldProps = {
   services: ServiceItemType[]
-  onServicesChange: (services: ServiceItemType[]) => void
+  onChange: (services: ServiceItemType[]) => void
   disabled?: boolean
   isClient?: boolean
   showCommission?: boolean
@@ -27,7 +28,7 @@ type ServiceSelectionFieldProps = {
 
 export function ServiceSelectionField({ 
   services = [],
-  onServicesChange,
+  onChange,
   disabled = false,
   isClient = false,
   showCommission = false,
@@ -59,38 +60,19 @@ export function ServiceSelectionField({
       description: ""
     }
 
-    onServicesChange([...services, newService])
+    onChange([...services, newService])
   }
 
   const removeService = (index: number) => {
     const newServices = [...services]
     newServices.splice(index, 1)
-    onServicesChange(newServices)
+    onChange(newServices)
   }
 
-  const updateQuantity = (index: number, quantity: number) => {
+  const updateService = (index: number, updates: Partial<ServiceItemType>) => {
     const newServices = [...services]
-    newServices[index] = { ...newServices[index], quantity }
-    onServicesChange(newServices)
-  }
-
-  const updatePrice = (index: number, price: number) => {
-    if (isClient) return
-    const newServices = [...services]
-    newServices[index] = { ...newServices[index], unit_price: price }
-    onServicesChange(newServices)
-  }
-
-  const updateCommission = (index: number, field: 'commission_rate' | 'commission_type', value: any) => {
-    return new Promise<void>((resolve) => {
-      const newServices = [...services]
-      newServices[index] = { 
-        ...newServices[index], 
-        [field]: field === 'commission_rate' ? Number(value) : value 
-      }
-      onServicesChange(newServices)
-      resolve()
-    })
+    newServices[index] = { ...newServices[index], ...updates }
+    onChange(newServices)
   }
 
   return (
@@ -128,7 +110,7 @@ export function ServiceSelectionField({
                       type="number"
                       min="1"
                       value={service.quantity}
-                      onChange={(e) => updateQuantity(index, parseInt(e.target.value) || 1)}
+                      onChange={(e) => updateService(index, { quantity: parseInt(e.target.value) || 1 })}
                       className="w-full"
                       disabled={disabled}
                     />
@@ -142,7 +124,7 @@ export function ServiceSelectionField({
                         min="0"
                         step="0.01"
                         value={service.unit_price}
-                        onChange={(e) => updatePrice(index, parseFloat(e.target.value) || 0)}
+                        onChange={(e) => updateService(index, { unit_price: parseFloat(e.target.value) || 0 })}
                         className="w-full"
                         disabled={disabled}
                       />
@@ -152,53 +134,15 @@ export function ServiceSelectionField({
                   {showCommission && (
                     <div className="col-span-2">
                       <CommissionRateFields
-                        form={{
-                          control: {
-                            register: () => ({
-                              name: `services[${index}].commission_rate`,
-                              value: service.commission_rate ?? null,
-                              onChange: async (e: any) => {
-                                await updateCommission(index, 'commission_rate', e.target.value)
-                                return true
-                              },
-                              onBlur: () => Promise.resolve(true),
-                              ref: () => {}
-                            }),
-                            _subjects: {
-                              watch: { subscribe: () => ({ unsubscribe: () => {} }) },
-                              array: { subscribe: () => ({ unsubscribe: () => {} }) },
-                              state: { subscribe: () => ({ unsubscribe: () => {} }) }
-                            },
-                            _removeUnmounted: () => {},
-                            _names: {
-                              mount: new Set(),
-                              unMount: new Set(),
-                              array: new Set(),
-                              watch: new Set()
-                            },
-                            _state: { mount: true, action: false, watch: false },
-                            _options: { shouldUnmount: true, shouldUnregister: true },
-                            _formValues: {},
-                            _getWatch: () => ({}),
-                            _formState: {
-                              isDirty: false,
-                              isLoading: false,
-                              isSubmitted: false,
-                              isSubmitSuccessful: false,
-                              isSubmitting: false,
-                              isValidating: false,
-                              isValid: false,
-                              submitCount: 0,
-                              dirtyFields: {},
-                              touchedFields: {},
-                              errors: {},
-                              defaultValues: {}
-                            },
-                            _defaultValues: {}
-                          }
+                        serviceIndex={index}
+                        value={{
+                          rate: service.commission_rate,
+                          type: service.commission_type
                         }}
-                        namePrefix={`services.${index}.`}
-                        label="Service Commission Override"
+                        onChange={(value) => updateService(index, {
+                          commission_rate: value.rate,
+                          commission_type: value.type
+                        })}
                         disabled={disabled}
                       />
                     </div>

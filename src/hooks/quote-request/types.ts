@@ -1,6 +1,11 @@
 
 import { ServiceFormData } from "@/types/service-item"
 
+export interface FormStorage {
+  step: number
+  data: ServiceFormData
+}
+
 export type QuoteRequestStatus = "pending" | "estimated" | "accepted" | "rejected" | "converted"
 
 export interface QuoteRequest {
@@ -15,9 +20,4 @@ export interface QuoteRequest {
   service_ids: string[]
   service_details: Record<string, any>
   created_at: string
-}
-
-export interface QuoteRequestState {
-  step: number
-  data: ServiceFormData
 }

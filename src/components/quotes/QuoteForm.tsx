@@ -1,179 +1,183 @@
 import { useForm } from "react-hook-form"
+import { ServiceItemType } from "@/types/service-item"
+import { EstimateFormValues, Estimate } from "@/components/quotes/types"
+import { useEffect, useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Form } from "@/components/ui/form"
-import { toast } from "sonner"
-import { useNavigate } from "react-router-dom"
-import { supabase } from "@/integrations/supabase/client"
-import { PageTitle } from "@/components/shared/PageTitle"
-import { ArrowLeft } from "lucide-react"
-import { CustomerInfoSection } from "@/components/quotes/form-sections/CustomerInfoSection"
-import { VehicleInfoSection } from "@/components/quotes/form-sections/VehicleInfoSection"
-import { ServicesSection } from "@/components/quotes/form-sections/ServicesSection"
-import { NotesSection } from "@/components/quotes/form-sections/NotesSection"
-import { ServiceItemType } from "@/hooks/quote-request/formSchema"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 
-type FormData = {
-  customer_first_name: string
-  customer_last_name: string
-  customer_email: string
-  customer_phone: string
-  customer_unit_number: string
-  customer_street_address: string
-  customer_city: string
-  customer_state_province: string
-  customer_postal_code: string
-  customer_country: string
-  vehicle_make: string
-  vehicle_model: string
-  vehicle_year: number
-  vehicle_vin: string
-  service_items: Array<{
-    service_id: string
-    service_name: string
-    quantity: number
-    unit_price: number
-  }>
-  notes: string
+interface QuoteFormProps {
+  estimate?: Estimate
+  onSubmit: (data: EstimateFormValues) => void
+  isSubmitting?: boolean
 }
 
-export function QuoteForm({ quote, onSuccess }: { quote?: Estimate; onSuccess?: () => void }) {
-  const navigate = useNavigate()
+export function QuoteForm({ estimate, onSubmit, isSubmitting = false }: QuoteFormProps) {
+  const [services, setServices] = useState<ServiceItemType[]>(
+    estimate?.estimate_items || []
+  )
 
-  const form = useForm<FormData>({
+  const form = useForm<EstimateFormValues>({
     defaultValues: {
-      customer_first_name: "",
-      customer_last_name: "",
-      customer_email: "",
-      customer_phone: "",
-      customer_unit_number: "",
-      customer_street_address: "",
-      customer_city: "",
-      customer_state_province: "",
-      customer_postal_code: "",
-      customer_country: "",
-      vehicle_make: "",
-      vehicle_model: "",
-      vehicle_year: new Date().getFullYear(),
-      vehicle_vin: "",
-      service_items: [],
-      notes: ""
+      notes: estimate?.notes || "",
+      status: estimate?.status || "draft",
+      service_items: estimate?.estimate_items || [],
+      customer_first_name: estimate?.customer_first_name || "",
+      customer_last_name: estimate?.customer_last_name || "",
+      customer_email: estimate?.customer_email || "",
+      customer_phone: estimate?.customer_phone || "",
+      customer_address: estimate?.customer_address || "",
+      vehicle_make: estimate?.vehicle_make || "",
+      vehicle_model: estimate?.vehicle_model || "",
+      vehicle_year: estimate?.vehicle_year || new Date().getFullYear(),
+      vehicle_vin: estimate?.vehicle_vin || ""
     }
   })
 
-  const items = form.watch('service_items')
-
-  const onSubmit = async (data: FormData) => {
-    try {
-      // Calculate totals
-      const subtotal = data.service_items.reduce((sum, item) => 
-        sum + (item.quantity * item.unit_price), 0
-      )
-
-      const serviceItems: ServiceItemType[] = items.map(item => ({
-        service_id: item.service_id,
-        service_name: item.service_name,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        commission_rate: null,
-        commission_type: null,
-        description: item.description || ""
-      }))
-
-      // Create quote
-      const { data: quote, error } = await supabase
-        .from('quotes')
-        .insert({
-          customer_first_name: data.customer_first_name,
-          customer_last_name: data.customer_last_name,
-          customer_email: data.customer_email,
-          customer_phone: data.customer_phone,
-          customer_unit_number: data.customer_unit_number,
-          customer_street_address: data.customer_street_address,
-          customer_city: data.customer_city,
-          customer_state_province: data.customer_state_province,
-          customer_postal_code: data.customer_postal_code,
-          customer_country: data.customer_country,
-          vehicle_make: data.vehicle_make,
-          vehicle_model: data.vehicle_model,
-          vehicle_year: data.vehicle_year,
-          vehicle_vin: data.vehicle_vin,
-          notes: data.notes,
-          subtotal,
-          total: subtotal,
-          status: 'draft'
-        })
-        .select()
-        .single()
-
-      if (error) throw error
-
-      // Add quote items
-      if (quote) {
-        const { error: itemsError } = await supabase
-          .from('quote_items')
-          .insert(
-            data.service_items.map(item => ({
-              quote_id: quote.id,
-              service_id: item.service_id,
-              service_name: item.service_name,
-              quantity: item.quantity,
-              unit_price: item.unit_price
-            }))
-          )
-
-        if (itemsError) throw itemsError
-      }
-
-      toast.success("Estimate created successfully")
-      navigate(`/admin/estimates/${quote?.id}`)
-    } catch (error: any) {
-      console.error('Error creating estimate:', error)
-      toast.error("Failed to create estimate")
-    }
+  const defaultServiceItem: ServiceItemType = {
+    service_id: "",
+    service_name: "",
+    quantity: 1,
+    unit_price: 0,
+    description: "",
+    commission_rate: null,
+    commission_type: null
   }
 
+  useEffect(() => {
+    form.setValue("service_items", services)
+  }, [services, form])
+
+  const handleSubmit = form.handleSubmit((data) => {
+    onSubmit({
+      ...data,
+      service_items: services
+    })
+  })
+
   return (
-    <div className="space-y-6 p-6 md:p-6 p-2">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/admin/estimates')}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <PageTitle 
-            title="Create Estimate"
-            description="Create a new estimate for a customer"
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Customer Information</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="customer_first_name">First Name</Label>
+              <Input
+                id="customer_first_name"
+                {...form.register("customer_first_name")}
+              />
+            </div>
+            <div>
+              <Label htmlFor="customer_last_name">Last Name</Label>
+              <Input
+                id="customer_last_name"
+                {...form.register("customer_last_name")}
+              />
+            </div>
+            <div>
+              <Label htmlFor="customer_email">Email</Label>
+              <Input
+                id="customer_email"
+                type="email"
+                {...form.register("customer_email")}
+              />
+            </div>
+            <div>
+              <Label htmlFor="customer_phone">Phone</Label>
+              <Input
+                id="customer_phone"
+                type="tel"
+                {...form.register("customer_phone")}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <Label htmlFor="customer_address">Address</Label>
+              <Input
+                id="customer_address"
+                {...form.register("customer_address")}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Vehicle Information</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="vehicle_make">Make</Label>
+              <Input
+                id="vehicle_make"
+                {...form.register("vehicle_make")}
+              />
+            </div>
+            <div>
+              <Label htmlFor="vehicle_model">Model</Label>
+              <Input
+                id="vehicle_model"
+                {...form.register("vehicle_model")}
+              />
+            </div>
+            <div>
+              <Label htmlFor="vehicle_year">Year</Label>
+              <Input
+                id="vehicle_year"
+                type="number"
+                {...form.register("vehicle_year", { valueAsNumber: true })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="vehicle_vin">VIN</Label>
+              <Input
+                id="vehicle_vin"
+                {...form.register("vehicle_vin")}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Services</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ServiceSelectionField
+            services={services}
+            onChange={setServices}
+            disabled={isSubmitting}
+            showCommission
           />
-        </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Notes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Textarea
+            {...form.register("notes")}
+            placeholder="Add any additional notes here..."
+            className="min-h-[100px]"
+          />
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-end gap-4">
+        <Button type="submit" disabled={isSubmitting}>
+          {estimate ? "Update Estimate" : "Create Estimate"}
+        </Button>
       </div>
-
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 gap-6">
-            <CustomerInfoSection form={form} />
-            <VehicleInfoSection form={form} />
-            <ServicesSection form={form} />
-            <NotesSection form={form} />
-          </div>
-
-          <div className="flex flex-col sm:flex-row justify-end gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate(-1)}
-              className="w-full sm:w-auto"
-            >
-              Cancel
-            </Button>
-            <Button type="submit" className="w-full sm:w-auto">
-              Create Estimate
-            </Button>
-          </div>
-        </form>
-      </Form>
-    </div>
+    </form>
   )
 }
