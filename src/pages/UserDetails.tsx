@@ -1,6 +1,6 @@
 
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageTitle } from "@/components/shared/PageTitle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 
 function LoadingState() {
   return (
@@ -42,6 +43,29 @@ function LoadingState() {
 export default function UserDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      // Invalidate all queries
+      queryClient.removeQueries();
+      navigate("/auth", { replace: true });
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account.",
+      });
+    } catch (error: any) {
+      console.error("Logout error:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to log out",
+      });
+    }
+  };
 
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['user', id],
@@ -120,14 +144,14 @@ export default function UserDetails() {
 
   if (userLoading || workOrdersLoading || commissionsLoading) {
     return (
-      <DashboardLayout>
+      <DashboardLayout onLogout={handleLogout}>
         <LoadingState />
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout onLogout={handleLogout}>
       <div className="container py-6 space-y-6">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
