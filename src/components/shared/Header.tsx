@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Bell } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/lib/supabase";
 
 interface HeaderProps {
   firstName?: string | null;
@@ -44,9 +45,53 @@ const mockNotifications = [
 ];
 
 export function Header({ firstName, role, onLogout, className, children }: HeaderProps) {
+  const [unreadCount, setUnreadCount] = useState(0)
+  const { toast } = useToast()
+
+  useEffect(() => {
+    const fetchUnreadMessages = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: messages, error } = await supabase
+        .from("chat_messages")
+        .select("*", { count: 'exact' })
+        .eq("recipient_id", user.id)
+        .eq("read", false)
+
+      if (error) {
+        console.error("Error fetching unread messages:", error)
+        return
+      }
+
+      setUnreadCount(messages.length)
+    }
+
+    fetchUnreadMessages()
+
+    // Subscribe to new messages
+    const channel = supabase
+      .channel("chat_messages")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "chat_messages"
+        },
+        () => {
+          fetchUnreadMessages()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
   const isAdmin = role?.name?.toLowerCase() === 'administrator';
   const initials = firstName ? firstName.charAt(0).toUpperCase() : '?';
-  const unreadCount = mockNotifications.length;
 
   return (
     <header className={cn("flex h-16 items-center px-6 border-b", className)}>

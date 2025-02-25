@@ -7,11 +7,14 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { supabase } from "@/integrations/supabase/client"
 import { Send } from "lucide-react"
+import { format } from "date-fns"
+import { useToast } from "@/hooks/use-toast"
 
 export function ChatWindow({ recipientId }: { recipientId: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [newMessage, setNewMessage] = useState("")
   const [recipient, setRecipient] = useState<ChatUser | null>(null)
+  const { toast } = useToast()
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -27,6 +30,16 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       }
 
       setMessages(messages)
+
+      // Mark messages as read
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase
+          .from("chat_messages")
+          .update({ read: true })
+          .eq("sender_id", recipientId)
+          .eq("recipient_id", user.id)
+      }
     }
 
     const fetchRecipient = async () => {
@@ -41,7 +54,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         return
       }
 
-      // Ensure the role field is properly structured
       const recipientData = {
         ...profile,
         role: Array.isArray(profile.role) ? profile.role[0] : profile.role
@@ -65,7 +77,12 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
           filter: `recipient_id=eq.${recipientId}`,
         },
         (payload) => {
-          setMessages((current) => [...current, payload.new as ChatMessage])
+          const newMessage = payload.new as ChatMessage
+          setMessages((current) => [...current, newMessage])
+          toast({
+            title: "New message",
+            description: `You have a new message from ${recipient?.first_name || 'someone'}`,
+          })
         }
       )
       .subscribe()
@@ -73,7 +90,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [recipientId])
+  }, [recipientId, recipient?.first_name, toast])
 
   const sendMessage = async () => {
     if (!newMessage.trim()) return
@@ -81,7 +98,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    // First add the message locally for immediate feedback
     const newMsg: ChatMessage = {
       id: crypto.randomUUID(),
       sender_id: user.id,
@@ -93,7 +109,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     }
     setMessages(curr => [...curr, newMsg])
     
-    // Then send to the server
     const { error } = await supabase
       .from("chat_messages")
       .insert([{
@@ -104,7 +119,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
 
     if (error) {
       console.error("Error sending message:", error)
-      // Remove the message if it failed to send
       setMessages(curr => curr.filter(msg => msg.id !== newMsg.id))
       return
     }
@@ -140,7 +154,10 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
                     : "bg-primary text-primary-foreground"
                 }`}
               >
-                {message.message}
+                <div>{message.message}</div>
+                <div className="text-xs opacity-70 mt-1">
+                  {format(new Date(message.created_at), 'MMM d, yyyy h:mm a')}
+                </div>
               </div>
             </div>
           ))}

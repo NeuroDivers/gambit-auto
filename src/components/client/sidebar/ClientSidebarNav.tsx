@@ -6,6 +6,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useSidebar } from "@/components/ui/sidebar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { useEffect, useState } from "react"
+import { usePermissions } from "@/hooks/usePermissions"
 import { 
   LayoutGrid, 
   FileText, 
@@ -34,16 +36,19 @@ const navigationItems = [
         title: "Quotes",
         href: "/quotes",
         icon: MessageSquare,
+        permission: { resource: "quotes", type: "page_access" }
       },
       {
         title: "Invoices",
         href: "/invoices",
         icon: FileText,
+        permission: { resource: "invoices", type: "page_access" }
       },
       {
         title: "Chat",
         href: "/chat",
         icon: MessageSquare,
+        permission: { resource: "chat", type: "page_access" }
       },
     ],
   },
@@ -54,16 +59,19 @@ const navigationItems = [
         title: "Vehicles",
         href: "/vehicles",
         icon: Car,
+        permission: { resource: "vehicles", type: "page_access" }
       },
       {
         title: "Bookings",
         href: "/bookings",
         icon: Calendar,
+        permission: { resource: "bookings", type: "page_access" }
       },
       {
         title: "Payment Methods",
         href: "/payment-methods",
         icon: CreditCard,
+        permission: { resource: "payment_methods", type: "page_access" }
       },
     ],
   },
@@ -87,6 +95,34 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
   const location = useLocation()
   const { isMobile, state } = useSidebar()
   const isCollapsed = state === "collapsed"
+  const { checkPermission } = usePermissions()
+  const [filteredItems, setFilteredItems] = useState(navigationItems)
+
+  useEffect(() => {
+    const filterItems = async () => {
+      const newItems = await Promise.all(
+        navigationItems.map(async (section) => {
+          const filteredSectionItems = await Promise.all(
+            section.items.map(async (item) => {
+              if (!item.permission) return item
+              const hasPermission = await checkPermission(
+                item.permission.resource,
+                item.permission.type
+              )
+              return hasPermission ? item : null
+            })
+          )
+          return {
+            ...section,
+            items: filteredSectionItems.filter(Boolean)
+          }
+        })
+      )
+      setFilteredItems(newItems.filter(section => section.items.length > 0))
+    }
+
+    filterItems()
+  }, [checkPermission])
 
   const NavLink = ({ item }: { item: (typeof navigationItems)[0]["items"][0] }) => {
     const link = (
@@ -125,7 +161,7 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
   return (
     <ScrollArea className="flex-1">
       <nav className="flex flex-col gap-4 py-4">
-        {navigationItems.map((section, index) => (
+        {filteredItems.map((section, index) => (
           <div key={section.section} className="px-3">
             {!isCollapsed && (
               <h4 className="mb-2 px-2 text-xs font-semibold tracking-tight text-muted-foreground">
@@ -137,7 +173,7 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
                 <NavLink key={item.href} item={item} />
               ))}
             </div>
-            {index < navigationItems.length - 1 && !isCollapsed && (
+            {index < filteredItems.length - 1 && !isCollapsed && (
               <Separator className="my-4" />
             )}
           </div>
