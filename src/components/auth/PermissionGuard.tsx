@@ -26,9 +26,10 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
         return;
       }
 
-      // If user is administrator, grant immediate access
-      if (currentUserRole.name.toLowerCase() === 'administrator') {
-        console.log('User is admin, granting access');
+      // If user is administrator or technician, grant immediate access
+      if (currentUserRole.name.toLowerCase() === 'administrator' || 
+          currentUserRole.name.toLowerCase() === 'technician') {
+        console.log('User is admin or technician, granting access');
         setHasPermission(true);
         return;
       }
@@ -47,10 +48,10 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
     return <LoadingScreen />
   }
 
-  // Redirect to auth if no permission
+  // Redirect to unauthorized if no permission
   if (!hasPermission) {
-    console.log('No permission, redirecting to /auth')
-    return <Navigate to="/auth" replace />
+    console.log('No permission, redirecting to /unauthorized')
+    return <Navigate to="/unauthorized" replace />
   }
 
   return <>{children}</>

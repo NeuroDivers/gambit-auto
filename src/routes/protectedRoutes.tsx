@@ -34,7 +34,7 @@ const RoleBasedLayout = () => {
       case 'administrator':
         return <DashboardLayoutWrapper />;
       case 'staff':
-      case 'technician': // Added technician role handling
+      case 'technician':  // Added technician case to use StaffLayoutWrapper
         return <StaffLayoutWrapper />;
       case 'client':
         return <ClientLayoutWrapper />;
