@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,11 +45,9 @@ export default function UserDetails() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Handle logout
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      // Invalidate all queries
       queryClient.removeQueries();
       navigate("/auth", { replace: true });
       toast({
@@ -66,6 +63,30 @@ export default function UserDetails() {
       });
     }
   };
+
+  const { data: currentUserProfile } = useQuery({
+    queryKey: ['current-user-profile'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          role:role_id (
+            id,
+            name,
+            nicename
+          )
+        `)
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['user', id],
@@ -91,9 +112,18 @@ export default function UserDetails() {
   const { data: lastLogin } = useQuery({
     queryKey: ['user-last-login', id],
     queryFn: async () => {
-      const { data: { user: authUser }, error } = await supabase.auth.admin.getUserById(id as string);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && session.user.id === id) {
+        return session.user.last_sign_in_at;
+      }
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('updated_at')
+        .eq('id', id)
+        .single();
+      
       if (error) throw error;
-      return authUser?.last_sign_in_at;
+      return data.updated_at;
     }
   });
 
@@ -144,14 +174,22 @@ export default function UserDetails() {
 
   if (userLoading || workOrdersLoading || commissionsLoading) {
     return (
-      <DashboardLayout onLogout={handleLogout}>
+      <DashboardLayout 
+        firstName={currentUserProfile?.first_name}
+        role={currentUserProfile?.role}
+        onLogout={handleLogout}
+      >
         <LoadingState />
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout onLogout={handleLogout}>
+    <DashboardLayout
+      firstName={currentUserProfile?.first_name}
+      role={currentUserProfile?.role}
+      onLogout={handleLogout}
+    >
       <div className="container py-6 space-y-6">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
