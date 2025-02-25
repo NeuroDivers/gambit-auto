@@ -61,7 +61,7 @@ export const useRolePermissions = (roleId: string | null) => {
       })
 
       // Update the database
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from("role_permissions")
         .update({ 
           is_active: newValue,
@@ -69,10 +69,13 @@ export const useRolePermissions = (roleId: string | null) => {
         })
         .eq("id", permission.id)
         .eq("role_id", roleId)
-        .single()
 
       if (error) {
         throw error
+      }
+
+      if (!data || data.length === 0) {
+        throw new Error("Failed to update permission")
       }
 
       const resourceName = permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
