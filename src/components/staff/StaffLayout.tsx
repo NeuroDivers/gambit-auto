@@ -1,8 +1,8 @@
 
 import { Sidebar, SidebarContent, SidebarProvider, SidebarRail, SidebarTrigger } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
-import { StaffSidebarNav } from "./sidebar/StaffSidebarNav"
-import { StaffSidebarHeader } from "./sidebar/StaffSidebarHeader"
+import { DashboardSidebarNav } from "../dashboard/sidebar/DashboardSidebarNav"
+import { DashboardSidebarHeader } from "../dashboard/sidebar/DashboardSidebarHeader"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useState } from "react"
 import { Header } from "../shared/Header"
@@ -32,13 +32,13 @@ export function StaffLayout({
   const sidebarContent = (
     <SidebarContent className="flex flex-col h-full">
       <div className="px-4 py-2">
-        <StaffSidebarHeader 
+        <DashboardSidebarHeader 
           firstName={firstName}
           role={role}
           onLogout={onLogout}
         />
       </div>
-      <StaffSidebarNav onNavigate={() => setIsMobileMenuOpen(false)} />
+      <DashboardSidebarNav onNavigate={() => setIsMobileMenuOpen(false)} />
       <div className="mt-auto border-t p-4">
         <SidebarTrigger size="sm" variant="ghost" className="mx-auto" />
       </div>
