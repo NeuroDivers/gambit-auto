@@ -1,15 +1,17 @@
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { ChatUser } from "@/types/chat"
 import { ChatWindow } from "@/components/chat/ChatWindow"
 import { Card, CardContent } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { supabase } from "@/integrations/supabase/client"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Badge } from "@/components/ui/badge"
 
 export default function Chat() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null)
+  const queryClient = useQueryClient()
+  const channelRef = useRef<any>(null)
 
   const { data: users, isLoading } = useQuery({
     queryKey: ["chat-users"],
@@ -51,6 +53,68 @@ export default function Chat() {
       return usersWithCounts
     },
   })
+
+  // Set up real-time subscription for new messages
+  useEffect(() => {
+    const setupSubscription = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // Clean up previous subscription if it exists
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current)
+      }
+
+      // Subscribe to new messages
+      channelRef.current = supabase
+        .channel('chat_updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'chat_messages',
+            filter: `recipient_id=eq.${user.id}`
+          },
+          async (payload) => {
+            console.log('New message received, updating counts:', payload)
+            // Invalidate the query to trigger a refresh of the user list with new counts
+            queryClient.invalidateQueries(["chat-users"])
+          }
+        )
+        .subscribe((status) => {
+          console.log("Chat updates subscription status:", status)
+        })
+
+      // Also subscribe to message read status changes
+      channelRef.current = supabase
+        .channel('read_status_updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'chat_messages',
+            filter: `recipient_id=eq.${user.id}`
+          },
+          async (payload) => {
+            console.log('Message read status updated:', payload)
+            // Invalidate the query to trigger a refresh
+            queryClient.invalidateQueries(["chat-users"])
+          }
+        )
+        .subscribe()
+    }
+
+    setupSubscription()
+
+    return () => {
+      if (channelRef.current) {
+        console.log("Cleaning up chat updates subscription")
+        supabase.removeChannel(channelRef.current)
+      }
+    }
+  }, [queryClient])
 
   if (isLoading) {
     return <div>Loading...</div>
