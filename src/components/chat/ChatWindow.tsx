@@ -237,7 +237,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
                   <Tooltip>
                     <TooltipTrigger>
                       <div
-                        className={`rounded-lg px-4 py-2 max-w-[70%] ${
+                        className={`rounded-lg px-4 py-2 max-w-[85%] ${
                           message.sender_id === recipientId
                             ? "bg-muted"
                             : "bg-primary text-primary-foreground"
