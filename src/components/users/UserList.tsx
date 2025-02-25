@@ -14,6 +14,7 @@ interface UserListProps {
 export const UserList = ({ initialRoleFilter = "all", excludeClients = false }: UserListProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState(initialRoleFilter);
+  const [excludedRoles, setExcludedRoles] = useState<string[]>([]);
   const { data: users, isLoading, refetch } = useUserData();
   
   // Update roleFilter when initialRoleFilter changes
@@ -33,12 +34,21 @@ export const UserList = ({ initialRoleFilter = "all", excludeClients = false }: 
     
     const matchesRole = roleFilter === "all" || user.role?.name === roleFilter;
     const matchesUserType = excludeClients ? user.role?.name !== 'client' : true;
+    const notExcluded = !excludedRoles.includes(user.role?.name || '');
     
-    return matchesSearch && matchesRole && matchesUserType;
+    return matchesSearch && matchesRole && matchesUserType && notExcluded;
   });
 
   const handleRefresh = async () => {
     await refetch();
+  };
+
+  const handleExcludeRole = (roleName: string) => {
+    setExcludedRoles(prev => [...prev, roleName]);
+  };
+
+  const handleRemoveExcludedRole = (roleName: string) => {
+    setExcludedRoles(prev => prev.filter(r => r !== roleName));
   };
 
   if (isLoading) {
@@ -58,6 +68,9 @@ export const UserList = ({ initialRoleFilter = "all", excludeClients = false }: 
         onSearchChange={setSearchQuery}
         roleFilter={roleFilter}
         onRoleFilterChange={setRoleFilter}
+        excludedRoles={excludedRoles}
+        onExcludeRole={handleExcludeRole}
+        onRemoveExcludedRole={handleRemoveExcludedRole}
         onRefresh={handleRefresh}
       />
       <div className="grid gap-4">

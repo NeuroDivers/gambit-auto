@@ -1,3 +1,4 @@
+
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserFilters } from "./UserFilters";
@@ -8,6 +9,9 @@ interface UserListHeaderProps {
   onSearchChange: (value: string) => void;
   roleFilter: string;
   onRoleFilterChange: (value: string) => void;
+  excludedRoles: string[];
+  onExcludeRole: (roleName: string) => void;
+  onRemoveExcludedRole: (roleName: string) => void;
   onRefresh: () => Promise<void>;
 }
 
@@ -16,6 +20,9 @@ export const UserListHeader = ({
   onSearchChange,
   roleFilter,
   onRoleFilterChange,
+  excludedRoles,
+  onExcludeRole,
+  onRemoveExcludedRole,
   onRefresh,
 }: UserListHeaderProps) => {
   const { toast } = useToast();
@@ -30,22 +37,27 @@ export const UserListHeader = ({
   };
 
   return (
-    <div className="flex items-center justify-between mb-4">
-      <UserFilters
-        searchQuery={searchQuery}
-        onSearchChange={onSearchChange}
-        roleFilter={roleFilter}
-        onRoleFilterChange={onRoleFilterChange}
-      />
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleRefresh}
-        className="ml-2"
-      >
-        <RefreshCw className="h-4 w-4 mr-2" />
-        Refresh
-      </Button>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <UserFilters
+          searchQuery={searchQuery}
+          onSearchChange={onSearchChange}
+          roleFilter={roleFilter}
+          onRoleFilterChange={onRoleFilterChange}
+          excludedRoles={excludedRoles}
+          onExcludeRole={onExcludeRole}
+          onRemoveExcludedRole={onRemoveExcludedRole}
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          className="ml-2 shrink-0"
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
+      </div>
     </div>
   );
 };
