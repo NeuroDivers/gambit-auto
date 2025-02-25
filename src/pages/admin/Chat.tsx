@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { supabase } from "@/integrations/supabase/client"
 import { useQuery } from "@tanstack/react-query"
+import { Badge } from "@/components/ui/badge"
 
 export default function Chat() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null)
@@ -13,19 +14,47 @@ export default function Chat() {
   const { data: users, isLoading } = useQuery({
     queryKey: ["chat-users"],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      // First get all profiles
       const { data: profiles, error } = await supabase
         .from("profiles")
         .select("id, first_name, last_name, email, role:role_id(name, nicename), avatar_url")
         .order("role_id")
       
       if (error) throw error
-      // Ensure the role field is properly structured
-      return (profiles || []).map(profile => ({
+
+      // Get unread message counts for each user
+      const unreadCounts = await Promise.all(
+        (profiles || []).map(async (profile) => {
+          const { count } = await supabase
+            .from("chat_messages")
+            .select("*", { count: 'exact', head: true })
+            .eq("recipient_id", user?.id)
+            .eq("sender_id", profile.id)
+            .eq("read", false)
+
+          return {
+            userId: profile.id,
+            count: count || 0
+          }
+        })
+      )
+
+      // Combine profiles with unread counts
+      const usersWithCounts = (profiles || []).map(profile => ({
         ...profile,
-        role: Array.isArray(profile.role) ? profile.role[0] : profile.role
-      })) as ChatUser[]
+        role: Array.isArray(profile.role) ? profile.role[0] : profile.role,
+        unreadCount: unreadCounts.find(c => c.userId === profile.id)?.count || 0
+      })) as (ChatUser & { unreadCount: number })[]
+
+      return usersWithCounts
     },
   })
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
 
   // Group users by role
   const groupedUsers = users?.reduce((acc, user) => {
@@ -36,10 +65,6 @@ export default function Chat() {
     acc[roleName].push(user)
     return acc
   }, {} as Record<string, typeof users>)
-
-  if (isLoading) {
-    return <div>Loading...</div>
-  }
 
   const getUserDisplayName = (user: ChatUser) => {
     if (user.first_name && user.last_name) {
@@ -61,13 +86,25 @@ export default function Chat() {
                     <button
                       key={user.id}
                       onClick={() => setSelectedUser(user.id)}
-                      className={`w-full text-left p-2 rounded-lg transition-colors text-gray-700 ${
+                      className={`w-full text-left p-2 rounded-lg transition-colors text-gray-700 flex items-center justify-between ${
                         selectedUser === user.id 
                           ? "bg-primary text-primary-foreground" 
                           : "hover:bg-primary hover:text-primary-foreground"
                       }`}
                     >
-                      {getUserDisplayName(user)}
+                      <span>{getUserDisplayName(user)}</span>
+                      {(user as any).unreadCount > 0 && (
+                        <Badge 
+                          variant="secondary" 
+                          className={`${
+                            selectedUser === user.id 
+                              ? "bg-primary-foreground text-primary" 
+                              : "bg-primary text-primary-foreground"
+                          }`}
+                        >
+                          {(user as any).unreadCount}
+                        </Badge>
+                      )}
                     </button>
                   ))}
                 </div>
