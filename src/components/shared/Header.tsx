@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -28,27 +29,31 @@ interface HeaderProps {
   children?: React.ReactNode;
 }
 
-// Mock notifications - In a real app, these would come from your backend
-const mockNotifications = [
-  {
-    id: 1,
-    title: "New Work Order",
-    description: "A new work order has been assigned to you",
-    time: "5 minutes ago"
-  },
-  {
-    id: 2,
-    title: "Quote Request",
-    description: "You have a new quote request pending review",
-    time: "1 hour ago"
-  }
-];
-
 export function Header({ firstName, role, onLogout, className, children }: HeaderProps) {
   const [unreadCount, setUnreadCount] = useState(0)
+  const [notifications, setNotifications] = useState<any[]>([])
   const { toast } = useToast()
 
   useEffect(() => {
+    const fetchNotifications = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("profile_id", user.id)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      if (error) {
+        console.error("Error fetching notifications:", error)
+        return
+      }
+
+      setNotifications(data || [])
+    }
+
     const fetchUnreadNotifications = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
@@ -67,6 +72,7 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
       setUnreadCount(notifications.length)
     }
 
+    fetchNotifications()
     fetchUnreadNotifications()
 
     const channel = supabase
@@ -79,6 +85,7 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
           table: "notifications",
         },
         () => {
+          fetchNotifications()
           fetchUnreadNotifications()
         }
       )
@@ -124,14 +131,16 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
           <DropdownMenuContent className="w-80" align="end">
             <DropdownMenuLabel>Notifications</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {mockNotifications.map((notification) => (
+            {notifications.map((notification) => (
               <DropdownMenuItem key={notification.id} className="flex flex-col items-start py-3 group">
                 <div className="font-medium group-hover:text-white">{notification.title}</div>
-                <div className="text-sm text-muted-foreground group-hover:text-white">{notification.description}</div>
-                <div className="text-xs text-muted-foreground group-hover:text-white mt-1">{notification.time}</div>
+                <div className="text-sm text-muted-foreground group-hover:text-white">{notification.message}</div>
+                <div className="text-xs text-muted-foreground group-hover:text-white mt-1">
+                  {new Date(notification.created_at).toLocaleString()}
+                </div>
               </DropdownMenuItem>
             ))}
-            {mockNotifications.length === 0 && (
+            {notifications.length === 0 && (
               <DropdownMenuItem disabled>No new notifications</DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
