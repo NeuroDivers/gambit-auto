@@ -81,16 +81,31 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    const { error } = await supabase.from("chat_messages").insert([
-      {
+    // First add the message locally for immediate feedback
+    const newMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      sender_id: user.id,
+      recipient_id: recipientId,
+      message: newMessage.trim(),
+      read: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+    setMessages(curr => [...curr, newMsg])
+    
+    // Then send to the server
+    const { error } = await supabase
+      .from("chat_messages")
+      .insert([{
         sender_id: user.id,
         recipient_id: recipientId,
         message: newMessage.trim(),
-      },
-    ])
+      }])
 
     if (error) {
       console.error("Error sending message:", error)
+      // Remove the message if it failed to send
+      setMessages(curr => curr.filter(msg => msg.id !== newMsg.id))
       return
     }
 
@@ -136,7 +151,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder="Type a message..."
-          onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
         />
         <Button 
           onClick={sendMessage}

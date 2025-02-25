@@ -61,10 +61,10 @@ export default function Chat() {
                     <button
                       key={user.id}
                       onClick={() => setSelectedUser(user.id)}
-                      className={`w-full text-left p-2 rounded-lg transition-colors ${
+                      className={`w-full text-left p-2 rounded-lg transition-colors text-gray-700 ${
                         selectedUser === user.id 
                           ? "bg-primary text-primary-foreground" 
-                          : "hover:bg-primary/90 hover:text-primary-foreground"
+                          : "hover:bg-primary hover:text-primary-foreground"
                       }`}
                     >
                       {getUserDisplayName(user)}
