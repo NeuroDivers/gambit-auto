@@ -78,9 +78,17 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       console.log("Fetching messages between current user and recipient:", currentUserId, recipientId)
       const { data: messages, error } = await supabase
         .from("chat_messages")
-        .select("*")
-        .or(`and(sender_id.eq.${currentUserId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${currentUserId})`)
-        .order("created_at", { ascending: true })
+        .select(`
+          *,
+          sender:sender_id (
+            first_name,
+            last_name,
+            email
+          )
+        `)
+        .or(`sender_id.eq.${currentUserId},recipient_id.eq.${currentUserId}`)
+        .or(`sender_id.eq.${recipientId},recipient_id.eq.${recipientId}`)
+        .order('created_at', { ascending: true })
 
       if (error) {
         console.error("Error fetching messages:", error)
