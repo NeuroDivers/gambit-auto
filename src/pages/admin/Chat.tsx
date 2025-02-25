@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge"
 export default function Chat() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null)
   const queryClient = useQueryClient()
-  const channelRef = useRef<any>(null)
+  const messageChannelRef = useRef<any>(null)
+  const readStatusChannelRef = useRef<any>(null)
 
   const { data: users, isLoading } = useQuery({
     queryKey: ["chat-users"],
@@ -60,14 +61,17 @@ export default function Chat() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Clean up previous subscription if it exists
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current)
+      // Clean up previous subscriptions if they exist
+      if (messageChannelRef.current) {
+        supabase.removeChannel(messageChannelRef.current)
+      }
+      if (readStatusChannelRef.current) {
+        supabase.removeChannel(readStatusChannelRef.current)
       }
 
       // Subscribe to new messages
-      channelRef.current = supabase
-        .channel('chat_updates')
+      messageChannelRef.current = supabase
+        .channel('chat_messages_updates')
         .on(
           'postgres_changes',
           {
@@ -83,11 +87,11 @@ export default function Chat() {
           }
         )
         .subscribe((status) => {
-          console.log("Chat updates subscription status:", status)
+          console.log("Chat messages subscription status:", status)
         })
 
-      // Also subscribe to message read status changes
-      channelRef.current = supabase
+      // Subscribe to message read status changes
+      readStatusChannelRef.current = supabase
         .channel('read_status_updates')
         .on(
           'postgres_changes',
@@ -103,15 +107,21 @@ export default function Chat() {
             queryClient.invalidateQueries({ queryKey: ["chat-users"] })
           }
         )
-        .subscribe()
+        .subscribe((status) => {
+          console.log("Read status subscription status:", status)
+        })
     }
 
     setupSubscription()
 
     return () => {
-      if (channelRef.current) {
-        console.log("Cleaning up chat updates subscription")
-        supabase.removeChannel(channelRef.current)
+      if (messageChannelRef.current) {
+        console.log("Cleaning up message updates subscription")
+        supabase.removeChannel(messageChannelRef.current)
+      }
+      if (readStatusChannelRef.current) {
+        console.log("Cleaning up read status subscription")
+        supabase.removeChannel(readStatusChannelRef.current)
       }
     }
   }, [queryClient])
