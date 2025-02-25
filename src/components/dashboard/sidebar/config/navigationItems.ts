@@ -110,7 +110,7 @@ export const navigationItems: NavSection[] = [
       },
       {
         title: "Staff Skills",
-        href: "/admin/staff-skills",
+        href: "/staff-skills",
         icon: Briefcase,
         permission: { resource: "users", type: "page_access" }
       },
