@@ -30,7 +30,10 @@ export const usePermissions = () => {
     queryKey: ["current-user-role"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      if (!user) {
+        console.log('No user found in usePermissions');
+        return null;
+      }
 
       const { data, error } = await supabase
         .from('profiles')
@@ -44,27 +47,27 @@ export const usePermissions = () => {
         .eq('id', user.id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching role:', error);
+        throw error;
+      }
 
-      // Transform the data to match UserRole interface
       if (data?.role) {
-        // Explicitly type the role data and ensure we're handling a single object
         const roleData = Array.isArray(data.role) ? data.role[0] : data.role;
-        
-        // Now create a properly typed UserRole object
         const userRole: UserRole = {
           id: String(roleData.id),
           name: String(roleData.name),
           nicename: String(roleData.nicename)
         };
-        
-        console.log('Processed user role:', userRole);
+        console.log('User role in usePermissions:', userRole);
         return userRole;
       }
       
+      console.log('No role found in usePermissions');
       return null;
     },
-    staleTime: Infinity, // Cache the role indefinitely until explicitly invalidated
+    staleTime: 30000, // Cache for 30 seconds
+    retry: 3
   });
 
   // Get all permissions and cache them
@@ -83,10 +86,14 @@ export const usePermissions = () => {
         `)
         .order('resource_name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching permissions:', error);
+        throw error;
+      }
       return data as RolePermission[];
     },
-    staleTime: Infinity, // Cache permissions indefinitely until explicitly invalidated
+    staleTime: 30000, // Cache for 30 seconds
+    retry: 3
   });
 
   const checkPermission = async (
@@ -97,19 +104,19 @@ export const usePermissions = () => {
       // First check if user is authenticated
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.log('No user found');
+        console.log('No user found in checkPermission');
         return false;
       }
 
       // If user is administrator, grant access immediately
       if (currentUserRole?.name?.toLowerCase() === 'administrator') {
-        console.log('User is administrator, granting access');
+        console.log('User is administrator in checkPermission, granting access');
         return true;
       }
 
       // For non-admin users, check specific permissions
       if (!currentUserRole) {
-        console.log('No role found');
+        console.log('No role found in checkPermission');
         return false;
       }
 
