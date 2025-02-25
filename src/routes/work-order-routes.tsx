@@ -9,21 +9,34 @@ import EditWorkOrder from "@/pages/admin/EditWorkOrder"
 import Calendar from "@/pages/admin/Calendar"
 import { usePermissions } from "@/hooks/usePermissions"
 
+const RoleBasedWorkOrders = () => {
+  const { currentUserRole } = usePermissions();
+  const role = currentUserRole?.name?.toLowerCase();
+  
+  if (role === 'staff') {
+    return <StaffWorkOrders />;
+  }
+  
+  return <WorkOrders />;
+};
+
+const RoleBasedCalendar = () => {
+  const { currentUserRole } = usePermissions();
+  const role = currentUserRole?.name?.toLowerCase();
+  
+  if (role === 'staff') {
+    return <StaffCalendar />;
+  }
+  
+  return <Calendar />;
+};
+
 export const workOrderRoutes: RouteObject[] = [
   {
     path: "work-orders",
     element: (
       <PermissionGuard resource="work_orders" type="page_access">
-        {() => {
-          const { currentUserRole } = usePermissions();
-          const role = currentUserRole?.name?.toLowerCase();
-          
-          if (role === 'staff') {
-            return <StaffWorkOrders />;
-          }
-          
-          return <WorkOrders />;
-        }}
+        <RoleBasedWorkOrders />
       </PermissionGuard>
     ),
   },
@@ -47,16 +60,7 @@ export const workOrderRoutes: RouteObject[] = [
     path: "calendar",
     element: (
       <PermissionGuard resource="calendar" type="page_access">
-        {() => {
-          const { currentUserRole } = usePermissions();
-          const role = currentUserRole?.name?.toLowerCase();
-          
-          if (role === 'staff') {
-            return <StaffCalendar />;
-          }
-          
-          return <Calendar />;
-        }}
+        <RoleBasedCalendar />
       </PermissionGuard>
     ),
   },
