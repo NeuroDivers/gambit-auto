@@ -1,14 +1,19 @@
 
 import { 
+  Settings, 
+  Users, 
   FileText, 
   Calendar, 
   ClipboardList, 
+  Store, 
+  Wrench,
+  LayoutGrid,
+  Shield,
+  Code,
   MessageSquare,
   DollarSign,
   Car,
-  Briefcase,
-  LayoutGrid,
-  Users
+  Briefcase
 } from "lucide-react"
 import { NavSection } from "../types/navigation"
 
@@ -28,6 +33,12 @@ export const navigationItems: NavSection[] = [
     section: "Work Management",
     items: [
       {
+        title: "Estimates",
+        href: "/estimates",
+        icon: FileText,
+        permission: { resource: "estimates", type: "page_access" }
+      },
+      {
         title: "Work Orders",
         href: "/work-orders",
         icon: ClipboardList,
@@ -38,12 +49,6 @@ export const navigationItems: NavSection[] = [
         href: "/calendar",
         icon: Calendar,
         permission: { resource: "calendar", type: "page_access" }
-      },
-      {
-        title: "Estimates",
-        href: "/estimates",
-        icon: FileText,
-        permission: { resource: "estimates", type: "page_access" }
       },
       {
         title: "Chat",
@@ -66,7 +71,7 @@ export const navigationItems: NavSection[] = [
     ],
   },
   {
-    section: "Client Management",
+    section: "Business",
     items: [
       {
         title: "Clients",
@@ -75,11 +80,64 @@ export const navigationItems: NavSection[] = [
         permission: { resource: "clients", type: "page_access" }
       },
       {
+        title: "Service Types",
+        href: "/service-types",
+        icon: Wrench,
+        permission: { resource: "service_types", type: "page_access" }
+      },
+      {
+        title: "Service Bays",
+        href: "/service-bays",
+        icon: Store,
+        permission: { resource: "service_bays", type: "page_access" }
+      },
+      {
         title: "Vehicles",
         href: "/vehicles",
         icon: Car,
         permission: { resource: "vehicles", type: "page_access" }
-      }
+      },
+      {
+        title: "Bookings",
+        href: "/bookings",
+        icon: Calendar,
+        permission: { resource: "bookings", type: "page_access" }
+      },
     ],
-  }
+  },
+  {
+    section: "Administration",
+    items: [
+      {
+        title: "Users",
+        href: "/users",
+        icon: Users,
+        permission: { resource: "users", type: "page_access" }
+      },
+      {
+        title: "Staff Skills Management",
+        href: "/admin/staff-skills",
+        icon: Briefcase,
+        permission: { resource: "staff_skills", type: "page_access" }
+      },
+      {
+        title: "System Roles",
+        href: "/system-roles",
+        icon: Shield,
+        permission: { resource: "users", type: "page_access" }
+      },
+      {
+        title: "Settings",
+        href: "/business-settings",
+        icon: Settings,
+        permission: { resource: "business_settings", type: "page_access" }
+      },
+      {
+        title: "Developer Settings",
+        href: "/developer-settings",
+        icon: Code,
+        permission: { resource: "developer_settings", type: "page_access" }
+      },
+    ],
+  },
 ]
