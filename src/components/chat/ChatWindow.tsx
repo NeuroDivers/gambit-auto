@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { ChatMessage, ChatUser } from "@/types/chat"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -15,13 +15,14 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   const [newMessage, setNewMessage] = useState("")
   const [recipient, setRecipient] = useState<ChatUser | null>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const channelRef = useRef<any>(null)
   const { toast } = useToast()
 
   useEffect(() => {
-    // Get current user ID on mount
     const getCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
+        console.log("Current user ID:", user.id)
         setCurrentUserId(user.id)
       }
     }
@@ -29,11 +30,14 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   }, [])
 
   useEffect(() => {
+    if (!currentUserId) return
+
     const fetchMessages = async () => {
+      console.log("Fetching messages between current user and recipient:", currentUserId, recipientId)
       const { data: messages, error } = await supabase
         .from("chat_messages")
         .select("*")
-        .or(`sender_id.eq.${recipientId},recipient_id.eq.${recipientId}`)
+        .or(`and(sender_id.eq.${currentUserId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${currentUserId})`)
         .order("created_at", { ascending: true })
 
       if (error) {
@@ -43,23 +47,20 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
 
       setMessages(messages)
 
-      // Mark messages as read
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        await supabase
-          .from("chat_messages")
-          .update({ read: true })
-          .eq("sender_id", recipientId)
-          .eq("recipient_id", user.id)
+      // Mark messages as read when they are from the recipient
+      await supabase
+        .from("chat_messages")
+        .update({ read: true })
+        .eq("sender_id", recipientId)
+        .eq("recipient_id", currentUserId)
 
-        // Create or update notification count
-        await supabase
-          .from("notifications")
-          .update({ read: true })
-          .eq("profile_id", user.id)
-          .eq("sender_id", recipientId)
-          .eq("type", 'chat_message')
-      }
+      // Update notification as read
+      await supabase
+        .from("notifications")
+        .update({ read: true })
+        .eq("profile_id", currentUserId)
+        .eq("sender_id", recipientId)
+        .eq("type", 'chat_message')
     }
 
     const fetchRecipient = async () => {
@@ -85,64 +86,74 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     fetchMessages()
     fetchRecipient()
 
+    // Clean up previous subscription if it exists
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current)
+    }
+
     // Subscribe to new messages
-    const channel = supabase
-      .channel("chat_messages")
+    channelRef.current = supabase
+      .channel(`chat_messages_${currentUserId}_${recipientId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "chat_messages",
+          filter: `recipient_id=eq.${currentUserId}`
         },
         async (payload) => {
+          console.log("New message received:", payload)
           const newMessage = payload.new as ChatMessage
-          // Only update messages if the message is relevant to this chat
-          if (newMessage.sender_id === recipientId || newMessage.recipient_id === recipientId) {
+          
+          // Only update messages if it's part of this conversation
+          if (newMessage.sender_id === recipientId) {
+            console.log("Adding new message to chat")
             setMessages((current) => [...current, newMessage])
-            
-            // Only show toast and create notification if the current user is the recipient
-            if (newMessage.recipient_id === currentUserId && newMessage.sender_id === recipientId) {
-              toast({
-                title: "New message",
-                description: `You have a new message from ${recipient?.first_name || 'someone'}`,
+
+            // Only show toast and create notification for the recipient
+            console.log("Creating notification for recipient")
+            toast({
+              title: "New message",
+              description: `You have a new message from ${recipient?.first_name || 'someone'}`,
+            })
+
+            // Create a notification
+            const { error: notificationError } = await supabase
+              .from("notifications")
+              .upsert({
+                profile_id: currentUserId,
+                sender_id: newMessage.sender_id,
+                type: 'chat_message',
+                title: 'New Message',
+                message: `New message from ${recipient?.first_name || 'someone'}`,
+                read: false,
               })
 
-              // Create a notification for the new message
-              const { error: notificationError } = await supabase
-                .from("notifications")
-                .upsert({
-                  profile_id: currentUserId,
-                  sender_id: newMessage.sender_id,
-                  type: 'chat_message',
-                  title: 'New Message',
-                  message: `New message from ${recipient?.first_name || 'someone'}`,
-                  read: false,
-                })
-
-              if (notificationError) {
-                console.error("Error creating notification:", notificationError)
-              }
+            if (notificationError) {
+              console.error("Error creating notification:", notificationError)
             }
           }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log("Chat subscription status:", status)
+      })
 
     return () => {
-      supabase.removeChannel(channel)
+      if (channelRef.current) {
+        console.log("Cleaning up chat subscription")
+        supabase.removeChannel(channelRef.current)
+      }
     }
-  }, [recipientId, recipient?.first_name, toast, currentUserId])
+  }, [recipientId, currentUserId, recipient?.first_name, toast])
 
   const sendMessage = async () => {
-    if (!newMessage.trim()) return
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    if (!newMessage.trim() || !currentUserId) return
 
     const newMsg: ChatMessage = {
       id: crypto.randomUUID(),
-      sender_id: user.id,
+      sender_id: currentUserId,
       recipient_id: recipientId,
       message: newMessage.trim(),
       read: false,
@@ -154,7 +165,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     const { error } = await supabase
       .from("chat_messages")
       .insert([{
-        sender_id: user.id,
+        sender_id: currentUserId,
         recipient_id: recipientId,
         message: newMessage.trim(),
       }])
