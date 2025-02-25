@@ -20,7 +20,7 @@ export default function StaffWorkOrders() {
         .from('work_orders')
         .select(`
           *,
-          service_bays (name),
+          service_bays!fk_work_orders_assigned_bay (name),
           work_order_services (
             id,
             service_id,
@@ -52,7 +52,7 @@ export default function StaffWorkOrders() {
         .from('work_orders')
         .select(`
           *,
-          service_bays (name),
+          service_bays!fk_work_orders_assigned_bay (name),
           work_order_services (
             id,
             service_id,
