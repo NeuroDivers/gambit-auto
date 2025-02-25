@@ -11,6 +11,7 @@ import { estimateRoutes } from "./estimate-routes"
 import { invoiceRoutes } from "./invoice-routes"
 import { clientRoutes } from "./client-routes"
 import { settingsRoutes } from "./settings-routes"
+import { vehicleRoutes } from "./vehicle-routes"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Navigate } from "react-router-dom"
 import Chat from "@/pages/admin/Chat"
@@ -26,11 +27,9 @@ const RoleBasedLayout = () => {
     return <LoadingScreen />;
   }
 
-  // If we have a role, determine the appropriate layout based on default_dashboard setting
   if (currentUserRole?.name) {
     console.log('Current role:', currentUserRole);
     
-    // Use the default_dashboard setting to determine which layout to show
     switch (currentUserRole.default_dashboard) {
       case 'admin':
         return <DashboardLayoutWrapper />;
@@ -39,13 +38,11 @@ const RoleBasedLayout = () => {
       case 'client':
         return <ClientLayoutWrapper />;
       default:
-        // If no default_dashboard is set, fallback to client dashboard
         console.log('No default dashboard set, using client dashboard');
         return <ClientLayoutWrapper />;
     }
   }
 
-  // If we have no role but the hook has finished loading, redirect to auth
   console.log('No role found, redirecting to auth');
   return <Navigate to="/auth" replace />;
 };
@@ -86,5 +83,7 @@ export const protectedRoutes: RouteObject = {
     ...invoiceRoutes,
     ...clientRoutes,
     ...settingsRoutes,
+    ...vehicleRoutes,
   ],
 };
+
