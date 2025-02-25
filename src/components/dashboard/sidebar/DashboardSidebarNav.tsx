@@ -56,9 +56,8 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
   return (
     <nav className="flex flex-col gap-4 py-4">
       {filteredItems.map((section, index) => (
-        <>
+        <div key={section.section}>
           <NavSection
-            key={section.section}
             section={section}
             isCollapsed={isCollapsed}
             onNavigate={onNavigate}
@@ -66,7 +65,7 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
           {index < filteredItems.length - 1 && !isCollapsed && (
             <Separator className="my-4" />
           )}
-        </>
+        </div>
       ))}
     </nav>
   )
