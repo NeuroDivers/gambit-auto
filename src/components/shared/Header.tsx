@@ -29,9 +29,33 @@ interface HeaderProps {
   children?: React.ReactNode;
 }
 
+// Add interfaces for type safety
+interface ChatMessage {
+  id: string;
+  message: string;
+  created_at: string;
+  sender_id: string;
+  read: boolean;
+  profiles: {
+    first_name: string | null;
+    last_name: string | null;
+    email: string | null;
+  };
+}
+
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  created_at: string;
+  type?: string;
+  read: boolean;
+  sender_id?: string;
+}
+
 export function Header({ firstName, role, onLogout, className, children }: HeaderProps) {
   const [unreadCount, setUnreadCount] = useState(0)
-  const [notifications, setNotifications] = useState<any[]>([])
+  const [notifications, setNotifications] = useState<Notification[]>([])
   const { toast } = useToast()
 
   useEffect(() => {
@@ -67,11 +91,11 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
           .order('created_at', { ascending: false })
       ])
 
-      const notifications = notificationsResponse.data || []
-      const chatMessages = chatMessagesResponse.data || []
+      const notifications = (notificationsResponse.data || []) as Notification[]
+      const chatMessages = (chatMessagesResponse.data || []) as ChatMessage[]
 
       // Convert chat messages to notification format
-      const chatNotifications = chatMessages.map(msg => ({
+      const chatNotifications: Notification[] = chatMessages.map(msg => ({
         id: msg.id,
         title: "New Message",
         message: `${msg.profiles?.first_name || msg.profiles?.email || 'Someone'}: ${msg.message.substring(0, 50)}${msg.message.length > 50 ? '...' : ''}`,
@@ -169,7 +193,7 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
                 key={notification.id} 
                 className="flex flex-col items-start py-3 group"
                 onClick={() => {
-                  if (notification.type === 'chat_message') {
+                  if (notification.type === 'chat_message' && notification.sender_id) {
                     // Navigate to chat with the sender
                     window.location.href = `/chat?user=${notification.sender_id}`;
                   }
