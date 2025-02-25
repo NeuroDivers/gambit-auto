@@ -22,22 +22,9 @@ export function StaffLayoutWrapper() {
     },
   })
 
-  const { data: hasAccess, isLoading: permissionLoading } = useQuery({
-    queryKey: ["staff-dashboard-access", session?.user.id],
-    enabled: !!session?.user.id,
-    queryFn: async () => {
-      const { data } = await supabase.rpc('has_permission', {
-        user_id: session!.user.id,
-        resource: 'staff_dashboard',
-        perm_type: 'page_access'
-      })
-      return data
-    }
-  })
-
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile", session?.user?.id],
-    enabled: !!session?.user?.id && !!hasAccess,
+    enabled: !!session?.user?.id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
@@ -46,7 +33,8 @@ export function StaffLayoutWrapper() {
           role:role_id (
             id,
             name,
-            nicename
+            nicename,
+            default_dashboard
           )
         `)
         .eq("id", session!.user.id)
@@ -75,7 +63,7 @@ export function StaffLayoutWrapper() {
     }
   }
 
-  if (sessionLoading || permissionLoading || profileLoading) {
+  if (sessionLoading || profileLoading) {
     return <LoadingScreen />
   }
 
@@ -83,12 +71,12 @@ export function StaffLayoutWrapper() {
     return <Navigate to="/auth" replace />
   }
 
-  if (!hasAccess) {
+  // Allow access if user has staff dashboard or is an admin
+  if (!profile?.role?.default_dashboard || 
+      (profile.role.default_dashboard !== 'staff' && 
+       profile.role.default_dashboard !== 'admin')) {
+    console.log('User does not have staff access, redirecting to unauthorized')
     return <Navigate to="/unauthorized" replace />
-  }
-
-  if (!profile) {
-    return <LoadingScreen />
   }
 
   return (
