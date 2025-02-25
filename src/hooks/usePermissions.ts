@@ -107,15 +107,28 @@ export const usePermissions = () => {
         return true;
       }
 
-      // Use the cached permissions to check access
-      const hasPermission = await supabase.rpc('has_permission', {
-        user_id: user.id,
-        resource: resource,
-        perm_type: type
-      });
+      // For non-admin users, check specific permissions
+      if (!currentUserRole) {
+        console.log('No role found');
+        return false;
+      }
 
-      console.log(`Permission check for ${resource}: ${hasPermission.data}`);
-      return hasPermission.data || false;
+      // Check if role has permission
+      const { data: hasPermission, error } = await supabase
+        .from('role_permissions')
+        .select('is_active')
+        .eq('role_id', currentUserRole.id)
+        .eq('resource_name', resource)
+        .eq('permission_type', type)
+        .single();
+
+      if (error) {
+        console.error('Permission check error:', error);
+        return false;
+      }
+
+      console.log(`Permission check for ${resource}: ${hasPermission?.is_active}`);
+      return hasPermission?.is_active || false;
     } catch (error) {
       console.error('Permission check error:', error);
       return false;
