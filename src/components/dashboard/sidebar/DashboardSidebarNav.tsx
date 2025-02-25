@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
 import { 
@@ -16,12 +17,28 @@ import { useSidebar } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { usePermissions } from "@/hooks/usePermissions"
 import { useEffect, useState } from "react"
+import { PermissionType } from "@/types/permissions"
+
+interface NavItem {
+  title: string;
+  href: string;
+  icon: any;
+  permission?: {
+    resource: string;
+    type: PermissionType;
+  };
+}
+
+interface NavSection {
+  section: string;
+  items: NavItem[];
+}
 
 interface DashboardSidebarNavProps {
   onNavigate?: () => void
 }
 
-const items = [
+const items: NavSection[] = [
   {
     section: "Overview",
     items: [
