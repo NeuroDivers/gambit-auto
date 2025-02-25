@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
-import { User, Calendar, Settings } from "lucide-react"
+import { User, Calendar, Settings, MessageSquare, ClipboardList, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useSidebar } from "@/components/ui/sidebar"
@@ -14,9 +14,24 @@ const items = [
     icon: User,
   },
   {
+    title: "Work Orders",
+    href: "/staff/work-orders",
+    icon: ClipboardList,
+  },
+  {
+    title: "Estimates",
+    href: "/staff/estimates",
+    icon: FileText,
+  },
+  {
     title: "Calendar",
     href: "/staff/calendar",
     icon: Calendar,
+  },
+  {
+    title: "Chat",
+    href: "/staff/chat",
+    icon: MessageSquare,
   },
   {
     title: "Settings",
