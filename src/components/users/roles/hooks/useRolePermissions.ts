@@ -78,7 +78,9 @@ export const useRolePermissions = (roleId: string | null) => {
       }
 
       // Refresh the data to ensure we have the latest state
-      await queryClient.invalidateQueries(["role-permissions", roleId])
+      await queryClient.invalidateQueries({
+        queryKey: ["role-permissions", roleId]
+      })
 
       const resourceName = permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
       const permissionType = permission.permission_type.toLowerCase().replace(/_/g, ' ')
