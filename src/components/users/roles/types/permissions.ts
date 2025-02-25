@@ -14,18 +14,11 @@ export type GroupedPermissions = Record<string, Permission[]>;
 
 export const groupPermissions = (permissions: Permission[]): GroupedPermissions => {
   return permissions.reduce((acc: GroupedPermissions, permission) => {
-    const section = permission.resource_name;
+    const section = permission.permission_type;
     if (!acc[section]) {
       acc[section] = [];
     }
     acc[section].push(permission);
     return acc;
   }, {});
-};
-
-export const defaultPermissionDescriptions: Record<string, string> = {
-  bookings: "Access and manage booking requests",
-  vehicles: "View and manage vehicle information",
-  calendar: "Access and manage the calendar view",
-  payment_methods: "View and manage payment methods",
 };

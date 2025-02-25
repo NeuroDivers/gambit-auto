@@ -1,7 +1,7 @@
 
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Permission, defaultPermissionDescriptions } from "../types/permissions"
+import { Permission } from "../types/permissions"
 
 interface PermissionSectionProps {
   sectionName: string
@@ -35,14 +35,13 @@ export const PermissionSection = ({
                       word.charAt(0).toUpperCase() + word.slice(1)
                     ).join(' ')}
               </Label>
-              <p className="text-sm text-muted-foreground">
-                {permission.description || defaultPermissionDescriptions[permission.resource_name] || 
-                  (permission.resource_name === "quotes"
-                    ? permission.description?.replace(/quote/gi, "estimate").replace(/Quote/gi, "Estimate")
-                    : `Manage ${permission.resource_name.split('_').map(word => 
-                        word.charAt(0).toUpperCase() + word.slice(1)
-                      ).join(' ')} access`)}
-              </p>
+              {permission.description && (
+                <p className="text-sm text-muted-foreground">
+                  {permission.resource_name === "quotes"
+                    ? permission.description.replace(/quote/gi, "estimate").replace(/Quote/gi, "Estimate")
+                    : permission.description}
+                </p>
+              )}
             </div>
             <Switch
               id={`permission-${permission.id}`}

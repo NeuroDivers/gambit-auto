@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
@@ -10,46 +9,36 @@ export const useRolePermissions = (roleId: string | null) => {
   const queryClient = useQueryClient()
   const [isUpdating, setIsUpdating] = useState(false)
 
-  const { data: permissions, isLoading: permissionsLoading } = useQuery({
+  const { data: permissions, isLoading } = useQuery({
     queryKey: ["role-permissions", roleId],
     queryFn: async () => {
       if (!roleId) return null
       
-      console.log("Fetching permissions for role:", roleId)
       const { data, error } = await supabase
         .from("role_permissions")
         .select("*")
         .eq("role_id", roleId)
+        .order("resource_name")
       
-      if (error) {
-        console.error("Error fetching permissions:", error)
-        throw error
-      }
+      if (error) throw error
       
-      console.log("Fetched permissions:", data)
       return data as Permission[]
     },
     enabled: !!roleId,
   })
 
-  const { data: role, isLoading: roleLoading } = useQuery({
+  const { data: role } = useQuery({
     queryKey: ["role", roleId],
     queryFn: async () => {
       if (!roleId) return null
       
-      console.log("Fetching role:", roleId)
       const { data, error } = await supabase
         .from("roles")
         .select("*")
         .eq("id", roleId)
         .maybeSingle()
       
-      if (error) {
-        console.error("Error fetching role:", error)
-        throw error
-      }
-      
-      console.log("Fetched role:", data)
+      if (error) throw error
       return data
     },
     enabled: !!roleId,
@@ -77,7 +66,7 @@ export const useRolePermissions = (roleId: string | null) => {
           is_active: newValue,
         })
         .eq("id", permission.id)
-        .select()
+        .select("*")
 
       if (error) {
         console.error("Database update error:", error)
@@ -112,6 +101,80 @@ export const useRolePermissions = (roleId: string | null) => {
       
       toast({
         title: "Error updating permission",
+        description: error.message,
+        variant: "destructive",
+      })
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleBayAssignmentToggle = async (newValue: boolean) => {
+    if (!roleId || isUpdating) return
+    setIsUpdating(true)
+
+    try {
+      queryClient.setQueryData(["role", roleId], (oldData: any) => {
+        if (!oldData) return oldData
+        return { ...oldData, can_be_assigned_to_bay: newValue }
+      })
+
+      const { error } = await supabase
+        .from("roles")
+        .update({ 
+          can_be_assigned_to_bay: newValue,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", roleId)
+
+      if (error) throw error
+
+      toast({
+        title: "Role updated",
+        description: `Bay assignment ${newValue ? 'enabled' : 'disabled'} for this role.`,
+      })
+    } catch (error: any) {
+      console.error("Bay assignment update error:", error)
+      queryClient.invalidateQueries({ queryKey: ["role", roleId] })
+      toast({
+        title: "Error updating bay assignment",
+        description: error.message,
+        variant: "destructive",
+      })
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleWorkOrderAssignmentToggle = async (newValue: boolean) => {
+    if (!roleId || isUpdating) return
+    setIsUpdating(true)
+
+    try {
+      queryClient.setQueryData(["role", roleId], (oldData: any) => {
+        if (!oldData) return oldData
+        return { ...oldData, can_be_assigned_work_orders: newValue }
+      })
+
+      const { error } = await supabase
+        .from("roles")
+        .update({ 
+          can_be_assigned_work_orders: newValue,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", roleId)
+
+      if (error) throw error
+
+      toast({
+        title: "Role updated",
+        description: `Work order assignment ${newValue ? 'enabled' : 'disabled'} for this role.`,
+      })
+    } catch (error: any) {
+      console.error("Work order assignment update error:", error)
+      queryClient.invalidateQueries({ queryKey: ["role", roleId] })
+      toast({
+        title: "Error updating work order assignment",
         description: error.message,
         variant: "destructive",
       })
@@ -159,10 +222,12 @@ export const useRolePermissions = (roleId: string | null) => {
 
   return {
     permissions,
-    isLoading: permissionsLoading || roleLoading,
+    isLoading,
     isUpdating,
     role,
     handlePermissionToggle,
-    handleDashboardChange
+    handleDashboardChange,
+    handleBayAssignmentToggle,
+    handleWorkOrderAssignmentToggle
   }
 }
