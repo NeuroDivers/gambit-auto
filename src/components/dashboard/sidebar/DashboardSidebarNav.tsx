@@ -10,7 +10,8 @@ import {
   Store, 
   Wrench,
   LayoutGrid,
-  Shield
+  Shield,
+  Code
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useSidebar } from "@/components/ui/sidebar"
@@ -117,6 +118,12 @@ const items: NavSection[] = [
         href: "/business-settings",
         icon: Settings,
         permission: { resource: "business_settings", type: "page_access" }
+      },
+      {
+        title: "Developer Settings",
+        href: "/developer-settings",
+        icon: Code,
+        permission: { resource: "developer_settings", type: "page_access" }
       },
     ],
   },
