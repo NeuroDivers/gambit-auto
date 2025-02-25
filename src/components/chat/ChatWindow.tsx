@@ -101,8 +101,8 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
           if (newMessage.sender_id === recipientId || newMessage.recipient_id === recipientId) {
             setMessages((current) => [...current, newMessage])
             
-            // Only show toast and create notification if we're the recipient
-            if (newMessage.recipient_id === currentUserId) {
+            // Only show toast and create notification if the current user is the recipient
+            if (newMessage.recipient_id === currentUserId && newMessage.sender_id === recipientId) {
               toast({
                 title: "New message",
                 description: `You have a new message from ${recipient?.first_name || 'someone'}`,
