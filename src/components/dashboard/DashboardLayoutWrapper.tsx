@@ -1,5 +1,5 @@
 
-import React from "react"
+import React, { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
@@ -21,12 +21,10 @@ export function DashboardLayoutWrapper() {
         console.error("Session error:", error);
         throw error;
       }
-      if (!session) {
-        throw new Error("No session found");
-      }
       return session;
     },
-    retry: false
+    staleTime: 5 * 60 * 1000, // Consider session data fresh for 5 minutes
+    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 
   const { data: profile, isLoading: profileLoading, error: profileError } = useQuery({
@@ -51,14 +49,14 @@ export function DashboardLayoutWrapper() {
       if (profileError) throw profileError;
       return profileData;
     },
-    retry: false
+    staleTime: 5 * 60 * 1000, // Consider profile data fresh for 5 minutes
   });
 
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      // Invalidate all queries including permissions
-      queryClient.removeQueries();
+      // Clear all queries including permissions
+      queryClient.clear();
       navigate("/auth", { replace: true });
       toast({
         title: "Logged out successfully",
