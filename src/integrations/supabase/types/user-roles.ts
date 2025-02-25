@@ -14,6 +14,7 @@ export interface RolesTable {
     created_at: string
     permissions_configured: boolean
     updated_at: string
+    default_dashboard: 'admin' | 'staff' | 'client' | null
   }
   Insert: {
     id?: string
@@ -24,6 +25,7 @@ export interface RolesTable {
     created_at?: string
     permissions_configured?: boolean
     updated_at?: string
+    default_dashboard?: 'admin' | 'staff' | 'client' | null
   }
   Update: {
     id?: string
@@ -34,6 +36,7 @@ export interface RolesTable {
     created_at?: string
     permissions_configured?: boolean
     updated_at?: string
+    default_dashboard?: 'admin' | 'staff' | 'client' | null
   }
   Relationships: []
 }
@@ -66,5 +69,6 @@ export interface ProfileWithRole {
     id: string;
     name: string;
     nicename: string;
+    default_dashboard?: 'admin' | 'staff' | 'client';
   };
 }
