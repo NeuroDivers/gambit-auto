@@ -2,11 +2,27 @@
 import { useAuthForm } from "@/hooks/useAuthForm"
 import { AuthLayout } from "@/components/auth/AuthLayout"
 import { AuthContent } from "@/components/auth/AuthContent"
-import { useAuthRedirect } from "@/hooks/useAuthRedirect"
+import { useNavigate } from "react-router-dom"
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
+import { LoadingScreen } from "@/components/shared/LoadingScreen"
 
 export default function Auth() {
-  // This hook will check auth state and redirect if needed
-  useAuthRedirect()
+  const navigate = useNavigate()
+
+  // Query to check authentication status
+  const { isLoading } = useQuery({
+    queryKey: ['auth-session'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        // If user is authenticated, redirect to dashboard
+        console.log('User is already authenticated, redirecting to dashboard')
+        navigate('/dashboard', { replace: true })
+      }
+      return session
+    }
+  })
 
   const {
     isLogin,
@@ -21,6 +37,10 @@ export default function Auth() {
     handleGoogleSignIn,
     handleForgotPassword,
   } = useAuthForm()
+
+  if (isLoading) {
+    return <LoadingScreen />
+  }
 
   return (
     <AuthLayout 
