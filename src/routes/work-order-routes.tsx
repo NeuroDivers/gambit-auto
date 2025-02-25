@@ -13,7 +13,7 @@ const RoleBasedWorkOrders = () => {
   const { currentUserRole } = usePermissions();
   const role = currentUserRole?.name?.toLowerCase();
   
-  if (role === 'staff') {
+  if (role === 'staff' || role === 'technician') {
     return <StaffWorkOrders />;
   }
   
@@ -24,7 +24,7 @@ const RoleBasedCalendar = () => {
   const { currentUserRole } = usePermissions();
   const role = currentUserRole?.name?.toLowerCase();
   
-  if (role === 'staff') {
+  if (role === 'staff' || role === 'technician') {
     return <StaffCalendar />;
   }
   
