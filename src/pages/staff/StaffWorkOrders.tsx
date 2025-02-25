@@ -21,9 +21,15 @@ export default function StaffWorkOrders() {
         .select(`
           *,
           service_bays (name),
-          assigned_to: profiles!work_orders_assigned_profile_id_fkey (
-            first_name,
-            last_name
+          work_order_services (
+            id,
+            service_id,
+            quantity,
+            unit_price,
+            service_types (
+              name,
+              description
+            )
           )
         `)
         .eq('assigned_profile_id', user.id)
@@ -42,7 +48,17 @@ export default function StaffWorkOrders() {
         .from('work_orders')
         .select(`
           *,
-          service_bays (name)
+          service_bays (name),
+          work_order_services (
+            id,
+            service_id,
+            quantity,
+            unit_price,
+            service_types (
+              name,
+              description
+            )
+          )
         `)
         .is('assigned_profile_id', null)
         .eq('status', 'pending')
@@ -107,8 +123,22 @@ export default function StaffWorkOrders() {
                 {order.service_bays?.name && (
                   <p className="text-sm">Bay: {order.service_bays.name}</p>
                 )}
+                {order.work_order_services && order.work_order_services.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm font-medium">Services:</p>
+                    <ul className="list-disc list-inside text-sm text-muted-foreground">
+                      {order.work_order_services.map((service: any) => (
+                        <li key={service.id}>
+                          {service.service_types.name} x {service.quantity}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 {order.additional_notes && (
-                  <p className="text-sm">Notes: {order.additional_notes}</p>
+                  <p className="text-sm mt-2">
+                    <span className="font-medium">Notes:</span> {order.additional_notes}
+                  </p>
                 )}
               </div>
             </Card>
@@ -143,8 +173,22 @@ export default function StaffWorkOrders() {
                 {order.service_bays?.name && (
                   <p className="text-sm">Bay: {order.service_bays.name}</p>
                 )}
+                {order.work_order_services && order.work_order_services.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm font-medium">Services:</p>
+                    <ul className="list-disc list-inside text-sm text-muted-foreground">
+                      {order.work_order_services.map((service: any) => (
+                        <li key={service.id}>
+                          {service.service_types.name} x {service.quantity}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 {order.additional_notes && (
-                  <p className="text-sm">Notes: {order.additional_notes}</p>
+                  <p className="text-sm mt-2">
+                    <span className="font-medium">Notes:</span> {order.additional_notes}
+                  </p>
                 )}
               </div>
             </Card>
