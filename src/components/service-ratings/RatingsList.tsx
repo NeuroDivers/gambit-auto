@@ -7,11 +7,12 @@ import { Star } from "lucide-react"
 interface RatingsListProps {
   profileId?: string
   serviceId?: string
+  workOrderId?: string
 }
 
-export function RatingsList({ profileId, serviceId }: RatingsListProps) {
+export function RatingsList({ profileId, serviceId, workOrderId }: RatingsListProps) {
   const { data: ratings, isLoading } = useQuery({
-    queryKey: ['service-ratings', profileId, serviceId],
+    queryKey: ['service-ratings', profileId, serviceId, workOrderId],
     queryFn: async () => {
       let query = supabase
         .from('service_ratings')
@@ -27,6 +28,12 @@ export function RatingsList({ profileId, serviceId }: RatingsListProps) {
           clients (
             first_name,
             last_name
+          ),
+          work_orders!service_ratings_work_order_id_fkey (
+            id,
+            vehicle_make,
+            vehicle_model,
+            vehicle_year
           )
         `)
         .order('created_at', { ascending: false })
@@ -37,6 +44,10 @@ export function RatingsList({ profileId, serviceId }: RatingsListProps) {
 
       if (serviceId) {
         query = query.eq('service_id', serviceId)
+      }
+
+      if (workOrderId) {
+        query = query.eq('work_order_id', workOrderId)
       }
 
       const { data, error } = await query
@@ -70,6 +81,11 @@ export function RatingsList({ profileId, serviceId }: RatingsListProps) {
               <p className="text-sm text-muted-foreground">
                 {rating.service_types?.name}
               </p>
+              {rating.work_orders && (
+                <p className="text-xs text-muted-foreground">
+                  {rating.work_orders.vehicle_year} {rating.work_orders.vehicle_make} {rating.work_orders.vehicle_model}
+                </p>
+              )}
             </div>
             <div className="flex">
               {[1, 2, 3, 4, 5].map((star) => (
