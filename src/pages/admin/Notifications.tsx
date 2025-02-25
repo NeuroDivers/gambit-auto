@@ -1,30 +1,85 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useNotificationSubscription } from "@/hooks/useNotificationSubscription";
 
 const Notifications = () => {
-  useEffect(() => {
-    // In a real app, you would fetch notifications here
-    console.log("Fetching notifications...");
-  }, []);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+  
+  // Add notification subscription
+  useNotificationSubscription();
 
-  // Mock notifications - In a real app, these would come from your backend
-  const notifications = [
-    {
-      id: 1,
-      title: "New Work Order",
-      description: "A new work order has been assigned to you",
-      time: "5 minutes ago",
-      isRead: false
-    },
-    {
-      id: 2,
-      title: "Quote Request",
-      description: "You have a new quote request pending review",
-      time: "1 hour ago",
-      isRead: false
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("profile_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching notifications:", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch notifications",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setNotifications(data || []);
+      setIsLoading(false);
+    };
+
+    fetchNotifications();
+
+    const channel = supabase
+      .channel("notifications-list")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+        },
+        () => {
+          fetchNotifications();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [toast]);
+
+  const markAsRead = async (notificationId: string) => {
+    const { error } = await supabase
+      .from("notifications")
+      .update({ read: true })
+      .eq("id", notificationId);
+
+    if (error) {
+      console.error("Error marking notification as read:", error);
+      toast({
+        title: "Error",
+        description: "Failed to mark notification as read",
+        variant: "destructive",
+      });
+      return;
     }
-  ];
+  };
+
+  if (isLoading) {
+    return <div className="flex justify-center p-6">Loading notifications...</div>;
+  }
 
   return (
     <div className="container mx-auto p-6">
@@ -35,13 +90,14 @@ const Notifications = () => {
           <div
             key={notification.id}
             className="p-4 bg-card border rounded-lg hover:border-primary transition-colors cursor-pointer"
+            onClick={() => markAsRead(notification.id)}
           >
             <h3 className="font-medium">{notification.title}</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              {notification.description}
+              {notification.message}
             </p>
             <span className="text-xs text-muted-foreground mt-2 block">
-              {notification.time}
+              {new Date(notification.created_at).toLocaleString()}
             </span>
           </div>
         ))}

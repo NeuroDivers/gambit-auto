@@ -49,38 +49,37 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
   const { toast } = useToast()
 
   useEffect(() => {
-    const fetchUnreadMessages = async () => {
+    const fetchUnreadNotifications = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data: messages, error } = await supabase
-        .from("chat_messages")
+      const { data: notifications, error } = await supabase
+        .from("notifications")
         .select("*", { count: 'exact' })
-        .eq("recipient_id", user.id)
+        .eq("profile_id", user.id)
         .eq("read", false)
 
       if (error) {
-        console.error("Error fetching unread messages:", error)
+        console.error("Error fetching unread notifications:", error)
         return
       }
 
-      setUnreadCount(messages.length)
+      setUnreadCount(notifications.length)
     }
 
-    fetchUnreadMessages()
+    fetchUnreadNotifications()
 
-    // Subscribe to new messages
     const channel = supabase
-      .channel("chat_messages")
+      .channel("notifications")
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
-          table: "chat_messages"
+          table: "notifications",
         },
         () => {
-          fetchUnreadMessages()
+          fetchUnreadNotifications()
         }
       )
       .subscribe()
