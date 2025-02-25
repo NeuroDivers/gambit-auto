@@ -22,3 +22,10 @@ export const groupPermissions = (permissions: Permission[]): GroupedPermissions 
     return acc;
   }, {});
 };
+
+export const defaultPermissionDescriptions: Record<string, string> = {
+  bookings: "Access and manage booking requests",
+  vehicles: "View and manage vehicle information",
+  calendar: "Access and manage the calendar view",
+  payment_methods: "View and manage payment methods",
+};
