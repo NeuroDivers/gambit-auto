@@ -4,8 +4,13 @@ import { PermissionGuard } from "@/components/auth/PermissionGuard"
 import BusinessSettings from "@/pages/admin/BusinessSettings"
 import ProfileSettings from "@/pages/admin/ProfileSettings"
 import DeveloperSettings from "@/pages/admin/DeveloperSettings"
+import { Navigate } from "react-router-dom"
 
 export const settingsRoutes: RouteObject[] = [
+  {
+    path: "settings",
+    element: <Navigate to="/profile-settings" replace />,
+  },
   {
     path: "business-settings",
     element: (
@@ -27,3 +32,4 @@ export const settingsRoutes: RouteObject[] = [
     ),
   },
 ]
+
