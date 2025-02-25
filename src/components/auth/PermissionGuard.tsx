@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect, useState } from "react"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Navigate } from "react-router-dom"
@@ -21,11 +20,6 @@ interface UserRole {
 interface ProfileData {
   id: string
   role: UserRole
-}
-
-interface SupabaseProfileResponse {
-  id: string
-  role: UserRole[]
 }
 
 export function PermissionGuard({ children, resource, type }: PermissionGuardProps) {
