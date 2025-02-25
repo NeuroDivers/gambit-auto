@@ -16,41 +16,50 @@ export const PermissionSection = ({
   onToggle,
   isDisabled
 }: PermissionSectionProps) => {
+  // Sort permissions alphabetically by resource name
+  const sortedPermissions = [...permissions].sort((a, b) => 
+    a.resource_name.localeCompare(b.resource_name)
+  )
+  
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-primary">
         {sectionName}
       </h3>
       <div className="grid gap-4">
-        {permissions.map((permission) => (
-          <div 
-            key={permission.id}
-            className="flex items-center justify-between p-4 rounded-lg bg-muted/50"
-          >
-            <div className="space-y-0.5">
-              <Label htmlFor={`permission-${permission.id}`}>
-                {permission.resource_name === "quotes" 
-                  ? "Estimates"
-                  : permission.resource_name.split('_').map(word => 
-                      word.charAt(0).toUpperCase() + word.slice(1)
-                    ).join(' ')}
-              </Label>
-              {permission.description && (
-                <p className="text-sm text-muted-foreground">
-                  {permission.resource_name === "quotes"
-                    ? permission.description.replace(/quote/gi, "estimate").replace(/Quote/gi, "Estimate")
-                    : permission.description}
-                </p>
-              )}
+        {sortedPermissions.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No {sectionName.toLowerCase()} permissions found.</p>
+        ) : (
+          sortedPermissions.map((permission) => (
+            <div 
+              key={permission.id}
+              className="flex items-center justify-between p-4 rounded-lg bg-muted/50"
+            >
+              <div className="space-y-0.5">
+                <Label htmlFor={`permission-${permission.id}`}>
+                  {permission.resource_name === "quotes" 
+                    ? "Estimates"
+                    : permission.resource_name.split('_').map(word => 
+                        word.charAt(0).toUpperCase() + word.slice(1)
+                      ).join(' ')}
+                </Label>
+                {permission.description && (
+                  <p className="text-sm text-muted-foreground">
+                    {permission.resource_name === "quotes"
+                      ? permission.description.replace(/quote/gi, "estimate").replace(/Quote/gi, "Estimate")
+                      : permission.description}
+                  </p>
+                )}
+              </div>
+              <Switch
+                id={`permission-${permission.id}`}
+                checked={permission.is_active}
+                onCheckedChange={(checked) => onToggle(permission, checked)}
+                disabled={isDisabled}
+              />
             </div>
-            <Switch
-              id={`permission-${permission.id}`}
-              checked={permission.is_active}
-              onCheckedChange={(checked) => onToggle(permission, checked)}
-              disabled={isDisabled}
-            />
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   )

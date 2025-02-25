@@ -1,11 +1,9 @@
 
-import { PermissionType } from "@/types/permissions";
-
 export type Permission = {
   id: string;
   role_id: string;
   resource_name: string;
-  permission_type: PermissionType;
+  permission_type: 'page_access' | 'feature_access';
   is_active: boolean;
   description?: string;
 };
