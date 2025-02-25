@@ -153,7 +153,7 @@ export default function Chat() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] gap-4 p-6">
+    <div className="flex h-[calc(100vh-4rem)] gap-4 p-4">
       <Card className="w-64">
         <CardContent className="p-4">
           <ScrollArea className="h-[calc(100vh-8rem)]">
@@ -212,7 +212,7 @@ export default function Chat() {
         </CardContent>
       </Card>
       
-      <div className="flex-1 h-[calc(100vh-6rem)]">
+      <div className="flex-1 h-[calc(100vh-5rem)]">
         {selectedUser ? (
           <ChatWindow recipientId={selectedUser} />
         ) : (
