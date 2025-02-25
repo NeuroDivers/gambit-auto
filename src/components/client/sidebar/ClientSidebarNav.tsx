@@ -8,6 +8,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useEffect, useState } from "react"
 import { usePermissions } from "@/hooks/usePermissions"
+import { Badge } from "@/components/ui/badge"
+import { supabase } from "@/integrations/supabase/client"
 import { 
   LayoutGrid, 
   FileText, 
@@ -109,6 +111,7 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
   const isCollapsed = state === "collapsed"
   const { checkPermission } = usePermissions()
   const [filteredItems, setFilteredItems] = useState(navigationItems)
+  const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
     const filterItems = async () => {
@@ -121,7 +124,6 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
                 item.permission.resource,
                 item.permission.type
               )
-              console.log(`Checking permission for ${item.title}:`, hasPermission)
               return hasPermission ? item : null
             })
           )
@@ -137,13 +139,53 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
     filterItems()
   }, [checkPermission])
 
+  // Add effect for unread messages count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { count } = await supabase
+        .from('chat_messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('recipient_id', user.id)
+        .eq('read', false)
+
+      setUnreadCount(count || 0)
+    }
+
+    fetchUnreadCount()
+
+    // Subscribe to new messages
+    const channel = supabase
+      .channel('chat_messages_count')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'chat_messages'
+        },
+        () => {
+          fetchUnreadCount()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
   const NavLink = ({ item }: { item: (typeof navigationItems)[0]["items"][0] }) => {
+    const isChat = item.href === '/chat'
+    
     const link = (
       <Link
         to={item.href}
         onClick={onNavigate}
         className={cn(
-          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors relative",
           location.pathname === item.href
             ? "bg-accent text-accent-foreground"
             : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
@@ -152,6 +194,17 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
       >
         <item.icon className="h-4 w-4 shrink-0" />
         {!isCollapsed && <span>{item.title}</span>}
+        {isChat && unreadCount > 0 && (
+          <Badge 
+            variant="destructive" 
+            className={cn(
+              "ml-auto",
+              isCollapsed && "absolute -top-1 -right-1"
+            )}
+          >
+            {unreadCount}
+          </Badge>
+        )}
       </Link>
     )
 
@@ -163,6 +216,7 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
           </TooltipTrigger>
           <TooltipContent side="right" align="center">
             {item.title}
+            {isChat && unreadCount > 0 && ` (${unreadCount})`}
           </TooltipContent>
         </Tooltip>
       )
