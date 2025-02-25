@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react"
 import { ChatMessage, ChatUser } from "@/types/chat"
 import { Card } from "@/components/ui/card"
@@ -23,8 +22,12 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
-      const scrollArea = scrollAreaRef.current
-      scrollArea.scrollTop = scrollArea.scrollHeight
+      setTimeout(() => {
+        const scrollArea = scrollAreaRef.current
+        if (scrollArea) {
+          scrollArea.scrollTop = scrollArea.scrollHeight
+        }
+      }, 100)
     }
   }
 
@@ -63,7 +66,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
 
       setMessages(messages)
 
-      // Mark messages as read when they are from the recipient
       const unreadMessages = messages.filter(m => 
         m.sender_id === recipientId && 
         m.recipient_id === currentUserId && 
@@ -80,7 +82,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
           console.error("Error marking messages as read:", updateError)
         }
 
-        // Update notifications as read
         await supabase
           .from("notifications")
           .update({ read: true })
@@ -89,7 +90,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
           .eq("type", 'chat_message')
       }
 
-      // Scroll to first unread message after messages are loaded
       setTimeout(() => {
         if (unreadMessages.length > 0) {
           scrollToFirstUnread()
@@ -122,12 +122,10 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     fetchMessages()
     fetchRecipient()
 
-    // Clean up previous subscription if it exists
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current)
     }
 
-    // Subscribe to new messages
     channelRef.current = supabase
       .channel(`chat_messages_${currentUserId}_${recipientId}`)
       .on(
@@ -142,13 +140,11 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
           console.log("New message received:", payload)
           const newMessage = payload.new as ChatMessage
           
-          // Only update messages if it's part of this conversation
           if (newMessage.sender_id === recipientId) {
             console.log("Adding new message to chat")
             setMessages((current) => [...current, newMessage])
             scrollToBottom()
 
-            // Mark the message as read immediately
             const { error: updateError } = await supabase
               .from("chat_messages")
               .update({ read_at: new Date().toISOString() })
@@ -158,7 +154,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
               console.error("Error marking message as read:", updateError)
             }
 
-            // Show toast notification
             toast({
               title: "New Message",
               description: `${recipient?.first_name || 'Someone'}: ${newMessage.message.substring(0, 50)}${newMessage.message.length > 50 ? '...' : ''}`,
@@ -191,8 +186,11 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }
-    setMessages(curr => [...curr, newMsg])
     
+    setMessages(curr => [...curr, newMsg])
+    setNewMessage("")
+    scrollToBottom()
+
     const { error } = await supabase
       .from("chat_messages")
       .insert([{
@@ -206,9 +204,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       setMessages(curr => curr.filter(msg => msg.id !== newMsg.id))
       return
     }
-
-    setNewMessage("")
-    scrollToBottom()
   }
 
   const getRecipientDisplayName = () => {
