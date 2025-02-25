@@ -8,8 +8,21 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { WorkOrderStatusSelect } from "@/components/work-orders/components/WorkOrderStatusSelect"
+import { useNavigate } from "react-router-dom"
 
 export default function StaffWorkOrders() {
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut()
+      navigate("/auth")
+    } catch (error) {
+      console.error("Error logging out:", error)
+      toast.error("Failed to log out")
+    }
+  }
+
   // Fetch assigned work orders
   const { data: assignedOrders, isLoading: isLoadingAssigned } = useQuery({
     queryKey: ['staff-work-orders', 'assigned'],
@@ -81,7 +94,7 @@ export default function StaffWorkOrders() {
   }
 
   return (
-    <StaffLayout>
+    <StaffLayout onLogout={handleLogout}>
       <div className="container mx-auto p-6">
         <h1 className="text-3xl font-bold mb-6">Work Orders</h1>
         
