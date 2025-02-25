@@ -16,49 +16,32 @@ import { Navigate } from "react-router-dom"
 import Chat from "@/pages/admin/Chat"
 import Notifications from "@/pages/admin/Notifications"
 import CommissionsPage from "@/components/commissions/CommissionsPage"
-import { Suspense, useEffect, useState } from "react"
+import { Suspense } from "react"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
 
 const RoleBasedLayout = () => {
-  const { currentUserRole, checkPermission, isLoading } = usePermissions();
-  const [hasStaffAccess, setHasStaffAccess] = useState<boolean | null>(null);
+  const { currentUserRole, isLoading } = usePermissions();
   
-  useEffect(() => {
-    const checkStaffAccess = async () => {
-      if (currentUserRole?.name?.toLowerCase() === 'staff' || currentUserRole?.name?.toLowerCase() === 'technician') {
-        const access = await checkPermission('staff_dashboard', 'page_access');
-        setHasStaffAccess(access);
-      }
-    };
-    
-    checkStaffAccess();
-  }, [currentUserRole, checkPermission]);
-
-  if (isLoading || (currentUserRole?.name?.toLowerCase() === 'staff' && hasStaffAccess === null)) {
+  if (isLoading) {
     return <LoadingScreen />;
   }
 
-  // If we have a role, determine the appropriate layout
+  // If we have a role, determine the appropriate layout based on default_dashboard setting
   if (currentUserRole?.name) {
-    const roleName = currentUserRole.name.toLowerCase();
-    console.log('Current role name:', roleName);
+    console.log('Current role:', currentUserRole);
     
-    switch (roleName) {
-      case 'administrator':
+    // Use the default_dashboard setting to determine which layout to show
+    switch (currentUserRole.default_dashboard) {
+      case 'admin':
         return <DashboardLayoutWrapper />;
       case 'staff':
-      case 'technician':
-        if (!hasStaffAccess) {
-          console.log('Staff access denied');
-          return <Navigate to="/unauthorized" replace />;
-        }
-        console.log('Rendering StaffLayoutWrapper for role:', roleName);
         return <StaffLayoutWrapper />;
       case 'client':
         return <ClientLayoutWrapper />;
       default:
-        console.log('Unknown role:', roleName);
-        return <Navigate to="/unauthorized" replace />;
+        // If no default_dashboard is set, fallback to client dashboard
+        console.log('No default dashboard set, using client dashboard');
+        return <ClientLayoutWrapper />;
     }
   }
 
