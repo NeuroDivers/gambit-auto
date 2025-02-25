@@ -14,6 +14,7 @@ import { settingsRoutes } from "./settings-routes"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Navigate } from "react-router-dom"
 import Chat from "@/pages/admin/Chat"
+import Notifications from "@/pages/admin/Notifications"
 import CommissionsPage from "@/components/commissions/CommissionsPage"
 import { Suspense } from "react"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
@@ -68,6 +69,10 @@ export const protectedRoutes: RouteObject = {
     {
       path: "chat",
       element: <Chat />,
+    },
+    {
+      path: "notifications",
+      element: <Notifications />,
     },
     {
       path: "commissions",
