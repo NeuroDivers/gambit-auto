@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect, useState } from "react"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Navigate } from "react-router-dom"
@@ -22,6 +23,16 @@ interface ProfileData {
   role: UserRole
 }
 
+// Define the exact shape of the Supabase response
+interface SupabaseProfileResponse {
+  id: string
+  role: {
+    id: string
+    name: string
+    nicename: string
+  }
+}
+
 export function PermissionGuard({ children, resource, type }: PermissionGuardProps) {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null)
   const { checkPermission } = usePermissions()
@@ -36,7 +47,7 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
         return null
       }
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select(`
           id,
@@ -47,9 +58,9 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
           )
         `)
         .eq('id', user.id)
-        .single()
+        .single<SupabaseProfileResponse>()
 
-      if (!data) {
+      if (error || !data) {
         console.log('No profile found in PermissionGuard')
         return null
       }
