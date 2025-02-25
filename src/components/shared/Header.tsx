@@ -27,9 +27,26 @@ interface HeaderProps {
   children?: React.ReactNode;
 }
 
+// Mock notifications - In a real app, these would come from your backend
+const mockNotifications = [
+  {
+    id: 1,
+    title: "New Work Order",
+    description: "A new work order has been assigned to you",
+    time: "5 minutes ago"
+  },
+  {
+    id: 2,
+    title: "Quote Request",
+    description: "You have a new quote request pending review",
+    time: "1 hour ago"
+  }
+];
+
 export function Header({ firstName, role, onLogout, className, children }: HeaderProps) {
   const isAdmin = role?.name?.toLowerCase() === 'administrator';
   const initials = firstName ? firstName.charAt(0).toUpperCase() : '?';
+  const unreadCount = mockNotifications.length;
 
   return (
     <header className={cn("flex h-16 items-center px-6 border-b", className)}>
@@ -45,16 +62,41 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
         )}
       </div>
       <nav className="ml-auto flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative"
-        >
-          <Bell className="h-5 w-5" />
-          <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-xs text-white">
-            2
-          </span>
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+            >
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-xs text-white">
+                  {unreadCount}
+                </span>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-80" align="end">
+            <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {mockNotifications.map((notification) => (
+              <DropdownMenuItem key={notification.id} className="flex flex-col items-start py-3">
+                <div className="font-medium">{notification.title}</div>
+                <div className="text-sm text-muted-foreground">{notification.description}</div>
+                <div className="text-xs text-muted-foreground mt-1">{notification.time}</div>
+              </DropdownMenuItem>
+            ))}
+            {mockNotifications.length === 0 && (
+              <DropdownMenuItem disabled>No new notifications</DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-center justify-center">
+              <NavLink to="/notifications" className="w-full text-center">View all notifications</NavLink>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
