@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react"
+import React from "react"
 import { useNavigate } from "react-router-dom"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
@@ -24,7 +24,7 @@ export function DashboardLayoutWrapper() {
       return session;
     },
     staleTime: 5 * 60 * 1000, // Consider session data fresh for 5 minutes
-    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes before garbage collection
   });
 
   const { data: profile, isLoading: profileLoading, error: profileError } = useQuery({
