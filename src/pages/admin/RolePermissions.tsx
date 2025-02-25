@@ -37,7 +37,7 @@ export default function RolePermissions() {
         <Button 
           variant="ghost" 
           size="icon"
-          onClick={() => navigate('/admin/system-roles')}
+          onClick={() => navigate('/system-roles')}
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
