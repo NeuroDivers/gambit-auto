@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react"
 import { ChatMessage, ChatUser } from "@/types/chat"
 import { Card } from "@/components/ui/card"
@@ -16,7 +15,15 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   const [recipient, setRecipient] = useState<ChatUser | null>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const channelRef = useRef<any>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
   const { toast } = useToast()
+
+  const scrollToBottom = () => {
+    if (scrollAreaRef.current) {
+      const scrollArea = scrollAreaRef.current
+      scrollArea.scrollTop = scrollArea.scrollHeight
+    }
+  }
 
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -200,7 +207,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       <div className="p-4 border-b">
         <h3 className="font-semibold">{getRecipientDisplayName()}</h3>
       </div>
-      <ScrollArea className="flex-1 p-4">
+      <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
         <div className="space-y-4">
           {messages.map((message) => (
             <div

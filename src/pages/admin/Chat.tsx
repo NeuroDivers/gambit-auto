@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react"
 import { ChatUser } from "@/types/chat"
 import { ChatWindow } from "@/components/chat/ChatWindow"
@@ -55,7 +54,6 @@ export default function Chat() {
     },
   })
 
-  // Set up real-time subscription for new messages
   useEffect(() => {
     const setupSubscription = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -130,8 +128,12 @@ export default function Chat() {
     return <div>Loading...</div>
   }
 
-  // Group users by role
-  const groupedUsers = users?.reduce((acc, user) => {
+  // First, separate users with unread messages
+  const unreadUsers = users?.filter(user => user.unreadCount > 0) || []
+  const otherUsers = users?.filter(user => !user.unreadCount) || []
+
+  // Then group remaining users by role
+  const groupedUsers = otherUsers.reduce((acc, user) => {
     const roleName = user.role?.nicename || "Other"
     if (!acc[roleName]) {
       acc[roleName] = []
@@ -153,10 +155,11 @@ export default function Chat() {
         <CardContent className="p-4">
           <ScrollArea className="h-[calc(100vh-8rem)]">
             <div className="space-y-6">
-              {groupedUsers && Object.entries(groupedUsers).map(([role, users]) => (
-                <div key={role} className="space-y-2">
-                  <h3 className="text-sm font-semibold text-muted-foreground mb-2">{role}</h3>
-                  {users?.map((user) => (
+              {/* Unread Messages Section */}
+              {unreadUsers.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-destructive mb-2">Unread Messages</h3>
+                  {unreadUsers.map((user) => (
                     <button
                       key={user.id}
                       onClick={() => setSelectedUser(user.id)}
@@ -167,18 +170,36 @@ export default function Chat() {
                       }`}
                     >
                       <span>{getUserDisplayName(user)}</span>
-                      {(user as any).unreadCount > 0 && (
-                        <Badge 
-                          variant="secondary" 
-                          className={`${
-                            selectedUser === user.id 
-                              ? "bg-primary-foreground text-primary" 
-                              : "bg-primary text-primary-foreground"
-                          }`}
-                        >
-                          {(user as any).unreadCount}
-                        </Badge>
-                      )}
+                      <Badge 
+                        variant="destructive" 
+                        className={`${
+                          selectedUser === user.id 
+                            ? "bg-primary-foreground text-primary" 
+                            : "bg-primary text-primary-foreground"
+                        }`}
+                      >
+                        {user.unreadCount}
+                      </Badge>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Other Users Grouped by Role */}
+              {Object.entries(groupedUsers).map(([role, users]) => (
+                <div key={role} className="space-y-2">
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-2">{role}</h3>
+                  {users?.map((user) => (
+                    <button
+                      key={user.id}
+                      onClick={() => setSelectedUser(user.id)}
+                      className={`w-full text-left p-2 rounded-lg transition-colors text-gray-700 ${
+                        selectedUser === user.id 
+                          ? "bg-primary text-primary-foreground" 
+                          : "hover:bg-primary hover:text-primary-foreground"
+                      }`}
+                    >
+                      <span>{getUserDisplayName(user)}</span>
                     </button>
                   ))}
                 </div>
