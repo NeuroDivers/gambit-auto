@@ -88,15 +88,13 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
           .eq("profile_id", currentUserId)
           .eq("sender_id", recipientId)
           .eq("type", 'chat_message')
-      }
 
-      setTimeout(() => {
-        if (unreadMessages.length > 0) {
+        setTimeout(() => {
           scrollToFirstUnread()
-        } else {
-          scrollToBottom()
-        }
-      }, 100)
+        }, 100)
+      } else {
+        scrollToBottom()
+      }
     }
 
     const fetchRecipient = async () => {
