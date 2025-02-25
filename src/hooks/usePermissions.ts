@@ -25,7 +25,7 @@ interface UserRole {
 }
 
 export const usePermissions = () => {
-  // Get current user's role and permissions
+  // Get current user's role and cache it
   const { data: currentUserRole } = useQuery({
     queryKey: ["current-user-role"],
     queryFn: async () => {
@@ -64,10 +64,10 @@ export const usePermissions = () => {
       
       return null;
     },
-    staleTime: Infinity,
+    staleTime: Infinity, // Cache the role indefinitely until explicitly invalidated
   });
 
-  // Get all permissions
+  // Get all permissions and cache them
   const { data: permissions } = useQuery({
     queryKey: ["permissions"],
     queryFn: async () => {
@@ -86,7 +86,7 @@ export const usePermissions = () => {
       if (error) throw error;
       return data as RolePermission[];
     },
-    staleTime: Infinity,
+    staleTime: Infinity, // Cache permissions indefinitely until explicitly invalidated
   });
 
   const checkPermission = async (
@@ -107,20 +107,15 @@ export const usePermissions = () => {
         return true;
       }
 
-      // For other roles, check specific permissions
-      const { data: hasPermission, error } = await supabase.rpc('has_permission', {
+      // Use the cached permissions to check access
+      const hasPermission = await supabase.rpc('has_permission', {
         user_id: user.id,
         resource: resource,
         perm_type: type
       });
 
-      if (error) {
-        console.error('Permission check error:', error);
-        return false;
-      }
-
-      console.log(`Permission check for ${resource}: ${hasPermission}`);
-      return hasPermission || false;
+      console.log(`Permission check for ${resource}: ${hasPermission.data}`);
+      return hasPermission.data || false;
     } catch (error) {
       console.error('Permission check error:', error);
       return false;

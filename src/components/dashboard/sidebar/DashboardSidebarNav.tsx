@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
 import { 
@@ -125,35 +124,39 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
   const location = useLocation()
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
-  const { checkPermission } = usePermissions()
+  const { checkPermission, currentUserRole } = usePermissions()
   const [filteredItems, setFilteredItems] = useState(items)
 
   useEffect(() => {
     const filterItems = async () => {
+      if (currentUserRole?.name?.toLowerCase() === 'administrator') {
+        setFilteredItems(items);
+        return;
+      }
+
       const newItems = await Promise.all(items.map(async (section) => {
         const filteredSectionItems = await Promise.all(
           section.items.map(async (item) => {
-            if (!item.permission) return item
+            if (!item.permission) return item;
             const hasPermission = await checkPermission(
               item.permission.resource,
               item.permission.type
-            )
-            return hasPermission ? item : null
+            );
+            return hasPermission ? item : null;
           })
-        )
+        );
         
         return {
           ...section,
           items: filteredSectionItems.filter(Boolean)
-        }
-      }))
+        };
+      }));
       
-      // Only keep sections that have items
-      setFilteredItems(newItems.filter(section => section.items.length > 0))
-    }
+      setFilteredItems(newItems.filter(section => section.items.length > 0));
+    };
 
-    filterItems()
-  }, [checkPermission])
+    filterItems();
+  }, [checkPermission, currentUserRole]);
 
   return (
     <nav className="flex flex-col gap-4 py-4">
