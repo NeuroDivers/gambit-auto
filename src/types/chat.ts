@@ -1,0 +1,17 @@
+
+export interface ChatMessage {
+  id: string
+  sender_id: string
+  recipient_id: string
+  message: string
+  read: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface ChatUser {
+  id: string
+  first_name: string | null
+  last_name: string | null
+  avatar_url: string | null
+}

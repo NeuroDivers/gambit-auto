@@ -13,6 +13,8 @@ import { clientRoutes } from "./client-routes"
 import { settingsRoutes } from "./settings-routes"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Navigate } from "react-router-dom"
+import Chat from "@/pages/admin/Chat"
+import CommissionsPage from "@/components/commissions/CommissionsPage"
 
 const RoleBasedLayout = () => {
   const { currentUserRole, isLoading } = usePermissions();
@@ -47,6 +49,14 @@ export const protectedRoutes: RouteObject = {
     {
       path: "dashboard",
       element: <Dashboard />,
+    },
+    {
+      path: "chat",
+      element: <Chat />,
+    },
+    {
+      path: "commissions",
+      element: <CommissionsPage />,
     },
     ...workOrderRoutes,
     ...serviceRoutes,
