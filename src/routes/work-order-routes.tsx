@@ -41,7 +41,7 @@ export const workOrderRoutes: RouteObject[] = [
     ),
   },
   {
-    path: "work-orders/create",
+    path: "admin/work-orders/create",
     element: (
       <PermissionGuard resource="work_orders" type="page_access">
         <CreateWorkOrder />

@@ -78,7 +78,7 @@ export const WorkOrderCalendar = ({ clientView = false }: WorkOrderCalendarProps
     <div className="space-y-8">
       {!clientView && (
         <div className="flex justify-end px-6">
-          <Button onClick={() => navigate("/work-orders/create")}>
+          <Button onClick={() => navigate("/admin/work-orders/create")}>
             <Plus className="h-4 w-4 mr-2" />
             New Work Order
           </Button>
