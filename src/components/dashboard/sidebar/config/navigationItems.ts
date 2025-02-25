@@ -62,6 +62,12 @@ export const navigationItems: NavSection[] = [
         icon: DollarSign,
         permission: { resource: "commissions", type: "page_access" }
       },
+      {
+        title: "My Skills",
+        href: "/staff/service-skills",
+        icon: Briefcase,
+        permission: { resource: "staff_skills", type: "page_access" }
+      },
     ],
   },
   {
@@ -135,3 +141,4 @@ export const navigationItems: NavSection[] = [
     ],
   },
 ]
+

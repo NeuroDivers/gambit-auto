@@ -6,7 +6,7 @@ export default function ServiceSkills() {
   return (
     <div className="container mx-auto p-6">
       <PageTitle 
-        title="Service Skills" 
+        title="My Service Skills" 
         description="Manage the services you're qualified to perform"
       />
       <div className="mt-6">
@@ -15,3 +15,4 @@ export default function ServiceSkills() {
     </div>
   )
 }
+
