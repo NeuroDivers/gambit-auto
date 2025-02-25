@@ -13,6 +13,15 @@ type SidekickAssignmentFieldProps = {
   form: UseFormReturn<WorkOrderFormValues>
 }
 
+interface StaffSkill {
+  profile_id: string
+  service_id: string
+  service_types: {
+    name: string
+    description: string | null
+  }
+}
+
 export function SidekickAssignmentField({ form }: SidekickAssignmentFieldProps) {
   const { profiles = [] } = useAssignableProfiles()
   
@@ -32,7 +41,8 @@ export function SidekickAssignmentField({ form }: SidekickAssignmentFieldProps) 
           profile_id,
           service_id,
           service_types:service_types (
-            name
+            name,
+            description
           )
         `)
         .in('service_id', serviceIds)
@@ -44,14 +54,13 @@ export function SidekickAssignmentField({ form }: SidekickAssignmentFieldProps) 
       }
 
       // Group skills by profile_id with proper typing
-      return data.reduce((acc: Record<string, { serviceId: string, serviceName: string }[]>, skill) => {
+      return (data as StaffSkill[]).reduce((acc: Record<string, { serviceId: string, serviceName: string }[]>, skill) => {
         if (!acc[skill.profile_id]) {
           acc[skill.profile_id] = []
         }
         acc[skill.profile_id].push({
           serviceId: skill.service_id,
-          // Fix the access to service_types name
-          serviceName: skill.service_types?.name || ''
+          serviceName: skill.service_types.name
         })
         return acc
       }, {})
