@@ -2,27 +2,13 @@
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Card } from "@/components/ui/card"
-import { StaffLayout } from "@/components/staff/StaffLayout"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { WorkOrderStatusSelect } from "@/components/work-orders/components/WorkOrderStatusSelect"
-import { useNavigate } from "react-router-dom"
 
 export default function StaffWorkOrders() {
-  const navigate = useNavigate()
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut()
-      navigate("/auth")
-    } catch (error) {
-      console.error("Error logging out:", error)
-      toast.error("Failed to log out")
-    }
-  }
-
   // Fetch assigned work orders
   const { data: assignedOrders, isLoading: isLoadingAssigned } = useQuery({
     queryKey: ['staff-work-orders', 'assigned'],
@@ -94,84 +80,82 @@ export default function StaffWorkOrders() {
   }
 
   return (
-    <StaffLayout onLogout={handleLogout}>
-      <div className="container mx-auto p-6">
-        <h1 className="text-3xl font-bold mb-6">Work Orders</h1>
-        
-        <Tabs defaultValue="assigned" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="assigned">My Work Orders</TabsTrigger>
-            <TabsTrigger value="available">Available Orders</TabsTrigger>
-          </TabsList>
+    <div className="container mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">Work Orders</h1>
+      
+      <Tabs defaultValue="assigned" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="assigned">My Work Orders</TabsTrigger>
+          <TabsTrigger value="available">Available Orders</TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="assigned" className="space-y-4">
-            {assignedOrders?.map((order) => (
-              <Card key={order.id} className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="font-semibold">
-                      {order.first_name} {order.last_name}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {order.vehicle_year} {order.vehicle_make} {order.vehicle_model}
-                    </p>
-                  </div>
-                  <WorkOrderStatusSelect workOrder={order} />
+        <TabsContent value="assigned" className="space-y-4">
+          {assignedOrders?.map((order) => (
+            <Card key={order.id} className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="font-semibold">
+                    {order.first_name} {order.last_name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {order.vehicle_year} {order.vehicle_make} {order.vehicle_model}
+                  </p>
                 </div>
-                <div className="space-y-2">
-                  {order.service_bays?.name && (
-                    <p className="text-sm">Bay: {order.service_bays.name}</p>
-                  )}
-                  {order.additional_notes && (
-                    <p className="text-sm">Notes: {order.additional_notes}</p>
-                  )}
-                </div>
-              </Card>
-            ))}
-            {assignedOrders?.length === 0 && (
-              <p className="text-center text-muted-foreground">
-                No work orders assigned to you yet.
-              </p>
-            )}
-          </TabsContent>
+                <WorkOrderStatusSelect workOrder={order} />
+              </div>
+              <div className="space-y-2">
+                {order.service_bays?.name && (
+                  <p className="text-sm">Bay: {order.service_bays.name}</p>
+                )}
+                {order.additional_notes && (
+                  <p className="text-sm">Notes: {order.additional_notes}</p>
+                )}
+              </div>
+            </Card>
+          ))}
+          {assignedOrders?.length === 0 && (
+            <p className="text-center text-muted-foreground">
+              No work orders assigned to you yet.
+            </p>
+          )}
+        </TabsContent>
 
-          <TabsContent value="available" className="space-y-4">
-            {availableOrders?.map((order) => (
-              <Card key={order.id} className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="font-semibold">
-                      {order.vehicle_year} {order.vehicle_make} {order.vehicle_model}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Created: {new Date(order.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <Button 
-                    variant="secondary"
-                    onClick={() => handleApplyForWorkOrder(order.id)}
-                  >
-                    Apply
-                  </Button>
+        <TabsContent value="available" className="space-y-4">
+          {availableOrders?.map((order) => (
+            <Card key={order.id} className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="font-semibold">
+                    {order.vehicle_year} {order.vehicle_make} {order.vehicle_model}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Created: {new Date(order.created_at).toLocaleDateString()}
+                  </p>
                 </div>
-                <div className="space-y-2">
-                  {order.service_bays?.name && (
-                    <p className="text-sm">Bay: {order.service_bays.name}</p>
-                  )}
-                  {order.additional_notes && (
-                    <p className="text-sm">Notes: {order.additional_notes}</p>
-                  )}
-                </div>
-              </Card>
-            ))}
-            {availableOrders?.length === 0 && (
-              <p className="text-center text-muted-foreground">
-                No available work orders at the moment.
-              </p>
-            )}
-          </TabsContent>
-        </Tabs>
-      </div>
-    </StaffLayout>
+                <Button 
+                  variant="secondary"
+                  onClick={() => handleApplyForWorkOrder(order.id)}
+                >
+                  Apply
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {order.service_bays?.name && (
+                  <p className="text-sm">Bay: {order.service_bays.name}</p>
+                )}
+                {order.additional_notes && (
+                  <p className="text-sm">Notes: {order.additional_notes}</p>
+                )}
+              </div>
+            </Card>
+          ))}
+          {availableOrders?.length === 0 && (
+            <p className="text-center text-muted-foreground">
+              No available work orders at the moment.
+            </p>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
   )
 }
