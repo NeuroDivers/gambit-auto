@@ -9,6 +9,7 @@ import { useState } from "react";
 import { ProfileCompletionDialog } from "../profile/ProfileCompletionDialog";
 import { Menu, X } from "lucide-react";
 import { Button } from "../ui/button";
+import { memo } from "react";
 
 interface DashboardLayoutProps {
   firstName?: string | null;
@@ -21,6 +22,26 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
+// Memoize the sidebar content to prevent unnecessary re-renders
+const MemoizedSidebarContent = memo(({ firstName, role, onLogout, onNavigate }: {
+  firstName?: string | null;
+  role?: { id: string; name: string; nicename: string; } | null;
+  onLogout: () => void;
+  onNavigate: () => void;
+}) => (
+  <SidebarContent className="flex flex-col h-full">
+    <div className="py-0 px-0">
+      <DashboardSidebarHeader firstName={firstName} role={role} onLogout={onLogout} />
+    </div>
+    <DashboardSidebarNav onNavigate={onNavigate} />
+    <div className="mt-auto border-t p-4">
+      <SidebarTrigger size="sm" variant="ghost" className="mx-auto" />
+    </div>
+  </SidebarContent>
+));
+
+MemoizedSidebarContent.displayName = 'MemoizedSidebarContent';
+
 export function DashboardLayout({
   firstName,
   role,
@@ -30,17 +51,7 @@ export function DashboardLayout({
   const isMobile = useIsMobile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const sidebarContent = (
-    <SidebarContent className="flex flex-col h-full">
-      <div className="py-0 px-0">
-        <DashboardSidebarHeader firstName={firstName} role={role} onLogout={onLogout} />
-      </div>
-      <DashboardSidebarNav onNavigate={() => setIsMobileMenuOpen(false)} />
-      <div className="mt-auto border-t p-4">
-        <SidebarTrigger size="sm" variant="ghost" className="mx-auto" />
-      </div>
-    </SidebarContent>
-  );
+  const handleNavigate = () => setIsMobileMenuOpen(false);
 
   const content = isMobile ? (
     <SidebarProvider>
@@ -78,7 +89,12 @@ export function DashboardLayout({
               <X className="h-5 w-5" />
               <span className="sr-only">Close Menu</span>
             </Button>
-            {sidebarContent}
+            <MemoizedSidebarContent 
+              firstName={firstName} 
+              role={role} 
+              onLogout={onLogout}
+              onNavigate={handleNavigate}
+            />
           </div>
         </div>
 
@@ -100,7 +116,12 @@ export function DashboardLayout({
       >
         <ProfileCompletionDialog />
         <Sidebar className="border-r" collapsible="icon">
-          {sidebarContent}
+          <MemoizedSidebarContent 
+            firstName={firstName} 
+            role={role} 
+            onLogout={onLogout}
+            onNavigate={handleNavigate}
+          />
           <SidebarRail />
         </Sidebar>
         <div className="flex-1 overflow-hidden flex flex-col">
