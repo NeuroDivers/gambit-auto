@@ -111,11 +111,11 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
             console.log("Adding new message to chat")
             setMessages((current) => [...current, newMessage])
 
-            // Only show toast and create notification for the recipient
-            console.log("Creating notification for recipient")
+            // Show toast notification immediately when message is received
             toast({
-              title: "New message",
-              description: `You have a new message from ${recipient?.first_name || 'someone'}`,
+              title: "New Message",
+              description: `${recipient?.first_name || 'Someone'}: ${newMessage.message.substring(0, 50)}${newMessage.message.length > 50 ? '...' : ''}`,
+              duration: 5000, // Show for 5 seconds
             })
 
             // Create a notification with all required fields
