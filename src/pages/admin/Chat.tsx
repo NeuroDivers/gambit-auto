@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react"
 import { ChatUser } from "@/types/chat"
 import { ChatWindow } from "@/components/chat/ChatWindow"
@@ -17,11 +18,13 @@ export default function Chat() {
     queryKey: ["chat-users"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return []
       
-      // First get all profiles
+      // First get all profiles except current user
       const { data: profiles, error } = await supabase
         .from("profiles")
         .select("id, first_name, last_name, email, role:role_id(name, nicename), avatar_url")
+        .neq('id', user.id) // Exclude current user
         .order("role_id")
       
       if (error) throw error
@@ -32,9 +35,9 @@ export default function Chat() {
           const { count } = await supabase
             .from("chat_messages")
             .select("*", { count: 'exact', head: true })
-            .eq("recipient_id", user?.id)
+            .eq("recipient_id", user.id)
             .eq("sender_id", profile.id)
-            .eq("read", false)
+            .is("read_at", null)
 
           return {
             userId: profile.id,
