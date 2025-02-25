@@ -32,7 +32,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     const fetchRecipient = async () => {
       const { data: recipient, error } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name, avatar_url")
+        .select("id, first_name, last_name, email, avatar_url")
         .eq("id", recipientId)
         .single()
 
@@ -87,12 +87,17 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     setNewMessage("")
   }
 
+  const getRecipientDisplayName = () => {
+    if (recipient?.first_name && recipient?.last_name) {
+      return `${recipient.first_name} ${recipient.last_name}`
+    }
+    return recipient?.email || "Unknown User"
+  }
+
   return (
     <Card className="flex flex-col h-[600px]">
       <div className="p-4 border-b">
-        <h3 className="font-semibold">
-          {recipient?.first_name} {recipient?.last_name}
-        </h3>
+        <h3 className="font-semibold">{getRecipientDisplayName()}</h3>
       </div>
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
@@ -123,7 +128,10 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
           placeholder="Type a message..."
           onKeyPress={(e) => e.key === "Enter" && sendMessage()}
         />
-        <Button onClick={sendMessage}>
+        <Button 
+          onClick={sendMessage}
+          className="bg-primary hover:bg-primary/90 text-primary-foreground"
+        >
           <Send className="h-4 w-4" />
         </Button>
       </div>

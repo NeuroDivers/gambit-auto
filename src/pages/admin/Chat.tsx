@@ -15,15 +15,33 @@ export default function Chat() {
     queryFn: async () => {
       const { data: profiles, error } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name, avatar_url")
+        .select("id, first_name, last_name, email, role:role_id(name, nicename), avatar_url")
+        .order("role_id")
       
       if (error) throw error
-      return profiles as ChatUser[]
+      return profiles as (ChatUser & { role: { name: string, nicename: string } })[]
     },
   })
 
+  // Group users by role
+  const groupedUsers = users?.reduce((acc, user) => {
+    const roleName = user.role?.nicename || "Other"
+    if (!acc[roleName]) {
+      acc[roleName] = []
+    }
+    acc[roleName].push(user)
+    return acc
+  }, {} as Record<string, typeof users>)
+
   if (isLoading) {
     return <div>Loading...</div>
+  }
+
+  const getUserDisplayName = (user: ChatUser) => {
+    if (user.first_name && user.last_name) {
+      return `${user.first_name} ${user.last_name}`
+    }
+    return user.email || "Unknown User"
   }
 
   return (
@@ -31,17 +49,24 @@ export default function Chat() {
       <Card className="w-64">
         <CardContent className="p-4">
           <ScrollArea className="h-[calc(100vh-8rem)]">
-            <div className="space-y-2">
-              {users?.map((user) => (
-                <button
-                  key={user.id}
-                  onClick={() => setSelectedUser(user.id)}
-                  className={`w-full text-left p-2 rounded-lg hover:bg-accent ${
-                    selectedUser === user.id ? "bg-accent" : ""
-                  }`}
-                >
-                  {user.first_name} {user.last_name}
-                </button>
+            <div className="space-y-6">
+              {groupedUsers && Object.entries(groupedUsers).map(([role, users]) => (
+                <div key={role} className="space-y-2">
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-2">{role}</h3>
+                  {users?.map((user) => (
+                    <button
+                      key={user.id}
+                      onClick={() => setSelectedUser(user.id)}
+                      className={`w-full text-left p-2 rounded-lg transition-colors ${
+                        selectedUser === user.id 
+                          ? "bg-primary text-primary-foreground" 
+                          : "hover:bg-primary hover:text-primary-foreground"
+                      }`}
+                    >
+                      {getUserDisplayName(user)}
+                    </button>
+                  ))}
+                </div>
               ))}
             </div>
           </ScrollArea>
