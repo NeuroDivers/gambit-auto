@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface AssignmentSheetProps {
   title: string
@@ -22,26 +23,35 @@ export function AssignmentSheet({
       <SheetContent>
         <SheetHeader>
           <SheetTitle>{title}</SheetTitle>
+          <SheetDescription>Select from the list below</SheetDescription>
         </SheetHeader>
-        <div className="mt-6 space-y-4">
-          <Button
-            variant="outline"
-            className="w-full justify-start text-muted-foreground hover:text-foreground"
-            onClick={() => onAssign(null)}
-          >
-            Unassign {title.toLowerCase()}
-          </Button>
-          {items?.map((item) => (
+        <ScrollArea className="h-[calc(100vh-200px)] mt-6">
+          <div className="space-y-4 pr-4">
             <Button
-              key={item.id}
               variant="outline"
-              className="w-full justify-start"
-              onClick={() => onAssign(item.id)}
+              className="w-full justify-start text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                onAssign(null);
+                onOpenChange(false);
+              }}
             >
-              {item.name}
+              Unassign {title.toLowerCase()}
             </Button>
-          ))}
-        </div>
+            {items?.map((item) => (
+              <Button
+                key={item.id}
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => {
+                  onAssign(item.id);
+                  onOpenChange(false);
+                }}
+              >
+                {item.name}
+              </Button>
+            ))}
+          </div>
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   )

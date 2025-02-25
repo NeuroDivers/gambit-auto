@@ -7,7 +7,10 @@ export function useWorkOrderAssignment() {
     try {
       const { error } = await supabase
         .from('work_orders')
-        .update({ assigned_profile_id: userId })
+        .update({
+          assigned_profile_id: userId,
+          updated_at: new Date().toISOString() // Add updated_at instead of updated_by
+        })
         .eq('id', workOrderId);
 
       if (error) throw error;
@@ -25,7 +28,10 @@ export function useWorkOrderAssignment() {
     try {
       const { error } = await supabase
         .from('work_orders')
-        .update({ assigned_bay_id: bayId })
+        .update({
+          assigned_bay_id: bayId,
+          updated_at: new Date().toISOString() // Add updated_at instead of updated_by
+        })
         .eq('id', workOrderId);
 
       if (error) throw error;
