@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
 import { cn } from "@/lib/utils"
@@ -9,6 +10,7 @@ import { useEffect, useState } from "react"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Badge } from "@/components/ui/badge"
 import { supabase } from "@/integrations/supabase/client"
+import { Permission } from "@/types/permissions"
 import { 
   LayoutGrid, 
   FileText, 
@@ -23,7 +25,19 @@ import {
   Briefcase
 } from "lucide-react"
 
-const navigationItems = [
+interface NavigationItem {
+  title: string;
+  href: string;
+  icon: any;
+  permission?: Permission;
+}
+
+interface NavigationSection {
+  section: string;
+  items: NavigationItem[];
+}
+
+const navigationItems: NavigationSection[] = [
   {
     section: "Overview",
     items: [
@@ -202,7 +216,7 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
     }
   }, [])
 
-  const NavLink = ({ item }: { item: (typeof navigationItems)[0]["items"][0] }) => {
+  const NavLink = ({ item }: { item: NavigationItem }) => {
     const isChat = item.href === '/chat'
     
     const link = (

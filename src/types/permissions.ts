@@ -1,6 +1,11 @@
 
 export type PermissionType = 'page_access' | 'feature_access';
 
+export interface Permission {
+  resource: string;
+  type: PermissionType;
+}
+
 export interface RolePermission {
   id: string;
   role_id: string;
