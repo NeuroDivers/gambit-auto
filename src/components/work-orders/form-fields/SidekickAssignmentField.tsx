@@ -7,6 +7,7 @@ import { UseFormReturn } from "react-hook-form"
 import { WorkOrderFormValues } from "../types"
 import { useAssignableProfiles } from "@/components/service-bays/hooks/useAssignableProfiles"
 import { Badge } from "@/components/ui/badge"
+import { ServiceItemType } from "@/types/service-item"
 
 type SidekickAssignmentFieldProps = {
   form: UseFormReturn<WorkOrderFormValues>
@@ -15,8 +16,8 @@ type SidekickAssignmentFieldProps = {
 export function SidekickAssignmentField({ form }: SidekickAssignmentFieldProps) {
   const { profiles = [] } = useAssignableProfiles()
   
-  // Get the selected services from the form
-  const selectedServices = form.watch('services') || []
+  // Get the selected services from the form with proper typing
+  const selectedServices = form.watch('service_items') as ServiceItemType[] || []
   const serviceIds = selectedServices.map(service => service.service_id)
 
   // Query staff skills
@@ -30,7 +31,9 @@ export function SidekickAssignmentField({ form }: SidekickAssignmentFieldProps) 
         .select(`
           profile_id,
           service_id,
-          service_types (name)
+          service_types:service_types (
+            name
+          )
         `)
         .in('service_id', serviceIds)
         .eq('is_active', true)
