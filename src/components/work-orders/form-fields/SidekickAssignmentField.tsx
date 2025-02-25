@@ -13,7 +13,7 @@ type SidekickAssignmentFieldProps = {
   form: UseFormReturn<WorkOrderFormValues>
 }
 
-interface StaffSkill {
+interface DatabaseStaffSkill {
   profile_id: string
   service_id: string
   service_types: {
@@ -35,12 +35,12 @@ export function SidekickAssignmentField({ form }: SidekickAssignmentFieldProps) 
     queryFn: async () => {
       if (!serviceIds.length) return {}
 
-      const { data, error } = await supabase
+      const { data: rawData, error } = await supabase
         .from('staff_service_skills')
         .select(`
           profile_id,
           service_id,
-          service_types:service_types (
+          service_types (
             name,
             description
           )
@@ -53,8 +53,15 @@ export function SidekickAssignmentField({ form }: SidekickAssignmentFieldProps) 
         throw error
       }
 
-      // Group skills by profile_id with proper typing
-      return (data as StaffSkill[]).reduce((acc: Record<string, { serviceId: string, serviceName: string }[]>, skill) => {
+      // Ensure the data matches our expected type
+      const data = rawData.map(item => ({
+        profile_id: item.profile_id,
+        service_id: item.service_id,
+        service_types: item.service_types as DatabaseStaffSkill['service_types']
+      }))
+
+      // Group skills by profile_id
+      return data.reduce((acc: Record<string, { serviceId: string, serviceName: string }[]>, skill) => {
         if (!acc[skill.profile_id]) {
           acc[skill.profile_id] = []
         }
