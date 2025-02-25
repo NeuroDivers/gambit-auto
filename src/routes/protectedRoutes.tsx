@@ -18,6 +18,7 @@ import { Navigate } from "react-router-dom"
 import Chat from "@/pages/admin/Chat"
 import Notifications from "@/pages/admin/Notifications"
 import CommissionsPage from "@/components/commissions/CommissionsPage"
+import StaffSkills from "@/pages/admin/StaffSkills"
 import { Suspense } from "react"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
 
@@ -64,6 +65,10 @@ export const protectedRoutes: RouteObject = {
     {
       path: "dashboard",
       element: <Dashboard />,
+    },
+    {
+      path: "staff/service-skills",
+      element: <StaffSkills />,
     },
     {
       path: "chat",
