@@ -57,17 +57,17 @@ export const navigationItems: NavSection[] = [
         permission: { resource: "chat", type: "page_access" }
       },
       {
-        title: "Commissions",
-        href: "/commissions",
-        icon: DollarSign,
-        permission: { resource: "commissions", type: "page_access" }
-      },
-      {
-        title: "My Service Skills",
+        title: "My Skills",
         href: "/staff/service-skills",
         icon: Briefcase,
         permission: { resource: "staff_skills", type: "page_access" }
       },
+      {
+        title: "Commissions",
+        href: "/commissions",
+        icon: DollarSign,
+        permission: { resource: "commissions", type: "page_access" }
+      }
     ],
   },
   {
