@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react"
 import { ChatMessage, ChatUser } from "@/types/chat"
 import { Card } from "@/components/ui/card"
@@ -5,9 +6,10 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { supabase } from "@/integrations/supabase/client"
-import { Send } from "lucide-react"
+import { Send, Check, Circle } from "lucide-react"
 import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 export function ChatWindow({ recipientId }: { recipientId: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -16,12 +18,19 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const channelRef = useRef<any>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const firstUnreadRef = useRef<HTMLDivElement>(null)
   const { toast } = useToast()
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
       const scrollArea = scrollAreaRef.current
       scrollArea.scrollTop = scrollArea.scrollHeight
+    }
+  }
+
+  const scrollToFirstUnread = () => {
+    if (firstUnreadRef.current) {
+      firstUnreadRef.current.scrollIntoView({ behavior: 'smooth' })
     }
   }
 
@@ -43,7 +52,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       console.log("Fetching messages between current user and recipient:", currentUserId, recipientId)
       const { data: messages, error } = await supabase
         .from("chat_messages")
-        .select("*")
+        .select("*, read_at")
         .or(`and(sender_id.eq.${currentUserId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${currentUserId})`)
         .order("created_at", { ascending: true })
 
@@ -55,19 +64,39 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       setMessages(messages)
 
       // Mark messages as read when they are from the recipient
-      await supabase
-        .from("chat_messages")
-        .update({ read: true })
-        .eq("sender_id", recipientId)
-        .eq("recipient_id", currentUserId)
+      const unreadMessages = messages.filter(m => 
+        m.sender_id === recipientId && 
+        m.recipient_id === currentUserId && 
+        !m.read_at
+      )
 
-      // Update notification as read
-      await supabase
-        .from("notifications")
-        .update({ read: true })
-        .eq("profile_id", currentUserId)
-        .eq("sender_id", recipientId)
-        .eq("type", 'chat_message')
+      if (unreadMessages.length > 0) {
+        const { error: updateError } = await supabase
+          .from("chat_messages")
+          .update({ read_at: new Date().toISOString() })
+          .in('id', unreadMessages.map(m => m.id))
+
+        if (updateError) {
+          console.error("Error marking messages as read:", updateError)
+        }
+
+        // Update notifications as read
+        await supabase
+          .from("notifications")
+          .update({ read: true })
+          .eq("profile_id", currentUserId)
+          .eq("sender_id", recipientId)
+          .eq("type", 'chat_message')
+      }
+
+      // Scroll to first unread message after messages are loaded
+      setTimeout(() => {
+        if (unreadMessages.length > 0) {
+          scrollToFirstUnread()
+        } else {
+          scrollToBottom()
+        }
+      }, 100)
     }
 
     const fetchRecipient = async () => {
@@ -117,38 +146,24 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
           if (newMessage.sender_id === recipientId) {
             console.log("Adding new message to chat")
             setMessages((current) => [...current, newMessage])
+            scrollToBottom()
 
-            // Show toast notification immediately when message is received
+            // Mark the message as read immediately
+            const { error: updateError } = await supabase
+              .from("chat_messages")
+              .update({ read_at: new Date().toISOString() })
+              .eq('id', newMessage.id)
+
+            if (updateError) {
+              console.error("Error marking message as read:", updateError)
+            }
+
+            // Show toast notification
             toast({
               title: "New Message",
               description: `${recipient?.first_name || 'Someone'}: ${newMessage.message.substring(0, 50)}${newMessage.message.length > 50 ? '...' : ''}`,
-              duration: 5000, // Show for 5 seconds
+              duration: 5000,
             })
-
-            // Create a notification with all required fields
-            const notificationData = {
-              profile_id: currentUserId,
-              sender_id: newMessage.sender_id,
-              type: 'chat_message',
-              title: 'New Message',
-              message: `New message from ${recipient?.first_name || 'someone'}`,
-              read: false,
-              data: {
-                messageId: newMessage.id,
-                senderId: newMessage.sender_id,
-                senderName: recipient?.first_name,
-                messagePreview: newMessage.message.substring(0, 50) + (newMessage.message.length > 50 ? '...' : ''),
-                timestamp: new Date().toISOString()
-              }
-            }
-
-            const { error: notificationError } = await supabase
-              .from("notifications")
-              .insert([notificationData])
-
-            if (notificationError) {
-              console.error("Error creating notification:", notificationError)
-            }
           }
         }
       )
@@ -172,7 +187,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       sender_id: currentUserId,
       recipient_id: recipientId,
       message: newMessage.trim(),
-      read: false,
+      read_at: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }
@@ -193,6 +208,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     }
 
     setNewMessage("")
+    scrollToBottom()
   }
 
   const getRecipientDisplayName = () => {
@@ -209,27 +225,55 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       </div>
       <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
         <div className="space-y-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${
-                message.sender_id === recipientId ? "justify-start" : "justify-end"
-              }`}
-            >
+          {messages.map((message, index) => {
+            const isFirstUnread = 
+              !message.read_at && 
+              message.sender_id === recipientId && 
+              messages[index - 1]?.read_at !== undefined
+
+            return (
               <div
-                className={`rounded-lg px-4 py-2 max-w-[70%] ${
-                  message.sender_id === recipientId
-                    ? "bg-muted"
-                    : "bg-primary text-primary-foreground"
+                key={message.id}
+                ref={isFirstUnread ? firstUnreadRef : null}
+                className={`flex ${
+                  message.sender_id === recipientId ? "justify-start" : "justify-end"
                 }`}
               >
-                <div>{message.message}</div>
-                <div className="text-xs opacity-70 mt-1">
-                  {format(new Date(message.created_at), 'MMM d, yyyy h:mm a')}
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <div
+                        className={`rounded-lg px-4 py-2 max-w-[70%] ${
+                          message.sender_id === recipientId
+                            ? "bg-muted"
+                            : "bg-primary text-primary-foreground"
+                        }`}
+                      >
+                        <div>{message.message}</div>
+                        <div className="text-xs opacity-70 mt-1 flex items-center gap-1">
+                          {format(new Date(message.created_at), 'MMM d, yyyy h:mm a')}
+                          {message.sender_id !== recipientId && (
+                            message.read_at ? (
+                              <Check className="h-3 w-3" />
+                            ) : (
+                              <Circle className="h-3 w-3" />
+                            )
+                          )}
+                        </div>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {message.read_at ? (
+                        `Read at ${format(new Date(message.read_at), 'MMM d, yyyy h:mm a')}`
+                      ) : (
+                        "Not read yet"
+                      )}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </ScrollArea>
       <div className="p-4 border-t flex gap-2">
