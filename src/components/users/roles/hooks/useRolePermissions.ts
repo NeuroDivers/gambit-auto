@@ -1,3 +1,4 @@
+
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
@@ -62,16 +63,22 @@ export const useRolePermissions = (roleId: string | null) => {
       // Update the database
       const { error } = await supabase
         .from("role_permissions")
-        .update({ 
+        .update({
           is_active: newValue,
           updated_at: new Date().toISOString()
         })
-        .eq("id", permission.id)
-        .eq("role_id", roleId)
+        .match({
+          id: permission.id,
+          role_id: roleId
+        })
 
       if (error) {
+        console.error("Database update error:", error)
         throw error
       }
+
+      // Refresh the data to ensure we have the latest state
+      await queryClient.invalidateQueries(["role-permissions", roleId])
 
       const resourceName = permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
       const permissionType = permission.permission_type.toLowerCase().replace(/_/g, ' ')
