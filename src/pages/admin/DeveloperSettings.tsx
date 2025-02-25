@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react"
 import { usePermissions } from "@/hooks/usePermissions"
+import { useQueryClient } from "@tanstack/react-query"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, Globe, Shield, Database, Code, Sun, Moon } from "lucide-react"
+import { Loader2, Globe, Shield, Database, Code, Sun, Moon, Trash2 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { Label } from "@/components/ui/label"
@@ -15,6 +16,7 @@ export default function DeveloperSettings() {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
   const { checkPermission } = usePermissions()
   const { theme } = useTheme()
+  const queryClient = useQueryClient()
 
   const [colors, setColors] = useState({
     light: {
@@ -96,6 +98,11 @@ export default function DeveloperSettings() {
     }
   }
 
+  const handleClearCache = () => {
+    queryClient.clear()
+    toast.success("Application cache cleared successfully")
+  }
+
   if (hasAccess === null) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -123,6 +130,14 @@ export default function DeveloperSettings() {
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Developer Settings</h1>
+        <Button 
+          variant="outline" 
+          onClick={handleClearCache}
+          className="gap-2"
+        >
+          <Trash2 className="h-4 w-4" />
+          Clear Cache
+        </Button>
       </div>
 
       <Tabs defaultValue="theme" className="space-y-4">
