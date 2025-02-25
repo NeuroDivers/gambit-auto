@@ -30,9 +30,9 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     }
 
     const fetchRecipient = async () => {
-      const { data: profile, error } = await supabase
+      const { data: recipient, error } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name, email, role:role_id(name, nicename), avatar_url")
+        .select("id, first_name, last_name, email, avatar_url")
         .eq("id", recipientId)
         .single()
 
@@ -41,13 +41,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         return
       }
 
-      // Ensure the role field is properly structured
-      const recipientData = {
-        ...profile,
-        role: Array.isArray(profile.role) ? profile.role[0] : profile.role
-      } as ChatUser
-
-      setRecipient(recipientData)
+      setRecipient(recipient)
     }
 
     fetchMessages()
@@ -78,12 +72,8 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   const sendMessage = async () => {
     if (!newMessage.trim()) return
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
     const { error } = await supabase.from("chat_messages").insert([
       {
-        sender_id: user.id,
         recipient_id: recipientId,
         message: newMessage.trim(),
       },
@@ -140,7 +130,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         />
         <Button 
           onClick={sendMessage}
-          size="icon"
           className="bg-primary hover:bg-primary/90 text-primary-foreground"
         >
           <Send className="h-4 w-4" />

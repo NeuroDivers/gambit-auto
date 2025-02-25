@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ChatUser } from "@/types/chat"
 import { ChatWindow } from "@/components/chat/ChatWindow"
 import { Card, CardContent } from "@/components/ui/card"
@@ -19,11 +19,7 @@ export default function Chat() {
         .order("role_id")
       
       if (error) throw error
-      // Ensure the role field is properly structured
-      return (profiles || []).map(profile => ({
-        ...profile,
-        role: Array.isArray(profile.role) ? profile.role[0] : profile.role
-      })) as ChatUser[]
+      return profiles as (ChatUser & { role: { name: string, nicename: string } })[]
     },
   })
 
@@ -64,7 +60,7 @@ export default function Chat() {
                       className={`w-full text-left p-2 rounded-lg transition-colors ${
                         selectedUser === user.id 
                           ? "bg-primary text-primary-foreground" 
-                          : "hover:bg-primary/90 hover:text-primary-foreground"
+                          : "hover:bg-primary hover:text-primary-foreground"
                       }`}
                     >
                       {getUserDisplayName(user)}
