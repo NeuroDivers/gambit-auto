@@ -9,9 +9,16 @@ export interface ChatMessage {
   updated_at: string
 }
 
+export interface ChatRole {
+  name: string
+  nicename: string
+}
+
 export interface ChatUser {
   id: string
   first_name: string | null
   last_name: string | null
+  email: string | null
   avatar_url: string | null
+  role: ChatRole | null
 }
