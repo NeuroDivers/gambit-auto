@@ -10,7 +10,11 @@ import { CalendarClock, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "react-router-dom"
 
-export const WorkOrderCalendar = () => {
+interface WorkOrderCalendarProps {
+  clientView?: boolean;
+}
+
+export const WorkOrderCalendar = ({ clientView = false }: WorkOrderCalendarProps) => {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [currentDate] = useState(new Date())
@@ -72,26 +76,32 @@ export const WorkOrderCalendar = () => {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-end px-6">
-        <Button onClick={() => navigate("/work-orders/create")}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Work Order
-        </Button>
-      </div>
+      {!clientView && (
+        <div className="flex justify-end px-6">
+          <Button onClick={() => navigate("/work-orders/create")}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Work Order
+          </Button>
+        </div>
+      )}
       <div className="space-y-20">
         <MobileCalendarView
           currentDate={currentDate}
           workOrders={workOrders}
           onDateChange={(date) => console.log("Date changed:", date)}
         />
-        <Alert>
-          <CalendarClock className="h-4 w-4" />
-          <AlertTitle>Unscheduled Work Orders</AlertTitle>
-          <AlertDescription>
-            Work orders without a start time won't appear on the calendar. They will be listed in the section below.
-          </AlertDescription>
-        </Alert>
-        <WorkOrdersSection />
+        {!clientView && (
+          <>
+            <Alert>
+              <CalendarClock className="h-4 w-4" />
+              <AlertTitle>Unscheduled Work Orders</AlertTitle>
+              <AlertDescription>
+                Work orders without a start time won't appear on the calendar. They will be listed in the section below.
+              </AlertDescription>
+            </Alert>
+            <WorkOrdersSection />
+          </>
+        )}
       </div>
     </div>
   )
