@@ -19,7 +19,7 @@ interface DatabaseStaffSkill {
   service_types: {
     name: string
     description: string | null
-  }
+  }[]
 }
 
 export function SidekickAssignmentField({ form }: SidekickAssignmentFieldProps) {
@@ -65,9 +65,11 @@ export function SidekickAssignmentField({ form }: SidekickAssignmentFieldProps) 
         if (!acc[skill.profile_id]) {
           acc[skill.profile_id] = []
         }
+        // Get the first service type if it exists
+        const serviceType = skill.service_types[0]
         acc[skill.profile_id].push({
           serviceId: skill.service_id,
-          serviceName: skill.service_types.name
+          serviceName: serviceType?.name || 'Unknown Service'
         })
         return acc
       }, {})
