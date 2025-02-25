@@ -25,8 +25,29 @@ export default function RolePermissions() {
     handleWorkOrderAssignmentToggle
   } = useRolePermissions(roleId || null)
 
+  console.log("RolePermissions page - roleId:", roleId)
+  console.log("RolePermissions page - role:", role)
+  console.log("RolePermissions page - permissions:", permissions)
+
   if (isLoading) {
-    return <div>Loading...</div>
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (!role) {
+    return (
+      <div className="p-6">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Role not found or you don't have permission to access it.
+          </AlertDescription>
+        </Alert>
+      </div>
+    )
   }
 
   const groupedPermissions = permissions ? groupPermissions(permissions) : {}
@@ -43,12 +64,10 @@ export default function RolePermissions() {
         </Button>
         <div className="flex items-center gap-2">
           <h1 className="text-3xl font-bold">Role Permissions</h1>
-          {role && (
-            <Badge variant="secondary" className="gap-1">
-              <Users className="h-3 w-3" />
-              {role.nicename || role.name}
-            </Badge>
-          )}
+          <Badge variant="secondary" className="gap-1">
+            <Users className="h-3 w-3" />
+            {role.nicename || role.name}
+          </Badge>
         </div>
       </div>
 
@@ -73,7 +92,7 @@ export default function RolePermissions() {
               </p>
             </div>
             <Select
-              value={role?.default_dashboard || "client"}
+              value={role.default_dashboard || "client"}
               onValueChange={(value) => handleDashboardChange(value as "admin" | "staff" | "client")}
               disabled={isUpdating}
             >
@@ -103,7 +122,7 @@ export default function RolePermissions() {
                 </p>
               </div>
               <Switch
-                checked={role?.can_be_assigned_to_bay}
+                checked={role.can_be_assigned_to_bay}
                 onCheckedChange={handleBayAssignmentToggle}
                 disabled={isUpdating}
               />
@@ -116,7 +135,7 @@ export default function RolePermissions() {
                 </p>
               </div>
               <Switch
-                checked={role?.can_be_assigned_work_orders}
+                checked={role.can_be_assigned_work_orders}
                 onCheckedChange={handleWorkOrderAssignmentToggle}
                 disabled={isUpdating}
               />
