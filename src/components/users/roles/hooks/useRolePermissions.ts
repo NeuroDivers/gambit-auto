@@ -45,6 +45,65 @@ export const useRolePermissions = (roleId: string | null) => {
     enabled: !!roleId,
   })
 
+  const handlePermissionToggle = async (permission: Permission, newValue: boolean) => {
+    if (!roleId || isUpdating) return
+    
+    setIsUpdating(true)
+    console.log("Updating permission:", permission.id, "to:", newValue)
+    
+    try {
+      // Optimistically update the cache
+      queryClient.setQueryData(["role-permissions", roleId], (oldData: Permission[] | undefined) => {
+        if (!oldData) return oldData
+        return oldData.map(p => 
+          p.id === permission.id ? { ...p, is_active: newValue } : p
+        )
+      })
+
+      // Update the database
+      const { error } = await supabase
+        .from("role_permissions")
+        .update({ 
+          is_active: newValue,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", permission.id)
+        .eq("role_id", roleId)
+        .single()
+
+      if (error) {
+        throw error
+      }
+
+      const resourceName = permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+      const permissionType = permission.permission_type.toLowerCase().replace(/_/g, ' ')
+      
+      toast({
+        title: "Permission updated",
+        description: `${resourceName} ${permissionType} has been ${newValue ? 'enabled' : 'disabled'}.`,
+      })
+
+    } catch (error: any) {
+      console.error("Permission update error:", error)
+      
+      // Revert the optimistic update
+      queryClient.setQueryData(["role-permissions", roleId], (oldData: Permission[] | undefined) => {
+        if (!oldData) return oldData
+        return oldData.map(p => 
+          p.id === permission.id ? { ...p, is_active: !newValue } : p
+        )
+      })
+      
+      toast({
+        title: "Error updating permission",
+        description: error.message,
+        variant: "destructive",
+      })
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
   const handleBayAssignmentToggle = async (newValue: boolean) => {
     if (!roleId || isUpdating) return
     setIsUpdating(true)
@@ -119,57 +178,10 @@ export const useRolePermissions = (roleId: string | null) => {
     }
   }
 
-  const handlePermissionToggle = async (permission: Permission, newValue: boolean) => {
-    if (isUpdating) return
-    
-    setIsUpdating(true)
-    
-    try {
-      queryClient.setQueryData(["role-permissions", roleId], (oldData: Permission[] | undefined) => {
-        if (!oldData) return oldData
-        return oldData.map(p => p.id === permission.id ? { ...p, is_active: newValue } : p)
-      })
-
-      const { error: updateError } = await supabase
-        .from("role_permissions")
-        .update({ 
-          is_active: newValue,
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", permission.id)
-
-      if (updateError) throw updateError
-
-      const resourceName = permission.resource_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-      const permissionType = permission.permission_type.toLowerCase().replace(/_/g, ' ')
-      const action = newValue ? "enabled" : "disabled"
-      
-      toast({
-        title: `Permission ${action}`,
-        description: `${resourceName} permission has been ${action} for ${permissionType} operations.`,
-      })
-
-    } catch (error: any) {
-      console.error("Permission update error:", error)
-      
-      queryClient.invalidateQueries({ 
-        queryKey: ["role-permissions", roleId]
-      })
-      
-      toast({
-        title: "Error updating permission",
-        description: error.message,
-        variant: "destructive",
-      })
-    } finally {
-      setIsUpdating(false)
-    }
-  }
-
   const handleDashboardChange = async (dashboard: "admin" | "staff" | "client") => {
     if (!roleId || isUpdating) return
-
     setIsUpdating(true)
+
     try {
       queryClient.setQueryData(["role", roleId], (oldData: any) => {
         if (!oldData) return oldData
@@ -192,11 +204,7 @@ export const useRolePermissions = (roleId: string | null) => {
       })
     } catch (error: any) {
       console.error("Dashboard update error:", error)
-      
-      queryClient.invalidateQueries({ 
-        queryKey: ["role", roleId]
-      })
-      
+      queryClient.invalidateQueries({ queryKey: ["role", roleId] })
       toast({
         title: "Error updating default dashboard",
         description: error.message,
