@@ -24,8 +24,7 @@ export const useUserEditSubmit = ({ userId, currentRole, onSuccess }: UseUserEdi
         .update({
           first_name: values.first_name,
           last_name: values.last_name,
-          role_id: values.role,
-          default_dashboard: values.default_dashboard
+          role_id: values.role
         })
         .eq("id", userId);
 
