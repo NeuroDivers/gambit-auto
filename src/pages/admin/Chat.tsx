@@ -79,7 +79,7 @@ export default function Chat() {
           async (payload) => {
             console.log('New message received, updating counts:', payload)
             // Invalidate the query to trigger a refresh of the user list with new counts
-            queryClient.invalidateQueries(["chat-users"])
+            queryClient.invalidateQueries({ queryKey: ["chat-users"] })
           }
         )
         .subscribe((status) => {
@@ -100,7 +100,7 @@ export default function Chat() {
           async (payload) => {
             console.log('Message read status updated:', payload)
             // Invalidate the query to trigger a refresh
-            queryClient.invalidateQueries(["chat-users"])
+            queryClient.invalidateQueries({ queryKey: ["chat-users"] })
           }
         )
         .subscribe()
