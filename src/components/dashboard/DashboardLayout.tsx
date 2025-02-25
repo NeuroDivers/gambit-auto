@@ -1,15 +1,19 @@
-
-import { Sidebar, SidebarContent, SidebarProvider, SidebarRail, SidebarTrigger } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
-import { Header } from "../shared/Header";
-import { DashboardSidebarNav } from "./sidebar/DashboardSidebarNav";
-import { DashboardSidebarHeader } from "./sidebar/DashboardSidebarHeader";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useState } from "react";
-import { ProfileCompletionDialog } from "../profile/ProfileCompletionDialog";
-import { Menu, X } from "lucide-react";
-import { Button } from "../ui/button";
-import { memo } from "react";
+import { 
+  Sidebar, 
+  SidebarContent, 
+  SidebarProvider, 
+  SidebarTrigger 
+} from "@/components/ui/sidebar"
+import { cn } from "@/lib/utils"
+import { Header } from "../shared/Header"
+import { DashboardSidebarNav } from "./sidebar/DashboardSidebarNav"
+import { DashboardSidebarHeader } from "./sidebar/DashboardSidebarHeader"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { useState } from "react"
+import { ProfileCompletionDialog } from "../profile/ProfileCompletionDialog"
+import { Menu, X } from "lucide-react"
+import { Button } from "../ui/button"
+import { memo } from "react"
 
 interface DashboardLayoutProps {
   firstName?: string | null;
@@ -122,7 +126,7 @@ export function DashboardLayout({
             onLogout={onLogout}
             onNavigate={handleNavigate}
           />
-          <SidebarRail />
+          {/* <SidebarRail /> */}
         </Sidebar>
         <div className="flex-1 overflow-hidden flex flex-col">
           <Header firstName={firstName} role={role} onLogout={onLogout} />
