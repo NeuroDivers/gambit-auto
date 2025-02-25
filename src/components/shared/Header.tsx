@@ -92,7 +92,12 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
       ])
 
       const notifications = (notificationsResponse.data || []) as Notification[]
-      const chatMessages = (chatMessagesResponse.data || []) as ChatMessage[]
+      
+      // Fix the type casting for chat messages
+      const chatMessages = (chatMessagesResponse.data || []).map(msg => ({
+        ...msg,
+        profiles: Array.isArray(msg.profiles) ? msg.profiles[0] : msg.profiles
+      })) as ChatMessage[]
 
       // Convert chat messages to notification format
       const chatNotifications: Notification[] = chatMessages.map(msg => ({
