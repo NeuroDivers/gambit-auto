@@ -123,18 +123,12 @@ export const useAuthForm = () => {
 
       console.log("Profile data for redirect:", profileData);
 
-      // Redirect based on role
-      if (profileData.role.name.toLowerCase() === 'client') {
-        console.log("Redirecting to client dashboard");
-        navigate("/client", { replace: true });
-      } else {
-        console.log("Redirecting to admin dashboard");
-        navigate("/admin", { replace: true });
-      }
+      // All users go to dashboard first
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       console.error("Error during role-based redirect:", error);
-      // Default to client route if role check fails
-      navigate("/client", { replace: true });
+      // Default to dashboard if role check fails
+      navigate("/dashboard", { replace: true });
     }
   };
 
