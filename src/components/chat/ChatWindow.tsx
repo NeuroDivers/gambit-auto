@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react"
 import { ChatMessage, ChatUser } from "@/types/chat"
 import { Card } from "@/components/ui/card"
@@ -212,7 +213,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   }
 
   return (
-    <Card className="flex flex-col h-[600px]">
+    <Card className="flex flex-col h-full">
       <div className="p-4 border-b">
         <h3 className="font-semibold">{getRecipientDisplayName()}</h3>
       </div>

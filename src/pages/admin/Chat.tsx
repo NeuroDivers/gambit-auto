@@ -212,7 +212,7 @@ export default function Chat() {
         </CardContent>
       </Card>
       
-      <div className="flex-1">
+      <div className="flex-1 h-[calc(100vh-6rem)]">
         {selectedUser ? (
           <ChatWindow recipientId={selectedUser} />
         ) : (
