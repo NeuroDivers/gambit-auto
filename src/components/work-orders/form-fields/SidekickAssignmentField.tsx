@@ -43,13 +43,14 @@ export function SidekickAssignmentField({ form }: SidekickAssignmentFieldProps) 
         throw error
       }
 
-      // Group skills by profile_id
+      // Group skills by profile_id with proper typing
       return data.reduce((acc: Record<string, { serviceId: string, serviceName: string }[]>, skill) => {
         if (!acc[skill.profile_id]) {
           acc[skill.profile_id] = []
         }
         acc[skill.profile_id].push({
           serviceId: skill.service_id,
+          // Fix the access to service_types name
           serviceName: skill.service_types?.name || ''
         })
         return acc
