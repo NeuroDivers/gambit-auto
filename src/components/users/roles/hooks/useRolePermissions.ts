@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
@@ -65,10 +64,9 @@ export const useRolePermissions = (roleId: string | null) => {
         .from("role_permissions")
         .update({
           is_active: newValue,
-          updated_at: new Date().toISOString()
         })
         .eq("id", permission.id)
-        .select()
+        .select("*")
 
       if (error) {
         console.error("Database update error:", error)
