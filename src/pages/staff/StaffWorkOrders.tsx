@@ -35,7 +35,11 @@ export default function StaffWorkOrders() {
         .eq('assigned_profile_id', user.id)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching assigned orders:', error)
+        throw error
+      }
+      console.log('Assigned orders:', data)
       return data
     }
   })
@@ -64,7 +68,11 @@ export default function StaffWorkOrders() {
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching available orders:', error)
+        throw error
+      }
+      console.log('Available orders:', data)
       return data
     }
   })
@@ -101,8 +109,8 @@ export default function StaffWorkOrders() {
       
       <Tabs defaultValue="assigned" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="assigned">My Work Orders</TabsTrigger>
-          <TabsTrigger value="available">Available Orders</TabsTrigger>
+          <TabsTrigger value="assigned">My Work Orders ({assignedOrders?.length || 0})</TabsTrigger>
+          <TabsTrigger value="available">Available Orders ({availableOrders?.length || 0})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="assigned" className="space-y-4">
@@ -129,7 +137,7 @@ export default function StaffWorkOrders() {
                     <ul className="list-disc list-inside text-sm text-muted-foreground">
                       {order.work_order_services.map((service: any) => (
                         <li key={service.id}>
-                          {service.service_types.name} x {service.quantity}
+                          {service.service_types?.name} x {service.quantity}
                         </li>
                       ))}
                     </ul>
@@ -179,7 +187,7 @@ export default function StaffWorkOrders() {
                     <ul className="list-disc list-inside text-sm text-muted-foreground">
                       {order.work_order_services.map((service: any) => (
                         <li key={service.id}>
-                          {service.service_types.name} x {service.quantity}
+                          {service.service_types?.name} x {service.quantity}
                         </li>
                       ))}
                     </ul>
