@@ -10,37 +10,37 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 const items = [
   {
     title: "Dashboard",
-    href: "/client",
+    href: "/dashboard",
     icon: User,
   },
   {
     title: "Quotes",
-    href: "/client/quotes",
+    href: "/quotes",
     icon: MessageSquare,
   },
   {
     title: "Invoices",
-    href: "/client/invoices",
+    href: "/invoices",
     icon: FileText,
   },
   {
     title: "Vehicles",
-    href: "/client/vehicles",
+    href: "/vehicles",
     icon: Car,
   },
   {
     title: "Bookings",
-    href: "/client/bookings",
+    href: "/bookings",
     icon: Calendar,
   },
   {
     title: "Payment Methods",
-    href: "/client/payment-methods",
+    href: "/payment-methods",
     icon: CreditCard,
   },
   {
     title: "Settings",
-    href: "/client/settings",
+    href: "/settings",
     icon: Settings,
   },
 ]

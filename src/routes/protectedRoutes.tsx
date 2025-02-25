@@ -1,4 +1,3 @@
-
 import { DashboardLayoutWrapper } from "@/components/dashboard/DashboardLayoutWrapper"
 import { StaffLayoutWrapper } from "@/components/staff/StaffLayoutWrapper"
 import { ClientLayoutWrapper } from "@/components/client/ClientLayoutWrapper"
@@ -20,7 +19,7 @@ import { Suspense } from "react"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
 
 const RoleBasedLayout = () => {
-  const { currentUserRole, isLoading } = usePermissions();
+  const { currentUserRole, checkPermission, isLoading } = usePermissions();
   
   if (isLoading) {
     return <LoadingScreen />;
@@ -36,6 +35,12 @@ const RoleBasedLayout = () => {
         return <DashboardLayoutWrapper />;
       case 'staff':
       case 'technician':
+        // Check if user has permission to access staff dashboard
+        const hasStaffAccess = await checkPermission('staff_dashboard', 'page_access');
+        if (!hasStaffAccess) {
+          console.log('Staff access denied');
+          return <Navigate to="/unauthorized" replace />;
+        }
         console.log('Rendering StaffLayoutWrapper for role:', roleName);
         return <StaffLayoutWrapper />;
       case 'client':

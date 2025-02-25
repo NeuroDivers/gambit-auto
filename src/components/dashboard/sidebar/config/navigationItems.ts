@@ -1,4 +1,3 @@
-
 import { 
   Settings, 
   Users, 
@@ -23,7 +22,7 @@ export const navigationItems: NavSection[] = [
         title: "Dashboard",
         href: "/dashboard",
         icon: LayoutGrid,
-        permission: { resource: "dashboard", type: "page_access" }
+        permission: { resource: "staff_dashboard", type: "page_access" }
       },
     ],
   },
