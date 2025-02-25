@@ -1,4 +1,3 @@
-
 import { Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -324,9 +323,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         onClick={handleOpen}
         className="shrink-0"
       >
-        <Camera className="h
-
--4 w-4" />
+        <Camera className="h-4 w-4" />
       </Button>
 
       <Dialog open={isDialogOpen} onOpenChange={handleClose}>
