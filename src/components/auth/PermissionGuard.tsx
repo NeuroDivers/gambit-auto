@@ -26,9 +26,11 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
         return;
       }
 
+      const roleName = currentUserRole.name.toLowerCase();
+      console.log('Checking permissions for role:', roleName);
+
       // If user is administrator or technician, grant immediate access
-      if (currentUserRole.name.toLowerCase() === 'administrator' || 
-          currentUserRole.name.toLowerCase() === 'technician') {
+      if (roleName === 'administrator' || roleName === 'technician') {
         console.log('User is admin or technician, granting access');
         setHasPermission(true);
         return;

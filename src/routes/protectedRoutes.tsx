@@ -28,18 +28,20 @@ const RoleBasedLayout = () => {
 
   // If we have a role, determine the appropriate layout
   if (currentUserRole?.name) {
-    const role = currentUserRole.name.toLowerCase();
+    const roleName = currentUserRole.name.toLowerCase();
+    console.log('Current role name:', roleName);
     
-    switch (role) {
+    switch (roleName) {
       case 'administrator':
         return <DashboardLayoutWrapper />;
       case 'staff':
-      case 'technician':  // Added technician case to use StaffLayoutWrapper
+      case 'technician':
+        console.log('Rendering StaffLayoutWrapper for role:', roleName);
         return <StaffLayoutWrapper />;
       case 'client':
         return <ClientLayoutWrapper />;
       default:
-        console.log('Unknown role:', role);
+        console.log('Unknown role:', roleName);
         return <Navigate to="/unauthorized" replace />;
     }
   }
