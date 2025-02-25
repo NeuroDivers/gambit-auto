@@ -7,8 +7,12 @@ import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function RolePermissions() {
-  const { id } = useParams()
+  const { id } = useParams<{ id: string }>()
   const { permissions, isLoading, handlePermissionToggle, role } = useRolePermissions(id || null)
+
+  console.log("Role ID:", id)
+  console.log("Permissions:", permissions)
+  console.log("Role:", role)
 
   if (isLoading) {
     return (
@@ -33,7 +37,21 @@ export default function RolePermissions() {
     )
   }
 
-  const groupedPermissions = groupPermissions(permissions || [])
+  if (!permissions || permissions.length === 0) {
+    return (
+      <div className="space-y-8 p-6">
+        <div className="space-y-4">
+          <PageBreadcrumbs />
+          <h1 className="text-3xl font-bold">Role Permissions</h1>
+          <p className="text-muted-foreground">
+            No permissions found for this role. Please ensure the role exists and has permissions configured.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  const groupedPermissions = groupPermissions(permissions)
 
   return (
     <div className="space-y-8 p-6">
