@@ -14,7 +14,19 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [newMessage, setNewMessage] = useState("")
   const [recipient, setRecipient] = useState<ChatUser | null>(null)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const { toast } = useToast()
+
+  useEffect(() => {
+    // Get current user ID on mount
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setCurrentUserId(user.id)
+      }
+    }
+    getCurrentUser()
+  }, [])
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -39,6 +51,14 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
           .update({ read: true })
           .eq("sender_id", recipientId)
           .eq("recipient_id", user.id)
+
+        // Create or update notification count
+        await supabase
+          .from("notifications")
+          .update({ read: true })
+          .eq("profile_id", user.id)
+          .eq("sender_id", recipientId)
+          .eq("type", 'chat_message')
       }
     }
 
@@ -74,15 +94,37 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
           event: "INSERT",
           schema: "public",
           table: "chat_messages",
-          filter: `recipient_id=eq.${recipientId}`,
         },
-        (payload) => {
+        async (payload) => {
           const newMessage = payload.new as ChatMessage
-          setMessages((current) => [...current, newMessage])
-          toast({
-            title: "New message",
-            description: `You have a new message from ${recipient?.first_name || 'someone'}`,
-          })
+          // Only update messages if the message is relevant to this chat
+          if (newMessage.sender_id === recipientId || newMessage.recipient_id === recipientId) {
+            setMessages((current) => [...current, newMessage])
+            
+            // Only show toast and create notification if we're the recipient
+            if (newMessage.recipient_id === currentUserId) {
+              toast({
+                title: "New message",
+                description: `You have a new message from ${recipient?.first_name || 'someone'}`,
+              })
+
+              // Create a notification for the new message
+              const { error: notificationError } = await supabase
+                .from("notifications")
+                .upsert({
+                  profile_id: currentUserId,
+                  sender_id: newMessage.sender_id,
+                  type: 'chat_message',
+                  title: 'New Message',
+                  message: `New message from ${recipient?.first_name || 'someone'}`,
+                  read: false,
+                })
+
+              if (notificationError) {
+                console.error("Error creating notification:", notificationError)
+              }
+            }
+          }
         }
       )
       .subscribe()
@@ -90,7 +132,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [recipientId, recipient?.first_name, toast])
+  }, [recipientId, recipient?.first_name, toast, currentUserId])
 
   const sendMessage = async () => {
     if (!newMessage.trim()) return
