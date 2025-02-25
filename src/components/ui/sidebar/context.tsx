@@ -1,8 +1,10 @@
 
 import * as React from "react"
 
+type SidebarState = "expanded" | "collapsed"
+
 type SidebarContext = {
-  state: "expanded" | "collapsed"
+  state: SidebarState
   open: boolean
   setOpen: (open: boolean) => void
   openMobile: boolean
