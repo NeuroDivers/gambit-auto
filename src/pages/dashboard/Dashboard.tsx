@@ -1,43 +1,46 @@
 
+import { usePermissions } from "@/hooks/usePermissions"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
+import { LoadingScreen } from "@/components/shared/LoadingScreen"
 import { AdminDashboard } from "./templates/AdminDashboard"
 import { StaffDashboard } from "./templates/StaffDashboard"
 import { ClientDashboard } from "./templates/ClientDashboard"
-import { usePermissions } from "@/hooks/usePermissions"
-import { LoadingScreen } from "@/components/shared/LoadingScreen"
 
 export default function Dashboard() {
-  const { currentUserRole } = usePermissions()
+  const { currentUserRole, isLoading: roleLoading } = usePermissions()
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("No user found")
-      
-      const { data: profileData } = await supabase
+      if (!user) return null
+
+      const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
-        .maybeSingle()
-      
-      return profileData
+        .single()
+
+      if (error) throw error
+      return data
     },
+    enabled: !!currentUserRole
   })
 
-  if (profileLoading) {
+  if (roleLoading || profileLoading) {
     return <LoadingScreen />
   }
 
-  // Determine which dashboard template to show based on user role
-  if (currentUserRole?.name?.toLowerCase() === 'administrator') {
+  // Determine which dashboard to show based on role's default_dashboard
+  if (currentUserRole?.default_dashboard === 'admin') {
     return <AdminDashboard profile={profile} />
   }
 
-  if (currentUserRole?.name?.toLowerCase() === 'staff') {
+  if (currentUserRole?.default_dashboard === 'staff') {
     return <StaffDashboard profile={profile} />
   }
 
+  // Default to client dashboard
   return <ClientDashboard profile={profile} />
 }
