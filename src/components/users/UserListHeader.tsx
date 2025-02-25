@@ -37,7 +37,7 @@ export const UserListHeader = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 mb-8">
       <div className="flex items-center justify-between">
         <UserFilters
           searchQuery={searchQuery}
