@@ -171,7 +171,7 @@ export default function StaffWorkOrders() {
                   </p>
                 </div>
                 <Button 
-                  variant="secondary"
+                  className="bg-gradient-to-br from-card to-secondary/80 backdrop-blur-sm hover:bg-secondary/90 text-secondary-foreground"
                   onClick={() => handleApplyForWorkOrder(order.id)}
                 >
                   Apply
