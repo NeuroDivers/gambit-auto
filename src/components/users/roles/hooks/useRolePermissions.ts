@@ -61,21 +61,21 @@ export const useRolePermissions = (roleId: string | null) => {
       })
 
       // Update the database
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("role_permissions")
         .update({
           is_active: newValue,
           updated_at: new Date().toISOString()
         })
-        .match({
-          id: permission.id,
-          role_id: roleId
-        })
+        .eq("id", permission.id)
+        .select()
 
       if (error) {
         console.error("Database update error:", error)
         throw error
       }
+
+      console.log("Update response:", data)
 
       // Refresh the data to ensure we have the latest state
       await queryClient.invalidateQueries({
