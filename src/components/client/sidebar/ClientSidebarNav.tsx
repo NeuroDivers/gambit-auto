@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useSidebar } from "@/components/ui/sidebar"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
 import { 
   LayoutGrid, 
   FileText, 
@@ -15,41 +16,61 @@ import {
   Settings 
 } from "lucide-react"
 
-const items = [
+const navigationItems = [
   {
-    title: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutGrid,
+    section: "Overview",
+    items: [
+      {
+        title: "Dashboard",
+        href: "/dashboard",
+        icon: LayoutGrid,
+      },
+    ],
   },
   {
-    title: "Quotes",
-    href: "/quotes",
-    icon: MessageSquare,
+    section: "Services",
+    items: [
+      {
+        title: "Quotes",
+        href: "/quotes",
+        icon: MessageSquare,
+      },
+      {
+        title: "Invoices",
+        href: "/invoices",
+        icon: FileText,
+      },
+    ],
   },
   {
-    title: "Invoices",
-    href: "/invoices",
-    icon: FileText,
+    section: "Management",
+    items: [
+      {
+        title: "Vehicles",
+        href: "/vehicles",
+        icon: Car,
+      },
+      {
+        title: "Bookings",
+        href: "/bookings",
+        icon: Calendar,
+      },
+      {
+        title: "Payment Methods",
+        href: "/payment-methods",
+        icon: CreditCard,
+      },
+    ],
   },
   {
-    title: "Vehicles",
-    href: "/vehicles",
-    icon: Car,
-  },
-  {
-    title: "Bookings",
-    href: "/bookings",
-    icon: Calendar,
-  },
-  {
-    title: "Payment Methods",
-    href: "/payment-methods",
-    icon: CreditCard,
-  },
-  {
-    title: "Settings",
-    href: "/settings",
-    icon: Settings,
+    section: "Account",
+    items: [
+      {
+        title: "Settings",
+        href: "/settings",
+        icon: Settings,
+      },
+    ],
   },
 ]
 
@@ -62,7 +83,7 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
   const { isMobile, state } = useSidebar()
   const isCollapsed = state === "collapsed"
 
-  const NavLink = ({ item }: { item: typeof items[0] }) => {
+  const NavLink = ({ item }: { item: (typeof navigationItems)[0]["items"][0] }) => {
     const link = (
       <Link
         to={item.href}
@@ -98,9 +119,23 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
 
   return (
     <ScrollArea className="flex-1">
-      <nav className="flex flex-col gap-2 p-4">
-        {items.map((item) => (
-          <NavLink key={item.href} item={item} />
+      <nav className="flex flex-col gap-4 py-4">
+        {navigationItems.map((section, index) => (
+          <div key={section.section} className="px-3">
+            {!isCollapsed && (
+              <h4 className="mb-2 px-2 text-xs font-semibold tracking-tight text-muted-foreground">
+                {section.section}
+              </h4>
+            )}
+            <div className="space-y-1">
+              {section.items.map((item) => (
+                <NavLink key={item.href} item={item} />
+              ))}
+            </div>
+            {index < navigationItems.length - 1 && !isCollapsed && (
+              <Separator className="my-4" />
+            )}
+          </div>
         ))}
       </nav>
     </ScrollArea>
