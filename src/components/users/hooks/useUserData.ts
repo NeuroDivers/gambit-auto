@@ -6,6 +6,7 @@ export type UserRole = {
   id: string;
   name: string;
   nicename: string;
+  default_dashboard?: "admin" | "staff" | "client";
 };
 
 export type User = {
@@ -49,7 +50,8 @@ export const useUserData = () => {
           role:role_id (
             id,
             name,
-            nicename
+            nicename,
+            default_dashboard
           )
         `)
         .returns<ProfileResponse[]>();
