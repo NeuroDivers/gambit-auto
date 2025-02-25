@@ -2,7 +2,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Star } from "lucide-react"
@@ -29,7 +29,6 @@ interface ServiceRating {
 export function RatingSubmissionForm({ workOrderId, serviceItems, onSuccess }: RatingSubmissionFormProps) {
   const [ratings, setRatings] = useState<Record<string, ServiceRating>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { toast } = useToast()
 
   // Check for existing ratings
   const { data: existingRatings } = useQuery({
@@ -101,19 +100,11 @@ export function RatingSubmissionForm({ workOrderId, serviceItems, onSuccess }: R
 
       if (error) throw error
 
-      toast({
-        title: "Success",
-        description: "Ratings submitted successfully",
-      })
-
+      toast.success("Ratings submitted successfully")
       if (onSuccess) onSuccess()
     } catch (error) {
       console.error('Error submitting ratings:', error)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: typeof error === 'string' ? error : "Failed to submit ratings",
-      })
+      toast.error(typeof error === 'string' ? error : "Failed to submit ratings")
     } finally {
       setIsSubmitting(false)
     }
