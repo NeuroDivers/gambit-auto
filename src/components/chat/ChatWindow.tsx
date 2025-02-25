@@ -118,17 +118,26 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
               description: `You have a new message from ${recipient?.first_name || 'someone'}`,
             })
 
-            // Create a notification
+            // Create a notification with all required fields
+            const notificationData = {
+              profile_id: currentUserId,
+              sender_id: newMessage.sender_id,
+              type: 'chat_message',
+              title: 'New Message',
+              message: `New message from ${recipient?.first_name || 'someone'}`,
+              read: false,
+              data: {
+                messageId: newMessage.id,
+                senderId: newMessage.sender_id,
+                senderName: recipient?.first_name,
+                messagePreview: newMessage.message.substring(0, 50) + (newMessage.message.length > 50 ? '...' : ''),
+                timestamp: new Date().toISOString()
+              }
+            }
+
             const { error: notificationError } = await supabase
               .from("notifications")
-              .upsert({
-                profile_id: currentUserId,
-                sender_id: newMessage.sender_id,
-                type: 'chat_message',
-                title: 'New Message',
-                message: `New message from ${recipient?.first_name || 'someone'}`,
-                read: false,
-              })
+              .insert([notificationData])
 
             if (notificationError) {
               console.error("Error creating notification:", notificationError)
