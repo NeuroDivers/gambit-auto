@@ -1,3 +1,4 @@
+
 import { DashboardLayoutWrapper } from "@/components/dashboard/DashboardLayoutWrapper"
 import { StaffLayoutWrapper } from "@/components/staff/StaffLayoutWrapper"
 import { ClientLayoutWrapper } from "@/components/client/ClientLayoutWrapper"
@@ -15,13 +16,25 @@ import { Navigate } from "react-router-dom"
 import Chat from "@/pages/admin/Chat"
 import Notifications from "@/pages/admin/Notifications"
 import CommissionsPage from "@/components/commissions/CommissionsPage"
-import { Suspense } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
 
 const RoleBasedLayout = () => {
   const { currentUserRole, checkPermission, isLoading } = usePermissions();
+  const [hasStaffAccess, setHasStaffAccess] = useState<boolean | null>(null);
   
-  if (isLoading) {
+  useEffect(() => {
+    const checkStaffAccess = async () => {
+      if (currentUserRole?.name?.toLowerCase() === 'staff' || currentUserRole?.name?.toLowerCase() === 'technician') {
+        const access = await checkPermission('staff_dashboard', 'page_access');
+        setHasStaffAccess(access);
+      }
+    };
+    
+    checkStaffAccess();
+  }, [currentUserRole, checkPermission]);
+
+  if (isLoading || (currentUserRole?.name?.toLowerCase() === 'staff' && hasStaffAccess === null)) {
     return <LoadingScreen />;
   }
 
@@ -35,8 +48,6 @@ const RoleBasedLayout = () => {
         return <DashboardLayoutWrapper />;
       case 'staff':
       case 'technician':
-        // Check if user has permission to access staff dashboard
-        const hasStaffAccess = await checkPermission('staff_dashboard', 'page_access');
         if (!hasStaffAccess) {
           console.log('Staff access denied');
           return <Navigate to="/unauthorized" replace />;
