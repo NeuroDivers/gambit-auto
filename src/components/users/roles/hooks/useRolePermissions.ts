@@ -10,7 +10,7 @@ export const useRolePermissions = (roleId: string | null) => {
   const queryClient = useQueryClient()
   const [isUpdating, setIsUpdating] = useState(false)
 
-  const { data: permissions, isLoading } = useQuery({
+  const { data: permissions, isLoading: permissionsLoading } = useQuery({
     queryKey: ["role-permissions", roleId],
     queryFn: async () => {
       if (!roleId) return null
@@ -18,7 +18,14 @@ export const useRolePermissions = (roleId: string | null) => {
       console.log("Fetching permissions for role:", roleId)
       const { data, error } = await supabase
         .from("role_permissions")
-        .select("*")
+        .select(`
+          id,
+          role_id,
+          resource_name,
+          permission_type,
+          is_active,
+          description
+        `)
         .eq("role_id", roleId)
         .order("resource_name")
       
@@ -33,7 +40,7 @@ export const useRolePermissions = (roleId: string | null) => {
     enabled: !!roleId,
   })
 
-  const { data: role } = useQuery({
+  const { data: role, isLoading: roleLoading } = useQuery({
     queryKey: ["role", roleId],
     queryFn: async () => {
       if (!roleId) return null
@@ -41,7 +48,15 @@ export const useRolePermissions = (roleId: string | null) => {
       console.log("Fetching role:", roleId)
       const { data, error } = await supabase
         .from("roles")
-        .select("*")
+        .select(`
+          id,
+          name,
+          nicename,
+          description,
+          default_dashboard,
+          can_be_assigned_to_bay,
+          can_be_assigned_work_orders
+        `)
         .eq("id", roleId)
         .maybeSingle()
       
@@ -234,7 +249,7 @@ export const useRolePermissions = (roleId: string | null) => {
 
   return {
     permissions,
-    isLoading,
+    isLoading: permissionsLoading || roleLoading,
     isUpdating,
     role,
     handlePermissionToggle,
