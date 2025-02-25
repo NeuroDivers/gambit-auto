@@ -59,7 +59,7 @@ export default function UserManagement() {
           <div className="space-y-1">
             <h1 className="text-3xl font-bold">User Management</h1>
             <p className="text-muted-foreground">
-              Manage system users and their roles
+              Manage staff and employee accounts
             </p>
           </div>
           {isAdmin && (
@@ -71,13 +71,13 @@ export default function UserManagement() {
         </div>
         <Alert>
           <Users className="h-4 w-4" />
-          <AlertTitle>User Management</AlertTitle>
+          <AlertTitle>Staff Management</AlertTitle>
           <AlertDescription>
-            Add, edit, and manage users in the system. Assign roles to control their access and permissions.
+            Add and manage staff accounts. For client management, please use the Clients section.
           </AlertDescription>
         </Alert>
       </div>
-      <UserList initialRoleFilter={selectedRole} />
+      <UserList initialRoleFilter={selectedRole} excludeClients={true} />
       <CreateUserDialog 
         open={isCreateUserOpen} 
         onOpenChange={setIsCreateUserOpen} 

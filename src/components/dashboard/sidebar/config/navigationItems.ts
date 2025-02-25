@@ -12,7 +12,8 @@ import {
   Code,
   MessageSquare,
   DollarSign,
-  Car
+  Car,
+  Briefcase
 } from "lucide-react"
 import { NavSection } from "../types/navigation"
 
@@ -105,6 +106,12 @@ export const navigationItems: NavSection[] = [
         title: "Users",
         href: "/users",
         icon: Users,
+        permission: { resource: "users", type: "page_access" }
+      },
+      {
+        title: "Staff Skills",
+        href: "/admin/staff-skills",
+        icon: Briefcase,
         permission: { resource: "users", type: "page_access" }
       },
       {
