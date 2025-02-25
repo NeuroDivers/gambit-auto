@@ -20,7 +20,10 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
 
   useEffect(() => {
     const filterItems = async () => {
+      console.log("Current user role:", currentUserRole);
+      
       if (currentUserRole?.name?.toLowerCase() === 'administrator') {
+        console.log("User is admin, showing all items");
         setFilteredItems(navigationItems)
         return
       }
@@ -33,6 +36,11 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
               item.permission.resource,
               item.permission.type
             )
+            console.log(`Checking permission for ${item.title}:`, {
+              resource: item.permission.resource,
+              type: item.permission.type,
+              hasPermission
+            });
             return hasPermission ? item : null
           })
         )
@@ -70,3 +78,4 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
     </nav>
   )
 }
+
