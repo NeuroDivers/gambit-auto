@@ -10,11 +10,51 @@ export const useRolePermissions = (roleId: string | null) => {
   const queryClient = useQueryClient()
   const [isUpdating, setIsUpdating] = useState(false)
 
-  const { data: permissions, isLoading } = useQuery({
+  const { data: role, isLoading: isRoleLoading } = useQuery({
+    queryKey: ["role", roleId],
+    queryFn: async () => {
+      if (!roleId) {
+        console.log("No roleId provided for role fetch")
+        return null
+      }
+      
+      console.log("Fetching role:", roleId)
+      
+      const { data, error } = await supabase
+        .from("roles")
+        .select(`
+          id,
+          name,
+          nicename,
+          description,
+          can_be_assigned_to_bay,
+          can_be_assigned_work_orders,
+          default_dashboard
+        `)
+        .eq("id", roleId)
+        .maybeSingle()
+      
+      if (error) {
+        console.error("Error fetching role:", error)
+        toast({
+          title: "Error fetching role",
+          description: error.message,
+          variant: "destructive",
+        })
+        return null
+      }
+
+      console.log("Fetched role:", data)
+      return data
+    },
+    enabled: !!roleId,
+  })
+
+  const { data: permissions, isLoading: isPermissionsLoading } = useQuery({
     queryKey: ["role-permissions", roleId],
     queryFn: async () => {
       if (!roleId) {
-        console.log("No roleId provided")
+        console.log("No roleId provided for permissions fetch")
         return null
       }
       
@@ -54,46 +94,6 @@ export const useRolePermissions = (roleId: string | null) => {
     enabled: !!roleId,
   })
 
-  const { data: role } = useQuery({
-    queryKey: ["role", roleId],
-    queryFn: async () => {
-      if (!roleId) {
-        console.log("No roleId provided")
-        return null
-      }
-      
-      console.log("Fetching role:", roleId)
-      
-      const { data, error } = await supabase
-        .from("roles")
-        .select(`
-          id,
-          name,
-          nicename,
-          description,
-          can_be_assigned_to_bay,
-          can_be_assigned_work_orders,
-          default_dashboard
-        `)
-        .eq("id", roleId)
-        .maybeSingle()
-      
-      if (error) {
-        console.error("Error fetching role:", error)
-        toast({
-          title: "Error fetching role",
-          description: error.message,
-          variant: "destructive",
-        })
-        return null
-      }
-
-      console.log("Fetched role:", data)
-      return data
-    },
-    enabled: !!roleId,
-  })
-
   const handlePermissionToggle = async (permission: Permission, newValue: boolean) => {
     if (!roleId || isUpdating) {
       console.log("Toggle blocked:", !roleId ? "No roleId" : "Already updating")
@@ -112,24 +112,17 @@ export const useRolePermissions = (roleId: string | null) => {
         )
       })
 
-      // Update the database
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("role_permissions")
         .update({ 
           is_active: newValue,
           updated_at: new Date().toISOString()
         })
         .eq("id", permission.id)
-        .select()
 
-      if (error) {
-        console.error("Database update error:", error)
-        throw error
-      }
+      if (error) throw error
 
-      console.log("Permission update response:", data)
-
-      // Refresh the data to ensure we have the latest state
+      // Refresh the data
       await queryClient.invalidateQueries({
         queryKey: ["role-permissions", roleId]
       })
@@ -308,7 +301,7 @@ export const useRolePermissions = (roleId: string | null) => {
 
   return {
     permissions,
-    isLoading,
+    isLoading: isRoleLoading || isPermissionsLoading,
     isUpdating,
     role,
     handlePermissionToggle,
