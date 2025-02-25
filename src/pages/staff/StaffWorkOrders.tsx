@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Card } from "@/components/ui/card"
@@ -6,6 +7,14 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { WorkOrderStatusSelect } from "@/components/work-orders/components/WorkOrderStatusSelect"
+import { RatingSubmissionForm } from "@/components/service-ratings/RatingSubmissionForm"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 export default function StaffWorkOrders() {
   // Fetch assigned work orders
@@ -102,6 +111,39 @@ export default function StaffWorkOrders() {
     return <LoadingScreen />
   }
 
+  const renderServiceRatingDialog = (order: any) => {
+    if (order.status !== 'completed') return null;
+
+    const serviceItems = order.work_order_services?.map((service: any) => ({
+      id: service.id,
+      service_id: service.service_id,
+      service_name: service.service_types?.name,
+      assigned_profile_id: order.assigned_profile_id
+    })) || [];
+
+    return (
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm" className="ml-2">
+            Rate Services
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Rate Services</DialogTitle>
+          </DialogHeader>
+          <RatingSubmissionForm 
+            workOrderId={order.id}
+            serviceItems={serviceItems}
+            onSuccess={() => {
+              toast.success("Thank you for your feedback!")
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Work Orders</h1>
@@ -124,7 +166,10 @@ export default function StaffWorkOrders() {
                     {order.vehicle_year} {order.vehicle_make} {order.vehicle_model}
                   </p>
                 </div>
-                <WorkOrderStatusSelect workOrder={order} />
+                <div className="flex items-center gap-2">
+                  <WorkOrderStatusSelect workOrder={order} />
+                  {renderServiceRatingDialog(order)}
+                </div>
               </div>
               <div className="space-y-2">
                 {order.service_bays?.name && (
