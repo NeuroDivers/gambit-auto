@@ -71,9 +71,11 @@ export const usePermissions = () => {
   });
 
   // Get all permissions and cache them
-  const { data: permissions, isLoading: isPermissionsLoading } = useQuery({
+  const { data: permissions } = useQuery({
     queryKey: ["permissions"],
     queryFn: async () => {
+      if (!currentUserRole) return null;
+
       const { data, error } = await supabase
         .from("role_permissions")
         .select(`
@@ -84,6 +86,7 @@ export const usePermissions = () => {
             nicename
           )
         `)
+        .eq('role_id', currentUserRole.id)
         .order('resource_name');
 
       if (error) {
@@ -92,6 +95,7 @@ export const usePermissions = () => {
       }
       return data as RolePermission[];
     },
+    enabled: !!currentUserRole,
     staleTime: 30000, // Cache for 30 seconds
     retry: 3
   });
@@ -108,34 +112,27 @@ export const usePermissions = () => {
         return false;
       }
 
+      // Check if permissions have been loaded
+      if (!permissions && currentUserRole?.name?.toLowerCase() !== 'administrator') {
+        console.log('Permissions not loaded yet');
+        return false;
+      }
+
       // If user is administrator, grant access immediately
       if (currentUserRole?.name?.toLowerCase() === 'administrator') {
         console.log('User is administrator in checkPermission, granting access');
         return true;
       }
 
-      // For non-admin users, check specific permissions
-      if (!currentUserRole) {
-        console.log('No role found in checkPermission');
-        return false;
-      }
+      // Find the specific permission
+      const hasPermission = permissions?.some(
+        perm => perm.resource_name === resource && 
+                perm.permission_type === type && 
+                perm.is_active
+      );
 
-      // Check if role has permission
-      const { data: hasPermission, error } = await supabase
-        .from('role_permissions')
-        .select('is_active')
-        .eq('role_id', currentUserRole.id)
-        .eq('resource_name', resource)
-        .eq('permission_type', type)
-        .single();
-
-      if (error) {
-        console.error('Permission check error:', error);
-        return false;
-      }
-
-      console.log(`Permission check for ${resource}: ${hasPermission?.is_active}`);
-      return hasPermission?.is_active || false;
+      console.log(`Permission check for ${resource}: ${hasPermission}`);
+      return hasPermission || false;
     } catch (error) {
       console.error('Permission check error:', error);
       return false;
@@ -146,6 +143,6 @@ export const usePermissions = () => {
     permissions,
     checkPermission,
     currentUserRole,
-    isLoading: isRoleLoading || isPermissionsLoading
+    isLoading: isRoleLoading
   };
 };
