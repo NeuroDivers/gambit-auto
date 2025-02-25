@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
 import { cn } from "@/lib/utils"
@@ -17,7 +16,11 @@ import {
   MessageSquare, 
   Car, 
   CreditCard, 
-  Settings 
+  Settings,
+  Wrench,
+  Shield,
+  ClipboardList,
+  Briefcase
 } from "lucide-react"
 
 const navigationItems = [
@@ -35,28 +38,34 @@ const navigationItems = [
     section: "Services",
     items: [
       {
-        title: "Quotes",
-        href: "/quotes",
-        icon: MessageSquare,
-        permission: { resource: "quotes", type: "page_access" }
+        title: "Work Orders",
+        href: "/work-orders",
+        icon: ClipboardList,
+        permission: { resource: "work_orders", type: "page_access" }
       },
       {
-        title: "Invoices",
-        href: "/invoices",
-        icon: FileText,
-        permission: { resource: "invoices", type: "page_access" }
+        title: "Service Types",
+        href: "/service-types",
+        icon: Wrench,
+        permission: { resource: "service_types", type: "page_access" }
+      },
+      {
+        title: "Staff Skills",
+        href: "/staff/service-skills",
+        icon: Briefcase,
+        permission: { resource: "staff_skills", type: "page_access" }
+      },
+      {
+        title: "System Roles",
+        href: "/system-roles",
+        icon: Shield,
+        permission: { resource: "system_roles", type: "page_access" }
       },
       {
         title: "Chat",
         href: "/chat",
         icon: MessageSquare,
         permission: { resource: "chat", type: "page_access" }
-      },
-      {
-        title: "Work Orders",
-        href: "/work-orders",
-        icon: FileText,
-        permission: { resource: "work_orders", type: "page_access" }
       },
       {
         title: "Commissions",
@@ -109,37 +118,54 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
   const location = useLocation()
   const { isMobile, state } = useSidebar()
   const isCollapsed = state === "collapsed"
-  const { checkPermission } = usePermissions()
+  const { checkPermission, currentUserRole } = usePermissions()
   const [filteredItems, setFilteredItems] = useState(navigationItems)
   const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
     const filterItems = async () => {
+      console.log("Filtering navigation items for role:", currentUserRole)
+
+      if (currentUserRole?.name?.toLowerCase() === 'administrator') {
+        console.log("User is admin, showing all items")
+        setFilteredItems(navigationItems)
+        return
+      }
+
       const newItems = await Promise.all(
         navigationItems.map(async (section) => {
           const filteredSectionItems = await Promise.all(
             section.items.map(async (item) => {
               if (!item.permission) return item
+              
               const hasPermission = await checkPermission(
                 item.permission.resource,
                 item.permission.type
               )
+              
+              console.log(`Checking permission for ${item.title}:`, {
+                resource: item.permission.resource,
+                type: item.permission.type,
+                hasPermission
+              })
+              
               return hasPermission ? item : null
             })
           )
+          
           return {
             ...section,
             items: filteredSectionItems.filter(Boolean)
           }
         })
       )
+      
       setFilteredItems(newItems.filter(section => section.items.length > 0))
     }
 
     filterItems()
-  }, [checkPermission])
+  }, [checkPermission, currentUserRole])
 
-  // Add effect for unread messages count
   useEffect(() => {
     const fetchUnreadCount = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -149,14 +175,13 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
         .from('chat_messages')
         .select('*', { count: 'exact', head: true })
         .eq('recipient_id', user.id)
-        .eq('read', false)
+        .is('read_at', null)
 
       setUnreadCount(count || 0)
     }
 
     fetchUnreadCount()
 
-    // Subscribe to new messages
     const channel = supabase
       .channel('chat_messages_count')
       .on(
