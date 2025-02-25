@@ -1,3 +1,4 @@
+
 import { 
   Settings, 
   Users, 
@@ -10,7 +11,8 @@ import {
   Shield,
   Code,
   MessageSquare,
-  DollarSign
+  DollarSign,
+  Car
 } from "lucide-react"
 import { NavSection } from "../types/navigation"
 
@@ -80,6 +82,18 @@ export const navigationItems: NavSection[] = [
         href: "/service-bays",
         icon: Store,
         permission: { resource: "service_bays", type: "page_access" }
+      },
+      {
+        title: "Vehicles",
+        href: "/vehicles",
+        icon: Car,
+        permission: { resource: "vehicles", type: "page_access" }
+      },
+      {
+        title: "Bookings",
+        href: "/bookings",
+        icon: Calendar,
+        permission: { resource: "bookings", type: "page_access" }
       },
     ],
   },

@@ -15,6 +15,7 @@ interface RolePermission {
     id: string;
     name: string;
     nicename: string;
+    default_dashboard?: 'admin' | 'staff' | 'client';
   };
 }
 
@@ -22,6 +23,7 @@ interface UserRole {
   id: string;
   name: string;
   nicename: string;
+  default_dashboard?: 'admin' | 'staff' | 'client';
 }
 
 export const usePermissions = () => {
@@ -41,7 +43,8 @@ export const usePermissions = () => {
           role:role_id (
             id,
             name,
-            nicename
+            nicename,
+            default_dashboard
           )
         `)
         .eq('id', user.id)
@@ -57,7 +60,8 @@ export const usePermissions = () => {
         const userRole: UserRole = {
           id: String(roleData.id),
           name: String(roleData.name),
-          nicename: String(roleData.nicename)
+          nicename: String(roleData.nicename),
+          default_dashboard: roleData.default_dashboard
         };
         console.log('User role in usePermissions:', userRole);
         return userRole;
