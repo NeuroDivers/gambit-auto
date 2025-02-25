@@ -13,7 +13,10 @@ export const useRolePermissions = (roleId: string | null) => {
   const { data: permissions, isLoading } = useQuery({
     queryKey: ["role-permissions", roleId],
     queryFn: async () => {
-      if (!roleId) return null
+      if (!roleId) {
+        console.log("No roleId provided")
+        return null
+      }
       
       console.log("Fetching permissions for role:", roleId)
       
@@ -32,10 +35,20 @@ export const useRolePermissions = (roleId: string | null) => {
       
       if (error) {
         console.error("Error fetching permissions:", error)
-        throw error
+        toast({
+          title: "Error fetching permissions",
+          description: error.message,
+          variant: "destructive",
+        })
+        return []
       }
       
-      console.log("Fetched permissions:", data)
+      if (!data || data.length === 0) {
+        console.log("No permissions found for role:", roleId)
+      } else {
+        console.log("Fetched permissions:", data)
+      }
+      
       return data as Permission[]
     },
     enabled: !!roleId,
@@ -44,7 +57,12 @@ export const useRolePermissions = (roleId: string | null) => {
   const { data: role } = useQuery({
     queryKey: ["role", roleId],
     queryFn: async () => {
-      if (!roleId) return null
+      if (!roleId) {
+        console.log("No roleId provided")
+        return null
+      }
+      
+      console.log("Fetching role:", roleId)
       
       const { data, error } = await supabase
         .from("roles")
@@ -62,7 +80,12 @@ export const useRolePermissions = (roleId: string | null) => {
       
       if (error) {
         console.error("Error fetching role:", error)
-        throw error
+        toast({
+          title: "Error fetching role",
+          description: error.message,
+          variant: "destructive",
+        })
+        return null
       }
 
       console.log("Fetched role:", data)
@@ -72,10 +95,13 @@ export const useRolePermissions = (roleId: string | null) => {
   })
 
   const handlePermissionToggle = async (permission: Permission, newValue: boolean) => {
-    if (!roleId || isUpdating) return
+    if (!roleId || isUpdating) {
+      console.log("Toggle blocked:", !roleId ? "No roleId" : "Already updating")
+      return
+    }
     
     setIsUpdating(true)
-    console.log("Updating permission:", permission.id, "to:", newValue)
+    console.log("Updating permission:", { id: permission.id, newValue })
     
     try {
       // Optimistically update the cache
@@ -101,7 +127,7 @@ export const useRolePermissions = (roleId: string | null) => {
         throw error
       }
 
-      console.log("Update response:", data)
+      console.log("Permission update response:", data)
 
       // Refresh the data to ensure we have the latest state
       await queryClient.invalidateQueries({
@@ -114,6 +140,7 @@ export const useRolePermissions = (roleId: string | null) => {
       toast({
         title: "Permission updated",
         description: `${resourceName} ${permissionType} has been ${newValue ? 'enabled' : 'disabled'}.`,
+        duration: 3000,
       })
 
     } catch (error: any) {
@@ -131,6 +158,7 @@ export const useRolePermissions = (roleId: string | null) => {
         title: "Error updating permission",
         description: error.message,
         variant: "destructive",
+        duration: 3000,
       })
     } finally {
       setIsUpdating(false)
@@ -138,10 +166,16 @@ export const useRolePermissions = (roleId: string | null) => {
   }
 
   const handleBayAssignmentToggle = async (newValue: boolean) => {
-    if (!roleId || isUpdating) return
+    if (!roleId || isUpdating || !role) {
+      console.log("Bay toggle blocked:", { noRoleId: !roleId, isUpdating, noRole: !role })
+      return
+    }
+    
     setIsUpdating(true)
+    console.log("Updating bay assignment:", { roleId, newValue })
 
     try {
+      // Optimistically update the cache
       queryClient.setQueryData(["role", roleId], (oldData: any) => {
         if (!oldData) return oldData
         return { ...oldData, can_be_assigned_to_bay: newValue }
@@ -157,9 +191,12 @@ export const useRolePermissions = (roleId: string | null) => {
 
       if (error) throw error
 
+      await queryClient.invalidateQueries({ queryKey: ["role", roleId] })
+
       toast({
         title: "Role updated",
         description: `Bay assignment ${newValue ? 'enabled' : 'disabled'} for this role.`,
+        duration: 3000,
       })
     } catch (error: any) {
       console.error("Bay assignment update error:", error)
@@ -168,6 +205,7 @@ export const useRolePermissions = (roleId: string | null) => {
         title: "Error updating bay assignment",
         description: error.message,
         variant: "destructive",
+        duration: 3000,
       })
     } finally {
       setIsUpdating(false)
@@ -175,10 +213,16 @@ export const useRolePermissions = (roleId: string | null) => {
   }
 
   const handleWorkOrderAssignmentToggle = async (newValue: boolean) => {
-    if (!roleId || isUpdating) return
+    if (!roleId || isUpdating || !role) {
+      console.log("Work order toggle blocked:", { noRoleId: !roleId, isUpdating, noRole: !role })
+      return
+    }
+    
     setIsUpdating(true)
+    console.log("Updating work order assignment:", { roleId, newValue })
 
     try {
+      // Optimistically update the cache
       queryClient.setQueryData(["role", roleId], (oldData: any) => {
         if (!oldData) return oldData
         return { ...oldData, can_be_assigned_work_orders: newValue }
@@ -194,9 +238,12 @@ export const useRolePermissions = (roleId: string | null) => {
 
       if (error) throw error
 
+      await queryClient.invalidateQueries({ queryKey: ["role", roleId] })
+
       toast({
         title: "Role updated",
         description: `Work order assignment ${newValue ? 'enabled' : 'disabled'} for this role.`,
+        duration: 3000,
       })
     } catch (error: any) {
       console.error("Work order assignment update error:", error)
@@ -205,6 +252,7 @@ export const useRolePermissions = (roleId: string | null) => {
         title: "Error updating work order assignment",
         description: error.message,
         variant: "destructive",
+        duration: 3000,
       })
     } finally {
       setIsUpdating(false)
@@ -212,10 +260,16 @@ export const useRolePermissions = (roleId: string | null) => {
   }
 
   const handleDashboardChange = async (dashboard: "admin" | "staff" | "client") => {
-    if (!roleId || isUpdating) return
+    if (!roleId || isUpdating || !role) {
+      console.log("Dashboard change blocked:", { noRoleId: !roleId, isUpdating, noRole: !role })
+      return
+    }
+    
     setIsUpdating(true)
+    console.log("Updating default dashboard:", { roleId, dashboard })
 
     try {
+      // Optimistically update the cache
       queryClient.setQueryData(["role", roleId], (oldData: any) => {
         if (!oldData) return oldData
         return { ...oldData, default_dashboard: dashboard }
@@ -231,9 +285,12 @@ export const useRolePermissions = (roleId: string | null) => {
 
       if (error) throw error
 
+      await queryClient.invalidateQueries({ queryKey: ["role", roleId] })
+
       toast({
         title: "Default dashboard updated",
         description: `Users with this role will now see the ${dashboard} dashboard by default.`,
+        duration: 3000,
       })
     } catch (error: any) {
       console.error("Dashboard update error:", error)
@@ -242,6 +299,7 @@ export const useRolePermissions = (roleId: string | null) => {
         title: "Error updating default dashboard",
         description: error.message,
         variant: "destructive",
+        duration: 3000,
       })
     } finally {
       setIsUpdating(false)
