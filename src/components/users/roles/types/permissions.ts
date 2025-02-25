@@ -29,3 +29,4 @@ export const defaultPermissionDescriptions: Record<string, string> = {
   calendar: "Access and manage the calendar view",
   payment_methods: "View and manage payment methods",
 };
+
