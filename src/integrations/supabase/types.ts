@@ -418,6 +418,67 @@ export type Database = {
           },
         ]
       }
+      commissions: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          id: string
+          rate: number
+          service_item_id: string | null
+          staff_id: string | null
+          status: string
+          type: string
+          updated_at: string | null
+          work_order_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          id?: string
+          rate: number
+          service_item_id?: string | null
+          staff_id?: string | null
+          status?: string
+          type: string
+          updated_at?: string | null
+          work_order_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          id?: string
+          rate?: number
+          service_item_id?: string | null
+          staff_id?: string | null
+          status?: string
+          type?: string
+          updated_at?: string | null
+          work_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commissions_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_commission_analytics"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "commissions_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           active: boolean | null

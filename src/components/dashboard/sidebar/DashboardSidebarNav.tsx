@@ -11,7 +11,9 @@ import {
   Wrench,
   LayoutGrid,
   Shield,
-  Code
+  Code,
+  MessageSquare,
+  DollarSign
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useSidebar } from "@/components/ui/sidebar"
@@ -72,6 +74,18 @@ const items: NavSection[] = [
         href: "/calendar",
         icon: Calendar,
         permission: { resource: "calendar", type: "page_access" }
+      },
+      {
+        title: "Chat",
+        href: "/chat",
+        icon: MessageSquare,
+        permission: { resource: "chat", type: "page_access" }
+      },
+      {
+        title: "Commissions",
+        href: "/commissions",
+        icon: DollarSign,
+        permission: { resource: "commissions", type: "page_access" }
       },
     ],
   },
