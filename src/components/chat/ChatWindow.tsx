@@ -52,7 +52,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       console.log("Fetching messages between current user and recipient:", currentUserId, recipientId)
       const { data: messages, error } = await supabase
         .from("chat_messages")
-        .select("*, read_at")
+        .select("*")
         .or(`and(sender_id.eq.${currentUserId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${currentUserId})`)
         .order("created_at", { ascending: true })
 
