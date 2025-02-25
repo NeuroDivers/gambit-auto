@@ -122,7 +122,7 @@ export const navigationItems: NavSection[] = [
       },
       {
         title: "System Roles",
-        href: "/system-roles",
+        href: "/business-settings",
         icon: Shield,
         permission: { resource: "users", type: "page_access" }
       },
