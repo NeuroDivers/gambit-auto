@@ -32,7 +32,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     const fetchRecipient = async () => {
       const { data: recipient, error } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name, email, avatar_url")
+        .select("id, first_name, last_name, email, role:role_id(name, nicename), avatar_url")
         .eq("id", recipientId)
         .single()
 
@@ -41,7 +41,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         return
       }
 
-      setRecipient(recipient)
+      setRecipient(recipient as ChatUser)
     }
 
     fetchMessages()
@@ -72,12 +72,12 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   const sendMessage = async () => {
     if (!newMessage.trim()) return
 
-    const { data: user } = await supabase.auth.getUser()
-    if (!user.user) return
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
 
     const { error } = await supabase.from("chat_messages").insert([
       {
-        sender_id: user.user.id,
+        sender_id: user.id,
         recipient_id: recipientId,
         message: newMessage.trim(),
       },
