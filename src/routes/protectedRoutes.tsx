@@ -15,31 +15,46 @@ import { usePermissions } from "@/hooks/usePermissions"
 import { Navigate } from "react-router-dom"
 import Chat from "@/pages/admin/Chat"
 import CommissionsPage from "@/components/commissions/CommissionsPage"
+import { Suspense } from "react"
+import { LoadingScreen } from "@/components/shared/LoadingScreen"
 
 const RoleBasedLayout = () => {
   const { currentUserRole, isLoading } = usePermissions();
   
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <LoadingScreen />;
   }
 
-  const role = currentUserRole?.name?.toLowerCase();
-  
-  switch (role) {
-    case 'administrator':
-      return <DashboardLayoutWrapper />;
-    case 'staff':
-      return <StaffLayoutWrapper />;
-    case 'client':
-      return <ClientLayoutWrapper />;
-    default:
-      return <Navigate to="/auth" replace />;
+  // If we have a role, determine the appropriate layout
+  if (currentUserRole?.name) {
+    const role = currentUserRole.name.toLowerCase();
+    
+    switch (role) {
+      case 'administrator':
+        return <DashboardLayoutWrapper />;
+      case 'staff':
+      case 'technician': // Added technician role handling
+        return <StaffLayoutWrapper />;
+      case 'client':
+        return <ClientLayoutWrapper />;
+      default:
+        console.log('Unknown role:', role);
+        return <Navigate to="/unauthorized" replace />;
+    }
   }
+
+  // If we have no role but the hook has finished loading, redirect to auth
+  console.log('No role found, redirecting to auth');
+  return <Navigate to="/auth" replace />;
 };
 
 export const protectedRoutes: RouteObject = {
   path: "/",
-  element: <RoleBasedLayout />,
+  element: (
+    <Suspense fallback={<LoadingScreen />}>
+      <RoleBasedLayout />
+    </Suspense>
+  ),
   children: [
     {
       path: "",
