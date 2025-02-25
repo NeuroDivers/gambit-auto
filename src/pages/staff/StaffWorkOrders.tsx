@@ -26,7 +26,7 @@ export default function StaffWorkOrders() {
             service_id,
             quantity,
             unit_price,
-            service_types (
+            service_types!work_order_services_service_id_fkey (
               name,
               description
             )
@@ -58,7 +58,7 @@ export default function StaffWorkOrders() {
             service_id,
             quantity,
             unit_price,
-            service_types (
+            service_types!work_order_services_service_id_fkey (
               name,
               description
             )
