@@ -39,43 +39,61 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data, error } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("profile_id", user.id)
-        .order('created_at', { ascending: false })
-        .limit(5)
+      // Fetch both notifications and unread chat messages
+      const [notificationsResponse, chatMessagesResponse] = await Promise.all([
+        supabase
+          .from("notifications")
+          .select("*")
+          .eq("profile_id", user.id)
+          .order('created_at', { ascending: false })
+          .limit(5),
+        
+        supabase
+          .from("chat_messages")
+          .select(`
+            id,
+            message,
+            created_at,
+            sender_id,
+            read,
+            profiles:sender_id (
+              first_name,
+              last_name,
+              email
+            )
+          `)
+          .eq("recipient_id", user.id)
+          .eq("read", false)
+          .order('created_at', { ascending: false })
+      ])
 
-      if (error) {
-        console.error("Error fetching notifications:", error)
-        return
-      }
+      const notifications = notificationsResponse.data || []
+      const chatMessages = chatMessagesResponse.data || []
 
-      setNotifications(data || [])
-    }
+      // Convert chat messages to notification format
+      const chatNotifications = chatMessages.map(msg => ({
+        id: msg.id,
+        title: "New Message",
+        message: `${msg.profiles?.first_name || msg.profiles?.email || 'Someone'}: ${msg.message.substring(0, 50)}${msg.message.length > 50 ? '...' : ''}`,
+        created_at: msg.created_at,
+        type: 'chat_message',
+        read: false,
+        sender_id: msg.sender_id
+      }))
 
-    const fetchUnreadNotifications = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      // Combine and sort all notifications
+      const allNotifications = [...notifications, ...chatNotifications]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 5)
 
-      const { data: notifications, error } = await supabase
-        .from("notifications")
-        .select("*", { count: 'exact' })
-        .eq("profile_id", user.id)
-        .eq("read", false)
-
-      if (error) {
-        console.error("Error fetching unread notifications:", error)
-        return
-      }
-
-      setUnreadCount(notifications.length)
+      setNotifications(allNotifications)
+      setUnreadCount(allNotifications.filter(n => !n.read).length)
     }
 
     fetchNotifications()
-    fetchUnreadNotifications()
 
-    const channel = supabase
+    // Subscribe to new notifications and chat messages
+    const notificationsChannel = supabase
       .channel("notifications")
       .on(
         "postgres_changes",
@@ -86,13 +104,28 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
         },
         () => {
           fetchNotifications()
-          fetchUnreadNotifications()
+        }
+      )
+      .subscribe()
+
+    const chatChannel = supabase
+      .channel("chat_messages")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "chat_messages",
+        },
+        () => {
+          fetchNotifications()
         }
       )
       .subscribe()
 
     return () => {
-      supabase.removeChannel(channel)
+      supabase.removeChannel(notificationsChannel)
+      supabase.removeChannel(chatChannel)
     }
   }, [])
 
@@ -132,7 +165,16 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
             <DropdownMenuLabel>Notifications</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {notifications.map((notification) => (
-              <DropdownMenuItem key={notification.id} className="flex flex-col items-start py-3 group">
+              <DropdownMenuItem 
+                key={notification.id} 
+                className="flex flex-col items-start py-3 group"
+                onClick={() => {
+                  if (notification.type === 'chat_message') {
+                    // Navigate to chat with the sender
+                    window.location.href = `/chat?user=${notification.sender_id}`;
+                  }
+                }}
+              >
                 <div className="font-medium group-hover:text-white">{notification.title}</div>
                 <div className="text-sm text-muted-foreground group-hover:text-white">{notification.message}</div>
                 <div className="text-xs text-muted-foreground group-hover:text-white mt-1">
