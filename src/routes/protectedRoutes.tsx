@@ -12,6 +12,7 @@ import { invoiceRoutes } from "./invoice-routes"
 import { clientRoutes } from "./client-routes"
 import { settingsRoutes } from "./settings-routes"
 import { vehicleRoutes } from "./vehicle-routes"
+import { bookingRoutes } from "./booking-routes"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Navigate } from "react-router-dom"
 import Chat from "@/pages/admin/Chat"
@@ -84,6 +85,6 @@ export const protectedRoutes: RouteObject = {
     ...clientRoutes,
     ...settingsRoutes,
     ...vehicleRoutes,
+    ...bookingRoutes,
   ],
 };
-
