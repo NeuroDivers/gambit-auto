@@ -63,7 +63,7 @@ export const navigationItems: NavSection[] = [
         permission: { resource: "commissions", type: "page_access" }
       },
       {
-        title: "My Skills",
+        title: "My Service Skills",
         href: "/staff/service-skills",
         icon: Briefcase,
         permission: { resource: "staff_skills", type: "page_access" }
@@ -116,7 +116,7 @@ export const navigationItems: NavSection[] = [
       },
       {
         title: "Staff Skills Management",
-        href: "/staff-skills",
+        href: "/admin/staff-skills",
         icon: Briefcase,
         permission: { resource: "staff_skills", type: "page_access" }
       },
@@ -141,4 +141,3 @@ export const navigationItems: NavSection[] = [
     ],
   },
 ]
-
