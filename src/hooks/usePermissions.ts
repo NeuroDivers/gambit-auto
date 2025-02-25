@@ -1,6 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useCallback } from "react";
 
 interface RolePermission {
   id: string;
@@ -63,20 +64,17 @@ export const usePermissions = () => {
           nicename: String(roleData.nicename),
           default_dashboard: roleData.default_dashboard
         };
-        console.log('User role in usePermissions:', userRole);
         return userRole;
       }
       
-      console.log('No role found in usePermissions');
       return null;
     },
-    staleTime: 30000, // Cache for 30 seconds
-    retry: 3
+    staleTime: 300000, // Cache for 5 minutes
   });
 
   // Get all permissions and cache them
   const { data: permissions } = useQuery({
-    queryKey: ["permissions"],
+    queryKey: ["permissions", currentUserRole?.id],
     queryFn: async () => {
       if (!currentUserRole) return null;
 
@@ -100,11 +98,10 @@ export const usePermissions = () => {
       return data as RolePermission[];
     },
     enabled: !!currentUserRole,
-    staleTime: 30000, // Cache for 30 seconds
-    retry: 3
+    staleTime: 300000, // Cache for 5 minutes
   });
 
-  const checkPermission = async (
+  const checkPermission = useCallback(async (
     resource: string,
     type: 'page_access' | 'feature_access'
   ): Promise<boolean> => {
@@ -124,7 +121,6 @@ export const usePermissions = () => {
 
       // If user is administrator, grant access immediately
       if (currentUserRole?.name?.toLowerCase() === 'administrator') {
-        console.log('User is administrator in checkPermission, granting access');
         return true;
       }
 
@@ -135,13 +131,12 @@ export const usePermissions = () => {
                 perm.is_active
       );
 
-      console.log(`Permission check for ${resource}: ${hasPermission}`);
       return hasPermission || false;
     } catch (error) {
       console.error('Permission check error:', error);
       return false;
     }
-  };
+  }, [permissions, currentUserRole]);
 
   return {
     permissions,
