@@ -110,7 +110,7 @@ export const navigationItems: NavSection[] = [
     items: [
       {
         title: "Users",
-        href: "/users",
+        href: "/user-management",
         icon: Users,
         permission: { resource: "users", type: "page_access" }
       },
