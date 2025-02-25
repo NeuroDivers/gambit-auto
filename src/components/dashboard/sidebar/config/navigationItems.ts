@@ -23,7 +23,8 @@ export const navigationItems: NavSection[] = [
       {
         title: "Dashboard",
         href: "/dashboard",
-        icon: LayoutGrid
+        icon: LayoutGrid,
+        permission: { resource: "dashboard", type: "page_access" }
       },
     ],
   },

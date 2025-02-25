@@ -50,6 +50,18 @@ const navigationItems = [
         icon: MessageSquare,
         permission: { resource: "chat", type: "page_access" }
       },
+      {
+        title: "Work Orders",
+        href: "/work-orders",
+        icon: FileText,
+        permission: { resource: "work_orders", type: "page_access" }
+      },
+      {
+        title: "Commissions",
+        href: "/commissions",
+        icon: FileText,
+        permission: { resource: "commissions", type: "page_access" }
+      },
     ],
   },
   {
@@ -109,6 +121,7 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
                 item.permission.resource,
                 item.permission.type
               )
+              console.log(`Checking permission for ${item.title}:`, hasPermission)
               return hasPermission ? item : null
             })
           )
