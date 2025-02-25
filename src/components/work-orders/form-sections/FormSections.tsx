@@ -153,41 +153,8 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
       />
 
       <div className="grid gap-6 sm:grid-cols-2">
-        <FormField
-          control={form.control}
-          name="assigned_bay_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Assign Bay</FormLabel>
-              <FormControl>
-                <BayAssignmentField 
-                  value={field.value} 
-                  onChange={field.onChange}
-                  disabled={isSubmitting}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="assigned_profile_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Assign Technician</FormLabel>
-              <FormControl>
-                <SidekickAssignmentField 
-                  value={field.value} 
-                  onChange={field.onChange}
-                  disabled={isSubmitting}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <BayAssignmentField form={form} />
+        <SidekickAssignmentField form={form} />
       </div>
 
       <FormField
