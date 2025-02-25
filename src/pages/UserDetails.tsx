@@ -17,7 +17,7 @@ export default function UserDetails() {
         .from('profiles')
         .select(`
           *,
-          roles (
+          role:role_id (
             id,
             name,
             nicename
@@ -88,7 +88,7 @@ export default function UserDetails() {
     <div className="container py-6 space-y-6">
       <PageTitle
         title={`${user?.first_name} ${user?.last_name}`}
-        description={`${user?.roles?.nicename || 'User'}`}
+        description={`${user?.role?.nicename || 'User'}`}
       />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

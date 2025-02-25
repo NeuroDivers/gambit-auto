@@ -4,6 +4,7 @@ import { PermissionGuard } from "@/components/auth/PermissionGuard"
 import WorkOrders from "@/pages/admin/WorkOrders"
 import CreateWorkOrder from "@/pages/admin/CreateWorkOrder"
 import EditWorkOrder from "@/pages/admin/EditWorkOrder"
+import Calendar from "@/pages/admin/Calendar"
 
 export const workOrderRoutes: RouteObject[] = [
   {
@@ -33,8 +34,8 @@ export const workOrderRoutes: RouteObject[] = [
   {
     path: "calendar",
     element: (
-      <PermissionGuard resource="work_orders" type="page_access">
-        <WorkOrders />
+      <PermissionGuard resource="calendar" type="page_access">
+        <Calendar />
       </PermissionGuard>
     ),
   },

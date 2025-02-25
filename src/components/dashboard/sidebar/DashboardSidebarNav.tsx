@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
 import { 
@@ -15,6 +14,8 @@ import {
 import { cn } from "@/lib/utils"
 import { useSidebar } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
+import { usePermissions } from "@/hooks/usePermissions"
+import { useEffect, useState } from "react"
 
 interface DashboardSidebarNavProps {
   onNavigate?: () => void
@@ -28,6 +29,7 @@ const items = [
         title: "Dashboard",
         href: "/dashboard",
         icon: LayoutGrid,
+        permission: { resource: "dashboard", type: "page_access" }
       },
     ],
   },
@@ -38,16 +40,19 @@ const items = [
         title: "Estimates",
         href: "/estimates",
         icon: FileText,
+        permission: { resource: "quotes", type: "page_access" }
       },
       {
         title: "Work Orders",
         href: "/work-orders",
         icon: ClipboardList,
+        permission: { resource: "work_orders", type: "page_access" }
       },
       {
         title: "Calendar",
         href: "/calendar",
         icon: Calendar,
+        permission: { resource: "calendar", type: "page_access" }
       },
     ],
   },
@@ -58,16 +63,19 @@ const items = [
         title: "Clients",
         href: "/clients",
         icon: Users,
+        permission: { resource: "clients", type: "page_access" }
       },
       {
         title: "Service Types",
         href: "/service-types",
         icon: Wrench,
+        permission: { resource: "service_types", type: "page_access" }
       },
       {
         title: "Service Bays",
         href: "/service-bays",
         icon: Store,
+        permission: { resource: "service_bays", type: "page_access" }
       },
     ],
   },
@@ -78,16 +86,19 @@ const items = [
         title: "Users",
         href: "/users",
         icon: Users,
+        permission: { resource: "users", type: "page_access" }
       },
       {
         title: "System Roles",
         href: "/system-roles",
         icon: Shield,
+        permission: { resource: "users", type: "page_access" }
       },
       {
         title: "Settings",
         href: "/business-settings",
         icon: Settings,
+        permission: { resource: "business_settings", type: "page_access" }
       },
     ],
   },
@@ -97,10 +108,39 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
   const location = useLocation()
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
+  const { checkPermission } = usePermissions()
+  const [filteredItems, setFilteredItems] = useState(items)
+
+  useEffect(() => {
+    const filterItems = async () => {
+      const newItems = await Promise.all(items.map(async (section) => {
+        const filteredSectionItems = await Promise.all(
+          section.items.map(async (item) => {
+            if (!item.permission) return item
+            const hasPermission = await checkPermission(
+              item.permission.resource,
+              item.permission.type
+            )
+            return hasPermission ? item : null
+          })
+        )
+        
+        return {
+          ...section,
+          items: filteredSectionItems.filter(Boolean)
+        }
+      }))
+      
+      // Only keep sections that have items
+      setFilteredItems(newItems.filter(section => section.items.length > 0))
+    }
+
+    filterItems()
+  }, [checkPermission])
 
   return (
     <nav className="flex flex-col gap-4 py-4">
-      {items.map((section, index) => (
+      {filteredItems.map((section, index) => (
         <div key={section.section} className="px-3">
           {!isCollapsed && (
             <h4 className="mb-2 px-2 text-xs font-semibold tracking-tight text-muted-foreground">
@@ -126,7 +166,7 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
               </Link>
             ))}
           </div>
-          {index < items.length - 1 && !isCollapsed && (
+          {index < filteredItems.length - 1 && !isCollapsed && (
             <Separator className="my-4" />
           )}
         </div>

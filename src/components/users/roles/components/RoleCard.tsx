@@ -15,6 +15,9 @@ interface RoleCardProps {
 export function RoleCard({ role, isAdmin, onEdit, onDelete }: RoleCardProps) {
   const navigate = useNavigate()
   
+  // Check if role is protected (administrator or client)
+  const isProtectedRole = role.name === 'administrator' || role.name === 'client'
+  
   return (
     <Card className="flex flex-col">
       <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
@@ -37,7 +40,7 @@ export function RoleCard({ role, isAdmin, onEdit, onDelete }: RoleCardProps) {
             >
               Edit Details
             </Button>
-            {isAdmin && role.name !== 'admin' && (
+            {isAdmin && !isProtectedRole && (
               <Button
                 variant="destructive"
                 size="sm"
@@ -52,7 +55,7 @@ export function RoleCard({ role, isAdmin, onEdit, onDelete }: RoleCardProps) {
             variant="default"
             size="sm"
             className="w-full"
-            onClick={() => navigate(`/admin/system-roles/${role.id}/permissions`)}
+            onClick={() => navigate(`/system-roles/${role.id}/permissions`)}
           >
             <Settings className="h-4 w-4 mr-2" />
             Permissions

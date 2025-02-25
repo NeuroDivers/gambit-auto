@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { UserAvatar } from "./card/UserAvatar";
 import { UserActions } from "./card/UserActions";
 import { User } from "./hooks/useUserData";
+import { useNavigate } from "react-router-dom";
 
 type UserCardProps = {
   user: User;
@@ -16,6 +17,7 @@ export const UserCard = ({ user }: UserCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const handleDelete = async () => {
     try {
@@ -48,9 +50,16 @@ export const UserCard = ({ user }: UserCardProps) => {
     ? `${user.first_name} ${user.last_name}`
     : user.email;
 
+  const handleCardClick = () => {
+    navigate(`/users/${user.id}`);
+  };
+
   return (
     <>
-      <div className="bg-card border border-border/50 rounded-lg p-4 transition-all duration-200 hover:border-primary/30">
+      <div 
+        onClick={handleCardClick}
+        className="bg-card border border-border/50 rounded-lg p-4 transition-all duration-200 hover:border-primary/30 cursor-pointer"
+      >
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <UserAvatar
             displayName={displayName}
