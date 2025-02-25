@@ -30,7 +30,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     }
 
     const fetchRecipient = async () => {
-      const { data: recipient, error } = await supabase
+      const { data: profile, error } = await supabase
         .from("profiles")
         .select("id, first_name, last_name, email, role:role_id(name, nicename), avatar_url")
         .eq("id", recipientId)
@@ -41,7 +41,13 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         return
       }
 
-      setRecipient(recipient as ChatUser)
+      // Ensure the role field is properly structured
+      const recipientData = {
+        ...profile,
+        role: Array.isArray(profile.role) ? profile.role[0] : profile.role
+      } as ChatUser
+
+      setRecipient(recipientData)
     }
 
     fetchMessages()
