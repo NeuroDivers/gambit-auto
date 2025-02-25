@@ -10,7 +10,7 @@ export default function StaffSkillsManagement() {
   const [selectedUserId, setSelectedUserId] = useState<string>("")
   const { data: users, isLoading } = useUserData()
 
-  // Filter out client users, we only want staff
+  // Filter out client users, we only want staff users
   const staffUsers = users?.filter(user => 
     user.role?.name !== 'client'
   ) || []
