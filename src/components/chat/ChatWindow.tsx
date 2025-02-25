@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react"
 import { ChatMessage, ChatUser } from "@/types/chat"
 import { Card } from "@/components/ui/card"
@@ -7,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { supabase } from "@/integrations/supabase/client"
 import { Send, Check, Circle } from "lucide-react"
-import { format } from "date-fns"
+import { format, formatDistanceToNow, differenceInDays, isToday, isYesterday } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
@@ -36,6 +35,29 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     if (firstUnreadRef.current) {
       firstUnreadRef.current.scrollIntoView({ behavior: 'smooth' })
     }
+  }
+
+  const formatMessageTime = (timestamp: string) => {
+    const date = new Date(timestamp)
+    const now = new Date()
+    const daysDifference = differenceInDays(now, date)
+
+    if (daysDifference > 3) {
+      return format(date, 'MMM d, yyyy')
+    }
+
+    if (daysDifference >= 1) {
+      if (isYesterday(date)) {
+        return 'Yesterday'
+      }
+      return `${daysDifference} days ago`
+    }
+
+    if (isToday(date)) {
+      return formatDistanceToNow(date, { addSuffix: true })
+    }
+
+    return format(date, 'MMM d, yyyy')
   }
 
   useEffect(() => {
@@ -245,7 +267,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
                       >
                         <div>{message.message}</div>
                         <div className="text-xs opacity-70 mt-1 flex items-center gap-1">
-                          {format(new Date(message.created_at), 'MMM d, yyyy h:mm a')}
+                          {formatMessageTime(message.created_at)}
                           {message.sender_id !== recipientId && (
                             message.read_at ? (
                               <Check className="h-3 w-3" />
@@ -258,7 +280,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
                     </TooltipTrigger>
                     <TooltipContent>
                       {message.read_at ? (
-                        `Read at ${format(new Date(message.read_at), 'MMM d, yyyy h:mm a')}`
+                        `Read ${formatMessageTime(message.read_at)}`
                       ) : (
                         "Not read yet"
                       )}
