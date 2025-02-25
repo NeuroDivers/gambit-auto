@@ -35,7 +35,7 @@ const navigationItems = [
     ],
   },
   {
-    section: "Services",
+    section: "Work Management",
     items: [
       {
         title: "Work Orders",
@@ -54,12 +54,6 @@ const navigationItems = [
         href: "/staff/service-skills",
         icon: Briefcase,
         permission: { resource: "staff_skills", type: "page_access" }
-      },
-      {
-        title: "System Roles",
-        href: "/system-roles",
-        icon: Shield,
-        permission: { resource: "system_roles", type: "page_access" }
       },
       {
         title: "Chat",
@@ -99,8 +93,14 @@ const navigationItems = [
     ],
   },
   {
-    section: "Account",
+    section: "Administration",
     items: [
+      {
+        title: "System Roles",
+        href: "/system-roles",
+        icon: Shield,
+        permission: { resource: "system_roles", type: "page_access" }
+      },
       {
         title: "Settings",
         href: "/settings",
