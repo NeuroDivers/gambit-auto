@@ -118,7 +118,7 @@ export const navigationItems: NavSection[] = [
         title: "Staff Skills",
         href: "/staff-skills",
         icon: Briefcase,
-        permission: { resource: "users", type: "page_access" }
+        permission: { resource: "staff_skills", type: "page_access" }
       },
       {
         title: "System Roles",
