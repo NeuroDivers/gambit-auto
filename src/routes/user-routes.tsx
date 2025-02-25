@@ -14,7 +14,7 @@ export const userRoutes: RouteObject[] = [
     element: <SystemRoles />,
   },
   {
-    path: "system-roles/:roleId/permissions",
+    path: "system-roles/:id/permissions",
     element: <RolePermissions />,
   },
 ]
