@@ -72,7 +72,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   }, [])
 
   useEffect(() => {
-    if (!currentUserId) return
+    if (!currentUserId || !recipientId) return
 
     const fetchMessages = async () => {
       console.log("Fetching messages between current user and recipient:", currentUserId, recipientId)
@@ -80,14 +80,13 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         .from("chat_messages")
         .select(`
           *,
-          sender:sender_id (
+          sender:profiles!chat_messages_sender_id_fkey (
             first_name,
             last_name,
             email
           )
         `)
-        .or(`sender_id.eq.${currentUserId},recipient_id.eq.${currentUserId}`)
-        .or(`sender_id.eq.${recipientId},recipient_id.eq.${recipientId}`)
+        .or(`and(sender_id.eq.${currentUserId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${currentUserId})`)
         .order('created_at', { ascending: true })
 
       if (error) {
@@ -95,6 +94,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         return
       }
 
+      console.log("Fetched messages:", messages)
       setMessages(messages)
 
       const unreadMessages = messages.filter(m => 
