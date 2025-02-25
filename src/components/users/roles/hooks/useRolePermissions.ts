@@ -1,3 +1,4 @@
+
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
@@ -14,14 +15,20 @@ export const useRolePermissions = (roleId: string | null) => {
     queryFn: async () => {
       if (!roleId) return null
       
+      console.log("Fetching permissions for role:", roleId)
+      
       const { data, error } = await supabase
         .from("role_permissions")
         .select("*")
         .eq("role_id", roleId)
         .order("resource_name")
       
-      if (error) throw error
+      if (error) {
+        console.error("Error fetching permissions:", error)
+        throw error
+      }
       
+      console.log("Fetched permissions:", data)
       return data as Permission[]
     },
     enabled: !!roleId,
@@ -38,7 +45,12 @@ export const useRolePermissions = (roleId: string | null) => {
         .eq("id", roleId)
         .maybeSingle()
       
-      if (error) throw error
+      if (error) {
+        console.error("Error fetching role:", error)
+        throw error
+      }
+
+      console.log("Fetched role:", data)
       return data
     },
     enabled: !!roleId,
