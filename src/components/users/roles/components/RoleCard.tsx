@@ -19,7 +19,7 @@ export function RoleCard({ role, isAdmin, onEdit, onDelete }: RoleCardProps) {
   const navigate = useNavigate()
   
   // Check if role is protected (administrator or client)
-  const isProtectedRole = role.name === 'administrator' || role.name === 'client'
+  const isProtectedRole = role.name.toLowerCase() === 'administrator' || role.name.toLowerCase() === 'client'
   
   // Fetch user count for this role
   const { data: userCount } = useQuery({
