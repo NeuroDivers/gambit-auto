@@ -8,9 +8,10 @@ import { UserListHeader } from "./UserListHeader";
 
 interface UserListProps {
   initialRoleFilter?: string;
+  excludeClients?: boolean;
 }
 
-export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
+export const UserList = ({ initialRoleFilter = "all", excludeClients = false }: UserListProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState(initialRoleFilter);
   const { data: users, isLoading, refetch } = useUserData();
@@ -31,8 +32,9 @@ export const UserList = ({ initialRoleFilter = "all" }: UserListProps) => {
       `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesRole = roleFilter === "all" || user.role?.name === roleFilter;
+    const matchesUserType = excludeClients ? user.role?.name !== 'client' : true;
     
-    return matchesSearch && matchesRole;
+    return matchesSearch && matchesRole && matchesUserType;
   });
 
   const handleRefresh = async () => {
