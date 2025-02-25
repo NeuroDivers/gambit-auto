@@ -1,13 +1,13 @@
 
-import { cn } from "@/lib/utils"
-import { Header } from "../shared/Header"
 import { Sidebar, SidebarContent, SidebarProvider, SidebarRail, SidebarTrigger } from "@/components/ui/sidebar"
+import { cn } from "@/lib/utils"
 import { StaffSidebarNav } from "./sidebar/StaffSidebarNav"
 import { StaffSidebarHeader } from "./sidebar/StaffSidebarHeader"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useState } from "react"
-import { Button } from "../ui/button"
+import { Header } from "../shared/Header"
 import { Menu } from "lucide-react"
+import { Button } from "../ui/button"
 
 interface StaffLayoutProps {
   children: React.ReactNode

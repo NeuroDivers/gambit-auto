@@ -38,7 +38,7 @@ export function StaffSidebarHeader({
   })
 
   return (
-    <div className="flex flex-col items-center py-4">
+    <div className={cn("flex flex-col items-center py-4", className)}>
       {businessProfile?.light_logo_url ? (
         <img 
           src={businessProfile.light_logo_url}
