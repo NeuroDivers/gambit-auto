@@ -1,17 +1,25 @@
 
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
-import { FileText, Calendar, User, CreditCard, MessageSquare, Car, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useSidebar } from "@/components/ui/sidebar"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { 
+  LayoutGrid, 
+  FileText, 
+  Calendar, 
+  MessageSquare, 
+  Car, 
+  CreditCard, 
+  Settings 
+} from "lucide-react"
 
 const items = [
   {
     title: "Dashboard",
     href: "/dashboard",
-    icon: User,
+    icon: LayoutGrid,
   },
   {
     title: "Quotes",
@@ -46,7 +54,7 @@ const items = [
 ]
 
 interface ClientSidebarNavProps {
-  onNavigate?: () => void;
+  onNavigate?: () => void
 }
 
 export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
@@ -60,13 +68,15 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
         to={item.href}
         onClick={onNavigate}
         className={cn(
-          "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-accent hover:text-accent-foreground min-w-0",
-          location.pathname === item.href ? "bg-accent text-accent-foreground" : "text-foreground",
-          isCollapsed && "justify-center px-2"
+          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+          location.pathname === item.href
+            ? "bg-accent text-accent-foreground"
+            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+          isCollapsed && "justify-center py-3 px-2"
         )}
       >
-        <item.icon className="h-5 w-5 shrink-0" />
-        {!isCollapsed && <span className="truncate">{item.title}</span>}
+        <item.icon className="h-4 w-4 shrink-0" />
+        {!isCollapsed && <span>{item.title}</span>}
       </Link>
     )
 
