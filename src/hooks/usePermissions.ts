@@ -26,7 +26,7 @@ interface UserRole {
 
 export const usePermissions = () => {
   // Get current user's role and cache it
-  const { data: currentUserRole } = useQuery({
+  const { data: currentUserRole, isLoading: isRoleLoading } = useQuery({
     queryKey: ["current-user-role"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -68,7 +68,7 @@ export const usePermissions = () => {
   });
 
   // Get all permissions and cache them
-  const { data: permissions } = useQuery({
+  const { data: permissions, isLoading: isPermissionsLoading } = useQuery({
     queryKey: ["permissions"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -126,5 +126,6 @@ export const usePermissions = () => {
     permissions,
     checkPermission,
     currentUserRole,
+    isLoading: isRoleLoading || isPermissionsLoading
   };
 };

@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
 import { 
@@ -17,6 +18,7 @@ import { Separator } from "@/components/ui/separator"
 import { usePermissions } from "@/hooks/usePermissions"
 import { useEffect, useState } from "react"
 import { PermissionType } from "@/types/permissions"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface NavItem {
   title: string;
@@ -56,7 +58,7 @@ const items: NavSection[] = [
         title: "Estimates",
         href: "/estimates",
         icon: FileText,
-        permission: { resource: "quotes", type: "page_access" }
+        permission: { resource: "estimates", type: "page_access" }
       },
       {
         title: "Work Orders",
@@ -120,12 +122,29 @@ const items: NavSection[] = [
   },
 ]
 
+function NavSkeleton() {
+  return (
+    <div className="space-y-4 py-4">
+      {Array.from({ length: 4 }).map((_, sectionIndex) => (
+        <div key={sectionIndex} className="px-3">
+          <Skeleton className="h-4 w-24 mb-3" />
+          <div className="space-y-1">
+            {Array.from({ length: 3 }).map((_, itemIndex) => (
+              <Skeleton key={itemIndex} className="h-8 w-full" />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
   const location = useLocation()
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
-  const { checkPermission, currentUserRole } = usePermissions()
-  const [filteredItems, setFilteredItems] = useState(items)
+  const { checkPermission, currentUserRole, isLoading } = usePermissions()
+  const [filteredItems, setFilteredItems] = useState<NavSection[]>([])
 
   useEffect(() => {
     const filterItems = async () => {
@@ -157,6 +176,10 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
 
     filterItems();
   }, [checkPermission, currentUserRole]);
+
+  if (isLoading) {
+    return <NavSkeleton />;
+  }
 
   return (
     <nav className="flex flex-col gap-4 py-4">
