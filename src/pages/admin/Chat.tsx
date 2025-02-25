@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { ChatUser } from "@/types/chat"
 import { ChatWindow } from "@/components/chat/ChatWindow"
 import { Card, CardContent } from "@/components/ui/card"
@@ -19,7 +19,7 @@ export default function Chat() {
         .order("role_id")
       
       if (error) throw error
-      return profiles as (ChatUser & { role: { name: string, nicename: string } })[]
+      return profiles as ChatUser[]
     },
   })
 

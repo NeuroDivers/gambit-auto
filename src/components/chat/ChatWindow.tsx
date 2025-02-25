@@ -72,8 +72,12 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   const sendMessage = async () => {
     if (!newMessage.trim()) return
 
+    const { data: user } = await supabase.auth.getUser()
+    if (!user.user) return
+
     const { error } = await supabase.from("chat_messages").insert([
       {
+        sender_id: user.user.id,
         recipient_id: recipientId,
         message: newMessage.trim(),
       },
@@ -130,6 +134,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         />
         <Button 
           onClick={sendMessage}
+          size="icon"
           className="bg-primary hover:bg-primary/90 text-primary-foreground"
         >
           <Send className="h-4 w-4" />
