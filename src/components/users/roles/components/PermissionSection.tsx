@@ -29,13 +29,17 @@ export const PermissionSection = ({
           >
             <div className="space-y-0.5">
               <Label htmlFor={`permission-${permission.id}`}>
-                {permission.resource_name.split('_').map(word => 
-                  word.charAt(0).toUpperCase() + word.slice(1)
-                ).join(' ')}
+                {permission.resource_name === "quotes" 
+                  ? "Estimates"
+                  : permission.resource_name.split('_').map(word => 
+                      word.charAt(0).toUpperCase() + word.slice(1)
+                    ).join(' ')}
               </Label>
               {permission.description && (
                 <p className="text-sm text-muted-foreground">
-                  {permission.description}
+                  {permission.resource_name === "quotes"
+                    ? permission.description.replace(/quote/gi, "estimate").replace(/Quote/gi, "Estimate")
+                    : permission.description}
                 </p>
               )}
             </div>
