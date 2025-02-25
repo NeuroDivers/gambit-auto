@@ -81,6 +81,8 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
       const targetId = profileId || currentUser?.id
       if (!targetId) return
 
+      const serviceName = skills?.find(skill => skill.service_id === serviceId)?.service_types.name
+
       if (skillId) {
         // Update existing skill
         const { error } = await supabase
@@ -102,11 +104,18 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
         if (error) throw error
       }
 
-      toast.success("Skill updated successfully")
+      // Show success toast with specific message
+      const action = currentStatus ? "disabled" : "enabled"
+      toast.success(`${serviceName} skill ${action}`, {
+        description: `You have successfully ${action} this service skill.`
+      })
+      
       refetch()
     } catch (error) {
       console.error('Error updating skill:', error)
-      toast.error("Failed to update skill")
+      toast.error("Failed to update skill", {
+        description: "There was an error updating your service skill. Please try again."
+      })
     }
   }
 
