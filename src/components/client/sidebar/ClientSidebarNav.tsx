@@ -40,6 +40,11 @@ const navigationItems = [
         href: "/invoices",
         icon: FileText,
       },
+      {
+        title: "Chat",
+        href: "/chat",
+        icon: MessageSquare,
+      },
     ],
   },
   {
