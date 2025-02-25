@@ -81,10 +81,10 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
             <DropdownMenuLabel>Notifications</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {mockNotifications.map((notification) => (
-              <DropdownMenuItem key={notification.id} className="flex flex-col items-start py-3">
-                <div className="font-medium">{notification.title}</div>
-                <div className="text-sm text-muted-foreground">{notification.description}</div>
-                <div className="text-xs text-muted-foreground mt-1">{notification.time}</div>
+              <DropdownMenuItem key={notification.id} className="flex flex-col items-start py-3 group">
+                <div className="font-medium group-hover:text-white">{notification.title}</div>
+                <div className="text-sm text-muted-foreground group-hover:text-white">{notification.description}</div>
+                <div className="text-xs text-muted-foreground group-hover:text-white mt-1">{notification.time}</div>
               </DropdownMenuItem>
             ))}
             {mockNotifications.length === 0 && (
