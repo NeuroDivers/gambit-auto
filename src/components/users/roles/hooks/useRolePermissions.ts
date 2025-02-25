@@ -19,7 +19,14 @@ export const useRolePermissions = (roleId: string | null) => {
       
       const { data, error } = await supabase
         .from("role_permissions")
-        .select("*")
+        .select(`
+          id,
+          role_id,
+          resource_name,
+          permission_type,
+          is_active,
+          description
+        `)
         .eq("role_id", roleId)
         .order("resource_name")
       
@@ -41,7 +48,15 @@ export const useRolePermissions = (roleId: string | null) => {
       
       const { data, error } = await supabase
         .from("roles")
-        .select("*")
+        .select(`
+          id,
+          name,
+          nicename,
+          description,
+          can_be_assigned_to_bay,
+          can_be_assigned_work_orders,
+          default_dashboard
+        `)
         .eq("id", roleId)
         .maybeSingle()
       
@@ -74,11 +89,12 @@ export const useRolePermissions = (roleId: string | null) => {
       // Update the database
       const { data, error } = await supabase
         .from("role_permissions")
-        .update({
+        .update({ 
           is_active: newValue,
+          updated_at: new Date().toISOString()
         })
         .eq("id", permission.id)
-        .select("*")
+        .select()
 
       if (error) {
         console.error("Database update error:", error)
