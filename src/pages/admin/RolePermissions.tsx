@@ -133,6 +133,16 @@ export default function RolePermissions() {
             isDisabled={isUpdating}
           />
         )}
+
+        {/* Feature Access Permissions */}
+        {groupedPermissions['feature_access'] && (
+          <PermissionSection
+            sectionName="Feature Access"
+            permissions={groupedPermissions['feature_access']}
+            onToggle={handlePermissionToggle}
+            isDisabled={isUpdating}
+          />
+        )}
       </div>
     </div>
   )
