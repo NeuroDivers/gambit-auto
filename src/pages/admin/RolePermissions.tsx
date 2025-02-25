@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch"
 
 export default function RolePermissions() {
   const navigate = useNavigate()
-  const { roleId } = useParams()
+  const { id: roleId } = useParams<{ id: string }>() // Changed to match the route parameter name
   const {
     permissions,
     isLoading,
