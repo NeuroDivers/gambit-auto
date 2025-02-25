@@ -64,7 +64,7 @@ const navigationItems: NavigationSection[] = [
         permission: { resource: "service_types", type: "page_access" }
       },
       {
-        title: "Staff Skills",
+        title: "My Skills",
         href: "/staff/service-skills",
         icon: Briefcase,
         permission: { resource: "staff_skills", type: "page_access" }
