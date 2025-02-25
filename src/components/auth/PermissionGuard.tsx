@@ -29,9 +29,16 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
       const roleName = currentUserRole.name.toLowerCase();
       console.log('Checking permissions for role:', roleName);
 
+      // If the resource is dashboard, grant access to all authenticated users
+      if (resource === 'dashboard') {
+        console.log('Dashboard access granted - all users can access dashboard');
+        setHasPermission(true);
+        return;
+      }
+
       // If user is administrator or technician, grant immediate access
-      if (roleName === 'administrator' || roleName === 'technician') {
-        console.log('User is admin or technician, granting access');
+      if (roleName === 'administrator') {
+        console.log('User is admin, granting access');
         setHasPermission(true);
         return;
       }
