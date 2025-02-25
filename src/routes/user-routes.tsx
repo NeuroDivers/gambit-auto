@@ -33,7 +33,7 @@ export const userRoutes: RouteObject[] = [
     ),
   },
   {
-    path: "role-permissions/:id",
+    path: "system-roles/:id/permissions",
     element: (
       <PermissionGuard resource="users" type="page_access">
         <RolePermissions />
