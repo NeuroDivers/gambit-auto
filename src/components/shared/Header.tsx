@@ -81,7 +81,10 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
             <DropdownMenuLabel>Notifications</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {mockNotifications.map((notification) => (
-              <DropdownMenuItem key={notification.id} className="flex flex-col items-start py-3">
+              <DropdownMenuItem 
+                key={notification.id} 
+                className="flex flex-col items-start py-3 hover:bg-transparent hover:border hover:border-primary rounded-md transition-all"
+              >
                 <div className="font-medium">{notification.title}</div>
                 <div className="text-sm text-muted-foreground">{notification.description}</div>
                 <div className="text-xs text-muted-foreground mt-1">{notification.time}</div>
@@ -91,7 +94,7 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
               <DropdownMenuItem disabled>No new notifications</DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-center justify-center">
+            <DropdownMenuItem className="text-center justify-center hover:bg-transparent hover:border hover:border-primary rounded-md">
               <NavLink to="/notifications" className="w-full text-center">View all notifications</NavLink>
             </DropdownMenuItem>
           </DropdownMenuContent>
