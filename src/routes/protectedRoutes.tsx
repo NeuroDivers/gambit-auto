@@ -30,6 +30,11 @@ export const protectedRoutes: RouteObject = {
   element: <DashboardLayoutWrapper />,
   children: [
     {
+      path: "",
+      element: <Dashboard />,
+      index: true
+    },
+    {
       path: "dashboard",
       element: <Dashboard />,
     },
