@@ -1,16 +1,17 @@
+
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary"
 import InvoiceDetails from "@/pages/admin/InvoiceDetails"
-import InvoiceList from "@/pages/admin/InvoiceList"
-import InvoiceCreate from "@/pages/admin/InvoiceCreate"
+import Invoices from "@/pages/admin/Invoices"
+import CreateInvoice from "@/pages/admin/CreateInvoice"
 
 export const invoiceRoutes = [
   {
     path: "invoices",
-    element: <InvoiceList />,
+    element: <Invoices />,
   },
   {
     path: "invoices/create",
-    element: <InvoiceCreate />,
+    element: <CreateInvoice />,
   },
   {
     path: "invoices/:id",
