@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -22,6 +21,7 @@ import { UseFormReturn } from "react-hook-form"
 import { RoleFormValues } from "./RoleFormSchema"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
+import { useEffect } from "react"
 
 interface RoleFormProps {
   form: UseFormReturn<RoleFormValues>
@@ -39,9 +39,29 @@ const PROTECTED_ROLE_IDS = [
 export function RoleForm({ form, onSubmit, onCancel, mode, roleId }: RoleFormProps) {
   const isProtectedRole = roleId && PROTECTED_ROLE_IDS.includes(roleId);
 
+  // Prevent form submission from modifying protected role names
+  const handleSubmit = (values: RoleFormValues) => {
+    if (isProtectedRole) {
+      // Keep the original name for protected roles
+      const originalName = form.getValues().name;
+      onSubmit({ ...values, name: originalName });
+    } else {
+      onSubmit(values);
+    }
+  };
+
+  // Set field as readonly for protected roles
+  useEffect(() => {
+    if (isProtectedRole) {
+      form.register('name', { 
+        disabled: true,
+      });
+    }
+  }, [isProtectedRole, form]);
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         {isProtectedRole && (
           <Alert variant="warning" className="mb-4">
             <AlertCircle className="h-4 w-4" />
