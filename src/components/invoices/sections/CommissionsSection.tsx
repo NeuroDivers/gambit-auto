@@ -53,10 +53,10 @@ export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps
       if (error) throw error
 
       await queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] })
-      toast.success('Commission updated successfully')
+      toast.success("Commission updated successfully")
     } catch (error) {
       console.error('Error updating commission:', error)
-      toast.error('Failed to update commission')
+      toast.error("Failed to update commission")
     } finally {
       setSaving(false)
     }
@@ -95,10 +95,10 @@ export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps
                 <div className="space-y-2">
                   <Label htmlFor={`assignee-${item.id}`}>Assign To</Label>
                   <Select
-                    value={item.assigned_profile_id || ''}
+                    value={item.assigned_profile_id || "unassigned"}
                     onValueChange={(value) => 
                       handleUpdateCommission(item.id, {
-                        assigned_profile_id: value || null
+                        assigned_profile_id: value === "unassigned" ? null : value
                       })
                     }
                   >
@@ -106,7 +106,7 @@ export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps
                       <SelectValue placeholder="Select staff member" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
                       {profiles?.map((profile) => (
                         <SelectItem key={profile.id} value={profile.id}>
                           {profile.first_name} {profile.last_name}
@@ -135,10 +135,10 @@ export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps
                 <div className="space-y-2">
                   <Label htmlFor={`type-${item.id}`}>Commission Type</Label>
                   <Select
-                    value={item.commission_type || ''}
+                    value={item.commission_type || "unset"}
                     onValueChange={(value) => 
                       handleUpdateCommission(item.id, {
-                        commission_type: value as 'percentage' | 'flat'
+                        commission_type: value === "unset" ? null : value as 'percentage' | 'flat'
                       })
                     }
                   >
@@ -146,6 +146,7 @@ export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="unset">Not Set</SelectItem>
                       <SelectItem value="percentage">Percentage</SelectItem>
                       <SelectItem value="flat">Flat Rate</SelectItem>
                     </SelectContent>
