@@ -1,3 +1,4 @@
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -29,6 +30,7 @@ const formSchema = z.object({
     unit_price: z.number().min(0),
     commission_rate: z.number().nullable(),
     commission_type: z.enum(['percentage', 'flat']).nullable(),
+    assigned_profile_id: z.string().nullable()
   }))
 })
 
@@ -62,51 +64,38 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
       if (!workOrder?.id) return
 
       try {
-        const { data: workOrderExists, error: workOrderError } = await supabase
-          .from('work_orders')
-          .select('id')
-          .eq('id', workOrder.id)
-          .maybeSingle()
-
-        if (workOrderError || !workOrderExists) {
-          console.error('Error verifying work order:', workOrderError)
-          return
-        }
-
         const { data: servicesData, error: servicesError } = await supabase
           .from('work_order_services')
           .select(`
-            id,
             service_id,
             quantity,
             unit_price,
-            service:service_types!work_order_services_service_id_fkey (
+            commission_rate,
+            commission_type,
+            service_types (
               id,
-              name,
-              price
+              name
             )
           `)
           .eq('work_order_id', workOrder.id)
 
-        if (servicesError) {
-          console.error('Error fetching work order services:', servicesError)
-          return
-        }
+        if (servicesError) throw servicesError
 
-        if (servicesData && Array.isArray(servicesData)) {
-          const formattedServices = servicesData
-            .filter(service => service.service && service.service.id)
-            .map(service => ({
-              service_id: service.service.id,
-              service_name: service.service.name,
-              quantity: service.quantity,
-              unit_price: service.unit_price || service.service.price || 0
-            }))
+        if (servicesData) {
+          const formattedServices = servicesData.map(service => ({
+            service_id: service.service_id,
+            service_name: service.service_types?.name || '',
+            quantity: service.quantity,
+            unit_price: service.unit_price,
+            commission_rate: service.commission_rate,
+            commission_type: service.commission_type as 'percentage' | 'flat' | null,
+            assigned_profile_id: null
+          }))
 
-          form.setValue('service_items', formattedServices, { shouldDirty: true })
+          form.setValue('service_items', formattedServices)
         }
       } catch (error) {
-        console.error('Error in fetchWorkOrderServices:', error)
+        console.error('Error fetching work order services:', error)
       }
     }
 
@@ -114,22 +103,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
   }, [workOrder?.id, form])
 
   const onSubmit = async (values: WorkOrderFormValues) => {
-    if (!values.service_items || values.service_items.length === 0) {
-      values.service_items = []
-    }
-
-    const validServiceItems = values.service_items.filter(item => 
-      item.service_id && 
-      item.service_id.trim() !== "" && 
-      item.service_name && 
-      item.service_name.trim() !== ""
-    )
-
-    const success = await submitWorkOrder({
-      ...values,
-      service_items: validServiceItems
-    }, workOrder?.id)
-
+    const success = await submitWorkOrder(values, workOrder?.id)
     if (success) {
       onSuccess?.()
     }

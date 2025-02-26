@@ -15,10 +15,12 @@ interface FormSectionsProps {
 }
 
 export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProps) {
+  const { control, watch, setValue } = form;
+  
   return (
     <div className="space-y-8">
-      <CustomerInfoFields form={form} />
-      <VehicleInfoFields form={form} />
+      <CustomerInfoFields control={control} />
+      <VehicleInfoFields control={control} watch={watch} setValue={setValue} />
       <ServiceSelectionFields form={form} />
       <SchedulingFields form={form} />
       <BayAssignmentField form={form} />
