@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react"
 import { createWorker, PSM } from 'tesseract.js'
 import { toast } from "sonner"
@@ -29,10 +28,12 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const isProcessingRef = useRef(false)
 
   const addLog = (message: string) => {
-    setLogs(prev => [...prev, message])
-    setTimeout(() => {
-      logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, 100)
+    if (!isPaused) {
+      setLogs(prev => [...prev, message])
+      setTimeout(() => {
+        logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 100)
+    }
   }
 
   const correctCommonOcrMistakes = (text: string): string => {
