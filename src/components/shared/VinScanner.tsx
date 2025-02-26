@@ -1,5 +1,4 @@
-
-import { Camera } from "lucide-react"
+import { Camera, Pause, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
 import { toast } from "sonner"
@@ -27,6 +26,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const [logs, setLogs] = useState<string[]>([])
   const [hasFlash, setHasFlash] = useState(false)
   const [isFlashOn, setIsFlashOn] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
   const isMobile = useIsMobile()
 
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -38,10 +38,12 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const logsEndRef = useRef<HTMLDivElement>(null)
 
   const addLog = (message: string) => {
-    setLogs(prev => [...prev, message])
-    setTimeout(() => {
-      logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, 100)
+    if (!isPaused) {
+      setLogs(prev => [...prev, message])
+      setTimeout(() => {
+        logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 100)
+    }
   }
 
   const toggleFlash = async () => {
@@ -126,7 +128,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
         streamRef.current = stream
         addLog('Stream acquired, initializing camera...')
         
-        // Check for flash capability
         const track = stream.getVideoTracks()[0]
         const capabilities = track.getCapabilities() as ExtendedTrackCapabilities
         setHasFlash('torch' in capabilities)
@@ -371,12 +372,29 @@ export function VinScanner({ onScan }: VinScannerProps) {
               </p>
             </div>
           </div>
-          <div className="bg-muted p-4 max-h-32 overflow-y-auto text-xs font-mono">
-            <div className="space-y-1">
-              {logs.map((log, index) => (
-                <div key={index} className="text-muted-foreground">{log}</div>
-              ))}
-              <div ref={logsEndRef} />
+          <div className="bg-muted p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-muted-foreground">Scan Logs</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => setIsPaused(!isPaused)}
+              >
+                {isPaused ? (
+                  <Play className="h-3 w-3" />
+                ) : (
+                  <Pause className="h-3 w-3" />
+                )}
+              </Button>
+            </div>
+            <div className="max-h-32 overflow-y-auto text-xs font-mono">
+              <div className="space-y-1">
+                {logs.map((log, index) => (
+                  <div key={index} className="text-muted-foreground">{log}</div>
+                ))}
+                <div ref={logsEndRef} />
+              </div>
             </div>
           </div>
         </DialogContent>
