@@ -8,7 +8,6 @@ import { PageTitle } from "@/components/shared/PageTitle"
 import { InvoiceActions } from "@/components/invoices/sections/InvoiceActions"
 import { useReactToPrint } from 'react-to-print'
 import { useRef } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CustomerInfoCard } from "@/components/invoices/sections/CustomerInfoCard"
 import { VehicleInfoCard } from "@/components/invoices/sections/VehicleInfoCard"
 import { InvoiceDetailsCard } from "@/components/invoices/sections/InvoiceDetailsCard"
@@ -25,7 +24,7 @@ export default function InvoiceDetails() {
     pageStyle: '@page { margin: 1cm }'
   })
 
-  const { data: invoice, isLoading, error } = useQuery({
+  const { data: invoice, isLoading } = useQuery({
     queryKey: ['invoice', id],
     queryFn: async () => {
       if (!id) throw new Error("Invoice ID is required")
@@ -64,26 +63,8 @@ export default function InvoiceDetails() {
     )
   }
 
-  if (error || !invoice) {
-    return (
-      <div className="p-8">
-        <Card className="border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive">Error</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>Failed to load invoice details. The invoice might not exist or you may not have permission to view it.</p>
-            <Button 
-              variant="outline" 
-              className="mt-4"
-              onClick={() => navigate('/invoices')}
-            >
-              Return to Invoices
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
+  if (!invoice) {
+    throw new Error("Failed to load invoice details")
   }
 
   return (
