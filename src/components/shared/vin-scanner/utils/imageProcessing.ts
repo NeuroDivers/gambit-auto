@@ -16,6 +16,7 @@ export const preprocessImage = async (imageData: ImageData): Promise<{ processed
     let edges = new cv.Mat();
     let contours = new cv.MatVector();
     let hierarchy = new cv.Mat();
+    let binary = new cv.Mat();
     
     // Preprocessing steps
     cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
@@ -53,6 +54,21 @@ export const preprocessImage = async (imageData: ImageData): Promise<{ processed
       approx.delete();
       cnt.delete();
     }
+
+    // Apply Otsu's thresholding and morphological operations if region detected
+    if (bestRect) {
+      const roi = gray.roi(new cv.Rect(bestRect.x, bestRect.y, bestRect.width, bestRect.height));
+      cv.threshold(roi, binary, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
+      
+      // Apply morphological operations to clean up text
+      const kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3, 3));
+      cv.morphologyEx(binary, binary, cv.MORPH_CLOSE, kernel);
+      
+      // Copy back to the original region
+      binary.copyTo(roi);
+      kernel.delete();
+      roi.delete();
+    }
     
     // Create output image with detection visualization
     const output = new cv.Mat();
@@ -79,6 +95,7 @@ export const preprocessImage = async (imageData: ImageData): Promise<{ processed
     src.delete();
     gray.delete();
     edges.delete();
+    binary.delete();
     output.delete();
     contours.delete();
     hierarchy.delete();
@@ -122,4 +139,45 @@ export const cropToVinRegion = (
     console.error('Error cropping to VIN region:', error);
     return null;
   }
+};
+
+export const postProcessVIN = (vin: string): string => {
+  // Common OCR misinterpretation corrections
+  const corrections: Record<string, string> = {
+    'O': '0', // 'O' is often misread as '0'
+    'I': '1', // 'I' is often misread as '1'
+    'S': '5', // 'S' is often misread as '5'
+    'B': '8', // 'B' can sometimes be misread as '8'
+    'G': '6', // 'G' can sometimes be misread as '6'
+    'Q': '0', // 'Q' can be misinterpreted as '0'
+    '|': '1', // Vertical bar can be misread as '1'
+    'Z': '2', // 'Z' can sometimes be misread as '2'
+    'D': '0', // 'D' can sometimes be misread as '0'
+  };
+
+  let correctedVIN = vin.toUpperCase().trim().replace(/\s/g, '');
+
+  // Replace common errors based on the corrections map
+  for (const [wrongChar, correctChar] of Object.entries(corrections)) {
+    correctedVIN = correctedVIN.replace(new RegExp(wrongChar, 'g'), correctChar);
+  }
+
+  // Early return if length is not 17 after basic corrections
+  if (correctedVIN.length !== 17) return '';
+
+  // Check for valid VIN format (only allowed characters)
+  const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/;
+  if (!vinRegex.test(correctedVIN)) return '';
+
+  // Additional North American specific corrections
+  if ('1234567890'.includes(correctedVIN[0])) {
+    // If first character is a number but not a valid NA code
+    if (!['1', '2', '3', '4', '5'].includes(correctedVIN[0])) {
+      if (correctedVIN[0] === '7') correctedVIN = '1' + correctedVIN.slice(1);
+      if (correctedVIN[0] === '6') correctedVIN = '5' + correctedVIN.slice(1);
+    }
+  }
+
+  // Final validation of the corrected VIN
+  return vinRegex.test(correctedVIN) ? correctedVIN : '';
 };
