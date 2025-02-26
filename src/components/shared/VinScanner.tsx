@@ -14,12 +14,18 @@ interface VinScannerProps {
   onScan: (vin: string) => void
 }
 
+interface ExtendedTrackCapabilities extends MediaTrackCapabilities {
+  torch?: boolean;
+}
+
 export function VinScanner({ onScan }: VinScannerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isCameraActive, setIsCameraActive] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
   const [scanMode, setScanMode] = useState<'text' | 'barcode'>('text')
   const [logs, setLogs] = useState<string[]>([])
+  const [hasFlash, setHasFlash] = useState(false)
+  const [isFlashOn, setIsFlashOn] = useState(false)
   const isMobile = useIsMobile()
 
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -37,50 +43,53 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }, 100)
   }
 
+  const toggleFlash = async () => {
+    if (!streamRef.current) return
+    try {
+      const track = streamRef.current.getVideoTracks()[0]
+      const capabilities = track.getCapabilities() as ExtendedTrackCapabilities
+      if ('torch' in capabilities) {
+        await track.applyConstraints({
+          advanced: [{ torch: !isFlashOn } as any]
+        })
+        setIsFlashOn(!isFlashOn)
+        addLog(`Flash ${!isFlashOn ? 'enabled' : 'disabled'}`)
+      }
+    } catch (err) {
+      addLog(`Flash control error: ${err}`)
+      toast.error('Failed to toggle flash')
+    }
+  }
+
+  const correctCommonOcrMistakes = (text: string): string => {
+    let corrected = text
+      .replace(/[oO]/g, '0')
+      .replace(/[iIl]/g, '1')
+      .replace(/[sS]/g, '5')
+      .replace(/[zZ]/g, '2')
+      .replace(/[bB]/g, '8')
+      .replace(/[gG]/g, '6')
+      .replace(/\s+/g, '')
+      .toUpperCase()
+
+    const vinPattern = /[A-HJ-NPR-Z0-9]{17}/
+    const match = corrected.match(vinPattern)
+    return match ? match[0] : corrected
+  }
+
   const initializeWorker = async () => {
     try {
-      addLog('Initializing OCR worker with VIN-specific font optimizations...')
+      addLog('Initializing OCR worker with basic settings...')
       const worker = await createWorker()
       
       await worker.reinitialize('eng')
       await worker.setParameters({
-        // Specific whitelist for VIN characters (no I,O,Q)
-        tessedit_char_whitelist: '0123456789ABCDEFGHJKLMNPRSTUVWXYZ',
-        tessedit_ocr_engine_mode: '3', // Neural nets LSTM only
-        tessjs_create_pdf: '0',
-        tessjs_create_hocr: '0',
-        debug_file: '/dev/null',
+        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
         tessedit_pageseg_mode: PSM.SINGLE_LINE,
-        // Font-specific optimizations
-        classify_bln_numeric_mode: '1',
-        textord_pitch_range: '0',  // Fixed pitch for OCR-B font
-        textord_fixed_pitch_threshold: '0',
-        edges_children_fix: '1',
-        edges_max_children_per_outline: '40',
-        edges_min_nonhole: '40',
-        edges_patharea_ratio: '2.0',
-        // OCR-B specific settings
-        assume_fixed_pitch: '1',
-        textord_space_size_is_variable: '0',
-        textord_words_default_fixed_space: '1',
-        textord_min_linesize: '5', // OCR-B is typically well-defined
-        classify_character_fragments: 'F',
-        // Enhanced segmentation for fixed-width characters
-        segsearch_max_fixed_pitch_char_wh_ratio: '1.1',
-        // Disable dictionary to rely on pure character recognition
-        load_system_dawg: '0',
-        load_freq_dawg: '0',
-        // High DPI for better character separation
-        tessjs_image_dpi: '300',
-        tessedit_dpi: '300',
-        // Minimal rejection for fixed-font characters
-        tessedit_minimal_rejection: 'T',
-        tessedit_zero_rejection: 'T',
-        // Blacklist commonly confused characters
-        tessedit_char_blacklist: 'IiOoQq',
+        preserve_interword_spaces: '0'
       })
 
-      addLog('OCR worker initialized with VIN font optimizations')
+      addLog('OCR worker initialized')
       return worker
     } catch (error) {
       addLog(`Error initializing OCR worker: ${error}`)
@@ -102,23 +111,27 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
     setIsCameraActive(false)
     setIsScanning(false)
+    setIsFlashOn(false)
   }
 
   const startCamera = async () => {
     try {
-      const constraints: MediaTrackConstraints = {
-        facingMode: 'environment',
-        width: { ideal: isMobile ? 1920 : 1280 },
-        height: { ideal: isMobile ? 1080 : 720 },
-        frameRate: { ideal: 30 }
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({ video: constraints })
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true
+      })
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         streamRef.current = stream
         addLog('Stream acquired, initializing camera...')
+        
+        // Check for flash capability
+        const track = stream.getVideoTracks()[0]
+        const capabilities = track.getCapabilities() as ExtendedTrackCapabilities
+        setHasFlash('torch' in capabilities)
+        if ('torch' in capabilities) {
+          addLog('Flash capability detected')
+        }
         
         await new Promise((resolve) => {
           if (videoRef.current) {
@@ -213,23 +226,21 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
       const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
       
-      // Clean the text first for better logging
-      const cleanedText = text.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, '')
-      addLog(`Detected text: ${cleanedText} (confidence: ${confidence}%)`)
+      const correctedText = correctCommonOcrMistakes(text)
+      addLog(`Detected text: ${correctedText} (confidence: ${confidence}%)`)
       
-      // More lenient confidence threshold but stricter validation
-      if (confidence < 40 || cleanedText.length < 15) {
+      if (confidence < 40 || correctedText.length < 15) {
         if (shouldScan) {
           scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
         }
         return
       }
 
-      if (cleanedText.length === 17 && validateVIN(cleanedText)) {
-        const isValidVin = await validateVinWithNHTSA(cleanedText)
+      if (correctedText.length === 17 && validateVIN(correctedText)) {
+        const isValidVin = await validateVinWithNHTSA(correctedText)
         
         if (isValidVin) {
-          onScan(cleanedText)
+          onScan(correctedText)
           toast.success("VIN scanned and validated successfully")
           handleClose()
           return
@@ -260,8 +271,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
       return null
     }
 
-    const scanAreaWidth = video.videoWidth * (isMobile ? 0.8 : 0.7)
-    const scanAreaHeight = video.videoHeight * (isMobile ? 0.2 : 0.15)
+    const scanAreaWidth = Math.min(280, video.videoWidth * 0.6)
+    const scanAreaHeight = video.videoHeight * 0.12
     const startX = (video.videoWidth - scanAreaWidth) / 2
     const startY = (video.videoHeight - scanAreaHeight) / 2
 
@@ -331,6 +342,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
           <ScannerOverlay
             scanMode={scanMode}
             onScanModeChange={handleScanModeChange}
+            hasFlash={hasFlash}
+            isFlashOn={isFlashOn}
+            onFlashToggle={toggleFlash}
           />
           <div className="relative aspect-video w-full overflow-hidden">
             <video
@@ -344,7 +358,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
               ref={canvasRef}
               className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5 sm:w-2/3 h-1/5 border-2 border-dashed border-primary-foreground/70">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3/5 sm:w-1/2 h-[12%] border-2 border-dashed border-primary-foreground/70">
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
                 Position {scanMode === 'text' ? 'VIN text' : 'barcode'} here
               </div>
