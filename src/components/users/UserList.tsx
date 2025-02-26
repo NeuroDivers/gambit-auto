@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserCard } from "./UserCard";
 import { useUserData } from "./hooks/useUserData";
@@ -14,15 +14,15 @@ interface UserListProps {
 export const UserList = ({ initialRoleFilter = "all", excludeClients = false }: UserListProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState(initialRoleFilter);
-  const [excludedRoles, setExcludedRoles] = useState<string[]>([]);
+  const [excludedRoles, setExcludedRoles] = useState<string[]>(excludeClients ? ["client"] : []);
   const { data: users, isLoading, refetch } = useUserData();
   
   // Update roleFilter when initialRoleFilter changes
-  useState(() => {
+  useEffect(() => {
     if (initialRoleFilter !== roleFilter) {
       setRoleFilter(initialRoleFilter);
     }
-  });
+  }, [initialRoleFilter, roleFilter]);
   
   // Set up realtime subscriptions
   useUserSubscription();
