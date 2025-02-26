@@ -1,4 +1,3 @@
-
 import { Camera, Pause, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -46,13 +45,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
         type: 'vin-scanner'
       }
       
-      // Add to UI logs
       setLogs(prev => [...prev, message])
       
-      // Save to local storage
       const existingLogs = JSON.parse(localStorage.getItem('scanner-logs') || '[]')
       existingLogs.push(logEntry)
-      localStorage.setItem('scanner-logs', JSON.stringify(existingLogs.slice(-1000))) // Keep last 1000 logs
+      localStorage.setItem('scanner-logs', JSON.stringify(existingLogs.slice(-1000)))
       
       setTimeout(() => {
         logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -91,6 +88,10 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
     const vinPattern = /[A-HJ-NPR-Z0-9]{17}/
     const match = corrected.match(vinPattern)
+    
+    addLog(`VIN Pattern check: ${match ? 'MATCHED' : 'NO MATCH'} - Current text: ${corrected}`)
+    addLog(`Expected pattern: 17 characters [A-HJ-NPR-Z0-9] (no I, O, Q)`)
+    
     return match ? match[0] : corrected
   }
 
@@ -243,23 +244,32 @@ export function VinScanner({ onScan }: VinScannerProps) {
       const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
       
       const correctedText = correctCommonOcrMistakes(text)
-      addLog(`Detected text: ${correctedText} (confidence: ${confidence}%)`)
       
       if (confidence < 40 || correctedText.length < 15) {
+        addLog(`Low quality scan: Confidence ${confidence}%, Length: ${correctedText.length}`)
         if (shouldScan) {
           scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
         }
         return
       }
 
-      if (correctedText.length === 17 && validateVIN(correctedText)) {
-        const isValidVin = await validateVinWithNHTSA(correctedText)
-        
-        if (isValidVin) {
-          onScan(correctedText)
-          toast.success("VIN scanned and validated successfully")
-          handleClose()
-          return
+      if (correctedText.length === 17) {
+        addLog(`Potential VIN found: ${correctedText}`)
+        if (validateVIN(correctedText)) {
+          addLog('Local VIN validation passed')
+          const isValidVin = await validateVinWithNHTSA(correctedText)
+          
+          if (isValidVin) {
+            addLog('NHTSA validation passed - Valid VIN confirmed!')
+            onScan(correctedText)
+            toast.success("VIN scanned and validated successfully")
+            handleClose()
+            return
+          } else {
+            addLog('NHTSA validation failed - continuing scan...')
+          }
+        } else {
+          addLog('Local VIN validation failed - continuing scan...')
         }
       }
       
@@ -287,10 +297,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
       return null
     }
 
-    const scanAreaWidth = Math.min(280, video.videoWidth * 0.6)
-    const scanAreaHeight = video.videoHeight * 0.12
+    // Match the scan area with the outline box (95% width, 40px height)
+    const scanAreaWidth = video.videoWidth * 0.95
+    const scanAreaHeight = (40 / video.clientHeight) * video.videoHeight // Convert 40px to video height ratio
     const startX = (video.videoWidth - scanAreaWidth) / 2
     const startY = (video.videoHeight - scanAreaHeight) / 2
+
+    // Log scanning dimensions
+    addLog(`Scan area: ${Math.round(scanAreaWidth)}x${Math.round(scanAreaHeight)} px`)
 
     const tempCanvas = document.createElement('canvas')
     tempCanvas.width = scanAreaWidth
