@@ -450,19 +450,6 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     }
   }
 
-  const togglePause = () => {
-    setIsPaused(prev => {
-      const newPauseState = !prev;
-      addLog(`Scanning ${newPauseState ? 'paused' : 'resumed'}`);
-      
-      if (!newPauseState && !scanningRef.current) {
-        scanningRef.current = requestAnimationFrame(startOCRScanning);
-      }
-      
-      return newPauseState;
-    });
-  }
-
   useEffect(() => {
     return () => {
       if (scanningRef.current) {
