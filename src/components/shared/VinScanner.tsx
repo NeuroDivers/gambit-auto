@@ -1,4 +1,3 @@
-
 import React from 'react'
 import { Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -43,7 +42,6 @@ DialogContent.displayName = "DialogContent"
 export function VinScanner({ onScan }: VinScannerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isCameraActive, setIsCameraActive] = useState(false)
-  const [isScanning, setIsScanning] = useState(false)
   const [scanMode, setScanMode] = useState<'text' | 'barcode'>('text')
   const [logs, setLogs] = useState<string[]>([])
   const [hasFlash, setHasFlash] = useState(false)
@@ -119,40 +117,21 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }
 
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop())
-      streamRef.current = null
-    }
-    if (scanningRef.current) {
-      cancelAnimationFrame(scanningRef.current)
-    }
-    if (barcodeReaderRef.current) {
-      barcodeReaderRef.current.reset()
-      barcodeReaderRef.current = null
-    }
-    setIsCameraActive(false)
-    setIsScanning(false)
-    setIsFlashOn(false)
-  }
-
   const startCamera = async () => {
     try {
       const constraints = {
         video: {
-          facingMode: { exact: "environment" }, // This forces the back camera
+          facingMode: { exact: "environment" },
           width: { ideal: 1920 },
           height: { ideal: 1080 }
         }
       }
 
-      // Fallback to any available camera if back camera isn't available
       const fallbackConstraints = {
         video: true
       }
 
       try {
-        // First try with back camera
         const stream = await navigator.mediaDevices.getUserMedia(constraints)
         if (videoRef.current) {
           videoRef.current.srcObject = stream
@@ -160,8 +139,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
           addLog('Stream acquired with back camera, initializing...')
         }
       } catch (backCameraError) {
-        // If back camera fails, try with any available camera
-        console.log('Back camera not available, trying fallback:', backCameraError)
         addLog('Back camera not available, trying alternative camera...')
         const stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints)
         if (videoRef.current) {
@@ -172,7 +149,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
       }
       
       if (videoRef.current) {
-        // Check for flash capability
         const track = streamRef.current?.getVideoTracks()[0]
         if (track) {
           const capabilities = track.getCapabilities() as ExtendedTrackCapabilities
@@ -189,18 +165,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
         })
         
         await videoRef.current.play()
+        setIsCameraActive(true)
         addLog('Video stream started')
 
         if (scanMode === 'text') {
           addLog('Starting OCR initialization...')
           workerRef.current = await initializeWorker()
-          addLog('Worker reference created')
-          
-          let isCurrentlyScanning = true
-          setIsScanning(isCurrentlyScanning)
-          
-          addLog(`Starting OCR scanning...`)
-          await startOCRScanning(isCurrentlyScanning)
+          addLog('Starting continuous OCR scanning...')
+          startOCRScanning()
         } else {
           addLog('Initializing barcode reader...')
           await initializeBarcodeScanner()
@@ -210,6 +182,87 @@ export function VinScanner({ onScan }: VinScannerProps) {
       addLog(`Error accessing camera: ${error}`)
       toast.error("Could not access camera. Please check camera permissions.")
       setIsDialogOpen(false)
+    }
+  }
+
+  const captureFrame = () => {
+    if (!videoRef.current || !canvasRef.current) {
+      return null
+    }
+
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+
+    if (!ctx || video.readyState !== video.HAVE_ENOUGH_DATA) {
+      return null
+    }
+
+    // Set canvas size to match the video dimensions
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+
+    // Calculate the scan area dimensions (12% height, 60% width of the video)
+    const scanAreaWidth = video.videoWidth * 0.6
+    const scanAreaHeight = video.videoHeight * 0.12
+    const startX = (video.videoWidth - scanAreaWidth) / 2
+    const startY = (video.videoHeight - scanAreaHeight) / 2
+
+    // Create a temporary canvas for the cropped area
+    const tempCanvas = document.createElement('canvas')
+    tempCanvas.width = scanAreaWidth
+    tempCanvas.height = scanAreaHeight
+    const tempCtx = tempCanvas.getContext('2d')
+
+    if (!tempCtx) {
+      return null
+    }
+
+    // Draw only the scan area to the temporary canvas
+    tempCtx.drawImage(
+      video,
+      startX, startY, scanAreaWidth, scanAreaHeight,
+      0, 0, scanAreaWidth, scanAreaHeight
+    )
+
+    return preprocessImage(tempCanvas)
+  }
+
+  const startOCRScanning = async () => {
+    if (!streamRef.current || !workerRef.current || !isDialogOpen) {
+      return
+    }
+
+    try {
+      const frameData = captureFrame()
+      if (!frameData) {
+        scanningRef.current = requestAnimationFrame(startOCRScanning)
+        return
+      }
+
+      const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
+      const correctedText = correctCommonOcrMistakes(text)
+      
+      if (confidence > 40 && correctedText.length >= 15) {
+        addLog(`Detected text: ${correctedText} (confidence: ${confidence}%)`)
+
+        if (correctedText.length === 17 && validateVIN(correctedText)) {
+          const isValidVin = await validateVinWithNHTSA(correctedText)
+          
+          if (isValidVin) {
+            onScan(correctedText)
+            toast.success("VIN scanned and validated successfully")
+            handleClose()
+            return
+          }
+        }
+      }
+
+      // Continue scanning
+      scanningRef.current = requestAnimationFrame(startOCRScanning)
+    } catch (error) {
+      addLog(`OCR error: ${error}`)
+      scanningRef.current = requestAnimationFrame(startOCRScanning)
     }
   }
 
@@ -257,90 +310,20 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }
 
-  const startOCRScanning = async (immediateScanning?: boolean) => {
-    const shouldScan = immediateScanning ?? isScanning
-
-    if (!streamRef.current || !workerRef.current || !shouldScan) {
-      return
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
     }
-
-    try {
-      const frameData = captureFrame()
-      if (!frameData) {
-        if (shouldScan) {
-          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
-        }
-        return
-      }
-
-      const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
-      
-      const correctedText = correctCommonOcrMistakes(text)
-      addLog(`Detected text: ${correctedText} (confidence: ${confidence}%)`)
-      
-      if (confidence < 40 || correctedText.length < 15) {
-        if (shouldScan) {
-          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
-        }
-        return
-      }
-
-      if (correctedText.length === 17 && validateVIN(correctedText)) {
-        const isValidVin = await validateVinWithNHTSA(correctedText)
-        
-        if (isValidVin) {
-          onScan(correctedText)
-          toast.success("VIN scanned and validated successfully")
-          handleClose()
-          return
-        }
-      }
-      
-      if (shouldScan) {
-        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
-      }
-    } catch (error) {
-      addLog(`OCR error: ${error}`)
-      if (shouldScan) {
-        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
-      }
+    if (scanningRef.current) {
+      cancelAnimationFrame(scanningRef.current)
     }
-  }
-
-  const captureFrame = () => {
-    if (!videoRef.current || !canvasRef.current) {
-      return null
+    if (barcodeReaderRef.current) {
+      barcodeReaderRef.current.reset()
+      barcodeReaderRef.current = null
     }
-
-    const canvas = canvasRef.current
-    const video = videoRef.current
-    const ctx = canvas.getContext('2d')
-    
-    if (!ctx || video.readyState !== video.HAVE_ENOUGH_DATA) {
-      return null
-    }
-
-    const scanAreaWidth = Math.min(280, video.videoWidth * 0.6)
-    const scanAreaHeight = video.videoHeight * 0.12
-    const startX = (video.videoWidth - scanAreaWidth) / 2
-    const startY = (video.videoHeight - scanAreaHeight) / 2
-
-    const tempCanvas = document.createElement('canvas')
-    tempCanvas.width = scanAreaWidth
-    tempCanvas.height = scanAreaHeight
-    const tempCtx = tempCanvas.getContext('2d')
-
-    if (!tempCtx) {
-      return null
-    }
-
-    tempCtx.drawImage(
-      video,
-      startX, startY, scanAreaWidth, scanAreaHeight,
-      0, 0, scanAreaWidth, scanAreaHeight
-    )
-
-    return preprocessImage(tempCanvas)
+    setIsCameraActive(false)
+    setIsFlashOn(false)
   }
 
   const handleClose = async () => {
@@ -380,7 +363,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         type="button" 
         variant="outline" 
         size="icon"
-        onClick={() => setIsDialogOpen(true)}
+        onClick={handleOpen}
         className="shrink-0"
       >
         <Camera className="h-4 w-4" />
