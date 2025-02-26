@@ -18,23 +18,41 @@ const loadOpenCV = async (): Promise<void> => {
     window.cv = undefined;
   }
 
+  const existingScript = document.querySelector('script[src*="opencv.js"]');
+  if (existingScript) {
+    existingScript.remove();
+  }
+
   return new Promise((resolve, reject) => {
+    let isResolved = false;
+
     const script = document.createElement('script');
     script.src = 'https://docs.opencv.org/4.5.4/opencv.js';
     script.async = true;
     script.type = 'text/javascript';
 
+    const checkOpenCVModule = () => {
+      if (window.cv && typeof window.cv === 'object') {
+        if (!isResolved) {
+          isResolved = true;
+          resolve();
+        }
+      }
+    };
+
     script.onload = () => {
       const cvCheckInterval = setInterval(() => {
-        if (window.cv && typeof window.cv === 'object') {
+        checkOpenCVModule();
+        if (isResolved) {
           clearInterval(cvCheckInterval);
-          resolve();
         }
       }, 100);
 
       setTimeout(() => {
         clearInterval(cvCheckInterval);
-        reject(new Error('OpenCV took too long to initialize'));
+        if (!isResolved) {
+          reject(new Error('OpenCV took too long to initialize'));
+        }
       }, 10000);
     };
 
@@ -42,10 +60,11 @@ const loadOpenCV = async (): Promise<void> => {
       reject(new Error('Failed to load OpenCV'));
     };
 
-    const existingScript = document.querySelector('script[src*="opencv.js"]');
-    if (existingScript) {
-      existingScript.remove();
-    }
+    window.Module = {
+      onRuntimeInitialized: () => {
+        checkOpenCVModule();
+      }
+    };
 
     document.body.appendChild(script);
   });
@@ -69,10 +88,11 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const isProcessingRef = useRef(false)
 
   const addLog = (message: string) => {
-    setLogs(prev => [...prev, message])
+    console.log(message);
+    setLogs(prev => [...prev, message]);
     setTimeout(() => {
-      logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, 100)
+      logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   }
 
   const captureFrame = async (): Promise<string | null> => {
@@ -224,18 +244,24 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
 
   const startCamera = async () => {
     try {
-      await stopCamera()
+      await stopCamera();
 
       addLog('Loading OpenCV...');
       try {
         await loadOpenCV();
+        await new Promise(resolve => setTimeout(resolve, 1000));
         setIsOpenCVLoaded(true);
-        addLog('OpenCV loaded successfully');
+        addLog('OpenCV loaded and initialized successfully');
       } catch (error) {
+        console.error('OpenCV loading error:', error);
         addLog(`Failed to load OpenCV: ${error}`);
         toast.error("Failed to initialize camera. Please try again.");
         onClose();
         return;
+      }
+
+      if (!window.cv) {
+        throw new Error('OpenCV failed to initialize properly');
       }
 
       const constraints = {
@@ -299,13 +325,19 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       addLog('Video stream started successfully')
 
       addLog('Initializing OCR worker...')
-      workerRef.current = await initializeWorker()
-      addLog('Starting OCR scanning loop...')
-      startOCRScanning()
+      workerRef.current = await initializeWorker();
+      
+      if (isOpenCVLoaded && workerRef.current) {
+        addLog('Starting OCR scanning loop...');
+        startOCRScanning();
+      } else {
+        throw new Error('Required components not initialized');
+      }
     } catch (error) {
-      addLog(`Error accessing camera: ${error}`)
-      toast.error("Could not access camera. Please check camera permissions.")
-      onClose()
+      console.error('Camera start error:', error);
+      addLog(`Error accessing camera: ${error}`);
+      toast.error("Could not access camera. Please check camera permissions.");
+      onClose();
     }
   }
 
@@ -391,6 +423,7 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     return () => {
       if (scanningRef.current) {
         cancelAnimationFrame(scanningRef.current);
+        scanningRef.current = undefined;
       }
       stopCamera();
     };
