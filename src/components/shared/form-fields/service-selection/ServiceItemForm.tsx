@@ -11,7 +11,6 @@ import { ServicesByType } from "./types"
 import { CommissionRateFields } from "../CommissionRateFields"
 
 interface ServiceItemFormProps {
-  index: number;
   service: ServiceItemType;
   onRemove: () => void;
   onChange: (service: ServiceItemType) => void;
@@ -21,7 +20,6 @@ interface ServiceItemFormProps {
 }
 
 export function ServiceItemForm({
-  index,
   service,
   onRemove,
   onChange,
@@ -29,6 +27,7 @@ export function ServiceItemForm({
   showCommission = false,
   disabled = false
 }: ServiceItemFormProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleServiceChange = (updates: Partial<ServiceItemType>) => {
@@ -43,15 +42,22 @@ export function ServiceItemForm({
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
           <ServiceDropdown
-            selectedValue={service.service_id}
-            onServiceSelect={(serviceId, serviceName) => {
-              handleServiceChange({
-                service_id: serviceId,
-                service_name: serviceName
-              });
+            selectedServiceName={service.service_name}
+            servicesByType={services}
+            open={isOpen}
+            setOpen={setIsOpen}
+            handleServiceSelect={(serviceId) => {
+              const selectedService = Object.values(services)
+                .flat()
+                .find(s => s.id === serviceId);
+              if (selectedService) {
+                handleServiceChange({
+                  service_id: serviceId,
+                  service_name: selectedService.name
+                });
+              }
             }}
-            servicesList={services}
-            isDisabled={disabled}
+            serviceId={service.service_id}
           />
         </div>
         <Button
@@ -109,7 +115,7 @@ export function ServiceItemForm({
 
       <ServiceDescription
         selectedServiceId={service.service_id}
-        servicesList={services}
+        servicesByType={services}
         expanded={isExpanded}
         onExpandToggle={() => setIsExpanded(!isExpanded)}
       />

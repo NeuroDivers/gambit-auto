@@ -84,16 +84,19 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
         if (servicesError) throw servicesError
 
         if (servicesData && Array.isArray(servicesData)) {
-          const formattedServices = servicesData.map(service => ({
-            service_id: service.service_id,
-            service_name: service.service_types?.name || '',
-            quantity: service.quantity,
-            unit_price: service.unit_price,
-            commission_rate: service.commission_rate ?? 0,
-            commission_type: service.commission_type as 'percentage' | 'flat' | null,
-            assigned_profile_id: service.assigned_profile_id,
-            description: service.service_types?.description || ''
-          }));
+          const formattedServices = servicesData.map(service => {
+            const serviceType = service.service_types as { name: string; description?: string } | null;
+            return {
+              service_id: service.service_id,
+              service_name: serviceType?.name || '',
+              quantity: service.quantity,
+              unit_price: service.unit_price,
+              commission_rate: service.commission_rate ?? 0,
+              commission_type: service.commission_type as 'percentage' | 'flat' | null,
+              assigned_profile_id: service.assigned_profile_id,
+              description: serviceType?.description || ''
+            };
+          });
 
           form.setValue('service_items', formattedServices)
         }

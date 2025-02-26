@@ -11,21 +11,22 @@ export interface ServiceType {
 }
 
 export interface ServiceDropdownProps {
-  selectedValue?: string;
-  onServiceSelect: (serviceId: string, serviceName: string) => void;
-  servicesList: ServicesByType;
-  isDisabled?: boolean;
+  selectedServiceName?: string;
+  servicesByType: ServicesByType;
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  handleServiceSelect: (value: string) => void;
+  serviceId?: string;
 }
 
 export interface ServiceDescriptionProps {
   selectedServiceId?: string;
-  servicesList: ServicesByType;
+  servicesByType: ServicesByType;
   expanded: boolean;
   onExpandToggle: () => void;
 }
 
 export interface ServiceItemProps {
-  index: number;
   service: ServiceItemType;
   availableServices: ServiceType[];
   onRemove: () => void;
