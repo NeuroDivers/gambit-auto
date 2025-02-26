@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -21,13 +22,6 @@ export default function InvoiceDetails() {
   const handlePrint = useReactToPrint({
     documentTitle: 'Invoice',
     pageStyle: '@page { margin: 1cm }',
-    onBeforeGetContent: () => {
-      const document = printRef.current?.ownerDocument
-      if (document) {
-        const html = document.getElementsByTagName('html')[0]
-        html.style.transform = 'scale(1)'
-      }
-    },
     content: () => printRef.current,
   })
 
