@@ -94,9 +94,9 @@ export function VehicleInfoFields({ control, watch, setValue }: VehicleInfoField
         name="vehicle_serial"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>VIN</FormLabel>
+            <FormLabel>VIN (Optional)</FormLabel>
             <FormControl>
-              <Input placeholder="Enter vehicle VIN" {...field} />
+              <Input placeholder="Enter VIN for auto-fill" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

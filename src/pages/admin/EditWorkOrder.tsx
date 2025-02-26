@@ -7,6 +7,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import { PageTitle } from "@/components/shared/PageTitle"
+import { toast } from "sonner"
 
 export default function EditWorkOrder() {
   const { id } = useParams()
@@ -35,7 +36,7 @@ export default function EditWorkOrder() {
           )
         `)
         .eq('id', id)
-        .single()
+        .maybeSingle()
 
       if (error) {
         console.error('Error fetching work order:', error)
@@ -90,6 +91,7 @@ export default function EditWorkOrder() {
         <WorkOrderForm
           workOrder={workOrder}
           onSuccess={() => {
+            toast.success("Work order updated successfully")
             navigate('/work-orders')
           }}
         />
