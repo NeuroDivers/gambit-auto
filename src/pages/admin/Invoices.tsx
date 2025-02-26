@@ -58,6 +58,21 @@ export default function Invoices() {
     navigate(`/admin/invoices/${id}`)
   }
 
+  const getBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'paid':
+        return 'success'
+      case 'overdue':
+        return 'destructive'
+      case 'pending':
+        return 'pending'
+      case 'draft':
+        return 'draft'
+      default:
+        return 'secondary'
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -150,7 +165,7 @@ export default function Invoices() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={invoice.status}>
+                        <Badge variant={getBadgeVariant(invoice.status)}>
                           {invoice.status}
                         </Badge>
                       </TableCell>

@@ -11,6 +11,21 @@ interface InvoiceMobileListProps {
 }
 
 export function InvoiceMobileList({ invoices, onRowClick }: InvoiceMobileListProps) {
+  const getBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'paid':
+        return 'success'
+      case 'overdue':
+        return 'destructive'
+      case 'pending':
+        return 'pending'
+      case 'draft':
+        return 'draft'
+      default:
+        return 'secondary'
+    }
+  }
+
   if (!invoices?.length) {
     return (
       <Card className="p-6 text-center text-muted-foreground">
@@ -34,7 +49,7 @@ export function InvoiceMobileList({ invoices, onRowClick }: InvoiceMobileListPro
               </h3>
               <p className="text-sm text-muted-foreground">{invoice.customer_email}</p>
             </div>
-            <Badge variant={invoice.status}>
+            <Badge variant={getBadgeVariant(invoice.status)}>
               {invoice.status}
             </Badge>
           </div>
