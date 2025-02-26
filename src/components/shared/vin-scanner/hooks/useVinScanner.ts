@@ -90,9 +90,9 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const logsEndRef = useRef<HTMLDivElement>(null)
   const isProcessingRef = useRef(false)
   const lastScanTimeRef = useRef<number>(0);
-  const SCAN_INTERVAL = 500; // Minimum time between scans in milliseconds
-  const CONFIDENCE_THRESHOLD = 30; // Only process results with confidence above 30%
-  const MIN_MATCHES_REQUIRED = 2; // Require at least 2 matching scans before accepting
+  const SCAN_INTERVAL = 500;
+  const CONFIDENCE_THRESHOLD = 0; // Lower confidence threshold since we're getting good matches with low confidence
+  const MIN_MATCHES_REQUIRED = 2;
   const matchesRef = useRef<{[key: string]: number}>({});
   const scanStartTimeRef = useRef<number>(0);
 
@@ -218,23 +218,13 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       const result = await workerRef.current.recognize(frameData);
       const { text, confidence } = result.data;
       
-      if (confidence < CONFIDENCE_THRESHOLD) {
-        if (text.trim()) {
-          addLog(`Low confidence text: "${text.trim()}" (${confidence.toFixed(1)}%)`);
-        }
-        isProcessingRef.current = false;
-        if (!isPaused) {
-          scanningRef.current = requestAnimationFrame(startOCRScanning);
-        }
-        return;
-      }
-      
+      // Extract VIN pattern first
       const vinPattern = /[A-HJ-NPR-Z0-9]{17}/;
       const matches = text.match(vinPattern);
       
       if (matches) {
         const potentialVin = matches[0];
-        addLog(`Potential VIN found: "${potentialVin}" (${confidence.toFixed(1)}%)`);
+        addLog(`VIN pattern found: "${potentialVin}" (${confidence.toFixed(1)}%)`);
         
         if (validateVIN(potentialVin)) {
           const isNorthAmerican = ['1', '2', '3', '4', '5'].includes(potentialVin[0]);
@@ -273,13 +263,13 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
         }, 1000);
       }
     }
-  }
+  };
 
   const startCamera = async () => {
     try {
       await stopCamera();
-      scanStartTimeRef.current = Date.now(); // Reset the timer when starting camera
-
+      
+      // Initialize everything before starting the camera
       addLog('Loading OpenCV...');
       try {
         await loadOpenCV();
@@ -298,6 +288,13 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
         throw new Error('OpenCV failed to initialize properly');
       }
 
+      // Reset timer when starting camera
+      scanStartTimeRef.current = Date.now();
+
+      // Initialize worker before camera
+      addLog('Initializing OCR worker...');
+      workerRef.current = await initializeWorker();
+
       const constraints = {
         video: {
           facingMode: { exact: "environment" },
@@ -310,10 +307,12 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
 
       const fallbackConstraints = {
         video: {
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          zoom: 2.0,
-          advanced: [{ zoom: 2.0 }] as any
+          video: {
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            zoom: 2.0,
+            advanced: [{ zoom: 2.0 }] as any
+          }
         }
       }
 
@@ -358,8 +357,6 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       setIsCameraActive(true)
       addLog('Video stream started successfully')
 
-      addLog('Initializing OCR worker...')
-      workerRef.current = await initializeWorker();
       
       if (isOpenCVLoaded && workerRef.current) {
         addLog('Starting OCR scanning loop...');
@@ -373,7 +370,7 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       toast.error("Could not access camera. Please check camera permissions.");
       onClose();
     }
-  }
+  };
 
   const stopCamera = async () => {
     if (scanningRef.current) {
