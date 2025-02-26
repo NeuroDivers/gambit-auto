@@ -3,10 +3,14 @@ import { WorkOrderForm } from "@/components/work-orders/WorkOrderForm"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
-import { useParams } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
+import { Button } from "@/components/ui/button"
+import { ArrowLeft } from "lucide-react"
+import { PageTitle } from "@/components/shared/PageTitle"
 
 export default function EditWorkOrder() {
   const { id } = useParams()
+  const navigate = useNavigate()
 
   const { data: workOrder, isLoading } = useQuery({
     queryKey: ['work-order', id],
@@ -16,21 +20,28 @@ export default function EditWorkOrder() {
         .select(`
           *,
           work_order_services (
+            id,
             service_id,
             quantity,
             unit_price,
-            service_types!work_order_services_service_id_fkey (
-              id,
-              name,
-              description,
-              price
-            )
+            commission_rate,
+            commission_type,
+            main_service_id,
+            sub_service_id
+          ),
+          service_bays!fk_work_orders_assigned_bay (
+            id,
+            name
           )
         `)
         .eq('id', id)
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching work order:', error)
+        throw error
+      }
+
       return data
     },
     enabled: !!id
@@ -41,17 +52,48 @@ export default function EditWorkOrder() {
   }
 
   if (!workOrder) {
-    return <div>Work order not found</div>
+    return (
+      <div className="p-6">
+        <div className="flex items-center gap-4 mb-6">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <PageTitle 
+            title="Work Order Not Found" 
+            description="The requested work order could not be found."
+          />
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-4">
-      <WorkOrderForm
-        workOrder={workOrder}
-        onSuccess={() => {
-          // Handle success if needed
-        }}
-      />
+    <div className="space-y-6 p-6">
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <PageTitle 
+          title="Edit Work Order" 
+          description="Update the work order details using the form below."
+        />
+      </div>
+      <div className="rounded-lg border bg-card p-6">
+        <WorkOrderForm
+          workOrder={workOrder}
+          onSuccess={() => {
+            navigate('/work-orders')
+          }}
+        />
+      </div>
     </div>
   )
 }
