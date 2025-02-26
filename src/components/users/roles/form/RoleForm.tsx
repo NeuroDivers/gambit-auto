@@ -21,7 +21,6 @@ import { UseFormReturn } from "react-hook-form"
 import { RoleFormValues } from "./RoleFormSchema"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
-import { useEffect } from "react"
 
 interface RoleFormProps {
   form: UseFormReturn<RoleFormValues>
@@ -50,15 +49,6 @@ export function RoleForm({ form, onSubmit, onCancel, mode, roleId }: RoleFormPro
     }
   };
 
-  // Set field as readonly for protected roles
-  useEffect(() => {
-    if (isProtectedRole) {
-      form.register('name', { 
-        disabled: true,
-      });
-    }
-  }, [isProtectedRole, form]);
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
@@ -74,6 +64,7 @@ export function RoleForm({ form, onSubmit, onCancel, mode, roleId }: RoleFormPro
         <FormField
           control={form.control}
           name="name"
+          disabled={isProtectedRole}
           render={({ field }) => (
             <FormItem>
               <FormLabel>System Name</FormLabel>
