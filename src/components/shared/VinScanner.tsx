@@ -106,6 +106,17 @@ export function VinScanner({ onScan }: VinScannerProps) {
     setIsScanning(false)
   }
 
+  const handleClose = async () => {
+    stopCamera()
+    if (workerRef.current) {
+      await workerRef.current.terminate()
+      workerRef.current = null
+    }
+    confidenceMapRef.current = []
+    setIsDialogOpen(false)
+    setLogs([])
+  }
+
   const startCamera = async () => {
     try {
       setError(undefined)
@@ -242,7 +253,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       const now = Date.now()
       if (now - lastScanRef.current < OCR_SCAN_INTERVAL) {
         if (shouldScan) {
-          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan));
+          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
         }
         return
       }
@@ -254,7 +265,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       const frameData = captureFrame()
       if (!frameData) {
         if (shouldScan) {
-          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan));
+          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
         }
         return
       }
@@ -277,7 +288,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
           .replace(/[Bb]/g, '8')
           .replace(/[Gg]/g, '6')
 
-        const charConfidence = word.confidence / word.text.length
+        // Ensure we have a valid confidence value
+        const charConfidence = typeof word.confidence === 'number' ? word.confidence : 0
 
         normalizedText.split('').forEach((char: string) => {
           if (charCount < 17) {
@@ -398,17 +410,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
       lastUpdated: now
     }
     return char
-  }
-
-  const handleClose = async () => {
-    stopCamera()
-    if (workerRef.current) {
-      await workerRef.current.terminate()
-      workerRef.current = null
-    }
-    confidenceMapRef.current = []
-    setIsDialogOpen(false)
-    setLogs([])
   }
 
   const handleOpen = async () => {
