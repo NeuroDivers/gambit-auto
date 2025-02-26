@@ -14,16 +14,39 @@ export interface ExtendedTrackCapabilities extends MediaTrackCapabilities {
 }
 
 const loadOpenCV = async (): Promise<void> => {
-  if (window.cv) return;
+  if (typeof window !== 'undefined') {
+    window.cv = undefined;
+  }
 
   return new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.src = 'https://docs.opencv.org/4.5.4/opencv.js';
     script.async = true;
+    script.type = 'text/javascript';
+
     script.onload = () => {
-      setTimeout(() => resolve(), 500);
+      const cvCheckInterval = setInterval(() => {
+        if (window.cv && typeof window.cv === 'object') {
+          clearInterval(cvCheckInterval);
+          resolve();
+        }
+      }, 100);
+
+      setTimeout(() => {
+        clearInterval(cvCheckInterval);
+        reject(new Error('OpenCV took too long to initialize'));
+      }, 10000);
     };
-    script.onerror = () => reject(new Error('Failed to load OpenCV'));
+
+    script.onerror = () => {
+      reject(new Error('Failed to load OpenCV'));
+    };
+
+    const existingScript = document.querySelector('script[src*="opencv.js"]');
+    if (existingScript) {
+      existingScript.remove();
+    }
+
     document.body.appendChild(script);
   });
 };
@@ -46,12 +69,10 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const isProcessingRef = useRef(false)
 
   const addLog = (message: string) => {
-    if (!isPaused) {
-      setLogs(prev => [...prev, message])
-      setTimeout(() => {
-        logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-      }, 100)
-    }
+    setLogs(prev => [...prev, message])
+    setTimeout(() => {
+      logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, 100)
   }
 
   const captureFrame = async (): Promise<string | null> => {
@@ -205,6 +226,18 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     try {
       await stopCamera()
 
+      addLog('Loading OpenCV...');
+      try {
+        await loadOpenCV();
+        setIsOpenCVLoaded(true);
+        addLog('OpenCV loaded successfully');
+      } catch (error) {
+        addLog(`Failed to load OpenCV: ${error}`);
+        toast.error("Failed to initialize camera. Please try again.");
+        onClose();
+        return;
+      }
+
       const constraints = {
         video: {
           facingMode: { exact: "environment" },
@@ -223,10 +256,6 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
           advanced: [{ zoom: 2.0 }] as any
         }
       }
-
-      await loadOpenCV()
-      setIsOpenCVLoaded(true)
-      addLog('OpenCV loaded successfully')
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia(constraints)
@@ -282,8 +311,8 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
 
   const stopCamera = async () => {
     if (scanningRef.current) {
-      cancelAnimationFrame(scanningRef.current)
-      scanningRef.current = undefined
+      cancelAnimationFrame(scanningRef.current);
+      scanningRef.current = undefined;
     }
 
     if (streamRef.current) {
