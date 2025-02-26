@@ -99,13 +99,8 @@ export function useWorkOrderListData() {
           updated_at: new Date().toISOString()
         })
         .eq("id", workOrderId)
-        .select(`
-          *,
-          service_bays!inner (
-            id,
-            name
-          )
-        `)
+        .select(`*, service_bays!fk_work_orders_assigned_bay (id, name)`)
+        .single()
 
       if (error) {
         console.error('Bay assignment error:', error)
