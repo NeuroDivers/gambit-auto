@@ -38,18 +38,41 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
 
   const correctCommonOcrMistakes = (text: string): string => {
     let corrected = text
-      .replace(/[oO]/g, '0')
-      .replace(/[iIl]/g, '1')
+      .replace(/[oO0]/g, '0')
+      .replace(/[iIl|]/g, '1')
       .replace(/[sS]/g, '5')
       .replace(/[zZ]/g, '2')
       .replace(/[bB]/g, '8')
       .replace(/[gG]/g, '6')
+      .replace(/[qQ]/g, '0')
       .replace(/\s+/g, '')
       .toUpperCase()
 
     const vinPattern = /[A-HJ-NPR-Z0-9]{17}/
     const match = corrected.match(vinPattern)
-    return match ? match[0] : corrected
+    
+    if (match) {
+      let vin = match[0]
+      
+      if (vin.length === 17) {
+        const firstChar = vin.charAt(0)
+        if ('1234567890'.includes(firstChar)) {
+          if (!['1', '2', '3', '4', '5'].includes(firstChar)) {
+            if (firstChar === '7') vin = '1' + vin.slice(1)
+            if (firstChar === '6') vin = '5' + vin.slice(1)
+          }
+        }
+        
+        vin = vin
+          .replace(/I/g, '1')
+          .replace(/O/g, '0')
+          .replace(/Q/g, '0')
+      }
+      
+      return vin
+    }
+    
+    return corrected
   }
 
   const initializeWorker = async () => {
@@ -159,7 +182,9 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       const frameData = captureFrame()
       
       if (!frameData) {
-        addLog('No valid frame captured')
+        if (!isPaused) {
+          addLog('No valid frame captured')
+        }
         isProcessingRef.current = false
         if (!isPaused) {
           scanningRef.current = requestAnimationFrame(startOCRScanning)
@@ -167,30 +192,40 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
         return
       }
 
-      addLog('Processing frame with OCR...')
+      if (!isPaused) {
+        addLog('Processing frame with OCR...')
+      }
+      
       const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
       
-      if (text.trim()) {
+      if (!isPaused && text.trim()) {
         addLog(`Raw text: "${text.trim()}" (${confidence.toFixed(1)}%)`)
       }
       
       const correctedText = correctCommonOcrMistakes(text)
-      if (correctedText !== text.trim() && correctedText) {
+      if (!isPaused && correctedText !== text.trim() && correctedText) {
         addLog(`Corrected text: "${correctedText}"`)
       }
       
-      if (confidence > 40 && correctedText.length >= 15) {
+      if (confidence > 45 && correctedText.length >= 15) {
         if (correctedText.length === 17 && validateVIN(correctedText)) {
-          addLog('✓ Valid VIN format detected, validating with NHTSA...')
+          const isNorthAmerican = ['1', '2', '3', '4', '5'].includes(correctedText[0])
+          
+          if (!isPaused) {
+            addLog(`✓ Valid VIN format detected${isNorthAmerican ? ' (North American)' : ''}, validating with NHTSA...`)
+          }
+          
           const isValidVin = await validateVinWithNHTSA(correctedText)
           
           if (isValidVin) {
-            addLog('✓ VIN validated successfully!')
+            if (!isPaused) {
+              addLog('✓ VIN validated successfully!')
+              toast.success("VIN scanned and validated successfully")
+            }
             onScan(correctedText)
-            toast.success("VIN scanned and validated successfully")
             onClose()
             return
-          } else {
+          } else if (!isPaused) {
             addLog('✗ VIN validation failed')
           }
         }
