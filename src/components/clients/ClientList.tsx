@@ -37,14 +37,15 @@ export function ClientList() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [sortBy, setSortBy] = useState<string>("recent")
+  const [accountFilter, setAccountFilter] = useState<string>("all")
   const debouncedSearch = useDebounce(searchQuery, 300)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
   const { data: clients, isLoading } = useQuery({
-    queryKey: ['clients', debouncedSearch, sortBy],
+    queryKey: ['clients', debouncedSearch, sortBy, accountFilter],
     queryFn: async () => {
-      console.log("Fetching clients with search:", debouncedSearch, "sort:", sortBy)
+      console.log("Fetching clients with search:", debouncedSearch, "sort:", sortBy, "account filter:", accountFilter)
       let query = supabase
         .from('clients')
         .select(`
@@ -56,6 +57,7 @@ export function ClientList() {
           address,
           created_at,
           updated_at,
+          user_id,
           invoices (
             total,
             created_at
@@ -68,6 +70,13 @@ export function ClientList() {
       // Apply search if present
       if (debouncedSearch) {
         query = query.or(`first_name.ilike.%${debouncedSearch}%,last_name.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%`)
+      }
+
+      // Apply account filter
+      if (accountFilter === 'has_account') {
+        query = query.not('user_id', 'is', null)
+      } else if (accountFilter === 'no_account') {
+        query = query.is('user_id', null)
       }
 
       // Apply sorting
@@ -106,6 +115,7 @@ export function ClientList() {
           address: client.address,
           created_at: client.created_at,
           updated_at: client.updated_at,
+          user_id: client.user_id,
           total_work_orders: workOrders.length,
           total_invoices: invoices.length,
           total_spent: invoices.reduce((sum, inv) => sum + (inv.total || 0), 0),
@@ -189,6 +199,19 @@ export function ClientList() {
             <SelectItem value="recent">Most Recent</SelectItem>
             <SelectItem value="name">Name</SelectItem>
             <SelectItem value="activity">Recent Activity</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select
+          value={accountFilter}
+          onValueChange={setAccountFilter}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Account status..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Clients</SelectItem>
+            <SelectItem value="has_account">Has Account</SelectItem>
+            <SelectItem value="no_account">No Account</SelectItem>
           </SelectContent>
         </Select>
       </div>
