@@ -43,12 +43,21 @@ export default function DeveloperSettings() {
     }
   })
 
+  const [scannerLogs, setScannerLogs] = useState<Array<{
+    timestamp: string;
+    message: string;
+    type: string;
+  }>>([])
+
   useEffect(() => {
     const checkAccess = async () => {
       const hasPermission = await checkPermission("developer_settings", "page_access")
       setHasAccess(hasPermission)
     }
     checkAccess()
+
+    const logs = JSON.parse(localStorage.getItem('scanner-logs') || '[]')
+    setScannerLogs(logs)
   }, [checkPermission])
 
   const handleColorChange = (mode: 'light' | 'dark', colorKey: string, value: string) => {
@@ -157,6 +166,10 @@ export default function DeveloperSettings() {
           <TabsTrigger value="database" className="space-x-2">
             <Database className="h-4 w-4" />
             <span>Database</span>
+          </TabsTrigger>
+          <TabsTrigger value="logs" className="space-x-2">
+            <Code className="h-4 w-4" />
+            <span>System Logs</span>
           </TabsTrigger>
         </TabsList>
 
@@ -404,6 +417,44 @@ export default function DeveloperSettings() {
                     <p className="text-sm text-muted-foreground">
                       Configure automated database backups and retention policies
                     </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="logs" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-medium">
+                Scanner Logs
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="relative">
+                <Button 
+                  variant="outline" 
+                  className="absolute right-0 top-0"
+                  onClick={() => {
+                    localStorage.removeItem('scanner-logs')
+                    setScannerLogs([])
+                    toast.success("Scanner logs cleared")
+                  }}
+                >
+                  Clear Logs
+                </Button>
+                <div className="h-[500px] overflow-y-auto border rounded-lg p-4 mt-12">
+                  <div className="space-y-2">
+                    {scannerLogs.map((log, index) => (
+                      <div key={index} className="text-sm">
+                        <span className="text-muted-foreground">
+                          {new Date(log.timestamp).toLocaleString()}
+                        </span>
+                        <span className="mx-2">-</span>
+                        <span>{log.message}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>

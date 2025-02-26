@@ -40,7 +40,20 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const addLog = (message: string) => {
     if (!isPaused) {
+      const logEntry = {
+        timestamp: new Date().toISOString(),
+        message,
+        type: 'vin-scanner'
+      }
+      
+      // Add to UI logs
       setLogs(prev => [...prev, message])
+      
+      // Save to local storage
+      const existingLogs = JSON.parse(localStorage.getItem('scanner-logs') || '[]')
+      existingLogs.push(logEntry)
+      localStorage.setItem('scanner-logs', JSON.stringify(existingLogs.slice(-1000))) // Keep last 1000 logs
+      
       setTimeout(() => {
         logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
       }, 100)
@@ -362,23 +375,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
               ref={canvasRef}
               className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
-            {/* Modified overlay structure */}
-            <div className="absolute inset-0">
-              {/* Top overlay */}
-              <div className="absolute top-0 left-0 right-0 h-[calc(50%-80px)] bg-black/80" />
-              {/* Bottom overlay */}
-              <div className="absolute bottom-0 left-0 right-0 h-[calc(50%-80px)] bg-black/80" />
-              {/* Left overlay */}
-              <div className="absolute top-[calc(50%-80px)] bottom-[calc(50%-80px)] left-0 w-[2.5%] bg-black/80" />
-              {/* Right overlay */}
-              <div className="absolute top-[calc(50%-80px)] bottom-[calc(50%-80px)] right-0 w-[2.5%] bg-black/80" />
-              {/* Scanning area border */}
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] h-40 border-2 border-dashed border-primary-foreground/70" />
-            </div>
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-              <p className="text-white text-center text-sm">
-                Position {scanMode === 'text' ? 'VIN text' : 'barcode'} within frame
-              </p>
+            {/* Simplified scanning area */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] h-40">
+              <div className="absolute inset-0 border-2 border-primary rounded-lg" />
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/60 px-4 py-2 rounded-lg">
+                <p className="text-white text-center text-sm">
+                  Position {scanMode === 'text' ? 'VIN text' : 'barcode'} within frame
+                </p>
+              </div>
             </div>
           </div>
           <div className="bg-muted p-4">
