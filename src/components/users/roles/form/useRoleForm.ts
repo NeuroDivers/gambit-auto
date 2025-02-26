@@ -13,6 +13,11 @@ interface UseRoleFormProps {
   onOpenChange: (open: boolean) => void
 }
 
+const PROTECTED_ROLE_IDS = [
+  '816fe283-1aef-4294-b3cb-264347852e95', // Administrator
+  '73a06339-6dd6-4da7-ac27-db9e160c2ff6'  // Client
+];
+
 export const useRoleForm = ({ role, onSuccess, onOpenChange }: UseRoleFormProps) => {
   const { toast } = useToast()
 
@@ -48,15 +53,22 @@ export const useRoleForm = ({ role, onSuccess, onOpenChange }: UseRoleFormProps)
   const onSubmit = useCallback(async (values: RoleFormValues) => {
     try {
       if (role) {
+        const isProtectedRole = PROTECTED_ROLE_IDS.includes(role.id);
+        const updateData = {
+          nicename: values.nicename,
+          description: values.description,
+          default_dashboard: values.default_dashboard,
+          updated_at: new Date().toISOString()
+        };
+
+        // Only include name in update if not a protected role
+        if (!isProtectedRole) {
+          (updateData as any).name = values.name;
+        }
+
         const { error } = await supabase
           .from("roles")
-          .update({
-            name: values.name,
-            nicename: values.nicename,
-            description: values.description,
-            default_dashboard: values.default_dashboard,
-            updated_at: new Date().toISOString()
-          })
+          .update(updateData)
           .eq("id", role.id)
 
         if (error) throw error
