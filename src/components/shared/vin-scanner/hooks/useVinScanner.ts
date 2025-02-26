@@ -75,7 +75,6 @@ const loadOpenCV = async (): Promise<void> => {
 
 export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const [isCameraActive, setIsCameraActive] = useState(false)
-  const [isPaused, setIsPaused] = useState(false)
   const [logs, setLogs] = useState<string[]>([])
   const [hasFlash, setHasFlash] = useState(false)
   const [isFlashOn, setIsFlashOn] = useState(false)
@@ -91,10 +90,11 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const isProcessingRef = useRef(false)
   const lastScanTimeRef = useRef<number>(0);
   const SCAN_INTERVAL = 500;
-  const CONFIDENCE_THRESHOLD = 0; // Lower confidence threshold since we're getting good matches with low confidence
+  const CONFIDENCE_THRESHOLD = 0;
   const MIN_MATCHES_REQUIRED = 2;
   const matchesRef = useRef<{[key: string]: number}>({});
   const scanStartTimeRef = useRef<number>(0);
+  const isScanningRef = useRef(true);
 
   const addLog = (message: string) => {
     console.log(message);
@@ -268,6 +268,8 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   };
 
   const startOCRScanning = async () => {
+    if (!isScanningRef.current) return;
+
     if (!scanStartTimeRef.current) {
       scanStartTimeRef.current = Date.now();
     }
@@ -277,33 +279,41 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       scanningRef.current = undefined;
     }
 
-    if (isProcessingRef.current || isPaused || !isOpenCVLoaded) {
+    const currentTime = Date.now();
+    if (currentTime - lastScanTimeRef.current < SCAN_INTERVAL) {
+      if (isScanningRef.current) {
+        scanningRef.current = requestAnimationFrame(startOCRScanning);
+      }
+      return;
+    }
+
+    if (isProcessingRef.current || !isOpenCVLoaded) {
       addLog('Scanning skipped: ' + 
         (isProcessingRef.current ? 'processing in progress' : 
-         isPaused ? 'scanning paused' : 
          'OpenCV not loaded'));
       
-      if (!isPaused) {
+      if (isScanningRef.current) {
         scanningRef.current = requestAnimationFrame(startOCRScanning);
       }
       return;
     }
 
     if (!streamRef.current || !workerRef.current) {
-      addLog('Scanning conditions not met:');
-      addLog(`- Stream available: ${!!streamRef.current}`);
-      addLog(`- Worker available: ${!!workerRef.current}`);
-      addLog(`- OpenCV loaded: ${isOpenCVLoaded}`);
+      addLog('Scanning conditions not met:')
+      addLog(`- Stream available: ${!!streamRef.current}`)
+      addLog(`- Worker available: ${!!workerRef.current}`)
+      addLog(`- OpenCV loaded: ${isOpenCVLoaded}`)
       return;
     }
 
     try {
       isProcessingRef.current = true;
+      lastScanTimeRef.current = currentTime;
       
       const frameData = await captureFrame();
       if (!frameData) {
         isProcessingRef.current = false;
-        if (!isPaused) {
+        if (isScanningRef.current) {
           scanningRef.current = requestAnimationFrame(startOCRScanning);
         }
         return;
@@ -328,22 +338,17 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
           if (matchesRef.current[potentialVin] >= MIN_MATCHES_REQUIRED) {
             const isValidVin = await validateVinWithNHTSA(potentialVin);
             if (isValidVin) {
+              isScanningRef.current = false;
               if (scanningRef.current) {
                 cancelAnimationFrame(scanningRef.current);
                 scanningRef.current = undefined;
               }
               
-              isProcessingRef.current = false;
-              setIsPaused(true);
-              
               const scanDuration = (Date.now() - scanStartTimeRef.current) / 1000;
               addLog(`✓ VIN validated successfully! (Scan took ${scanDuration.toFixed(1)} seconds)`);
               
               toast.success(`VIN scanned and validated successfully in ${scanDuration.toFixed(1)}s`);
-              
-              await stopCamera();
               onScan(potentialVin);
-              onClose();
               return;
             }
           }
@@ -353,14 +358,14 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       }
 
       isProcessingRef.current = false;
-      if (!isPaused) {
+      if (isScanningRef.current) {
         scanningRef.current = requestAnimationFrame(startOCRScanning);
       }
     } catch (error) {
       console.error('OCR error:', error);
       addLog(`OCR error: ${error}`);
       isProcessingRef.current = false;
-      if (!isPaused) {
+      if (isScanningRef.current) {
         setTimeout(() => {
           scanningRef.current = requestAnimationFrame(startOCRScanning);
         }, 1000);
@@ -369,12 +374,14 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   };
 
   const stopCamera = async () => {
+    isScanningRef.current = false;
+    
     if (scanningRef.current) {
       cancelAnimationFrame(scanningRef.current);
       scanningRef.current = undefined;
     }
 
-    scanStartTimeRef.current = 0; // Reset the timer when stopping camera
+    scanStartTimeRef.current = 0;
 
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
@@ -473,11 +480,9 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     logs,
     hasFlash,
     isFlashOn,
-    isPaused,
+    detectedRegion,
     toggleFlash,
-    togglePause,
     startCamera,
-    stopCamera,
-    detectedRegion
+    stopCamera
   }
 }

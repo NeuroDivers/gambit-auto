@@ -48,18 +48,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
     logs,
     hasFlash,
     isFlashOn,
-    isPaused,
     detectedRegion,
     toggleFlash,
-    togglePause,
     startCamera,
     stopCamera
   } = useVinScanner({
     onScan: (vin: string) => {
-      // First stop camera and close dialog
       stopCamera();
       setIsDialogOpen(false);
-      // Then call onScan callback
       onScan(vin);
     },
     onClose: () => setIsDialogOpen(false)
@@ -92,8 +88,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
           <ScannerOverlay
             onFlashToggle={toggleFlash}
             onClose={handleClose}
-            isPaused={isPaused}
-            onPauseToggle={togglePause}
             hasFlash={hasFlash}
             isFlashOn={isFlashOn}
           />
