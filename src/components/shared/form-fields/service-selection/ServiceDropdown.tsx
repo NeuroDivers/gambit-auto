@@ -9,27 +9,27 @@ import {
 } from "@/components/ui/select";
 
 export function ServiceDropdown({
-  selectedValue,
-  onServiceSelect,
-  servicesList,
-  isDisabled
+  selectedServiceName,
+  servicesByType,
+  open,
+  setOpen,
+  handleServiceSelect,
+  serviceId
 }: ServiceDropdownProps) {
   return (
     <Select
-      value={selectedValue}
-      onValueChange={(value) => {
-        const service = Object.values(servicesList)
-          .flat()
-          .find((s) => s.id === value);
-        onServiceSelect(value, service?.name || '');
-      }}
-      disabled={isDisabled}
+      value={serviceId}
+      onValueChange={handleServiceSelect}
+      open={open}
+      onOpenChange={setOpen}
     >
       <SelectTrigger>
-        <SelectValue placeholder="Select a service" />
+        <SelectValue placeholder="Select a service">
+          {selectedServiceName}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
-        {Object.entries(servicesList).map(([category, services]) => (
+        {Object.entries(servicesByType).map(([category, services]) => (
           <div key={category}>
             {services.map((service) => (
               <SelectItem key={service.id} value={service.id}>

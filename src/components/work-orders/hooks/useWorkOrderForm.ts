@@ -85,7 +85,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
 
         if (servicesData && Array.isArray(servicesData)) {
           const formattedServices = servicesData.map(service => {
-            const serviceType = service.service_types as { name: string; description?: string } | null;
+            const serviceType = service.service_types as unknown as { name: string; description?: string } | null;
             return {
               service_id: service.service_id,
               service_name: serviceType?.name || '',
