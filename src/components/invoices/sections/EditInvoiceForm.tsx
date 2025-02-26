@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
@@ -15,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
+import { useState } from "react"
 
 type EditInvoiceFormProps = {
   form: UseFormReturn<InvoiceFormValues>
@@ -35,9 +35,13 @@ export function EditInvoiceForm({
   isLoadingClients = false,
   onClientSelect
 }: EditInvoiceFormProps) {
+  const [vehicleBodyClass, setVehicleBodyClass] = useState("")
+  const [vehicleDoors, setVehicleDoors] = useState(0)
+  const [vehicleTrim, setVehicleTrim] = useState("")
+  
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-screen">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="flex-1 overflow-y-auto space-y-6 px-4 pb-4">
           <Card>
             <CardHeader>
@@ -115,7 +119,7 @@ export function EditInvoiceForm({
               <CardTitle>Vehicle Information</CardTitle>
             </CardHeader>
             <CardContent>
-              <VehicleInfoFields 
+              <VehicleInfoFields
                 vehicleMake={form.watch('vehicle_make')}
                 setVehicleMake={(value) => form.setValue('vehicle_make', value)}
                 vehicleModel={form.watch('vehicle_model')}
@@ -124,6 +128,12 @@ export function EditInvoiceForm({
                 setVehicleYear={(value) => form.setValue('vehicle_year', value)}
                 vehicleVin={form.watch('vehicle_vin')}
                 setVehicleVin={(value) => form.setValue('vehicle_vin', value)}
+                vehicleBodyClass={vehicleBodyClass}
+                setVehicleBodyClass={setVehicleBodyClass}
+                vehicleDoors={vehicleDoors}
+                setVehicleDoors={setVehicleDoors}
+                vehicleTrim={vehicleTrim}
+                setVehicleTrim={setVehicleTrim}
               />
             </CardContent>
           </Card>

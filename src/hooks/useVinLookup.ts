@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
@@ -7,6 +6,9 @@ interface VinLookupResult {
   make?: string
   model?: string
   year?: number
+  bodyClass?: string
+  doors?: number
+  trim?: string
   error?: string
 }
 
@@ -48,7 +50,10 @@ export function useVinLookup(vin: string) {
           return {
             make: cachedData.make,
             model: cachedData.model,
-            year: cachedData.year
+            year: cachedData.year,
+            bodyClass: cachedData.body_class,
+            doors: cachedData.doors,
+            trim: cachedData.trim
           }
         }
 
@@ -75,18 +80,27 @@ export function useVinLookup(vin: string) {
         const makeResult = results.find((r: any) => r.Variable === 'Make' && r.Value && r.Value !== 'null')
         const modelResult = results.find((r: any) => r.Variable === 'Model' && r.Value && r.Value !== 'null')
         const yearResult = results.find((r: any) => r.Variable === 'Model Year' && r.Value && r.Value !== 'null')
+        const bodyClassResult = results.find((r: any) => r.Variable === 'Body Class' && r.Value && r.Value !== 'null')
+        const doorsResult = results.find((r: any) => r.Variable === 'Doors' && r.Value && r.Value !== 'null')
+        const trimResult = results.find((r: any) => r.Variable === 'Trim' && r.Value && r.Value !== 'null')
 
         // Log specific fields we're looking for
         console.log('Make result:', makeResult)
         console.log('Model result:', modelResult)
         console.log('Year result:', yearResult)
+        console.log('Body Class result:', bodyClassResult)
+        console.log('Doors result:', doorsResult)
+        console.log('Trim result:', trimResult)
 
         const make = makeResult?.Value
         const model = modelResult?.Value
         const year = yearResult?.Value ? parseInt(yearResult.Value) : undefined
+        const bodyClass = bodyClassResult?.Value
+        const doors = doorsResult?.Value
+        const trim = trimResult?.Value
 
         // Log the extracted values
-        console.log('Extracted values:', { make, model, year })
+        console.log('Extracted values:', { make, model, year, bodyClass, doors, trim })
 
         if (!make) {
           const error = 'Could not decode VIN - make information missing'
@@ -102,6 +116,24 @@ export function useVinLookup(vin: string) {
 
         if (!year) {
           const error = 'Could not decode VIN - year information missing'
+          await cacheErrorResult(vin, error)
+          return { error }
+        }
+
+        if (!bodyClass) {
+          const error = 'Could not decode VIN - body class information missing'
+          await cacheErrorResult(vin, error)
+          return { error }
+        }
+
+        if (!doors) {
+          const error = 'Could not decode VIN - doors information missing'
+          await cacheErrorResult(vin, error)
+          return { error }
+        }
+
+        if (!trim) {
+          const error = 'Could not decode VIN - trim information missing'
           await cacheErrorResult(vin, error)
           return { error }
         }
@@ -130,7 +162,7 @@ export function useVinLookup(vin: string) {
           toast.error('Failed to cache VIN lookup')
         }
 
-        return { make, model, year }
+        return { make, model, year, bodyClass, doors, trim }
       } catch (error: any) {
         console.error('VIN lookup error:', error)
         await cacheErrorResult(vin, error.message)

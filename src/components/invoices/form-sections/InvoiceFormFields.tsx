@@ -25,6 +25,12 @@ type InvoiceFormFieldsProps = {
   setVehicleYear: (value: number) => void
   vehicleVin: string
   setVehicleVin: (value: string) => void
+  vehicleBodyClass: string
+  setVehicleBodyClass: (value: string) => void
+  vehicleDoors: number
+  setVehicleDoors: (value: number) => void
+  vehicleTrim: string
+  setVehicleTrim: (value: string) => void
   notes: string
   setNotes: (value: string) => void
   selectedWorkOrderId: string
@@ -53,6 +59,12 @@ export function InvoiceFormFields({
   setVehicleYear,
   vehicleVin,
   setVehicleVin,
+  vehicleBodyClass,
+  setVehicleBodyClass,
+  vehicleDoors,
+  setVehicleDoors,
+  vehicleTrim,
+  setVehicleTrim,
   notes,
   setNotes,
   selectedWorkOrderId,
@@ -91,6 +103,12 @@ export function InvoiceFormFields({
         setVehicleYear={setVehicleYear}
         vehicleVin={vehicleVin}
         setVehicleVin={setVehicleVin}
+        vehicleBodyClass={vehicleBodyClass}
+        setVehicleBodyClass={setVehicleBodyClass}
+        vehicleDoors={vehicleDoors}
+        setVehicleDoors={setVehicleDoors}
+        vehicleTrim={vehicleTrim}
+        setVehicleTrim={setVehicleTrim}
       />
 
       <InvoiceItemsFields
