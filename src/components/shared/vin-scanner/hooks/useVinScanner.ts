@@ -239,6 +239,9 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
               const scanDuration = (Date.now() - scanStartTimeRef.current) / 1000;
               addLog(`✓ VIN validated successfully! (Scan took ${scanDuration.toFixed(1)} seconds)`);
               toast.success(`VIN scanned and validated successfully in ${scanDuration.toFixed(1)}s`);
+              
+              // Stop scanning and cleanup before calling onScan
+              await stopCamera();
               onScan(potentialVin);
               onClose();
               return;
