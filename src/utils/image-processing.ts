@@ -279,9 +279,9 @@ export const cropToVinRegion = (canvas: HTMLCanvasElement): HTMLCanvasElement =>
   const ctx = canvas.getContext('2d')
   if (!ctx) return canvas
 
-  // Match the larger UI overlay dimensions
+  // Match the overlay dimensions exactly
   const vinRegionWidth = canvas.width * 0.95 // 95% of width to match UI
-  const vinRegionHeight = canvas.height * 0.4 // Increased height to match UI
+  const vinRegionHeight = canvas.height * (40/canvas.height) // Fixed 40px height to match UI
   const startX = (canvas.width - vinRegionWidth) / 2
   const startY = (canvas.height - vinRegionHeight) / 2
 

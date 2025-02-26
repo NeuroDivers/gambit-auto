@@ -1,3 +1,4 @@
+
 import { Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -345,6 +346,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
             hasFlash={hasFlash}
             isFlashOn={isFlashOn}
             onFlashToggle={toggleFlash}
+            onClose={handleClose}
           />
           <div className="relative aspect-video w-full overflow-hidden">
             <video
@@ -358,17 +360,17 @@ export function VinScanner({ onScan }: VinScannerProps) {
               ref={canvasRef}
               className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3/5 sm:w-1/2 h-[12%] border-2 border-dashed border-primary-foreground/70">
-              <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
-                Position {scanMode === 'text' ? 'VIN text' : 'barcode'} here
+            {/* Added semi-transparent overlay with clear scanning area */}
+            <div className="absolute inset-0 bg-black/50">
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] h-40 bg-transparent">
+                <div className="absolute inset-0 border-2 border-dashed border-primary-foreground/70">
+                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 border-4 border-primary-foreground/70" />
+                </div>
               </div>
-              <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-px bg-primary-foreground/70" />
-              <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-px bg-primary-foreground/70" />
-              <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-4 h-4 border-2 border-primary-foreground/70" />
             </div>
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent p-4">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
               <p className="text-white text-center text-sm">
-                Position the {scanMode === 'text' ? 'VIN text' : 'barcode'} within the frame
+                Position {scanMode === 'text' ? 'VIN text' : 'barcode'} within frame
               </p>
             </div>
           </div>
