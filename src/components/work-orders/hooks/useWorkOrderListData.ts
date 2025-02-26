@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { WorkOrder } from "../types"
@@ -14,6 +14,45 @@ export function useWorkOrderListData() {
   const [assignBayWorkOrder, setAssignBayWorkOrder] = useState<WorkOrder | null>(null)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('work-orders-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'work_orders'
+        },
+        (payload) => {
+          console.log('Work order change detected:', payload)
+          queryClient.invalidateQueries({ queryKey: ["workOrders"] })
+          
+          // Show toast notification based on the type of change
+          switch (payload.eventType) {
+            case "UPDATE":
+              toast.success('Work order updated')
+              break
+            case "INSERT":
+              toast.success('New work order created')
+              break
+            case "DELETE":
+              toast.info('Work order deleted')
+              break
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log("Subscription status:", status)
+      })
+
+    return () => {
+      console.log("Cleaning up subscription")
+      supabase.removeChannel(channel)
+    }
+  }, [queryClient])
 
   const { data: workOrders, isLoading, error } = useQuery({
     queryKey: ["workOrders", searchTerm, statusFilter, assignmentFilter, page],
