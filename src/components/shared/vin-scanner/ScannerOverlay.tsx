@@ -1,42 +1,57 @@
 
-import { X, Flashlight } from "lucide-react"
+import { Camera, X, Pause, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface ScannerOverlayProps {
-  onFlashToggle: () => void
+  hasFlash?: boolean
+  isFlashOn?: boolean
+  isPaused?: boolean
+  onFlashToggle?: () => void
+  onPauseToggle?: () => void
   onClose: () => void
-  hasFlash: boolean
-  isFlashOn: boolean
 }
 
-export function ScannerOverlay({
-  onFlashToggle,
-  onClose,
+export function ScannerOverlay({ 
   hasFlash,
   isFlashOn,
+  isPaused,
+  onFlashToggle,
+  onPauseToggle,
+  onClose
 }: ScannerOverlayProps) {
   return (
-    <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-2 bg-background/80 p-2 backdrop-blur">
+    <div className="flex items-center justify-between p-2 border-b">
+      <div className="flex items-center gap-2">
+        {hasFlash && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onFlashToggle}
+            className={isFlashOn ? "text-yellow-500" : ""}
+          >
+            <span className="sr-only">Toggle flash</span>
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onPauseToggle}
+          className={isPaused ? "text-blue-500" : ""}
+        >
+          {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+          <span className="sr-only">
+            {isPaused ? 'Resume scanning' : 'Pause scanning'}
+          </span>
+        </Button>
+      </div>
       <Button
-        type="button"
         variant="ghost"
         size="icon"
         onClick={onClose}
       >
         <X className="h-4 w-4" />
+        <span className="sr-only">Close scanner</span>
       </Button>
-      {hasFlash && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={onFlashToggle}
-          data-active={isFlashOn}
-          className="data-[active=true]:text-yellow-500"
-        >
-          <Flashlight className="h-4 w-4" />
-        </Button>
-      )}
     </div>
   )
 }

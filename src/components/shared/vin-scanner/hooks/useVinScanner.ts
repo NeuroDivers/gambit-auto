@@ -75,6 +75,7 @@ const loadOpenCV = async (): Promise<void> => {
 
 export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const [isCameraActive, setIsCameraActive] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
   const [logs, setLogs] = useState<string[]>([])
   const [hasFlash, setHasFlash] = useState(false)
   const [isFlashOn, setIsFlashOn] = useState(false)
@@ -88,14 +89,11 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const scanningRef = useRef<number>()
   const logsEndRef = useRef<HTMLDivElement>(null)
   const isProcessingRef = useRef(false)
-  const lastScanTimeRef = useRef<number>(0)
-  const SCAN_INTERVAL = 500
-  const CONFIDENCE_THRESHOLD = 0
-  const MIN_MATCHES_REQUIRED = 2
-  const matchesRef = useRef<{[key: string]: number}>({})
-  const scanStartTimeRef = useRef<number>(0)
-  const isScanningRef = useRef(true)
-  const isInitializedRef = useRef(false)
+  const lastScanTimeRef = useRef<number>(0);
+  const SCAN_INTERVAL = 500; // Minimum time between scans in milliseconds
+  const CONFIDENCE_THRESHOLD = 30; // Only process results with confidence above 30%
+  const MIN_MATCHES_REQUIRED = 2; // Require at least 2 matching scans before accepting
+  const matchesRef = useRef<{[key: string]: number}>({});
 
   const addLog = (message: string) => {
     console.log(message);
@@ -167,126 +165,25 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     }
   }
 
-  const startCamera = async () => {
-    try {
-      await stopCamera();
-      
-      addLog('Loading OpenCV...');
-      try {
-        await loadOpenCV();
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setIsOpenCVLoaded(true);
-        addLog('OpenCV loaded and initialized successfully');
-      } catch (error) {
-        console.error('OpenCV loading error:', error);
-        addLog(`Failed to load OpenCV: ${error}`);
-        toast.error("Failed to initialize camera. Please try again.");
-        onClose();
-        return;
-      }
-
-      if (!window.cv) {
-        throw new Error('OpenCV failed to initialize properly');
-      }
-
-      scanStartTimeRef.current = Date.now();
-      addLog('Initializing OCR worker...');
-      workerRef.current = await initializeWorker();
-
-      const constraints = {
-        video: {
-          facingMode: { exact: "environment" },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          zoom: 2.0,
-          advanced: [{ zoom: 2.0 }] as any
-        }
-      }
-
-      const fallbackConstraints = {
-        video: {
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          zoom: 2.0,
-          advanced: [{ zoom: 2.0 }] as any
-        }
-      }
-
-      let stream: MediaStream | null = null;
-
-      try {
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
-        addLog('Stream acquired with back camera');
-      } catch (backCameraError) {
-        addLog('Back camera not available, trying alternative camera...');
-        stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
-        addLog('Stream acquired with fallback camera');
-      }
-
-      if (!stream) {
-        throw new Error('Failed to acquire camera stream');
-      }
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-      } else {
-        throw new Error('Video element not available');
-      }
-
-      const track = stream.getVideoTracks()[0];
-      if (track) {
-        const capabilities = track.getCapabilities() as ExtendedTrackCapabilities;
-        setHasFlash('torch' in capabilities);
-        if ('torch' in capabilities) {
-          addLog('Flash capability detected');
-        }
-      }
-      
-      addLog('Waiting for video to be ready...');
-      await new Promise<void>((resolve) => {
-        if (videoRef.current) {
-          videoRef.current.onloadedmetadata = () => resolve();
-        }
-      });
-      
-      await videoRef.current?.play();
-      setIsCameraActive(true);
-      addLog('Video stream started successfully');
-
-      if (isOpenCVLoaded && workerRef.current && streamRef.current) {
-        isInitializedRef.current = true;
-        isScanningRef.current = true;
-        addLog('Starting OCR scanning loop...');
-        startOCRScanning();
-      } else {
-        throw new Error('Required components not initialized');
-      }
-    } catch (error) {
-      console.error('Camera start error:', error);
-      addLog(`Error accessing camera: ${error}`);
-      toast.error("Could not access camera. Please check camera permissions.");
-      onClose();
-    }
-  };
-
   const startOCRScanning = async () => {
-    if (!isScanningRef.current || !isInitializedRef.current) return;
-
-    if (!scanStartTimeRef.current) {
-      scanStartTimeRef.current = Date.now();
+    if (scanningRef.current) {
+      cancelAnimationFrame(scanningRef.current);
+      scanningRef.current = undefined;
     }
 
     const currentTime = Date.now();
     if (currentTime - lastScanTimeRef.current < SCAN_INTERVAL) {
-      if (isScanningRef.current) {
-        scanningRef.current = requestAnimationFrame(startOCRScanning);
-      }
+      scanningRef.current = requestAnimationFrame(startOCRScanning);
       return;
     }
 
-    if (isProcessingRef.current || !isOpenCVLoaded) {
-      if (isScanningRef.current) {
+    if (isProcessingRef.current || isPaused || !isOpenCVLoaded) {
+      addLog('Scanning skipped: ' + 
+        (isProcessingRef.current ? 'processing in progress' : 
+         isPaused ? 'scanning paused' : 
+         'OpenCV not loaded'));
+      
+      if (!isPaused) {
         scanningRef.current = requestAnimationFrame(startOCRScanning);
       }
       return;
@@ -307,7 +204,7 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       const frameData = await captureFrame();
       if (!frameData) {
         isProcessingRef.current = false;
-        if (isScanningRef.current) {
+        if (!isPaused) {
           scanningRef.current = requestAnimationFrame(startOCRScanning);
         }
         return;
@@ -316,38 +213,38 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       const result = await workerRef.current.recognize(frameData);
       const { text, confidence } = result.data;
       
+      if (confidence < CONFIDENCE_THRESHOLD) {
+        if (text.trim()) {
+          addLog(`Low confidence text: "${text.trim()}" (${confidence.toFixed(1)}%)`);
+        }
+        isProcessingRef.current = false;
+        if (!isPaused) {
+          scanningRef.current = requestAnimationFrame(startOCRScanning);
+        }
+        return;
+      }
+      
       const vinPattern = /[A-HJ-NPR-Z0-9]{17}/;
       const matches = text.match(vinPattern);
       
       if (matches) {
         const potentialVin = matches[0];
-        addLog(`VIN pattern found: "${potentialVin}" (${confidence.toFixed(1)}%)`);
+        addLog(`Potential VIN found: "${potentialVin}" (${confidence.toFixed(1)}%)`);
         
         if (validateVIN(potentialVin)) {
           const isNorthAmerican = ['1', '2', '3', '4', '5'].includes(potentialVin[0]);
           addLog(`✓ Valid VIN format detected${isNorthAmerican ? ' (North American)' : ''}`);
           
+          // Increment match count for this VIN
           matchesRef.current[potentialVin] = (matchesRef.current[potentialVin] || 0) + 1;
           
           if (matchesRef.current[potentialVin] >= MIN_MATCHES_REQUIRED) {
             const isValidVin = await validateVinWithNHTSA(potentialVin);
             if (isValidVin) {
-              isScanningRef.current = false;
-              isInitializedRef.current = false;
-              isProcessingRef.current = false;
-              
-              if (scanningRef.current) {
-                cancelAnimationFrame(scanningRef.current);
-                scanningRef.current = undefined;
-              }
-              
-              const scanDuration = (Date.now() - scanStartTimeRef.current) / 1000;
-              addLog(`✓ VIN validated successfully! (Scan took ${scanDuration.toFixed(1)} seconds)`);
-              
-              await stopCamera();
-              
-              toast.success(`VIN scanned and validated successfully in ${scanDuration.toFixed(1)}s`);
+              addLog('✓ VIN validated successfully!');
+              toast.success("VIN scanned and validated successfully");
               onScan(potentialVin);
+              onClose();
               return;
             }
           }
@@ -357,52 +254,146 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       }
 
       isProcessingRef.current = false;
-      if (isScanningRef.current) {
+      if (!isPaused) {
         scanningRef.current = requestAnimationFrame(startOCRScanning);
       }
     } catch (error) {
       console.error('OCR error:', error);
       addLog(`OCR error: ${error}`);
       isProcessingRef.current = false;
-      if (isScanningRef.current) {
+      if (!isPaused) {
         setTimeout(() => {
           scanningRef.current = requestAnimationFrame(startOCRScanning);
         }, 1000);
       }
     }
-  };
+  }
+
+  const startCamera = async () => {
+    try {
+      await stopCamera();
+
+      addLog('Loading OpenCV...');
+      try {
+        await loadOpenCV();
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setIsOpenCVLoaded(true);
+        addLog('OpenCV loaded and initialized successfully');
+      } catch (error) {
+        console.error('OpenCV loading error:', error);
+        addLog(`Failed to load OpenCV: ${error}`);
+        toast.error("Failed to initialize camera. Please try again.");
+        onClose();
+        return;
+      }
+
+      if (!window.cv) {
+        throw new Error('OpenCV failed to initialize properly');
+      }
+
+      const constraints = {
+        video: {
+          facingMode: { exact: "environment" },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          zoom: 2.0,
+          advanced: [{ zoom: 2.0 }] as any
+        }
+      }
+
+      const fallbackConstraints = {
+        video: {
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          zoom: 2.0,
+          advanced: [{ zoom: 2.0 }] as any
+        }
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints)
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          streamRef.current = stream
+          addLog('Stream acquired with back camera')
+        }
+      } catch (backCameraError) {
+        addLog('Back camera not available, trying alternative camera...')
+        const stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints)
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          streamRef.current = stream
+          addLog('Stream acquired with fallback camera')
+        }
+      }
+      
+      if (!videoRef.current) {
+        throw new Error('Video element not available')
+      }
+
+      const track = streamRef.current?.getVideoTracks()[0]
+      if (track) {
+        const capabilities = track.getCapabilities() as ExtendedTrackCapabilities
+        setHasFlash('torch' in capabilities)
+        if ('torch' in capabilities) {
+          addLog('Flash capability detected')
+        }
+      }
+      
+      addLog('Waiting for video to be ready...')
+      await new Promise<void>((resolve) => {
+        if (videoRef.current) {
+          videoRef.current.onloadedmetadata = () => resolve()
+        }
+      })
+      
+      await videoRef.current.play()
+      setIsCameraActive(true)
+      addLog('Video stream started successfully')
+
+      addLog('Initializing OCR worker...')
+      workerRef.current = await initializeWorker();
+      
+      if (isOpenCVLoaded && workerRef.current) {
+        addLog('Starting OCR scanning loop...');
+        startOCRScanning();
+      } else {
+        throw new Error('Required components not initialized');
+      }
+    } catch (error) {
+      console.error('Camera start error:', error);
+      addLog(`Error accessing camera: ${error}`);
+      toast.error("Could not access camera. Please check camera permissions.");
+      onClose();
+    }
+  }
 
   const stopCamera = async () => {
-    isScanningRef.current = false;
-    isInitializedRef.current = false;
-    isProcessingRef.current = false;
-    
     if (scanningRef.current) {
       cancelAnimationFrame(scanningRef.current);
       scanningRef.current = undefined;
     }
 
-    scanStartTimeRef.current = 0;
-
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
     }
 
     if (workerRef.current) {
       try {
-        await workerRef.current.terminate();
-        workerRef.current = null;
+        await workerRef.current.terminate()
+        workerRef.current = null
       } catch (error) {
-        console.error('Error terminating worker:', error);
+        console.error('Error terminating worker:', error)
       }
     }
 
-    setIsCameraActive(false);
-    setIsFlashOn(false);
-    setIsOpenCVLoaded(false);
-    addLog('Camera and scanning stopped');
-  };
+    setIsCameraActive(false)
+    setIsFlashOn(false)
+    isProcessingRef.current = false
+    setIsOpenCVLoaded(false)
+    addLog('Camera and scanning stopped')
+  }
 
   const initializeWorker = async () => {
     try {
@@ -450,6 +441,19 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     }
   }
 
+  const togglePause = () => {
+    setIsPaused(prev => {
+      const newPauseState = !prev;
+      addLog(`Scanning ${newPauseState ? 'paused' : 'resumed'}`);
+      
+      if (!newPauseState && !scanningRef.current) {
+        scanningRef.current = requestAnimationFrame(startOCRScanning);
+      }
+      
+      return newPauseState;
+    });
+  }
+
   useEffect(() => {
     return () => {
       if (scanningRef.current) {
@@ -467,9 +471,11 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     logs,
     hasFlash,
     isFlashOn,
-    detectedRegion,
+    isPaused,
     toggleFlash,
+    togglePause,
     startCamera,
-    stopCamera
+    stopCamera,
+    detectedRegion
   }
 }
