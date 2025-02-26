@@ -166,6 +166,107 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     }
   }
 
+  const startCamera = async () => {
+    try {
+      await stopCamera();
+      
+      addLog('Loading OpenCV...');
+      try {
+        await loadOpenCV();
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setIsOpenCVLoaded(true);
+        addLog('OpenCV loaded and initialized successfully');
+      } catch (error) {
+        console.error('OpenCV loading error:', error);
+        addLog(`Failed to load OpenCV: ${error}`);
+        toast.error("Failed to initialize camera. Please try again.");
+        onClose();
+        return;
+      }
+
+      if (!window.cv) {
+        throw new Error('OpenCV failed to initialize properly');
+      }
+
+      scanStartTimeRef.current = Date.now();
+      addLog('Initializing OCR worker...');
+      workerRef.current = await initializeWorker();
+
+      const constraints = {
+        video: {
+          facingMode: { exact: "environment" },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          zoom: 2.0,
+          advanced: [{ zoom: 2.0 }] as any
+        }
+      }
+
+      const fallbackConstraints = {
+        video: {
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          zoom: 2.0,
+          advanced: [{ zoom: 2.0 }] as any
+        }
+      }
+
+      let stream: MediaStream | null = null;
+
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        addLog('Stream acquired with back camera');
+      } catch (backCameraError) {
+        addLog('Back camera not available, trying alternative camera...');
+        stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+        addLog('Stream acquired with fallback camera');
+      }
+
+      if (!stream) {
+        throw new Error('Failed to acquire camera stream');
+      }
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        streamRef.current = stream;
+      } else {
+        throw new Error('Video element not available');
+      }
+
+      const track = stream.getVideoTracks()[0];
+      if (track) {
+        const capabilities = track.getCapabilities() as ExtendedTrackCapabilities;
+        setHasFlash('torch' in capabilities);
+        if ('torch' in capabilities) {
+          addLog('Flash capability detected');
+        }
+      }
+      
+      addLog('Waiting for video to be ready...');
+      await new Promise<void>((resolve) => {
+        if (videoRef.current) {
+          videoRef.current.onloadedmetadata = () => resolve();
+        }
+      });
+      
+      await videoRef.current.play();
+      setIsCameraActive(true);
+      addLog('Video stream started successfully');
+      
+      if (isOpenCVLoaded && workerRef.current) {
+        addLog('Starting OCR scanning loop...');
+        startOCRScanning();
+      } else {
+        throw new Error('Required components not initialized');
+      }
+    } catch (error) {
+      console.error('Camera start error:', error);
+      addLog(`Error accessing camera: ${error}`);
+      toast.error("Could not access camera. Please check camera permissions.");
+      onClose();
+    }
+  };
+
   const startOCRScanning = async () => {
     if (!scanStartTimeRef.current) {
       scanStartTimeRef.current = Date.now();
@@ -174,12 +275,6 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     if (scanningRef.current) {
       cancelAnimationFrame(scanningRef.current);
       scanningRef.current = undefined;
-    }
-
-    const currentTime = Date.now();
-    if (currentTime - lastScanTimeRef.current < SCAN_INTERVAL) {
-      scanningRef.current = requestAnimationFrame(startOCRScanning);
-      return;
     }
 
     if (isProcessingRef.current || isPaused || !isOpenCVLoaded) {
@@ -195,16 +290,15 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     }
 
     if (!streamRef.current || !workerRef.current) {
-      addLog('Scanning conditions not met:')
-      addLog(`- Stream available: ${!!streamRef.current}`)
-      addLog(`- Worker available: ${!!workerRef.current}`)
-      addLog(`- OpenCV loaded: ${isOpenCVLoaded}`)
+      addLog('Scanning conditions not met:');
+      addLog(`- Stream available: ${!!streamRef.current}`);
+      addLog(`- Worker available: ${!!workerRef.current}`);
+      addLog(`- OpenCV loaded: ${isOpenCVLoaded}`);
       return;
     }
 
     try {
       isProcessingRef.current = true;
-      lastScanTimeRef.current = currentTime;
       
       const frameData = await captureFrame();
       if (!frameData) {
@@ -218,7 +312,6 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       const result = await workerRef.current.recognize(frameData);
       const { text, confidence } = result.data;
       
-      // Extract VIN pattern first
       const vinPattern = /[A-HJ-NPR-Z0-9]{17}/;
       const matches = text.match(vinPattern);
       
@@ -230,28 +323,25 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
           const isNorthAmerican = ['1', '2', '3', '4', '5'].includes(potentialVin[0]);
           addLog(`✓ Valid VIN format detected${isNorthAmerican ? ' (North American)' : ''}`);
           
-          // Increment match count for this VIN
           matchesRef.current[potentialVin] = (matchesRef.current[potentialVin] || 0) + 1;
           
           if (matchesRef.current[potentialVin] >= MIN_MATCHES_REQUIRED) {
             const isValidVin = await validateVinWithNHTSA(potentialVin);
             if (isValidVin) {
-              const scanDuration = (Date.now() - scanStartTimeRef.current) / 1000;
-              addLog(`✓ VIN validated successfully! (Scan took ${scanDuration.toFixed(1)} seconds)`);
-              
-              // Cancel any pending animation frame first
               if (scanningRef.current) {
                 cancelAnimationFrame(scanningRef.current);
                 scanningRef.current = undefined;
               }
               
-              // Set processing to false to prevent new scans
               isProcessingRef.current = false;
+              setIsPaused(true);
               
-              // Stop the camera immediately
-              await stopCamera();
+              const scanDuration = (Date.now() - scanStartTimeRef.current) / 1000;
+              addLog(`✓ VIN validated successfully! (Scan took ${scanDuration.toFixed(1)} seconds)`);
               
               toast.success(`VIN scanned and validated successfully in ${scanDuration.toFixed(1)}s`);
+              
+              await stopCamera();
               onScan(potentialVin);
               onClose();
               return;
@@ -275,110 +365,6 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
           scanningRef.current = requestAnimationFrame(startOCRScanning);
         }, 1000);
       }
-    }
-  };
-
-  const startCamera = async () => {
-    try {
-      await stopCamera();
-      
-      // Initialize everything before starting the camera
-      addLog('Loading OpenCV...');
-      try {
-        await loadOpenCV();
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setIsOpenCVLoaded(true);
-        addLog('OpenCV loaded and initialized successfully');
-      } catch (error) {
-        console.error('OpenCV loading error:', error);
-        addLog(`Failed to load OpenCV: ${error}`);
-        toast.error("Failed to initialize camera. Please try again.");
-        onClose();
-        return;
-      }
-
-      if (!window.cv) {
-        throw new Error('OpenCV failed to initialize properly');
-      }
-
-      // Reset timer when starting camera
-      scanStartTimeRef.current = Date.now();
-
-      // Initialize worker before camera
-      addLog('Initializing OCR worker...');
-      workerRef.current = await initializeWorker();
-
-      const constraints = {
-        video: {
-          facingMode: { exact: "environment" },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          zoom: 2.0,
-          advanced: [{ zoom: 2.0 }] as any
-        }
-      }
-
-      const fallbackConstraints = {
-        video: {
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          zoom: 2.0,
-          advanced: [{ zoom: 2.0 }] as any
-        }
-      }
-
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia(constraints)
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream
-          streamRef.current = stream
-          addLog('Stream acquired with back camera')
-        }
-      } catch (backCameraError) {
-        addLog('Back camera not available, trying alternative camera...')
-        const stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints)
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream
-          streamRef.current = stream
-          addLog('Stream acquired with fallback camera')
-        }
-      }
-      
-      if (!videoRef.current) {
-        throw new Error('Video element not available')
-      }
-
-      const track = streamRef.current?.getVideoTracks()[0]
-      if (track) {
-        const capabilities = track.getCapabilities() as ExtendedTrackCapabilities
-        setHasFlash('torch' in capabilities)
-        if ('torch' in capabilities) {
-          addLog('Flash capability detected')
-        }
-      }
-      
-      addLog('Waiting for video to be ready...')
-      await new Promise<void>((resolve) => {
-        if (videoRef.current) {
-          videoRef.current.onloadedmetadata = () => resolve()
-        }
-      })
-      
-      await videoRef.current.play()
-      setIsCameraActive(true)
-      addLog('Video stream started successfully')
-      
-      if (isOpenCVLoaded && workerRef.current) {
-        addLog('Starting OCR scanning loop...');
-        startOCRScanning();
-      } else {
-        throw new Error('Required components not initialized');
-      }
-    } catch (error) {
-      console.error('Camera start error:', error);
-      addLog(`Error accessing camera: ${error}`);
-      toast.error("Could not access camera. Please check camera permissions.");
-      onClose();
     }
   };
 
