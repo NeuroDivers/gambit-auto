@@ -1,11 +1,12 @@
 
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { WorkOrder } from "../types"
 import { toast } from "sonner"
 
 export function useWorkOrderListData() {
+  const queryClient = useQueryClient()
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [assignmentFilter, setAssignmentFilter] = useState<string>("all")
@@ -61,7 +62,7 @@ export function useWorkOrderListData() {
         throw err
       }
     },
-    retry: 2 // Retry failed requests up to 2 times
+    retry: 2
   })
 
   const { data: serviceBays } = useQuery({
@@ -89,14 +90,31 @@ export function useWorkOrderListData() {
 
   const handleAssignBay = async (workOrderId: string, bayId: string | null) => {
     try {
-      const { error } = await supabase
+      console.log('Assigning bay:', { workOrderId, bayId })
+      const { data, error } = await supabase
         .from("work_orders")
-        .update({ assigned_bay_id: bayId })
+        .update({ 
+          assigned_bay_id: bayId,
+          updated_at: new Date().toISOString()
+        })
         .eq("id", workOrderId)
+        .select()
 
-      if (error) throw error
+      if (error) {
+        console.error('Bay assignment error:', error)
+        throw error
+      }
 
+      console.log('Bay assignment result:', data)
+      
+      // Invalidate the queries to refetch the latest data
+      await queryClient.invalidateQueries({ queryKey: ["workOrders"] })
+      await queryClient.invalidateQueries({ queryKey: ["service-bays"] })
+      
       toast.success('Bay assigned successfully')
+      
+      // Clear the assignment modal state
+      setAssignBayWorkOrder(null)
     } catch (err) {
       console.error('Bay assignment error:', err)
       toast.error('Failed to assign bay')
