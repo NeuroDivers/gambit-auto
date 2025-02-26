@@ -1,3 +1,4 @@
+
 export type VinPosition = {
   value: string;
   isValid: boolean;
@@ -15,19 +16,49 @@ const VALID_VIN_CHARS = {
   SEQUENCE: /[0-9]{6}/ // Characters 12-17
 };
 
-const MODEL_YEAR_CODES: { [key: string]: number } = {
-  'A': 1980, 'B': 1981, 'C': 1982, 'D': 1983, 'E': 1984,
-  'F': 1985, 'G': 1986, 'H': 1987, 'J': 1988, 'K': 1989,
-  'L': 1990, 'M': 1991, 'N': 1992, 'P': 1993, 'R': 1994,
-  'S': 1995, 'T': 1996, 'V': 1997, 'W': 1998, 'X': 1999,
-  'Y': 2000, '1': 2001, '2': 2002, '3': 2003, '4': 2004,
-  '5': 2005, '6': 2006, '7': 2007, '8': 2008, '9': 2009,
-  'A': 2010, 'B': 2011, 'C': 2012, 'D': 2013, 'E': 2014,
-  'F': 2015, 'G': 2016, 'H': 2017, 'J': 2018, 'K': 2019,
-  'L': 2020, 'M': 2021, 'N': 2022, 'P': 2023, 'R': 2024,
-  'S': 2025, 'T': 2026, 'V': 2027, 'W': 2028, 'X': 2029,
-  'Y': 2030, '1': 2031, '2': 2032, '3': 2033, '4': 2034,
-  '5': 2035, '6': 2036
+// Define year ranges for better disambiguation
+const YEAR_RANGES = [
+  { start: 1980, end: 2009 },
+  { start: 2010, end: 2039 }
+];
+
+const getModelYearFromCode = (code: string): number[] => {
+  const possibilities: number[] = [];
+  
+  if (code >= '1' && code <= '9') {
+    possibilities.push(2001 + (parseInt(code) - 1));
+    possibilities.push(2031 + (parseInt(code) - 1));
+  } else {
+    const letterMap: { [key: string]: number[] } = {
+      'A': [1980, 2010],
+      'B': [1981, 2011],
+      'C': [1982, 2012],
+      'D': [1983, 2013],
+      'E': [1984, 2014],
+      'F': [1985, 2015],
+      'G': [1986, 2016],
+      'H': [1987, 2017],
+      'J': [1988, 2018],
+      'K': [1989, 2019],
+      'L': [1990, 2020],
+      'M': [1991, 2021],
+      'N': [1992, 2022],
+      'P': [1993, 2023],
+      'R': [1994, 2024],
+      'S': [1995, 2025],
+      'T': [1996, 2026],
+      'V': [1997, 2027],
+      'W': [1998, 2028],
+      'X': [1999, 2029],
+      'Y': [2000, 2030]
+    };
+    
+    if (code in letterMap) {
+      possibilities.push(...letterMap[code]);
+    }
+  }
+
+  return possibilities;
 };
 
 export const validateVIN = (vin: string): boolean => {
@@ -57,6 +88,10 @@ export const validateVIN = (vin: string): boolean => {
   if (!VALID_VIN_CHARS.YEAR.test(sections.year)) return false;
   if (!VALID_VIN_CHARS.PLANT.test(sections.plant)) return false;
   if (!VALID_VIN_CHARS.SEQUENCE.test(sections.sequence)) return false;
+
+  // Verify that the year code is valid
+  const possibleYears = getModelYearFromCode(sections.year);
+  if (possibleYears.length === 0) return false;
 
   // Check for suspicious patterns
   const suspiciousPatterns = [
@@ -117,10 +152,11 @@ export const analyzeVIN = (vin: string): VinPosition[] => {
   });
 
   // Model Year
+  const possibleYears = getModelYearFromCode(vin[9]);
   positions.push({
     value: vin[9],
-    isValid: vin[9] in MODEL_YEAR_CODES,
-    description: 'Model Year'
+    isValid: possibleYears.length > 0,
+    description: `Model Year (${possibleYears.join(' or ')})`
   });
 
   // Assembly Plant
