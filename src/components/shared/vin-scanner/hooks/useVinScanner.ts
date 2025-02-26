@@ -60,11 +60,14 @@ const loadOpenCV = async (): Promise<void> => {
       reject(new Error('Failed to load OpenCV'));
     };
 
-    window.Module = {
-      onRuntimeInitialized: () => {
-        checkOpenCVModule();
-      }
-    };
+    // Set up the Module callback that OpenCV will use
+    if (typeof window !== 'undefined') {
+      window.Module = {
+        onRuntimeInitialized: () => {
+          checkOpenCVModule();
+        }
+      };
+    }
 
     document.body.appendChild(script);
   });
