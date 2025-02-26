@@ -60,13 +60,13 @@ export default function QuoteDetails() {
             <CardTitle className="text-destructive">Error</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>Failed to load quote details. The quote might not exist or you may not have permission to view it.</p>
+            <p>Failed to load estimate details. The estimate might not exist or you may not have permission to view it.</p>
             <Button 
               variant="outline" 
               className="mt-4"
               onClick={() => navigate('/admin/quotes')}
             >
-              Return to Quotes
+              Return to Estimates
             </Button>
           </CardContent>
         </Card>
@@ -87,8 +87,8 @@ export default function QuoteDetails() {
         </Button>
         <div className="flex flex-col md:flex-row md:items-center justify-between w-full gap-4">
           <PageTitle 
-            title={`Quote ${quote.quote_number}`}
-            description="View and manage quote details"
+            title={`Estimate ${quote.quote_number}`}
+            description="View and manage estimate details"
           />
           <Badge 
             variant={
@@ -142,7 +142,7 @@ export default function QuoteDetails() {
 
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>Quote Details</CardTitle>
+            <CardTitle>Estimate Details</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -216,7 +216,7 @@ export default function QuoteDetails() {
           variant="outline"
           onClick={() => navigate(`/admin/quotes/${id}/edit`)}
         >
-          Edit Quote
+          Edit Estimate
         </Button>
         <Button 
           onClick={() => navigate(`/admin/invoices/create?quote_id=${id}`)}
