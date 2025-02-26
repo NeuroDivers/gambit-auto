@@ -1,7 +1,7 @@
 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { UseFormReturn } from "react-hook-form"
 import { useVinLookup } from "@/hooks/useVinLookup"
 import { useEffect } from "react"
@@ -21,6 +21,9 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
       if (vinData.make) form.setValue('vehicle_make', vinData.make)
       if (vinData.model) form.setValue('vehicle_model', vinData.model)
       if (vinData.year) form.setValue('vehicle_year', vinData.year)
+      if (vinData.bodyClass) form.setValue('vehicle_body_class', vinData.bodyClass)
+      if (vinData.doors) form.setValue('vehicle_doors', vinData.doors)
+      if (vinData.trim) form.setValue('vehicle_trim', vinData.trim)
     }
   }, [vinData, form])
 
@@ -118,6 +121,81 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
                   <div className="flex gap-2">
                     <Input {...field} placeholder="Enter VIN" />
                     <VinScanner onScan={(vin) => field.onChange(vin)} />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <FormField
+            control={form.control}
+            name="vehicle_body_class"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Body Class</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input 
+                      {...field} 
+                      disabled={isLoadingVin}
+                      placeholder="e.g. Sedan" 
+                    />
+                    {isLoadingVin && (
+                      <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="vehicle_doors"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Doors</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input 
+                      type="number"
+                      {...field}
+                      disabled={isLoadingVin}
+                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+                      min={1}
+                      max={6}
+                      placeholder="e.g. 4" 
+                    />
+                    {isLoadingVin && (
+                      <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="vehicle_trim"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Trim</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input 
+                      {...field} 
+                      disabled={isLoadingVin}
+                      placeholder="e.g. LE" 
+                    />
+                    {isLoadingVin && (
+                      <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
                   </div>
                 </FormControl>
                 <FormMessage />

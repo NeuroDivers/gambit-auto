@@ -20,6 +20,9 @@ export type EstimateFormValues = {
   vehicle_model: string
   vehicle_year: number
   vehicle_vin: string
+  vehicle_body_class?: string
+  vehicle_doors?: number
+  vehicle_trim?: string
 }
 
 export type Estimate = {
@@ -41,6 +44,9 @@ export type Estimate = {
   vehicle_model: string | null
   vehicle_year: number | null
   vehicle_vin: string | null
+  vehicle_body_class?: string | null
+  vehicle_doors?: number | null
+  vehicle_trim?: string | null
   estimate_items: EstimateItem[]
   quote_items: EstimateItem[]  // Added for backward compatibility
 }
