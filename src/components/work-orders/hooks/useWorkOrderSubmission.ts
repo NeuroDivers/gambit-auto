@@ -12,41 +12,10 @@ export function useWorkOrderSubmission() {
 
   const submitWorkOrder = async (values: WorkOrderFormValues, workOrderId?: string) => {
     try {
-      console.log("Form values before submission:", values)
-      console.log("Service items before submission:", values.service_items)
-
-      // Create a copy of service items and sanitize them
-      const validServices = values.service_items
-        .map(item => ({
-          ...item,
-          // Ensure we keep the original service_id if it exists
-          service_id: item.service_id || '',
-          service_name: item.service_name || '',
-          quantity: item.quantity || 1,
-          unit_price: item.unit_price || 0
-        }))
-        .filter(item => 
-          item.service_id && 
-          item.service_id.trim() !== "" && 
-          item.service_name && 
-          item.service_name.trim() !== ""
-        );
-
-      console.log("Valid service items:", validServices);
-
-      if (validServices.length === 0) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Please select at least one service",
-        })
-        return false;
-      }
-      
       if (workOrderId) {
-        await updateWorkOrder(workOrderId, { ...values, service_items: validServices })
+        await updateWorkOrder(workOrderId, values)
       } else {
-        await createWorkOrder({ ...values, service_items: validServices })
+        await createWorkOrder(values)
       }
 
       await queryClient.invalidateQueries({ queryKey: ["workOrder", workOrderId] })
@@ -57,7 +26,6 @@ export function useWorkOrderSubmission() {
         description: workOrderId ? "Work order updated successfully" : "Work order created successfully",
       })
 
-      // Update the navigation to use the correct path
       navigate("/admin/work-orders")
       return true
     } catch (error: any) {
@@ -75,8 +43,6 @@ export function useWorkOrderSubmission() {
 }
 
 async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues) {
-  console.log("Updating work order with values:", values)
-  
   // Update work order
   const { error: workOrderError } = await supabase
     .from("work_orders")
@@ -100,40 +66,16 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
     })
     .eq("id", workOrderId)
 
-  if (workOrderError) {
-    console.error("Error updating work order:", workOrderError)
-    throw workOrderError
-  }
-
-  // If a bay is assigned, update the bay
-  if (values.assigned_bay_id && values.assigned_bay_id !== "unassigned") {
-    const { error: bayError } = await supabase
-      .from('service_bays')
-      .update({ assigned_profile_id: null })
-      .eq('id', values.assigned_bay_id)
-
-    if (bayError) {
-      console.error("Error updating service bay:", bayError)
-      throw bayError
-    }
-  }
+  if (workOrderError) throw workOrderError
 
   // Handle services update
-  console.log("Handling services update for work order:", workOrderId)
-  console.log("Service items to process:", values.service_items)
-
-  // First, delete existing services
   const { error: deleteError } = await supabase
     .from('work_order_services')
     .delete()
     .eq('work_order_id', workOrderId)
 
-  if (deleteError) {
-    console.error("Error deleting work order services:", deleteError)
-    throw deleteError
-  }
+  if (deleteError) throw deleteError
 
-  // Then insert new services if there are any valid ones
   const validServices = values.service_items.filter(item => 
     item.service_id && 
     item.service_id.trim() !== "" && 
@@ -152,22 +94,16 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
       assigned_profile_id: item.assigned_profile_id
     }))
 
-    console.log("Inserting new services:", servicesToInsert)
-
     const { error: servicesError } = await supabase
       .from('work_order_services')
       .insert(servicesToInsert)
 
-    if (servicesError) {
-      console.error("Error inserting work order services:", servicesError)
-      throw servicesError
-    }
+    if (servicesError) throw servicesError
   }
 }
 
 async function createWorkOrder(values: WorkOrderFormValues) {
-  console.log("Creating work order with values:", values)
-  
+  // Create work order
   const { data: workOrder, error: workOrderError } = await supabase
     .from("work_orders")
     .insert({
@@ -186,33 +122,14 @@ async function createWorkOrder(values: WorkOrderFormValues) {
       estimated_duration: values.estimated_duration ? `${values.estimated_duration} hours` : null,
       end_time: values.end_time?.toISOString(),
       assigned_bay_id: values.assigned_bay_id === "unassigned" ? null : values.assigned_bay_id,
-      assigned_profile_id: values.assigned_profile_id === "unassigned" ? null : values.assigned_profile_id,
       status: "pending"
     })
     .select()
     .single()
 
-  if (workOrderError || !workOrder) {
-    console.error("Error creating work order:", workOrderError)
-    throw workOrderError
-  }
+  if (workOrderError || !workOrder) throw workOrderError
 
-  // If a bay is assigned, update the bay's assigned profile
-  if (values.assigned_bay_id && values.assigned_bay_id !== "unassigned") {
-    const { error: bayError } = await supabase
-      .from('service_bays')
-      .update({ 
-        assigned_profile_id: values.assigned_profile_id === "unassigned" ? null : values.assigned_profile_id 
-      })
-      .eq('id', values.assigned_bay_id)
-
-    if (bayError) {
-      console.error("Error updating service bay:", bayError)
-      throw bayError
-    }
-  }
-
-  // Insert service items
+  // Insert services
   const validServices = values.service_items.filter(item => 
     item.service_id && 
     item.service_id.trim() !== "" && 
@@ -221,24 +138,20 @@ async function createWorkOrder(values: WorkOrderFormValues) {
   );
   
   if (validServices.length > 0) {
-    console.log("Creating services for new work order:", validServices)
-    
     const servicesToInsert = validServices.map(item => ({
       work_order_id: workOrder.id,
       service_id: item.service_id,
       quantity: item.quantity || 1,
-      unit_price: item.unit_price || 0
+      unit_price: item.unit_price || 0,
+      commission_rate: item.commission_rate,
+      commission_type: item.commission_type,
+      assigned_profile_id: item.assigned_profile_id
     }))
 
     const { error: servicesError } = await supabase
-      .from("work_order_services")
+      .from('work_order_services')
       .insert(servicesToInsert)
 
-    if (servicesError) {
-      console.error("Error inserting work order services:", servicesError)
-      throw servicesError
-    }
-
-    console.log("Successfully inserted services for new work order")
+    if (servicesError) throw servicesError
   }
 }

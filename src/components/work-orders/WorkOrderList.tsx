@@ -4,14 +4,12 @@ import { EditWorkOrderDialog } from "./EditWorkOrderDialog"
 import { WorkOrderFilters } from "./components/WorkOrderFilters"
 import { AssignmentSheet } from "./components/AssignmentSheet"
 import { useWorkOrderListData } from "./hooks/useWorkOrderListData"
-import { useNavigate } from "react-router-dom"
 import { WorkOrderTable } from "./components/WorkOrderTable"
 import { WorkOrderPagination } from "./components/WorkOrderPagination"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { WorkOrderMobileList } from "./components/WorkOrderMobileList"
 
 export function WorkOrderList() {
-  const navigate = useNavigate()
   const isMobile = useIsMobile()
   const {
     searchTerm,
@@ -22,16 +20,12 @@ export function WorkOrderList() {
     setAssignmentFilter,
     selectedWorkOrder,
     setSelectedWorkOrder,
-    assignWorkOrder,
-    setAssignWorkOrder,
     assignBayWorkOrder,
     setAssignBayWorkOrder,
     workOrders,
     isLoading,
     error,
-    assignableUsers,
     serviceBays,
-    handleAssignUser,
     handleAssignBay,
     handleCreateInvoice,
     page,
@@ -104,7 +98,7 @@ export function WorkOrderList() {
           id: bay.id,
           name: bay.name
         })) || []}
-        onAssign={handleAssignBay}
+        onAssign={(bayId) => assignBayWorkOrder && handleAssignBay(assignBayWorkOrder.id, bayId || null)}
       />
     </div>
   )

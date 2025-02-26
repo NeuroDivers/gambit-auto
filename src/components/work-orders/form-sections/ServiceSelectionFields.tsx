@@ -8,5 +8,14 @@ interface ServiceSelectionFieldsProps {
 }
 
 export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
-  return <ServiceItemsField form={form} />;
+  const { control, watch } = form;
+  const services = watch("service_items") || [];
+  
+  return (
+    <ServiceItemsField
+      services={services}
+      onChange={(newServices) => form.setValue("service_items", newServices)}
+      disabled={false}
+    />
+  );
 }

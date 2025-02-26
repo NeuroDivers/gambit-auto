@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -12,7 +13,6 @@ export function useWorkOrderListData() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
-  // Fetch work orders with filters
   const { data: workOrders, isLoading, error } = useQuery({
     queryKey: ["workOrders", searchTerm, statusFilter, assignmentFilter, page],
     queryFn: async () => {
@@ -52,7 +52,6 @@ export function useWorkOrderListData() {
     }
   })
 
-  // Fetch service bays
   const { data: serviceBays } = useQuery({
     queryKey: ["service-bays"],
     queryFn: async () => {
@@ -66,7 +65,7 @@ export function useWorkOrderListData() {
     }
   })
 
-  const handleAssignBay = async (workOrderId: string, bayId: string) => {
+  const handleAssignBay = async (workOrderId: string, bayId: string | null) => {
     const { error } = await supabase
       .from("work_orders")
       .update({ assigned_bay_id: bayId })
