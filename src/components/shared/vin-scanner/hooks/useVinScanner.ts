@@ -238,10 +238,20 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
             if (isValidVin) {
               const scanDuration = (Date.now() - scanStartTimeRef.current) / 1000;
               addLog(`✓ VIN validated successfully! (Scan took ${scanDuration.toFixed(1)} seconds)`);
-              toast.success(`VIN scanned and validated successfully in ${scanDuration.toFixed(1)}s`);
               
-              // Stop scanning and cleanup before calling onScan
+              // Cancel any pending animation frame first
+              if (scanningRef.current) {
+                cancelAnimationFrame(scanningRef.current);
+                scanningRef.current = undefined;
+              }
+              
+              // Set processing to false to prevent new scans
+              isProcessingRef.current = false;
+              
+              // Stop the camera immediately
               await stopCamera();
+              
+              toast.success(`VIN scanned and validated successfully in ${scanDuration.toFixed(1)}s`);
               onScan(potentialVin);
               onClose();
               return;
