@@ -1257,6 +1257,7 @@ export type Database = {
           default_dashboard: string | null
           description: string | null
           id: string
+          is_protected: boolean | null
           name: string
           nicename: string
           permissions_configured: boolean | null
@@ -1269,6 +1270,7 @@ export type Database = {
           default_dashboard?: string | null
           description?: string | null
           id?: string
+          is_protected?: boolean | null
           name: string
           nicename: string
           permissions_configured?: boolean | null
@@ -1281,6 +1283,7 @@ export type Database = {
           default_dashboard?: string | null
           description?: string | null
           id?: string
+          is_protected?: boolean | null
           name?: string
           nicename?: string
           permissions_configured?: boolean | null

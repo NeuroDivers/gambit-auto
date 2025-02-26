@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -39,9 +38,18 @@ const PROTECTED_ROLE_IDS = [
 export function RoleForm({ form, onSubmit, onCancel, mode, roleId }: RoleFormProps) {
   const isProtectedRole = roleId && PROTECTED_ROLE_IDS.includes(roleId);
 
+  const handleSubmit = (values: RoleFormValues) => {
+    if (isProtectedRole) {
+      const originalName = form.getValues().name;
+      onSubmit({ ...values, name: originalName });
+    } else {
+      onSubmit(values);
+    }
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         {isProtectedRole && (
           <Alert variant="warning" className="mb-4">
             <AlertCircle className="h-4 w-4" />
@@ -54,17 +62,21 @@ export function RoleForm({ form, onSubmit, onCancel, mode, roleId }: RoleFormPro
         <FormField
           control={form.control}
           name="name"
+          disabled={isProtectedRole}
           render={({ field }) => (
             <FormItem>
               <FormLabel>System Name</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="admin" 
-                  {...field} 
-                  disabled={isProtectedRole}
-                  readOnly={isProtectedRole}
-                  className={isProtectedRole ? "bg-muted text-muted-foreground cursor-not-allowed" : ""}
-                />
+                {isProtectedRole ? (
+                  <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-base text-muted-foreground md:text-sm select-none pointer-events-none">
+                    {field.value}
+                  </div>
+                ) : (
+                  <Input 
+                    placeholder="admin" 
+                    {...field} 
+                  />
+                )}
               </FormControl>
               <FormDescription>
                 Internal name used by the system (lowercase, no spaces)

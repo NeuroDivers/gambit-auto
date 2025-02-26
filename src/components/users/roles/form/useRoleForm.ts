@@ -71,7 +71,13 @@ export const useRoleForm = ({ role, onSuccess, onOpenChange }: UseRoleFormProps)
           .update(updateData)
           .eq("id", role.id)
 
-        if (error) throw error
+        if (error) {
+          // Handle the specific error from our trigger
+          if (error.message.includes('Cannot modify the name of a protected system role')) {
+            throw new Error('System role names cannot be modified');
+          }
+          throw error;
+        }
       } else {
         const { error } = await supabase
           .from("roles")
