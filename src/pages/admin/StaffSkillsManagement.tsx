@@ -2,7 +2,7 @@
 import { ServiceSkillsManager } from "@/components/staff/skills/ServiceSkillsManager"
 import { PageTitle } from "@/components/shared/PageTitle"
 import { Card } from "@/components/ui/card"
-import { useUserData } from "@/components/users/hooks/useUserData"
+import { useUserData, CLIENT_ROLE_ID } from "@/components/users/hooks/useUserData"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState } from "react"
 
@@ -12,7 +12,7 @@ export default function StaffSkillsManagement() {
 
   // Filter out client users, we only want staff users
   const staffUsers = users?.filter(user => 
-    user.role?.name !== 'client'
+    user.role?.id !== CLIENT_ROLE_ID
   ) || []
 
   return (
