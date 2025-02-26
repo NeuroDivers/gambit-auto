@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { WorkOrder } from "./types"
 import { WorkOrderForm } from "./WorkOrderForm"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useCallback, useState } from "react"
+import { useCallback, useState, useEffect } from "react"
 
 type EditWorkOrderDialogProps = {
   workOrder: WorkOrder
@@ -14,23 +14,35 @@ type EditWorkOrderDialogProps = {
 export function EditWorkOrderDialog({ workOrder, open, onOpenChange }: EditWorkOrderDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Reset submitting state when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setIsSubmitting(false)
+    }
+  }, [open])
+
   const handleSuccess = useCallback(() => {
-    setIsSubmitting(false) // Reset submitting state
-    onOpenChange(false) // Close the sheet
+    setIsSubmitting(false)
+    onOpenChange(false)
   }, [onOpenChange])
 
   const handleSubmitting = useCallback((submitting: boolean) => {
     setIsSubmitting(submitting)
   }, [])
 
+  const handleOpenChange = useCallback((newOpen: boolean) => {
+    if (!isSubmitting) {
+      onOpenChange(newOpen)
+      if (!newOpen) {
+        setIsSubmitting(false)
+      }
+    }
+  }, [isSubmitting, onOpenChange])
+
   return (
     <Sheet 
       open={open} 
-      onOpenChange={(newOpen) => {
-        if (!isSubmitting) {
-          onOpenChange(newOpen)
-        }
-      }}
+      onOpenChange={handleOpenChange}
     >
       <SheetContent 
         side="right" 
@@ -51,7 +63,7 @@ export function EditWorkOrderDialog({ workOrder, open, onOpenChange }: EditWorkO
           }
         }}
         onCloseAutoFocus={(e) => {
-          e.preventDefault() // Prevent focus trap issues
+          e.preventDefault()
         }}
       >
         <SheetHeader className="p-6 pb-0">
