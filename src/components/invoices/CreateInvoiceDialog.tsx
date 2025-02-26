@@ -51,13 +51,37 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
         <ScrollArea className="flex-1 px-6">
           <form onSubmit={handleSubmit} className="space-y-6 pb-6">
             <InvoiceFormFields
-              {...formData}
-              {...setters}
               selectedWorkOrderId={formData.selectedWorkOrderId}
               onWorkOrderSelect={handleWorkOrderSelect}
               workOrders={workOrders || []}
               invoiceItems={formData.invoiceItems}
               setInvoiceItems={setters.setInvoiceItems}
+              customerFirstName={formData.customerFirstName}
+              setCustomerFirstName={setters.setCustomerFirstName}
+              customerLastName={formData.customerLastName}
+              setCustomerLastName={setters.setCustomerLastName}
+              customerEmail={formData.customerEmail}
+              setCustomerEmail={setters.setCustomerEmail}
+              customerPhone={formData.customerPhone}
+              setCustomerPhone={setters.setCustomerPhone}
+              customerAddress={formData.customerAddress}
+              setCustomerAddress={setters.setCustomerAddress}
+              vehicleMake={formData.vehicleMake}
+              setVehicleMake={setters.setVehicleMake}
+              vehicleModel={formData.vehicleModel}
+              setVehicleModel={setters.setVehicleModel}
+              vehicleYear={formData.vehicleYear}
+              setVehicleYear={setters.setVehicleYear}
+              vehicleVin={formData.vehicleVin}
+              setVehicleVin={setters.setVehicleVin}
+              vehicleBodyClass={formData.vehicleBodyClass || ""}
+              setVehicleBodyClass={setters.setVehicleBodyClass}
+              vehicleDoors={formData.vehicleDoors || 0}
+              setVehicleDoors={setters.setVehicleDoors}
+              vehicleTrim={formData.vehicleTrim || ""}
+              setVehicleTrim={setters.setVehicleTrim}
+              notes={formData.notes}
+              setNotes={setters.setNotes}
             />
             <Button type="submit" className="w-full">
               Create Invoice

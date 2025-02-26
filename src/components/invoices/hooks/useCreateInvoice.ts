@@ -1,9 +1,9 @@
-
-import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { supabase } from "@/integrations/supabase/client"
 
 export function useCreateInvoice() {
+  const [selectedWorkOrderId, setSelectedWorkOrderId] = useState("")
   const [customerFirstName, setCustomerFirstName] = useState("")
   const [customerLastName, setCustomerLastName] = useState("")
   const [customerEmail, setCustomerEmail] = useState("")
@@ -11,10 +11,12 @@ export function useCreateInvoice() {
   const [customerAddress, setCustomerAddress] = useState("")
   const [vehicleMake, setVehicleMake] = useState("")
   const [vehicleModel, setVehicleModel] = useState("")
-  const [vehicleYear, setVehicleYear] = useState<number>(new Date().getFullYear())
+  const [vehicleYear, setVehicleYear] = useState(new Date().getFullYear())
   const [vehicleVin, setVehicleVin] = useState("")
+  const [vehicleBodyClass, setVehicleBodyClass] = useState("")
+  const [vehicleDoors, setVehicleDoors] = useState(0)
+  const [vehicleTrim, setVehicleTrim] = useState("")
   const [notes, setNotes] = useState("")
-  const [selectedWorkOrderId, setSelectedWorkOrderId] = useState<string>("")
   const [invoiceItems, setInvoiceItems] = useState<any[]>([])
 
   const { data: workOrders } = useQuery({
@@ -78,6 +80,9 @@ export function useCreateInvoice() {
       setVehicleModel(workOrder.vehicle_model)
       setVehicleYear(workOrder.vehicle_year)
       setVehicleVin(workOrder.vehicle_serial)
+      setVehicleBodyClass(workOrder.vehicle_body_class)
+      setVehicleDoors(workOrder.vehicle_doors)
+      setVehicleTrim(workOrder.vehicle_trim)
       setNotes(workOrder.additional_notes || "")
       
       const items = workOrder.work_order_services.map((service: any) => ({
@@ -91,6 +96,7 @@ export function useCreateInvoice() {
   }
 
   const resetForm = () => {
+    setSelectedWorkOrderId("")
     setCustomerFirstName("")
     setCustomerLastName("")
     setCustomerEmail("")
@@ -100,13 +106,16 @@ export function useCreateInvoice() {
     setVehicleModel("")
     setVehicleYear(new Date().getFullYear())
     setVehicleVin("")
+    setVehicleBodyClass("")
+    setVehicleDoors(0)
+    setVehicleTrim("")
     setNotes("")
-    setSelectedWorkOrderId("")
     setInvoiceItems([])
   }
 
   return {
     formData: {
+      selectedWorkOrderId,
       customerFirstName,
       customerLastName,
       customerEmail,
@@ -116,11 +125,14 @@ export function useCreateInvoice() {
       vehicleModel,
       vehicleYear,
       vehicleVin,
+      vehicleBodyClass,
+      vehicleDoors,
+      vehicleTrim,
       notes,
-      selectedWorkOrderId,
       invoiceItems,
     },
     setters: {
+      setSelectedWorkOrderId,
       setCustomerFirstName,
       setCustomerLastName,
       setCustomerEmail,
@@ -130,6 +142,9 @@ export function useCreateInvoice() {
       setVehicleModel,
       setVehicleYear,
       setVehicleVin,
+      setVehicleBodyClass,
+      setVehicleDoors,
+      setVehicleTrim,
       setNotes,
       setInvoiceItems,
     },
