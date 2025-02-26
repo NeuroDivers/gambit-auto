@@ -22,7 +22,7 @@ export default function InvoiceDetails() {
   const handlePrint = useReactToPrint({
     documentTitle: 'Invoice',
     pageStyle: '@page { margin: 1cm }',
-    content: () => printRef.current,
+    getPrintContent: () => printRef.current,
   })
 
   const { data: invoice, isLoading, error } = useQuery({

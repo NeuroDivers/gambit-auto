@@ -511,6 +511,7 @@ export type Database = {
       }
       invoice_items: {
         Row: {
+          assigned_profile_id: string | null
           commission_rate: number | null
           commission_type: string | null
           created_at: string
@@ -527,6 +528,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_profile_id?: string | null
           commission_rate?: number | null
           commission_type?: string | null
           created_at?: string
@@ -543,6 +545,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_profile_id?: string | null
           commission_rate?: number | null
           commission_type?: string | null
           created_at?: string
@@ -572,6 +575,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "service_types"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_assigned_profile_id_fkey"
+            columns: ["assigned_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_assigned_profile_id_fkey"
+            columns: ["assigned_profile_id"]
+            isOneToOne: false
+            referencedRelation: "staff_commission_analytics"
+            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "invoice_items_invoice_id_fkey"
