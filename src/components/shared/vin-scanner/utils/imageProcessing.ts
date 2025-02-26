@@ -1,6 +1,4 @@
 
-import { VIN_GUIDE_DIMENSIONS } from '../components/ScannerViewport';
-
 declare const cv: any;
 
 export interface BoundingBox {
@@ -12,6 +10,7 @@ export interface BoundingBox {
 
 export const preprocessImage = async (imageData: ImageData): Promise<{ processedImage: ImageData; boundingBox: BoundingBox | null }> => {
   try {
+    // Convert ImageData to Mat
     let src = cv.matFromImageData(imageData);
     let gray = new cv.Mat();
     let processed = new cv.Mat();
@@ -20,63 +19,75 @@ export const preprocessImage = async (imageData: ImageData): Promise<{ processed
       // Convert to grayscale
       cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
       
-      // Apply Gaussian blur to reduce noise
-      let blurred = new cv.Mat();
-      cv.GaussianBlur(gray, blurred, new cv.Size(3, 3), 0, 0);
-      
-      // Apply adaptive thresholding with more aggressive parameters
+      // Apply adaptive thresholding
       cv.adaptiveThreshold(
-        blurred,
+        gray,
         processed,
         255,
         cv.ADAPTIVE_THRESH_GAUSSIAN_C,
         cv.THRESH_BINARY,
-        21, // Increased block size for better text isolation
-        5   // Increased C constant for stronger thresholding
+        11,
+        2
       );
 
-      // Create a bounding box that matches the guide box dimensions
-      const guideBox: BoundingBox = {
-        x: Math.floor((imageData.width * (1 - VIN_GUIDE_DIMENSIONS.width)) / 2),
-        y: Math.floor((imageData.height * (1 - VIN_GUIDE_DIMENSIONS.height)) / 2),
-        width: Math.floor(imageData.width * VIN_GUIDE_DIMENSIONS.width),
-        height: Math.floor(imageData.height * VIN_GUIDE_DIMENSIONS.height)
-      };
+      // Apply noise reduction
+      let denoised = new cv.Mat();
+      cv.fastNlMeansDenoising(processed, denoised);
+      
+      // Find contours for VIN region detection
+      let contours = new cv.MatVector();
+      let hierarchy = new cv.Mat();
+      cv.findContours(
+        denoised,
+        contours,
+        hierarchy,
+        cv.RETR_EXTERNAL,
+        cv.CHAIN_APPROX_SIMPLE
+      );
 
-      // Extract and process the region of interest
-      let roi = processed.roi(new cv.Rect(guideBox.x, guideBox.y, guideBox.width, guideBox.height));
-      
-      // Apply morphological operations to clean up the text
-      let kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(2, 2));
-      
-      // Dilate slightly to connect broken characters
-      let dilated = new cv.Mat();
-      cv.dilate(roi, dilated, kernel, new cv.Point(-1, -1), 1);
-      
-      // Erode to restore character thickness
-      let eroded = new cv.Mat();
-      cv.erode(dilated, eroded, kernel, new cv.Point(-1, -1), 1);
-      
+      let boundingBox: BoundingBox | null = null;
+      let maxArea = 0;
+
+      // Look for rectangle-shaped contours with appropriate aspect ratio
+      for (let i = 0; i < contours.size(); i++) {
+        const contour = contours.get(i);
+        const rect = cv.boundingRect(contour);
+        const area = rect.width * rect.height;
+        const aspectRatio = rect.width / rect.height;
+
+        // VIN label typically has aspect ratio between 4:1 and 8:1
+        if (aspectRatio >= 4 && aspectRatio <= 8 && area > 5000) {
+          if (area > maxArea) {
+            maxArea = area;
+            boundingBox = {
+              x: rect.x,
+              y: rect.y,
+              width: rect.width,
+              height: rect.height
+            };
+          }
+        }
+      }
+
       // Convert processed image back to ImageData
       let processedImageData = new ImageData(
-        new Uint8ClampedArray(eroded.data),
-        eroded.cols,
-        eroded.rows
+        new Uint8ClampedArray(denoised.data),
+        denoised.cols,
+        denoised.rows
       );
 
       // Cleanup OpenCV objects
-      roi.delete();
-      kernel.delete();
-      dilated.delete();
-      eroded.delete();
-      blurred.delete();
+      contours.delete();
+      hierarchy.delete();
+      denoised.delete();
 
       return {
         processedImage: processedImageData,
-        boundingBox: guideBox
+        boundingBox
       };
 
     } finally {
+      // Ensure we clean up OpenCV objects
       src.delete();
       gray.delete();
       processed.delete();
@@ -84,6 +95,7 @@ export const preprocessImage = async (imageData: ImageData): Promise<{ processed
     
   } catch (error) {
     console.error('Error in preprocessImage:', error);
+    // Return original image if processing fails
     return {
       processedImage: imageData,
       boundingBox: null
@@ -99,8 +111,8 @@ export const cropToVinRegion = (
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
-    // Add minimal padding around the detected region
-    const padding = 5;
+    // Add some padding around the detected region
+    const padding = 10;
     const x = Math.max(0, boundingBox.x - padding);
     const y = Math.max(0, boundingBox.y - padding);
     const width = Math.min(canvas.width - x, boundingBox.width + 2 * padding);
@@ -119,10 +131,7 @@ export const postProcessVIN = (text: string): string => {
   // Remove spaces and convert to uppercase
   let processedText = text.replace(/\s+/g, '').toUpperCase();
 
-  // Remove any obviously invalid sequences
-  processedText = processedText.replace(/[^A-Z0-9]/g, '');
-
-  // Common OCR substitutions (updated with more common mistakes)
+  // Common OCR substitutions
   const substitutions: { [key: string]: string } = {
     'O': '0',
     'I': '1',
@@ -131,21 +140,12 @@ export const postProcessVIN = (text: string): string => {
     'Z': '2',
     '|': '1',
     'B': '8',
-    'D': '0',
-    'T': '7',
-    'L': '1',
-    'E': '8'
+    'D': '0'
   };
 
-  // Apply substitutions only if they make the text more likely to be a VIN
-  const beforeSubs = processedText;
+  // Apply substitutions
   for (const [from, to] of Object.entries(substitutions)) {
     processedText = processedText.replace(new RegExp(from, 'g'), to);
-  }
-
-  // If substitutions made it worse, revert
-  if (beforeSubs.length === 17 && processedText.length !== 17) {
-    processedText = beforeSubs;
   }
 
   // Remove any characters that aren't valid in a VIN

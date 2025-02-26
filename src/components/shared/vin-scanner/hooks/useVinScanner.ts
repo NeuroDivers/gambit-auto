@@ -89,8 +89,6 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const scanningRef = useRef<number>()
   const logsEndRef = useRef<HTMLDivElement>(null)
   const isProcessingRef = useRef(false)
-  const lastScanTimeRef = useRef<number>(0);
-  const SCAN_INTERVAL = 500; // Minimum time between scans in milliseconds
 
   const addLog = (message: string) => {
     console.log(message);
@@ -168,12 +166,6 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       scanningRef.current = undefined;
     }
 
-    const currentTime = Date.now();
-    if (currentTime - lastScanTimeRef.current < SCAN_INTERVAL) {
-      scanningRef.current = requestAnimationFrame(startOCRScanning);
-      return;
-    }
-
     if (isProcessingRef.current || isPaused || !isOpenCVLoaded) {
       addLog('Scanning skipped: ' + 
         (isProcessingRef.current ? 'processing in progress' : 
@@ -192,10 +184,11 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
 
     try {
       isProcessingRef.current = true;
-      lastScanTimeRef.current = currentTime;
-      
+      addLog('Starting frame capture...');
       const frameData = await captureFrame();
+      
       if (!frameData) {
+        addLog('No valid frame captured');
         isProcessingRef.current = false;
         if (!isPaused) {
           scanningRef.current = requestAnimationFrame(startOCRScanning);
@@ -203,31 +196,37 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
         return;
       }
 
-      const result = await workerRef.current.recognize(frameData);
-      const { text, confidence } = result.data;
+      addLog('Processing frame with OCR...');
       
-      const vinPattern = /[A-HJ-NPR-Z0-9]{17}/;
-      const matches = text.match(vinPattern);
+      const { data: { text, confidence } } = await workerRef.current.recognize(frameData);
       
-      if (matches) {
-        const potentialVin = matches[0];
-        addLog(`Potential VIN found: "${potentialVin}" (${confidence.toFixed(1)}%)`);
-        
-        if (validateVIN(potentialVin)) {
-          const isNorthAmerican = ['1', '2', '3', '4', '5'].includes(potentialVin[0]);
-          addLog(`✓ Valid VIN format detected${isNorthAmerican ? ' (North American)' : ''}`);
+      if (text.trim()) {
+        addLog(`Raw text: "${text.trim()}" (${confidence.toFixed(1)}%)`);
+      }
+      
+      const correctedText = postProcessVIN(text);
+      if (correctedText !== text.trim() && correctedText) {
+        addLog(`Corrected text: "${correctedText}"`);
+      }
+      
+      if (confidence > 45 && correctedText.length >= 15) {
+        if (correctedText.length === 17 && validateVIN(correctedText)) {
+          const isNorthAmerican = ['1', '2', '3', '4', '5'].includes(correctedText[0]);
           
-          const isValidVin = await validateVinWithNHTSA(potentialVin);
+          addLog(`✓ Valid VIN format detected${isNorthAmerican ? ' (North American)' : ''}, validating with NHTSA...`);
+          
+          const isValidVin = await validateVinWithNHTSA(correctedText);
+          
           if (isValidVin) {
             addLog('✓ VIN validated successfully!');
             toast.success("VIN scanned and validated successfully");
-            onScan(potentialVin);
+            onScan(correctedText);
             onClose();
             return;
+          } else {
+            addLog('✗ VIN validation failed');
           }
         }
-      } else if (text.trim()) {
-        addLog(`Raw text: "${text.trim()}" (${confidence.toFixed(1)}%)`);
       }
 
       isProcessingRef.current = false;
@@ -383,13 +382,10 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       
       await worker.setParameters({
         tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-        tessedit_pageseg_mode: PSM.SINGLE_BLOCK,
+        tessedit_pageseg_mode: PSM.SINGLE_LINE,
         preserve_interword_spaces: '0',
         tessjs_create_box: '1',
-        tessjs_create_unlock: '1',
-        tessjs_min_char_height: '20',
-        textord_min_linesize: '2.5',
-        classify_bln_numeric_mode: '1'
+        tessjs_create_unlock: '1'
       })
       
       addLog('OCR worker fully initialized')
@@ -419,16 +415,11 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   }
 
   const togglePause = () => {
-    setIsPaused(prev => {
-      const newPauseState = !prev;
-      addLog(`Scanning ${newPauseState ? 'paused' : 'resumed'}`);
-      
-      if (!newPauseState && isCameraActive && workerRef.current && !scanningRef.current) {
-        startOCRScanning();
-      }
-      
-      return newPauseState;
-    });
+    setIsPaused(!isPaused)
+    addLog(`Scanning ${!isPaused ? 'paused' : 'resumed'}`)
+    if (isPaused && isCameraActive && workerRef.current) {
+      startOCRScanning()
+    }
   }
 
   useEffect(() => {
