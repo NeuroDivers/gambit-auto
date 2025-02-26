@@ -334,6 +334,8 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
             if (isValidVin) {
               isScanningRef.current = false;
               isInitializedRef.current = false;
+              isProcessingRef.current = false;
+              
               if (scanningRef.current) {
                 cancelAnimationFrame(scanningRef.current);
                 scanningRef.current = undefined;
@@ -341,6 +343,8 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
               
               const scanDuration = (Date.now() - scanStartTimeRef.current) / 1000;
               addLog(`✓ VIN validated successfully! (Scan took ${scanDuration.toFixed(1)} seconds)`);
+              
+              await stopCamera();
               
               toast.success(`VIN scanned and validated successfully in ${scanDuration.toFixed(1)}s`);
               onScan(potentialVin);
@@ -371,6 +375,7 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const stopCamera = async () => {
     isScanningRef.current = false;
     isInitializedRef.current = false;
+    isProcessingRef.current = false;
     
     if (scanningRef.current) {
       cancelAnimationFrame(scanningRef.current);
@@ -380,25 +385,24 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     scanStartTimeRef.current = 0;
 
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop())
-      streamRef.current = null
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
     }
 
     if (workerRef.current) {
       try {
-        await workerRef.current.terminate()
-        workerRef.current = null
+        await workerRef.current.terminate();
+        workerRef.current = null;
       } catch (error) {
-        console.error('Error terminating worker:', error)
+        console.error('Error terminating worker:', error);
       }
     }
 
-    setIsCameraActive(false)
-    setIsFlashOn(false)
-    isProcessingRef.current = false
-    setIsOpenCVLoaded(false)
-    addLog('Camera and scanning stopped')
-  }
+    setIsCameraActive(false);
+    setIsFlashOn(false);
+    setIsOpenCVLoaded(false);
+    addLog('Camera and scanning stopped');
+  };
 
   const initializeWorker = async () => {
     try {
