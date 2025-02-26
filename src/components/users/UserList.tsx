@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserCard } from "./UserCard";
-import { useUserData } from "./hooks/useUserData";
+import { useUserData, CLIENT_ROLE_ID } from "./hooks/useUserData";
 import { useUserSubscription } from "./hooks/useUserSubscription";
 import { UserListHeader } from "./UserListHeader";
 
@@ -14,7 +14,7 @@ interface UserListProps {
 export const UserList = ({ initialRoleFilter = "all", excludeClients = false }: UserListProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState(initialRoleFilter);
-  const [excludedRoles, setExcludedRoles] = useState<string[]>(excludeClients ? ["Client"] : []);
+  const [excludedRoles, setExcludedRoles] = useState<string[]>(excludeClients ? [CLIENT_ROLE_ID] : []);
   const { data: users, isLoading, refetch } = useUserData();
   
   // Update roleFilter when initialRoleFilter changes
@@ -33,8 +33,8 @@ export const UserList = ({ initialRoleFilter = "all", excludeClients = false }: 
       `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesRole = roleFilter === "all" || user.role?.name === roleFilter;
-    const matchesUserType = excludeClients ? user.role?.name !== 'Client' : true;
-    const notExcluded = !excludedRoles.includes(user.role?.name || '');
+    const matchesUserType = excludeClients ? user.role?.id !== CLIENT_ROLE_ID : true;
+    const notExcluded = !excludedRoles.includes(user.role?.id || '');
     
     return matchesSearch && matchesRole && matchesUserType && notExcluded;
   });
@@ -43,12 +43,12 @@ export const UserList = ({ initialRoleFilter = "all", excludeClients = false }: 
     await refetch();
   };
 
-  const handleExcludeRole = (roleName: string) => {
-    setExcludedRoles(prev => [...prev, roleName]);
+  const handleExcludeRole = (roleId: string) => {
+    setExcludedRoles(prev => [...prev, roleId]);
   };
 
-  const handleRemoveExcludedRole = (roleName: string) => {
-    setExcludedRoles(prev => prev.filter(r => r !== roleName));
+  const handleRemoveExcludedRole = (roleId: string) => {
+    setExcludedRoles(prev => prev.filter(r => r !== roleId));
   };
 
   if (isLoading) {

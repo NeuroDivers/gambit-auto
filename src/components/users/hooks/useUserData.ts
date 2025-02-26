@@ -35,6 +35,8 @@ type ClientResponse = {
   address?: string;
 };
 
+export const CLIENT_ROLE_ID = "00000000-0000-0000-0000-000000000002"; // Replace with actual client role ID
+
 export const useUserData = () => {
   return useQuery({
     queryKey: ["users"],
@@ -64,8 +66,8 @@ export const useUserData = () => {
       console.log("Fetched profiles:", profiles);
 
       // Separate client profiles - we'll get their data from clients table
-      const clientProfiles = profiles.filter(profile => profile.role.name === 'client');
-      const nonClientProfiles = profiles.filter(profile => profile.role.name !== 'client');
+      const clientProfiles = profiles.filter(profile => profile.role?.id === CLIENT_ROLE_ID);
+      const nonClientProfiles = profiles.filter(profile => profile.role?.id !== CLIENT_ROLE_ID);
 
       // Get client data for client profiles
       const { data: clients, error: clientsError } = await supabase
