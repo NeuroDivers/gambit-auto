@@ -361,3 +361,4 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     stopCamera
   }
 }
+
