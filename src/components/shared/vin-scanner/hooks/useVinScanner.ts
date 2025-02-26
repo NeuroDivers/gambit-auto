@@ -87,11 +87,15 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
           advanced: [{ torch: !isFlashOn } as any]
         })
         setIsFlashOn(!isFlashOn)
-        addLog(`Flash ${!isFlashOn ? 'enabled' : 'disabled'}`)
+        if (!isPaused) {
+          addLog(`Flash ${!isFlashOn ? 'enabled' : 'disabled'}`)
+        }
       }
     } catch (err) {
-      addLog(`Flash control error: ${err}`)
-      toast.error('Failed to toggle flash')
+      if (!isPaused) {
+        addLog(`Flash control error: ${err}`)
+        toast.error('Failed to toggle flash')
+      }
     }
   }
 
@@ -144,13 +148,18 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     }
 
     if (isProcessingRef.current || isPaused) {
+      if (!isPaused) {
+        scanningRef.current = requestAnimationFrame(startOCRScanning)
+      }
       return
     }
 
     if (!streamRef.current || !workerRef.current) {
-      addLog('Scanning conditions not met:')
-      addLog(`- Stream available: ${!!streamRef.current}`)
-      addLog(`- Worker available: ${!!workerRef.current}`)
+      if (!isPaused) {
+        addLog('Scanning conditions not met:')
+        addLog(`- Stream available: ${!!streamRef.current}`)
+        addLog(`- Worker available: ${!!workerRef.current}`)
+      }
       return
     }
 
@@ -159,7 +168,9 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       const frameData = captureFrame()
       
       if (!frameData) {
-        addLog('No valid frame captured')
+        if (!isPaused) {
+          addLog('No valid frame captured')
+        }
         isProcessingRef.current = false
         if (!isPaused) {
           scanningRef.current = requestAnimationFrame(startOCRScanning)
@@ -167,30 +178,37 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
         return
       }
 
-      addLog('Processing frame with OCR...')
+      if (!isPaused) {
+        addLog('Processing frame with OCR...')
+      }
+      
       const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
       
-      if (text.trim()) {
+      if (!isPaused && text.trim()) {
         addLog(`Raw text: "${text.trim()}" (${confidence.toFixed(1)}%)`)
       }
       
       const correctedText = correctCommonOcrMistakes(text)
-      if (correctedText !== text.trim() && correctedText) {
+      if (!isPaused && correctedText !== text.trim() && correctedText) {
         addLog(`Corrected text: "${correctedText}"`)
       }
       
       if (confidence > 40 && correctedText.length >= 15) {
         if (correctedText.length === 17 && validateVIN(correctedText)) {
-          addLog('✓ Valid VIN format detected, validating with NHTSA...')
+          if (!isPaused) {
+            addLog('✓ Valid VIN format detected, validating with NHTSA...')
+          }
           const isValidVin = await validateVinWithNHTSA(correctedText)
           
           if (isValidVin) {
-            addLog('✓ VIN validated successfully!')
+            if (!isPaused) {
+              addLog('✓ VIN validated successfully!')
+              toast.success("VIN scanned and validated successfully")
+            }
             onScan(correctedText)
-            toast.success("VIN scanned and validated successfully")
             onClose()
             return
-          } else {
+          } else if (!isPaused) {
             addLog('✗ VIN validation failed')
           }
         }
@@ -201,7 +219,9 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
         scanningRef.current = requestAnimationFrame(startOCRScanning)
       }
     } catch (error) {
-      addLog(`OCR error: ${error}`)
+      if (!isPaused) {
+        addLog(`OCR error: ${error}`)
+      }
       isProcessingRef.current = false
       if (!isPaused) {
         scanningRef.current = requestAnimationFrame(startOCRScanning)
