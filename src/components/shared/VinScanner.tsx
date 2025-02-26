@@ -116,13 +116,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const startCamera = async () => {
     try {
-      const constraints: MediaTrackConstraints = {
-        facingMode: 'environment',
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({ video: constraints })
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true
+      })
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream
