@@ -42,6 +42,7 @@ DialogContent.displayName = "DialogContent"
 export function VinScanner({ onScan }: VinScannerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isCameraActive, setIsCameraActive] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
   const [scanMode, setScanMode] = useState<'text' | 'barcode'>('text')
   const [logs, setLogs] = useState<string[]>([])
   const [hasFlash, setHasFlash] = useState(false)
@@ -129,12 +130,19 @@ export function VinScanner({ onScan }: VinScannerProps) {
         video: {
           facingMode: { exact: "environment" },
           width: { ideal: 1920 },
-          height: { ideal: 1080 }
+          height: { ideal: 1080 },
+          zoom: 2.0,
+          advanced: [{ zoom: 2.0 }] as any
         }
       }
 
       const fallbackConstraints = {
-        video: true
+        video: {
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          zoom: 2.0,
+          advanced: [{ zoom: 2.0 }] as any
+        }
       }
 
       try {
@@ -240,8 +248,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
   }
 
   const startOCRScanning = async () => {
-    if (isProcessingRef.current) {
-      addLog('Already processing a frame, skipping...')
+    if (isProcessingRef.current || isPaused) {
       return
     }
 
@@ -396,6 +403,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }
 
+  const togglePause = () => {
+    setIsPaused(!isPaused)
+    addLog(`Scanning ${!isPaused ? 'paused' : 'resumed'}`)
+    if (!isPaused && isDialogOpen && isCameraActive && workerRef.current && scanMode === 'text') {
+      startOCRScanning()
+    }
+  }
+
   useEffect(() => {
     return () => {
       handleClose()
@@ -429,6 +444,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
             isFlashOn={isFlashOn}
             onFlashToggle={toggleFlash}
             onClose={handleClose}
+            isPaused={isPaused}
+            onPauseToggle={togglePause}
           />
           <div className="relative aspect-video w-full overflow-hidden">
             <video
@@ -459,7 +476,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
           <div className="bg-muted p-4 max-h-32 overflow-y-auto text-xs font-mono">
             <div className="space-y-1">
               {logs.map((log, index) => (
-                <div key={index} className="text-muted-foreground">{log}</div>
+                <div key={index} className="text-muted-foreground select-text">{log}</div>
               ))}
               <div ref={logsEndRef} />
             </div>
