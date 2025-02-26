@@ -26,7 +26,7 @@ export function useWorkOrderSubmission() {
         description: workOrderId ? "Work order updated successfully" : "Work order created successfully",
       })
 
-      navigate("/work-orders")
+      navigate("/admin/work-orders")
       return true
     } catch (error: any) {
       console.error("Error saving work order:", error)

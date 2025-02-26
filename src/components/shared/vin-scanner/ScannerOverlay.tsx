@@ -1,57 +1,34 @@
 
-import { Camera, X, Pause, Play } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Camera, Barcode } from "lucide-react"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 
 interface ScannerOverlayProps {
-  hasFlash?: boolean
-  isFlashOn?: boolean
-  isPaused?: boolean
-  onFlashToggle?: () => void
-  onPauseToggle?: () => void
-  onClose: () => void
+  scanMode: 'text' | 'barcode'
+  onScanModeChange: (value: string) => void
 }
 
-export function ScannerOverlay({ 
-  hasFlash,
-  isFlashOn,
-  isPaused,
-  onFlashToggle,
-  onPauseToggle,
-  onClose
-}: ScannerOverlayProps) {
+export function ScannerOverlay({ scanMode, onScanModeChange }: ScannerOverlayProps) {
   return (
-    <div className="flex items-center justify-between p-2 border-b">
-      <div className="flex items-center gap-2">
-        {hasFlash && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onFlashToggle}
-            className={isFlashOn ? "text-yellow-500" : ""}
-          >
-            <span className="sr-only">Toggle flash</span>
-          </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onPauseToggle}
-          className={isPaused ? "text-blue-500" : ""}
+    <DialogHeader className="p-4 space-y-4">
+      <DialogTitle>Scan VIN</DialogTitle>
+      <DialogDescription>
+        <ToggleGroup
+          type="single"
+          value={scanMode}
+          onValueChange={onScanModeChange}
+          className="flex justify-center"
         >
-          {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-          <span className="sr-only">
-            {isPaused ? 'Resume scanning' : 'Pause scanning'}
-          </span>
-        </Button>
-      </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onClose}
-      >
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close scanner</span>
-      </Button>
-    </div>
+          <ToggleGroupItem value="text" aria-label="Text scanner">
+            <Camera className="h-4 w-4 mr-2" />
+            Text
+          </ToggleGroupItem>
+          <ToggleGroupItem value="barcode" aria-label="Barcode scanner">
+            <Barcode className="h-4 w-4 mr-2" />
+            Barcode
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </DialogDescription>
+    </DialogHeader>
   )
 }
