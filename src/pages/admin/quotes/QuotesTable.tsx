@@ -55,11 +55,7 @@ export function QuotesTable({ quotes, onRowClick }: QuotesTableProps) {
       </TableCell>
       <TableCell>
         <Badge 
-          variant={
-            quote.status === 'accepted' ? 'default' : 
-            quote.status === 'rejected' ? 'destructive' : 
-            'secondary'
-          }
+          variant={quote.status as "pending" | "accepted" | "rejected" | "estimated"}
         >
           {quote.status}
         </Badge>
