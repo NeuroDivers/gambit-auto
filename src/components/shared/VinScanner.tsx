@@ -46,6 +46,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const [logs, setLogs] = useState<string[]>([])
   const [hasFlash, setHasFlash] = useState(false)
   const [isFlashOn, setIsFlashOn] = useState(false)
+  const [isScanning, setIsScanning] = useState(false)
   const isMobile = useIsMobile()
 
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -99,17 +100,22 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const initializeWorker = async () => {
     try {
-      addLog('Initializing OCR worker with basic settings...')
+      addLog('Initializing OCR worker...')
       const worker = await createWorker()
+      addLog('Worker created, initializing language...')
       
       await worker.reinitialize('eng')
+      addLog('Language initialized, setting parameters...')
+      
       await worker.setParameters({
         tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
         tessedit_pageseg_mode: PSM.SINGLE_LINE,
-        preserve_interword_spaces: '0'
+        preserve_interword_spaces: '0',
+        tessjs_create_box: '1',
+        tessjs_create_unlock: '1'
       })
-
-      addLog('OCR worker initialized')
+      
+      addLog('OCR worker fully initialized')
       return worker
     } catch (error) {
       addLog(`Error initializing OCR worker: ${error}`)
@@ -136,7 +142,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         if (videoRef.current) {
           videoRef.current.srcObject = stream
           streamRef.current = stream
-          addLog('Stream acquired with back camera, initializing...')
+          addLog('Stream acquired with back camera')
         }
       } catch (backCameraError) {
         addLog('Back camera not available, trying alternative camera...')
@@ -144,7 +150,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         if (videoRef.current) {
           videoRef.current.srcObject = stream
           streamRef.current = stream
-          addLog('Stream acquired with fallback camera, initializing...')
+          addLog('Stream acquired with fallback camera')
         }
       }
       
@@ -158,6 +164,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
           }
         }
         
+        addLog('Waiting for video to be ready...')
         await new Promise((resolve) => {
           if (videoRef.current) {
             videoRef.current.onloadedmetadata = resolve
@@ -166,13 +173,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
         
         await videoRef.current.play()
         setIsCameraActive(true)
-        addLog('Video stream started')
+        addLog('Video stream started successfully')
 
         if (scanMode === 'text') {
-          addLog('Starting OCR initialization...')
+          addLog('Initializing OCR worker...')
           workerRef.current = await initializeWorker()
-          addLog('Starting continuous OCR scanning...')
-          startOCRScanning()
+          setIsScanning(true)
+          addLog('Starting continuous OCR scanning loop...')
+          await startOCRScanning()
         } else {
           addLog('Initializing barcode reader...')
           await initializeBarcodeScanner()
@@ -187,6 +195,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const captureFrame = () => {
     if (!videoRef.current || !canvasRef.current) {
+      addLog('Video or canvas reference not available')
       return null
     }
 
@@ -195,6 +204,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
     const ctx = canvas.getContext('2d')
 
     if (!ctx || video.readyState !== video.HAVE_ENOUGH_DATA) {
+      addLog('Video not ready or context not available')
       return null
     }
 
@@ -215,6 +225,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
     const tempCtx = tempCanvas.getContext('2d')
 
     if (!tempCtx) {
+      addLog('Could not create temporary canvas context')
       return null
     }
 
@@ -225,21 +236,25 @@ export function VinScanner({ onScan }: VinScannerProps) {
       0, 0, scanAreaWidth, scanAreaHeight
     )
 
+    addLog('Frame captured successfully')
     return preprocessImage(tempCanvas)
   }
 
   const startOCRScanning = async () => {
-    if (!streamRef.current || !workerRef.current || !isDialogOpen) {
+    if (!streamRef.current || !workerRef.current || !isDialogOpen || !isScanning) {
+      addLog('Scanning conditions not met, stopping scan loop')
       return
     }
 
     try {
       const frameData = captureFrame()
       if (!frameData) {
-        scanningRef.current = requestAnimationFrame(startOCRScanning)
+        addLog('No valid frame captured, retrying...')
+        scanningRef.current = requestAnimationFrame(() => startOCRScanning())
         return
       }
 
+      addLog('Processing frame with OCR...')
       const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
       const correctedText = correctCommonOcrMistakes(text)
       
@@ -247,22 +262,26 @@ export function VinScanner({ onScan }: VinScannerProps) {
         addLog(`Detected text: ${correctedText} (confidence: ${confidence}%)`)
 
         if (correctedText.length === 17 && validateVIN(correctedText)) {
+          addLog('Valid VIN format detected, validating with NHTSA...')
           const isValidVin = await validateVinWithNHTSA(correctedText)
           
           if (isValidVin) {
+            addLog('VIN validated successfully!')
             onScan(correctedText)
             toast.success("VIN scanned and validated successfully")
             handleClose()
             return
+          } else {
+            addLog('VIN validation failed')
           }
         }
       }
 
       // Continue scanning
-      scanningRef.current = requestAnimationFrame(startOCRScanning)
+      scanningRef.current = requestAnimationFrame(() => startOCRScanning())
     } catch (error) {
       addLog(`OCR error: ${error}`)
-      scanningRef.current = requestAnimationFrame(startOCRScanning)
+      scanningRef.current = requestAnimationFrame(() => startOCRScanning())
     }
   }
 
@@ -311,6 +330,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
   }
 
   const stopCamera = () => {
+    setIsScanning(false)
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
@@ -324,11 +344,13 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
     setIsCameraActive(false)
     setIsFlashOn(false)
+    addLog('Camera and scanning stopped')
   }
 
   const handleClose = async () => {
     stopCamera()
     if (workerRef.current) {
+      addLog('Terminating OCR worker...')
       await workerRef.current.terminate()
       workerRef.current = null
     }
