@@ -58,16 +58,9 @@ export function RoleForm({ form, onSubmit, onCancel, mode, roleId }: RoleFormPro
             <FormItem>
               <FormLabel>System Name</FormLabel>
               <FormControl>
-                {isProtectedRole ? (
-                  <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-base text-muted-foreground md:text-sm select-none pointer-events-none">
-                    {field.value}
-                  </div>
-                ) : (
-                  <Input 
-                    placeholder="admin" 
-                    {...field} 
-                  />
-                )}
+                <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-base text-muted-foreground md:text-sm select-none pointer-events-none">
+                  {field.value}
+                </div>
               </FormControl>
               <FormDescription>
                 Internal name used by the system (lowercase, no spaces)
