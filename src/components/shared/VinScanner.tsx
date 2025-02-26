@@ -27,7 +27,13 @@ const DialogContent = React.forwardRef<
       )} 
       {...props} 
       onPointerDownOutside={(e) => e.preventDefault()}
-    />
+    >
+      <Dialog.Title className="sr-only">Scan VIN</Dialog.Title>
+      <Dialog.Description className="sr-only">
+        Use your camera to scan a vehicle's VIN number
+      </Dialog.Description>
+      {props.children}
+    </Dialog.Content>
   </Dialog.Portal>
 ))
 DialogContent.displayName = "DialogContent"
@@ -49,7 +55,13 @@ export function VinScanner({ onScan }: VinScannerProps) {
     startCamera,
     stopCamera
   } = useVinScanner({
-    onScan,
+    onScan: (vin: string) => {
+      // First stop camera and close dialog
+      stopCamera();
+      setIsDialogOpen(false);
+      // Then call onScan callback
+      onScan(vin);
+    },
     onClose: () => setIsDialogOpen(false)
   })
 
