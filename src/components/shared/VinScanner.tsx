@@ -15,6 +15,12 @@ interface VinScannerProps {
   onScan: (vin: string) => void
 }
 
+interface CharacterConfidence {
+  char: string;
+  confidence: number;
+  lastUpdated: number;
+}
+
 export function VinScanner({ onScan }: VinScannerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isCameraActive, setIsCameraActive] = useState(false)
@@ -34,6 +40,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const scanningRef = useRef<number>()
   const logsEndRef = useRef<HTMLDivElement>(null)
   const lastScanRef = useRef<number>(0)
+  const confidenceMapRef = useRef<CharacterConfidence[]>([])
 
   const addLog = (message: string) => {
     setLogs(prev => [...prev, message])
@@ -228,9 +235,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
     try {
       const now = Date.now()
-      if (now - lastScanRef.current < 2000) { // Check every 2 seconds for OCR
+      if (now - lastScanRef.current < OCR_SCAN_INTERVAL) {
         if (shouldScan) {
-          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan));
         }
         return
       }
@@ -242,57 +249,94 @@ export function VinScanner({ onScan }: VinScannerProps) {
       const frameData = captureFrame()
       if (!frameData) {
         if (shouldScan) {
-          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan));
         }
         return
       }
 
-      const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
-      
-      const cleanedText = text.toUpperCase()
-        .replace(/[^A-Z0-9]/g, '')
-        .replace(/[OoQq]/g, '0')
-        .replace(/[IiLl]/g, '1')
-        .replace(/[Ss]/g, '5')
-        .replace(/[Zz]/g, '2')
-        .replace(/[Bb]/g, '8')
-        .replace(/[Gg]/g, '6')
+      const { data } = await workerRef.current.recognize(frameData);
+      const text = data.text;
+      const words = data.words || [];
 
-      setDetectedText(cleanedText)
-      addLog(`Detected text: ${cleanedText} (confidence: ${confidence}%)`)
-      
-      if (confidence < 40 || cleanedText.length < 15) {
-        setError(confidence < 40 ? "Low confidence scan, please try again" : undefined)
-        if (shouldScan) {
-          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+      let processedText = '';
+      let overallConfidence = 0;
+      let charCount = 0;
+
+      words.forEach((word: any) => {
+        const normalizedText = word.text.toUpperCase()
+          .replace(/[^A-Z0-9]/g, '')
+          .replace(/[OoQq]/g, '0')
+          .replace(/[IiLl]/g, '1')
+          .replace(/[Ss]/g, '5')
+          .replace(/[Zz]/g, '2')
+          .replace(/[Bb]/g, '8')
+          .replace(/[Gg]/g, '6');
+
+        const charConfidence = word.confidence / word.text.length;
+
+        normalizedText.split('').forEach((char: string) => {
+          if (charCount < 17) { // Only process up to 17 characters
+            const processedChar = updateCharacterConfidence(charCount, char, charConfidence);
+            processedText += processedChar;
+            overallConfidence += charConfidence;
+            charCount++;
+          }
+        });
+      });
+
+      // Fill remaining positions with previous high-confidence characters
+      while (processedText.length < 17 && confidenceMapRef.current.length > processedText.length) {
+        const existing = confidenceMapRef.current[processedText.length];
+        if (existing && existing.confidence > MIN_CHAR_CONFIDENCE) {
+          processedText += existing.char;
+          overallConfidence += existing.confidence;
+          charCount++;
+        } else {
+          break;
         }
-        return
       }
 
-      if (cleanedText.length === 17 && validateVIN(cleanedText)) {
-        const isValidVin = await validateVinWithNHTSA(cleanedText)
+      if (charCount > 0) {
+        overallConfidence = overallConfidence / charCount;
+      }
+
+      setDetectedText(processedText);
+      addLog(`Detected text: ${processedText} (avg confidence: ${overallConfidence.toFixed(1)}%)`);
+
+      // Log high-confidence characters
+      const highConfidenceChars = confidenceMapRef.current
+        .filter(c => c && c.confidence > HIGH_CHAR_CONFIDENCE)
+        .map(c => `${c.char}(${c.confidence.toFixed(1)}%)`);
+      if (highConfidenceChars.length > 0) {
+        addLog(`High confidence chars: ${highConfidenceChars.join(', ')}`);
+      }
+
+      if (processedText.length === 17 && validateVIN(processedText)) {
+        const isValidVin = await validateVinWithNHTSA(processedText);
         
         if (isValidVin) {
-          onScan(cleanedText)
-          toast.success("VIN scanned successfully")
-          handleClose()
-          return
+          onScan(processedText);
+          toast.success("VIN scanned successfully");
+          handleClose();
+          return;
         } else {
-          setError("VIN validation failed")
+          setError("VIN validation failed");
         }
+      } else if (processedText.length === 17) {
+        setError("Invalid VIN format");
       }
       
       if (shouldScan) {
-        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan));
       }
     } catch (error) {
-      addLog(`OCR error: ${error}`)
-      setError("Error processing scan")
+      addLog(`OCR error: ${error}`);
+      setError("Error processing scan");
       if (shouldScan) {
-        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan));
       }
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
   }
 
@@ -332,12 +376,34 @@ export function VinScanner({ onScan }: VinScannerProps) {
     return preprocessImage(tempCanvas)
   }
 
+  const updateCharacterConfidence = (position: number, char: string, confidence: number) => {
+    const now = Date.now();
+    const existing = confidenceMapRef.current[position];
+
+    if (existing && existing.confidence > confidence) {
+      const timeDiff = now - existing.lastUpdated;
+      if (timeDiff > CONFIDENCE_DECAY_TIME) {
+        const decayFactor = Math.max(0, 1 - (timeDiff - CONFIDENCE_DECAY_TIME) / 10000);
+        existing.confidence *= decayFactor;
+      }
+      return existing.char;
+    }
+
+    confidenceMapRef.current[position] = {
+      char,
+      confidence,
+      lastUpdated: now
+    };
+    return char;
+  }
+
   const handleClose = async () => {
     stopCamera()
     if (workerRef.current) {
       await workerRef.current.terminate()
       workerRef.current = null
     }
+    confidenceMapRef.current = []
     setIsDialogOpen(false)
     setLogs([])
   }
