@@ -1,3 +1,4 @@
+
 import { Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -128,6 +129,19 @@ export function VinScanner({ onScan }: VinScannerProps) {
         
         await videoRef.current.play()
         addLog('Video stream started')
+
+        // Try to enable torch if available
+        const track = stream.getVideoTracks()[0]
+        if ('torch' in track.getCapabilities()) {
+          try {
+            await track.applyConstraints({
+              advanced: [{ torch: true }]
+            })
+            addLog('Torch enabled')
+          } catch (error) {
+            addLog('Torch not available or permission denied')
+          }
+        }
 
         if (scanMode === 'text') {
           addLog('Starting OCR initialization...')
