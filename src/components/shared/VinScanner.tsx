@@ -3,13 +3,14 @@ import { Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
 import { toast } from "sonner"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog } from "@radix-ui/react-dialog"
 import { createWorker, PSM } from 'tesseract.js'
 import { BrowserMultiFormatReader } from '@zxing/library'
 import { useIsMobile } from "@/hooks/use-mobile"
 import { validateVIN, validateVinWithNHTSA } from "@/utils/vin-validation"
 import { preprocessImage } from "@/utils/image-processing"
 import { ScannerOverlay } from "./vin-scanner/ScannerOverlay"
+import { cn } from "@/lib/utils"
 
 interface VinScannerProps {
   onScan: (vin: string) => void
@@ -18,6 +19,20 @@ interface VinScannerProps {
 interface ExtendedTrackCapabilities extends MediaTrackCapabilities {
   torch?: boolean;
 }
+
+const DialogContent = React.forwardRef<
+  React.ElementRef<"div">,
+  React.ComponentPropsWithoutRef<"div">
+>(({ className, ...props }, ref) => (
+  <Dialog.Portal>
+    <Dialog.Overlay className="fixed inset-0 z-[99] bg-black/80" />
+    <Dialog.Content ref={ref} className={cn(
+      "fixed left-[50%] top-[50%] z-[100] w-full max-w-md translate-x-[-50%] translate-y-[-50%] bg-background duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+      className
+    )} {...props} />
+  </Dialog.Portal>
+))
+DialogContent.displayName = "DialogContent"
 
 export function VinScanner({ onScan }: VinScannerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -366,7 +381,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       </Button>
 
       <Dialog open={isDialogOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-md p-0" onPointerDownOutside={(e) => e.preventDefault()}>
+        <DialogContent className="p-0">
           <ScannerOverlay
             scanMode={scanMode}
             onScanModeChange={handleScanModeChange}
