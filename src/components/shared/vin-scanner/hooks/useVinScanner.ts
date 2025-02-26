@@ -179,6 +179,10 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
         (isProcessingRef.current ? 'processing in progress' : 
          isPaused ? 'scanning paused' : 
          'OpenCV not loaded'));
+      
+      if (!isPaused) {
+        scanningRef.current = requestAnimationFrame(startOCRScanning);
+      }
       return;
     }
 
@@ -423,8 +427,8 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       const newPauseState = !prev;
       addLog(`Scanning ${newPauseState ? 'paused' : 'resumed'}`);
       
-      if (!newPauseState && isCameraActive && workerRef.current && !scanningRef.current) {
-        startOCRScanning();
+      if (!newPauseState && !scanningRef.current) {
+        scanningRef.current = requestAnimationFrame(startOCRScanning);
       }
       
       return newPauseState;
