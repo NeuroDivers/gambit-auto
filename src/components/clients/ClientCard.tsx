@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useState } from "react"
+import { Badge } from "@/components/ui/badge"
 
 interface ClientCardProps {
   client: Client
@@ -37,7 +38,14 @@ export function ClientCard({ client, onEdit, onDelete }: ClientCardProps) {
       <Card className="flex flex-col">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>{client.first_name} {client.last_name}</span>
+            <div className="flex items-center gap-2">
+              <span>{client.first_name} {client.last_name}</span>
+              {client.user_id && (
+                <Badge variant="secondary" className="text-xs">
+                  Has Account
+                </Badge>
+              )}
+            </div>
             <div className="flex gap-2">
               <Button 
                 variant="ghost" 
