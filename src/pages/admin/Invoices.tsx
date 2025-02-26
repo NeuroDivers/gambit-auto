@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
@@ -55,7 +56,7 @@ export default function Invoices() {
   })
 
   const handleRowClick = (id: string) => {
-    navigate(`/admin/invoices/${id}`)
+    navigate(`/invoices/${id}`)
   }
 
   const getBadgeVariant = (status: string) => {
@@ -96,7 +97,7 @@ export default function Invoices() {
           title="Invoices" 
           description="Manage customer invoices"
         />
-        <Button onClick={() => navigate("/admin/invoices/create")}>
+        <Button onClick={() => navigate("/invoices/create")}>
           <Plus className="mr-2 h-4 w-4" />
           New Invoice
         </Button>
