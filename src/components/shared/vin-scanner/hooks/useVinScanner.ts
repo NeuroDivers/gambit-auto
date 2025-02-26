@@ -1,8 +1,9 @@
+
 import { useState, useRef, useEffect } from "react"
 import { createWorker, PSM } from 'tesseract.js'
 import { toast } from "sonner"
 import { validateVIN, validateVinWithNHTSA } from "@/utils/vin-validation"
-import { preprocessImage, cropToVinRegion, BoundingBox } from '../utils/imageProcessing';
+import { preprocessImage, cropToVinRegion, postProcessVIN, BoundingBox } from '../utils/imageProcessing'
 
 interface UseVinScannerProps {
   onScan: (vin: string) => void
@@ -13,6 +14,19 @@ export interface ExtendedTrackCapabilities extends MediaTrackCapabilities {
   torch?: boolean
 }
 
+const loadOpenCV = async (): Promise<void> => {
+  if (window.cv) return;
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://docs.opencv.org/4.5.4/opencv.js';
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Failed to load OpenCV'));
+    document.body.appendChild(script);
+  });
+};
+
 export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const [isCameraActive, setIsCameraActive] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
@@ -20,6 +34,7 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const [hasFlash, setHasFlash] = useState(false)
   const [isFlashOn, setIsFlashOn] = useState(false)
   const [detectedRegion, setDetectedRegion] = useState<BoundingBox | null>(null)
+  const [isOpenCVLoaded, setIsOpenCVLoaded] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -38,91 +53,9 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     }
   }
 
-  const correctCommonOcrMistakes = (text: string): string => {
-    let corrected = text
-      .replace(/[oO0]/g, '0')
-      .replace(/[iIl|]/g, '1')
-      .replace(/[sS]/g, '5')
-      .replace(/[zZ]/g, '2')
-      .replace(/[bB]/g, '8')
-      .replace(/[gG]/g, '6')
-      .replace(/[qQ]/g, '0')
-      .replace(/\s+/g, '')
-      .toUpperCase()
-
-    const vinPattern = /[A-HJ-NPR-Z0-9]{17}/
-    const match = corrected.match(vinPattern)
-    
-    if (match) {
-      let vin = match[0]
-      
-      if (vin.length === 17) {
-        const firstChar = vin.charAt(0)
-        if ('1234567890'.includes(firstChar)) {
-          if (!['1', '2', '3', '4', '5'].includes(firstChar)) {
-            if (firstChar === '7') vin = '1' + vin.slice(1)
-            if (firstChar === '6') vin = '5' + vin.slice(1)
-          }
-        }
-        
-        vin = vin
-          .replace(/I/g, '1')
-          .replace(/O/g, '0')
-          .replace(/Q/g, '0')
-      }
-      
-      return vin
-    }
-    
-    return corrected
-  }
-
-  const initializeWorker = async () => {
-    try {
-      addLog('Creating OCR worker...')
-      const worker = await createWorker()
-      addLog('Worker created, initializing language...')
-      
-      await worker.reinitialize('eng')
-      addLog('Language initialized, setting parameters...')
-      
-      await worker.setParameters({
-        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-        tessedit_pageseg_mode: PSM.SINGLE_LINE,
-        preserve_interword_spaces: '0',
-        tessjs_create_box: '1',
-        tessjs_create_unlock: '1'
-      })
-      
-      addLog('OCR worker fully initialized')
-      return worker
-    } catch (error) {
-      addLog(`Error initializing OCR worker: ${error}`)
-      throw error
-    }
-  }
-
-  const toggleFlash = async () => {
-    if (!streamRef.current) return
-    try {
-      const track = streamRef.current.getVideoTracks()[0]
-      const capabilities = track.getCapabilities() as ExtendedTrackCapabilities
-      if ('torch' in capabilities) {
-        await track.applyConstraints({
-          advanced: [{ torch: !isFlashOn } as any]
-        })
-        setIsFlashOn(!isFlashOn)
-        addLog(`Flash ${!isFlashOn ? 'enabled' : 'disabled'}`)
-      }
-    } catch (err) {
-      addLog(`Flash control error: ${err}`)
-      toast.error('Failed to toggle flash')
-    }
-  }
-
   const captureFrame = async (): Promise<string | null> => {
-    if (!videoRef.current || !canvasRef.current) {
-      addLog('Video or canvas reference not available');
+    if (!videoRef.current || !canvasRef.current || !window.cv) {
+      addLog('Video, canvas or OpenCV not available');
       return null;
     }
 
@@ -137,17 +70,16 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-
+    
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
     try {
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       
       const { processedImage, boundingBox } = await preprocessImage(imageData);
+      setDetectedRegion(boundingBox);
       
       if (boundingBox) {
-        setDetectedRegion(boundingBox);
-        
         const croppedRegion = cropToVinRegion(canvas, boundingBox);
         if (croppedRegion) {
           const tempCanvas = document.createElement('canvas');
@@ -187,7 +119,7 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       cancelAnimationFrame(scanningRef.current)
     }
 
-    if (isProcessingRef.current || isPaused) {
+    if (isProcessingRef.current || isPaused || !isOpenCVLoaded) {
       return
     }
 
@@ -195,12 +127,13 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       addLog('Scanning conditions not met:')
       addLog(`- Stream available: ${!!streamRef.current}`)
       addLog(`- Worker available: ${!!workerRef.current}`)
+      addLog(`- OpenCV loaded: ${isOpenCVLoaded}`)
       return
     }
 
     try {
       isProcessingRef.current = true
-      const frameData = captureFrame()
+      const frameData = await captureFrame()
       
       if (!frameData) {
         if (!isPaused) {
@@ -223,7 +156,7 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
         addLog(`Raw text: "${text.trim()}" (${confidence.toFixed(1)}%)`)
       }
       
-      const correctedText = correctCommonOcrMistakes(text)
+      const correctedText = postProcessVIN(text)
       if (!isPaused && correctedText !== text.trim() && correctedText) {
         addLog(`Corrected text: "${correctedText}"`)
       }
@@ -287,6 +220,10 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
           advanced: [{ zoom: 2.0 }] as any
         }
       }
+
+      await loadOpenCV()
+      setIsOpenCVLoaded(true)
+      addLog('OpenCV loaded successfully')
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia(constraints)
@@ -363,7 +300,51 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     setIsCameraActive(false)
     setIsFlashOn(false)
     isProcessingRef.current = false
+    setIsOpenCVLoaded(false)
     addLog('Camera and scanning stopped')
+  }
+
+  const initializeWorker = async () => {
+    try {
+      addLog('Creating OCR worker...')
+      const worker = await createWorker()
+      addLog('Worker created, initializing language...')
+      
+      await worker.reinitialize('eng')
+      addLog('Language initialized, setting parameters...')
+      
+      await worker.setParameters({
+        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        tessedit_pageseg_mode: PSM.SINGLE_LINE,
+        preserve_interword_spaces: '0',
+        tessjs_create_box: '1',
+        tessjs_create_unlock: '1'
+      })
+      
+      addLog('OCR worker fully initialized')
+      return worker
+    } catch (error) {
+      addLog(`Error initializing OCR worker: ${error}`)
+      throw error
+    }
+  }
+
+  const toggleFlash = async () => {
+    if (!streamRef.current) return
+    try {
+      const track = streamRef.current.getVideoTracks()[0]
+      const capabilities = track.getCapabilities() as ExtendedTrackCapabilities
+      if ('torch' in capabilities) {
+        await track.applyConstraints({
+          advanced: [{ torch: !isFlashOn } as any]
+        })
+        setIsFlashOn(!isFlashOn)
+        addLog(`Flash ${!isFlashOn ? 'enabled' : 'disabled'}`)
+      }
+    } catch (err) {
+      addLog(`Flash control error: ${err}`)
+      toast.error('Failed to toggle flash')
+    }
   }
 
   const togglePause = () => {
@@ -395,3 +376,4 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     detectedRegion
   }
 }
+
