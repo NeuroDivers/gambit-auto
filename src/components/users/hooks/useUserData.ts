@@ -35,7 +35,7 @@ type ClientResponse = {
   address?: string;
 };
 
-export const CLIENT_ROLE_ID = "00000000-0000-0000-0000-000000000002"; // Replace with actual client role ID
+export const CLIENT_ROLE_ID = "73a06339-6dd6-4da7-ac27-db9e160c2ff6";
 
 export const useUserData = () => {
   return useQuery({
