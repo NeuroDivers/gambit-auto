@@ -1,3 +1,4 @@
+
 import { Trash2, Sun, Globe, Shield, Database, Code, Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
@@ -6,6 +7,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { VinScanner } from "@/components/shared/VinScanner"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+
+interface ProcessingSettings {
+  blueEmphasis: 'normal' | 'high' | 'very-high';
+  contrast: 'normal' | 'high' | 'very-high';
+  morphKernelSize: '2' | '3' | '4';
+  confidenceThreshold: '35' | '40' | '45';
+}
 
 export default function DeveloperSettings() {
   const [scannerLogs, setScannerLogs] = useState<Array<{
@@ -14,10 +25,20 @@ export default function DeveloperSettings() {
     type: string;
   }>>([])
 
+  const [settings, setSettings] = useState<ProcessingSettings>({
+    blueEmphasis: 'normal',
+    contrast: 'normal',
+    morphKernelSize: '2',
+    confidenceThreshold: '40'
+  })
+
   useEffect(() => {
     const logs = JSON.parse(localStorage.getItem('scanner-logs') || '[]')
     setScannerLogs(logs)
-  }, [])
+    
+    // Store settings in localStorage
+    localStorage.setItem('scanner-settings', JSON.stringify(settings))
+  }, [settings])
 
   const handleClearCache = () => {
     localStorage.clear()
@@ -70,12 +91,120 @@ export default function DeveloperSettings() {
         <TabsContent value="logs" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg font-medium flex items-center justify-between">
-                Scanner Debug
-                <VinScanner onScan={handleVinScanned} />
+              <CardTitle className="text-lg font-medium">
+                Processing Settings
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label>Blue Channel Emphasis</Label>
+                    <RadioGroup
+                      value={settings.blueEmphasis}
+                      onValueChange={(value) => 
+                        setSettings(prev => ({ ...prev, blueEmphasis: value as any }))
+                      }
+                      className="mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="normal" id="blue-normal" />
+                        <Label htmlFor="blue-normal">Normal (0.5)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="high" id="blue-high" />
+                        <Label htmlFor="blue-high">High (0.6)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="very-high" id="blue-very-high" />
+                        <Label htmlFor="blue-very-high">Very High (0.7)</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div>
+                    <Label>Contrast Enhancement</Label>
+                    <RadioGroup
+                      value={settings.contrast}
+                      onValueChange={(value) => 
+                        setSettings(prev => ({ ...prev, contrast: value as any }))
+                      }
+                      className="mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="normal" id="contrast-normal" />
+                        <Label htmlFor="contrast-normal">Normal (0.5/1.5)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="high" id="contrast-high" />
+                        <Label htmlFor="contrast-high">High (0.4/1.7)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="very-high" id="contrast-very-high" />
+                        <Label htmlFor="contrast-very-high">Very High (0.3/1.9)</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label>Morphological Kernel Size</Label>
+                    <RadioGroup
+                      value={settings.morphKernelSize}
+                      onValueChange={(value) => 
+                        setSettings(prev => ({ ...prev, morphKernelSize: value as any }))
+                      }
+                      className="mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="2" id="kernel-2" />
+                        <Label htmlFor="kernel-2">2px</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="3" id="kernel-3" />
+                        <Label htmlFor="kernel-3">3px</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="4" id="kernel-4" />
+                        <Label htmlFor="kernel-4">4px</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div>
+                    <Label>Confidence Threshold</Label>
+                    <RadioGroup
+                      value={settings.confidenceThreshold}
+                      onValueChange={(value) => 
+                        setSettings(prev => ({ ...prev, confidenceThreshold: value as any }))
+                      }
+                      className="mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="35" id="confidence-35" />
+                        <Label htmlFor="confidence-35">35%</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="40" id="confidence-40" />
+                        <Label htmlFor="confidence-40">40%</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="45" id="confidence-45" />
+                        <Label htmlFor="confidence-45">45%</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6">
+                <CardTitle className="text-lg font-medium flex items-center justify-between">
+                  Scanner Debug
+                  <VinScanner onScan={handleVinScanned} />
+                </CardTitle>
+              </div>
+
               <div className="relative">
                 <Button 
                   variant="outline" 

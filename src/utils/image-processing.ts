@@ -1,5 +1,13 @@
 
 export const preprocessImage = (canvas: HTMLCanvasElement): string => {
+  // Get processing settings from localStorage
+  const settings = JSON.parse(localStorage.getItem('scanner-settings') || '{}')
+  const {
+    blueEmphasis = 'normal',
+    contrast = 'normal',
+    morphKernelSize = '2'
+  } = settings
+
   const ctx = canvas.getContext('2d')
   if (!ctx) return canvas.toDataURL()
 
@@ -7,20 +15,43 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
   const data = imageData.data
 
+  // Get blue emphasis weights based on settings
+  const getChannelWeights = () => {
+    switch (blueEmphasis) {
+      case 'very-high': return { r: 0.15, g: 0.15, b: 0.7 }
+      case 'high': return { r: 0.15, g: 0.25, b: 0.6 }
+      default: return { r: 0.2, g: 0.3, b: 0.5 }
+    }
+  }
+
+  // Get contrast values based on settings
+  const getContrastValues = () => {
+    switch (contrast) {
+      case 'very-high': return { dark: 0.3, light: 1.9 }
+      case 'high': return { dark: 0.4, light: 1.7 }
+      default: return { dark: 0.5, light: 1.5 }
+    }
+  }
+
+  const weights = getChannelWeights()
+  const contrastValues = getContrastValues()
+
   // Convert to grayscale and enhance contrast
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i]
     const g = data[i + 1]
     const b = data[i + 2]
-    // Enhanced weight for blue channel since VIN appears blue-tinted
-    const gray = 0.2 * r + 0.3 * g + 0.5 * b
-    // Increase contrast more aggressively
-    const enhanced = gray < 128 ? gray * 0.5 : Math.min(255, gray * 1.5)
+    
+    const gray = weights.r * r + weights.g * g + weights.b * b
+    const enhanced = gray < 128 ? 
+      gray * contrastValues.dark : 
+      Math.min(255, gray * contrastValues.light)
+    
     data[i] = data[i + 1] = data[i + 2] = enhanced
   }
 
-  // Apply Gaussian blur to reduce noise
-  const sigma = 1.2 // Reduced blur for better text preservation
+  // Apply Gaussian blur
+  const sigma = 1.2
   const kernelSize = Math.ceil(sigma * 3) * 2 + 1
   const kernel = createGaussianKernel(kernelSize, sigma)
   
@@ -29,21 +60,19 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
     data[i] = blurredData[i]
   }
 
-  // Apply Otsu's thresholding for better binarization
+  // Apply Otsu's thresholding
   const threshold = calculateOtsuThreshold(data)
   for (let i = 0; i < data.length; i += 4) {
     const value = data[i] < threshold ? 0 : 255
     data[i] = data[i + 1] = data[i + 2] = value
   }
 
-  // Apply morphological operations for text cleanup
-  const morphKernelSize = 2 // Reduced kernel size for finer detail preservation
-  dilate(data, canvas.width, canvas.height, morphKernelSize)
-  erode(data, canvas.width, canvas.height, morphKernelSize)
+  // Apply morphological operations with configurable kernel size
+  const mKernelSize = parseInt(morphKernelSize)
+  dilate(data, canvas.width, canvas.height, mKernelSize)
+  erode(data, canvas.width, canvas.height, mKernelSize)
 
-  // Put processed data back to canvas
   ctx.putImageData(imageData, 0, 0)
-
   return canvas.toDataURL('image/png', 1.0)
 }
 

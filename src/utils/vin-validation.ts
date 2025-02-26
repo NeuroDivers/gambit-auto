@@ -2,13 +2,13 @@
 export const validateVIN = (vin: string): boolean => {
   if (vin.length !== 17) return false;
 
-  const validVINPattern = /^[A-HJ-NPR-Z0-9]{17}$/i;
+  // Updated pattern to explicitly exclude I, O, Q
+  const validVINPattern = /^[A-HJ-MNPR-Z0-9]{17}$/;
   if (!validVINPattern.test(vin)) return false;
 
   const suspiciousPatterns = [
-    /[O0]{3,}/i,  // Too many zeros or O's in a row
-    /[1I]{3,}/i,  // Too many ones or I's in a row
-    /(.)\1{4,}/i, // Any character repeated more than 4 times
+    /[0]{3,}/,      // Too many zeros in a row
+    /(.)\1{4,}/,    // Any character repeated more than 4 times
   ];
 
   return !suspiciousPatterns.some(pattern => pattern.test(vin));
