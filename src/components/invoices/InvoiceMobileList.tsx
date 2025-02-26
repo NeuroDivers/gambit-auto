@@ -1,6 +1,5 @@
 
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { FileText, Calendar, DollarSign } from "lucide-react"
 import { format } from "date-fns"
@@ -35,13 +34,7 @@ export function InvoiceMobileList({ invoices, onRowClick }: InvoiceMobileListPro
               </h3>
               <p className="text-sm text-muted-foreground">{invoice.customer_email}</p>
             </div>
-            <Badge 
-              variant={
-                invoice.status === 'paid' ? 'default' : 
-                invoice.status === 'overdue' ? 'destructive' : 
-                'secondary'
-              }
-            >
+            <Badge variant={invoice.status}>
               {invoice.status}
             </Badge>
           </div>

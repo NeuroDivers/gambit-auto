@@ -150,13 +150,7 @@ export default function Invoices() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge 
-                          variant={
-                            invoice.status === 'paid' ? 'default' : 
-                            invoice.status === 'overdue' ? 'destructive' : 
-                            'secondary'
-                          }
-                        >
+                        <Badge variant={invoice.status}>
                           {invoice.status}
                         </Badge>
                       </TableCell>
