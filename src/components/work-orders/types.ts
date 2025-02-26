@@ -18,13 +18,8 @@ export interface WorkOrder {
   end_time?: string;
   estimated_duration?: string;
   assigned_bay_id?: string | null;
-  assigned_profile_id?: string | null;
   service_bays?: {
     name: string;
-  };
-  assigned_to?: {
-    first_name: string;
-    last_name: string;
   };
   address: string;
   timeframe: "flexible" | "asap" | "within_week" | "within_month";
@@ -37,6 +32,7 @@ export interface ServiceItemType {
   unit_price: number;
   commission_rate?: number | null;
   commission_type?: 'percentage' | 'flat' | null;
+  assigned_profile_id?: string | null;
 }
 
 export interface WorkOrderFormValues {
@@ -55,7 +51,6 @@ export interface WorkOrderFormValues {
   estimated_duration: number | null;
   end_time: Date | null;
   assigned_bay_id: string | null;
-  assigned_profile_id: string | null;
   service_items: ServiceItemType[];
 }
 

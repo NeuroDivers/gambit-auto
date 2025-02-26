@@ -96,7 +96,6 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
       estimated_duration: values.estimated_duration ? `${values.estimated_duration} hours` : null,
       end_time: values.end_time?.toISOString(),
       assigned_bay_id: values.assigned_bay_id === "unassigned" ? null : values.assigned_bay_id,
-      assigned_profile_id: values.assigned_profile_id === "unassigned" ? null : values.assigned_profile_id,
       updated_at: new Date().toISOString()
     })
     .eq("id", workOrderId)
@@ -106,13 +105,11 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
     throw workOrderError
   }
 
-  // If a bay is assigned, update the bay's assigned profile
+  // If a bay is assigned, update the bay
   if (values.assigned_bay_id && values.assigned_bay_id !== "unassigned") {
     const { error: bayError } = await supabase
       .from('service_bays')
-      .update({ 
-        assigned_profile_id: values.assigned_profile_id === "unassigned" ? null : values.assigned_profile_id 
-      })
+      .update({ assigned_profile_id: null })
       .eq('id', values.assigned_bay_id)
 
     if (bayError) {
@@ -149,7 +146,10 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
       work_order_id: workOrderId,
       service_id: item.service_id,
       quantity: item.quantity || 1,
-      unit_price: item.unit_price || 0
+      unit_price: item.unit_price || 0,
+      commission_rate: item.commission_rate,
+      commission_type: item.commission_type,
+      assigned_profile_id: item.assigned_profile_id
     }))
 
     console.log("Inserting new services:", servicesToInsert)
