@@ -20,18 +20,37 @@ import {
 } from "@/components/ui/select"
 import { UseFormReturn } from "react-hook-form"
 import { RoleFormValues } from "./RoleFormSchema"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 
 interface RoleFormProps {
   form: UseFormReturn<RoleFormValues>
   onSubmit: (values: RoleFormValues) => void
   onCancel: () => void
   mode: 'create' | 'edit'
+  roleId?: string
 }
 
-export function RoleForm({ form, onSubmit, onCancel, mode }: RoleFormProps) {
+const PROTECTED_ROLE_IDS = [
+  '816fe283-1aef-4294-b3cb-264347852e95', // Administrator
+  '73a06339-6dd6-4da7-ac27-db9e160c2ff6'  // Client
+];
+
+export function RoleForm({ form, onSubmit, onCancel, mode, roleId }: RoleFormProps) {
+  const isProtectedRole = roleId && PROTECTED_ROLE_IDS.includes(roleId);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {isProtectedRole && (
+          <Alert variant="warning" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              This is a system role. The system name cannot be changed to ensure system stability.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <FormField
           control={form.control}
           name="name"
@@ -39,7 +58,11 @@ export function RoleForm({ form, onSubmit, onCancel, mode }: RoleFormProps) {
             <FormItem>
               <FormLabel>System Name</FormLabel>
               <FormControl>
-                <Input placeholder="admin" {...field} />
+                <Input 
+                  placeholder="admin" 
+                  {...field} 
+                  disabled={isProtectedRole}
+                />
               </FormControl>
               <FormDescription>
                 Internal name used by the system (lowercase, no spaces)
