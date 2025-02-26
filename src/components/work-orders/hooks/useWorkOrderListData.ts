@@ -24,6 +24,7 @@ export function useWorkOrderListData() {
           .select(`
             *,
             service_bays!fk_work_orders_assigned_bay (
+              id,
               name
             )
           `)
@@ -61,8 +62,7 @@ export function useWorkOrderListData() {
         toast.error('Failed to load work orders')
         throw err
       }
-    },
-    retry: 2
+    }
   })
 
   const { data: serviceBays } = useQuery({
@@ -99,7 +99,13 @@ export function useWorkOrderListData() {
           updated_at: new Date().toISOString()
         })
         .eq("id", workOrderId)
-        .select()
+        .select(`
+          *,
+          service_bays!inner (
+            id,
+            name
+          )
+        `)
 
       if (error) {
         console.error('Bay assignment error:', error)
