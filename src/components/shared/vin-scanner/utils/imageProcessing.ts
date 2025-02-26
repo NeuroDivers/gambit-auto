@@ -12,59 +12,37 @@ export const preprocessImage = async (imageData: ImageData): Promise<{ processed
   try {
     // Convert ImageData to Mat
     const src = cv.matFromImageData(imageData);
-    const dst = new cv.Mat();
+    let gray = new cv.Mat();
+    let edges = new cv.Mat();
+    let contours = new cv.MatVector();
+    let hierarchy = new cv.Mat();
     
-    // Convert to grayscale
-    cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
-    
-    // Apply Gaussian blur to reduce noise
-    const ksize = new cv.Size(5, 5);
-    cv.GaussianBlur(dst, dst, ksize, 0);
-    
-    // Apply adaptive thresholding
-    cv.adaptiveThreshold(
-      dst,
-      dst,
-      255,
-      cv.ADAPTIVE_THRESH_GAUSSIAN_C,
-      cv.THRESH_BINARY,
-      11,
-      2
-    );
-    
-    // Find edges using Canny
-    cv.Canny(dst, dst, 50, 150);
-    
-    // Find contours
-    const contours = new cv.MatVector();
-    const hierarchy = new cv.Mat();
-    cv.findContours(
-      dst,
-      contours,
-      hierarchy,
-      cv.RETR_LIST,
-      cv.CHAIN_APPROX_SIMPLE
-    );
-    
-    // Find the most likely VIN rectangle
-    let maxRect: BoundingBox | null = null;
-    let maxScore = 0;
-    
+    // Preprocessing steps
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+    cv.GaussianBlur(gray, gray, new cv.Size(5, 5), 0, 0);
+    cv.Canny(gray, edges, 50, 150);
+    cv.findContours(edges, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+    // Find best rectangle based on VIN characteristics
+    let bestRect: BoundingBox | null = null;
+    let maxArea = 0;
+
     for (let i = 0; i < contours.size(); i++) {
-      const contour = contours.get(i);
-      const rect = cv.boundingRect(contour);
-      
-      // VIN aspect ratio is typically around 8:1 to 10:1
+      const cnt = contours.get(i);
+      const approx = new cv.Mat();
+      cv.approxPolyDP(cnt, approx, 0.02 * cv.arcLength(cnt, true), true);
+      const rect = cv.boundingRect(approx);
+
       const aspectRatio = rect.width / rect.height;
-      
-      // Score the rectangle based on aspect ratio and size
-      if (aspectRatio >= 6 && aspectRatio <= 12) {
-        const area = rect.width * rect.height;
-        const score = area * (1 - Math.abs(9 - aspectRatio) / 9);
-        
-        if (score > maxScore) {
-          maxScore = score;
-          maxRect = {
+      const area = rect.width * rect.height;
+
+      // Filter based on typical VIN label characteristics:
+      // - Aspect ratio between 4.5:1 and 9.5:1
+      // - Minimum area to avoid noise
+      if (aspectRatio > 4.5 && aspectRatio < 9.5 && area > 5000) {
+        if (area > maxArea) {
+          maxArea = area;
+          bestRect = {
             x: rect.x,
             y: rect.y,
             width: rect.width,
@@ -72,20 +50,20 @@ export const preprocessImage = async (imageData: ImageData): Promise<{ processed
           };
         }
       }
-      
-      contour.delete();
+      approx.delete();
+      cnt.delete();
     }
     
-    // Create output image
+    // Create output image with detection visualization
     const output = new cv.Mat();
-    cv.cvtColor(dst, output, cv.COLOR_GRAY2RGBA);
+    cv.cvtColor(gray, output, cv.COLOR_GRAY2RGBA);
     
     // Draw the detected VIN region if found
-    if (maxRect) {
-      const point1 = new cv.Point(maxRect.x, maxRect.y);
+    if (bestRect) {
+      const point1 = new cv.Point(bestRect.x, bestRect.y);
       const point2 = new cv.Point(
-        maxRect.x + maxRect.width,
-        maxRect.y + maxRect.height
+        bestRect.x + bestRect.width,
+        bestRect.y + bestRect.height
       );
       cv.rectangle(output, point1, point2, [0, 255, 0, 255], 2);
     }
@@ -99,14 +77,15 @@ export const preprocessImage = async (imageData: ImageData): Promise<{ processed
     
     // Cleanup
     src.delete();
-    dst.delete();
+    gray.delete();
+    edges.delete();
     output.delete();
     contours.delete();
     hierarchy.delete();
     
     return {
       processedImage: processedImageData,
-      boundingBox: maxRect
+      boundingBox: bestRect
     };
   } catch (error) {
     console.error('Image preprocessing failed:', error);
@@ -125,10 +104,10 @@ export const cropToVinRegion = (
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
     
-    // Add padding around the detected region
+    // Add padding around the detected region for better OCR
     const padding = {
-      x: boundingBox.width * 0.1,
-      y: boundingBox.height * 0.5
+      x: boundingBox.width * 0.05,  // Reduced horizontal padding
+      y: boundingBox.height * 0.3   // Increased vertical padding for better character recognition
     };
     
     const croppedRegion = ctx.getImageData(
