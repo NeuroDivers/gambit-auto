@@ -74,8 +74,8 @@ export const UserFilters = ({
               <SelectValue placeholder="Exclude roles" />
             </SelectTrigger>
             <SelectContent>
-              {roles?.filter(role => !excludedRoles.includes(role.name)).map((role) => (
-                <SelectItem key={role.id} value={role.name}>
+              {roles?.filter(role => !excludedRoles.includes(role.id)).map((role) => (
+                <SelectItem key={role.id} value={role.id}>
                   {role.nicename}
                 </SelectItem>
               ))}
@@ -96,15 +96,15 @@ export const UserFilters = ({
               />
             </Badge>
           )}
-          {excludedRoles.map((roleName) => {
-            const role = roles?.find(r => r.name === roleName);
+          {excludedRoles.map((roleId) => {
+            const role = roles?.find(r => r.id === roleId);
             if (!role) return null;
             return (
-              <Badge key={roleName} variant="secondary" className="flex items-center gap-1">
+              <Badge key={roleId} variant="secondary" className="flex items-center gap-1">
                 Excluding: {role.nicename}
                 <X 
                   className="h-3 w-3 cursor-pointer hover:text-destructive" 
-                  onClick={() => onRemoveExcludedRole?.(roleName)}
+                  onClick={() => onRemoveExcludedRole?.(roleId)}
                 />
               </Badge>
             );

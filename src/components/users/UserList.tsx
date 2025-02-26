@@ -14,7 +14,7 @@ interface UserListProps {
 export const UserList = ({ initialRoleFilter = "all", excludeClients = false }: UserListProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState(initialRoleFilter);
-  const [excludedRoles, setExcludedRoles] = useState<string[]>([CLIENT_ROLE_ID]); // Initialize with CLIENT_ROLE_ID
+  const [excludedRoles, setExcludedRoles] = useState<string[]>([CLIENT_ROLE_ID]);
   const { data: users, isLoading, refetch } = useUserData();
   
   // Update roleFilter when initialRoleFilter changes
@@ -33,10 +33,9 @@ export const UserList = ({ initialRoleFilter = "all", excludeClients = false }: 
       `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesRole = roleFilter === "all" || user.role?.name === roleFilter;
-    const matchesUserType = excludeClients ? user.role?.id !== CLIENT_ROLE_ID : true;
     const notExcluded = !excludedRoles.includes(user.role?.id || '');
     
-    return matchesSearch && matchesRole && matchesUserType && notExcluded;
+    return matchesSearch && matchesRole && notExcluded;
   });
 
   const handleRefresh = async () => {
