@@ -28,9 +28,10 @@ const formSchema = z.object({
     service_name: z.string(),
     quantity: z.number().min(1),
     unit_price: z.number().min(0),
-    commission_rate: z.number().nullable(),
+    commission_rate: z.number(),
     commission_type: z.enum(['percentage', 'flat']).nullable(),
-    assigned_profile_id: z.string().nullable()
+    assigned_profile_id: z.string().nullable(),
+    description: z.string().optional()
   }))
 })
 
@@ -72,9 +73,11 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
             unit_price,
             commission_rate,
             commission_type,
+            assigned_profile_id,
             service_types (
               id,
-              name
+              name,
+              description
             )
           `)
           .eq('work_order_id', workOrder.id)
@@ -85,11 +88,12 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
           const formattedServices = servicesData.map(service => ({
             service_id: service.service_id,
             service_name: service.service_types?.name || '',
-            quantity: service.quantity,
-            unit_price: service.unit_price,
-            commission_rate: service.commission_rate,
+            quantity: service.quantity || 1,
+            unit_price: service.unit_price || 0,
+            commission_rate: service.commission_rate || 0,
             commission_type: service.commission_type as 'percentage' | 'flat' | null,
-            assigned_profile_id: null
+            assigned_profile_id: service.assigned_profile_id,
+            description: service.service_types?.description
           }))
 
           form.setValue('service_items', formattedServices)

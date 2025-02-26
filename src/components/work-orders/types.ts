@@ -1,4 +1,6 @@
 
+import { ServiceItemType } from "@/types/service-item";
+
 export interface WorkOrder {
   id: string;
   first_name: string;
@@ -29,16 +31,6 @@ export interface WorkOrder {
   timeframe: "flexible" | "asap" | "within_week" | "within_month";
 }
 
-export interface ServiceItemType {
-  service_id: string;
-  service_name: string;
-  quantity: number;
-  unit_price: number;
-  commission_rate?: number | null;
-  commission_type?: 'percentage' | 'flat' | null;
-  assigned_profile_id?: string | null;
-}
-
 export interface WorkOrderFormValues {
   first_name: string;
   last_name: string;
@@ -56,11 +48,4 @@ export interface WorkOrderFormValues {
   end_time: Date | null;
   assigned_bay_id: string | null;
   service_items: ServiceItemType[];
-}
-
-export interface WorkOrderFormProps {
-  workOrder?: WorkOrder;
-  onSuccess?: () => void;
-  defaultStartTime?: Date;
-  onSubmitting?: (isSubmitting: boolean) => void;
 }
