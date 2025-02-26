@@ -43,6 +43,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
     hasFlash,
     isFlashOn,
     isPaused,
+    detectedRegion,
     toggleFlash,
     togglePause,
     startCamera,
@@ -87,6 +88,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
           <ScannerViewport
             videoRef={videoRef}
             canvasRef={canvasRef}
+            detectedRegion={detectedRegion}
           />
           <LogsDisplay
             logs={logs}

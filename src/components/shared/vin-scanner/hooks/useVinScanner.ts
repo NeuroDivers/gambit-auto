@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react"
 import { createWorker, PSM } from 'tesseract.js'
 import { toast } from "sonner"
 import { validateVIN, validateVinWithNHTSA } from "@/utils/vin-validation"
+import { preprocessImage, cropToVinRegion, BoundingBox } from '../utils/imageProcessing';
 
 interface UseVinScannerProps {
   onScan: (vin: string) => void
@@ -18,6 +19,7 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const [logs, setLogs] = useState<string[]>([])
   const [hasFlash, setHasFlash] = useState(false)
   const [isFlashOn, setIsFlashOn] = useState(false)
+  const [detectedRegion, setDetectedRegion] = useState<BoundingBox | null>(null)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -118,47 +120,66 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     }
   }
 
-  const captureFrame = () => {
+  const captureFrame = async (): Promise<string | null> => {
     if (!videoRef.current || !canvasRef.current) {
-      addLog('Video or canvas reference not available')
-      return null
+      addLog('Video or canvas reference not available');
+      return null;
     }
 
-    const video = videoRef.current
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
 
     if (!ctx || video.readyState !== video.HAVE_ENOUGH_DATA) {
-      addLog('Video not ready or context not available')
-      return null
+      addLog('Video not ready or context not available');
+      return null;
     }
 
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
 
-    const scanAreaWidth = video.videoWidth * 0.6
-    const scanAreaHeight = video.videoHeight * 0.2
-    const startX = (video.videoWidth - scanAreaWidth) / 2
-    const startY = (video.videoHeight - scanAreaHeight) / 2
-
-    const tempCanvas = document.createElement('canvas')
-    tempCanvas.width = scanAreaWidth
-    tempCanvas.height = scanAreaHeight
-    const tempCtx = tempCanvas.getContext('2d')
-
-    if (!tempCtx) {
-      addLog('Could not create temporary canvas context')
-      return null
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    try {
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      
+      const { processedImage, boundingBox } = await preprocessImage(imageData);
+      
+      if (boundingBox) {
+        setDetectedRegion(boundingBox);
+        
+        const croppedRegion = cropToVinRegion(canvas, boundingBox);
+        if (croppedRegion) {
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = croppedRegion.width;
+          tempCanvas.height = croppedRegion.height;
+          const tempCtx = tempCanvas.getContext('2d');
+          
+          if (tempCtx) {
+            tempCtx.putImageData(croppedRegion, 0, 0);
+            addLog('VIN region detected and cropped');
+            return tempCanvas.toDataURL();
+          }
+        }
+      }
+      
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = processedImage.width;
+      tempCanvas.height = processedImage.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      
+      if (tempCtx) {
+        tempCtx.putImageData(processedImage, 0, 0);
+        return tempCanvas.toDataURL();
+      }
+      
+      addLog('Using full frame for scanning');
+      return canvas.toDataURL();
+    } catch (error) {
+      console.error('Error in image preprocessing:', error);
+      addLog('Image preprocessing failed, using raw frame');
+      return canvas.toDataURL();
     }
-
-    tempCtx.drawImage(
-      video,
-      startX, startY, scanAreaWidth, scanAreaHeight,
-      0, 0, scanAreaWidth, scanAreaHeight
-    )
-
-    addLog('Frame captured successfully')
-    return tempCanvas.toDataURL()
   }
 
   const startOCRScanning = async () => {
@@ -370,6 +391,7 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     toggleFlash,
     togglePause,
     startCamera,
-    stopCamera
+    stopCamera,
+    detectedRegion
   }
 }
