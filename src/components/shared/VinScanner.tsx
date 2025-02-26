@@ -21,6 +21,11 @@ interface CharacterConfidence {
   lastUpdated: number;
 }
 
+const OCR_SCAN_INTERVAL = 500; // Scan every 500ms
+const CONFIDENCE_DECAY_TIME = 5000; // 5 seconds before confidence decay
+const MIN_CHAR_CONFIDENCE = 40; // Minimum confidence to keep a character
+const HIGH_CHAR_CONFIDENCE = 85; // Threshold for high-confidence characters
+
 export function VinScanner({ onScan }: VinScannerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isCameraActive, setIsCameraActive] = useState(false)
@@ -254,13 +259,13 @@ export function VinScanner({ onScan }: VinScannerProps) {
         return
       }
 
-      const { data } = await workerRef.current.recognize(frameData);
-      const text = data.text;
-      const words = data.words || [];
+      const { data } = await workerRef.current.recognize(frameData)
+      const text = data.text
+      const words = data.words || []
 
-      let processedText = '';
-      let overallConfidence = 0;
-      let charCount = 0;
+      let processedText = ''
+      let overallConfidence = 0
+      let charCount = 0
 
       words.forEach((word: any) => {
         const normalizedText = word.text.toUpperCase()
@@ -270,73 +275,71 @@ export function VinScanner({ onScan }: VinScannerProps) {
           .replace(/[Ss]/g, '5')
           .replace(/[Zz]/g, '2')
           .replace(/[Bb]/g, '8')
-          .replace(/[Gg]/g, '6');
+          .replace(/[Gg]/g, '6')
 
-        const charConfidence = word.confidence / word.text.length;
+        const charConfidence = word.confidence / word.text.length
 
         normalizedText.split('').forEach((char: string) => {
-          if (charCount < 17) { // Only process up to 17 characters
-            const processedChar = updateCharacterConfidence(charCount, char, charConfidence);
-            processedText += processedChar;
-            overallConfidence += charConfidence;
-            charCount++;
+          if (charCount < 17) {
+            const processedChar = updateCharacterConfidence(charCount, char, charConfidence)
+            processedText += processedChar
+            overallConfidence += charConfidence
+            charCount++
           }
-        });
-      });
+        })
+      })
 
-      // Fill remaining positions with previous high-confidence characters
       while (processedText.length < 17 && confidenceMapRef.current.length > processedText.length) {
-        const existing = confidenceMapRef.current[processedText.length];
+        const existing = confidenceMapRef.current[processedText.length]
         if (existing && existing.confidence > MIN_CHAR_CONFIDENCE) {
-          processedText += existing.char;
-          overallConfidence += existing.confidence;
-          charCount++;
+          processedText += existing.char
+          overallConfidence += existing.confidence
+          charCount++
         } else {
-          break;
+          break
         }
       }
 
       if (charCount > 0) {
-        overallConfidence = overallConfidence / charCount;
+        overallConfidence = overallConfidence / charCount
       }
 
-      setDetectedText(processedText);
-      addLog(`Detected text: ${processedText} (avg confidence: ${overallConfidence.toFixed(1)}%)`);
+      setDetectedText(processedText)
+      addLog(`Detected text: ${processedText} (avg confidence: ${overallConfidence.toFixed(1)}%)`)
 
-      // Log high-confidence characters
       const highConfidenceChars = confidenceMapRef.current
         .filter(c => c && c.confidence > HIGH_CHAR_CONFIDENCE)
-        .map(c => `${c.char}(${c.confidence.toFixed(1)}%)`);
+        .map(c => `${c.char}(${c.confidence.toFixed(1)}%)`)
       if (highConfidenceChars.length > 0) {
-        addLog(`High confidence chars: ${highConfidenceChars.join(', ')}`);
+        addLog(`High confidence chars: ${highConfidenceChars.join(', ')}`)
       }
 
       if (processedText.length === 17 && validateVIN(processedText)) {
-        const isValidVin = await validateVinWithNHTSA(processedText);
+        const isValidVin = await validateVinWithNHTSA(processedText)
         
         if (isValidVin) {
-          onScan(processedText);
-          toast.success("VIN scanned successfully");
-          handleClose();
-          return;
+          onScan(processedText)
+          toast.success("VIN scanned successfully")
+          handleClose()
+          return
         } else {
-          setError("VIN validation failed");
+          setError("VIN validation failed")
         }
       } else if (processedText.length === 17) {
-        setError("Invalid VIN format");
+        setError("Invalid VIN format")
       }
       
       if (shouldScan) {
-        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan));
+        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
       }
     } catch (error) {
-      addLog(`OCR error: ${error}`);
-      setError("Error processing scan");
+      addLog(`OCR error: ${error}`)
+      setError("Error processing scan")
       if (shouldScan) {
-        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan));
+        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
       }
     } finally {
-      setIsProcessing(false);
+      setIsProcessing(false)
     }
   }
 
@@ -377,24 +380,24 @@ export function VinScanner({ onScan }: VinScannerProps) {
   }
 
   const updateCharacterConfidence = (position: number, char: string, confidence: number) => {
-    const now = Date.now();
-    const existing = confidenceMapRef.current[position];
+    const now = Date.now()
+    const existing = confidenceMapRef.current[position]
 
     if (existing && existing.confidence > confidence) {
-      const timeDiff = now - existing.lastUpdated;
+      const timeDiff = now - existing.lastUpdated
       if (timeDiff > CONFIDENCE_DECAY_TIME) {
-        const decayFactor = Math.max(0, 1 - (timeDiff - CONFIDENCE_DECAY_TIME) / 10000);
-        existing.confidence *= decayFactor;
+        const decayFactor = Math.max(0, 1 - (timeDiff - CONFIDENCE_DECAY_TIME) / 10000)
+        existing.confidence *= decayFactor
       }
-      return existing.char;
+      return existing.char
     }
 
     confidenceMapRef.current[position] = {
       char,
       confidence,
       lastUpdated: now
-    };
-    return char;
+    }
+    return char
   }
 
   const handleClose = async () => {
