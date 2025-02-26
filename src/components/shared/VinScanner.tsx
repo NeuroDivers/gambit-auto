@@ -268,23 +268,29 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
       addLog('Processing frame with OCR...')
       const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
+      
+      if (text.trim()) {
+        addLog(`Raw text: "${text.trim()}" (${confidence.toFixed(1)}%)`)
+      }
+      
       const correctedText = correctCommonOcrMistakes(text)
+      if (correctedText !== text.trim() && correctedText) {
+        addLog(`Corrected text: "${correctedText}"`)
+      }
       
       if (confidence > 40 && correctedText.length >= 15) {
-        addLog(`Detected text: ${correctedText} (confidence: ${confidence}%)`)
-
         if (correctedText.length === 17 && validateVIN(correctedText)) {
-          addLog('Valid VIN format detected, validating with NHTSA...')
+          addLog('✓ Valid VIN format detected, validating with NHTSA...')
           const isValidVin = await validateVinWithNHTSA(correctedText)
           
           if (isValidVin) {
-            addLog('VIN validated successfully!')
+            addLog('✓ VIN validated successfully!')
             onScan(correctedText)
             toast.success("VIN scanned and validated successfully")
             handleClose()
             return
           } else {
-            addLog('VIN validation failed')
+            addLog('✗ VIN validation failed')
           }
         }
       }
