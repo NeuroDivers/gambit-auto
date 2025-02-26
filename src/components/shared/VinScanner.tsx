@@ -1,3 +1,4 @@
+
 import { Camera, Pause, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -361,10 +362,18 @@ export function VinScanner({ onScan }: VinScannerProps) {
               ref={canvasRef}
               className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
-            <div className="absolute inset-0 bg-black/80">
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] h-40">
-                <div className="absolute inset-0 border-2 border-dashed border-primary-foreground/70" />
-              </div>
+            {/* Modified overlay structure */}
+            <div className="absolute inset-0">
+              {/* Top overlay */}
+              <div className="absolute top-0 left-0 right-0 h-[calc(50%-80px)] bg-black/80" />
+              {/* Bottom overlay */}
+              <div className="absolute bottom-0 left-0 right-0 h-[calc(50%-80px)] bg-black/80" />
+              {/* Left overlay */}
+              <div className="absolute top-[calc(50%-80px)] bottom-[calc(50%-80px)] left-0 w-[2.5%] bg-black/80" />
+              {/* Right overlay */}
+              <div className="absolute top-[calc(50%-80px)] bottom-[calc(50%-80px)] right-0 w-[2.5%] bg-black/80" />
+              {/* Scanning area border */}
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] h-40 border-2 border-dashed border-primary-foreground/70" />
             </div>
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
               <p className="text-white text-center text-sm">
