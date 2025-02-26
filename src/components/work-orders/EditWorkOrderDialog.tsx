@@ -1,5 +1,5 @@
 
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { WorkOrder } from "./types"
 import { WorkOrderForm } from "./WorkOrderForm"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -34,7 +34,7 @@ export function EditWorkOrderDialog({ workOrder, open, onOpenChange }: EditWorkO
       }}
     >
       <SheetContent 
-        side="right"
+        side="right" 
         className="sm:max-w-sm p-0"
         onPointerDownOutside={(e) => {
           if (isSubmitting) {
@@ -47,23 +47,16 @@ export function EditWorkOrderDialog({ workOrder, open, onOpenChange }: EditWorkO
           }
         }}
       >
-        <div className="flex flex-col h-full">
-          <div className="p-6 pb-0">
-            <div className="space-y-2">
-              <h2 className="text-lg font-semibold">Edit Work Order</h2>
-              <p className="text-sm text-muted-foreground">
-                Make changes to the work order details below.
-              </p>
-            </div>
-          </div>
-          <ScrollArea className="flex-1 p-6">
-            <WorkOrderForm 
-              workOrder={workOrder} 
-              onSuccess={handleSuccess}
-              onSubmitting={handleSubmitting}
-            />
-          </ScrollArea>
-        </div>
+        <SheetHeader className="p-6 pb-0">
+          <SheetTitle>Edit Work Order</SheetTitle>
+        </SheetHeader>
+        <ScrollArea className="flex-1 p-6">
+          <WorkOrderForm 
+            workOrder={workOrder} 
+            onSuccess={handleSuccess}
+            onSubmitting={handleSubmitting}
+          />
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   )

@@ -46,7 +46,7 @@ export function SchedulingFields({ form }: SchedulingFieldsProps) {
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
-                  selected={field.value}
+                  selected={field.value || undefined}
                   onSelect={field.onChange}
                   initialFocus
                 />
@@ -65,8 +65,8 @@ export function SchedulingFields({ form }: SchedulingFieldsProps) {
             <FormControl>
               <Input 
                 type="number" 
-                {...field} 
-                onChange={e => field.onChange(e.target.valueAsNumber)}
+                value={field.value || ''}
+                onChange={e => field.onChange(e.target.valueAsNumber || null)}
                 placeholder="Enter estimated duration" 
               />
             </FormControl>
