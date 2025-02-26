@@ -1,75 +1,82 @@
-
 import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
 import { WorkOrder } from "../types"
-import { useWorkOrderQueries } from "./useWorkOrderQueries"
-import { useWorkOrderSubscription } from "./useWorkOrderSubscription"
-import { useWorkOrderAssignment } from "./useWorkOrderAssignment"
-import { useWorkOrderInvoice } from "./useWorkOrderInvoice"
 
 export function useWorkOrderListData() {
-  // Initialize all state first
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [assignmentFilter, setAssignmentFilter] = useState<string>("all")
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
-  const [assignWorkOrder, setAssignWorkOrder] = useState<WorkOrder | null>(null)
   const [assignBayWorkOrder, setAssignBayWorkOrder] = useState<WorkOrder | null>(null)
   const [page, setPage] = useState(1)
-  const pageSize = 10
+  const [totalPages, setTotalPages] = useState(1)
 
-  // Initialize hooks unconditionally
-  const { workOrdersData, isLoading, error, assignableUsers, serviceBays } = useWorkOrderQueries(page, pageSize)
-  const { handleAssignUser, handleAssignBay } = useWorkOrderAssignment()
-  const { handleCreateInvoice } = useWorkOrderInvoice()
+  // Fetch work orders with filters
+  const { data: workOrders, isLoading, error } = useQuery({
+    queryKey: ["workOrders", searchTerm, statusFilter, assignmentFilter, page],
+    queryFn: async () => {
+      let query = supabase
+        .from("work_orders")
+        .select(`
+          *,
+          service_bays (
+            name
+          )
+        `)
+        .order("created_at", { ascending: false })
 
-  // Set up subscriptions after other hooks
-  useWorkOrderSubscription()
-
-  // Filter work orders only if we have data
-  const filteredWorkOrders = workOrdersData?.workOrders.filter(order => {
-    const matchesSearch = (
-      order.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.vehicle_make?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.vehicle_model?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-
-    const matchesStatus = statusFilter === "all" || order.status === statusFilter
-
-    const matchesAssignment = (() => {
-      switch (assignmentFilter) {
-        case "unassigned-user":
-          return !order.assigned_profile_id
-        case "assigned-user":
-          return !!order.assigned_profile_id
-        case "unassigned-bay":
-          return !order.assigned_bay_id
-        case "assigned-bay":
-          return !!order.assigned_bay_id
-        default:
-          return true
+      if (searchTerm) {
+        query = query.or(
+          `first_name.ilike.%${searchTerm}%,` +
+          `last_name.ilike.%${searchTerm}%,` +
+          `email.ilike.%${searchTerm}%,` +
+          `phone_number.ilike.%${searchTerm}%`
+        )
       }
-    })()
 
-    return matchesSearch && matchesStatus && matchesAssignment
-  }) || []
+      if (statusFilter !== "all") {
+        query = query.eq("status", statusFilter)
+      }
 
-  const totalPages = workOrdersData ? Math.ceil(workOrdersData.totalCount / pageSize) : 0
+      if (assignmentFilter === "assigned") {
+        query = query.not("assigned_bay_id", "is", null)
+      } else if (assignmentFilter === "unassigned") {
+        query = query.is("assigned_bay_id", null)
+      }
 
-  // Wrap assignment handlers
-  const handleAssignUserWrapper = async (userId: string | null) => {
-    if (!assignWorkOrder) return
-    if (await handleAssignUser(assignWorkOrder.id, userId)) {
-      setAssignWorkOrder(null)
+      const { data, error } = await query
+
+      if (error) throw error
+      return data
     }
+  })
+
+  // Fetch service bays
+  const { data: serviceBays } = useQuery({
+    queryKey: ["service-bays"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_bays")
+        .select("*")
+        .eq("status", "available")
+
+      if (error) throw error
+      return data
+    }
+  })
+
+  const handleAssignBay = async (workOrderId: string, bayId: string) => {
+    const { error } = await supabase
+      .from("work_orders")
+      .update({ assigned_bay_id: bayId })
+      .eq("id", workOrderId)
+
+    if (error) throw error
   }
 
-  const handleAssignBayWrapper = async (bayId: string | null) => {
-    if (!assignBayWorkOrder) return
-    if (await handleAssignBay(assignBayWorkOrder.id, bayId)) {
-      setAssignBayWorkOrder(null)
-    }
+  const handleCreateInvoice = async (workOrderId: string) => {
+    // Logic to create an invoice
   }
 
   return {
@@ -81,17 +88,13 @@ export function useWorkOrderListData() {
     setAssignmentFilter,
     selectedWorkOrder,
     setSelectedWorkOrder,
-    assignWorkOrder,
-    setAssignWorkOrder,
     assignBayWorkOrder,
     setAssignBayWorkOrder,
-    workOrders: filteredWorkOrders,
+    workOrders,
     isLoading,
     error,
-    assignableUsers,
     serviceBays,
-    handleAssignUser: handleAssignUserWrapper,
-    handleAssignBay: handleAssignBayWrapper,
+    handleAssignBay,
     handleCreateInvoice,
     page,
     setPage,

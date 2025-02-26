@@ -69,7 +69,6 @@ export function WorkOrderList() {
       {isMobile ? (
         <WorkOrderMobileList
           workOrders={workOrders}
-          onAssignUser={setAssignWorkOrder}
           onAssignBay={setAssignBayWorkOrder}
           onEdit={setSelectedWorkOrder}
           onCreateInvoice={handleCreateInvoice}
@@ -77,7 +76,6 @@ export function WorkOrderList() {
       ) : (
         <WorkOrderTable
           workOrders={workOrders}
-          onAssignUser={setAssignWorkOrder}
           onAssignBay={setAssignBayWorkOrder}
           onEdit={setSelectedWorkOrder}
           onCreateInvoice={handleCreateInvoice}
@@ -97,17 +95,6 @@ export function WorkOrderList() {
           onOpenChange={(open) => !open && setSelectedWorkOrder(null)}
         />
       )}
-
-      <AssignmentSheet
-        title="Assign User"
-        open={!!assignWorkOrder}
-        onOpenChange={(open) => !open && setAssignWorkOrder(null)}
-        items={assignableUsers?.map(user => ({
-          id: user.id,
-          name: `${user.first_name} ${user.last_name}`
-        })) || []}
-        onAssign={handleAssignUser}
-      />
 
       <AssignmentSheet
         title="Assign Bay"

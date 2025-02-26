@@ -6,24 +6,6 @@ import { useWorkOrderSubmission } from "./useWorkOrderSubmission"
 import { useEffect } from "react"
 import { supabase } from "@/integrations/supabase/client"
 
-interface ServiceType {
-  id: string;
-  name: string;
-}
-
-// Define the shape of the raw data from Supabase
-interface RawWorkOrderService {
-  id: string;
-  service_id: string;
-  quantity: number;
-  unit_price: number;
-  service: {
-    id: string;
-    name: string;
-    price: number | null;
-  };
-}
-
 const formSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().min(1, "Last name is required"),
@@ -36,16 +18,17 @@ const formSchema = z.object({
   vehicle_serial: z.string().min(1, "Vehicle serial number is required"),
   additional_notes: z.string().optional(),
   address: z.string().optional(),
-  start_time: z.date().nullable().optional(),
-  estimated_duration: z.number().nullable().optional(),
-  end_time: z.date().nullable().optional(),
-  assigned_bay_id: z.string().nullable().optional(),
-  assigned_profile_id: z.string().nullable().optional(),
+  start_time: z.date().nullable(),
+  estimated_duration: z.number().nullable(),
+  end_time: z.date().nullable(),
+  assigned_bay_id: z.string().nullable(),
   service_items: z.array(z.object({
     service_id: z.string(),
     service_name: z.string(),
     quantity: z.number().min(1),
-    unit_price: z.number().min(0)
+    unit_price: z.number().min(0),
+    commission_rate: z.number().nullable(),
+    commission_type: z.enum(['percentage', 'flat']).nullable(),
   }))
 })
 
@@ -70,7 +53,6 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
       estimated_duration: workOrder?.estimated_duration ? parseInt(workOrder.estimated_duration.toString()) : null,
       end_time: workOrder?.end_time ? new Date(workOrder.end_time) : null,
       assigned_bay_id: workOrder?.assigned_bay_id || null,
-      assigned_profile_id: workOrder?.assigned_profile_id || null,
       service_items: []
     }
   })
@@ -80,7 +62,6 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
       if (!workOrder?.id) return
 
       try {
-        // First verify if the work order exists and the ID is valid
         const { data: workOrderExists, error: workOrderError } = await supabase
           .from('work_orders')
           .select('id')
@@ -92,7 +73,6 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
           return
         }
 
-        // Then fetch the services with the correct relationship specified
         const { data: servicesData, error: servicesError } = await supabase
           .from('work_order_services')
           .select(`
@@ -113,13 +93,8 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
           return
         }
 
-        console.log('Fetched services:', servicesData)
-
         if (servicesData && Array.isArray(servicesData)) {
-          // First cast the raw data to our known shape
-          const rawServices = servicesData as unknown as RawWorkOrderService[]
-          
-          const formattedServices = rawServices
+          const formattedServices = servicesData
             .filter(service => service.service && service.service.id)
             .map(service => ({
               service_id: service.service.id,
@@ -128,7 +103,6 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
               unit_price: service.unit_price || service.service.price || 0
             }))
 
-          console.log('Formatted services for form:', formattedServices)
           form.setValue('service_items', formattedServices, { shouldDirty: true })
         }
       } catch (error) {
@@ -140,23 +114,16 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
   }, [workOrder?.id, form])
 
   const onSubmit = async (values: WorkOrderFormValues) => {
-    console.log("Form values before submission:", values)
-    
     if (!values.service_items || values.service_items.length === 0) {
       values.service_items = []
     }
 
-    console.log("Service items before submission:", values.service_items)
-
-    // Filter out any service items with empty service_id
     const validServiceItems = values.service_items.filter(item => 
       item.service_id && 
       item.service_id.trim() !== "" && 
       item.service_name && 
       item.service_name.trim() !== ""
     )
-
-    console.log("Valid service items:", validServiceItems)
 
     const success = await submitWorkOrder({
       ...values,
