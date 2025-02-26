@@ -655,8 +655,11 @@ export type Database = {
           subtotal: number
           total: number
           updated_at: string
+          vehicle_body_class: string | null
+          vehicle_doors: number | null
           vehicle_make: string | null
           vehicle_model: string | null
+          vehicle_trim: string | null
           vehicle_vin: string | null
           vehicle_year: number | null
           work_order_id: string | null
@@ -688,8 +691,11 @@ export type Database = {
           subtotal: number
           total: number
           updated_at?: string
+          vehicle_body_class?: string | null
+          vehicle_doors?: number | null
           vehicle_make?: string | null
           vehicle_model?: string | null
+          vehicle_trim?: string | null
           vehicle_vin?: string | null
           vehicle_year?: number | null
           work_order_id?: string | null
@@ -721,8 +727,11 @@ export type Database = {
           subtotal?: number
           total?: number
           updated_at?: string
+          vehicle_body_class?: string | null
+          vehicle_doors?: number | null
           vehicle_make?: string | null
           vehicle_model?: string | null
+          vehicle_trim?: string | null
           vehicle_vin?: string | null
           vehicle_year?: number | null
           work_order_id?: string | null
@@ -1118,8 +1127,11 @@ export type Database = {
           tax_amount: number
           total: number
           updated_at: string
+          vehicle_body_class: string | null
+          vehicle_doors: number | null
           vehicle_make: string | null
           vehicle_model: string | null
+          vehicle_trim: string | null
           vehicle_vin: string | null
           vehicle_year: number | null
         }
@@ -1145,8 +1157,11 @@ export type Database = {
           tax_amount?: number
           total?: number
           updated_at?: string
+          vehicle_body_class?: string | null
+          vehicle_doors?: number | null
           vehicle_make?: string | null
           vehicle_model?: string | null
+          vehicle_trim?: string | null
           vehicle_vin?: string | null
           vehicle_year?: number | null
         }
@@ -1172,8 +1187,11 @@ export type Database = {
           tax_amount?: number
           total?: number
           updated_at?: string
+          vehicle_body_class?: string | null
+          vehicle_doors?: number | null
           vehicle_make?: string | null
           vehicle_model?: string | null
+          vehicle_trim?: string | null
           vehicle_vin?: string | null
           vehicle_year?: number | null
         }
@@ -1709,43 +1727,52 @@ export type Database = {
       }
       vehicles: {
         Row: {
+          body_class: string | null
           client_id: string | null
           color: string | null
           created_at: string
+          doors: number | null
           id: string
           is_primary: boolean | null
           license_plate: string | null
           make: string
           model: string
           notes: string | null
+          trim: string | null
           updated_at: string
           vin: string | null
           year: number
         }
         Insert: {
+          body_class?: string | null
           client_id?: string | null
           color?: string | null
           created_at?: string
+          doors?: number | null
           id?: string
           is_primary?: boolean | null
           license_plate?: string | null
           make: string
           model: string
           notes?: string | null
+          trim?: string | null
           updated_at?: string
           vin?: string | null
           year: number
         }
         Update: {
+          body_class?: string | null
           client_id?: string | null
           color?: string | null
           created_at?: string
+          doors?: number | null
           id?: string
           is_primary?: boolean | null
           license_plate?: string | null
           make?: string
           model?: string
           notes?: string | null
+          trim?: string | null
           updated_at?: string
           vin?: string | null
           year?: number
@@ -2015,9 +2042,12 @@ export type Database = {
           start_time: string | null
           status: string
           updated_at: string
+          vehicle_body_class: string | null
+          vehicle_doors: number | null
           vehicle_make: string
           vehicle_model: string
           vehicle_serial: string | null
+          vehicle_trim: string | null
           vehicle_year: number
         }
         Insert: {
@@ -2040,9 +2070,12 @@ export type Database = {
           start_time?: string | null
           status?: string
           updated_at?: string
+          vehicle_body_class?: string | null
+          vehicle_doors?: number | null
           vehicle_make: string
           vehicle_model: string
           vehicle_serial?: string | null
+          vehicle_trim?: string | null
           vehicle_year: number
         }
         Update: {
@@ -2065,9 +2098,12 @@ export type Database = {
           start_time?: string | null
           status?: string
           updated_at?: string
+          vehicle_body_class?: string | null
+          vehicle_doors?: number | null
           vehicle_make?: string
           vehicle_model?: string
           vehicle_serial?: string | null
+          vehicle_trim?: string | null
           vehicle_year?: number
         }
         Relationships: [

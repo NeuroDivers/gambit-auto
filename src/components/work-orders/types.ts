@@ -12,6 +12,9 @@ export interface WorkOrder {
   vehicle_model: string;
   vehicle_year: number;
   vehicle_serial: string;
+  vehicle_body_class?: string;
+  vehicle_doors?: number;
+  vehicle_trim?: string;
   additional_notes?: string;
   status: string;
   created_at: string;
@@ -41,6 +44,9 @@ export interface WorkOrderFormValues {
   vehicle_model: string;
   vehicle_year: number;
   vehicle_serial: string;
+  vehicle_body_class?: string;
+  vehicle_doors?: number;
+  vehicle_trim?: string;
   additional_notes?: string;
   address: string;
   start_time: Date | null;
