@@ -35,8 +35,7 @@ export function ServiceList({ workOrderServices, onAddService, onRemoveService, 
       quantity: 1,
       unit_price: 0,
       commission_rate: 0,
-      commission_type: null,
-      assigned_profile_id: null
+      commission_type: null
     };
     onAddService(newService);
   };
@@ -46,11 +45,11 @@ export function ServiceList({ workOrderServices, onAddService, onRemoveService, 
       {workOrderServices.map((service, index) => (
         <ServiceItem
           key={index}
-          serviceIndex={index}
-          serviceItem={service}
+          index={index}
+          service={service}
           availableServices={servicesData || []}
-          onRemoveService={() => onRemoveService(index)}
-          onUpdateService={(updatedService) => onUpdateService(index, updatedService)}
+          onRemove={() => onRemoveService(index)}
+          onChange={(updatedService) => onUpdateService(index, updatedService)}
         />
       ))}
       <Button type="button" onClick={handleAddService} className="w-full">

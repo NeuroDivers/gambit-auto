@@ -83,7 +83,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
 
         if (servicesError) throw servicesError
 
-        if (servicesData) {
+        if (servicesData && Array.isArray(servicesData)) {
           const formattedServices = servicesData.map(service => ({
             service_id: service.service_id,
             service_name: service.service_types?.name || '',
