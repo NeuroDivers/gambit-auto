@@ -79,18 +79,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const initializeWorker = async () => {
     try {
-      addLog('Initializing OCR worker with optimized settings...')
+      addLog('Initializing OCR worker with basic settings...')
       const worker = await createWorker()
       
       await worker.reinitialize('eng')
       await worker.setParameters({
         tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-        tessedit_ocr_engine_mode: '3',
         tessedit_pageseg_mode: PSM.SINGLE_LINE,
-        preserve_interword_spaces: '0',
-        tessjs_create_pdf: '0',
-        tessjs_create_hocr: '0',
-        tessjs_image_dpi: '300',
+        preserve_interword_spaces: '0'
       })
 
       addLog('OCR worker initialized')
