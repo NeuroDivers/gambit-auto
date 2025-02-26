@@ -88,13 +88,14 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const scanningRef = useRef<number>()
   const logsEndRef = useRef<HTMLDivElement>(null)
   const isProcessingRef = useRef(false)
-  const lastScanTimeRef = useRef<number>(0);
-  const SCAN_INTERVAL = 500;
-  const CONFIDENCE_THRESHOLD = 0;
-  const MIN_MATCHES_REQUIRED = 2;
-  const matchesRef = useRef<{[key: string]: number}>({});
-  const scanStartTimeRef = useRef<number>(0);
-  const isScanningRef = useRef(true);
+  const lastScanTimeRef = useRef<number>(0)
+  const SCAN_INTERVAL = 500
+  const CONFIDENCE_THRESHOLD = 0
+  const MIN_MATCHES_REQUIRED = 2
+  const matchesRef = useRef<{[key: string]: number}>({})
+  const scanStartTimeRef = useRef<number>(0)
+  const isScanningRef = useRef(true)
+  const isInitializedRef = useRef(false)
 
   const addLog = (message: string) => {
     console.log(message);
@@ -249,11 +250,13 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
         }
       });
       
-      await videoRef.current.play();
+      await videoRef.current?.play();
       setIsCameraActive(true);
       addLog('Video stream started successfully');
-      
-      if (isOpenCVLoaded && workerRef.current) {
+
+      if (isOpenCVLoaded && workerRef.current && streamRef.current) {
+        isInitializedRef.current = true;
+        isScanningRef.current = true;
         addLog('Starting OCR scanning loop...');
         startOCRScanning();
       } else {
@@ -268,15 +271,10 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   };
 
   const startOCRScanning = async () => {
-    if (!isScanningRef.current) return;
+    if (!isScanningRef.current || !isInitializedRef.current) return;
 
     if (!scanStartTimeRef.current) {
       scanStartTimeRef.current = Date.now();
-    }
-
-    if (scanningRef.current) {
-      cancelAnimationFrame(scanningRef.current);
-      scanningRef.current = undefined;
     }
 
     const currentTime = Date.now();
@@ -288,10 +286,6 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     }
 
     if (isProcessingRef.current || !isOpenCVLoaded) {
-      addLog('Scanning skipped: ' + 
-        (isProcessingRef.current ? 'processing in progress' : 
-         'OpenCV not loaded'));
-      
       if (isScanningRef.current) {
         scanningRef.current = requestAnimationFrame(startOCRScanning);
       }
@@ -339,6 +333,7 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
             const isValidVin = await validateVinWithNHTSA(potentialVin);
             if (isValidVin) {
               isScanningRef.current = false;
+              isInitializedRef.current = false;
               if (scanningRef.current) {
                 cancelAnimationFrame(scanningRef.current);
                 scanningRef.current = undefined;
@@ -375,6 +370,7 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
 
   const stopCamera = async () => {
     isScanningRef.current = false;
+    isInitializedRef.current = false;
     
     if (scanningRef.current) {
       cancelAnimationFrame(scanningRef.current);
