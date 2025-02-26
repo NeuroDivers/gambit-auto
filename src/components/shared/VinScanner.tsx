@@ -9,6 +9,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { validateVIN, validateVinWithNHTSA } from "@/utils/vin-validation"
 import { preprocessImage } from "@/utils/image-processing"
 import { ScannerOverlay } from "./vin-scanner/ScannerOverlay"
+import { ScannerFeedback } from "./vin-scanner/ScannerFeedback"
 
 interface VinScannerProps {
   onScan: (vin: string) => void
@@ -20,6 +21,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const [isScanning, setIsScanning] = useState(false)
   const [scanMode, setScanMode] = useState<'text' | 'barcode'>('text')
   const [logs, setLogs] = useState<string[]>([])
+  const [detectedText, setDetectedText] = useState("")
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [error, setError] = useState<string>()
   const isMobile = useIsMobile()
 
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -29,6 +33,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const barcodeReaderRef = useRef<BrowserMultiFormatReader | null>(null)
   const scanningRef = useRef<number>()
   const logsEndRef = useRef<HTMLDivElement>(null)
+  const lastScanRef = useRef<number>(0)
 
   const addLog = (message: string) => {
     setLogs(prev => [...prev, message])
@@ -91,6 +96,10 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const startCamera = async () => {
     try {
+      setError(undefined)
+      setDetectedText("")
+      setIsProcessing(false)
+
       const constraints: MediaTrackConstraints = {
         facingMode: 'environment',
         width: { ideal: isMobile ? 1920 : 1280 },
@@ -142,6 +151,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       }
     } catch (error) {
       addLog(`Error accessing camera: ${error}`)
+      setError("Could not access camera. Please check camera permissions.")
       toast.error("Could not access camera. Please check camera permissions.")
       setIsDialogOpen(false)
     }
@@ -157,11 +167,23 @@ export function VinScanner({ onScan }: VinScannerProps) {
         
         const scanLoop = async () => {
           try {
+            const now = Date.now()
+            if (now - lastScanRef.current < 500) { // Check every 500ms
+              if (isDialogOpen) {
+                requestAnimationFrame(scanLoop)
+              }
+              return
+            }
+            
+            lastScanRef.current = now
+            setIsProcessing(true)
+
             if (!videoRef.current || !barcodeReaderRef.current) return;
             
             const result = await barcodeReaderRef.current.decodeOnce(videoRef.current);
             if (result?.getText()) {
               const scannedValue = result.getText()
+              setDetectedText(scannedValue)
               addLog(`Barcode detected: ${scannedValue}`)
               
               if (validateVIN(scannedValue)) {
@@ -170,12 +192,17 @@ export function VinScanner({ onScan }: VinScannerProps) {
                 toast.success("VIN scanned successfully")
                 handleClose()
                 return
+              } else {
+                setError("Invalid VIN format detected")
               }
             }
           } catch (error: any) {
             if (error?.name !== 'NotFoundException') {
               addLog(`Barcode scan error: ${error}`)
+              setError("Error scanning barcode")
             }
+          } finally {
+            setIsProcessing(false)
           }
           
           if (isDialogOpen) {
@@ -187,6 +214,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       }
     } catch (error) {
       addLog(`Error initializing barcode scanner: ${error}`)
+      setError("Failed to initialize barcode scanner")
       throw error
     }
   }
@@ -199,6 +227,18 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
 
     try {
+      const now = Date.now()
+      if (now - lastScanRef.current < 2000) { // Check every 2 seconds for OCR
+        if (shouldScan) {
+          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+        }
+        return
+      }
+
+      lastScanRef.current = now
+      setIsProcessing(true)
+      setError(undefined)
+
       const frameData = captureFrame()
       if (!frameData) {
         if (shouldScan) {
@@ -218,9 +258,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
         .replace(/[Bb]/g, '8')
         .replace(/[Gg]/g, '6')
 
+      setDetectedText(cleanedText)
       addLog(`Detected text: ${cleanedText} (confidence: ${confidence}%)`)
       
       if (confidence < 40 || cleanedText.length < 15) {
+        setError(confidence < 40 ? "Low confidence scan, please try again" : undefined)
         if (shouldScan) {
           scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
         }
@@ -235,6 +277,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
           toast.success("VIN scanned successfully")
           handleClose()
           return
+        } else {
+          setError("VIN validation failed")
         }
       }
       
@@ -243,9 +287,12 @@ export function VinScanner({ onScan }: VinScannerProps) {
       }
     } catch (error) {
       addLog(`OCR error: ${error}`)
+      setError("Error processing scan")
       if (shouldScan) {
         scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
       }
+    } finally {
+      setIsProcessing(false)
     }
   }
 
@@ -360,6 +407,13 @@ export function VinScanner({ onScan }: VinScannerProps) {
               </p>
             </div>
           </div>
+
+          <ScannerFeedback 
+            detectedText={detectedText}
+            isProcessing={isProcessing}
+            error={error}
+          />
+
           <div className="bg-muted p-4 max-h-32 overflow-y-auto text-xs font-mono">
             <div className="space-y-1">
               {logs.map((log, index) => (
