@@ -43,7 +43,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isCameraActive, setIsCameraActive] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
-  const [scanMode, setScanMode] = useState<'text' | 'barcode'>('text')
   const [logs, setLogs] = useState<string[]>([])
   const [hasFlash, setHasFlash] = useState(false)
   const [isFlashOn, setIsFlashOn] = useState(false)
@@ -53,7 +52,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const workerRef = useRef<any>(null)
-  const barcodeReaderRef = useRef<BrowserMultiFormatReader | null>(null)
   const scanningRef = useRef<number>()
   const logsEndRef = useRef<HTMLDivElement>(null)
   const isProcessingRef = useRef(false)
@@ -183,19 +181,10 @@ export function VinScanner({ onScan }: VinScannerProps) {
         setIsCameraActive(true)
         addLog('Video stream started successfully')
 
-        if (scanMode === 'text') {
-          addLog('Initializing OCR worker...')
-          workerRef.current = await initializeWorker()
-          addLog('Starting OCR scanning loop...')
-          if (isDialogOpen) {
-            startOCRScanning()
-          } else {
-            addLog('Dialog not open, waiting for dialog state to update...')
-          }
-        } else {
-          addLog('Initializing barcode reader...')
-          await initializeBarcodeScanner()
-        }
+        addLog('Initializing OCR worker...')
+        workerRef.current = await initializeWorker()
+        addLog('Starting OCR scanning loop...')
+        startOCRScanning()
       }
     } catch (error) {
       addLog(`Error accessing camera: ${error}`)
@@ -248,15 +237,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
   }
 
   const startOCRScanning = async () => {
-    if (isProcessingRef.current || isPaused) {
+    if (isProcessingRef.current || isPaused || !isDialogOpen) {
       return
     }
 
-    if (!streamRef.current || !workerRef.current || !isDialogOpen) {
+    if (!streamRef.current || !workerRef.current) {
       addLog('Scanning conditions not met:')
       addLog(`- Stream available: ${!!streamRef.current}`)
       addLog(`- Worker available: ${!!workerRef.current}`)
-      addLog(`- Dialog open: ${isDialogOpen}`)
       return
     }
 
@@ -267,7 +255,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       if (!frameData) {
         addLog('No valid frame captured, retrying...')
         isProcessingRef.current = false
-        if (isDialogOpen) {
+        if (isDialogOpen && !isPaused) {
           scanningRef.current = requestAnimationFrame(startOCRScanning)
         }
         return
@@ -303,59 +291,49 @@ export function VinScanner({ onScan }: VinScannerProps) {
       }
 
       isProcessingRef.current = false
-      if (isDialogOpen) {
+      if (isDialogOpen && !isPaused) {
         scanningRef.current = requestAnimationFrame(startOCRScanning)
       }
     } catch (error) {
       addLog(`OCR error: ${error}`)
       isProcessingRef.current = false
-      if (isDialogOpen) {
+      if (isDialogOpen && !isPaused) {
         scanningRef.current = requestAnimationFrame(startOCRScanning)
       }
     }
   }
 
-  const initializeBarcodeScanner = async () => {
-    try {
-      const codeReader = new BrowserMultiFormatReader()
-      barcodeReaderRef.current = codeReader
+  const togglePause = () => {
+    setIsPaused(!isPaused)
+    addLog(`Scanning ${!isPaused ? 'paused' : 'resumed'}`)
+    if (isPaused && isDialogOpen && isCameraActive && workerRef.current) {
+      startOCRScanning()
+    }
+  }
 
-      if (videoRef.current) {
-        addLog('Starting barcode scanning...')
-        
-        const scanLoop = async () => {
-          try {
-            if (!videoRef.current || !barcodeReaderRef.current) return;
-            
-            const result = await barcodeReaderRef.current.decodeOnce(videoRef.current);
-            if (result?.getText()) {
-              const scannedValue = result.getText()
-              addLog(`Barcode detected: ${scannedValue}`)
-              
-              if (validateVIN(scannedValue)) {
-                addLog('Valid VIN detected!')
-                onScan(scannedValue.toUpperCase())
-                toast.success("VIN scanned successfully")
-                handleClose()
-                return
-              }
-            }
-          } catch (error: any) {
-            if (error?.name !== 'NotFoundException') {
-              addLog(`Barcode scan error: ${error}`)
-            }
-          }
-          
-          if (isDialogOpen) {
-            requestAnimationFrame(scanLoop)
-          }
-        }
-        
-        scanLoop()
-      }
-    } catch (error) {
-      addLog(`Error initializing barcode scanner: ${error}`)
-      throw error
+  const handleOpen = () => {
+    setIsDialogOpen(true)
+    setLogs([])
+    setTimeout(startCamera, 0)
+  }
+
+  const handleClose = async () => {
+    stopCamera()
+    if (workerRef.current) {
+      addLog('Terminating OCR worker...')
+      await workerRef.current.terminate()
+      workerRef.current = null
+    }
+    setIsDialogOpen(false)
+    setLogs([])
+  }
+
+  const handleScanModeChange = async (value: string) => {
+    if (value === 'text' || value === 'barcode') {
+      setScanMode(value)
+      stopCamera()
+      setLogs([])
+      await startCamera()
     }
   }
 
@@ -377,51 +355,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
     addLog('Camera and scanning stopped')
   }
 
-  const handleClose = async () => {
-    stopCamera()
-    if (workerRef.current) {
-      addLog('Terminating OCR worker...')
-      await workerRef.current.terminate()
-      workerRef.current = null
-    }
-    setIsDialogOpen(false)
-    setLogs([])
-  }
-
-  const handleOpen = () => {
-    setIsDialogOpen(true)
-    setLogs([])
-    setTimeout(startCamera, 0)
-  }
-
-  const handleScanModeChange = async (value: string) => {
-    if (value === 'text' || value === 'barcode') {
-      setScanMode(value)
-      stopCamera()
-      setLogs([])
-      await startCamera()
-    }
-  }
-
-  const togglePause = () => {
-    setIsPaused(!isPaused)
-    addLog(`Scanning ${!isPaused ? 'paused' : 'resumed'}`)
-    if (!isPaused && isDialogOpen && isCameraActive && workerRef.current && scanMode === 'text') {
-      startOCRScanning()
-    }
-  }
-
   useEffect(() => {
     return () => {
       handleClose()
     }
   }, [])
-
-  useEffect(() => {
-    if (isDialogOpen && isCameraActive && workerRef.current && scanMode === 'text') {
-      startOCRScanning()
-    }
-  }, [isDialogOpen, isCameraActive])
 
   return (
     <>
@@ -438,14 +376,12 @@ export function VinScanner({ onScan }: VinScannerProps) {
       <Dialog.Root open={isDialogOpen} onOpenChange={handleClose}>
         <DialogContent className="p-0">
           <ScannerOverlay
-            scanMode={scanMode}
-            onScanModeChange={handleScanModeChange}
-            hasFlash={hasFlash}
-            isFlashOn={isFlashOn}
             onFlashToggle={toggleFlash}
             onClose={handleClose}
             isPaused={isPaused}
             onPauseToggle={togglePause}
+            hasFlash={hasFlash}
+            isFlashOn={isFlashOn}
           />
           <div className="relative aspect-video w-full overflow-hidden">
             <video
@@ -459,9 +395,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
               ref={canvasRef}
               className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[20%] border-2 border-dashed border-primary-foreground/70">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[30%] border-2 border-dashed border-primary-foreground/70">
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
-                Position {scanMode === 'text' ? 'VIN text' : 'barcode'} here
+                Position VIN text here
               </div>
               <div className="absolute -left-2 -top-2 w-4 h-4 border-l-2 border-t-2 border-primary-foreground/70" />
               <div className="absolute -right-2 -top-2 w-4 h-4 border-r-2 border-t-2 border-primary-foreground/70" />
@@ -474,7 +410,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
             </div>
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent p-4">
               <p className="text-white text-center text-sm">
-                Position the {scanMode === 'text' ? 'VIN text' : 'barcode'} within the frame
+                Position the VIN text within the frame
               </p>
             </div>
           </div>

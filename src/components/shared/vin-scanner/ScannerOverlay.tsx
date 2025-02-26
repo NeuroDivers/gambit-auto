@@ -1,11 +1,8 @@
 
-import { Camera, Barcode, X, Pause, Play } from "lucide-react"
+import { Camera, X, Pause, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Toggle } from "@/components/ui/toggle"
 
 interface ScannerOverlayProps {
-  scanMode: 'text' | 'barcode'
-  onScanModeChange: (mode: string) => void
   hasFlash?: boolean
   isFlashOn?: boolean
   isPaused?: boolean
@@ -15,8 +12,6 @@ interface ScannerOverlayProps {
 }
 
 export function ScannerOverlay({ 
-  scanMode, 
-  onScanModeChange,
   hasFlash,
   isFlashOn,
   isPaused,
@@ -27,13 +22,6 @@ export function ScannerOverlay({
   return (
     <div className="flex items-center justify-between p-2 border-b">
       <div className="flex items-center gap-2">
-        <Toggle
-          pressed={scanMode === 'barcode'}
-          onPressedChange={(pressed) => onScanModeChange(pressed ? 'barcode' : 'text')}
-          aria-label="Toggle scan mode"
-        >
-          {scanMode === 'text' ? <Camera className="h-4 w-4" /> : <Barcode className="h-4 w-4" />}
-        </Toggle>
         {hasFlash && (
           <Button
             variant="ghost"
