@@ -1,6 +1,7 @@
 
-import { Camera, Barcode, Lightbulb, X } from "lucide-react"
+import { Camera, Barcode, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Toggle } from "@/components/ui/toggle"
 
 interface ScannerOverlayProps {
   scanMode: 'text' | 'barcode'
@@ -8,6 +9,7 @@ interface ScannerOverlayProps {
   hasFlash?: boolean
   isFlashOn?: boolean
   onFlashToggle?: () => void
+  onClose: () => void
 }
 
 export function ScannerOverlay({ 
@@ -15,18 +17,19 @@ export function ScannerOverlay({
   onScanModeChange,
   hasFlash,
   isFlashOn,
-  onFlashToggle
+  onFlashToggle,
+  onClose
 }: ScannerOverlayProps) {
   return (
     <div className="flex items-center justify-between p-2 border-b">
       <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onScanModeChange(scanMode === 'text' ? 'barcode' : 'text')}
+        <Toggle
+          pressed={scanMode === 'barcode'}
+          onPressedChange={(pressed) => onScanModeChange(pressed ? 'barcode' : 'text')}
+          aria-label="Toggle scan mode"
         >
-          {scanMode === 'text' ? <Barcode className="h-4 w-4" /> : <Camera className="h-4 w-4" />}
-        </Button>
+          {scanMode === 'text' ? <Camera className="h-4 w-4" /> : <Barcode className="h-4 w-4" />}
+        </Toggle>
         {hasFlash && (
           <Button
             variant="ghost"
@@ -34,15 +37,17 @@ export function ScannerOverlay({
             onClick={onFlashToggle}
             className={isFlashOn ? "text-yellow-500" : ""}
           >
-            <Lightbulb className="h-4 w-4" />
+            <span className="sr-only">Toggle flash</span>
           </Button>
         )}
       </div>
       <Button
         variant="ghost"
         size="icon"
+        onClick={onClose}
       >
         <X className="h-4 w-4" />
+        <span className="sr-only">Close scanner</span>
       </Button>
     </div>
   )

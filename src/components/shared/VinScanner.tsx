@@ -1,4 +1,3 @@
-
 import { Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -359,7 +358,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         type="button" 
         variant="outline" 
         size="icon"
-        onClick={handleOpen}
+        onClick={() => setIsDialogOpen(true)}
         className="shrink-0"
       >
         <Camera className="h-4 w-4" />
@@ -373,6 +372,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
             hasFlash={hasFlash}
             isFlashOn={isFlashOn}
             onFlashToggle={toggleFlash}
+            onClose={handleClose}
           />
           <div className="relative aspect-video w-full overflow-hidden">
             <video
