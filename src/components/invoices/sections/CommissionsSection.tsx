@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
+import { useAssignableProfiles } from "@/components/service-bays/hooks/useAssignableProfiles"
 
 interface CommissionsSectionProps {
   invoiceId: string
@@ -24,27 +25,29 @@ interface CommissionsSectionProps {
     commission_type: 'percentage' | 'flat' | null
     quantity: number
     unit_price: number
+    assigned_profile_id: string | null
   }[]
 }
 
 export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps) {
   const queryClient = useQueryClient()
   const [saving, setSaving] = useState(false)
+  const { profiles } = useAssignableProfiles()
 
   const handleUpdateCommission = async (
     itemId: string, 
-    rate: number | null, 
-    type: 'percentage' | 'flat' | null
+    updates: {
+      commission_rate?: number | null
+      commission_type?: 'percentage' | 'flat' | null
+      assigned_profile_id?: string | null
+    }
   ) => {
     try {
       setSaving(true)
       
       const { error } = await supabase
         .from('invoice_items')
-        .update({
-          commission_rate: rate,
-          commission_type: type
-        })
+        .update(updates)
         .eq('id', itemId)
 
       if (error) throw error
@@ -88,7 +91,31 @@ export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor={`assignee-${item.id}`}>Assign To</Label>
+                  <Select
+                    value={item.assigned_profile_id || ''}
+                    onValueChange={(value) => 
+                      handleUpdateCommission(item.id, {
+                        assigned_profile_id: value || null
+                      })
+                    }
+                  >
+                    <SelectTrigger id={`assignee-${item.id}`}>
+                      <SelectValue placeholder="Select staff member" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">None</SelectItem>
+                      {profiles?.map((profile) => (
+                        <SelectItem key={profile.id} value={profile.id}>
+                          {profile.first_name} {profile.last_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor={`rate-${item.id}`}>Commission Rate</Label>
                   <Input
@@ -98,11 +125,9 @@ export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps
                     value={item.commission_rate || ''}
                     onChange={(e) => {
                       const newRate = e.target.value ? parseFloat(e.target.value) : null
-                      handleUpdateCommission(
-                        item.id,
-                        newRate,
-                        item.commission_type
-                      )
+                      handleUpdateCommission(item.id, {
+                        commission_rate: newRate
+                      })
                     }}
                   />
                 </div>
@@ -112,11 +137,9 @@ export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps
                   <Select
                     value={item.commission_type || ''}
                     onValueChange={(value) => 
-                      handleUpdateCommission(
-                        item.id,
-                        item.commission_rate,
-                        value as 'percentage' | 'flat'
-                      )
+                      handleUpdateCommission(item.id, {
+                        commission_type: value as 'percentage' | 'flat'
+                      })
                     }
                   >
                     <SelectTrigger id={`type-${item.id}`}>

@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -22,18 +21,14 @@ export default function InvoiceDetails() {
   const handlePrint = useReactToPrint({
     documentTitle: 'Invoice',
     pageStyle: '@page { margin: 1cm }',
-    print: async (printIframe: HTMLIFrameElement) => {
-      const document = printIframe.contentDocument
+    onBeforeGetContent: () => {
+      const document = printRef.current?.ownerDocument
       if (document) {
         const html = document.getElementsByTagName('html')[0]
         html.style.transform = 'scale(1)'
       }
-      await new Promise((resolve) => {
-        printIframe.contentWindow?.print()
-        resolve(true)
-      })
     },
-    getPrintElement: () => printRef.current,
+    content: () => printRef.current,
   })
 
   const { data: invoice, isLoading, error } = useQuery({
@@ -52,7 +47,8 @@ export default function InvoiceDetails() {
             unit_price,
             description,
             commission_rate,
-            commission_type
+            commission_type,
+            assigned_profile_id
           )
         `)
         .eq('id', id)
