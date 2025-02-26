@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react"
 import { createWorker, PSM } from 'tesseract.js'
 import { toast } from "sonner"
@@ -232,6 +233,8 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const startCamera = async () => {
     try {
       await stopCamera()
+      setIsPaused(false) // Reset pause state when starting camera
+      setLogs([]) // Clear previous logs
 
       const constraints = {
         video: {
