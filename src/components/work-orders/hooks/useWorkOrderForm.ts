@@ -92,8 +92,8 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
             commission_rate: service.commission_rate ?? 0,
             commission_type: service.commission_type as 'percentage' | 'flat' | null,
             assigned_profile_id: service.assigned_profile_id,
-            description: service.service_types?.description
-          }))
+            description: service.service_types?.description || ''
+          }));
 
           form.setValue('service_items', formattedServices)
         }

@@ -43,15 +43,15 @@ export function ServiceItemForm({
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
           <ServiceDropdown
-            value={service.service_id}
-            onChange={(serviceId, serviceName) => {
+            selectedValue={service.service_id}
+            onServiceSelect={(serviceId, serviceName) => {
               handleServiceChange({
                 service_id: serviceId,
                 service_name: serviceName
               });
             }}
-            services={services}
-            disabled={disabled}
+            servicesList={services}
+            isDisabled={disabled}
           />
         </div>
         <Button
@@ -108,10 +108,10 @@ export function ServiceItemForm({
       )}
 
       <ServiceDescription
-        serviceId={service.service_id}
-        services={services}
-        isExpanded={isExpanded}
-        onToggle={() => setIsExpanded(!isExpanded)}
+        selectedServiceId={service.service_id}
+        servicesList={services}
+        expanded={isExpanded}
+        onExpandToggle={() => setIsExpanded(!isExpanded)}
       />
     </div>
   );
