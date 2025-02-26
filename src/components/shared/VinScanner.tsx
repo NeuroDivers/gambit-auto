@@ -1,4 +1,3 @@
-
 import { Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -360,12 +359,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
               ref={canvasRef}
               className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
-            {/* Added semi-transparent overlay with clear scanning area */}
-            <div className="absolute inset-0 bg-black/50">
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] h-40 bg-transparent">
-                <div className="absolute inset-0 border-2 border-dashed border-primary-foreground/70">
-                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 border-4 border-primary-foreground/70" />
-                </div>
+            <div className="absolute inset-0 bg-black/80">
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] h-40">
+                <div className="absolute inset-0 border-2 border-dashed border-primary-foreground/70" />
               </div>
             </div>
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
