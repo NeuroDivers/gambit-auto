@@ -1,115 +1,118 @@
 
-import React from 'react';
+import { useState } from 'react';
 import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 import { X } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
-import { ServiceItemFormProps, ServicesByType } from "./types"
+import { ServiceItemType } from "@/types/service-item"
 import { ServiceDropdown } from "./ServiceDropdown"
-import { ServiceQuantityPrice } from "./ServiceQuantityPrice"
 import { ServiceDescription } from "./ServiceDescription"
+import { ServicesByType } from "./types"
+import { CommissionRateFields } from "../CommissionRateFields"
 
-export function ServiceItemForm({ index, item, services = [], onUpdate, onRemove }: ServiceItemFormProps) {
-  const mounted = useRef(true);
+interface ServiceItemFormProps {
+  index: number;
+  service: ServiceItemType;
+  onRemove: () => void;
+  onChange: (service: ServiceItemType) => void;
+  services: ServicesByType;
+  showCommission?: boolean;
+  disabled?: boolean;
+}
+
+export function ServiceItemForm({
+  index,
+  service,
+  onRemove,
+  onChange,
+  services,
+  showCommission = false,
+  disabled = false
+}: ServiceItemFormProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [selectedServiceName, setSelectedServiceName] = useState(item.service_name || "");
 
-  useEffect(() => {
-    if (item.service_name) {
-      setSelectedServiceName(item.service_name);
-      setIsExpanded(true);
-    }
-    
-    return () => {
-      mounted.current = false;
-    };
-  }, [item.service_name]);
-
-  const handleServiceSelect = React.useCallback((currentValue: string) => {
-    if (!mounted.current) return;
-
-    const selectedService = services.find(service => service.id === currentValue);
-    
-    if (selectedService) {
-      console.log('Selected service:', selectedService);
-      onUpdate(index, "service_id", selectedService.id);
-      onUpdate(index, "service_name", selectedService.name);
-      
-      // Only update the unit price if it exists in the selected service
-      const currentUnitPrice = item.unit_price || 0;
-      const newUnitPrice = selectedService.price !== null && selectedService.price !== undefined 
-        ? selectedService.price 
-        : currentUnitPrice;
-      
-      onUpdate(index, "unit_price", newUnitPrice);
-      setSelectedServiceName(selectedService.name);
-      setIsExpanded(true);
-      setOpen(false);
-    }
-  }, [services, index, onUpdate, item.unit_price]);
-
-  const servicesByType = services.reduce<ServicesByType>((acc, service) => {
-    const type = service.hierarchy_type || 'Other';
-    if (!acc[type]) acc[type] = [];
-    acc[type].push(service);
-    return acc;
-  }, {});
-
-  const selectedService = services.find(s => s.id === item.service_id);
+  const handleServiceChange = (updates: Partial<ServiceItemType>) => {
+    onChange({
+      ...service,
+      ...updates
+    });
+  };
 
   return (
-    <div className="space-y-4 p-4 border rounded-lg relative bg-card">
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        onClick={onRemove}
-        className="absolute right-2 top-2"
-      >
-        <X className="h-4 w-4" />
-      </Button>
+    <div className="space-y-4 p-4 border rounded-lg">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1">
+          <ServiceDropdown
+            value={service.service_id}
+            onChange={(serviceId, serviceName) => {
+              handleServiceChange({
+                service_id: serviceId,
+                service_name: serviceName
+              });
+            }}
+            services={services}
+            disabled={disabled}
+          />
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onRemove}
+          disabled={disabled}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
 
-      <Accordion
-        type="single"
-        collapsible
-        value={isExpanded ? "service-details" : ""}
-        onValueChange={(value) => setIsExpanded(value === "service-details")}
-      >
-        <AccordionItem value="service-details" className="border-none">
-          <AccordionTrigger className="py-2">
-            {selectedServiceName || "Select a Service"}
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="space-y-4">
-              <ServiceDropdown
-                selectedServiceName={selectedServiceName}
-                servicesByType={servicesByType}
-                open={open}
-                setOpen={setOpen}
-                handleServiceSelect={handleServiceSelect}
-                serviceId={item.service_id}
-              />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <Label>Quantity</Label>
+          <Input
+            type="number"
+            min="1"
+            value={service.quantity}
+            onChange={(e) => handleServiceChange({ quantity: parseInt(e.target.value) || 1 })}
+            disabled={disabled}
+          />
+        </div>
+        <div>
+          <Label>Price</Label>
+          <Input
+            type="number"
+            min="0"
+            step="0.01"
+            value={service.unit_price}
+            onChange={(e) => handleServiceChange({ unit_price: parseFloat(e.target.value) || 0 })}
+            disabled={disabled}
+          />
+        </div>
+      </div>
 
-              <ServiceQuantityPrice
-                index={index}
-                item={item}
-                onUpdate={onUpdate}
-                mounted={mounted}
-              />
+      {showCommission && (
+        <div className="pt-2">
+          <CommissionRateFields
+            value={{
+              rate: service.commission_rate,
+              type: service.commission_type
+            }}
+            onChange={(value) => {
+              handleServiceChange({
+                commission_rate: value.rate ?? 0,
+                commission_type: value.type
+              });
+            }}
+            disabled={disabled}
+          />
+        </div>
+      )}
 
-              <ServiceDescription 
-                description={selectedService?.description}
-              />
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+      <ServiceDescription
+        serviceId={service.service_id}
+        services={services}
+        isExpanded={isExpanded}
+        onToggle={() => setIsExpanded(!isExpanded)}
+      />
     </div>
   );
 }

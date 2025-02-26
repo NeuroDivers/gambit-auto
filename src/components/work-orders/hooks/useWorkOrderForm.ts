@@ -1,3 +1,4 @@
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -86,9 +87,9 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
           const formattedServices = servicesData.map(service => ({
             service_id: service.service_id,
             service_name: service.service_types?.name || '',
-            quantity: service.quantity || 1,
-            unit_price: service.unit_price || 0,
-            commission_rate: service.commission_rate || 0,
+            quantity: service.quantity,
+            unit_price: service.unit_price,
+            commission_rate: service.commission_rate ?? 0,
             commission_type: service.commission_type as 'percentage' | 'flat' | null,
             assigned_profile_id: service.assigned_profile_id,
             description: service.service_types?.description

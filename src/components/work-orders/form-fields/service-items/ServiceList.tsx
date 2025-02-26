@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ServiceItem } from './ServiceItem';
 import { Button } from "@/components/ui/button";
@@ -8,60 +9,40 @@ import { ServiceItemType } from "@/types/service-item";
 
 interface ServiceListProps {
   workOrderServices: ServiceItemType[];
-  onServicesChange: (services: ServiceItemType[]) => void;
-  disabled?: boolean;
+  onAddService: (service: ServiceItemType) => void;
+  onRemoveService: (index: number) => void;
+  onUpdateService: (index: number, service: ServiceItemType) => void;
 }
 
-export function ServiceList({ workOrderServices, onServicesChange, disabled }: ServiceListProps) {
-  const { data: services = [] } = useServiceData();
-  const form = useFieldArray({
-    name: "service_items"
-  });
-
-  const handleRemoveService = (index: number) => {
-    const updatedServices = [...workOrderServices];
-    updatedServices.splice(index, 1);
-    onServicesChange(updatedServices);
-  };
+export function ServiceList({ workOrderServices, onAddService, onRemoveService, onUpdateService }: ServiceListProps) {
+  const { services } = useServiceData();
 
   const handleAddService = () => {
-    onServicesChange([
-      ...workOrderServices,
-      {
-        service_id: "",
-        service_name: "",
-        quantity: 1,
-        unit_price: 0
-      }
-    ]);
+    const newService: ServiceItemType = {
+      service_id: "",
+      service_name: "",
+      quantity: 1,
+      unit_price: 0,
+      commission_rate: 0,
+      commission_type: null,
+      assigned_profile_id: null
+    };
+    onAddService(newService);
   };
 
   return (
     <div className="space-y-4">
-      <div className="space-y-4">
-        {workOrderServices.map((service, index) => (
-          <ServiceItem
-            key={index}
-            index={index}
-            onRemove={handleRemoveService}
-            field={{ value: service }}
-            form={{
-              getValues: () => workOrderServices,
-              setValue: (_: string, newServices: ServiceItemType[]) => {
-                onServicesChange(newServices);
-              }
-            }}
-          />
-        ))}
-      </div>
-
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full"
-        onClick={handleAddService}
-        disabled={disabled}
-      >
+      {workOrderServices.map((service, index) => (
+        <ServiceItem
+          key={index}
+          index={index}
+          service={service}
+          availableServices={services}
+          onRemove={() => onRemoveService(index)}
+          onChange={(updatedService) => onUpdateService(index, updatedService)}
+        />
+      ))}
+      <Button type="button" onClick={handleAddService} className="w-full">
         <Plus className="h-4 w-4 mr-2" />
         Add Service
       </Button>
