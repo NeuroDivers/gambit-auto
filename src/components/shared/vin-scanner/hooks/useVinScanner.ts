@@ -94,6 +94,7 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const CONFIDENCE_THRESHOLD = 30; // Only process results with confidence above 30%
   const MIN_MATCHES_REQUIRED = 2; // Require at least 2 matching scans before accepting
   const matchesRef = useRef<{[key: string]: number}>({});
+  const scanStartTimeRef = useRef<number>(0);
 
   const addLog = (message: string) => {
     console.log(message);
@@ -166,6 +167,10 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   }
 
   const startOCRScanning = async () => {
+    if (!scanStartTimeRef.current) {
+      scanStartTimeRef.current = Date.now();
+    }
+
     if (scanningRef.current) {
       cancelAnimationFrame(scanningRef.current);
       scanningRef.current = undefined;
@@ -241,8 +246,9 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
           if (matchesRef.current[potentialVin] >= MIN_MATCHES_REQUIRED) {
             const isValidVin = await validateVinWithNHTSA(potentialVin);
             if (isValidVin) {
-              addLog('✓ VIN validated successfully!');
-              toast.success("VIN scanned and validated successfully");
+              const scanDuration = (Date.now() - scanStartTimeRef.current) / 1000;
+              addLog(`✓ VIN validated successfully! (Scan took ${scanDuration.toFixed(1)} seconds)`);
+              toast.success(`VIN scanned and validated successfully in ${scanDuration.toFixed(1)}s`);
               onScan(potentialVin);
               onClose();
               return;
@@ -272,6 +278,7 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const startCamera = async () => {
     try {
       await stopCamera();
+      scanStartTimeRef.current = Date.now(); // Reset the timer when starting camera
 
       addLog('Loading OpenCV...');
       try {
@@ -373,6 +380,8 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       cancelAnimationFrame(scanningRef.current);
       scanningRef.current = undefined;
     }
+
+    scanStartTimeRef.current = 0; // Reset the timer when stopping camera
 
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
