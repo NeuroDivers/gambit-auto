@@ -98,7 +98,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const initializeWorker = async () => {
     try {
-      addLog('Initializing OCR worker...')
+      addLog('Creating OCR worker...')
       const worker = await createWorker()
       addLog('Worker created, initializing language...')
       
@@ -123,6 +123,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const startCamera = async () => {
     try {
+      await stopCamera()
+
       const constraints = {
         video: {
           facingMode: { exact: "environment" },
@@ -159,32 +161,34 @@ export function VinScanner({ onScan }: VinScannerProps) {
         }
       }
       
-      if (videoRef.current) {
-        const track = streamRef.current?.getVideoTracks()[0]
-        if (track) {
-          const capabilities = track.getCapabilities() as ExtendedTrackCapabilities
-          setHasFlash('torch' in capabilities)
-          if ('torch' in capabilities) {
-            addLog('Flash capability detected')
-          }
-        }
-        
-        addLog('Waiting for video to be ready...')
-        await new Promise((resolve) => {
-          if (videoRef.current) {
-            videoRef.current.onloadedmetadata = resolve
-          }
-        })
-        
-        await videoRef.current.play()
-        setIsCameraActive(true)
-        addLog('Video stream started successfully')
-
-        addLog('Initializing OCR worker...')
-        workerRef.current = await initializeWorker()
-        addLog('Starting OCR scanning loop...')
-        startOCRScanning()
+      if (!videoRef.current) {
+        throw new Error('Video element not available')
       }
+
+      const track = streamRef.current?.getVideoTracks()[0]
+      if (track) {
+        const capabilities = track.getCapabilities() as ExtendedTrackCapabilities
+        setHasFlash('torch' in capabilities)
+        if ('torch' in capabilities) {
+          addLog('Flash capability detected')
+        }
+      }
+      
+      addLog('Waiting for video to be ready...')
+      await new Promise<void>((resolve) => {
+        if (videoRef.current) {
+          videoRef.current.onloadedmetadata = () => resolve()
+        }
+      })
+      
+      await videoRef.current.play()
+      setIsCameraActive(true)
+      addLog('Video stream started successfully')
+
+      addLog('Initializing OCR worker...')
+      workerRef.current = await initializeWorker()
+      addLog('Starting OCR scanning loop...')
+      startOCRScanning()
     } catch (error) {
       addLog(`Error accessing camera: ${error}`)
       toast.error("Could not access camera. Please check camera permissions.")
@@ -236,6 +240,10 @@ export function VinScanner({ onScan }: VinScannerProps) {
   }
 
   const startOCRScanning = async () => {
+    if (scanningRef.current) {
+      cancelAnimationFrame(scanningRef.current)
+    }
+
     if (isProcessingRef.current || isPaused || !isDialogOpen) {
       return
     }
@@ -252,7 +260,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       const frameData = captureFrame()
       
       if (!frameData) {
-        addLog('No valid frame captured, retrying...')
+        addLog('No valid frame captured')
         isProcessingRef.current = false
         if (isDialogOpen && !isPaused) {
           scanningRef.current = requestAnimationFrame(startOCRScanning)
@@ -327,14 +335,26 @@ export function VinScanner({ onScan }: VinScannerProps) {
     setLogs([])
   }
 
-  const stopCamera = () => {
+  const stopCamera = async () => {
+    if (scanningRef.current) {
+      cancelAnimationFrame(scanningRef.current)
+      scanningRef.current = undefined
+    }
+
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
     }
-    if (scanningRef.current) {
-      cancelAnimationFrame(scanningRef.current)
+
+    if (workerRef.current) {
+      try {
+        await workerRef.current.terminate()
+        workerRef.current = null
+      } catch (error) {
+        console.error('Error terminating worker:', error)
+      }
     }
+
     setIsCameraActive(false)
     setIsFlashOn(false)
     isProcessingRef.current = false
