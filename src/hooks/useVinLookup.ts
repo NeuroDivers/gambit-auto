@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
@@ -116,24 +117,6 @@ export function useVinLookup(vin: string) {
 
         if (!year) {
           const error = 'Could not decode VIN - year information missing'
-          await cacheErrorResult(vin, error)
-          return { error }
-        }
-
-        if (!bodyClass) {
-          const error = 'Could not decode VIN - body class information missing'
-          await cacheErrorResult(vin, error)
-          return { error }
-        }
-
-        if (!doors) {
-          const error = 'Could not decode VIN - doors information missing'
-          await cacheErrorResult(vin, error)
-          return { error }
-        }
-
-        if (!trim) {
-          const error = 'Could not decode VIN - trim information missing'
           await cacheErrorResult(vin, error)
           return { error }
         }
