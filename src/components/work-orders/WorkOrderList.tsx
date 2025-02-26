@@ -1,6 +1,5 @@
 
 import { Loader2 } from "lucide-react"
-import { EditWorkOrderDialog } from "./EditWorkOrderDialog"
 import { WorkOrderFilters } from "./components/WorkOrderFilters"
 import { AssignmentSheet } from "./components/AssignmentSheet"
 import { useWorkOrderListData } from "./hooks/useWorkOrderListData"
@@ -8,8 +7,10 @@ import { WorkOrderTable } from "./components/WorkOrderTable"
 import { WorkOrderPagination } from "./components/WorkOrderPagination"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { WorkOrderMobileList } from "./components/WorkOrderMobileList"
+import { useNavigate } from "react-router-dom"
 
 export function WorkOrderList() {
+  const navigate = useNavigate()
   const isMobile = useIsMobile()
   const {
     searchTerm,
@@ -18,8 +19,6 @@ export function WorkOrderList() {
     setStatusFilter,
     assignmentFilter,
     setAssignmentFilter,
-    selectedWorkOrder,
-    setSelectedWorkOrder,
     assignBayWorkOrder,
     setAssignBayWorkOrder,
     workOrders,
@@ -49,6 +48,10 @@ export function WorkOrderList() {
     )
   }
 
+  const handleEdit = (workOrder: any) => {
+    navigate(`/work-orders/${workOrder.id}/edit`)
+  }
+
   return (
     <div className="space-y-4">
       <WorkOrderFilters
@@ -64,14 +67,14 @@ export function WorkOrderList() {
         <WorkOrderMobileList
           workOrders={workOrders}
           onAssignBay={setAssignBayWorkOrder}
-          onEdit={setSelectedWorkOrder}
+          onEdit={handleEdit}
           onCreateInvoice={handleCreateInvoice}
         />
       ) : (
         <WorkOrderTable
           workOrders={workOrders}
           onAssignBay={setAssignBayWorkOrder}
-          onEdit={setSelectedWorkOrder}
+          onEdit={handleEdit}
           onCreateInvoice={handleCreateInvoice}
         />
       )}
@@ -81,14 +84,6 @@ export function WorkOrderList() {
         totalPages={totalPages}
         onPageChange={setPage}
       />
-
-      {selectedWorkOrder && (
-        <EditWorkOrderDialog
-          workOrder={selectedWorkOrder}
-          open={!!selectedWorkOrder}
-          onOpenChange={(open) => !open && setSelectedWorkOrder(null)}
-        />
-      )}
 
       <AssignmentSheet
         title="Assign Bay"
