@@ -92,22 +92,47 @@ export function useWorkOrderListData() {
   const handleAssignBay = async (workOrderId: string, bayId: string | null) => {
     try {
       console.log('Assigning bay:', { workOrderId, bayId })
-      const { data, error } = await supabase
+      
+      // First get the current user
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        throw new Error('No authenticated user found')
+      }
+
+      // Update the work order
+      const { error: updateError } = await supabase
         .from('work_orders')
         .update({ 
           assigned_bay_id: bayId === "unassigned" ? null : bayId,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          assigned_profile_id: user.id // Add the current user as the one making the change
         })
         .eq("id", workOrderId)
-        .select(`*, service_bays!fk_work_orders_assigned_bay (id, name)`)
-        .single()
 
-      if (error) {
-        console.error('Bay assignment error:', error)
-        throw error
+      if (updateError) {
+        console.error('Bay assignment error:', updateError)
+        throw updateError
       }
 
-      console.log('Bay assignment result:', data)
+      // Fetch the updated work order to get the latest state
+      const { data: updatedWorkOrder, error: fetchError } = await supabase
+        .from('work_orders')
+        .select(`
+          *,
+          service_bays!fk_work_orders_assigned_bay (
+            id,
+            name
+          )
+        `)
+        .eq('id', workOrderId)
+        .single()
+
+      if (fetchError) {
+        console.error('Error fetching updated work order:', fetchError)
+        throw fetchError
+      }
+
+      console.log('Updated work order:', updatedWorkOrder)
       
       // Invalidate the queries to refetch the latest data
       await queryClient.invalidateQueries({ queryKey: ["workOrders"] })
