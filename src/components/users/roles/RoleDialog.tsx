@@ -35,6 +35,7 @@ export const RoleDialog = ({ open, onOpenChange, role, onSuccess }: RoleDialogPr
             onSubmit={onSubmit}
             onCancel={() => onOpenChange(false)}
             mode={role ? 'edit' : 'create'}
+            roleId={role?.id}
           />
         </div>
       </DialogContent>
