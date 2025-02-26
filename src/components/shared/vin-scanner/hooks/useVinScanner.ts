@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react"
 import { createWorker, PSM } from 'tesseract.js'
 import { toast } from "sonner"
@@ -21,7 +20,9 @@ const loadOpenCV = async (): Promise<void> => {
     const script = document.createElement('script');
     script.src = 'https://docs.opencv.org/4.5.4/opencv.js';
     script.async = true;
-    script.onload = () => resolve();
+    script.onload = () => {
+      setTimeout(() => resolve(), 500);
+    };
     script.onerror = () => reject(new Error('Failed to load OpenCV'));
     document.body.appendChild(script);
   });
@@ -68,13 +69,13 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       return null;
     }
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
     try {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      addLog('Frame captured successfully');
       
       const { processedImage, boundingBox } = await preprocessImage(imageData);
       setDetectedRegion(boundingBox);
@@ -102,25 +103,31 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       
       if (tempCtx) {
         tempCtx.putImageData(processedImage, 0, 0);
+        addLog('Frame processed successfully');
         return tempCanvas.toDataURL();
       }
       
       addLog('Using full frame for scanning');
       return canvas.toDataURL();
     } catch (error) {
-      console.error('Error in image preprocessing:', error);
-      addLog('Image preprocessing failed, using raw frame');
-      return canvas.toDataURL();
+      console.error('Error in captureFrame:', error);
+      addLog(`Frame capture error: ${error}`);
+      return null;
     }
   }
 
   const startOCRScanning = async () => {
     if (scanningRef.current) {
-      cancelAnimationFrame(scanningRef.current)
+      cancelAnimationFrame(scanningRef.current);
+      scanningRef.current = undefined;
     }
 
     if (isProcessingRef.current || isPaused || !isOpenCVLoaded) {
-      return
+      addLog('Scanning skipped: ' + 
+        (isProcessingRef.current ? 'processing in progress' : 
+         isPaused ? 'scanning paused' : 
+         'OpenCV not loaded'));
+      return;
     }
 
     if (!streamRef.current || !workerRef.current) {
@@ -128,72 +135,68 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       addLog(`- Stream available: ${!!streamRef.current}`)
       addLog(`- Worker available: ${!!workerRef.current}`)
       addLog(`- OpenCV loaded: ${isOpenCVLoaded}`)
-      return
+      return;
     }
 
     try {
-      isProcessingRef.current = true
-      const frameData = await captureFrame()
+      isProcessingRef.current = true;
+      addLog('Starting frame capture...');
+      const frameData = await captureFrame();
       
       if (!frameData) {
+        addLog('No valid frame captured');
+        isProcessingRef.current = false;
         if (!isPaused) {
-          addLog('No valid frame captured')
+          scanningRef.current = requestAnimationFrame(startOCRScanning);
         }
-        isProcessingRef.current = false
-        if (!isPaused) {
-          scanningRef.current = requestAnimationFrame(startOCRScanning)
-        }
-        return
+        return;
       }
 
-      if (!isPaused) {
-        addLog('Processing frame with OCR...')
+      addLog('Processing frame with OCR...');
+      
+      const { data: { text, confidence } } = await workerRef.current.recognize(frameData);
+      
+      if (text.trim()) {
+        addLog(`Raw text: "${text.trim()}" (${confidence.toFixed(1)}%)`);
       }
       
-      const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
-      
-      if (!isPaused && text.trim()) {
-        addLog(`Raw text: "${text.trim()}" (${confidence.toFixed(1)}%)`)
-      }
-      
-      const correctedText = postProcessVIN(text)
-      if (!isPaused && correctedText !== text.trim() && correctedText) {
-        addLog(`Corrected text: "${correctedText}"`)
+      const correctedText = postProcessVIN(text);
+      if (correctedText !== text.trim() && correctedText) {
+        addLog(`Corrected text: "${correctedText}"`);
       }
       
       if (confidence > 45 && correctedText.length >= 15) {
         if (correctedText.length === 17 && validateVIN(correctedText)) {
-          const isNorthAmerican = ['1', '2', '3', '4', '5'].includes(correctedText[0])
+          const isNorthAmerican = ['1', '2', '3', '4', '5'].includes(correctedText[0]);
           
-          if (!isPaused) {
-            addLog(`✓ Valid VIN format detected${isNorthAmerican ? ' (North American)' : ''}, validating with NHTSA...`)
-          }
+          addLog(`✓ Valid VIN format detected${isNorthAmerican ? ' (North American)' : ''}, validating with NHTSA...`);
           
-          const isValidVin = await validateVinWithNHTSA(correctedText)
+          const isValidVin = await validateVinWithNHTSA(correctedText);
           
           if (isValidVin) {
-            if (!isPaused) {
-              addLog('✓ VIN validated successfully!')
-              toast.success("VIN scanned and validated successfully")
-            }
-            onScan(correctedText)
-            onClose()
-            return
-          } else if (!isPaused) {
-            addLog('✗ VIN validation failed')
+            addLog('✓ VIN validated successfully!');
+            toast.success("VIN scanned and validated successfully");
+            onScan(correctedText);
+            onClose();
+            return;
+          } else {
+            addLog('✗ VIN validation failed');
           }
         }
       }
 
-      isProcessingRef.current = false
+      isProcessingRef.current = false;
       if (!isPaused) {
-        scanningRef.current = requestAnimationFrame(startOCRScanning)
+        scanningRef.current = requestAnimationFrame(startOCRScanning);
       }
     } catch (error) {
-      addLog(`OCR error: ${error}`)
-      isProcessingRef.current = false
+      console.error('OCR error:', error);
+      addLog(`OCR error: ${error}`);
+      isProcessingRef.current = false;
       if (!isPaused) {
-        scanningRef.current = requestAnimationFrame(startOCRScanning)
+        setTimeout(() => {
+          scanningRef.current = requestAnimationFrame(startOCRScanning);
+        }, 1000);
       }
     }
   }
@@ -357,9 +360,12 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
 
   useEffect(() => {
     return () => {
-      stopCamera()
-    }
-  }, [])
+      if (scanningRef.current) {
+        cancelAnimationFrame(scanningRef.current);
+      }
+      stopCamera();
+    };
+  }, []);
 
   return {
     videoRef,
@@ -376,4 +382,3 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     detectedRegion
   }
 }
-
