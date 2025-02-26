@@ -30,7 +30,6 @@ const formSchema = z.object({
     unit_price: z.number().min(0),
     commission_rate: z.number(),
     commission_type: z.enum(['percentage', 'flat']).nullable(),
-    assigned_profile_id: z.string().nullable(),
     description: z.string().optional()
   }))
 })
@@ -73,7 +72,6 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
             unit_price,
             commission_rate,
             commission_type,
-            assigned_profile_id,
             service_types:service_types!work_order_services_service_id_fkey (
               name,
               description
@@ -93,7 +91,6 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
               unit_price: service.unit_price,
               commission_rate: service.commission_rate ?? 0,
               commission_type: service.commission_type as 'percentage' | 'flat' | null,
-              assigned_profile_id: service.assigned_profile_id,
               description: serviceType?.description || ''
             };
           });
