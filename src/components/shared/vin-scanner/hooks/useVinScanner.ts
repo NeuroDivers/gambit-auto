@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react"
 import { createWorker, PSM } from 'tesseract.js'
 import { toast } from "sonner"
@@ -88,15 +87,11 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
           advanced: [{ torch: !isFlashOn } as any]
         })
         setIsFlashOn(!isFlashOn)
-        if (!isPaused) {
-          addLog(`Flash ${!isFlashOn ? 'enabled' : 'disabled'}`)
-        }
+        addLog(`Flash ${!isFlashOn ? 'enabled' : 'disabled'}`)
       }
     } catch (err) {
-      if (!isPaused) {
-        addLog(`Flash control error: ${err}`)
-        toast.error('Failed to toggle flash')
-      }
+      addLog(`Flash control error: ${err}`)
+      toast.error('Failed to toggle flash')
     }
   }
 
@@ -149,18 +144,13 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     }
 
     if (isProcessingRef.current || isPaused) {
-      if (!isPaused) {
-        scanningRef.current = requestAnimationFrame(startOCRScanning)
-      }
       return
     }
 
     if (!streamRef.current || !workerRef.current) {
-      if (!isPaused) {
-        addLog('Scanning conditions not met:')
-        addLog(`- Stream available: ${!!streamRef.current}`)
-        addLog(`- Worker available: ${!!workerRef.current}`)
-      }
+      addLog('Scanning conditions not met:')
+      addLog(`- Stream available: ${!!streamRef.current}`)
+      addLog(`- Worker available: ${!!workerRef.current}`)
       return
     }
 
@@ -169,9 +159,7 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       const frameData = captureFrame()
       
       if (!frameData) {
-        if (!isPaused) {
-          addLog('No valid frame captured')
-        }
+        addLog('No valid frame captured')
         isProcessingRef.current = false
         if (!isPaused) {
           scanningRef.current = requestAnimationFrame(startOCRScanning)
@@ -179,37 +167,30 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
         return
       }
 
-      if (!isPaused) {
-        addLog('Processing frame with OCR...')
-      }
-      
+      addLog('Processing frame with OCR...')
       const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
       
-      if (!isPaused && text.trim()) {
+      if (text.trim()) {
         addLog(`Raw text: "${text.trim()}" (${confidence.toFixed(1)}%)`)
       }
       
       const correctedText = correctCommonOcrMistakes(text)
-      if (!isPaused && correctedText !== text.trim() && correctedText) {
+      if (correctedText !== text.trim() && correctedText) {
         addLog(`Corrected text: "${correctedText}"`)
       }
       
       if (confidence > 40 && correctedText.length >= 15) {
         if (correctedText.length === 17 && validateVIN(correctedText)) {
-          if (!isPaused) {
-            addLog('✓ Valid VIN format detected, validating with NHTSA...')
-          }
+          addLog('✓ Valid VIN format detected, validating with NHTSA...')
           const isValidVin = await validateVinWithNHTSA(correctedText)
           
           if (isValidVin) {
-            if (!isPaused) {
-              addLog('✓ VIN validated successfully!')
-              toast.success("VIN scanned and validated successfully")
-            }
+            addLog('✓ VIN validated successfully!')
             onScan(correctedText)
+            toast.success("VIN scanned and validated successfully")
             onClose()
             return
-          } else if (!isPaused) {
+          } else {
             addLog('✗ VIN validation failed')
           }
         }
@@ -220,9 +201,7 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
         scanningRef.current = requestAnimationFrame(startOCRScanning)
       }
     } catch (error) {
-      if (!isPaused) {
-        addLog(`OCR error: ${error}`)
-      }
+      addLog(`OCR error: ${error}`)
       isProcessingRef.current = false
       if (!isPaused) {
         scanningRef.current = requestAnimationFrame(startOCRScanning)
@@ -233,8 +212,6 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const startCamera = async () => {
     try {
       await stopCamera()
-      setIsPaused(false) // Reset pause state when starting camera
-      setLogs([]) // Clear previous logs
 
       const constraints = {
         video: {
@@ -361,4 +338,3 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
     stopCamera
   }
 }
-
