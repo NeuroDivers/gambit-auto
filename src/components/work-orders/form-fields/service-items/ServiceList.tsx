@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { ServiceItem } from './ServiceItem';
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useFieldArray } from "react-hook-form";
 import { useServiceData } from "@/components/shared/form-fields/service-selection/useServiceData";
-import { ServiceItemType } from "../../types";
+import { ServiceItemType } from "@/types/service-item";
 
 interface ServiceListProps {
   workOrderServices: ServiceItemType[];

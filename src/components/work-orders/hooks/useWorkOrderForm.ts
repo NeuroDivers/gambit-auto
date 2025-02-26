@@ -1,4 +1,3 @@
-
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -74,8 +73,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
             commission_rate,
             commission_type,
             assigned_profile_id,
-            service_types (
-              id,
+            service_types:service_types!work_order_services_service_id_fkey (
               name,
               description
             )

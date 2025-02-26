@@ -49,3 +49,10 @@ export interface WorkOrderFormValues {
   assigned_bay_id: string | null;
   service_items: ServiceItemType[];
 }
+
+export interface WorkOrderFormProps {
+  workOrder?: WorkOrder;
+  onSuccess?: () => void;
+  defaultStartTime?: Date;
+  onSubmitting?: (isSubmitting: boolean) => void;
+}

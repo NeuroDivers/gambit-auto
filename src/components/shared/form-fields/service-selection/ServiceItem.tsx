@@ -1,10 +1,9 @@
-
 import React, { useRef, useEffect, useState, memo } from 'react';
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { X } from "lucide-react"
-import { ServiceItemType } from "@/components/work-orders/types"
+import { ServiceItemType } from "@/types/service-item"
 import { ServiceDropdown } from "./ServiceDropdown"
 import { ServiceDescription } from "./ServiceDescription"
 import { ServicesByType } from "./types"

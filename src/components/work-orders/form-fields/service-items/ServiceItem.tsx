@@ -1,11 +1,10 @@
-
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { useServiceData } from "@/components/shared/form-fields/service-selection/useServiceData"
-import { ServiceItemType } from "../../types"
+import { ServiceItemType } from "@/types/service-item"
 import { SearchableSelect, Option } from "@/components/shared/form-fields/searchable-select/SearchableSelect"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 

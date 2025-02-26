@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { ServiceItemType } from "@/components/work-orders/types"
+import { ServiceItemType } from "@/types/service-item"
 
 interface ServiceQuantityPriceProps {
   index: number;
