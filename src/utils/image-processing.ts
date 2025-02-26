@@ -6,25 +6,20 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
   const data = imageData.data
 
-  // Create temporary canvas for processing
-  const tempCanvas = document.createElement('canvas')
-  tempCanvas.width = canvas.width
-  tempCanvas.height = canvas.height
-  const tempCtx = tempCanvas.getContext('2d')
-  if (!tempCtx) return canvas.toDataURL()
-
-  // Convert to grayscale and apply initial contrast enhancement
+  // Convert to grayscale and enhance contrast
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i]
     const g = data[i + 1]
     const b = data[i + 2]
     // Convert to grayscale using luminance formula
     const gray = 0.299 * r + 0.587 * g + 0.114 * b
-    data[i] = data[i + 1] = data[i + 2] = gray
+    // Enhance contrast
+    const enhanced = gray < 128 ? gray * 0.8 : Math.min(255, gray * 1.2)
+    data[i] = data[i + 1] = data[i + 2] = enhanced
   }
 
   // Apply Gaussian blur to reduce noise
-  const sigma = 1.5
+  const sigma = 1.2 // Reduced blur for better text preservation
   const kernelSize = Math.ceil(sigma * 3) * 2 + 1
   const kernel = createGaussianKernel(kernelSize, sigma)
   
@@ -33,21 +28,65 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
     data[i] = blurredData[i]
   }
 
-  // Apply adaptive thresholding
-  const blockSize = 25
-  const C = 7
-  applyAdaptiveThreshold(data, canvas.width, canvas.height, blockSize, C)
+  // Apply Otsu's thresholding for better binarization
+  const threshold = calculateOtsuThreshold(data)
+  for (let i = 0; i < data.length; i += 4) {
+    const value = data[i] < threshold ? 0 : 255
+    data[i] = data[i + 1] = data[i + 2] = value
+  }
 
-  // Apply morphological operations
-  const morphKernelSize = 3
+  // Apply morphological operations for text cleanup
+  const morphKernelSize = 2 // Reduced kernel size for finer detail preservation
   dilate(data, canvas.width, canvas.height, morphKernelSize)
   erode(data, canvas.width, canvas.height, morphKernelSize)
 
   // Put processed data back to canvas
   ctx.putImageData(imageData, 0, 0)
 
-  // Return high-quality PNG
   return canvas.toDataURL('image/png', 1.0)
+}
+
+// Calculate Otsu's threshold
+function calculateOtsuThreshold(data: Uint8ClampedArray): number {
+  const histogram = new Array(256).fill(0)
+  let pixelCount = 0
+
+  // Build histogram
+  for (let i = 0; i < data.length; i += 4) {
+    histogram[data[i]]++
+    pixelCount++
+  }
+
+  let sum = 0
+  for (let i = 0; i < 256; i++) {
+    sum += i * histogram[i]
+  }
+
+  let sumB = 0
+  let wB = 0
+  let wF = 0
+  let maxVariance = 0
+  let threshold = 0
+
+  for (let t = 0; t < 256; t++) {
+    wB += histogram[t]
+    if (wB === 0) continue
+
+    wF = pixelCount - wB
+    if (wF === 0) break
+
+    sumB += t * histogram[t]
+    const mB = sumB / wB
+    const mF = (sum - sumB) / wF
+    const variance = wB * wF * (mB - mF) * (mB - mF)
+
+    if (variance > maxVariance) {
+      maxVariance = variance
+      threshold = t
+    }
+  }
+
+  return threshold
 }
 
 // Create Gaussian kernel for blur operation
@@ -187,7 +226,7 @@ function erode(data: Uint8ClampedArray, width: number, height: number, kernelSiz
 }
 
 export const postProcessVIN = (text: string): string => {
-  // Common OCR mistakes and their corrections
+  // Enhanced character correction map
   const commonMistakes: { [key: string]: string } = {
     'O': '0',
     'Q': '0',
@@ -197,33 +236,52 @@ export const postProcessVIN = (text: string): string => {
     'Z': '2',
     'S': '5',
     'B': '8',
-    'G': '6'
+    'G': '6',
+    'T': '7',
+    'A': '4', // Only if confidence is low
+    'H': '4', // Only if confidence is low
+    'U': '0', // Only if confidence is low
+    'V': 'Y' // Only if in known position
   }
 
-  // Remove common noise characters and spaces
+  // Remove all non-alphanumeric characters and spaces
   let processed = text.replace(/[^A-HJ-NPR-Z0-9]/g, '')
 
-  // Apply character substitutions
+  // Keep original for validation
   const original = processed
+
+  // Apply character substitutions
   processed = processed.split('').map(char => commonMistakes[char] || char).join('')
 
-  // Validate the result meets VIN format
+  // Enhanced VIN validation
   const vinPattern = /^[A-HJ-NPR-Z0-9]{17}$/
-  if (!vinPattern.test(processed) && vinPattern.test(original)) {
-    // If substitutions made the result invalid but original was valid, keep original
-    return original
-  }
+  const naVinPattern = /^[1-5][A-HJ-NPR-Z0-9]{16}$/ // North American VIN pattern
 
-  return processed.toUpperCase()
+  // Check if the processed result matches VIN patterns
+  const isProcessedValid = vinPattern.test(processed)
+  const isProcessedNA = naVinPattern.test(processed)
+  const isOriginalValid = vinPattern.test(original)
+  const isOriginalNA = naVinPattern.test(original)
+
+  // Prefer North American VINs if detected
+  if (isProcessedNA) return processed
+  if (isOriginalNA) return original
+
+  // Fall back to general VIN format
+  if (isProcessedValid) return processed
+  if (isOriginalValid) return original
+
+  // If no valid VIN is found, return the cleaned original text
+  return original.toUpperCase()
 }
 
 export const cropToVinRegion = (canvas: HTMLCanvasElement): HTMLCanvasElement => {
   const ctx = canvas.getContext('2d')
   if (!ctx) return canvas
 
-  // Define VIN region with reduced padding
-  const vinRegionHeight = canvas.height * 0.15 // 15% of image height
-  const vinRegionWidth = canvas.width * 0.7 // 70% of image width
+  // Adjusted VIN region dimensions for better accuracy
+  const vinRegionHeight = canvas.height * 0.22 // Increased height for better capture
+  const vinRegionWidth = canvas.width * 0.8 // Increased width to match UI guide
   const startX = (canvas.width - vinRegionWidth) / 2
   const startY = (canvas.height - vinRegionHeight) / 2
 
