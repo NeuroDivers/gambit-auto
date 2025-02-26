@@ -1,3 +1,4 @@
+
 import { Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -116,21 +117,48 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const constraints = {
+        video: {
+          facingMode: { exact: "environment" }, // This forces the back camera
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
+      }
+
+      // Fallback to any available camera if back camera isn't available
+      const fallbackConstraints = {
         video: true
-      })
+      }
+
+      try {
+        // First try with back camera
+        const stream = await navigator.mediaDevices.getUserMedia(constraints)
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          streamRef.current = stream
+          addLog('Stream acquired with back camera, initializing...')
+        }
+      } catch (backCameraError) {
+        // If back camera fails, try with any available camera
+        console.log('Back camera not available, trying fallback:', backCameraError)
+        addLog('Back camera not available, trying alternative camera...')
+        const stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints)
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          streamRef.current = stream
+          addLog('Stream acquired with fallback camera, initializing...')
+        }
+      }
       
       if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        streamRef.current = stream
-        addLog('Stream acquired, initializing camera...')
-        
         // Check for flash capability
-        const track = stream.getVideoTracks()[0]
-        const capabilities = track.getCapabilities() as ExtendedTrackCapabilities
-        setHasFlash('torch' in capabilities)
-        if ('torch' in capabilities) {
-          addLog('Flash capability detected')
+        const track = streamRef.current?.getVideoTracks()[0]
+        if (track) {
+          const capabilities = track.getCapabilities() as ExtendedTrackCapabilities
+          setHasFlash('torch' in capabilities)
+          if ('torch' in capabilities) {
+            addLog('Flash capability detected')
+          }
         }
         
         await new Promise((resolve) => {
