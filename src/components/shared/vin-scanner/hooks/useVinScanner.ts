@@ -91,9 +91,6 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const isProcessingRef = useRef(false)
   const lastScanTimeRef = useRef<number>(0);
   const SCAN_INTERVAL = 500; // Minimum time between scans in milliseconds
-  const CONFIDENCE_THRESHOLD = 30; // Only process results with confidence above 30%
-  const MIN_MATCHES_REQUIRED = 2; // Require at least 2 matching scans before accepting
-  const matchesRef = useRef<{[key: string]: number}>({});
 
   const addLog = (message: string) => {
     console.log(message);
@@ -182,10 +179,6 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
         (isProcessingRef.current ? 'processing in progress' : 
          isPaused ? 'scanning paused' : 
          'OpenCV not loaded'));
-      
-      if (!isPaused) {
-        scanningRef.current = requestAnimationFrame(startOCRScanning);
-      }
       return;
     }
 
@@ -213,17 +206,6 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       const result = await workerRef.current.recognize(frameData);
       const { text, confidence } = result.data;
       
-      if (confidence < CONFIDENCE_THRESHOLD) {
-        if (text.trim()) {
-          addLog(`Low confidence text: "${text.trim()}" (${confidence.toFixed(1)}%)`);
-        }
-        isProcessingRef.current = false;
-        if (!isPaused) {
-          scanningRef.current = requestAnimationFrame(startOCRScanning);
-        }
-        return;
-      }
-      
       const vinPattern = /[A-HJ-NPR-Z0-9]{17}/;
       const matches = text.match(vinPattern);
       
@@ -235,18 +217,13 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
           const isNorthAmerican = ['1', '2', '3', '4', '5'].includes(potentialVin[0]);
           addLog(`✓ Valid VIN format detected${isNorthAmerican ? ' (North American)' : ''}`);
           
-          // Increment match count for this VIN
-          matchesRef.current[potentialVin] = (matchesRef.current[potentialVin] || 0) + 1;
-          
-          if (matchesRef.current[potentialVin] >= MIN_MATCHES_REQUIRED) {
-            const isValidVin = await validateVinWithNHTSA(potentialVin);
-            if (isValidVin) {
-              addLog('✓ VIN validated successfully!');
-              toast.success("VIN scanned and validated successfully");
-              onScan(potentialVin);
-              onClose();
-              return;
-            }
+          const isValidVin = await validateVinWithNHTSA(potentialVin);
+          if (isValidVin) {
+            addLog('✓ VIN validated successfully!');
+            toast.success("VIN scanned and validated successfully");
+            onScan(potentialVin);
+            onClose();
+            return;
           }
         }
       } else if (text.trim()) {
@@ -446,8 +423,8 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       const newPauseState = !prev;
       addLog(`Scanning ${newPauseState ? 'paused' : 'resumed'}`);
       
-      if (!newPauseState && !scanningRef.current) {
-        scanningRef.current = requestAnimationFrame(startOCRScanning);
+      if (!newPauseState && isCameraActive && workerRef.current && !scanningRef.current) {
+        startOCRScanning();
       }
       
       return newPauseState;
