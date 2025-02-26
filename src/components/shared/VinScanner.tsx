@@ -5,7 +5,6 @@ import { useState, useRef, useEffect } from "react"
 import { toast } from "sonner"
 import * as Dialog from "@radix-ui/react-dialog"
 import { createWorker, PSM } from 'tesseract.js'
-import { BrowserMultiFormatReader } from '@zxing/library'
 import { useIsMobile } from "@/hooks/use-mobile"
 import { validateVIN, validateVinWithNHTSA } from "@/utils/vin-validation"
 import { preprocessImage } from "@/utils/image-processing"
@@ -328,15 +327,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
     setLogs([])
   }
 
-  const handleScanModeChange = async (value: string) => {
-    if (value === 'text' || value === 'barcode') {
-      setScanMode(value)
-      stopCamera()
-      setLogs([])
-      await startCamera()
-    }
-  }
-
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
@@ -344,10 +334,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
     if (scanningRef.current) {
       cancelAnimationFrame(scanningRef.current)
-    }
-    if (barcodeReaderRef.current) {
-      barcodeReaderRef.current.reset()
-      barcodeReaderRef.current = null
     }
     setIsCameraActive(false)
     setIsFlashOn(false)
