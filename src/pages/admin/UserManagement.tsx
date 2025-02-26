@@ -77,7 +77,7 @@ export default function UserManagement() {
           </AlertDescription>
         </Alert>
       </div>
-      <UserList initialRoleFilter={selectedRole} excludeClients={true} />
+      <UserList initialRoleFilter={selectedRole} />
       <CreateUserDialog 
         open={isCreateUserOpen} 
         onOpenChange={setIsCreateUserOpen} 
