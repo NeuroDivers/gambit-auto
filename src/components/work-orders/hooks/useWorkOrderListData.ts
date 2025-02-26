@@ -73,7 +73,8 @@ export function useWorkOrderListData() {
           .from("service_bays")
           .select("*")
           .eq("status", "available")
-
+          .order('name')
+      
         if (error) {
           console.error('Service bays fetch error:', error)
           throw new Error(`Failed to fetch service bays: ${error.message}`)
@@ -92,9 +93,9 @@ export function useWorkOrderListData() {
     try {
       console.log('Assigning bay:', { workOrderId, bayId })
       const { data, error } = await supabase
-        .from("work_orders")
+        .from('work_orders')
         .update({ 
-          assigned_bay_id: bayId,
+          assigned_bay_id: bayId === "unassigned" ? null : bayId,
           updated_at: new Date().toISOString()
         })
         .eq("id", workOrderId)
