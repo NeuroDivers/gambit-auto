@@ -15,10 +15,9 @@ export function EditWorkOrderDialog({ workOrder, open, onOpenChange }: EditWorkO
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSuccess = useCallback(() => {
-    if (!isSubmitting) {
-      onOpenChange(false)
-    }
-  }, [onOpenChange, isSubmitting])
+    setIsSubmitting(false) // Reset submitting state
+    onOpenChange(false) // Close the sheet
+  }, [onOpenChange])
 
   const handleSubmitting = useCallback((submitting: boolean) => {
     setIsSubmitting(submitting)
@@ -45,6 +44,14 @@ export function EditWorkOrderDialog({ workOrder, open, onOpenChange }: EditWorkO
           if (isSubmitting) {
             e.preventDefault()
           }
+        }}
+        onEscapeKeyDown={(e) => {
+          if (isSubmitting) {
+            e.preventDefault()
+          }
+        }}
+        onCloseAutoFocus={(e) => {
+          e.preventDefault() // Prevent focus trap issues
         }}
       >
         <SheetHeader className="p-6 pb-0">
