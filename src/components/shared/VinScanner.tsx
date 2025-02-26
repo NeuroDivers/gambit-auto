@@ -1,4 +1,3 @@
-
 import { Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -13,6 +12,10 @@ import { ScannerOverlay } from "./vin-scanner/ScannerOverlay"
 
 interface VinScannerProps {
   onScan: (vin: string) => void
+}
+
+interface ExtendedTrackCapabilities extends MediaTrackCapabilities {
+  torch?: boolean;
 }
 
 export function VinScanner({ onScan }: VinScannerProps) {
@@ -44,10 +47,10 @@ export function VinScanner({ onScan }: VinScannerProps) {
     if (!streamRef.current) return
     try {
       const track = streamRef.current.getVideoTracks()[0]
-      const capabilities = track.getCapabilities()
+      const capabilities = track.getCapabilities() as ExtendedTrackCapabilities
       if ('torch' in capabilities) {
         await track.applyConstraints({
-          advanced: [{ torch: !isFlashOn }]
+          advanced: [{ torch: !isFlashOn } as any]
         })
         setIsFlashOn(!isFlashOn)
         addLog(`Flash ${!isFlashOn ? 'enabled' : 'disabled'}`)
@@ -120,8 +123,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       const constraints: MediaTrackConstraints = {
         facingMode: 'environment',
         width: { ideal: 1280 },
-        height: { ideal: 720 },
-        advanced: [{ torch: false }]
+        height: { ideal: 720 }
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({ video: constraints })
@@ -133,7 +135,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         
         // Check for flash capability
         const track = stream.getVideoTracks()[0]
-        const capabilities = track.getCapabilities()
+        const capabilities = track.getCapabilities() as ExtendedTrackCapabilities
         setHasFlash('torch' in capabilities)
         if ('torch' in capabilities) {
           addLog('Flash capability detected')
@@ -277,9 +279,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
       return null
     }
 
-    // Reduced scan area for more focused captures
-    const scanAreaWidth = Math.min(280, video.videoWidth * 0.6)  // Reduced from 0.8 to 0.6
-    const scanAreaHeight = video.videoHeight * 0.12  // Reduced from 0.2 to 0.12
+    const scanAreaWidth = Math.min(280, video.videoWidth * 0.6)
+    const scanAreaHeight = video.videoHeight * 0.12
     const startX = (video.videoWidth - scanAreaWidth) / 2
     const startY = (video.videoHeight - scanAreaHeight) / 2
 
