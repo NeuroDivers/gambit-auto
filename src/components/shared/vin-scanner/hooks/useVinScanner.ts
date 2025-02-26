@@ -307,12 +307,10 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
 
       const fallbackConstraints = {
         video: {
-          video: {
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-            zoom: 2.0,
-            advanced: [{ zoom: 2.0 }] as any
-          }
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          zoom: 2.0,
+          advanced: [{ zoom: 2.0 }] as any
         }
       }
 
@@ -356,7 +354,6 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       await videoRef.current.play()
       setIsCameraActive(true)
       addLog('Video stream started successfully')
-
       
       if (isOpenCVLoaded && workerRef.current) {
         addLog('Starting OCR scanning loop...');
