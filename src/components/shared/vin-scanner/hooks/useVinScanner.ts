@@ -89,6 +89,11 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   const scanningRef = useRef<number>()
   const logsEndRef = useRef<HTMLDivElement>(null)
   const isProcessingRef = useRef(false)
+  const lastScanTimeRef = useRef<number>(0);
+  const SCAN_INTERVAL = 500; // Minimum time between scans in milliseconds
+  const CONFIDENCE_THRESHOLD = 30; // Only process results with confidence above 30%
+  const MIN_MATCHES_REQUIRED = 2; // Require at least 2 matching scans before accepting
+  const matchesRef = useRef<{[key: string]: number}>({});
 
   const addLog = (message: string) => {
     console.log(message);
@@ -166,11 +171,21 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       scanningRef.current = undefined;
     }
 
+    const currentTime = Date.now();
+    if (currentTime - lastScanTimeRef.current < SCAN_INTERVAL) {
+      scanningRef.current = requestAnimationFrame(startOCRScanning);
+      return;
+    }
+
     if (isProcessingRef.current || isPaused || !isOpenCVLoaded) {
       addLog('Scanning skipped: ' + 
         (isProcessingRef.current ? 'processing in progress' : 
          isPaused ? 'scanning paused' : 
          'OpenCV not loaded'));
+      
+      if (!isPaused) {
+        scanningRef.current = requestAnimationFrame(startOCRScanning);
+      }
       return;
     }
 
@@ -184,11 +199,10 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
 
     try {
       isProcessingRef.current = true;
-      addLog('Starting frame capture...');
-      const frameData = await captureFrame();
+      lastScanTimeRef.current = currentTime;
       
+      const frameData = await captureFrame();
       if (!frameData) {
-        addLog('No valid frame captured');
         isProcessingRef.current = false;
         if (!isPaused) {
           scanningRef.current = requestAnimationFrame(startOCRScanning);
@@ -196,37 +210,47 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
         return;
       }
 
-      addLog('Processing frame with OCR...');
+      const result = await workerRef.current.recognize(frameData);
+      const { text, confidence } = result.data;
       
-      const { data: { text, confidence } } = await workerRef.current.recognize(frameData);
-      
-      if (text.trim()) {
-        addLog(`Raw text: "${text.trim()}" (${confidence.toFixed(1)}%)`);
+      if (confidence < CONFIDENCE_THRESHOLD) {
+        if (text.trim()) {
+          addLog(`Low confidence text: "${text.trim()}" (${confidence.toFixed(1)}%)`);
+        }
+        isProcessingRef.current = false;
+        if (!isPaused) {
+          scanningRef.current = requestAnimationFrame(startOCRScanning);
+        }
+        return;
       }
       
-      const correctedText = postProcessVIN(text);
-      if (correctedText !== text.trim() && correctedText) {
-        addLog(`Corrected text: "${correctedText}"`);
-      }
+      const vinPattern = /[A-HJ-NPR-Z0-9]{17}/;
+      const matches = text.match(vinPattern);
       
-      if (confidence > 45 && correctedText.length >= 15) {
-        if (correctedText.length === 17 && validateVIN(correctedText)) {
-          const isNorthAmerican = ['1', '2', '3', '4', '5'].includes(correctedText[0]);
+      if (matches) {
+        const potentialVin = matches[0];
+        addLog(`Potential VIN found: "${potentialVin}" (${confidence.toFixed(1)}%)`);
+        
+        if (validateVIN(potentialVin)) {
+          const isNorthAmerican = ['1', '2', '3', '4', '5'].includes(potentialVin[0]);
+          addLog(`✓ Valid VIN format detected${isNorthAmerican ? ' (North American)' : ''}`);
           
-          addLog(`✓ Valid VIN format detected${isNorthAmerican ? ' (North American)' : ''}, validating with NHTSA...`);
+          // Increment match count for this VIN
+          matchesRef.current[potentialVin] = (matchesRef.current[potentialVin] || 0) + 1;
           
-          const isValidVin = await validateVinWithNHTSA(correctedText);
-          
-          if (isValidVin) {
-            addLog('✓ VIN validated successfully!');
-            toast.success("VIN scanned and validated successfully");
-            onScan(correctedText);
-            onClose();
-            return;
-          } else {
-            addLog('✗ VIN validation failed');
+          if (matchesRef.current[potentialVin] >= MIN_MATCHES_REQUIRED) {
+            const isValidVin = await validateVinWithNHTSA(potentialVin);
+            if (isValidVin) {
+              addLog('✓ VIN validated successfully!');
+              toast.success("VIN scanned and validated successfully");
+              onScan(potentialVin);
+              onClose();
+              return;
+            }
           }
         }
+      } else if (text.trim()) {
+        addLog(`Raw text: "${text.trim()}" (${confidence.toFixed(1)}%)`);
       }
 
       isProcessingRef.current = false;
@@ -382,10 +406,13 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       
       await worker.setParameters({
         tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-        tessedit_pageseg_mode: PSM.SINGLE_LINE,
+        tessedit_pageseg_mode: PSM.SINGLE_BLOCK,
         preserve_interword_spaces: '0',
         tessjs_create_box: '1',
-        tessjs_create_unlock: '1'
+        tessjs_create_unlock: '1',
+        tessjs_min_char_height: '20',
+        textord_min_linesize: '2.5',
+        classify_bln_numeric_mode: '1'
       })
       
       addLog('OCR worker fully initialized')
@@ -415,11 +442,16 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   }
 
   const togglePause = () => {
-    setIsPaused(!isPaused)
-    addLog(`Scanning ${!isPaused ? 'paused' : 'resumed'}`)
-    if (isPaused && isCameraActive && workerRef.current) {
-      startOCRScanning()
-    }
+    setIsPaused(prev => {
+      const newPauseState = !prev;
+      addLog(`Scanning ${newPauseState ? 'paused' : 'resumed'}`);
+      
+      if (!newPauseState && !scanningRef.current) {
+        scanningRef.current = requestAnimationFrame(startOCRScanning);
+      }
+      
+      return newPauseState;
+    });
   }
 
   useEffect(() => {

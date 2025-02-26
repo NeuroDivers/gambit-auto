@@ -8,6 +8,12 @@ interface ScannerViewportProps {
   detectedRegion?: BoundingBox | null
 }
 
+// Define standard VIN guide dimensions
+export const VIN_GUIDE_DIMENSIONS = {
+  width: 0.7, // 70% of viewport width
+  height: 0.3, // 30% of viewport height
+};
+
 export function ScannerViewport({ videoRef, canvasRef, detectedRegion }: ScannerViewportProps) {
   return (
     <div className="relative aspect-video w-full overflow-hidden">
@@ -37,7 +43,15 @@ export function ScannerViewport({ videoRef, canvasRef, detectedRegion }: Scanner
           </div>
         </div>
       ) : (
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[30%] border-2 border-dashed border-primary-foreground/70">
+        <div 
+          className="absolute border-2 border-dashed border-primary-foreground/70"
+          style={{
+            left: `${((1 - VIN_GUIDE_DIMENSIONS.width) / 2) * 100}%`,
+            top: `${((1 - VIN_GUIDE_DIMENSIONS.height) / 2) * 100}%`,
+            width: `${VIN_GUIDE_DIMENSIONS.width * 100}%`,
+            height: `${VIN_GUIDE_DIMENSIONS.height * 100}%`,
+          }}
+        >
           <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
             Position VIN text here
           </div>
