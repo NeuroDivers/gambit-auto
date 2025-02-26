@@ -20,7 +20,7 @@ export default function InvoiceDetails() {
   const printRef = useRef<HTMLDivElement>(null)
 
   const handlePrint = useReactToPrint({
-    content: () => printRef.current,
+    contentRef: printRef,
     documentTitle: 'Invoice',
     pageStyle: '@page { margin: 1cm }'
   })
