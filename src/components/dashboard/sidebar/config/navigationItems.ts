@@ -13,7 +13,8 @@ import {
   MessageSquare,
   DollarSign,
   Car,
-  Briefcase
+  Briefcase,
+  Receipt
 } from "lucide-react"
 import { NavSection } from "../types/navigation"
 
@@ -43,6 +44,12 @@ export const navigationItems: NavSection[] = [
         href: "/work-orders",
         icon: ClipboardList,
         permission: { resource: "work_orders", type: "page_access" }
+      },
+      {
+        title: "Invoices",
+        href: "/invoices",
+        icon: Receipt,
+        permission: { resource: "invoices", type: "page_access" }
       },
       {
         title: "Calendar",

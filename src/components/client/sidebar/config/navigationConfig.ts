@@ -10,7 +10,8 @@ import {
   Wrench,
   Shield,
   ClipboardList,
-  Briefcase
+  Briefcase,
+  Receipt
 } from "lucide-react"
 import { NavigationSection } from "../types"
 
@@ -51,6 +52,12 @@ export const navigationItems: NavigationSection[] = [
         href: "/chat",
         icon: MessageSquare,
         permission: { resource: "chat", type: "page_access" }
+      },
+      {
+        title: "Invoices",
+        href: "/invoices",
+        icon: Receipt,
+        permission: { resource: "invoices", type: "page_access" }
       },
       {
         title: "Commissions",
