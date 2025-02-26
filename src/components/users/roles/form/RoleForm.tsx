@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -54,37 +55,32 @@ export function RoleForm({ form, onSubmit, onCancel, mode, roleId }: RoleFormPro
           <Alert variant="warning" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              This is a system role. The system name cannot be changed to ensure system stability.
+              This is a system role. Some fields cannot be modified to ensure system stability.
             </AlertDescription>
           </Alert>
         )}
         
-        <FormField
-          control={form.control}
-          name="name"
-          disabled={isProtectedRole}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>System Name</FormLabel>
-              <FormControl>
-                {isProtectedRole ? (
-                  <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-base text-muted-foreground md:text-sm select-none pointer-events-none">
-                    {field.value}
-                  </div>
-                ) : (
+        {!isProtectedRole && (
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>System Name</FormLabel>
+                <FormControl>
                   <Input 
                     placeholder="admin" 
                     {...field} 
                   />
-                )}
-              </FormControl>
-              <FormDescription>
-                Internal name used by the system (lowercase, no spaces)
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                </FormControl>
+                <FormDescription>
+                  Internal name used by the system (lowercase, no spaces)
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <FormField
           control={form.control}
