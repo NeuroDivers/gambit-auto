@@ -1,9 +1,10 @@
 
+import React from 'react'
 import { Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
 import { toast } from "sonner"
-import { Dialog } from "@radix-ui/react-dialog"
+import * as Dialog from "@radix-ui/react-dialog"
 import { createWorker, PSM } from 'tesseract.js'
 import { BrowserMultiFormatReader } from '@zxing/library'
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -21,8 +22,8 @@ interface ExtendedTrackCapabilities extends MediaTrackCapabilities {
 }
 
 const DialogContent = React.forwardRef<
-  React.ElementRef<"div">,
-  React.ComponentPropsWithoutRef<"div">
+  React.ElementRef<typeof Dialog.Content>,
+  React.ComponentPropsWithoutRef<typeof Dialog.Content>
 >(({ className, ...props }, ref) => (
   <Dialog.Portal>
     <Dialog.Overlay className="fixed inset-0 z-[99] bg-black/80" />
@@ -380,7 +381,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         <Camera className="h-4 w-4" />
       </Button>
 
-      <Dialog open={isDialogOpen} onOpenChange={handleClose}>
+      <Dialog.Root open={isDialogOpen} onOpenChange={handleClose}>
         <DialogContent className="p-0">
           <ScannerOverlay
             scanMode={scanMode}
@@ -425,7 +426,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
             </div>
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog.Root>
     </>
   )
 }
