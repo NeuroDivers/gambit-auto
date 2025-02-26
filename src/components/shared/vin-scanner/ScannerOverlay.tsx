@@ -50,20 +50,20 @@ export function ScannerOverlay({
         </Button>
       </div>
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="relative w-4/5 aspect-[4.5/1] max-w-2xl">
-          {/* Corner markers */}
-          <div className="absolute -left-2 -top-2 w-4 h-4 border-l-2 border-t-2 border-primary"></div>
-          <div className="absolute -right-2 -top-2 w-4 h-4 border-r-2 border-t-2 border-primary"></div>
-          <div className="absolute -left-2 -bottom-2 w-4 h-4 border-l-2 border-b-2 border-primary"></div>
-          <div className="absolute -right-2 -bottom-2 w-4 h-4 border-r-2 border-b-2 border-primary"></div>
+        <div className="relative w-[90%] aspect-[4.5/1] max-w-3xl">
+          {/* Corner markers - made bigger */}
+          <div className="absolute -left-3 -top-3 w-6 h-6 border-l-2 border-t-2 border-primary"></div>
+          <div className="absolute -right-3 -top-3 w-6 h-6 border-r-2 border-t-2 border-primary"></div>
+          <div className="absolute -left-3 -bottom-3 w-6 h-6 border-l-2 border-b-2 border-primary"></div>
+          <div className="absolute -right-3 -bottom-3 w-6 h-6 border-r-2 border-b-2 border-primary"></div>
           
-          {/* Center guide */}
-          <div className="absolute inset-0 border border-dashed border-primary/70">
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 border-2 border-primary/70"></div>
+          {/* Center guide - made bigger */}
+          <div className="absolute inset-0 border-2 border-dashed border-primary/70">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 border-2 border-primary/70"></div>
           </div>
           
           {/* Helper text */}
-          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
+          <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-lg text-sm whitespace-nowrap">
             Position {scanMode === 'text' ? 'VIN text' : 'barcode'} within frame
           </div>
         </div>
