@@ -176,7 +176,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         
         const scanLoop = async () => {
           try {
-            if (!videoRef.current || !barcodeReaderRef.current) return;
+            if (!videoRef.current || !barcodeReaderRef.current || isPaused) return;
             
             const result = await barcodeReaderRef.current.decodeOnce(videoRef.current);
             if (result?.getText()) {
@@ -213,7 +213,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const startOCRScanning = async (immediateScanning?: boolean) => {
     const shouldScan = immediateScanning ?? isScanning
 
-    if (!streamRef.current || !workerRef.current || !shouldScan) {
+    if (!streamRef.current || !workerRef.current || !shouldScan || isPaused) {
       return
     }
 
