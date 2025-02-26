@@ -2,25 +2,16 @@
 export const validateVIN = (vin: string): boolean => {
   if (vin.length !== 17) return false;
 
-  // First normalize common OCR mistakes
-  const normalizedVin = vin.toUpperCase()
-    .replace(/[OoQq]/g, '0')   // O/o/Q/q → 0
-    .replace(/[IiLl]/g, '1')   // I/i/L/l → 1
-    .replace(/[Ss]/g, '5')     // S/s → 5
-    .replace(/[Zz]/g, '2')     // Z/z → 2
-    .replace(/[Bb]/g, '8')     // B/b → 8
-    .replace(/[Gg]/g, '6')     // G/g → 6
-
-  const validVINPattern = /^[A-HJ-NPR-Z0-9]{17}$/;
-  if (!validVINPattern.test(normalizedVin)) return false;
+  const validVINPattern = /^[A-HJ-NPR-Z0-9]{17}$/i;
+  if (!validVINPattern.test(vin)) return false;
 
   const suspiciousPatterns = [
-    /[0]{3,}/,    // Too many zeros in a row
-    /[1]{3,}/,    // Too many ones in a row
-    /(.)\1{4,}/,  // Any character repeated more than 4 times
+    /[O0]{3,}/i,  // Too many zeros or O's in a row
+    /[1I]{3,}/i,  // Too many ones or I's in a row
+    /(.)\1{4,}/i, // Any character repeated more than 4 times
   ];
 
-  return !suspiciousPatterns.some(pattern => pattern.test(normalizedVin));
+  return !suspiciousPatterns.some(pattern => pattern.test(vin));
 }
 
 export const validateVinWithNHTSA = async (vin: string): Promise<boolean> => {
