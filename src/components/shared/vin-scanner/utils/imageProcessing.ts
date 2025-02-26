@@ -1,4 +1,6 @@
 
+import { VIN_GUIDE_DIMENSIONS } from '../components/ScannerViewport';
+
 declare const cv: any;
 
 export interface BoundingBox {
@@ -10,7 +12,6 @@ export interface BoundingBox {
 
 export const preprocessImage = async (imageData: ImageData): Promise<{ processedImage: ImageData; boundingBox: BoundingBox | null }> => {
   try {
-    // Convert ImageData to Mat
     let src = cv.matFromImageData(imageData);
     let gray = new cv.Mat();
     let processed = new cv.Mat();
@@ -30,45 +31,21 @@ export const preprocessImage = async (imageData: ImageData): Promise<{ processed
         2
       );
 
-      // Apply noise reduction
-      let denoised = new cv.Mat();
-      cv.fastNlMeansDenoising(processed, denoised);
+      // Create a bounding box that matches the guide box dimensions
+      const guideBox: BoundingBox = {
+        x: Math.floor((imageData.width * (1 - VIN_GUIDE_DIMENSIONS.width)) / 2),
+        y: Math.floor((imageData.height * (1 - VIN_GUIDE_DIMENSIONS.height)) / 2),
+        width: Math.floor(imageData.width * VIN_GUIDE_DIMENSIONS.width),
+        height: Math.floor(imageData.height * VIN_GUIDE_DIMENSIONS.height)
+      };
+
+      // Extract the region of interest
+      let roi = processed.roi(new cv.Rect(guideBox.x, guideBox.y, guideBox.width, guideBox.height));
       
-      // Find contours for VIN region detection
-      let contours = new cv.MatVector();
-      let hierarchy = new cv.Mat();
-      cv.findContours(
-        denoised,
-        contours,
-        hierarchy,
-        cv.RETR_EXTERNAL,
-        cv.CHAIN_APPROX_SIMPLE
-      );
-
-      let boundingBox: BoundingBox | null = null;
-      let maxArea = 0;
-
-      // Look for rectangle-shaped contours with appropriate aspect ratio
-      for (let i = 0; i < contours.size(); i++) {
-        const contour = contours.get(i);
-        const rect = cv.boundingRect(contour);
-        const area = rect.width * rect.height;
-        const aspectRatio = rect.width / rect.height;
-
-        // VIN label typically has aspect ratio between 4:1 and 8:1
-        if (aspectRatio >= 4 && aspectRatio <= 8 && area > 5000) {
-          if (area > maxArea) {
-            maxArea = area;
-            boundingBox = {
-              x: rect.x,
-              y: rect.y,
-              width: rect.width,
-              height: rect.height
-            };
-          }
-        }
-      }
-
+      // Apply noise reduction to the ROI
+      let denoised = new cv.Mat();
+      cv.fastNlMeansDenoising(roi, denoised);
+      
       // Convert processed image back to ImageData
       let processedImageData = new ImageData(
         new Uint8ClampedArray(denoised.data),
@@ -77,17 +54,15 @@ export const preprocessImage = async (imageData: ImageData): Promise<{ processed
       );
 
       // Cleanup OpenCV objects
-      contours.delete();
-      hierarchy.delete();
+      roi.delete();
       denoised.delete();
 
       return {
         processedImage: processedImageData,
-        boundingBox
+        boundingBox: guideBox
       };
 
     } finally {
-      // Ensure we clean up OpenCV objects
       src.delete();
       gray.delete();
       processed.delete();
@@ -95,7 +70,6 @@ export const preprocessImage = async (imageData: ImageData): Promise<{ processed
     
   } catch (error) {
     console.error('Error in preprocessImage:', error);
-    // Return original image if processing fails
     return {
       processedImage: imageData,
       boundingBox: null
