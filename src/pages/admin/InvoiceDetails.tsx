@@ -21,7 +21,19 @@ export default function InvoiceDetails() {
 
   const handlePrint = useReactToPrint({
     documentTitle: 'Invoice',
-    content: () => printRef.current,
+    pageStyle: '@page { margin: 1cm }',
+    print: async (printIframe: HTMLIFrameElement) => {
+      const document = printIframe.contentDocument
+      if (document) {
+        const html = document.getElementsByTagName('html')[0]
+        html.style.transform = 'scale(1)'
+      }
+      await new Promise((resolve) => {
+        printIframe.contentWindow?.print()
+        resolve(true)
+      })
+    },
+    getPrintElement: () => printRef.current,
   })
 
   const { data: invoice, isLoading, error } = useQuery({
