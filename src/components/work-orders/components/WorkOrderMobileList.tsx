@@ -14,7 +14,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { 
   MoreHorizontal, 
-  UserCheck, 
   Warehouse,
   FileEdit,
   Receipt 
@@ -25,7 +24,6 @@ import { WorkOrderStatusSelect } from "./WorkOrderStatusSelect"
 
 interface WorkOrderMobileListProps {
   workOrders: WorkOrder[]
-  onAssignUser: (workOrder: WorkOrder) => void
   onAssignBay: (workOrder: WorkOrder) => void
   onEdit: (workOrder: WorkOrder) => void
   onCreateInvoice: (workOrderId: string) => void
@@ -33,7 +31,6 @@ interface WorkOrderMobileListProps {
 
 export function WorkOrderMobileList({
   workOrders,
-  onAssignUser,
   onAssignBay,
   onEdit,
   onCreateInvoice,
@@ -63,16 +60,6 @@ export function WorkOrderMobileList({
               </div>
             </div>
             <div>
-              <div className="text-sm font-medium">Assigned To</div>
-              <div className="text-sm text-muted-foreground">
-                {order.assigned_to ? (
-                  `${order.assigned_to.first_name} ${order.assigned_to.last_name}`
-                ) : (
-                  "Unassigned"
-                )}
-              </div>
-            </div>
-            <div>
               <div className="text-sm font-medium">Bay</div>
               <div className="text-sm text-muted-foreground">
                 {order.service_bays?.name || "Unassigned"}
@@ -94,10 +81,6 @@ export function WorkOrderMobileList({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onAssignUser(order)}>
-                  <UserCheck className="mr-2 h-4 w-4" />
-                  Assign User
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onAssignBay(order)}>
                   <Warehouse className="mr-2 h-4 w-4" />
                   Assign Bay

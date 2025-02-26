@@ -16,7 +16,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { 
   MoreHorizontal, 
-  UserCheck, 
   Warehouse,
   FileEdit,
   Receipt 
@@ -27,7 +26,6 @@ import { WorkOrderStatusSelect } from "./WorkOrderStatusSelect"
 
 interface WorkOrderTableProps {
   workOrders: WorkOrder[]
-  onAssignUser: (workOrder: WorkOrder) => void
   onAssignBay: (workOrder: WorkOrder) => void
   onEdit: (workOrder: WorkOrder) => void
   onCreateInvoice: (workOrderId: string) => void
@@ -35,7 +33,6 @@ interface WorkOrderTableProps {
 
 export function WorkOrderTable({
   workOrders,
-  onAssignUser,
   onAssignBay,
   onEdit,
   onCreateInvoice,
@@ -46,7 +43,6 @@ export function WorkOrderTable({
         <TableRow>
           <TableHead>Customer</TableHead>
           <TableHead>Vehicle</TableHead>
-          <TableHead>Assigned To</TableHead>
           <TableHead>Bay</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Created</TableHead>
@@ -70,16 +66,6 @@ export function WorkOrderTable({
               {order.vehicle_year} {order.vehicle_make} {order.vehicle_model}
             </TableCell>
             <TableCell 
-              onClick={() => onAssignUser(order)}
-              className="cursor-pointer hover:bg-muted"
-            >
-              {order.assigned_to ? (
-                `${order.assigned_to.first_name} ${order.assigned_to.last_name}`
-              ) : (
-                <span className="text-muted-foreground">Unassigned</span>
-              )}
-            </TableCell>
-            <TableCell 
               onClick={() => onAssignBay(order)}
               className="cursor-pointer hover:bg-muted"
             >
@@ -100,10 +86,6 @@ export function WorkOrderTable({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onAssignUser(order)}>
-                    <UserCheck className="mr-2 h-4 w-4" />
-                    Assign User
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onAssignBay(order)}>
                     <Warehouse className="mr-2 h-4 w-4" />
                     Assign Bay

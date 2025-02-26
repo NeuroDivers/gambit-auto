@@ -63,7 +63,7 @@ export function WorkOrderDetailsDialog({
         .from('service_bays')
         .select('*')
         .eq('status', 'available')
-        .order('name')  // Add ordering here
+        .order('name')
       
       if (error) throw error
       return data
@@ -72,14 +72,13 @@ export function WorkOrderDetailsDialog({
 
   // Mutation to update work order assignments
   const updateAssignmentsMutation = useMutation({
-    mutationFn: async ({ bayId, userId }: { bayId?: string | null, userId?: string | null }) => {
-      console.log('Updating assignments:', { bayId, userId, workOrderId: workOrder.id })
+    mutationFn: async ({ bayId }: { bayId?: string | null }) => {
+      console.log('Updating assignments:', { bayId, workOrderId: workOrder.id })
       
       const { error } = await supabase
         .from('work_orders')
         .update({ 
-          assigned_bay_id: bayId,
-          assigned_profile_id: userId
+          assigned_bay_id: bayId
         })
         .eq('id', workOrder.id)
 
@@ -119,32 +118,6 @@ export function WorkOrderDetailsDialog({
             <p>{workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}</p>
           </div>
 
-          {/* Assign Staff */}
-          <div className="space-y-2">
-            <Label>Assign Staff</Label>
-            <Select
-              value={workOrder.assigned_profile_id || "none"}
-              onValueChange={(value) => {
-                updateAssignmentsMutation.mutate({
-                  userId: value === "none" ? null : value,
-                  bayId: workOrder.assigned_bay_id
-                })
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select staff member" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Unassigned</SelectItem>
-                {assignableUsers?.map((user) => (
-                  <SelectItem key={user.id} value={user.id}>
-                    {user.first_name} {user.last_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           {/* Assign Bay */}
           <div className="space-y-2">
             <Label>Assign Service Bay</Label>
@@ -152,8 +125,7 @@ export function WorkOrderDetailsDialog({
               value={workOrder.assigned_bay_id || "none"}
               onValueChange={(value) => {
                 updateAssignmentsMutation.mutate({
-                  bayId: value === "none" ? null : value,
-                  userId: workOrder.assigned_profile_id
+                  bayId: value === "none" ? null : value
                 })
               }}
             >
@@ -175,4 +147,3 @@ export function WorkOrderDetailsDialog({
     </Dialog>
   )
 }
-

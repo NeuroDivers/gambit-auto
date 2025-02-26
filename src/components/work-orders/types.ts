@@ -21,6 +21,10 @@ export interface WorkOrder {
   service_bays?: {
     name: string;
   };
+  assigned_to?: {
+    first_name: string;
+    last_name: string;
+  } | null;
   address: string;
   timeframe: "flexible" | "asap" | "within_week" | "within_month";
 }
