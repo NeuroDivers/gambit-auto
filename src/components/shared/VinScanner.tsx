@@ -78,21 +78,40 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const correctCommonOcrMistakes = (text: string): string => {
     let corrected = text
       .replace(/[oO]/g, '0')
-      .replace(/[iIl]/g, '1')
+      .replace(/[iIl|]/g, '1')
       .replace(/[sS]/g, '5')
       .replace(/[zZ]/g, '2')
       .replace(/[bB]/g, '8')
       .replace(/[gG]/g, '6')
+      .replace(/[tT]/g, '7')
       .replace(/\s+/g, '')
       .toUpperCase()
 
     const vinPattern = /[A-HJ-NPR-Z0-9]{17}/
     const match = corrected.match(vinPattern)
     
+    addLog(`Raw text detected: ${text}`)
+    addLog(`After corrections: ${corrected}`)
     addLog(`VIN Pattern check: ${match ? 'MATCHED' : 'NO MATCH'} - Current text: ${corrected}`)
     addLog(`Expected pattern: 17 characters [A-HJ-NPR-Z0-9] (no I, O, Q)`)
+    addLog(`Expected VIN: W1K5J5BB3MN196786`)
+    addLog(`Character diff: ${compareVins(corrected, 'W1K5J5BB3MN196786')}`)
     
     return match ? match[0] : corrected
+  }
+
+  const compareVins = (detected: string, expected: string): string => {
+    if (detected.length !== expected.length) {
+      return `Length mismatch: detected=${detected.length}, expected=${expected.length}`
+    }
+
+    let diff = ''
+    for (let i = 0; i < expected.length; i++) {
+      if (detected[i] !== expected[i]) {
+        diff += `pos ${i}: ${detected[i]} should be ${expected[i]}; `
+      }
+    }
+    return diff || 'Perfect match!'
   }
 
   const initializeWorker = async () => {
@@ -243,6 +262,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
       const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
       
+      addLog(`Raw confidence: ${confidence}%`)
       const correctedText = correctCommonOcrMistakes(text)
       
       if (confidence < 40 || correctedText.length < 15) {

@@ -1,3 +1,4 @@
+
 export const preprocessImage = (canvas: HTMLCanvasElement): string => {
   const ctx = canvas.getContext('2d')
   if (!ctx) return canvas.toDataURL()
@@ -11,10 +12,10 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
     const r = data[i]
     const g = data[i + 1]
     const b = data[i + 2]
-    // Convert to grayscale using luminance formula
-    const gray = 0.299 * r + 0.587 * g + 0.114 * b
-    // Enhance contrast
-    const enhanced = gray < 128 ? gray * 0.8 : Math.min(255, gray * 1.2)
+    // Enhanced weight for blue channel since VIN appears blue-tinted
+    const gray = 0.2 * r + 0.3 * g + 0.5 * b
+    // Increase contrast more aggressively
+    const enhanced = gray < 128 ? gray * 0.5 : Math.min(255, gray * 1.5)
     data[i] = data[i + 1] = data[i + 2] = enhanced
   }
 
