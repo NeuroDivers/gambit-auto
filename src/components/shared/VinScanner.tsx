@@ -223,7 +223,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
     canvas.height = video.videoHeight
 
     const scanAreaWidth = video.videoWidth * 0.6
-    const scanAreaHeight = video.videoHeight * 0.12
+    const scanAreaHeight = video.videoHeight * 0.2
     const startX = (video.videoWidth - scanAreaWidth) / 2
     const startY = (video.videoHeight - scanAreaHeight) / 2
 
@@ -459,13 +459,18 @@ export function VinScanner({ onScan }: VinScannerProps) {
               ref={canvasRef}
               className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3/5 sm:w-1/2 h-[12%] border-2 border-dashed border-primary-foreground/70">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[20%] border-2 border-dashed border-primary-foreground/70">
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded text-sm whitespace-nowrap">
                 Position {scanMode === 'text' ? 'VIN text' : 'barcode'} here
               </div>
-              <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-px bg-primary-foreground/70" />
-              <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-px bg-primary-foreground/70" />
-              <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-4 h-4 border-2 border-primary-foreground/70" />
+              <div className="absolute -left-2 -top-2 w-4 h-4 border-l-2 border-t-2 border-primary-foreground/70" />
+              <div className="absolute -right-2 -top-2 w-4 h-4 border-r-2 border-t-2 border-primary-foreground/70" />
+              <div className="absolute -left-2 -bottom-2 w-4 h-4 border-l-2 border-b-2 border-primary-foreground/70" />
+              <div className="absolute -right-2 -bottom-2 w-4 h-4 border-r-2 border-b-2 border-primary-foreground/70" />
+              <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-6 h-6">
+                <div className="absolute top-1/2 -translate-y-1/2 left-0 w-full h-px bg-primary-foreground/70" />
+                <div className="absolute left-1/2 -translate-x-1/2 top-0 h-full w-px bg-primary-foreground/70" />
+              </div>
             </div>
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent p-4">
               <p className="text-white text-center text-sm">
