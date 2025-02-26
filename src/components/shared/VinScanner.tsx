@@ -149,7 +149,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
         const stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints)
         if (videoRef.current) {
           videoRef.current.srcObject = stream
-          streamRef.current = null
           streamRef.current = stream
           addLog('Stream acquired with fallback camera')
         }
@@ -180,7 +179,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
           addLog('Initializing OCR worker...')
           workerRef.current = await initializeWorker()
           addLog('Starting OCR scanning loop...')
-          startOCRScanning()
+          if (isDialogOpen) {
+            startOCRScanning()
+          } else {
+            addLog('Dialog not open, waiting for dialog state to update...')
+          }
         } else {
           addLog('Initializing barcode reader...')
           await initializeBarcodeScanner()
@@ -372,10 +375,10 @@ export function VinScanner({ onScan }: VinScannerProps) {
     setLogs([])
   }
 
-  const handleOpen = async () => {
+  const handleOpen = () => {
     setIsDialogOpen(true)
     setLogs([])
-    await startCamera()
+    setTimeout(startCamera, 0)
   }
 
   const handleScanModeChange = async (value: string) => {
@@ -392,6 +395,12 @@ export function VinScanner({ onScan }: VinScannerProps) {
       handleClose()
     }
   }, [])
+
+  useEffect(() => {
+    if (isDialogOpen && isCameraActive && workerRef.current && scanMode === 'text') {
+      startOCRScanning()
+    }
+  }, [isDialogOpen, isCameraActive])
 
   return (
     <>
