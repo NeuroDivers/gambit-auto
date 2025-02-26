@@ -1,4 +1,3 @@
-
 import { Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -40,48 +39,33 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const initializeWorker = async () => {
     try {
-      addLog('Initializing OCR worker with VIN-specific font optimizations...')
+      addLog('Initializing OCR worker with VIN-specific optimizations...')
       const worker = await createWorker()
       
       await worker.reinitialize('eng')
       await worker.setParameters({
-        // Specific whitelist for VIN characters (no I,O,Q)
         tessedit_char_whitelist: '0123456789ABCDEFGHJKLMNPRSTUVWXYZ',
         tessedit_ocr_engine_mode: '3', // Neural nets LSTM only
         tessjs_create_pdf: '0',
         tessjs_create_hocr: '0',
         debug_file: '/dev/null',
         tessedit_pageseg_mode: PSM.SINGLE_LINE,
-        // Font-specific optimizations
         classify_bln_numeric_mode: '1',
-        textord_pitch_range: '0',  // Fixed pitch for OCR-B font
+        textord_pitch_range: '0',
         textord_fixed_pitch_threshold: '0',
         edges_children_fix: '1',
         edges_max_children_per_outline: '40',
         edges_min_nonhole: '40',
         edges_patharea_ratio: '2.0',
-        // OCR-B specific settings
-        assume_fixed_pitch: '1',
-        textord_space_size_is_variable: '0',
-        textord_words_default_fixed_space: '1',
-        textord_min_linesize: '5', // OCR-B is typically well-defined
-        classify_character_fragments: 'F',
-        // Enhanced segmentation for fixed-width characters
-        segsearch_max_fixed_pitch_char_wh_ratio: '1.1',
-        // Disable dictionary to rely on pure character recognition
-        load_system_dawg: '0',
-        load_freq_dawg: '0',
-        // High DPI for better character separation
+        tessedit_do_invert: '0',
+        textord_heavy_nr: '0',
+        language_model_penalty_non_freq_dict_word: '0.5',
+        language_model_penalty_non_dict_word: '0.5',
         tessjs_image_dpi: '300',
-        tessedit_dpi: '300',
-        // Minimal rejection for fixed-font characters
-        tessedit_minimal_rejection: 'T',
-        tessedit_zero_rejection: 'T',
-        // Blacklist commonly confused characters
-        tessedit_char_blacklist: 'IiOoQq',
+        tessedit_dpi: '300'
       })
 
-      addLog('OCR worker initialized with VIN font optimizations')
+      addLog('OCR worker initialized')
       return worker
     } catch (error) {
       addLog(`Error initializing OCR worker: ${error}`)
@@ -130,12 +114,12 @@ export function VinScanner({ onScan }: VinScannerProps) {
         await videoRef.current.play()
         addLog('Video stream started')
 
-        // Try to enable torch if available
         const track = stream.getVideoTracks()[0]
-        if ('torch' in track.getCapabilities()) {
+        const capabilities = track.getCapabilities()
+        if ('torch' in capabilities) {
           try {
             await track.applyConstraints({
-              advanced: [{ torch: true }]
+              advanced: [{ [capabilities.torch ? 'torch' : '']: true }]
             })
             addLog('Torch enabled')
           } catch (error) {
@@ -148,11 +132,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
           workerRef.current = await initializeWorker()
           addLog('Worker reference created')
           
-          let isCurrentlyScanning = true
-          setIsScanning(isCurrentlyScanning)
-          
-          addLog(`Starting OCR scanning...`)
-          await startOCRScanning(isCurrentlyScanning)
+          setIsScanning(true)
+          addLog('Starting OCR scanning...')
+          await startOCRScanning(true)
         } else {
           addLog('Initializing barcode reader...')
           await initializeBarcodeScanner()
@@ -227,11 +209,17 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
       const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
       
-      // Clean the text first for better logging
-      const cleanedText = text.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, '')
+      const cleanedText = text.toUpperCase()
+        .replace(/[^A-Z0-9]/g, '')
+        .replace(/[OoQq]/g, '0')
+        .replace(/[IiLl]/g, '1')
+        .replace(/[Ss]/g, '5')
+        .replace(/[Zz]/g, '2')
+        .replace(/[Bb]/g, '8')
+        .replace(/[Gg]/g, '6')
+
       addLog(`Detected text: ${cleanedText} (confidence: ${confidence}%)`)
       
-      // More lenient confidence threshold but stricter validation
       if (confidence < 40 || cleanedText.length < 15) {
         if (shouldScan) {
           scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
@@ -244,7 +232,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         
         if (isValidVin) {
           onScan(cleanedText)
-          toast.success("VIN scanned and validated successfully")
+          toast.success("VIN scanned successfully")
           handleClose()
           return
         }
