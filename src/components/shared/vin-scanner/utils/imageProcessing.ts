@@ -20,15 +20,19 @@ export const preprocessImage = async (imageData: ImageData): Promise<{ processed
       // Convert to grayscale
       cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
       
-      // Apply adaptive thresholding
+      // Apply Gaussian blur to reduce noise
+      let blurred = new cv.Mat();
+      cv.GaussianBlur(gray, blurred, new cv.Size(3, 3), 0, 0);
+      
+      // Apply adaptive thresholding with more aggressive parameters
       cv.adaptiveThreshold(
-        gray,
+        blurred,
         processed,
         255,
         cv.ADAPTIVE_THRESH_GAUSSIAN_C,
         cv.THRESH_BINARY,
-        11,
-        2
+        21, // Increased block size for better text isolation
+        5   // Increased C constant for stronger thresholding
       );
 
       // Create a bounding box that matches the guide box dimensions
@@ -39,23 +43,33 @@ export const preprocessImage = async (imageData: ImageData): Promise<{ processed
         height: Math.floor(imageData.height * VIN_GUIDE_DIMENSIONS.height)
       };
 
-      // Extract the region of interest
+      // Extract and process the region of interest
       let roi = processed.roi(new cv.Rect(guideBox.x, guideBox.y, guideBox.width, guideBox.height));
       
-      // Apply noise reduction to the ROI
-      let denoised = new cv.Mat();
-      cv.fastNlMeansDenoising(roi, denoised);
+      // Apply morphological operations to clean up the text
+      let kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(2, 2));
+      
+      // Dilate slightly to connect broken characters
+      let dilated = new cv.Mat();
+      cv.dilate(roi, dilated, kernel, new cv.Point(-1, -1), 1);
+      
+      // Erode to restore character thickness
+      let eroded = new cv.Mat();
+      cv.erode(dilated, eroded, kernel, new cv.Point(-1, -1), 1);
       
       // Convert processed image back to ImageData
       let processedImageData = new ImageData(
-        new Uint8ClampedArray(denoised.data),
-        denoised.cols,
-        denoised.rows
+        new Uint8ClampedArray(eroded.data),
+        eroded.cols,
+        eroded.rows
       );
 
       // Cleanup OpenCV objects
       roi.delete();
-      denoised.delete();
+      kernel.delete();
+      dilated.delete();
+      eroded.delete();
+      blurred.delete();
 
       return {
         processedImage: processedImageData,
@@ -85,8 +99,8 @@ export const cropToVinRegion = (
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
-    // Add some padding around the detected region
-    const padding = 10;
+    // Add minimal padding around the detected region
+    const padding = 5;
     const x = Math.max(0, boundingBox.x - padding);
     const y = Math.max(0, boundingBox.y - padding);
     const width = Math.min(canvas.width - x, boundingBox.width + 2 * padding);
@@ -105,7 +119,10 @@ export const postProcessVIN = (text: string): string => {
   // Remove spaces and convert to uppercase
   let processedText = text.replace(/\s+/g, '').toUpperCase();
 
-  // Common OCR substitutions
+  // Remove any obviously invalid sequences
+  processedText = processedText.replace(/[^A-Z0-9]/g, '');
+
+  // Common OCR substitutions (updated with more common mistakes)
   const substitutions: { [key: string]: string } = {
     'O': '0',
     'I': '1',
@@ -114,12 +131,21 @@ export const postProcessVIN = (text: string): string => {
     'Z': '2',
     '|': '1',
     'B': '8',
-    'D': '0'
+    'D': '0',
+    'T': '7',
+    'L': '1',
+    'E': '8'
   };
 
-  // Apply substitutions
+  // Apply substitutions only if they make the text more likely to be a VIN
+  const beforeSubs = processedText;
   for (const [from, to] of Object.entries(substitutions)) {
     processedText = processedText.replace(new RegExp(from, 'g'), to);
+  }
+
+  // If substitutions made it worse, revert
+  if (beforeSubs.length === 17 && processedText.length !== 17) {
+    processedText = beforeSubs;
   }
 
   // Remove any characters that aren't valid in a VIN
