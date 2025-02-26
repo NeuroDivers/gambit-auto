@@ -14,7 +14,7 @@ interface UserListProps {
 export const UserList = ({ initialRoleFilter = "all", excludeClients = false }: UserListProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState(initialRoleFilter);
-  const [excludedRoles, setExcludedRoles] = useState<string[]>(excludeClients ? [CLIENT_ROLE_ID] : []);
+  const [excludedRoles, setExcludedRoles] = useState<string[]>([CLIENT_ROLE_ID]); // Initialize with CLIENT_ROLE_ID
   const { data: users, isLoading, refetch } = useUserData();
   
   // Update roleFilter when initialRoleFilter changes
