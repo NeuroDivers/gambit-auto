@@ -198,7 +198,8 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
 
       addLog('Processing frame with OCR...');
       
-      const { data: { text, confidence } } = await workerRef.current.recognize(frameData);
+      const result = await workerRef.current.recognize(frameData);
+      const { text, confidence } = result.data;
       
       if (text.trim()) {
         addLog(`Raw text: "${text.trim()}" (${confidence.toFixed(1)}%)`);
@@ -382,7 +383,7 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
       
       await worker.setParameters({
         tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-        tessedit_pageseg_mode: PSM.SINGLE_LINE,
+        tessedit_pageseg_mode: PSM.SINGLE_BLOCK,
         preserve_interword_spaces: '0',
         tessjs_create_box: '1',
         tessjs_create_unlock: '1'
@@ -415,11 +416,16 @@ export const useVinScanner = ({ onScan, onClose }: UseVinScannerProps) => {
   }
 
   const togglePause = () => {
-    setIsPaused(!isPaused)
-    addLog(`Scanning ${!isPaused ? 'paused' : 'resumed'}`)
-    if (isPaused && isCameraActive && workerRef.current) {
-      startOCRScanning()
-    }
+    setIsPaused(prev => {
+      const newPauseState = !prev;
+      addLog(`Scanning ${newPauseState ? 'paused' : 'resumed'}`);
+      
+      if (!newPauseState && isCameraActive && workerRef.current && !scanningRef.current) {
+        startOCRScanning();
+      }
+      
+      return newPauseState;
+    });
   }
 
   useEffect(() => {
