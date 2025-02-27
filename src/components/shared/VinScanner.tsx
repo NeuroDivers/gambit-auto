@@ -1,3 +1,4 @@
+
 import { Camera, Pause, Play, Check, X as XIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -12,6 +13,8 @@ import { ScannerOverlay } from "./vin-scanner/ScannerOverlay"
 
 interface VinScannerProps {
   onScan: (vin: string) => void
+  isActive: boolean
+  scanMode: 'text' | 'barcode'
 }
 
 interface ExtendedTrackCapabilities extends MediaTrackCapabilities {
@@ -25,11 +28,10 @@ interface VehicleInfo {
   year?: string;
 }
 
-export function VinScanner({ onScan }: VinScannerProps) {
+export function VinScanner({ onScan, isActive, scanMode }: VinScannerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isCameraActive, setIsCameraActive] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
-  const [scanMode, setScanMode] = useState<'text' | 'barcode'>('text')
   const [logs, setLogs] = useState<string[]>([])
   const [hasFlash, setHasFlash] = useState(false)
   const [isFlashOn, setIsFlashOn] = useState(false)
@@ -87,6 +89,47 @@ export function VinScanner({ onScan }: VinScannerProps) {
       addLog(`Flash control error: ${err}`)
       toast.error('Failed to toggle flash')
     }
+  }
+
+  const handleBarcodeProcessing = (scannedValue: string): string | null => {
+    addLog(`Processing barcode: ${scannedValue}`)
+    
+    // If exact 17 characters, it's likely a valid VIN
+    if (scannedValue.length === 17) {
+      addLog(`Barcode has 17 characters, using as is`)
+      if (validateVIN(scannedValue)) {
+        return scannedValue.toUpperCase();
+      }
+    }
+    
+    // If 18 characters, try removing first or last character
+    if (scannedValue.length === 18) {
+      addLog(`Barcode has 18 characters, trying truncation approaches`)
+      
+      // Try removing first character
+      const withoutFirst = scannedValue.substring(1);
+      addLog(`Trying without first character: ${withoutFirst}`)
+      if (validateVIN(withoutFirst)) {
+        addLog(`Valid VIN found after removing first character`)
+        return withoutFirst.toUpperCase();
+      }
+      
+      // Try removing last character
+      const withoutLast = scannedValue.substring(0, 17);
+      addLog(`Trying without last character: ${withoutLast}`)
+      if (validateVIN(withoutLast)) {
+        addLog(`Valid VIN found after removing last character`)
+        return withoutLast.toUpperCase();
+      }
+    }
+    
+    // Return the original value if it passes basic validation
+    if (validateVIN(scannedValue)) {
+      return scannedValue.toUpperCase();
+    }
+    
+    addLog(`Barcode didn't yield a valid VIN after processing attempts`)
+    return null;
   }
 
   const correctCommonOcrMistakes = (text: string): string[] => {
@@ -346,9 +389,12 @@ export function VinScanner({ onScan }: VinScannerProps) {
               const scannedValue = result.getText()
               addLog(`Barcode detected: ${scannedValue}`)
               
-              if (validateVIN(scannedValue)) {
-                addLog('Valid VIN detected!')
-                onScan(scannedValue.toUpperCase())
+              // Process barcode value to handle different lengths (18 chars)
+              const processedVin = handleBarcodeProcessing(scannedValue);
+              
+              if (processedVin && validateVIN(processedVin)) {
+                addLog('Valid VIN detected from barcode!')
+                onScan(processedVin.toUpperCase())
                 toast.success("VIN scanned successfully")
                 handleClose()
                 return
@@ -574,7 +620,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const handleScanModeChange = async (value: string) => {
     if (value === 'text' || value === 'barcode') {
-      setScanMode(value)
+      // setScanMode(value)
       stopCamera()
       setLogs([])
       await startCamera()
@@ -586,6 +632,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
       handleClose()
     }
   }, [])
+
+  useEffect(() => {
+    if (isActive && !isCameraActive) {
+      handleOpen()
+    } else if (!isActive && isCameraActive) {
+      handleClose()
+    }
+  }, [isActive, isCameraActive])
 
   return (
     <>
