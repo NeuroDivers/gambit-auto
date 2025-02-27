@@ -33,31 +33,60 @@ export default function DeveloperSettings() {
     type: string;
   }>>([])
 
-  const [settings, setSettings] = useState<ProcessingSettings>({
-    blueEmphasis: 'very-high',
-    contrast: 'very-high',
-    morphKernelSize: '3',
-    confidenceThreshold: '35',
-    grayscaleMethod: 'blue-channel',
-    autoInvert: true,
-    edgeEnhancement: true,
-    noiseReduction: true,
-    adaptiveContrast: true,
-    tesseractConfig: {
-      psm: 7,
-      oem: 1
+  const [settings, setSettings] = useState<ProcessingSettings>(() => {
+    const savedSettings = localStorage.getItem('scanner-settings')
+    if (savedSettings) {
+      try {
+        return JSON.parse(savedSettings)
+      } catch (error) {
+        console.error('Error parsing saved scanner settings:', error)
+      }
+    }
+    
+    return {
+      blueEmphasis: 'very-high',
+      contrast: 'very-high',
+      morphKernelSize: '3',
+      confidenceThreshold: '35',
+      grayscaleMethod: 'blue-channel',
+      autoInvert: true,
+      edgeEnhancement: true,
+      noiseReduction: true,
+      adaptiveContrast: true,
+      tesseractConfig: {
+        psm: 7,
+        oem: 1
+      }
     }
   })
 
   useEffect(() => {
     const logs = JSON.parse(localStorage.getItem('scanner-logs') || '[]')
     setScannerLogs(logs)
+    
     localStorage.setItem('scanner-settings', JSON.stringify(settings))
   }, [settings])
 
   const handleClearCache = () => {
     localStorage.clear()
     setScannerLogs([])
+    
+    setSettings({
+      blueEmphasis: 'very-high',
+      contrast: 'very-high',
+      morphKernelSize: '3',
+      confidenceThreshold: '35',
+      grayscaleMethod: 'blue-channel',
+      autoInvert: true,
+      edgeEnhancement: true,
+      noiseReduction: true,
+      adaptiveContrast: true,
+      tesseractConfig: {
+        psm: 7,
+        oem: 1
+      }
+    })
+    
     toast.success("Cache cleared successfully")
   }
 
