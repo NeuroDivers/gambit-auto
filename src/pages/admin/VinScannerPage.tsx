@@ -1,0 +1,840 @@
+
+import { useState, useRef, useEffect } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
+import { Camera, Pause, Play, Check, X as XIcon, ChevronDown, ChevronUp } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
+import { createWorker, PSM } from 'tesseract.js'
+import { BrowserMultiFormatReader, BarcodeFormat } from '@zxing/library'
+import { useIsMobile } from "@/hooks/use-mobile"
+import { validateVIN } from "@/utils/vin-validation"
+import { preprocessImage } from "@/utils/image-processing"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+
+interface ExtendedTrackCapabilities extends MediaTrackCapabilities {
+  torch?: boolean;
+}
+
+interface VehicleInfo {
+  vin: string;
+  make?: string;
+  model?: string;
+  year?: string;
+}
+
+export default function VinScannerPage() {
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const returnPath = searchParams.get('returnTo') || '/admin/developer-settings'
+  
+  const [isCameraActive, setIsCameraActive] = useState(false)
+  const [isScanning, setIsScanning] = useState(false)
+  const [scanMode, setScanMode] = useState<'text' | 'barcode'>('text')
+  const [logs, setLogs] = useState<string[]>([])
+  const [hasFlash, setHasFlash] = useState(false)
+  const [isFlashOn, setIsFlashOn] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
+  const [scanStartTime, setScanStartTime] = useState<Date | null>(null)
+  const [lastScanDuration, setLastScanDuration] = useState<number | null>(null)
+  const [detectedVehicle, setDetectedVehicle] = useState<VehicleInfo | null>(null)
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false)
+  const [showLogs, setShowLogs] = useState(false)
+  const isMobile = useIsMobile()
+
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const workerRef = useRef<any>(null)
+  const barcodeReaderRef = useRef<BrowserMultiFormatReader | null>(null)
+  const scanningRef = useRef<number>()
+  const logsEndRef = useRef<HTMLDivElement>(null)
+
+  const checkedVinsRef = useRef<Set<string>>(new Set())
+
+  const addLog = (message: string) => {
+    if (!isPaused) {
+      const logEntry = {
+        timestamp: new Date().toISOString(),
+        message,
+        type: 'vin-scanner'
+      }
+      
+      setLogs(prev => [...prev, message])
+      
+      const existingLogs = JSON.parse(localStorage.getItem('scanner-logs') || '[]')
+      existingLogs.push(logEntry)
+      localStorage.setItem('scanner-logs', JSON.stringify(existingLogs.slice(-1000)))
+      
+      setTimeout(() => {
+        logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 100)
+    }
+  }
+
+  const toggleFlash = async () => {
+    if (!streamRef.current) return
+    try {
+      const track = streamRef.current.getVideoTracks()[0]
+      const capabilities = track.getCapabilities() as ExtendedTrackCapabilities
+      if ('torch' in capabilities) {
+        await track.applyConstraints({
+          advanced: [{ torch: !isFlashOn } as any]
+        })
+        setIsFlashOn(!isFlashOn)
+        addLog(`Flash ${!isFlashOn ? 'enabled' : 'disabled'}`)
+      }
+    } catch (err) {
+      addLog(`Flash control error: ${err}`)
+      toast.error('Failed to toggle flash')
+    }
+  }
+
+  const correctCommonOcrMistakes = (text: string): string[] => {
+    let cleanText = text
+      .replace(/\s+/g, '')
+      .toUpperCase();
+    
+    addLog(`Initial cleaned text: ${cleanText}`);
+
+    if (cleanText.length !== 17) {
+      addLog('Text length is not 17, proceeding with variations');
+      return generateVinVariations(text);
+    }
+
+    const invalidChars = new Set(['I', 'O', 'Q']);
+    const hasInvalidChars = [...cleanText].some(char => invalidChars.has(char));
+    
+    const ninthChar = cleanText[8];
+    const isValidCheckDigit = /[0-9X]/.test(ninthChar);
+
+    if (!hasInvalidChars && isValidCheckDigit) {
+      addLog('Raw scan looks promising, testing before generating variations');
+      if (validateVIN(cleanText)) {
+        addLog('Raw scan is a valid VIN!');
+        return [cleanText];
+      }
+      addLog('Raw scan validation failed, proceeding with variations');
+    } else {
+      addLog(`Found invalid characters or check digit, generating variations`);
+      if (hasInvalidChars) {
+        addLog(`Invalid characters detected: ${[...cleanText].filter(char => invalidChars.has(char)).join(', ')}`);
+      }
+      if (!isValidCheckDigit) {
+        addLog(`Invalid check digit detected: ${ninthChar}`);
+      }
+    }
+
+    return generateVinVariations(text);
+  };
+
+  const cleanVinBarcode = (scannedText: string): string => {
+    // Remove any leading 'I' characters (common barcode scanning error)
+    let cleaned = scannedText.trim();
+    
+    // Some barcode scanners add an 'I' prefix to the VIN
+    if (cleaned.startsWith('I') && cleaned.length === 18) {
+      addLog('Detected and removing leading I character from barcode scan');
+      cleaned = cleaned.substring(1);
+    }
+    
+    // Remove any whitespace and make uppercase
+    cleaned = cleaned.replace(/\s+/g, '').toUpperCase();
+    
+    return cleaned;
+  };
+
+  const generateVinVariations = (text: string): string[] => {
+    const handle9thCharacter = (char: string): string => {
+      if (/[0-9X]/.test(char)) {
+        return char;
+      }
+      
+      const checkDigitMappings: { [key: string]: string } = {
+        'O': '0',
+        'I': '1',
+        'L': '1',
+        'Z': '2',
+        'E': '3',
+        'A': '4',
+        'H': '4',
+        'S': '5',
+        'G': '6',
+        'T': '7',
+        'B': '8',
+        'Q': '9'
+      }
+      
+      return checkDigitMappings[char] || '0';
+    }
+
+    let corrected = text
+      .replace(/[oO]/g, '0')
+      .replace(/[iIl|]/g, '1')
+      .replace(/[sS]/g, '5')
+      .replace(/[zZ]/g, '2')
+      .replace(/[gG]/g, '6')
+      .replace(/[tT]/g, '7')
+      .replace(/\s+/g, '')
+      .toUpperCase();
+
+    if (corrected.length >= 9) {
+      const beforeCheck = corrected.slice(0, 8);
+      const afterCheck = corrected.slice(9);
+      const checkDigit = handle9thCharacter(corrected[8]);
+      corrected = beforeCheck + checkDigit + afterCheck;
+    }
+
+    const bOrEightPositions: number[] = [];
+    corrected.split('').forEach((char, index) => {
+      if (index !== 8 && (char === 'B' || char === '8')) {
+        bOrEightPositions.push(index);
+      }
+    });
+
+    const variations: string[] = [];
+    const totalCombinations = Math.pow(2, bOrEightPositions.length);
+
+    for (let i = 0; i < totalCombinations; i++) {
+      let variant = corrected.split('');
+      bOrEightPositions.forEach((pos, index) => {
+        variant[pos] = (i & (1 << index)) ? 'B' : '8';
+      });
+      variations.push(variant.join(''));
+    }
+
+    if (variations.length === 0) {
+      variations.push(corrected);
+    }
+
+    const vinPattern = /[A-HJ-NPR-Z0-9]{17}/;
+    
+    addLog(`Generated ${variations.length} possible variations`);
+    variations.forEach((variant, index) => {
+      addLog(`Variation ${index + 1}: ${variant}`);
+      if (variant.length >= 9) {
+        addLog(`Check digit (pos 9) in variation ${index + 1}: ${variant[8]}`);
+      }
+    });
+    
+    const validVariations = variations.filter(v => {
+      const isValidFormat = vinPattern.test(v);
+      const hasValidCheckDigit = v.length >= 9 && /[0-9X]/.test(v[8]);
+      return isValidFormat && hasValidCheckDigit;
+    });
+
+    addLog(`Found ${validVariations.length} valid VIN pattern matches`);
+    
+    return validVariations;
+  };
+
+  const initializeWorker = async () => {
+    try {
+      addLog('Initializing OCR worker with enhanced settings...')
+      const worker = await createWorker()
+      
+      await worker.reinitialize('eng')
+      await worker.setParameters({
+        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        tessedit_pageseg_mode: PSM.SINGLE_LINE,
+        preserve_interword_spaces: '0',
+        tessedit_min_word_length: 17,
+        tessjs_create_word_level_boxes: '1',
+        tessjs_create_box: '1',
+        debug_file: '/dev/null',
+        tessjs_mock_parameter: '1'
+      })
+
+      addLog('OCR worker initialized with enhanced settings')
+      return worker
+    } catch (error) {
+      addLog(`Error initializing OCR worker: ${error}`)
+      throw error
+    }
+  }
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
+    }
+    if (scanningRef.current) {
+      cancelAnimationFrame(scanningRef.current)
+    }
+    if (barcodeReaderRef.current) {
+      barcodeReaderRef.current.reset()
+      barcodeReaderRef.current = null
+    }
+    setIsCameraActive(false)
+    setIsScanning(false)
+    setIsFlashOn(false)
+  }
+
+  const startCamera = async () => {
+    try {
+      setScanStartTime(new Date())
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { exact: "environment" },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
+      }).catch(async () => {
+        addLog('Falling back to default camera...')
+        return await navigator.mediaDevices.getUserMedia({
+          video: true
+        })
+      })
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        streamRef.current = stream
+        addLog('Stream acquired, initializing camera...')
+        
+        const track = stream.getVideoTracks()[0]
+        const capabilities = track.getCapabilities() as ExtendedTrackCapabilities
+        setHasFlash('torch' in capabilities)
+        if ('torch' in capabilities) {
+          addLog('Flash capability detected')
+        }
+        
+        const settings = track.getSettings()
+        addLog(`Camera: ${settings.facingMode || 'unknown'} facing`)
+        
+        await new Promise((resolve) => {
+          if (videoRef.current) {
+            videoRef.current.onloadedmetadata = resolve
+          }
+        })
+        
+        await videoRef.current.play()
+        addLog('Video stream started')
+        setIsCameraActive(true)
+
+        if (scanMode === 'text') {
+          addLog('Starting OCR initialization...')
+          workerRef.current = await initializeWorker()
+          addLog('Worker reference created')
+          
+          let isCurrentlyScanning = true
+          setIsScanning(isCurrentlyScanning)
+          
+          addLog(`Starting OCR scanning...`)
+          await startOCRScanning(isCurrentlyScanning)
+        } else {
+          addLog('Initializing barcode reader...')
+          await initializeBarcodeScanner()
+        }
+      }
+    } catch (error) {
+      addLog(`Error accessing camera: ${error}`)
+      toast.error("Could not access camera. Please check camera permissions.")
+      navigateBack()
+    }
+  }
+
+  const initializeBarcodeScanner = async () => {
+    try {
+      // Create barcode reader with specific hints for VIN barcodes
+      const hints = new Map();
+      // Format hint - focus on Code 39 and Data Matrix which are commonly used for VIN barcodes
+      const formats = [BarcodeFormat.CODE_39, BarcodeFormat.DATA_MATRIX, BarcodeFormat.CODE_128];
+      hints.set(2, formats); // 2 is FORMAT_HINT_TYPE
+
+      // Try to make character set more restrictive for VINs (A-Z, 0-9)
+      hints.set(4, 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789'); // 4 is CHARACTER_SET hint
+
+      const codeReader = new BrowserMultiFormatReader(hints);
+      barcodeReaderRef.current = codeReader;
+
+      if (videoRef.current) {
+        addLog('Starting enhanced barcode scanning for VIN codes...');
+        
+        const scanLoop = async () => {
+          try {
+            if (!videoRef.current || !barcodeReaderRef.current || isPaused) return;
+            
+            const result = await barcodeReaderRef.current.decodeOnce(videoRef.current);
+            if (result?.getText()) {
+              let scannedValue = result.getText();
+              addLog(`Raw barcode detected: ${scannedValue}`);
+              
+              // Process the barcode to handle common issues
+              scannedValue = cleanVinBarcode(scannedValue);
+              addLog(`Processed barcode: ${scannedValue}`);
+              
+              if (validateVIN(scannedValue)) {
+                addLog('Valid VIN detected!');
+                
+                // Attempt to get vehicle info for confirmation
+                const vehicleInfo = await fetchVehicleInfo(scannedValue);
+                if (vehicleInfo) {
+                  const endTime = new Date();
+                  const duration = scanStartTime ? (endTime.getTime() - scanStartTime.getTime()) / 1000 : 0;
+                  setLastScanDuration(duration);
+                  
+                  addLog(`NHTSA validation passed - Valid VIN found in ${duration.toFixed(2)} seconds!`);
+                  addLog(`Vehicle Info - Make: ${vehicleInfo.make}, Model: ${vehicleInfo.model}, Year: ${vehicleInfo.year}`);
+                  
+                  setDetectedVehicle(vehicleInfo);
+                  setIsConfirmationOpen(true);
+                  return;
+                } else {
+                  // VIN format is valid but couldn't fetch vehicle info
+                  // Still allow confirmation as the VIN might be valid but not in NHTSA database
+                  addLog('NHTSA lookup failed, but VIN format is valid - proceeding with confirmation');
+                  const dummyVehicleInfo = {
+                    vin: scannedValue,
+                    make: "Unknown",
+                    model: "Unknown",
+                    year: "Unknown"
+                  };
+                  setDetectedVehicle(dummyVehicleInfo);
+                  setIsConfirmationOpen(true);
+                  return;
+                }
+              } else {
+                // Invalid VIN - log and continue scanning
+                addLog(`Invalid VIN format: ${scannedValue}`);
+              }
+            }
+          } catch (error: any) {
+            if (error?.name !== 'NotFoundException') {
+              addLog(`Barcode scan error: ${error}`);
+            }
+          }
+          
+          requestAnimationFrame(scanLoop);
+        };
+        
+        scanLoop();
+      }
+    } catch (error) {
+      addLog(`Error initializing barcode scanner: ${error}`);
+      throw error;
+    }
+  }
+
+  const startOCRScanning = async (immediateScanning?: boolean) => {
+    const shouldScan = immediateScanning ?? isScanning
+
+    if (!streamRef.current || !workerRef.current || !shouldScan || isPaused) {
+      return
+    }
+
+    try {
+      const frameData = captureFrame()
+      if (!frameData) {
+        if (shouldScan) {
+          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+        }
+        return
+      }
+
+      const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
+      
+      addLog(`Raw scan result: ${text}`)
+      addLog(`Raw confidence: ${confidence}%`)
+      
+      const possibleVins = correctCommonOcrMistakes(text)
+      
+      let foundValidVin = false
+      
+      for (const vin of possibleVins) {
+        if (!checkedVinsRef.current.has(vin)) {
+          addLog(`Checking new VIN variation: ${vin}`)
+          checkedVinsRef.current.add(vin)
+          const isValid = await checkVinValidity(vin)
+          if (isValid) {
+            foundValidVin = true
+            break
+          }
+        } else {
+          addLog(`Skipping already checked VIN: ${vin}`)
+        }
+      }
+
+      if (!foundValidVin && shouldScan) {
+        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+      }
+    } catch (error) {
+      addLog(`OCR error: ${error}`)
+      if (shouldScan) {
+        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+      }
+    }
+  }
+
+  const captureFrame = () => {
+    if (!videoRef.current || !canvasRef.current) {
+      return null
+    }
+
+    const canvas = canvasRef.current
+    const video = videoRef.current
+    const ctx = canvas.getContext('2d')
+    
+    if (!ctx || video.readyState !== video.HAVE_ENOUGH_DATA) {
+      return null
+    }
+
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+
+    const scanAreaWidth = video.videoWidth * 0.95
+    const scanAreaHeight = (40 / video.clientHeight) * video.videoHeight
+    const startX = (video.videoWidth - scanAreaWidth) / 2
+    const startY = (video.videoHeight - scanAreaHeight) / 2
+
+    addLog(`Video dimensions: ${video.videoWidth}x${video.videoHeight}`)
+    addLog(`Scan area: ${Math.round(scanAreaWidth)}x${Math.round(scanAreaHeight)} px`)
+    addLog(`Scan position: ${Math.round(startX)},${Math.round(startY)}`)
+
+    const tempCanvas = document.createElement('canvas')
+    tempCanvas.width = scanAreaWidth
+    tempCanvas.height = scanAreaHeight
+    const tempCtx = tempCanvas.getContext('2d')
+
+    if (!tempCtx) {
+      return null
+    }
+
+    tempCtx.drawImage(
+      video,
+      startX, startY, scanAreaWidth, scanAreaHeight,
+      0, 0, scanAreaWidth, scanAreaHeight
+    )
+
+    const scaledCanvas = document.createElement('canvas')
+    scaledCanvas.width = scanAreaWidth * 2
+    scaledCanvas.height = scanAreaHeight * 2
+    const scaledCtx = scaledCanvas.getContext('2d')
+    
+    if (scaledCtx) {
+      scaledCtx.imageSmoothingEnabled = false
+      scaledCtx.drawImage(
+        tempCanvas,
+        0, 0, tempCanvas.width, tempCanvas.height,
+        0, 0, scaledCanvas.width, scaledCanvas.height
+      )
+    }
+
+    return preprocessImage(scaledCanvas)
+  }
+
+  const fetchVehicleInfo = async (vin: string): Promise<VehicleInfo | null> => {
+    try {
+      const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`)
+      if (!response.ok) return null
+      
+      const data = await response.json()
+      const results = data.Results
+
+      if (!Array.isArray(results)) return null
+
+      const makeResult = results.find((r: any) => r.Variable === 'Make' && r.Value)
+      const modelResult = results.find((r: any) => r.Variable === 'Model' && r.Value)
+      const yearResult = results.find((r: any) => r.Variable === 'Model Year' && r.Value)
+
+      if (makeResult?.Value && modelResult?.Value && yearResult?.Value) {
+        return {
+          vin,
+          make: makeResult.Value,
+          model: modelResult.Value,
+          year: yearResult.Value
+        }
+      }
+    } catch (error) {
+      addLog(`NHTSA API error: ${error}`)
+    }
+    return null
+  }
+
+  const checkVinValidity = async (vin: string) => {
+    addLog(`Checking possible VIN: ${vin}`)
+    
+    if (validateVIN(vin)) {
+      addLog('Local VIN validation passed')
+      const vehicleInfo = await fetchVehicleInfo(vin)
+      
+      if (vehicleInfo) {
+        const endTime = new Date()
+        const duration = scanStartTime ? (endTime.getTime() - scanStartTime.getTime()) / 1000 : 0
+        setLastScanDuration(duration)
+        
+        addLog(`NHTSA validation passed - Valid VIN found in ${duration.toFixed(2)} seconds!`)
+        addLog(`Vehicle Info - Make: ${vehicleInfo.make}, Model: ${vehicleInfo.model}, Year: ${vehicleInfo.year}`)
+        
+        setDetectedVehicle(vehicleInfo)
+        setIsConfirmationOpen(true)
+        return true
+      } else {
+        addLog('NHTSA validation failed - Could not decode vehicle info')
+      }
+    } else {
+      addLog(`Local VIN validation failed - Invalid format`)
+    }
+    return false
+  }
+
+  const handleConfirm = (confirmed: boolean) => {
+    setIsConfirmationOpen(false)
+    
+    if (confirmed && detectedVehicle) {
+      // Navigate back with the scanned VIN
+      navigateWithResult(detectedVehicle.vin)
+    } else {
+      setDetectedVehicle(null)
+      checkedVinsRef.current.clear()
+      if (!videoRef.current?.srcObject) {
+        startCamera().then(() => {
+          startOCRScanning(true)
+        })
+      } else {
+        startOCRScanning(true)
+      }
+    }
+  }
+
+  const navigateWithResult = (vin: string) => {
+    // Store result in sessionStorage to pass to the previous page
+    sessionStorage.setItem('scanned-vin', vin)
+    navigate(returnPath)
+  }
+
+  const navigateBack = () => {
+    navigate(returnPath)
+  }
+
+  const handleScanModeChange = async (value: string) => {
+    if (value === 'text' || value === 'barcode') {
+      addLog(`Switching scan mode to: ${value}`)
+      setScanMode(value as 'text' | 'barcode')
+      
+      // First properly clean up the current mode
+      if (scanningRef.current) {
+        cancelAnimationFrame(scanningRef.current)
+        scanningRef.current = undefined
+      }
+      
+      if (workerRef.current) {
+        addLog('Terminating OCR worker before mode change')
+        await workerRef.current.terminate()
+        workerRef.current = null
+      }
+      
+      if (barcodeReaderRef.current) {
+        addLog('Resetting barcode reader before mode change')
+        barcodeReaderRef.current.reset()
+        barcodeReaderRef.current = null
+      }
+      
+      // Need to ensure we have an active camera before switching modes
+      if (!isCameraActive || !streamRef.current) {
+        addLog('Camera not active, restarting camera with new mode')
+        stopCamera()
+        await startCamera()
+      } else {
+        // Camera is already active, just initialize the new scanner mode
+        if (value === 'text') {
+          addLog('Initializing OCR for text mode')
+          workerRef.current = await initializeWorker()
+          setIsScanning(true)
+          startOCRScanning(true)
+        } else {
+          addLog('Initializing barcode scanner for barcode mode')
+          await initializeBarcodeScanner()
+        }
+      }
+    }
+  }
+
+  // Cleanup function
+  useEffect(() => {
+    // Start the camera when component mounts
+    startCamera()
+    
+    // Clean up when component unmounts
+    return () => {
+      stopCamera()
+      if (workerRef.current) {
+        workerRef.current.terminate()
+        workerRef.current = null
+      }
+    }
+  }, [])
+
+  return (
+    <div className="flex flex-col h-[100dvh] bg-background">
+      <div className="flex items-center justify-between p-4 border-b">
+        <h1 className="text-lg font-medium">VIN Scanner</h1>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={navigateBack}
+        >
+          <XIcon className="h-5 w-5" />
+        </Button>
+      </div>
+      
+      <div className="flex-1 relative">
+        {isConfirmationOpen ? (
+          <div className="absolute inset-0 z-50 bg-background/95 flex flex-col">
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold">Confirm Vehicle Information</h2>
+                <div className="bg-primary/10 p-3 rounded-lg">
+                  <div className="font-mono text-lg text-primary break-all">
+                    VIN: {detectedVehicle?.vin}
+                  </div>
+                </div>
+                {detectedVehicle && (
+                  <div className="grid gap-2 text-base">
+                    <div><span className="font-semibold">Make:</span> {detectedVehicle.make}</div>
+                    <div><span className="font-semibold">Model:</span> {detectedVehicle.model}</div>
+                    <div><span className="font-semibold">Year:</span> {detectedVehicle.year}</div>
+                  </div>
+                )}
+                <p className="text-sm text-muted-foreground">
+                  Is this the correct vehicle information?
+                </p>
+              </div>
+            </div>
+            <div className="p-6 border-t bg-background/80 backdrop-blur-sm">
+              <div className="grid grid-cols-2 gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleConfirm(false)}
+                >
+                  <XIcon className="mr-2 h-4 w-4" />
+                  Try Again
+                </Button>
+                <Button 
+                  onClick={() => handleConfirm(true)}
+                >
+                  <Check className="mr-2 h-4 w-4" />
+                  Confirm
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <video
+              ref={videoRef}
+              className="absolute inset-0 h-full w-full object-cover"
+              playsInline
+              autoPlay
+              muted
+            />
+            <canvas
+              ref={canvasRef}
+              className="absolute inset-0 h-full w-full object-cover opacity-0"
+            />
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] h-40">
+              <div className="absolute inset-0 border-2 border-primary rounded-lg" />
+              {/* Center indicator cross */}
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                <div className="relative">
+                  {/* Horizontal line */}
+                  <div className="absolute w-8 h-[2px] bg-primary/80 left-1/2 -translate-x-1/2"></div>
+                  {/* Vertical line */}
+                  <div className="absolute h-8 w-[2px] bg-primary/80 top-1/2 -translate-y-1/2"></div>
+                  {/* Center dot */}
+                  <div className="absolute w-2 h-2 rounded-full bg-[#F2FCE2] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"></div>
+                </div>
+              </div>
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/60 px-4 py-2 rounded-lg">
+                <p className="text-white text-center text-sm">
+                  Position {scanMode === 'text' ? 'VIN text' : 'barcode'} within frame
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+      
+      <div className="bg-muted p-4">
+        <div className="flex items-center justify-center gap-4 mb-4">
+          <Label htmlFor="scan-mode" className="text-sm">
+            Recognition Mode
+          </Label>
+          <div className="flex items-center gap-2">
+            <Label
+              htmlFor="scan-mode-text"
+              className={`text-sm ${
+                scanMode === "text" ? "text-foreground" : "text-muted-foreground"
+              }`}
+            >
+              OCR
+            </Label>
+            <Switch
+              id="scan-mode"
+              checked={scanMode === "barcode"}
+              onCheckedChange={(checked) =>
+                handleScanModeChange(checked ? "barcode" : "text")
+              }
+            />
+            <Label
+              htmlFor="scan-mode-barcode"
+              className={`text-sm ${
+                scanMode === "barcode" ? "text-foreground" : "text-muted-foreground"
+              }`}
+            >
+              Barcode
+            </Label>
+          </div>
+        </div>
+        
+        {lastScanDuration !== null && (
+          <div className="mb-2 text-sm font-medium text-primary">
+            Last successful scan took: {lastScanDuration.toFixed(2)} seconds
+          </div>
+        )}
+        
+        <div className="flex items-center justify-between">
+          {hasFlash && (
+            <Button variant="outline" size="sm" onClick={toggleFlash}>
+              {isFlashOn ? "Flash Off" : "Flash On"}
+            </Button>
+          )}
+          
+          <button 
+            onClick={() => setShowLogs(!showLogs)}
+            className="flex items-center text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <span className="mr-1">Scan Logs</span>
+            {showLogs ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          </button>
+        </div>
+        
+        {showLogs && (
+          <>
+            <div className="mt-2 flex justify-end">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => setIsPaused(!isPaused)}
+              >
+                {isPaused ? (
+                  <Play className="h-3 w-3" />
+                ) : (
+                  <Pause className="h-3 w-3" />
+                )}
+              </Button>
+            </div>
+            <div className="max-h-32 overflow-y-auto text-xs font-mono mt-2">
+              <div className="space-y-1">
+                {logs.map((log, index) => (
+                  <div key={index} className="text-muted-foreground">{log}</div>
+                ))}
+                <div ref={logsEndRef} />
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}

@@ -6,6 +6,7 @@ import NotFound from "./pages/NotFound"
 import PublicInvoiceView from "./pages/PublicInvoiceView"
 import Auth from "./pages/Auth"
 import UserDetails from "./pages/UserDetails"
+import VinScannerPage from "./pages/admin/VinScannerPage"
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +21,10 @@ export const router = createBrowserRouter([
   {
     path: "/users/:id",
     element: <UserDetails />,
+  },
+  {
+    path: "/admin/vin-scanner",
+    element: <VinScannerPage />,
   },
   ...authRoutes,
   {
