@@ -73,7 +73,6 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
       default:
         const weights = (() => {
           switch (blueEmphasis) {
-            case 'zero': return { r: 0.33, g: 0.33, b: 0.33 }  // No blue emphasis
             case 'very-high': return { r: 0.1, g: 0.1, b: 0.8 }  // More extreme blue emphasis
             case 'high': return { r: 0.15, g: 0.15, b: 0.7 }
             default: return { r: 0.2, g: 0.3, b: 0.5 }
@@ -202,228 +201,7 @@ export const postProcessVIN = (text: string): string => {
   return original.toUpperCase()
 }
 
-// Crop the image to the VIN region
-export const cropToVinRegion = (canvas: HTMLCanvasElement): HTMLCanvasElement => {
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return canvas
-
-  // Get settings from localStorage
-  const settings = JSON.parse(localStorage.getItem('scanner-settings') || '{}')
-  const { 
-    intelligentCrop = false, 
-    dynamicThreshold = false,
-    regionPadding = 'medium'
-  } = settings
-
-  // If intelligent crop is disabled, use the standard fixed crop
-  if (!intelligentCrop) {
-    // Default fixed region crop (centered)
-    const croppedCanvas = document.createElement('canvas')
-    
-    // Create crop region in the center of the image
-    const cropWidth = canvas.width * 0.95
-    const cropHeight = 40
-    const startX = (canvas.width - cropWidth) / 2
-    const startY = (canvas.height - cropHeight) / 2
-    
-    croppedCanvas.width = cropWidth
-    croppedCanvas.height = cropHeight
-    
-    const croppedCtx = croppedCanvas.getContext('2d')
-    if (croppedCtx) {
-      croppedCtx.drawImage(
-        canvas,
-        startX, startY, cropWidth, cropHeight,
-        0, 0, cropWidth, cropHeight
-      )
-    }
-    
-    return croppedCanvas
-  }
-
-  // Create a copy of the canvas for processing
-  const tempCanvas = document.createElement('canvas')
-  tempCanvas.width = canvas.width
-  tempCanvas.height = canvas.height
-  const tempCtx = tempCanvas.getContext('2d')
-  if (!tempCtx) return canvas
-  
-  // Draw the image to the temp canvas
-  tempCtx.drawImage(canvas, 0, 0)
-  
-  // Get image data for processing
-  const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height)
-  const data = imageData.data
-  
-  // Convert to grayscale for text detection
-  for (let i = 0; i < data.length; i += 4) {
-    const avg = (data[i] + data[i + 1] + data[i + 2]) / 3
-    data[i] = data[i + 1] = data[i + 2] = avg
-  }
-  
-  // Apply binary threshold for better text isolation
-  let threshold = 128 // Default threshold
-  
-  if (dynamicThreshold) {
-    threshold = calculateOtsuThreshold(data)
-  }
-  
-  for (let i = 0; i < data.length; i += 4) {
-    const value = data[i] < threshold ? 0 : 255
-    data[i] = data[i + 1] = data[i + 2] = value
-  }
-  
-  tempCtx.putImageData(imageData, 0, 0)
-  
-  // Try to find text regions using projection profiles
-  const { startX, startY, width, height } = findTextRegion(data, tempCanvas.width, tempCanvas.height)
-  
-  // If we couldn't find a text region, use a default region (centered region)
-  let regionWidth = width > 0 ? width : tempCanvas.width * 0.95
-  let regionHeight = height > 0 ? height : tempCanvas.height * 0.25
-  let regionStartX = startX >= 0 ? startX : (tempCanvas.width - regionWidth) / 2
-  let regionStartY = startY >= 0 ? startY : (tempCanvas.height - regionHeight) / 2
-  
-  // Ensure minimum height for VIN text (avoid narrow crops)
-  const minHeight = 30
-  if (regionHeight < minHeight) {
-    const diffHeight = minHeight - regionHeight
-    regionStartY = Math.max(0, regionStartY - diffHeight / 2)
-    regionHeight = Math.min(tempCanvas.height, regionHeight + diffHeight)
-  }
-  
-  // Ensure minimum width for VIN text (17 characters)
-  const minWidth = tempCanvas.width * 0.7
-  if (regionWidth < minWidth) {
-    const diffWidth = minWidth - regionWidth
-    regionStartX = Math.max(0, regionStartX - diffWidth / 2)
-    regionWidth = Math.min(tempCanvas.width, regionWidth + diffWidth)
-  }
-  
-  // Add padding based on settings
-  let paddingFactor: number
-  switch (regionPadding) {
-    case 'small': paddingFactor = 0.02; break;
-    case 'large': paddingFactor = 0.10; break;
-    case 'medium':
-    default: paddingFactor = 0.05; break;
-  }
-  
-  const paddingX = tempCanvas.width * paddingFactor
-  const paddingY = tempCanvas.height * paddingFactor
-  
-  regionStartX = Math.max(0, regionStartX - paddingX / 2)
-  regionStartY = Math.max(0, regionStartY - paddingY / 2)
-  regionWidth = Math.min(tempCanvas.width - regionStartX, regionWidth + paddingX)
-  regionHeight = Math.min(tempCanvas.height - regionStartY, regionHeight + paddingY)
-  
-  // Create result canvas with the detected region
-  const croppedCanvas = document.createElement('canvas')
-  croppedCanvas.width = regionWidth
-  croppedCanvas.height = regionHeight
-  
-  const croppedCtx = croppedCanvas.getContext('2d')
-  if (croppedCtx) {
-    // Draw only the text region to the new canvas from the original (not binary) image
-    croppedCtx.drawImage(
-      canvas,
-      regionStartX, regionStartY, regionWidth, regionHeight,
-      0, 0, regionWidth, regionHeight
-    )
-  }
-  
-  return croppedCanvas
-}
-
-// Find the region containing text using horizontal and vertical projection profiles
-function findTextRegion(data: Uint8ClampedArray, width: number, height: number): { 
-  startX: number, 
-  startY: number, 
-  width: number, 
-  height: number 
-} {
-  // Calculate horizontal and vertical projections
-  const horizontalProjection = new Array(height).fill(0)
-  const verticalProjection = new Array(width).fill(0)
-  
-  // Black pixels have value 0 in binary image - count them in each row/column
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const idx = (y * width + x) * 4
-      if (data[idx] === 0) { // Black pixel (text)
-        horizontalProjection[y]++
-        verticalProjection[x]++
-      }
-    }
-  }
-  
-  // Normalize by the maximum count
-  const maxHorizontal = Math.max(...horizontalProjection)
-  const maxVertical = Math.max(...verticalProjection)
-  
-  // If no black pixels found, return negative values to use defaults
-  if (maxHorizontal === 0 || maxVertical === 0) {
-    return { startX: -1, startY: -1, width: -1, height: -1 }
-  }
-  
-  // Define thresholds for text regions (% of max projection)
-  const horizontalThreshold = maxHorizontal * 0.05
-  const verticalThreshold = maxVertical * 0.05
-  
-  // Find text regions (areas with density above threshold)
-  let topY = -1, bottomY = -1
-  let leftX = -1, rightX = -1
-  
-  // Find top edge
-  for (let y = 0; y < height; y++) {
-    if (horizontalProjection[y] > horizontalThreshold) {
-      topY = y
-      break
-    }
-  }
-  
-  // Find bottom edge
-  for (let y = height - 1; y >= 0; y--) {
-    if (horizontalProjection[y] > horizontalThreshold) {
-      bottomY = y
-      break
-    }
-  }
-  
-  // Find left edge
-  for (let x = 0; x < width; x++) {
-    if (verticalProjection[x] > verticalThreshold) {
-      leftX = x
-      break
-    }
-  }
-  
-  // Find right edge
-  for (let x = width - 1; x >= 0; x--) {
-    if (verticalProjection[x] > verticalThreshold) {
-      rightX = x
-      break
-    }
-  }
-  
-  // Calculate region dimensions
-  const regionWidth = rightX - leftX + 1
-  const regionHeight = bottomY - topY + 1
-  
-  // Ensure we found valid regions
-  if (topY < 0 || leftX < 0 || regionWidth <= 0 || regionHeight <= 0) {
-    return { startX: -1, startY: -1, width: -1, height: -1 }
-  }
-  
-  return { 
-    startX: leftX, 
-    startY: topY, 
-    width: regionWidth, 
-    height: regionHeight 
-  }
-}
-
-// Helper functions for improved processing
+// New helper functions for improved processing
 
 function getLocalArea(data: Uint8ClampedArray, x: number, y: number, width: number, height: number): number[] {
   const area = []
@@ -447,6 +225,7 @@ function getLocalContrast(area: number[]): number {
 
 function applyUnsharpMask(data: Uint8ClampedArray, width: number, height: number, radius: number, amount: number, threshold: number) {
   const original = new Uint8ClampedArray(data)
+  const blurred = new Uint8ClampedArray(data.length)
   
   // Apply Gaussian blur
   const kernel = createGaussianKernel(radius * 2 + 1, radius)
@@ -571,6 +350,35 @@ function applyConvolution(data: Uint8ClampedArray, width: number, height: number
   return result
 }
 
+// Apply adaptive thresholding
+function applyAdaptiveThreshold(data: Uint8ClampedArray, width: number, height: number, blockSize: number, C: number) {
+  const halfBlock = Math.floor(blockSize / 2)
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let sum = 0
+      let count = 0
+
+      // Calculate local mean
+      for (let dy = -halfBlock; dy <= halfBlock; dy++) {
+        for (let dx = -halfBlock; dx <= halfBlock; dx++) {
+          const nx = x + dx
+          const ny = y + dy
+          if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+            sum += data[(ny * width + nx) * 4]
+            count++
+          }
+        }
+      }
+
+      const mean = sum / count
+      const idx = (y * width + x) * 4
+      const value = data[idx] < (mean - C) ? 0 : 255
+      data[idx] = data[idx + 1] = data[idx + 2] = value
+    }
+  }
+}
+
 // Morphological dilation
 function dilate(data: Uint8ClampedArray, width: number, height: number, kernelSize: number) {
   const result = new Uint8ClampedArray(data.length)
@@ -625,4 +433,32 @@ function erode(data: Uint8ClampedArray, width: number, height: number, kernelSiz
   for (let i = 0; i < data.length; i++) {
     data[i] = result[i]
   }
+}
+
+export const cropToVinRegion = (canvas: HTMLCanvasElement): HTMLCanvasElement => {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return canvas
+
+  // Match the overlay dimensions exactly
+  const vinRegionWidth = canvas.width * 0.95 // 95% of width to match UI
+  const vinRegionHeight = canvas.height * (40/canvas.height) // Fixed 40px height to match UI
+  const startX = (canvas.width - vinRegionWidth) / 2
+  const startY = (canvas.height - vinRegionHeight) / 2
+
+  // Create new canvas with cropped dimensions
+  const croppedCanvas = document.createElement('canvas')
+  croppedCanvas.width = vinRegionWidth
+  croppedCanvas.height = vinRegionHeight
+
+  // Draw cropped region to new canvas
+  const croppedCtx = croppedCanvas.getContext('2d')
+  if (croppedCtx) {
+    croppedCtx.drawImage(
+      canvas,
+      startX, startY, vinRegionWidth, vinRegionHeight,
+      0, 0, vinRegionWidth, vinRegionHeight
+    )
+  }
+
+  return croppedCanvas
 }

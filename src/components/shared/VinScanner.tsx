@@ -1,4 +1,3 @@
-
 import { Camera, Pause, Play, Check, X as XIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -8,7 +7,7 @@ import { createWorker, PSM } from 'tesseract.js'
 import { BrowserMultiFormatReader } from '@zxing/library'
 import { useIsMobile } from "@/hooks/use-mobile"
 import { validateVIN, validateVinWithNHTSA } from "@/utils/vin-validation"
-import { preprocessImage, cropToVinRegion } from "@/utils/image-processing"
+import { preprocessImage } from "@/utils/image-processing"
 import { ScannerOverlay } from "./vin-scanner/ScannerOverlay"
 
 interface VinScannerProps {
@@ -437,24 +436,48 @@ export function VinScanner({ onScan }: VinScannerProps) {
       return null
     }
 
-    // Set canvas size to match video dimensions
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
-    
-    // Draw full video frame to the canvas
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-    
-    // Log the dimensions for debugging
+
+    const scanAreaWidth = video.videoWidth * 0.95
+    const scanAreaHeight = (40 / video.clientHeight) * video.videoHeight
+    const startX = (video.videoWidth - scanAreaWidth) / 2
+    const startY = (video.videoHeight - scanAreaHeight) / 2
+
     addLog(`Video dimensions: ${video.videoWidth}x${video.videoHeight}`)
+    addLog(`Scan area: ${Math.round(scanAreaWidth)}x${Math.round(scanAreaHeight)} px`)
+    addLog(`Scan position: ${Math.round(startX)},${Math.round(startY)}`)
+
+    const tempCanvas = document.createElement('canvas')
+    tempCanvas.width = scanAreaWidth
+    tempCanvas.height = scanAreaHeight
+    const tempCtx = tempCanvas.getContext('2d')
+
+    if (!tempCtx) {
+      return null
+    }
+
+    tempCtx.drawImage(
+      video,
+      startX, startY, scanAreaWidth, scanAreaHeight,
+      0, 0, scanAreaWidth, scanAreaHeight
+    )
+
+    const scaledCanvas = document.createElement('canvas')
+    scaledCanvas.width = scanAreaWidth * 2
+    scaledCanvas.height = scanAreaHeight * 2
+    const scaledCtx = scaledCanvas.getContext('2d')
     
-    // Use the intelligent text region detection
-    const croppedCanvas = cropToVinRegion(canvas)
-    
-    // Log the cropped dimensions
-    addLog(`Cropped region: ${croppedCanvas.width}x${croppedCanvas.height} px`)
-    
-    // Apply preprocessing to the cropped region
-    return preprocessImage(croppedCanvas)
+    if (scaledCtx) {
+      scaledCtx.imageSmoothingEnabled = false
+      scaledCtx.drawImage(
+        tempCanvas,
+        0, 0, tempCanvas.width, tempCanvas.height,
+        0, 0, scaledCanvas.width, scaledCanvas.height
+      )
+    }
+
+    return preprocessImage(scaledCanvas)
   }
 
   const fetchVehicleInfo = async (vin: string): Promise<VehicleInfo | null> => {

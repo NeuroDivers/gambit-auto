@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 interface ProcessingSettings {
-  blueEmphasis: 'zero' | 'normal' | 'high' | 'very-high';
+  blueEmphasis: 'normal' | 'high' | 'very-high';
   contrast: 'normal' | 'high' | 'very-high';
   morphKernelSize: '2' | '3' | '4';
   confidenceThreshold: '35' | '40' | '45';
@@ -22,9 +22,6 @@ interface ProcessingSettings {
   edgeEnhancement: boolean;
   noiseReduction: boolean;
   adaptiveContrast: boolean;
-  intelligentCrop: boolean;
-  dynamicThreshold: boolean;
-  regionPadding: 'small' | 'medium' | 'large';
   tesseractConfig: {
     psm: 6 | 7 | 8 | 13;
     oem: 1 | 3;
@@ -59,9 +56,6 @@ export default function DeveloperSettings() {
       edgeEnhancement: true,
       noiseReduction: true,
       adaptiveContrast: true,
-      intelligentCrop: false,
-      dynamicThreshold: false,
-      regionPadding: 'medium',
       tesseractConfig: {
         psm: 7,
         oem: 1
@@ -91,9 +85,6 @@ export default function DeveloperSettings() {
       edgeEnhancement: true,
       noiseReduction: true,
       adaptiveContrast: true,
-      intelligentCrop: false,
-      dynamicThreshold: false,
-      regionPadding: 'medium',
       tesseractConfig: {
         psm: 7,
         oem: 1
@@ -191,38 +182,6 @@ export default function DeveloperSettings() {
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="intelligent-crop" className="flex-1">
-                          Intelligent Text Region Detection
-                          <p className="text-sm text-muted-foreground">
-                            Automatically detect and crop to text region
-                          </p>
-                        </Label>
-                        <Switch
-                          id="intelligent-crop"
-                          checked={settings.intelligentCrop}
-                          onCheckedChange={(checked) =>
-                            setSettings(prev => ({ ...prev, intelligentCrop: checked }))
-                          }
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="dynamic-threshold" className="flex-1">
-                          Dynamic Thresholding
-                          <p className="text-sm text-muted-foreground">
-                            Use Otsu's method for optimal threshold detection
-                          </p>
-                        </Label>
-                        <Switch
-                          id="dynamic-threshold"
-                          checked={settings.dynamicThreshold}
-                          onCheckedChange={(checked) =>
-                            setSettings(prev => ({ ...prev, dynamicThreshold: checked }))
-                          }
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
                         <Label htmlFor="edge-enhancement" className="flex-1">
                           Edge Enhancement
                           <p className="text-sm text-muted-foreground">
@@ -273,49 +232,25 @@ export default function DeveloperSettings() {
                   </div>
 
                   <div>
-                    <Label>Region Padding</Label>
-                    <RadioGroup
-                      value={settings.regionPadding}
-                      onValueChange={(value: 'small' | 'medium' | 'large') => 
-                        setSettings(prev => ({ ...prev, regionPadding: value }))
-                      }
-                      className="mt-2 space-y-3"
-                    >
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="small" id="padding-small" className="border-primary" />
-                        <Label htmlFor="padding-small" className="font-medium cursor-pointer">Small (2%)</Label>
-                      </div>
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="medium" id="padding-medium" className="border-primary" />
-                        <Label htmlFor="padding-medium" className="font-medium cursor-pointer">Medium (5%)</Label>
-                      </div>
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="large" id="padding-large" className="border-primary" />
-                        <Label htmlFor="padding-large" className="font-medium cursor-pointer">Large (10%)</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-
-                  <div>
                     <Label>Grayscale Method</Label>
                     <RadioGroup
                       value={settings.grayscaleMethod}
                       onValueChange={(value: 'luminosity' | 'average' | 'blue-channel') => 
                         setSettings(prev => ({ ...prev, grayscaleMethod: value }))
                       }
-                      className="mt-2 space-y-3"
+                      className="mt-2"
                     >
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="luminosity" id="gray-luminosity" className="border-primary" />
-                        <Label htmlFor="gray-luminosity" className="font-medium cursor-pointer">Luminosity (Default)</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="luminosity" id="gray-luminosity" />
+                        <Label htmlFor="gray-luminosity">Luminosity (Default)</Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="average" id="gray-average" className="border-primary" />
-                        <Label htmlFor="gray-average" className="font-medium cursor-pointer">Average</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="average" id="gray-average" />
+                        <Label htmlFor="gray-average">Average</Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="blue-channel" id="gray-blue" className="border-primary" />
-                        <Label htmlFor="gray-blue" className="font-medium cursor-pointer">Blue Channel Only</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="blue-channel" id="gray-blue" />
+                        <Label htmlFor="gray-blue">Blue Channel Only</Label>
                       </div>
                     </RadioGroup>
                   </div>
@@ -324,32 +259,26 @@ export default function DeveloperSettings() {
                     <Label>Blue Channel Emphasis</Label>
                     <RadioGroup
                       value={settings.blueEmphasis}
-                      onValueChange={(value: 'zero' | 'normal' | 'high' | 'very-high') => 
+                      onValueChange={(value: 'normal' | 'high' | 'very-high') => 
                         setSettings(prev => ({ ...prev, blueEmphasis: value }))
                       }
-                      className="mt-2 space-y-3"
+                      className="mt-2"
                     >
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="zero" id="blue-zero" className="border-primary" />
-                        <Label htmlFor="blue-zero" className="font-medium cursor-pointer">Zero (0.0)</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="normal" id="blue-normal" />
+                        <Label htmlFor="blue-normal">Normal (0.5)</Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="normal" id="blue-normal" className="border-primary" />
-                        <Label htmlFor="blue-normal" className="font-medium cursor-pointer">Normal (0.5)</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="high" id="blue-high" />
+                        <Label htmlFor="blue-high">High (0.6)</Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="high" id="blue-high" className="border-primary" />
-                        <Label htmlFor="blue-high" className="font-medium cursor-pointer">High (0.6)</Label>
-                      </div>
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="very-high" id="blue-very-high" className="border-primary" />
-                        <Label htmlFor="blue-very-high" className="font-medium cursor-pointer">Very High (0.7)</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="very-high" id="blue-very-high" />
+                        <Label htmlFor="blue-very-high">Very High (0.7)</Label>
                       </div>
                     </RadioGroup>
                   </div>
-                </div>
 
-                <div className="space-y-4">
                   <div>
                     <Label>Contrast Enhancement</Label>
                     <RadioGroup
@@ -357,23 +286,25 @@ export default function DeveloperSettings() {
                       onValueChange={(value: 'normal' | 'high' | 'very-high') => 
                         setSettings(prev => ({ ...prev, contrast: value }))
                       }
-                      className="mt-2 space-y-3"
+                      className="mt-2"
                     >
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="normal" id="contrast-normal" className="border-primary" />
-                        <Label htmlFor="contrast-normal" className="font-medium cursor-pointer">Normal (0.5/1.5)</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="normal" id="contrast-normal" />
+                        <Label htmlFor="contrast-normal">Normal (0.5/1.5)</Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="high" id="contrast-high" className="border-primary" />
-                        <Label htmlFor="contrast-high" className="font-medium cursor-pointer">High (0.4/1.7)</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="high" id="contrast-high" />
+                        <Label htmlFor="contrast-high">High (0.4/1.7)</Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="very-high" id="contrast-very-high" className="border-primary" />
-                        <Label htmlFor="contrast-very-high" className="font-medium cursor-pointer">Very High (0.3/1.9)</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="very-high" id="contrast-very-high" />
+                        <Label htmlFor="contrast-very-high">Very High (0.3/1.9)</Label>
                       </div>
                     </RadioGroup>
                   </div>
+                </div>
 
+                <div className="space-y-4">
                   <div>
                     <Label>Tesseract Page Segmentation Mode</Label>
                     <RadioGroup
@@ -387,23 +318,23 @@ export default function DeveloperSettings() {
                           }
                         }))
                       }
-                      className="mt-2 space-y-3"
+                      className="mt-2"
                     >
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="7" id="psm-7" className="border-primary" />
-                        <Label htmlFor="psm-7" className="font-medium cursor-pointer">Single Line (PSM 7)</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="7" id="psm-7" />
+                        <Label htmlFor="psm-7">Single Line (PSM 7)</Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="6" id="psm-6" className="border-primary" />
-                        <Label htmlFor="psm-6" className="font-medium cursor-pointer">Uniform Block (PSM 6)</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="6" id="psm-6" />
+                        <Label htmlFor="psm-6">Uniform Block (PSM 6)</Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="8" id="psm-8" className="border-primary" />
-                        <Label htmlFor="psm-8" className="font-medium cursor-pointer">Single Word (PSM 8)</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="8" id="psm-8" />
+                        <Label htmlFor="psm-8">Single Word (PSM 8)</Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="13" id="psm-13" className="border-primary" />
-                        <Label htmlFor="psm-13" className="font-medium cursor-pointer">Raw Line (PSM 13)</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="13" id="psm-13" />
+                        <Label htmlFor="psm-13">Raw Line (PSM 13)</Label>
                       </div>
                     </RadioGroup>
                   </div>
@@ -421,15 +352,15 @@ export default function DeveloperSettings() {
                           }
                         }))
                       }
-                      className="mt-2 space-y-3"
+                      className="mt-2"
                     >
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="1" id="oem-1" className="border-primary" />
-                        <Label htmlFor="oem-1" className="font-medium cursor-pointer">Neural Nets Only (OEM 1)</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="1" id="oem-1" />
+                        <Label htmlFor="oem-1">Neural Nets Only (OEM 1)</Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="3" id="oem-3" className="border-primary" />
-                        <Label htmlFor="oem-3" className="font-medium cursor-pointer">Default (OEM 3)</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="3" id="oem-3" />
+                        <Label htmlFor="oem-3">Default (OEM 3)</Label>
                       </div>
                     </RadioGroup>
                   </div>
@@ -441,19 +372,19 @@ export default function DeveloperSettings() {
                       onValueChange={(value: '2' | '3' | '4') => 
                         setSettings(prev => ({ ...prev, morphKernelSize: value }))
                       }
-                      className="mt-2 space-y-3"
+                      className="mt-2"
                     >
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="2" id="kernel-2" className="border-primary" />
-                        <Label htmlFor="kernel-2" className="font-medium cursor-pointer">2px</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="2" id="kernel-2" />
+                        <Label htmlFor="kernel-2">2px</Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="3" id="kernel-3" className="border-primary" />
-                        <Label htmlFor="kernel-3" className="font-medium cursor-pointer">3px</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="3" id="kernel-3" />
+                        <Label htmlFor="kernel-3">3px</Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="4" id="kernel-4" className="border-primary" />
-                        <Label htmlFor="kernel-4" className="font-medium cursor-pointer">4px</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="4" id="kernel-4" />
+                        <Label htmlFor="kernel-4">4px</Label>
                       </div>
                     </RadioGroup>
                   </div>
@@ -465,19 +396,19 @@ export default function DeveloperSettings() {
                       onValueChange={(value: '35' | '40' | '45') => 
                         setSettings(prev => ({ ...prev, confidenceThreshold: value }))
                       }
-                      className="mt-2 space-y-3"
+                      className="mt-2"
                     >
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="35" id="confidence-35" className="border-primary" />
-                        <Label htmlFor="confidence-35" className="font-medium cursor-pointer">35%</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="35" id="confidence-35" />
+                        <Label htmlFor="confidence-35">35%</Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="40" id="confidence-40" className="border-primary" />
-                        <Label htmlFor="confidence-40" className="font-medium cursor-pointer">40%</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="40" id="confidence-40" />
+                        <Label htmlFor="confidence-40">40%</Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value="45" id="confidence-45" className="border-primary" />
-                        <Label htmlFor="confidence-45" className="font-medium cursor-pointer">45%</Label>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="45" id="confidence-45" />
+                        <Label htmlFor="confidence-45">45%</Label>
                       </div>
                     </RadioGroup>
                   </div>
