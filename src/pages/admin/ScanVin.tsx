@@ -1,7 +1,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { ArrowLeft, Clipboard, RotateCcw, Check, AlignLeft, Barcode, Info } from "lucide-react"
+import { ArrowLeft, Clipboard, RotateCcw, Check, AlignLeft, Barcode, Info, Play, Pause, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createWorker, PSM } from 'tesseract.js'
@@ -17,7 +17,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Badge } from "@/components/ui/badge"
 import { PageTitle } from "@/components/shared/PageTitle"
 import { Toggle } from "@/components/ui/toggle"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, DialogFooter } from "@/components/ui/dialog"
+import { CheckSquare, Square } from "lucide-react"
 
 interface VehicleInfo {
   vin: string;
@@ -32,6 +34,7 @@ interface ExtendedTrackCapabilities extends MediaTrackCapabilities {
 
 // OCR presets - different configurations for Tesseract
 interface OcrPreset {
+  id: string;
   name: string;
   description: string;
   config: {
@@ -46,6 +49,7 @@ interface OcrPreset {
 
 const ocrPresets: OcrPreset[] = [
   {
+    id: "default",
     name: "Default",
     description: "Balanced accuracy for most VIN formats",
     config: {
@@ -58,6 +62,85 @@ const ocrPresets: OcrPreset[] = [
     }
   },
   {
+    id: "windshield",
+    name: "Windshield Scanning",
+    description: "Optimized for reading VINs through windshield glass",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SINGLE_BLOCK,
+      preserveInterwordSpaces: "0",
+      minWordLength: 17,
+      createWordBoxes: "1",
+      createBoxes: "1"
+    }
+  },
+  {
+    id: "monitor",
+    name: "Monitor/Screen",
+    description: "For VINs displayed on digital screens with reduced flickering",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SINGLE_LINE,
+      preserveInterwordSpaces: "0",
+      minWordLength: 17,
+      createWordBoxes: "1",
+      createBoxes: "1"
+    }
+  },
+  {
+    id: "monitor-advanced",
+    name: "Advanced Monitor VIN",
+    description: "Specialized processing for anti-aliasing and moiré patterns",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SINGLE_LINE,
+      preserveInterwordSpaces: "0",
+      minWordLength: 17,
+      createWordBoxes: "1",
+      createBoxes: "1"
+    }
+  },
+  {
+    id: "low-light",
+    name: "Low Light",
+    description: "Enhanced for poor lighting conditions",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SINGLE_BLOCK,
+      preserveInterwordSpaces: "0",
+      minWordLength: 17,
+      createWordBoxes: "1",
+      createBoxes: "1"
+    }
+  },
+  {
+    id: "bright-light",
+    name: "Bright Light",
+    description: "For dealing with glare and reflections",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SINGLE_BLOCK,
+      preserveInterwordSpaces: "0",
+      minWordLength: 17,
+      createWordBoxes: "1",
+      createBoxes: "1"
+    }
+  },
+  {
+    id: "paper",
+    name: "Paper Document",
+    description: "For printed VINs on paper documents",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.RAW_LINE,
+      preserveInterwordSpaces: "0",
+      minWordLength: 17,
+      createWordBoxes: "1",
+      createBoxes: "1"
+    }
+  },
+  {
+    id: "high-precision",
     name: "High Precision",
     description: "More accurate but slower scanning",
     config: {
@@ -70,6 +153,7 @@ const ocrPresets: OcrPreset[] = [
     }
   },
   {
+    id: "fast-scan",
     name: "Fast Scan",
     description: "Quicker but less accurate",
     config: {
@@ -82,6 +166,7 @@ const ocrPresets: OcrPreset[] = [
     }
   },
   {
+    id: "faded-text",
     name: "Faded Text",
     description: "Better for hard-to-read VINs",
     config: {
@@ -192,7 +277,7 @@ export default function ScanVin() {
   const [isScanning, setIsScanning] = useState(false)
   // Change default scan mode to 'barcode'
   const [scanMode, setScanMode] = useState<'text' | 'barcode'>('barcode')
-  const [ocrPreset, setOcrPreset] = useState<string>("Default")
+  const [ocrPreset, setOcrPreset] = useState<string>("default")
   const [logs, setLogs] = useState<string[]>([])
   const [hasFlash, setHasFlash] = useState(false)
   const [isFlashOn, setIsFlashOn] = useState(false)
@@ -207,6 +292,9 @@ export default function ScanVin() {
   const [isLoading, setIsLoading] = useState(false)
   const [textDetected, setTextDetected] = useState(false)
   const [isFlashingRed, setIsFlashingRed] = useState(false)
+  
+  // New states for OCR settings dialog
+  const [isOcrSettingsOpen, setIsOcrSettingsOpen] = useState(false)
   
   const isMobile = useIsMobile()
   
@@ -432,7 +520,7 @@ export default function ScanVin() {
   };
 
   const getCurrentOcrPreset = (): OcrPreset => {
-    return ocrPresets.find(preset => preset.name === ocrPreset) || ocrPresets[0];
+    return ocrPresets.find(preset => preset.id === ocrPreset) || ocrPresets[0];
   };
 
   const initializeWorker = async () => {
@@ -522,20 +610,9 @@ export default function ScanVin() {
         addLog('Video stream started')
         setIsCameraActive(true)
 
-        if (scanMode === 'text') {
-          addLog('Starting OCR initialization...')
-          workerRef.current = await initializeWorker()
-          addLog('Worker reference created')
-          
-          let isCurrentlyScanning = true
-          setIsScanning(isCurrentlyScanning)
-          
-          addLog(`Starting OCR scanning...`)
-          await startOCRScanning(isCurrentlyScanning)
-        } else {
-          addLog('Initializing barcode reader...')
-          await initializeBarcodeScanner()
-        }
+        // Don't start scanning automatically anymore
+        // The user will press the start scan button
+        setIsScanning(false)
       }
     } catch (error) {
       addLog(`Error accessing camera: ${error}`)
@@ -558,7 +635,7 @@ export default function ScanVin() {
         
         const scanLoop = async () => {
           try {
-            if (!videoRef.current || !barcodeReaderRef.current || isPaused) return;
+            if (!videoRef.current || !barcodeReaderRef.current || isPaused || !isScanning) return;
             
             const result = await barcodeReaderRef.current.decodeOnce(videoRef.current);
             if (result?.getText()) {
@@ -614,10 +691,14 @@ export default function ScanVin() {
             setTextDetected(false);
           }
           
-          requestAnimationFrame(scanLoop);
+          if (isScanning) {
+            requestAnimationFrame(scanLoop);
+          }
         };
         
-        scanLoop();
+        if (isScanning) {
+          scanLoop();
+        }
       }
     } catch (error) {
       addLog(`Error initializing barcode scanner: ${error}`);
@@ -827,14 +908,9 @@ export default function ScanVin() {
     
     if (!videoRef.current?.srcObject) {
       startCamera().then(() => {
-        if (scanMode === 'text') {
-          startOCRScanning(true)
-        }
+        // Don't auto-start scanning
+        setIsScanning(false)
       })
-    } else {
-      if (scanMode === 'text') {
-        startOCRScanning(true)
-      }
     }
   }
 
@@ -863,11 +939,11 @@ export default function ScanVin() {
       addLog('Camera not active, restarting camera with new mode')
       stopCamera()
       await startCamera()
-    } else {
+    } else if (isScanning) {
+      // If already scanning, initialize the appropriate scanner for the new mode
       if (value === 'text') {
         addLog('Initializing OCR for text mode')
         workerRef.current = await initializeWorker()
-        setIsScanning(true)
         startOCRScanning(true)
       } else {
         addLog('Initializing barcode scanner for barcode mode')
@@ -876,12 +952,13 @@ export default function ScanVin() {
     }
   }
 
-  const handleOcrPresetChange = async (value: string) => {
-    setOcrPreset(value);
-    addLog(`Switching OCR preset to: ${value}`);
+  const handleOcrPresetChange = async (presetId: string) => {
+    setOcrPreset(presetId);
+    setIsOcrSettingsOpen(false);
+    addLog(`Switching OCR preset to: ${presetId}`);
     
-    // Only restart OCR if we're currently in text mode
-    if (scanMode === 'text') {
+    // Only restart OCR if we're currently in text mode and scanning
+    if (scanMode === 'text' && isScanning) {
       if (workerRef.current) {
         addLog('Terminating OCR worker to apply new preset');
         await workerRef.current.terminate();
@@ -890,7 +967,6 @@ export default function ScanVin() {
       
       addLog('Reinitializing OCR with new preset');
       workerRef.current = await initializeWorker();
-      setIsScanning(true);
       startOCRScanning(true);
     }
   };
@@ -929,6 +1005,33 @@ export default function ScanVin() {
   }
   
   const vinDetails = getVinDetails()
+
+  // New function to toggle scanning (start/stop)
+  const toggleScanning = async () => {
+    if (isScanning) {
+      // Stop scanning
+      setIsScanning(false);
+      if (scanningRef.current) {
+        cancelAnimationFrame(scanningRef.current);
+        scanningRef.current = undefined;
+      }
+      addLog('Scanning paused');
+    } else {
+      // Start scanning
+      setIsScanning(true);
+      addLog('Scanning started');
+      
+      // Initialize the appropriate scanner based on the current mode
+      if (scanMode === 'text') {
+        if (!workerRef.current) {
+          workerRef.current = await initializeWorker();
+        }
+        startOCRScanning(true);
+      } else {
+        await initializeBarcodeScanner();
+      }
+    }
+  };
 
   // Determine the border color class based on detection status
   const borderColorClass = isFlashingRed ? 
@@ -1064,32 +1167,21 @@ export default function ScanVin() {
 
           {scanMode === 'text' && (
             <div className="mb-4">
-              <Label htmlFor="ocr-preset" className="text-sm mb-1 block">
-                OCR Settings Preset
-              </Label>
-              <Select value={ocrPreset} onValueChange={handleOcrPresetChange}>
-                <SelectTrigger id="ocr-preset" className="w-full">
-                  <SelectValue placeholder="Select OCR preset" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ocrPresets.map((preset) => (
-                    <SelectItem key={preset.name} value={preset.name}>
-                      <div>
-                        <span className="font-medium">{preset.name}</span>
-                        <p className="text-xs text-muted-foreground">{preset.description}</p>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Button 
+                variant="outline" 
+                className="w-full flex justify-between items-center" 
+                onClick={() => setIsOcrSettingsOpen(true)}
+              >
+                <div className="flex items-center">
+                  <Settings className="h-4 w-4 mr-2" />
+                  OCR Settings
+                </div>
+                <span className="ml-auto text-sm text-muted-foreground">
+                  {currentPreset.name}
+                </span>
+              </Button>
             </div>
           )}
-
-          <p className="text-xs text-muted-foreground">
-            {scanMode === 'text' 
-              ? `Using preset: ${currentPreset.name} - ${currentPreset.description}`
-              : 'Using barcode scanner for VIN detection'}
-          </p>
 
           <div className="relative bg-black rounded-lg overflow-hidden aspect-video w-full">
             <video
@@ -1111,16 +1203,42 @@ export default function ScanVin() {
             </div>
             
             <div className="absolute bottom-2 right-2">
-              <div className="bg-purple-600 text-white text-xs px-3 py-1 rounded-full flex items-center">
-                <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
-                Scanning for VIN...
-              </div>
+              {isScanning ? (
+                <div className="bg-purple-600 text-white text-xs px-3 py-1 rounded-full flex items-center">
+                  <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
+                  Scanning for VIN...
+                </div>
+              ) : (
+                <div className="bg-gray-700 text-white text-xs px-3 py-1 rounded-full flex items-center">
+                  <div className="w-2 h-2 bg-white rounded-full mr-2"></div>
+                  Camera ready
+                </div>
+              )}
             </div>
             
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-16">
               <div className={`absolute inset-0 border-2 ${borderColorClass} rounded-lg transition-colors duration-300`} />
             </div>
           </div>
+
+          {/* Start/Stop Scan Button */}
+          <Button 
+            onClick={toggleScanning} 
+            variant={isScanning ? "destructive" : "default"}
+            className="w-full py-6 text-lg"
+          >
+            {isScanning ? (
+              <>
+                <Pause className="mr-2 h-5 w-5" />
+                Stop Scanning
+              </>
+            ) : (
+              <>
+                <Play className="mr-2 h-5 w-5" />
+                Start Scanning
+              </>
+            )}
+          </Button>
 
           <div className="flex space-x-2 mt-4">
             <Input
@@ -1173,6 +1291,54 @@ export default function ScanVin() {
           Cancel
         </Button>
       </div>
+
+      {/* OCR Settings Dialog */}
+      <Dialog open={isOcrSettingsOpen} onOpenChange={setIsOcrSettingsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>OCR Settings</DialogTitle>
+            <DialogDescription>
+              Select an OCR preset for different scanning environments
+            </DialogDescription>
+          </DialogHeader>
+          
+          <ScrollArea className="h-[50vh] mt-6">
+            <div className="grid grid-cols-1 gap-3">
+              {ocrPresets.map((preset) => (
+                <Card 
+                  key={preset.id} 
+                  className={`cursor-pointer transition-all hover:bg-primary/10 hover:border-primary ${
+                    ocrPreset === preset.id ? 'border-primary bg-primary/10' : ''
+                  }`}
+                  onClick={() => handleOcrPresetChange(preset.id)}
+                >
+                  <CardContent className="p-3">
+                    <div className="flex items-start gap-2">
+                      <div className="pt-0.5">
+                        {ocrPreset === preset.id ? (
+                          <CheckSquare className="h-4 w-4 text-primary" />
+                        ) : (
+                          <Square className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm">{preset.name}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{preset.description}</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </ScrollArea>
+          
+          <DialogFooter>
+            <Button onClick={() => setIsOcrSettingsOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
