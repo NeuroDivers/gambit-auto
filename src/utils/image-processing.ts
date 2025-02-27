@@ -65,22 +65,14 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
         gray = (r + g + b) / 3
         break
       case 'blue-channel':
-        // Enhanced blue channel isolation with reduced artifacts for first character
-        const x = Math.floor((i / 4) % canvas.width)
-        const isFirstCharRegion = x < canvas.width * 0.15 // First 15% of width
-        if (isFirstCharRegion) {
-          // Use more balanced weights for the first character region
-          gray = (r * 0.3 + g * 0.3 + b * 0.4)
-        } else {
-          // Enhanced blue channel isolation with red/green suppression for rest
-          gray = Math.max(b - ((r + g) / 3), 0)
-        }
+        // Enhanced blue channel isolation with red/green suppression
+        gray = Math.max(b - ((r + g) / 3), 0)
         break
       case 'luminosity':
       default:
         const weights = (() => {
           switch (blueEmphasis) {
-            case 'very-high': return { r: 0.1, g: 0.1, b: 0.8 }
+            case 'very-high': return { r: 0.1, g: 0.1, b: 0.8 }  // More extreme blue emphasis
             case 'high': return { r: 0.15, g: 0.15, b: 0.7 }
             default: return { r: 0.2, g: 0.3, b: 0.5 }
           }
@@ -97,7 +89,7 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
       
       const contrastValues = (() => {
         switch (contrast) {
-          case 'very-high': return { dark: 0.2, light: 2.0 }
+          case 'very-high': return { dark: 0.2, light: 2.0 }  // More extreme contrast
           case 'high': return { dark: 0.3, light: 1.8 }
           default: return { dark: 0.4, light: 1.6 }
         }
@@ -159,39 +151,6 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
 }
 
 export const postProcessVIN = (text: string): string => {
-  // Define valid country and manufacturer codes
-  const countryCodeMap: { [key: string]: string } = {
-    '1': 'USA',
-    '4': 'USA',
-    '5': 'USA',
-    '2': 'Canada',
-    '3': 'Mexico',
-    'J': 'Japan',
-    'K': 'South Korea',
-    'W': 'Germany',
-    'V': 'France/Spain',
-    'S': 'UK',
-    'Z': 'Italy',
-    'Y': 'Sweden/Finland',
-    'L': 'China',
-    '9': 'Brazil'
-  }
-
-  const manufacturerCodeMap: { [key: string]: string[] } = {
-    'A': ['Audi', 'Jaguar'],
-    'B': ['BMW', 'Dodge'],
-    'C': ['Chrysler'],
-    'F': ['Ford'],
-    'G': ['General Motors', 'Chevrolet'],
-    'H': ['Honda', 'Hyundai'],
-    'J': ['Jeep'],
-    'L': ['Lincoln'],
-    'M': ['Mazda', 'Mercedes-Benz'],
-    'N': ['Nissan'],
-    'T': ['Toyota'],
-    'V': ['Volvo', 'Volkswagen']
-  }
-
   // Enhanced character correction map
   const commonMistakes: { [key: string]: string } = {
     'O': '0',
@@ -216,60 +175,18 @@ export const postProcessVIN = (text: string): string => {
   // Keep original for validation
   const original = processed
 
-  // Check for known GM VIN patterns first
-  const gmPattern = /^[R1][0-9G]1/
-  if (gmPattern.test(processed)) {
-    const currentStart = processed.slice(0, 3)
-    console.log(`Found potential GM pattern: ${currentStart}`)
-    
-    // If it starts with R1G1, 161, or similar patterns, correct to 1G1
-    if (currentStart !== '1G1') {
-      console.log(`Correcting ${currentStart} to 1G1 (GM standard pattern)`)
-      processed = '1G1' + processed.slice(3)
-    }
-  }
+  // Apply character substitutions
+  processed = processed.split('').map(char => commonMistakes[char] || char).join('')
 
-  // If the start still isn't 1G1 but has characteristics of a GM VIN
-  if (processed.length >= 3 && processed[0] === '1' && processed.slice(0, 3) !== '1G1') {
-    const secondChar = processed[1]
-    // If second character is a number or commonly misread character
-    if (/[0-9OQDB]/.test(secondChar)) {
-      console.log(`Detected likely GM VIN with invalid second character: ${secondChar}`)
-      processed = '1G1' + processed.slice(3)
-    }
-  }
-
-  // Apply character substitutions for the rest of the VIN (after WMI)
-  processed = processed.split('').map((char, index) => {
-    // Don't modify the WMI (first 3 characters)
-    if (index < 3) return char
-    return commonMistakes[char] || char
-  }).join('')
-
-  // Enhanced VIN validation patterns
+  // Enhanced VIN validation
   const vinPattern = /^[A-HJ-NPR-Z0-9]{17}$/
-  const naVinPattern = /^[1-5][A-Z][0-9A-Z]{15}$/ // North American VIN pattern
-  const gmPattern1 = /^1G1[A-Z0-9]{14}$/ // Specific pattern for GM vehicles
-  const manufacturerPattern = /^[1-9][A-Z][A-Z0-9]{15}$/ // Ensures second char is letter
-
-  // Log validation information
-  if (processed.length === 17) {
-    const country = countryCodeMap[processed[0]] || 'Unknown'
-    const manufacturers = manufacturerCodeMap[processed[1]] || ['Unknown']
-    console.log(`Detected: Country - ${country}, Possible Manufacturers - ${manufacturers.join(' or ')}`)
-  }
-
-  // Validation hierarchy (from most specific to most general)
-  if (gmPattern1.test(processed)) {
-    console.log('Matched specific GM pattern (1G1)')
-    return processed
-  }
+  const naVinPattern = /^[1-5][A-HJ-NPR-Z0-9]{16}$/ // North American VIN pattern
 
   // Check if the processed result matches VIN patterns
-  const isProcessedValid = vinPattern.test(processed) && manufacturerPattern.test(processed)
-  const isProcessedNA = naVinPattern.test(processed) && manufacturerPattern.test(processed)
-  const isOriginalValid = vinPattern.test(original) && manufacturerPattern.test(original)
-  const isOriginalNA = naVinPattern.test(original) && manufacturerPattern.test(original)
+  const isProcessedValid = vinPattern.test(processed)
+  const isProcessedNA = naVinPattern.test(processed)
+  const isOriginalValid = vinPattern.test(original)
+  const isOriginalNA = naVinPattern.test(original)
 
   // Prefer North American VINs if detected
   if (isProcessedNA) return processed
