@@ -21,18 +21,4 @@ export interface ChatUser {
   email: string | null
   avatar_url: string | null
   role: ChatRole | null
-  last_seen_at?: string | null
-  is_online?: boolean
-  unread_count?: number
 }
-
-export interface ChatAttachment {
-  id: string
-  message_id: string
-  file_name: string
-  file_url: string
-  file_type: string
-  created_at: string
-}
-
-export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'error';
