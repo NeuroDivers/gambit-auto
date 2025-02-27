@@ -444,7 +444,8 @@ export const useVinScanner = ({
             if (!videoRef.current || !barcodeReaderRef.current || !isMountedRef.current) return;
             
             // Try to decode a barcode from the current video frame
-            const result = await barcodeReaderRef.current.decodeOnceFromVideoElement(videoRef.current);
+            // Use decodeFromVideoElement instead of decodeOnceFromVideoElement
+            const result = await barcodeReaderRef.current.decodeFromVideoElement(videoRef.current);
             
             if (!isMountedRef.current) return;
             
