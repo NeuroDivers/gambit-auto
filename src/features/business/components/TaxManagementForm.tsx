@@ -82,7 +82,7 @@ export function TaxManagementForm({ initialTaxes }: TaxManagementFormProps) {
     .map(tax => tax.region)
     .filter((value, index, self) => self.indexOf(value) === index)
 
-  const defaultValues = {
+  const defaultValues: TaxFormValues = {
     region: "",
     country: "Canada",
     tax_type: "GST",
@@ -107,7 +107,7 @@ export function TaxManagementForm({ initialTaxes }: TaxManagementFormProps) {
         region: values.region,
         country: values.country,
         tax_type: values.tax_type,
-        tax_rate: values.tax_rate,
+        tax_rate: Number(values.tax_rate),
         tax_number: values.tax_number,
         is_default: values.is_default || false
       }

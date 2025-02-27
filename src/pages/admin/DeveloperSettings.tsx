@@ -43,35 +43,7 @@ export default function DeveloperSettings() {
   const [scanLog, setScanLog] = useState<string[]>([])
   const [isInitialized, setIsInitialized] = useState(false)
 
-  // Process an image from the scanner
-  const processImage = (canvas: HTMLCanvasElement, decodeResult?: string) => {
-    try {
-      // Only process if we're in the OCR tab and scanning is active
-      if (activeTab !== "ocr-scanner" || !scannerActive) return;
-
-      // Process the image
-      const croppedCanvas = cropToVinRegion(canvas)
-      const processedImage = preprocessImage(croppedCanvas)
-      
-      if (decodeResult) {
-        const processed = postProcessVIN(decodeResult)
-        
-        // Add to results
-        addScanLog(`Barcode scan result: ${decodeResult}`)
-        addScanLog(`Processed result: ${processed}`)
-        
-        if (processed && processed.length >= 11) {
-          setScanResults(prev => [processed, ...prev].slice(0, 10))
-          setFinalResult(processed)
-          setScannerActive(false)
-        }
-      }
-    } catch (error) {
-      console.error('Error processing image:', error)
-      addScanLog(`Error: ${error instanceof Error ? error.message : String(error)}`)
-    }
-  }
-
+  // Handle OCR result
   const handleOcrComplete = (result: string) => {
     try {
       if (!result) {
@@ -273,7 +245,6 @@ export default function DeveloperSettings() {
                   <div className={`${scannerActive ? 'block' : 'hidden'}`}>
                     <VinScanner
                       onScan={handleOcrComplete}
-                      onImageCapture={processImage}
                       isActive={scannerActive}
                       scanMode="text"
                     />
@@ -538,15 +509,4 @@ export default function DeveloperSettings() {
                     Important Note
                   </h4>
                   <p>
-                    For security, API keys should be set in your project's environment variables.
-                    The keys stored here are only used for local testing and development.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
-  )
-}
+                    For

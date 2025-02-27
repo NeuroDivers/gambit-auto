@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, KeyboardEvent } from "react"
 import { ChatMessage, ChatUser, MessageStatus } from "@/types/chat"
 import { Card } from "@/components/ui/card"
@@ -406,8 +407,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       message: newMessage.trim(),
       read_at: null,
       created_at: now,
-      updated_at: now,
-      sender: null
+      updated_at: now
     }
     
     // Add message to local state with pending status
@@ -763,7 +763,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
                                 >
                                   <div className="break-words">{message.message}</div>
                                   <div className="text-xs opacity-70 mt-1 flex items-center justify-end gap-1">
-                                    {formatMessageTime(message.created_at)}
+                                    {formatMessageDate(message.created_at)}
                                     {statusIcon}
                                   </div>
                                 </div>
@@ -783,7 +783,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
                                   </div>
                                 ) : (
                                   message.read_at ? (
-                                    `Read ${formatMessageTime(message.read_at)}`
+                                    `Read ${formatMessageDate(message.read_at)}`
                                   ) : (
                                     messageStatus === 'sending' ? "Sending..." : "Not read yet"
                                   )
