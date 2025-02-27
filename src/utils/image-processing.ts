@@ -216,65 +216,40 @@ export const postProcessVIN = (text: string): string => {
   // Keep original for validation
   const original = processed
 
-  // Special case: If string starts with 'R1G1', it's likely '1G1' (GM vehicles)
-  if (processed.startsWith('R1G1')) {
-    console.log('Detected R1G1 pattern, correcting to 1G1 (GM vehicle)')
-    processed = '1G1' + processed.slice(4)
-  }
-
-  // If first character isn't a valid country code but looks like a common misread
-  if (processed.length > 0 && !countryCodeMap[processed[0]]) {
-    const firstChar = processed[0]
-    console.log(`Invalid country code detected: ${firstChar}`)
+  // Check for known GM VIN patterns first
+  const gmPattern = /^[R1][0-9G]1/
+  if (gmPattern.test(processed)) {
+    const currentStart = processed.slice(0, 3)
+    console.log(`Found potential GM pattern: ${currentStart}`)
     
-    // Common misreads for country codes
-    if (firstChar === 'R' || firstChar === 'I') {
-      console.log('Correcting first character to 1 (USA)')
-      processed = '1' + processed.slice(1)
-    } else if (firstChar === 'O') {
-      console.log('Correcting first character to 0')
-      processed = '0' + processed.slice(1)
-    }
-  }
-
-  // Special handling for second character (manufacturer)
-  if (processed.length > 1) {
-    const manufacturerChar = processed[1]
-    if (!manufacturerCodeMap[manufacturerChar]) {
-      console.log(`Potential invalid manufacturer code: ${manufacturerChar}`)
-      
-      // If second character is a number, try to determine the correct manufacturer
-      if (/[0-9]/.test(manufacturerChar)) {
-        // If it starts with 1 and second char is number, likely GM (G)
-        if (processed[0] === '1') {
-          console.log('Correcting numeric manufacturer code to G (General Motors)')
-          processed = processed[0] + 'G' + processed.slice(2)
-        }
-        // Add more manufacturer corrections based on patterns if needed
-      }
-    }
-  }
-
-  // Special handling for common GM VIN patterns
-  if (processed.length >= 3) {
-    const wmi = processed.slice(0, 3)
-    if (/^[1-5][0-9]1/.test(wmi)) {
-      // If WMI looks like "161", "151", etc., it's likely "1G1"
-      console.log(`Correcting invalid WMI ${wmi} to 1G1 (GM pattern)`)
+    // If it starts with R1G1, 161, or similar patterns, correct to 1G1
+    if (currentStart !== '1G1') {
+      console.log(`Correcting ${currentStart} to 1G1 (GM standard pattern)`)
       processed = '1G1' + processed.slice(3)
     }
   }
 
-  // Apply character substitutions for the rest of the VIN
+  // If the start still isn't 1G1 but has characteristics of a GM VIN
+  if (processed.length >= 3 && processed[0] === '1' && processed.slice(0, 3) !== '1G1') {
+    const secondChar = processed[1]
+    // If second character is a number or commonly misread character
+    if (/[0-9OQDB]/.test(secondChar)) {
+      console.log(`Detected likely GM VIN with invalid second character: ${secondChar}`)
+      processed = '1G1' + processed.slice(3)
+    }
+  }
+
+  // Apply character substitutions for the rest of the VIN (after WMI)
   processed = processed.split('').map((char, index) => {
-    // Don't apply general substitutions to first two characters
-    if (index < 2) return char
+    // Don't modify the WMI (first 3 characters)
+    if (index < 3) return char
     return commonMistakes[char] || char
   }).join('')
 
-  // Enhanced VIN validation
+  // Enhanced VIN validation patterns
   const vinPattern = /^[A-HJ-NPR-Z0-9]{17}$/
-  const naVinPattern = /^[1-5][A-HJ-NPR-Z0-9]{16}$/ // North American VIN pattern
+  const naVinPattern = /^[1-5][A-Z][0-9A-Z]{15}$/ // North American VIN pattern
+  const gmPattern1 = /^1G1[A-Z0-9]{14}$/ // Specific pattern for GM vehicles
   const manufacturerPattern = /^[1-9][A-Z][A-Z0-9]{15}$/ // Ensures second char is letter
 
   // Log validation information
@@ -282,6 +257,12 @@ export const postProcessVIN = (text: string): string => {
     const country = countryCodeMap[processed[0]] || 'Unknown'
     const manufacturers = manufacturerCodeMap[processed[1]] || ['Unknown']
     console.log(`Detected: Country - ${country}, Possible Manufacturers - ${manufacturers.join(' or ')}`)
+  }
+
+  // Validation hierarchy (from most specific to most general)
+  if (gmPattern1.test(processed)) {
+    console.log('Matched specific GM pattern (1G1)')
+    return processed
   }
 
   // Check if the processed result matches VIN patterns
