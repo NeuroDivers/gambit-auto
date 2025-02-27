@@ -3,32 +3,37 @@ export const validateVIN = (vin: string): boolean => {
 
   // Strict VIN pattern for modern vehicles (post-1981)
   const validVINPattern = /^[A-HJ-NPR-Z0-9]{17}$/;
-  if (!validVINPattern.test(vin)) return false;
+  if (!validVINPattern.test(vin)) {
+    console.log('VIN failed pattern validation:', vin);
+    return false;
+  }
 
   // Common manufacturer codes for first position
   const validWMI = /^[A-HJ-NPR-Z][A-HJ-NPR-Z0-9]{2}/;
-  if (!validWMI.test(vin)) return false;
-
-  // Year code validation (10th position)
-  const validYearCodes = "ABCDEFGHJKLMNPRSTVWXY123456789";
-  if (!validYearCodes.includes(vin[9])) return false;
-
-  // Plant code validation (11th position)
-  const validPlantCodes = /[A-HJ-NPR-Z0-9]/;
-  if (!validPlantCodes.test(vin[10])) return false;
+  if (!validWMI.test(vin)) {
+    console.log('VIN failed WMI validation:', vin);
+    return false;
+  }
 
   // Check for sequential number format (last 6 digits)
   const sequentialNumber = /[0-9]{6}$/;
-  if (!sequentialNumber.test(vin.slice(-6))) return false;
+  if (!sequentialNumber.test(vin.slice(-6))) {
+    console.log('VIN failed sequential number validation:', vin);
+    return false;
+  }
 
+  // Remove suspicious pattern checks that might be too restrictive
   const suspiciousPatterns = [
     /[0]{3,}/,      // Too many zeros in a row
-    /(.)\1{4,}/,    // Any character repeated more than 4 times
-    /^[0-9]+$/,     // All numbers
-    /^[A-Z]+$/      // All letters
+    /(.)\1{4,}/     // Any character repeated more than 4 times
   ];
 
-  return !suspiciousPatterns.some(pattern => pattern.test(vin));
+  if (suspiciousPatterns.some(pattern => pattern.test(vin))) {
+    console.log('VIN failed suspicious pattern validation:', vin);
+    return false;
+  }
+
+  return true;
 }
 
 export const postProcessVIN = (text: string): string => {
