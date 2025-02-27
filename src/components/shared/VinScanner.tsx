@@ -504,10 +504,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
       toast.success("VIN confirmed and saved successfully")
       handleClose()
     } else {
-      if (remainingVariations.length > 0) {
-        const nextVariation = remainingVariations[0]
-        setRemainingVariations(remainingVariations.slice(1))
-        checkVinValidity(nextVariation)
+      setDetectedVehicle(null)
+      if (!videoRef.current?.srcObject) {
+        startCamera().then(() => {
+          startOCRScanning(true)
+        })
       } else {
         startOCRScanning(true)
       }
@@ -558,7 +559,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       </Button>
 
       <Dialog open={isDialogOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-md p-0 h-[100dvh] sm:h-auto [&>button]:hidden">
+        <DialogContent className="sm:max-w-md p-0 h-[100dvh] sm:h-auto [&>button]:hidden flex flex-col">
           <ScannerOverlay
             scanMode={scanMode}
             onScanModeChange={handleScanModeChange}
@@ -567,13 +568,13 @@ export function VinScanner({ onScan }: VinScannerProps) {
             onFlashToggle={toggleFlash}
             onClose={handleClose}
           />
-          <div className="relative h-[calc(100dvh-12rem)] sm:h-auto sm:aspect-video w-full overflow-hidden">
+          <div className="flex-1 relative sm:aspect-video w-full overflow-hidden">
             {isConfirmationOpen ? (
-              <div className="absolute inset-0 z-50 bg-background/95 p-6">
-                <div className="h-full flex flex-col">
+              <div className="absolute inset-0 z-50 bg-background/95 p-6 flex flex-col max-h-[calc(100vh-16rem)] sm:max-h-none overflow-y-auto">
+                <div className="flex-1">
                   <div className="space-y-4">
                     <h2 className="text-lg font-semibold">Confirm Vehicle Information</h2>
-                    <div className="font-mono text-lg text-primary">
+                    <div className="font-mono text-lg text-primary break-all">
                       VIN: {detectedVehicle?.vin}
                     </div>
                     {detectedVehicle && (
@@ -587,23 +588,23 @@ export function VinScanner({ onScan }: VinScannerProps) {
                       Is this the correct vehicle information?
                     </p>
                   </div>
-                  <div className="mt-auto flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => handleConfirm(false)}
-                      className="flex-1"
-                    >
-                      <XIcon className="mr-2 h-4 w-4" />
-                      Try Again
-                    </Button>
-                    <Button 
-                      onClick={() => handleConfirm(true)}
-                      className="flex-1"
-                    >
-                      <Check className="mr-2 h-4 w-4" />
-                      Confirm
-                    </Button>
-                  </div>
+                </div>
+                <div className="mt-4 flex gap-2 sticky bottom-0">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleConfirm(false)}
+                    className="flex-1"
+                  >
+                    <XIcon className="mr-2 h-4 w-4" />
+                    Try Again
+                  </Button>
+                  <Button 
+                    onClick={() => handleConfirm(true)}
+                    className="flex-1"
+                  >
+                    <Check className="mr-2 h-4 w-4" />
+                    Confirm
+                  </Button>
                 </div>
               </div>
             ) : (
