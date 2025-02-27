@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,7 @@ import { CheckSquare, Square } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 
 interface ProcessingSettings {
+  // Basic settings
   autoInvert: boolean;
   autoInvertDark: boolean;
   edgeEnhancement: boolean;
@@ -30,6 +32,17 @@ interface ProcessingSettings {
   contrastAdjustment: number;
   brightnessAdjustment: number;
   sharpenAmount: number;
+  
+  // Advanced settings
+  moireReduction: boolean;
+  autoAdjusting: boolean;
+  frameRate: 'auto' | '15fps' | '30fps' | '60fps' | '120fps';
+  laplacianSharpening: boolean;
+  fourierTransform: boolean;
+  adaptiveDenoising: boolean;
+  unsharpMasking: boolean;
+  highPassFilter: boolean;
+  
   tesseractConfig: {
     psm: number;
     oem: number;
@@ -70,6 +83,14 @@ const defaultPresets: Preset[] = [
       contrastAdjustment: 0,
       brightnessAdjustment: 0,
       sharpenAmount: 0.5,
+      moireReduction: false,
+      autoAdjusting: false,
+      frameRate: 'auto',
+      laplacianSharpening: false,
+      fourierTransform: false,
+      adaptiveDenoising: false,
+      unsharpMasking: false,
+      highPassFilter: false,
       tesseractConfig: {
         psm: 7,
         oem: 1,
@@ -100,6 +121,14 @@ const defaultPresets: Preset[] = [
       contrastAdjustment: 20,
       brightnessAdjustment: 10,
       sharpenAmount: 0.7,
+      moireReduction: false,
+      autoAdjusting: false,
+      frameRate: '30fps',
+      laplacianSharpening: false,
+      fourierTransform: false,
+      adaptiveDenoising: false,
+      unsharpMasking: false,
+      highPassFilter: false,
       tesseractConfig: {
         psm: 7,
         oem: 1,
@@ -130,6 +159,14 @@ const defaultPresets: Preset[] = [
       contrastAdjustment: 30,
       brightnessAdjustment: 20,
       sharpenAmount: 0.6,
+      moireReduction: false,
+      autoAdjusting: false,
+      frameRate: '15fps',
+      laplacianSharpening: false,
+      fourierTransform: false,
+      adaptiveDenoising: true,
+      unsharpMasking: false,
+      highPassFilter: false,
       tesseractConfig: {
         psm: 7,
         oem: 1,
@@ -160,6 +197,14 @@ const defaultPresets: Preset[] = [
       contrastAdjustment: 40,
       brightnessAdjustment: 0,
       sharpenAmount: 0.4,
+      moireReduction: false,
+      autoAdjusting: false,
+      frameRate: 'auto',
+      laplacianSharpening: false,
+      fourierTransform: false,
+      adaptiveDenoising: false,
+      unsharpMasking: false,
+      highPassFilter: false,
       tesseractConfig: {
         psm: 7,
         oem: 1,
@@ -190,6 +235,14 @@ const defaultPresets: Preset[] = [
       contrastAdjustment: 25,
       brightnessAdjustment: 5,
       sharpenAmount: 0.8,
+      moireReduction: false,
+      autoAdjusting: false,
+      frameRate: '30fps',
+      laplacianSharpening: false,
+      fourierTransform: false,
+      adaptiveDenoising: false,
+      unsharpMasking: false,
+      highPassFilter: false,
       tesseractConfig: {
         psm: 7,
         oem: 1,
@@ -220,6 +273,14 @@ const defaultPresets: Preset[] = [
       contrastAdjustment: 10,
       brightnessAdjustment: 0,
       sharpenAmount: 0.5,
+      moireReduction: false,
+      autoAdjusting: false,
+      frameRate: '15fps',
+      laplacianSharpening: false,
+      fourierTransform: false,
+      adaptiveDenoising: false,
+      unsharpMasking: false,
+      highPassFilter: false,
       tesseractConfig: {
         psm: 7,
         oem: 1,
@@ -250,6 +311,14 @@ const defaultPresets: Preset[] = [
       contrastAdjustment: 35,
       brightnessAdjustment: 15,
       sharpenAmount: 0.9,
+      moireReduction: false,
+      autoAdjusting: false,
+      frameRate: '30fps',
+      laplacianSharpening: false,
+      fourierTransform: false,
+      adaptiveDenoising: false,
+      unsharpMasking: false,
+      highPassFilter: false,
       tesseractConfig: {
         psm: 7,
         oem: 1,
@@ -280,6 +349,14 @@ const defaultPresets: Preset[] = [
       contrastAdjustment: 15,
       brightnessAdjustment: 5,
       sharpenAmount: 0.6,
+      moireReduction: false,
+      autoAdjusting: false,
+      frameRate: '15fps',
+      laplacianSharpening: false,
+      fourierTransform: false,
+      adaptiveDenoising: false,
+      unsharpMasking: false,
+      highPassFilter: false,
       tesseractConfig: {
         psm: 6,
         oem: 1,
@@ -310,6 +387,14 @@ const defaultPresets: Preset[] = [
       contrastAdjustment: 0,
       brightnessAdjustment: 0,
       sharpenAmount: 0,
+      moireReduction: false,
+      autoAdjusting: false,
+      frameRate: '60fps',
+      laplacianSharpening: false,
+      fourierTransform: false,
+      adaptiveDenoising: false,
+      unsharpMasking: false,
+      highPassFilter: false,
       tesseractConfig: {
         psm: 7,
         oem: 0,
@@ -318,70 +403,273 @@ const defaultPresets: Preset[] = [
         minConfidence: 50
       }
     }
+  },
+  // New monitor-specific presets
+  {
+    id: "monitor-basic",
+    name: "Monitor/Screen",
+    description: "Basic settings for VINs displayed on digital screens",
+    settings: {
+      autoInvert: false,
+      autoInvertDark: false,
+      edgeEnhancement: true,
+      noiseReduction: true,
+      adaptiveContrast: false,
+      deskewing: false,
+      angleCorrection: false,
+      grayscaleMethod: 'green-channel',
+      blueEmphasis: 'zero',
+      thresholdMethod: 'adaptive',
+      thresholdValue: 127,
+      adaptiveBlockSize: 11,
+      adaptiveConstant: 2,
+      contrastAdjustment: 10,
+      brightnessAdjustment: 5,
+      sharpenAmount: 0.3,
+      moireReduction: true,
+      autoAdjusting: false,
+      frameRate: '30fps',
+      laplacianSharpening: false,
+      fourierTransform: false,
+      adaptiveDenoising: true,
+      unsharpMasking: true,
+      highPassFilter: true,
+      tesseractConfig: {
+        psm: 7,
+        oem: 3,
+        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
+        blacklist: "IOQ",
+        minConfidence: 55
+      }
+    }
+  },
+  {
+    id: "monitor-advanced",
+    name: "Advanced Monitor VIN",
+    description: "Specialized processing for anti-aliasing, moiré patterns, and refresh rate artifacts",
+    settings: {
+      autoInvert: false,
+      autoInvertDark: false,
+      edgeEnhancement: true,
+      noiseReduction: true,
+      adaptiveContrast: true,
+      deskewing: false,
+      angleCorrection: false,
+      grayscaleMethod: 'green-channel',
+      blueEmphasis: 'zero',
+      thresholdMethod: 'adaptive',
+      thresholdValue: 127,
+      adaptiveBlockSize: 11,
+      adaptiveConstant: 2,
+      contrastAdjustment: 15,
+      brightnessAdjustment: 5,
+      sharpenAmount: 0.6,
+      moireReduction: true,
+      autoAdjusting: false,
+      frameRate: '60fps',
+      laplacianSharpening: true,
+      fourierTransform: true,
+      adaptiveDenoising: true,
+      unsharpMasking: true,
+      highPassFilter: true,
+      tesseractConfig: {
+        psm: 7,
+        oem: 3,
+        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
+        blacklist: "IOQ",
+        minConfidence: 60
+      }
+    }
+  },
+  {
+    id: "monitor-auto",
+    name: "Auto-Adjusting Monitor",
+    description: "Automatically adapts to different screen brightnesses and conditions",
+    settings: {
+      autoInvert: true,
+      autoInvertDark: true,
+      edgeEnhancement: true,
+      noiseReduction: true,
+      adaptiveContrast: true,
+      deskewing: false,
+      angleCorrection: false,
+      grayscaleMethod: 'green-channel',
+      blueEmphasis: 'zero',
+      thresholdMethod: 'adaptive',
+      thresholdValue: 127,
+      adaptiveBlockSize: 11,
+      adaptiveConstant: 2,
+      contrastAdjustment: 0,
+      brightnessAdjustment: 0,
+      sharpenAmount: 0.5,
+      moireReduction: true,
+      autoAdjusting: true,
+      frameRate: '60fps',
+      laplacianSharpening: true,
+      fourierTransform: true,
+      adaptiveDenoising: true,
+      unsharpMasking: true,
+      highPassFilter: true,
+      tesseractConfig: {
+        psm: 7,
+        oem: 3,
+        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
+        blacklist: "IOQ",
+        minConfidence: 50
+      }
+    }
+  },
+  {
+    id: "high-refresh-monitor",
+    name: "High Refresh Rate Screen",
+    description: "For OLED or high refresh rate displays (90Hz+)",
+    settings: {
+      autoInvert: false,
+      autoInvertDark: false,
+      edgeEnhancement: true,
+      noiseReduction: true,
+      adaptiveContrast: true,
+      deskewing: false,
+      angleCorrection: false,
+      grayscaleMethod: 'green-channel',
+      blueEmphasis: 'zero',
+      thresholdMethod: 'adaptive',
+      thresholdValue: 127,
+      adaptiveBlockSize: 11,
+      adaptiveConstant: 2,
+      contrastAdjustment: 10,
+      brightnessAdjustment: 5,
+      sharpenAmount: 0.4,
+      moireReduction: true,
+      autoAdjusting: false,
+      frameRate: '120fps',
+      laplacianSharpening: true,
+      fourierTransform: true,
+      adaptiveDenoising: true,
+      unsharpMasking: true,
+      highPassFilter: true,
+      tesseractConfig: {
+        psm: 7,
+        oem: 3,
+        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
+        blacklist: "IOQ",
+        minConfidence: 55
+      }
+    }
+  },
+  {
+    id: "moving-camera",
+    name: "Moving/Handheld Camera",
+    description: "Reduces motion blur while scanning on the move",
+    settings: {
+      autoInvert: true,
+      autoInvertDark: false,
+      edgeEnhancement: true,
+      noiseReduction: true,
+      adaptiveContrast: true,
+      deskewing: true,
+      angleCorrection: true,
+      grayscaleMethod: 'luminosity',
+      blueEmphasis: 'normal',
+      thresholdMethod: 'adaptive',
+      thresholdValue: 127,
+      adaptiveBlockSize: 11,
+      adaptiveConstant: 2,
+      contrastAdjustment: 15,
+      brightnessAdjustment: 0,
+      sharpenAmount: 0.7,
+      moireReduction: false,
+      autoAdjusting: false,
+      frameRate: '60fps',
+      laplacianSharpening: false,
+      fourierTransform: false,
+      adaptiveDenoising: true,
+      unsharpMasking: true,
+      highPassFilter: false,
+      tesseractConfig: {
+        psm: 7,
+        oem: 1,
+        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
+        blacklist: "IOQ",
+        minConfidence: 55
+      }
+    }
+  },
+  {
+    id: "high-brightness-glare",
+    name: "High Brightness/Glare",
+    description: "Captures multiple frames quickly to get a glare-free shot",
+    settings: {
+      autoInvert: false,
+      autoInvertDark: true,
+      edgeEnhancement: true,
+      noiseReduction: true,
+      adaptiveContrast: true,
+      deskewing: false,
+      angleCorrection: false,
+      grayscaleMethod: 'red-channel',
+      blueEmphasis: 'zero',
+      thresholdMethod: 'adaptive',
+      thresholdValue: 127,
+      adaptiveBlockSize: 15,
+      adaptiveConstant: 5,
+      contrastAdjustment: -10,
+      brightnessAdjustment: -15,
+      sharpenAmount: 0.5,
+      moireReduction: false,
+      autoAdjusting: false,
+      frameRate: '120fps',
+      laplacianSharpening: false,
+      fourierTransform: false,
+      adaptiveDenoising: true,
+      unsharpMasking: false,
+      highPassFilter: false,
+      tesseractConfig: {
+        psm: 7,
+        oem: 1,
+        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
+        blacklist: "IOQ",
+        minConfidence: 55
+      }
+    }
   }
 ];
 
 export default function DeveloperSettings() {
-  const [settings, setSettings] = useState<ProcessingSettings>({
-    autoInvert: true,
-    autoInvertDark: false,
-    edgeEnhancement: true,
-    noiseReduction: true,
-    adaptiveContrast: true,
-    deskewing: false,
-    angleCorrection: false,
-    grayscaleMethod: 'luminosity',
-    blueEmphasis: 'normal',
-    thresholdMethod: 'adaptive',
-    thresholdValue: 127,
-    adaptiveBlockSize: 11,
-    adaptiveConstant: 2,
-    contrastAdjustment: 0,
-    brightnessAdjustment: 0,
-    sharpenAmount: 0.5,
-    tesseractConfig: {
-      psm: 7,
-      oem: 1,
-      whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
-      blacklist: "IOQ",
-      minConfidence: 60
-    }
-  });
-
-  const [presets, setPresets] = useState<Preset[]>(defaultPresets);
-  const [activePresetId, setActivePresetId] = useState<string>("default");
-  const [newPresetName, setNewPresetName] = useState<string>("");
-
-  useEffect(() => {
-    // Load presets from localStorage
-    const savedPresets = localStorage.getItem('vin-scanner-presets');
-    if (savedPresets) {
-      try {
-        const parsedPresets = JSON.parse(savedPresets);
-        setPresets(parsedPresets);
-      } catch (e) {
-        console.error("Failed to parse saved presets", e);
-        setPresets(defaultPresets);
-      }
-    }
-
-    // Load active preset
-    const savedActivePresetId = localStorage.getItem('vin-scanner-active-preset');
-    if (savedActivePresetId) {
-      setActivePresetId(savedActivePresetId);
-    }
-
-    // Load settings
+  const [settings, setSettings] = useState<ProcessingSettings>(() => {
     const savedSettings = localStorage.getItem('vin-scanner-settings');
     if (savedSettings) {
       try {
-        const parsedSettings = JSON.parse(savedSettings);
-        setSettings(parsedSettings);
+        return JSON.parse(savedSettings);
       } catch (e) {
         console.error("Failed to parse saved settings", e);
       }
     }
-  }, []);
+    
+    // Default settings if none saved
+    return defaultPresets[0].settings;
+  });
+
+  const [presets, setPresets] = useState<Preset[]>(() => {
+    const savedPresets = localStorage.getItem('vin-scanner-presets');
+    if (savedPresets) {
+      try {
+        const parsedPresets = JSON.parse(savedPresets);
+        return parsedPresets;
+      } catch (e) {
+        console.error("Failed to parse saved presets", e);
+        return defaultPresets;
+      }
+    }
+    return defaultPresets;
+  });
+
+  const [activePresetId, setActivePresetId] = useState<string>(() => {
+    const savedActivePresetId = localStorage.getItem('vin-scanner-active-preset');
+    return savedActivePresetId || "default";
+  });
+  
+  const [newPresetName, setNewPresetName] = useState<string>("");
 
   useEffect(() => {
     // Save settings to localStorage
@@ -818,6 +1106,41 @@ export default function DeveloperSettings() {
               </div>
             </div>
           </div>
+
+          {/* New section for Frame Rate settings */}
+          <div className="space-y-2">
+            <Label className="text-base font-medium">Camera Frame Rate</Label>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              {[
+                { value: 'auto', label: 'Auto (Default)' },
+                { value: '15fps', label: 'Low (15 FPS)' },
+                { value: '30fps', label: 'Medium (30 FPS)' },
+                { value: '60fps', label: 'High (60 FPS)' },
+                { value: '120fps', label: 'Ultra (120 FPS)' }
+              ].map((rate) => (
+                <Toggle
+                  key={rate.value}
+                  pressed={settings.frameRate === rate.value}
+                  onPressedChange={() => 
+                    setSettings(prev => ({ 
+                      ...prev, 
+                      frameRate: rate.value as typeof settings.frameRate 
+                    }))
+                  }
+                  className={`${
+                    settings.frameRate === rate.value 
+                      ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
+                      : ''
+                  }`}
+                >
+                  {rate.label}
+                </Toggle>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Recommended: 30-60 FPS for monitors, 15-30 FPS for static VINs, 60+ FPS for moving cameras
+            </p>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -871,7 +1194,7 @@ export default function DeveloperSettings() {
                     className="w-20"
                   />
                   <span className="text-sm text-muted-foreground">
-                    (0=legacy, 1=LSTM, 2=both)
+                    (0=legacy, 1=LSTM, 3=both)
                   </span>
                 </div>
               </div>
@@ -935,6 +1258,124 @@ export default function DeveloperSettings() {
                         minConfidence: value
                       }
                     }))
+                  }
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Advanced Monitor/Screen Settings */}
+          <div className="space-y-4 border-b pb-4">
+            <Label className="text-base font-medium">Advanced Monitor/Screen Settings</Label>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="moire-reduction" className="flex-1">
+                  Moiré Pattern Reduction
+                  <p className="text-sm text-muted-foreground">
+                    Reduces wavy distortions from screen pixel alignment
+                  </p>
+                </Label>
+                <Switch
+                  id="moire-reduction"
+                  checked={settings.moireReduction}
+                  onCheckedChange={(checked) =>
+                    setSettings(prev => ({ ...prev, moireReduction: checked }))
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="auto-adjusting" className="flex-1">
+                  Auto-Adjusting Processing
+                  <p className="text-sm text-muted-foreground">
+                    Automatically adapts to screen brightness and conditions
+                  </p>
+                </Label>
+                <Switch
+                  id="auto-adjusting"
+                  checked={settings.autoAdjusting}
+                  onCheckedChange={(checked) =>
+                    setSettings(prev => ({ ...prev, autoAdjusting: checked }))
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="laplacian-sharpening" className="flex-1">
+                  Laplacian Sharpening
+                  <p className="text-sm text-muted-foreground">
+                    Advanced edge enhancement for screen text
+                  </p>
+                </Label>
+                <Switch
+                  id="laplacian-sharpening"
+                  checked={settings.laplacianSharpening}
+                  onCheckedChange={(checked) =>
+                    setSettings(prev => ({ ...prev, laplacianSharpening: checked }))
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="fourier-transform" className="flex-1">
+                  Fourier Transform
+                  <p className="text-sm text-muted-foreground">
+                    Removes repeating screen artifacts and patterns
+                  </p>
+                </Label>
+                <Switch
+                  id="fourier-transform"
+                  checked={settings.fourierTransform}
+                  onCheckedChange={(checked) =>
+                    setSettings(prev => ({ ...prev, fourierTransform: checked }))
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="adaptive-denoising" className="flex-1">
+                  Adaptive Denoising
+                  <p className="text-sm text-muted-foreground">
+                    Smart noise reduction based on image characteristics
+                  </p>
+                </Label>
+                <Switch
+                  id="adaptive-denoising"
+                  checked={settings.adaptiveDenoising}
+                  onCheckedChange={(checked) =>
+                    setSettings(prev => ({ ...prev, adaptiveDenoising: checked }))
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="unsharp-masking" className="flex-1">
+                  Unsharp Masking
+                  <p className="text-sm text-muted-foreground">
+                    Enhances apparent sharpness while preserving details
+                  </p>
+                </Label>
+                <Switch
+                  id="unsharp-masking"
+                  checked={settings.unsharpMasking}
+                  onCheckedChange={(checked) =>
+                    setSettings(prev => ({ ...prev, unsharpMasking: checked }))
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="high-pass-filter" className="flex-1">
+                  High-Pass Filter
+                  <p className="text-sm text-muted-foreground">
+                    Reduces screen flicker and enhances text details
+                  </p>
+                </Label>
+                <Switch
+                  id="high-pass-filter"
+                  checked={settings.highPassFilter}
+                  onCheckedChange={(checked) =>
+                    setSettings(prev => ({ ...prev, highPassFilter: checked }))
                   }
                 />
               </div>
