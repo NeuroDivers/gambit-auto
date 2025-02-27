@@ -22,6 +22,9 @@ interface ProcessingSettings {
   edgeEnhancement: boolean;
   noiseReduction: boolean;
   adaptiveContrast: boolean;
+  intelligentCrop: boolean;
+  dynamicThreshold: boolean;
+  regionPadding: 'small' | 'medium' | 'large';
   tesseractConfig: {
     psm: 6 | 7 | 8 | 13;
     oem: 1 | 3;
@@ -56,6 +59,9 @@ export default function DeveloperSettings() {
       edgeEnhancement: true,
       noiseReduction: true,
       adaptiveContrast: true,
+      intelligentCrop: false,
+      dynamicThreshold: false,
+      regionPadding: 'medium',
       tesseractConfig: {
         psm: 7,
         oem: 1
@@ -85,6 +91,9 @@ export default function DeveloperSettings() {
       edgeEnhancement: true,
       noiseReduction: true,
       adaptiveContrast: true,
+      intelligentCrop: false,
+      dynamicThreshold: false,
+      regionPadding: 'medium',
       tesseractConfig: {
         psm: 7,
         oem: 1
@@ -182,6 +191,38 @@ export default function DeveloperSettings() {
                       </div>
 
                       <div className="flex items-center justify-between">
+                        <Label htmlFor="intelligent-crop" className="flex-1">
+                          Intelligent Text Region Detection
+                          <p className="text-sm text-muted-foreground">
+                            Automatically detect and crop to text region
+                          </p>
+                        </Label>
+                        <Switch
+                          id="intelligent-crop"
+                          checked={settings.intelligentCrop}
+                          onCheckedChange={(checked) =>
+                            setSettings(prev => ({ ...prev, intelligentCrop: checked }))
+                          }
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="dynamic-threshold" className="flex-1">
+                          Dynamic Thresholding
+                          <p className="text-sm text-muted-foreground">
+                            Use Otsu's method for optimal threshold detection
+                          </p>
+                        </Label>
+                        <Switch
+                          id="dynamic-threshold"
+                          checked={settings.dynamicThreshold}
+                          onCheckedChange={(checked) =>
+                            setSettings(prev => ({ ...prev, dynamicThreshold: checked }))
+                          }
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
                         <Label htmlFor="edge-enhancement" className="flex-1">
                           Edge Enhancement
                           <p className="text-sm text-muted-foreground">
@@ -232,6 +273,30 @@ export default function DeveloperSettings() {
                   </div>
 
                   <div>
+                    <Label>Region Padding</Label>
+                    <RadioGroup
+                      value={settings.regionPadding}
+                      onValueChange={(value: 'small' | 'medium' | 'large') => 
+                        setSettings(prev => ({ ...prev, regionPadding: value }))
+                      }
+                      className="mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="small" id="padding-small" />
+                        <Label htmlFor="padding-small">Small (2%)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="medium" id="padding-medium" />
+                        <Label htmlFor="padding-medium">Medium (5%)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="large" id="padding-large" />
+                        <Label htmlFor="padding-large">Large (10%)</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div>
                     <Label>Grayscale Method</Label>
                     <RadioGroup
                       value={settings.grayscaleMethod}
@@ -278,7 +343,9 @@ export default function DeveloperSettings() {
                       </div>
                     </RadioGroup>
                   </div>
+                </div>
 
+                <div className="space-y-4">
                   <div>
                     <Label>Contrast Enhancement</Label>
                     <RadioGroup
@@ -302,9 +369,7 @@ export default function DeveloperSettings() {
                       </div>
                     </RadioGroup>
                   </div>
-                </div>
 
-                <div className="space-y-4">
                   <div>
                     <Label>Tesseract Page Segmentation Mode</Label>
                     <RadioGroup

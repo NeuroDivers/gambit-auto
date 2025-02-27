@@ -201,10 +201,44 @@ export const postProcessVIN = (text: string): string => {
   return original.toUpperCase()
 }
 
-// Enhanced cropToVinRegion with intelligent text detection
+// Crop the image to the VIN region
 export const cropToVinRegion = (canvas: HTMLCanvasElement): HTMLCanvasElement => {
   const ctx = canvas.getContext('2d')
   if (!ctx) return canvas
+
+  // Get settings from localStorage
+  const settings = JSON.parse(localStorage.getItem('scanner-settings') || '{}')
+  const { 
+    intelligentCrop = false, 
+    dynamicThreshold = false,
+    regionPadding = 'medium'
+  } = settings
+
+  // If intelligent crop is disabled, use the standard fixed crop
+  if (!intelligentCrop) {
+    // Default fixed region crop (centered)
+    const croppedCanvas = document.createElement('canvas')
+    
+    // Create crop region in the center of the image
+    const cropWidth = canvas.width * 0.95
+    const cropHeight = 40
+    const startX = (canvas.width - cropWidth) / 2
+    const startY = (canvas.height - cropHeight) / 2
+    
+    croppedCanvas.width = cropWidth
+    croppedCanvas.height = cropHeight
+    
+    const croppedCtx = croppedCanvas.getContext('2d')
+    if (croppedCtx) {
+      croppedCtx.drawImage(
+        canvas,
+        startX, startY, cropWidth, cropHeight,
+        0, 0, cropWidth, cropHeight
+      )
+    }
+    
+    return croppedCanvas
+  }
 
   // Create a copy of the canvas for processing
   const tempCanvas = document.createElement('canvas')
@@ -227,7 +261,12 @@ export const cropToVinRegion = (canvas: HTMLCanvasElement): HTMLCanvasElement =>
   }
   
   // Apply binary threshold for better text isolation
-  const threshold = calculateOtsuThreshold(data)
+  let threshold = 128 // Default threshold
+  
+  if (dynamicThreshold) {
+    threshold = calculateOtsuThreshold(data)
+  }
+  
   for (let i = 0; i < data.length; i += 4) {
     const value = data[i] < threshold ? 0 : 255
     data[i] = data[i + 1] = data[i + 2] = value
@@ -260,9 +299,17 @@ export const cropToVinRegion = (canvas: HTMLCanvasElement): HTMLCanvasElement =>
     regionWidth = Math.min(tempCanvas.width, regionWidth + diffWidth)
   }
   
-  // Add some padding
-  const paddingX = tempCanvas.width * 0.05
-  const paddingY = tempCanvas.height * 0.05
+  // Add padding based on settings
+  let paddingFactor: number
+  switch (regionPadding) {
+    case 'small': paddingFactor = 0.02; break;
+    case 'large': paddingFactor = 0.10; break;
+    case 'medium':
+    default: paddingFactor = 0.05; break;
+  }
+  
+  const paddingX = tempCanvas.width * paddingFactor
+  const paddingY = tempCanvas.height * paddingFactor
   
   regionStartX = Math.max(0, regionStartX - paddingX / 2)
   regionStartY = Math.max(0, regionStartY - paddingY / 2)
@@ -375,7 +422,7 @@ function findTextRegion(data: Uint8ClampedArray, width: number, height: number):
   }
 }
 
-// New helper functions for improved processing
+// Helper functions for improved processing
 
 function getLocalArea(data: Uint8ClampedArray, x: number, y: number, width: number, height: number): number[] {
   const area = []
@@ -399,7 +446,6 @@ function getLocalContrast(area: number[]): number {
 
 function applyUnsharpMask(data: Uint8ClampedArray, width: number, height: number, radius: number, amount: number, threshold: number) {
   const original = new Uint8ClampedArray(data)
-  const blurred = new Uint8ClampedArray(data.length)
   
   // Apply Gaussian blur
   const kernel = createGaussianKernel(radius * 2 + 1, radius)
@@ -522,35 +568,6 @@ function applyConvolution(data: Uint8ClampedArray, width: number, height: number
   }
 
   return result
-}
-
-// Apply adaptive thresholding
-function applyAdaptiveThreshold(data: Uint8ClampedArray, width: number, height: number, blockSize: number, C: number) {
-  const halfBlock = Math.floor(blockSize / 2)
-
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      let sum = 0
-      let count = 0
-
-      // Calculate local mean
-      for (let dy = -halfBlock; dy <= halfBlock; dy++) {
-        for (let dx = -halfBlock; dx <= halfBlock; dx++) {
-          const nx = x + dx
-          const ny = y + dy
-          if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-            sum += data[(ny * width + nx) * 4]
-            count++
-          }
-        }
-      }
-
-      const mean = sum / count
-      const idx = (y * width + x) * 4
-      const value = data[idx] < (mean - C) ? 0 : 255
-      data[idx] = data[idx + 1] = data[idx + 2] = value
-    }
-  }
 }
 
 // Morphological dilation
