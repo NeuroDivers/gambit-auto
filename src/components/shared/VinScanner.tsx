@@ -620,11 +620,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }
 
-  const handleClose = async () => {
+  const handleClose = () => {
     manualCloseRef.current = true
     stopCamera()
     if (workerRef.current) {
-      await workerRef.current.terminate()
+      workerRef.current.terminate()
       workerRef.current = null
     }
     setIsDialogOpen(false)
@@ -708,13 +708,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
     return () => {
       window.removeEventListener('orientationchange', handleOrientationChange)
       window.removeEventListener('resize', handleOrientationChange)
-      handleClose()
     }
   }, [isDialogOpen, isCameraActive])
 
   useEffect(() => {
     return () => {
-      handleClose()
+      if (isDialogOpen) {
+        handleClose()
+      }
     }
   }, [])
 
@@ -737,7 +738,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
       }}>
         <DialogContent 
           className="sm:max-w-md p-0 h-[100dvh] sm:h-auto [&>button]:hidden flex flex-col"
-          onPointerDownOutside={(e) => e.preventDefault()}
         >
           <ScannerOverlay
             scanMode={scanMode}
