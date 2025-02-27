@@ -194,10 +194,13 @@ export default function VinScannerPage() {
         // Configure Tesseract based on settings
         const { tesseractConfig } = ocrSettings
         
-        const newWorker = await createWorker('eng', {
-          // Explicitly set PSM mode based on settings
-          tessedit_pageseg_mode: tesseractConfig.psm,
-          tessedit_ocr_engine_mode: tesseractConfig.oem,
+        // Create Tesseract worker with the language model
+        const newWorker = await createWorker('eng')
+        
+        // Set parameters after worker creation
+        await newWorker.setParameters({
+          tessedit_pageseg_mode: tesseractConfig.psm.toString(),
+          tessedit_ocr_engine_mode: tesseractConfig.oem.toString(),
         })
         
         addLog(`OCR engine initialized with PSM=${tesseractConfig.psm}, OEM=${tesseractConfig.oem}`)
