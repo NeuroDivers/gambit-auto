@@ -360,11 +360,18 @@ export function VinScanner({ onScan }: VinScannerProps) {
       const possibleVins = correctCommonOcrMistakes(text)
       
       if (possibleVins.length > 0) {
-        const [firstVin, ...otherVins] = possibleVins
-        setRemainingVariations(otherVins)
-        
-        const isValid = await checkVinValidity(firstVin)
-        if (!isValid && shouldScan) {
+        // Try each variation one by one
+        for (const vin of possibleVins) {
+          addLog(`Trying VIN variation: ${vin}`)
+          const isValid = await checkVinValidity(vin)
+          if (isValid) {
+            // If a valid VIN is found, stop checking other variations
+            return
+          }
+        }
+
+        // If we get here, none of the variations were valid
+        if (shouldScan) {
           scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
         }
       } else if (shouldScan) {
