@@ -42,57 +42,48 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
 
   // Apply pre-sharpen for initial edge enhancement
   if (edgeEnhancement) {
-    // Use a more conservative Sobel operator for edge detection
-    const sobelX = [
-      -1, 0, 1,
-      -2, 0, 2,
-      -1, 0, 1
-    ]
-    const sobelY = [
-      -1, -2, -1,
-       0,  0,  0,
-       1,  2,  1
+    // Vertical edge detection kernel (emphasizes vertical edges)
+    const verticalKernel = [
+      -0.25, -0.5, -0.25,
+       0,     0,    0,
+       0.25,  0.5,  0.25
     ]
     
     const tempData = new Uint8ClampedArray(data.length)
+    tempData.set(data) // Copy original data
     
-    // Copy original data to temp buffer
-    tempData.set(data)
-    
-    // Apply Sobel operator with reduced intensity
-    for (let y = 1; y < canvas.height - 1; y++) {
-      for (let x = 1; x < canvas.width - 1; x++) {
+    // Apply vertical edge detection with very conservative thresholds
+    for (let y = 3; y < canvas.height - 3; y++) {
+      for (let x = 3; x < canvas.width - 3; x++) {
         const idx = (y * canvas.width + x) * 4
-        let gx = 0, gy = 0
+        let sum = 0
 
-        // Calculate gradient
+        // Calculate edge response
         for (let ky = -1; ky <= 1; ky++) {
           for (let kx = -1; kx <= 1; kx++) {
             const pixel = ((y + ky) * canvas.width + (x + kx)) * 4
             const value = (data[pixel] + data[pixel + 1] + data[pixel + 2]) / 3
-            
-            const kernelX = sobelX[(ky + 1) * 3 + (kx + 1)]
-            const kernelY = sobelY[(ky + 1) * 3 + (kx + 1)]
-            
-            gx += value * kernelX
-            gy += value * kernelY
+            const kernelValue = verticalKernel[(ky + 1) * 3 + (kx + 1)]
+            sum += value * kernelValue
           }
         }
 
-        // Calculate gradient magnitude with reduced intensity
-        const magnitude = Math.sqrt(gx * gx + gy * gy) * 0.3 // Reduced intensity factor
+        // Apply a very conservative enhancement
+        const magnitude = Math.abs(sum) * 0.15 // Reduced intensity factor
         
-        // Add edge enhancement to original image with threshold
-        for (let i = 0; i < 3; i++) {
-          const enhanced = data[idx + i] + magnitude
-          tempData[idx + i] = Math.min(255, Math.max(0, enhanced))
+        // Only enhance if the edge response is significant
+        if (magnitude > 10) { // Threshold to avoid noise
+          for (let i = 0; i < 3; i++) {
+            const enhanced = data[idx + i] + (sum > 0 ? magnitude : -magnitude)
+            tempData[idx + i] = Math.min(255, Math.max(0, enhanced))
+          }
         }
         tempData[idx + 3] = data[idx + 3] // Preserve alpha
       }
     }
 
     // Preserve a wider border of unmodified pixels
-    const borderWidth = 2
+    const borderWidth = 3
     for (let y = 0; y < canvas.height; y++) {
       for (let x = 0; x < canvas.width; x++) {
         if (y < borderWidth || y >= canvas.height - borderWidth || 
