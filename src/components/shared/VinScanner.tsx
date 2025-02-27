@@ -1,4 +1,3 @@
-
 import { Camera, Pause, Play, Check, X as XIcon, ChevronDown, ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -158,7 +157,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isCameraActive, setIsCameraActive] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
-  // Change default scan mode to 'barcode'
   const [scanMode, setScanMode] = useState<'text' | 'barcode'>('barcode')
   const [ocrPreset, setOcrPreset] = useState<string>("Default")
   const [logs, setLogs] = useState<string[]>([])
@@ -172,7 +170,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const [remainingVariations, setRemainingVariations] = useState<string[]>([])
   const [showLogs, setShowLogs] = useState(false)
   const isMobile = useIsMobile()
-  // Flag to track if the dialog was manually closed
   const manualCloseRef = useRef(false)
 
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -261,18 +258,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
     return generateVinVariations(text);
   };
 
-  // Also used for processing barcode scan results
   const cleanVinBarcode = (scannedText: string): string => {
-    // Remove any leading 'I' characters (common barcode scanning error)
     let cleaned = scannedText.trim();
     
-    // Some barcode scanners add an 'I' prefix to the VIN
     if (cleaned.startsWith('I') && cleaned.length === 18) {
       addLog('Detected and removing leading I character from barcode scan');
       cleaned = cleaned.substring(1);
     }
     
-    // Remove any whitespace and make uppercase
     cleaned = cleaned.replace(/\s+/g, '').toUpperCase();
     
     return cleaned;
@@ -389,7 +382,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
       
       await worker.reinitialize('eng');
       
-      // Apply the selected preset configuration
       await worker.setParameters({
         tessedit_char_whitelist: selectedPreset.config.whitelist,
         tessedit_pageseg_mode: selectedPreset.config.pagesegMode,
@@ -491,15 +483,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const initializeBarcodeScanner = async () => {
     try {
-      // Create barcode reader with specific hints for VIN barcodes
       const hints = new Map();
-      // Format hint - focus on Code 39 and Data Matrix which are commonly used for VIN barcodes
       const formats = [BarcodeFormat.CODE_39, BarcodeFormat.DATA_MATRIX, BarcodeFormat.CODE_128];
-      hints.set(2, formats); // 2 is FORMAT_HINT_TYPE
-
-      // Try to make character set more restrictive for VINs (A-Z, 0-9)
-      hints.set(4, 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789'); // 4 is CHARACTER_SET hint
-
+      hints.set(2, formats);
+      hints.set(4, 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789');
+      
       const codeReader = new BrowserMultiFormatReader(hints);
       barcodeReaderRef.current = codeReader;
 
@@ -515,15 +503,12 @@ export function VinScanner({ onScan }: VinScannerProps) {
               let scannedValue = result.getText();
               addLog(`Raw barcode detected: ${scannedValue}`);
               
-              // Process the barcode to handle common issues
               scannedValue = cleanVinBarcode(scannedValue);
               addLog(`Processed barcode: ${scannedValue}`);
               
-              // For barcode scans, skip local VIN validation if length is 17
               if (scannedValue.length === 17) {
                 addLog('Barcode VIN has valid length, proceeding with NHTSA validation');
                 
-                // Attempt to get vehicle info for confirmation
                 const vehicleInfo = await fetchVehicleInfo(scannedValue);
                 if (vehicleInfo) {
                   const endTime = new Date();
@@ -537,8 +522,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
                   setIsConfirmationOpen(true);
                   return;
                 } else {
-                  // VIN format is valid but couldn't fetch vehicle info
-                  // Still allow confirmation as the VIN might be valid but not in NHTSA database
                   addLog('NHTSA lookup failed, but barcode data appears to be a valid VIN - proceeding with confirmation');
                   const dummyVehicleInfo = {
                     vin: scannedValue,
@@ -551,7 +534,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
                   return;
                 }
               } else {
-                // Invalid VIN - log and continue scanning
                 addLog(`Invalid VIN length (${scannedValue.length}): ${scannedValue}`);
               }
             }
@@ -561,7 +543,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
             }
           }
           
-          // Continue scanning loop if dialog is still open
           if (isDialogOpen) {
             requestAnimationFrame(scanLoop);
           }
@@ -782,7 +763,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
       addLog(`Switching scan mode to: ${value}`)
       setScanMode(value as 'text' | 'barcode')
       
-      // First properly clean up the current mode
       if (scanningRef.current) {
         cancelAnimationFrame(scanningRef.current)
         scanningRef.current = undefined
@@ -800,13 +780,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
         barcodeReaderRef.current = null
       }
       
-      // Need to ensure we have an active camera before switching modes
       if (!isCameraActive || !streamRef.current) {
         addLog('Camera not active, restarting camera with new mode')
         stopCamera()
         await startCamera()
       } else {
-        // Camera is already active, just initialize the new scanner mode
         if (value === 'text') {
           addLog('Initializing OCR for text mode')
           workerRef.current = await initializeWorker()
@@ -824,7 +802,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
     setOcrPreset(value);
     addLog(`Switching OCR preset to: ${value}`);
     
-    // Only restart OCR if we're currently in text mode
     if (scanMode === 'text') {
       if (workerRef.current) {
         addLog('Terminating OCR worker to apply new preset');
@@ -839,16 +816,12 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   };
 
-  // Handle orientation change
   useEffect(() => {
-    // Prevent the dialog from closing on orientation change
     const handleOrientationChange = () => {
       addLog('Orientation change detected')
       
       if (!isDialogOpen || manualCloseRef.current) return
       
-      // If the dialog was open and not manually closed,
-      // ensure it stays open and camera remains active
       if (!isCameraActive && streamRef.current === null) {
         addLog('Restarting camera after orientation change')
         startCamera().catch(error => {
@@ -857,7 +830,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
       }
     }
 
-    // Listen for orientation change and resize events
     window.addEventListener('orientationchange', handleOrientationChange)
     window.addEventListener('resize', handleOrientationChange)
 
@@ -918,10 +890,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
                 <SelectContent>
                   {ocrPresets.map((preset) => (
                     <SelectItem key={preset.name} value={preset.name}>
-                      <div>
-                        <span className="font-medium">{preset.name}</span>
-                        <p className="text-xs text-muted-foreground">{preset.description}</p>
-                      </div>
+                      {preset.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -988,14 +957,10 @@ export function VinScanner({ onScan }: VinScannerProps) {
                 />
                 <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] h-40">
                   <div className="absolute inset-0 border-2 border-primary rounded-lg" />
-                  {/* Center indicator cross */}
                   <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
                     <div className="relative">
-                      {/* Horizontal line */}
                       <div className="absolute w-8 h-[2px] bg-primary/80 left-1/2 -translate-x-1/2"></div>
-                      {/* Vertical line */}
                       <div className="absolute h-8 w-[2px] bg-primary/80 top-1/2 -translate-y-1/2"></div>
-                      {/* Center dot */}
                       <div className="absolute w-2 h-2 rounded-full bg-[#F2FCE2] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"></div>
                     </div>
                   </div>
