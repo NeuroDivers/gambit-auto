@@ -1,512 +1,548 @@
 
-import { Trash2, Sun, Globe, Shield, Database, Code, Camera } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { toast } from "sonner"
-import { useState, useEffect } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { PageTitle } from "@/components/shared/PageTitle"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { VinScanner } from "@/components/shared/VinScanner"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-
-interface ProcessingSettings {
-  blueEmphasis: 'zero' | 'normal' | 'high' | 'very-high';
-  contrast: 'normal' | 'high' | 'very-high';
-  morphKernelSize: '2' | '3' | '4';
-  confidenceThreshold: '35' | '40' | '45';
-  grayscaleMethod: 'luminosity' | 'average' | 'blue-channel';
-  autoInvert: boolean;
-  autoInvertDark: boolean;
-  edgeEnhancement: boolean;
-  noiseReduction: boolean;
-  adaptiveContrast: boolean;
-  tesseractConfig: {
-    psm: 6 | 7 | 8 | 13;
-    oem: 1 | 3;
-  }
-}
+import { Button } from "@/components/ui/button"
+import { useState, useEffect, useRef } from "react"
+import { preprocessImage, postProcessVIN, cropToVinRegion } from "@/utils/image-processing"
+import { FileSpreadsheet, FileCode, FileSearch, Settings, Terminal, BookOpen } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 export default function DeveloperSettings() {
-  const [scannerLogs, setScannerLogs] = useState<Array<{
-    timestamp: string;
-    message: string;
-    type: string;
-  }>>([])
+  // Common state
+  const { toast } = useToast()
+  const [activeTab, setActiveTab] = useState("logs")
+  const [apiKeys, setApiKeys] = useState<Record<string, string>>({
+    VITE_MAPBOX_ACCESS_TOKEN: import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || '',
+    VITE_NHTSA_API_URL: import.meta.env.VITE_NHTSA_API_URL || 'https://vpic.nhtsa.dot.gov/api',
+  })
 
-  const [settings, setSettings] = useState<ProcessingSettings>(() => {
+  // Log tab state
+  const [logEntries, setLogEntries] = useState<string[]>([])
+  const logEndRef = useRef<HTMLDivElement>(null)
+
+  // Scanner tab state
+  const [scannerActive, setScannerActive] = useState(false)
+  const [scannerSettings, setScannerSettings] = useState({
+    blueEmphasis: 'very-high',
+    contrast: 'very-high',
+    morphKernelSize: '3',
+    grayscaleMethod: 'blue-channel',
+    autoInvert: true,
+    autoInvertDark: false,
+    edgeEnhancement: true,
+    noiseReduction: true,
+    adaptiveContrast: true
+  })
+  const [scanResults, setScanResults] = useState<string[]>([])
+  const [finalResult, setFinalResult] = useState("")
+  const [isScanning, setIsScanning] = useState(false)
+  const [scanLog, setScanLog] = useState<string[]>([])
+  const [isInitialized, setIsInitialized] = useState(false)
+
+  // Process an image from the scanner
+  const processImage = (canvas: HTMLCanvasElement, decodeResult?: string) => {
+    try {
+      // Only process if we're in the OCR tab and scanning is active
+      if (activeTab !== "ocr-scanner" || !scannerActive) return;
+
+      // Process the image
+      const croppedCanvas = cropToVinRegion(canvas)
+      const processedImage = preprocessImage(croppedCanvas)
+      
+      if (decodeResult) {
+        const processed = postProcessVIN(decodeResult)
+        
+        // Add to results
+        addScanLog(`Barcode scan result: ${decodeResult}`)
+        addScanLog(`Processed result: ${processed}`)
+        
+        if (processed && processed.length >= 11) {
+          setScanResults(prev => [processed, ...prev].slice(0, 10))
+          setFinalResult(processed)
+          setScannerActive(false)
+        }
+      }
+    } catch (error) {
+      console.error('Error processing image:', error)
+      addScanLog(`Error: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+
+  const handleOcrComplete = (result: string) => {
+    try {
+      if (!result) {
+        addScanLog('OCR returned empty result')
+        return
+      }
+      
+      addScanLog(`OCR raw result: ${result}`)
+      const processed = postProcessVIN(result)
+      addScanLog(`Processed result: ${processed}`)
+      
+      if (processed && processed.length >= 11) {
+        setScanResults(prev => [processed, ...prev].slice(0, 10))
+        setFinalResult(processed)
+        setScannerActive(false)
+      }
+    } catch (error) {
+      console.error('Error handling OCR result:', error)
+      addScanLog(`Error: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+
+  const addScanLog = (message: string) => {
+    setScanLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${message}`])
+  }
+
+  const startScanner = () => {
+    setScannerActive(true)
+    setIsScanning(true)
+    setScanLog([])
+    addScanLog('Scanner activated')
+  }
+
+  const stopScanner = () => {
+    setScannerActive(false)
+    setIsScanning(false)
+    addScanLog('Scanner stopped')
+  }
+
+  // Save scanner settings to localStorage
+  const saveSettings = () => {
+    localStorage.setItem('scanner-settings', JSON.stringify(scannerSettings))
+    toast({
+      title: "Settings saved",
+      description: "Scanner settings have been saved to local storage"
+    })
+  }
+
+  // Initialize scanner settings from localStorage
+  useEffect(() => {
     const savedSettings = localStorage.getItem('scanner-settings')
     if (savedSettings) {
       try {
-        return JSON.parse(savedSettings)
-      } catch (error) {
-        console.error('Error parsing saved scanner settings:', error)
+        const settings = JSON.parse(savedSettings)
+        setScannerSettings(settings)
+      } catch (e) {
+        console.error('Error parsing scanner settings:', e)
       }
     }
-    
-    return {
-      blueEmphasis: 'very-high',
-      contrast: 'very-high',
-      morphKernelSize: '3',
-      confidenceThreshold: '35',
-      grayscaleMethod: 'blue-channel',
-      autoInvert: true,
-      autoInvertDark: false,
-      edgeEnhancement: true,
-      noiseReduction: true,
-      adaptiveContrast: true,
-      tesseractConfig: {
-        psm: 7,
-        oem: 1
-      }
+    setIsInitialized(true)
+  }, [])
+
+  // Console log interceptor
+  useEffect(() => {
+    const originalConsoleLog = console.log
+    const originalConsoleError = console.error
+    const originalConsoleWarn = console.warn
+    const originalConsoleInfo = console.info
+
+    console.log = (...args) => {
+      originalConsoleLog(...args)
+      setLogEntries(prev => [...prev, `[LOG] ${args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ')}`])
     }
-  })
+
+    console.error = (...args) => {
+      originalConsoleError(...args)
+      setLogEntries(prev => [...prev, `[ERROR] ${args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ')}`])
+    }
+
+    console.warn = (...args) => {
+      originalConsoleWarn(...args)
+      setLogEntries(prev => [...prev, `[WARN] ${args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ')}`])
+    }
+
+    console.info = (...args) => {
+      originalConsoleInfo(...args)
+      setLogEntries(prev => [...prev, `[INFO] ${args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ')}`])
+    }
+
+    return () => {
+      console.log = originalConsoleLog
+      console.error = originalConsoleError
+      console.warn = originalConsoleWarn
+      console.info = originalConsoleInfo
+    }
+  }, [])
+
+  // Auto-scroll logs to bottom
+  useEffect(() => {
+    if (logEndRef.current) {
+      logEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [logEntries])
 
   useEffect(() => {
-    const logs = JSON.parse(localStorage.getItem('scanner-logs') || '[]')
-    setScannerLogs(logs)
-    
-    localStorage.setItem('scanner-settings', JSON.stringify(settings))
-  }, [settings])
+    console.log(`Switched to tab: ${activeTab}`)
+  }, [activeTab])
 
-  const handleClearCache = () => {
-    localStorage.clear()
-    setScannerLogs([])
-    
-    setSettings({
-      blueEmphasis: 'very-high',
-      contrast: 'very-high',
-      morphKernelSize: '3',
-      confidenceThreshold: '35',
-      grayscaleMethod: 'blue-channel',
-      autoInvert: true,
-      autoInvertDark: false,
-      edgeEnhancement: true,
-      noiseReduction: true,
-      adaptiveContrast: true,
-      tesseractConfig: {
-        psm: 7,
-        oem: 1
-      }
-    })
-    
-    toast.success("Cache cleared successfully")
+  // Handle API key changes
+  const handleApiKeyChange = (key: string, value: string) => {
+    setApiKeys(prev => ({ ...prev, [key]: value }))
   }
-
-  const handleVinScanned = (vin: string) => {
-    toast.success(`VIN scanned: ${vin}`)
-  }
-
+  
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Developer Settings</h1>
-        <Button 
-          variant="outline" 
-          onClick={handleClearCache}
-          className="gap-2"
-        >
-          <Trash2 className="h-4 w-4" />
-          Clear Cache
-        </Button>
-      </div>
-
-      <Tabs defaultValue="logs" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="logs" className="space-x-2">
-            <Code className="h-4 w-4" />
-            <span>Scanner Debug</span>
+    <div className="container py-6 space-y-6">
+      <PageTitle 
+        title="Developer Settings" 
+        description="Advanced settings and developer tools"
+      />
+      
+      <Tabs defaultValue="logs" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid grid-cols-3">
+          <TabsTrigger value="logs" className="flex items-center gap-2">
+            <Terminal className="h-4 w-4" />
+            <span>Logs</span>
           </TabsTrigger>
-          <TabsTrigger value="theme" className="space-x-2">
-            <Sun className="h-4 w-4" />
-            <span>Theme Configuration</span>
+          <TabsTrigger value="ocr-scanner" className="flex items-center gap-2">
+            <FileSearch className="h-4 w-4" />
+            <span>OCR Scanner</span>
           </TabsTrigger>
-          <TabsTrigger value="api" className="space-x-2">
-            <Globe className="h-4 w-4" />
-            <span>API Configuration</span>
-          </TabsTrigger>
-          <TabsTrigger value="security" className="space-x-2">
-            <Shield className="h-4 w-4" />
-            <span>Security</span>
-          </TabsTrigger>
-          <TabsTrigger value="database" className="space-x-2">
-            <Database className="h-4 w-4" />
-            <span>Database</span>
+          <TabsTrigger value="api-keys" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            <span>API Keys</span>
           </TabsTrigger>
         </TabsList>
-
+        
+        {/* Logs Tab */}
         <TabsContent value="logs" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg font-medium">
-                Processing Settings
+              <CardTitle className="flex items-center gap-2">
+                <Terminal className="h-5 w-5" />
+                Console Logs
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="space-y-4 border-b pb-4">
-                    <Label>Image Processing Features</Label>
+            <CardContent>
+              <div className="bg-black text-green-500 font-mono p-4 rounded-md h-[600px] overflow-y-auto">
+                {logEntries.length === 0 ? (
+                  <div className="text-gray-500 italic">No logs yet...</div>
+                ) : (
+                  <>
+                    {logEntries.map((log, index) => (
+                      <div key={index} className="whitespace-pre-wrap break-all">{log}</div>
+                    ))}
+                    <div ref={logEndRef} />
+                  </>
+                )}
+              </div>
+              <div className="flex justify-end mt-4 space-x-2">
+                <Button 
+                  variant="outline"
+                  onClick={() => setLogEntries([])}
+                >
+                  Clear Logs
+                </Button>
+                <Button
+                  onClick={() => {
+                    const blob = new Blob([logEntries.join('\n')], { type: 'text/plain' })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = `logs-${new Date().toISOString()}.txt`
+                    document.body.appendChild(a)
+                    a.click()
+                    document.body.removeChild(a)
+                    URL.revokeObjectURL(url)
+                  }}
+                >
+                  Download Logs
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* OCR Scanner Tab */}
+        <TabsContent value="ocr-scanner" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="md:row-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileSearch className="h-5 w-5" />
+                  VIN Scanner
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Scanner View */}
+                  <div className={`${scannerActive ? 'block' : 'hidden'}`}>
+                    <VinScanner
+                      onScan={handleOcrComplete}
+                      onImageCapture={processImage}
+                      isActive={scannerActive}
+                      scanMode="text"
+                    />
+                  </div>
+                  
+                  {/* Scanner Controls */}
+                  <div className="flex flex-col gap-4">
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="auto-invert" className="flex-1">
-                          Auto Invert Light Text
-                          <p className="text-sm text-muted-foreground">
-                            Automatically invert light text on dark background
-                          </p>
-                        </Label>
-                        <Switch
-                          id="auto-invert"
-                          checked={settings.autoInvert}
-                          onCheckedChange={(checked) =>
-                            setSettings(prev => ({ ...prev, autoInvert: checked }))
-                          }
+                      <Label htmlFor="final-result">Final Result</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          id="final-result" 
+                          value={finalResult}
+                          onChange={(e) => setFinalResult(e.target.value)}
+                          className="font-mono"
                         />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="auto-invert-dark" className="flex-1">
-                          Auto Invert Dark Text
-                          <p className="text-sm text-muted-foreground">
-                            Automatically invert dark text on light background
-                          </p>
-                        </Label>
-                        <Switch
-                          id="auto-invert-dark"
-                          checked={settings.autoInvertDark}
-                          onCheckedChange={(checked) =>
-                            setSettings(prev => ({ ...prev, autoInvertDark: checked }))
-                          }
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="edge-enhancement" className="flex-1">
-                          Edge Enhancement
-                          <p className="text-sm text-muted-foreground">
-                            Apply unsharp masking for better edge definition
-                          </p>
-                        </Label>
-                        <Switch
-                          id="edge-enhancement"
-                          checked={settings.edgeEnhancement}
-                          onCheckedChange={(checked) =>
-                            setSettings(prev => ({ ...prev, edgeEnhancement: checked }))
-                          }
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="noise-reduction" className="flex-1">
-                          Noise Reduction
-                          <p className="text-sm text-muted-foreground">
-                            Apply median filter to remove noise
-                          </p>
-                        </Label>
-                        <Switch
-                          id="noise-reduction"
-                          checked={settings.noiseReduction}
-                          onCheckedChange={(checked) =>
-                            setSettings(prev => ({ ...prev, noiseReduction: checked }))
-                          }
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="adaptive-contrast" className="flex-1">
-                          Adaptive Contrast
-                          <p className="text-sm text-muted-foreground">
-                            Dynamically adjust contrast based on local area
-                          </p>
-                        </Label>
-                        <Switch
-                          id="adaptive-contrast"
-                          checked={settings.adaptiveContrast}
-                          onCheckedChange={(checked) =>
-                            setSettings(prev => ({ ...prev, adaptiveContrast: checked }))
-                          }
-                        />
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            navigator.clipboard.writeText(finalResult)
+                            toast({
+                              title: "Copied",
+                              description: "VIN copied to clipboard"
+                            })
+                          }}
+                        >
+                          Copy
+                        </Button>
                       </div>
                     </div>
-                  </div>
-
-                  <div>
-                    <Label>Grayscale Method</Label>
-                    <RadioGroup
-                      value={settings.grayscaleMethod}
-                      onValueChange={(value: 'luminosity' | 'average' | 'blue-channel') => 
-                        setSettings(prev => ({ ...prev, grayscaleMethod: value }))
-                      }
-                      className="mt-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="luminosity" id="gray-luminosity" />
-                        <Label htmlFor="gray-luminosity">Luminosity (Default)</Label>
+                    
+                    <div className="flex gap-2">
+                      {!scannerActive ? (
+                        <Button 
+                          onClick={startScanner}
+                          className="w-full"
+                        >
+                          Start Scanner
+                        </Button>
+                      ) : (
+                        <Button 
+                          onClick={stopScanner}
+                          variant="destructive"
+                          className="w-full"
+                        >
+                          Stop Scanner
+                        </Button>
+                      )}
+                    </div>
+                    
+                    {/* Recent Results */}
+                    {scanResults.length > 0 && (
+                      <div>
+                        <Label>Recent Results</Label>
+                        <div className="mt-2 space-y-2">
+                          {scanResults.map((result, index) => (
+                            <div 
+                              key={index}
+                              className="font-mono text-sm p-2 bg-muted rounded cursor-pointer hover:bg-muted/80"
+                              onClick={() => setFinalResult(result)}
+                            >
+                              {result}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="average" id="gray-average" />
-                        <Label htmlFor="gray-average">Average</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="blue-channel" id="gray-blue" />
-                        <Label htmlFor="gray-blue">Blue Channel Only</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-
-                  <div>
-                    <Label>Blue Channel Emphasis</Label>
-                    <RadioGroup
-                      value={settings.blueEmphasis}
-                      onValueChange={(value: 'zero' | 'normal' | 'high' | 'very-high') => 
-                        setSettings(prev => ({ ...prev, blueEmphasis: value }))
-                      }
-                      className="mt-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="zero" id="blue-zero" />
-                        <Label htmlFor="blue-zero">Zero (0.33)</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="normal" id="blue-normal" />
-                        <Label htmlFor="blue-normal">Normal (0.5)</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="high" id="blue-high" />
-                        <Label htmlFor="blue-high">High (0.7)</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="very-high" id="blue-very-high" />
-                        <Label htmlFor="blue-very-high">Very High (0.8)</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-
-                  <div>
-                    <Label>Contrast Enhancement</Label>
-                    <RadioGroup
-                      value={settings.contrast}
-                      onValueChange={(value: 'normal' | 'high' | 'very-high') => 
-                        setSettings(prev => ({ ...prev, contrast: value }))
-                      }
-                      className="mt-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="normal" id="contrast-normal" />
-                        <Label htmlFor="contrast-normal">Normal (0.5/1.5)</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="high" id="contrast-high" />
-                        <Label htmlFor="contrast-high">High (0.4/1.7)</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="very-high" id="contrast-very-high" />
-                        <Label htmlFor="contrast-very-high">Very High (0.3/1.9)</Label>
-                      </div>
-                    </RadioGroup>
+                    )}
                   </div>
                 </div>
-
+              </CardContent>
+            </Card>
+            
+            {/* Scanner Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Scanner Settings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="space-y-4">
-                  <div>
-                    <Label>Tesseract Page Segmentation Mode</Label>
-                    <RadioGroup
-                      value={settings.tesseractConfig.psm.toString()}
-                      onValueChange={(value) => 
-                        setSettings(prev => ({
-                          ...prev,
-                          tesseractConfig: {
-                            ...prev.tesseractConfig,
-                            psm: parseInt(value) as 6 | 7 | 8 | 13
-                          }
-                        }))
-                      }
-                      className="mt-2"
+                  <div className="space-y-2">
+                    <Label htmlFor="blue-emphasis">Blue Channel Emphasis</Label>
+                    <select
+                      id="blue-emphasis"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
+                      value={scannerSettings.blueEmphasis}
+                      onChange={(e) => setScannerSettings({...scannerSettings, blueEmphasis: e.target.value})}
                     >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="7" id="psm-7" />
-                        <Label htmlFor="psm-7">Single Line (PSM 7)</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="6" id="psm-6" />
-                        <Label htmlFor="psm-6">Uniform Block (PSM 6)</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="8" id="psm-8" />
-                        <Label htmlFor="psm-8">Single Word (PSM 8)</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="13" id="psm-13" />
-                        <Label htmlFor="psm-13">Raw Line (PSM 13)</Label>
-                      </div>
-                    </RadioGroup>
+                      <option value="zero">None</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="very-high">Very High</option>
+                    </select>
                   </div>
-
-                  <div>
-                    <Label>OCR Engine Mode</Label>
-                    <RadioGroup
-                      value={settings.tesseractConfig.oem.toString()}
-                      onValueChange={(value) => 
-                        setSettings(prev => ({
-                          ...prev,
-                          tesseractConfig: {
-                            ...prev.tesseractConfig,
-                            oem: parseInt(value) as 1 | 3
-                          }
-                        }))
-                      }
-                      className="mt-2"
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="contrast">Contrast Level</Label>
+                    <select
+                      id="contrast"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
+                      value={scannerSettings.contrast}
+                      onChange={(e) => setScannerSettings({...scannerSettings, contrast: e.target.value})}
                     >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="1" id="oem-1" />
-                        <Label htmlFor="oem-1">Neural Nets Only (OEM 1)</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="3" id="oem-3" />
-                        <Label htmlFor="oem-3">Default (OEM 3)</Label>
-                      </div>
-                    </RadioGroup>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="very-high">Very High</option>
+                    </select>
                   </div>
-
-                  <div>
-                    <Label>Morphological Kernel Size</Label>
-                    <RadioGroup
-                      value={settings.morphKernelSize}
-                      onValueChange={(value: '2' | '3' | '4') => 
-                        setSettings(prev => ({ ...prev, morphKernelSize: value }))
-                      }
-                      className="mt-2"
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="grayscale-method">Grayscale Method</Label>
+                    <select
+                      id="grayscale-method"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
+                      value={scannerSettings.grayscaleMethod}
+                      onChange={(e) => setScannerSettings({...scannerSettings, grayscaleMethod: e.target.value})}
                     >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="2" id="kernel-2" />
-                        <Label htmlFor="kernel-2">2px</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="3" id="kernel-3" />
-                        <Label htmlFor="kernel-3">3px</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="4" id="kernel-4" />
-                        <Label htmlFor="kernel-4">4px</Label>
-                      </div>
-                    </RadioGroup>
+                      <option value="average">Average RGB</option>
+                      <option value="luminosity">Luminosity</option>
+                      <option value="blue-channel">Blue Channel</option>
+                    </select>
                   </div>
-
-                  <div>
-                    <Label>Confidence Threshold</Label>
-                    <RadioGroup
-                      value={settings.confidenceThreshold}
-                      onValueChange={(value: '35' | '40' | '45') => 
-                        setSettings(prev => ({ ...prev, confidenceThreshold: value }))
-                      }
-                      className="mt-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="35" id="confidence-35" />
-                        <Label htmlFor="confidence-35">35%</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="40" id="confidence-40" />
-                        <Label htmlFor="confidence-40">40%</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="45" id="confidence-45" />
-                        <Label htmlFor="confidence-45">45%</Label>
-                      </div>
-                    </RadioGroup>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="auto-invert"
+                        className="h-4 w-4"
+                        checked={scannerSettings.autoInvert}
+                        onChange={(e) => setScannerSettings({...scannerSettings, autoInvert: e.target.checked})}
+                      />
+                      <Label htmlFor="auto-invert">Auto Invert (Light on Dark)</Label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="edge-enhancement"
+                        className="h-4 w-4"
+                        checked={scannerSettings.edgeEnhancement}
+                        onChange={(e) => setScannerSettings({...scannerSettings, edgeEnhancement: e.target.checked})}
+                      />
+                      <Label htmlFor="edge-enhancement">Edge Enhancement</Label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="noise-reduction"
+                        className="h-4 w-4"
+                        checked={scannerSettings.noiseReduction}
+                        onChange={(e) => setScannerSettings({...scannerSettings, noiseReduction: e.target.checked})}
+                      />
+                      <Label htmlFor="noise-reduction">Noise Reduction</Label>
+                    </div>
                   </div>
+                  
+                  <Button onClick={saveSettings} className="w-full">
+                    Save Settings
+                  </Button>
                 </div>
-              </div>
-
-              <div className="pt-6 border-t">
-                <div className="flex items-center justify-between mb-4">
-                  <CardTitle className="text-lg font-medium">
-                    Scanner Debug
-                  </CardTitle>
-                  <VinScanner onScan={handleVinScanned} />
+              </CardContent>
+            </Card>
+            
+            {/* Scanner Logs */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileCode className="h-5 w-5" />
+                  Scanner Debug Log
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-black text-green-500 font-mono p-4 rounded-md h-[300px] overflow-y-auto">
+                  {scanLog.length === 0 ? (
+                    <div className="text-gray-500 italic">No scanner logs yet...</div>
+                  ) : (
+                    scanLog.map((log, index) => (
+                      <div key={index} className="whitespace-pre-wrap break-all text-sm">{log}</div>
+                    ))
+                  )}
+                </div>
+                <Button 
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() => setScanLog([])}
+                >
+                  Clear Scanner Logs
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        {/* API Keys Tab */}
+        <TabsContent value="api-keys" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                API Configuration
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="mapbox-token">Mapbox Access Token</Label>
+                  <Input 
+                    id="mapbox-token"
+                    value={apiKeys.VITE_MAPBOX_ACCESS_TOKEN}
+                    onChange={(e) => handleApiKeyChange('VITE_MAPBOX_ACCESS_TOKEN', e.target.value)}
+                    type="password"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Used for address autocomplete functionality
+                  </p>
                 </div>
                 
-                <div className="relative">
-                  <div className="flex justify-end mb-2">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        localStorage.removeItem('scanner-logs')
-                        setScannerLogs([])
-                        toast.success("Scanner logs cleared")
-                      }}
-                    >
-                      Clear Logs
-                    </Button>
-                  </div>
-                  <ScrollArea className="h-[500px] w-full rounded-md border p-4">
-                    <div className="space-y-2">
-                      {scannerLogs.map((log, index) => (
-                        <div key={index} className="text-sm font-mono">
-                          <span className="text-muted-foreground">
-                            {new Date(log.timestamp).toLocaleString()}
-                          </span>
-                          <span className="mx-2">-</span>
-                          <span>{log.message}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
+                <div className="space-y-2">
+                  <Label htmlFor="nhtsa-api">NHTSA API URL</Label>
+                  <Input 
+                    id="nhtsa-api"
+                    value={apiKeys.VITE_NHTSA_API_URL}
+                    onChange={(e) => handleApiKeyChange('VITE_NHTSA_API_URL', e.target.value)}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    API endpoint for VIN decoding (default: https://vpic.nhtsa.dot.gov/api)
+                  </p>
+                </div>
+                
+                <div className="flex justify-end space-x-2">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setApiKeys({
+                        VITE_MAPBOX_ACCESS_TOKEN: import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || '',
+                        VITE_NHTSA_API_URL: 'https://vpic.nhtsa.dot.gov/api',
+                      })
+                    }}
+                  >
+                    Reset
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      localStorage.setItem('api-keys', JSON.stringify(apiKeys))
+                      toast({
+                        title: "API Keys Saved",
+                        description: "Changes will take effect after reload"
+                      })
+                    }}
+                  >
+                    Save API Keys
+                  </Button>
+                </div>
+                
+                <div className="bg-yellow-100 dark:bg-yellow-900/30 p-4 rounded-md text-yellow-800 dark:text-yellow-200 text-sm">
+                  <h4 className="font-semibold flex items-center gap-1 mb-2">
+                    <BookOpen className="h-4 w-4" />
+                    Important Note
+                  </h4>
+                  <p>
+                    For security, API keys should be set in your project's environment variables.
+                    The keys stored here are only used for local testing and development.
+                  </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="theme">
-          <Card>
-            <CardHeader>
-              <CardTitle>Theme Configuration</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Theme configuration options will be available soon.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="api">
-          <Card>
-            <CardHeader>
-              <CardTitle>API Configuration</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                API configuration options will be available soon.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="security">
-          <Card>
-            <CardHeader>
-              <CardTitle>Security Settings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Security configuration options will be available soon.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="database">
-          <Card>
-            <CardHeader>
-              <CardTitle>Database Settings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Database configuration options will be available soon.
-              </p>
             </CardContent>
           </Card>
         </TabsContent>

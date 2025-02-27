@@ -1,35 +1,24 @@
 
-import { ServiceTypesList } from "@/components/services/ServiceTypesList"
 import { RouteObject } from "react-router-dom"
-import { lazy, useState } from "react"
-import { ServiceStatusFilter, ServiceTypeFilter } from "@/types/service-types"
-
-const ServiceSkills = lazy(() => import("@/pages/staff/ServiceSkills"))
-
-const ServiceTypesListWrapper = () => {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState<ServiceStatusFilter>("all")
-  const [typeFilter, setTypeFilter] = useState<ServiceTypeFilter>("all")
-
-  return (
-    <ServiceTypesList
-      searchQuery={searchQuery}
-      statusFilter={statusFilter}
-      typeFilter={typeFilter}
-      onSearch={setSearchQuery}
-      onStatusFilter={setStatusFilter}
-      onTypeFilter={setTypeFilter}
-    />
-  )
-}
+import { PermissionGuard } from "@/components/auth/PermissionGuard"
+import ServiceTypes from "@/pages/admin/ServiceTypes"
+import ServiceBays from "@/pages/admin/ServiceBays"
 
 export const serviceRoutes: RouteObject[] = [
   {
     path: "service-types",
-    element: <ServiceTypesListWrapper />,
+    element: (
+      <PermissionGuard resource="service_types" type="page_access">
+        <ServiceTypes />
+      </PermissionGuard>
+    ),
   },
   {
-    path: "staff/service-skills",
-    element: <ServiceSkills />,
+    path: "service-bays",
+    element: (
+      <PermissionGuard resource="service_bays" type="page_access">
+        <ServiceBays />
+      </PermissionGuard>
+    ),
   },
 ]
