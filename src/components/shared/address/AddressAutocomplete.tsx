@@ -49,7 +49,7 @@ export function AddressAutocomplete({ form, fieldPrefix = "" }: AddressAutocompl
         .mapboxgl-ctrl-geocoder--input {
           background-color: hsl(var(--background)) !important;
           color: hsl(var(--foreground)) !important;
-          padding: 0.5rem 1rem !important;
+          padding: 0.5rem 2.5rem !important; /* Increased left padding to prevent text overlap with icon */
           height: 2.5rem !important;
         }
         
@@ -60,6 +60,13 @@ export function AddressAutocomplete({ form, fieldPrefix = "" }: AddressAutocompl
 
         .mapboxgl-ctrl-geocoder--icon {
           fill: hsl(var(--muted-foreground)) !important;
+        }
+
+        .mapboxgl-ctrl-geocoder--icon-search {
+          top: 8px !important; /* Adjusted position */
+          left: 10px !important; /* Adjusted position */
+          width: 18px !important; /* Made icon smaller */
+          height: 18px !important; /* Made icon smaller */
         }
 
         .mapboxgl-ctrl-geocoder--button {
