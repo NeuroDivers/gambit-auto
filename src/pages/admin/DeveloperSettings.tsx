@@ -389,15 +389,17 @@ export default function DeveloperSettings() {
                   onValueChange={(value) => loadPreset(value)}
                 >
                   <SelectTrigger className="w-[220px]">
-                    <SelectValue placeholder="Select a preset" />
+                    <SelectValue placeholder="Select a preset">
+                      {activePresetId ? getActivePresetName() : "Select preset"}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {presets.map(preset => (
                       <SelectItem key={preset.id} value={preset.id}>
-                        <div className="flex flex-col w-full py-1">
-                          <span className="font-medium">{preset.name}</span>
-                          {preset.isDefault && <span className="text-xs text-muted-foreground">Default</span>}
-                        </div>
+                        {preset.name}
+                        {preset.isDefault && (
+                          <span className="ml-2 text-xs text-muted-foreground">(Default)</span>
+                        )}
                       </SelectItem>
                     ))}
                   </SelectContent>
