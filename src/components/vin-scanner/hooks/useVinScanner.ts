@@ -593,31 +593,60 @@ export const useVinScanner = ({
       stopCamera();
       
       addLog('Requesting camera access...');
-      const stream = await navigator.mediaDevices.getUserMedia({
+      
+      // Set up constraints with a lower resolution to start with
+      const constraints = {
         video: {
-          facingMode: { exact: "environment" },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         }
-      }).catch(async (err) => {
-        addLog(`Environment camera error: ${err}. Falling back to default camera...`);
-        return await navigator.mediaDevices.getUserMedia({
-          video: true
+      };
+      
+      // Try to access the camera with environment facing first if on mobile
+      let stream: MediaStream;
+      try {
+        addLog('Attempting to access environment-facing camera...');
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { exact: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
         });
-      });
+        addLog('Successfully accessed environment-facing camera');
+      } catch (envError) {
+        // If environment camera fails, fall back to any camera
+        addLog(`Could not access environment camera: ${envError}. Falling back to default camera.`);
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        addLog('Successfully accessed default camera');
+      }
       
       if (!isMountedRef.current) {
         // Component unmounted during camera initialization
+        addLog('Component unmounted during camera initialization');
         stream.getTracks().forEach(track => track.stop());
         return;
       }
       
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-        addLog('Stream acquired, initializing camera...');
-        
-        const track = stream.getVideoTracks()[0];
+      if (!videoRef.current) {
+        addLog('Video element reference is not available');
+        stream.getTracks().forEach(track => track.stop());
+        toast.error("Camera initialization failed. Please refresh and try again.");
+        return;
+      }
+      
+      // Set these properties before assigning srcObject
+      videoRef.current.muted = true;
+      videoRef.current.playsInline = true;
+      videoRef.current.autoplay = true;
+      
+      // Explicitly prepare the video element
+      addLog('Setting up video element...');
+      videoRef.current.srcObject = stream;
+      streamRef.current = stream;
+      
+      const track = stream.getVideoTracks()[0];
+      if (track) {
         const capabilities = track.getCapabilities() as ExtendedTrackCapabilities;
         setHasFlash('torch' in capabilities);
         if ('torch' in capabilities) {
@@ -626,109 +655,116 @@ export const useVinScanner = ({
         
         const settings = track.getSettings();
         addLog(`Camera: ${settings.facingMode || 'unknown'} facing, resolution: ${settings.width}x${settings.height}`);
-        
-        addLog('Waiting for video metadata to load...');
-        
-        // Setup a timeout promise along with the metadata loading promise
-        try {
-          await Promise.race([
-            new Promise<void>((resolve, reject) => {
-              // Add a timeout to prevent getting stuck
-              const timeoutId = setTimeout(() => {
-                reject(new Error('Video metadata loading timed out'));
-              }, 5000);
-              
-              // If videoRef is null or metadata is already loaded, resolve immediately
-              if (!videoRef.current) {
-                clearTimeout(timeoutId);
-                resolve();
-                return;
-              }
-              
-              // Handle the case where metadata might already be loaded
-              if (videoRef.current.readyState >= 1) {
-                clearTimeout(timeoutId);
-                resolve();
-                return;
-              }
-              
-              // Wait for metadata to load
-              videoRef.current.onloadedmetadata = () => {
-                clearTimeout(timeoutId);
-                resolve();
-              };
-            }),
-            // Additional timeout promise as a backup
-            new Promise<never>((_, reject) => 
-              setTimeout(() => reject(new Error('Global video metadata timeout')), 6000)
-            )
-          ]);
-          
-          addLog('Video metadata loaded successfully');
-        } catch (error) {
-          // If metadata loading times out, try to continue anyway
-          addLog(`Warning: ${error}. Attempting to continue...`);
-        }
-        
-        if (!isMountedRef.current || !videoRef.current) {
-          addLog('Component unmounted during video initialization');
+      } else {
+        addLog('No video track available in the stream');
+      }
+      
+      // Wait for the video to be ready using both loadedmetadata and loadeddata events
+      addLog('Waiting for video to be ready...');
+      
+      await new Promise<void>((resolve, reject) => {
+        if (!videoRef.current) {
+          reject(new Error('Video element not available'));
           return;
         }
         
-        addLog('Playing video stream...');
+        const timeoutId = setTimeout(() => {
+          reject(new Error('Video load timeout'));
+        }, 5000);
         
-        // Add timeout for video play as well
-        try {
+        // If already loaded, resolve immediately
+        if (videoRef.current.readyState >= 2) {
+          clearTimeout(timeoutId);
+          resolve();
+          return;
+        }
+        
+        // Listen for both events to ensure video is truly ready
+        const handleLoaded = () => {
+          clearTimeout(timeoutId);
+          if (videoRef.current) {
+            videoRef.current.removeEventListener('loadeddata', handleLoaded);
+            videoRef.current.removeEventListener('loadedmetadata', handleLoaded);
+          }
+          resolve();
+        };
+        
+        videoRef.current.addEventListener('loadeddata', handleLoaded);
+        videoRef.current.addEventListener('loadedmetadata', handleLoaded);
+      }).catch(error => {
+        addLog(`Video load error: ${error}. Attempting to continue anyway.`);
+      });
+      
+      if (!isMountedRef.current) {
+        addLog('Component unmounted while waiting for video to load');
+        return;
+      }
+      
+      // Play the video with error handling
+      addLog('Starting video playback...');
+      
+      try {
+        // Set these properties again just to be sure
+        if (videoRef.current) {
+          videoRef.current.muted = true;
+          
+          // Use a simple play with a short timeout
           await Promise.race([
             videoRef.current.play(),
-            new Promise<never>((_, reject) => 
-              setTimeout(() => reject(new Error('Video play timeout')), 5000)
-            )
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Play timeout')), 3000))
           ]);
-          addLog('Video stream started successfully');
-        } catch (err) {
-          addLog(`Error or timeout playing video: ${err}`);
-          toast.error("Camera initialization failed. Please check permissions and refresh.");
-          // Try to continue anyway in some cases
-          if (videoRef.current.paused) {
-            try {
-              // One more attempt with user interaction simulation
-              addLog('Attempting alternative video start method...');
-              videoRef.current.muted = true;
-              await videoRef.current.play();
-              addLog('Alternative video start succeeded');
-            } catch (finalErr) {
-              addLog(`Final video play error: ${finalErr}`);
-              toast.error("Could not start camera. Please try again with a different browser.");
-              throw finalErr;
-            }
-          }
-        }
-
-        if (scanMode === 'text') {
-          addLog('Starting OCR initialization...');
           
-          try {
-            workerRef.current = await initializeWorker();
-            
-            if (!isMountedRef.current) {
-              addLog('Component unmounted during OCR initialization');
-              return;
-            }
-            
-            addLog('OCR worker initialized successfully');
-            setIsScanning(true);
-            
-            addLog('Starting OCR scanning...');
-            await startOCRScanning(true);
-          } catch (error) {
-            addLog(`OCR initialization failed: ${error}`);
-            toast.error("Failed to initialize OCR scanner. Please try again.");
-          }
-        } else {
-          addLog('Initializing barcode reader...');
-          await initializeBarcodeScanner();
+          addLog('Video playback started successfully');
         }
+      } catch (playError) {
+        addLog(`Video play error: ${playError}`);
+        
+        // Try one more approach - create a user interaction event
+        try {
+          addLog('Trying alternative playback method...');
+          
+          if (videoRef.current) {
+            // Simulate a user interaction
+            const playPromise = videoRef.current.play();
+            if (playPromise !== undefined) {
+              playPromise.then(() => {
+                addLog('Alternative playback successful');
+              }).catch(finalError => {
+                addLog(`Final play error: ${finalError}`);
+                // Continue anyway - the OCR or barcode scanner might still work
+              });
+            }
+          }
+        } catch (finalError) {
+          addLog(`Failed all play attempts: ${finalError}`);
+        }
+      }
+      
+      // Initialize scanner even if video might not be playing properly
+      // Sometimes the scanning can still work
+      if (scanMode === 'text') {
+        addLog('Starting OCR initialization...');
+        
+        try {
+          workerRef.current = await initializeWorker();
+          
+          if (!isMountedRef.current) {
+            addLog('Component unmounted during OCR initialization');
+            return;
+          }
+          
+          addLog('OCR worker initialized successfully');
+          setIsScanning(true);
+          
+          addLog('Starting OCR scanning...');
+          await startOCRScanning(true);
+        } catch (error) {
+          addLog(`OCR initialization failed: ${error}`);
+          toast.error("Failed to initialize OCR scanner. Please try again.");
+        }
+      } else {
+        addLog('Initializing barcode reader...');
+        await initializeBarcodeScanner();
       }
     } catch (error) {
       addLog(`Error accessing camera: ${error}`);
