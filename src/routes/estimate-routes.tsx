@@ -9,7 +9,7 @@ import ScanVin from "@/pages/admin/ScanVin"
 
 export const estimateRoutes: RouteObject[] = [
   {
-    path: "admin/estimates/scan-vin",
+    path: "estimates/scan-vin",
     element: (
       <PermissionGuard resource="quotes" type="page_access">
         <ScanVin />

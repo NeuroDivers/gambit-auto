@@ -1,36 +1,47 @@
+
 import * as React from "react"
-import * as SelectPrimitive from "@radix-ui/react-select"
-import { Check } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Camera } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { VinScanner } from "@/components/shared/VinScanner"
+import { toast } from "sonner"
+import { useNavigate } from "react-router-dom"
 
-export const SelectItem = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
->(({ className, children, ...props }, ref) => (
-  <SelectPrimitive.Item
-    ref={ref}
-    className={cn(
-      "relative flex w-full cursor-default select-none items-start rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      className
-    )}
-    {...props}
-  >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center mt-0.5">
-      <SelectPrimitive.ItemIndicator>
-        <Check className="h-4 w-4" />
-      </SelectPrimitive.ItemIndicator>
-    </span>
-
-    <SelectPrimitive.ItemText>
-      <div className="flex flex-col">
-        {children}
-      </div>
-    </SelectPrimitive.ItemText>
-  </SelectPrimitive.Item>
-))
-SelectItem.displayName = SelectPrimitive.Item.displayName
-
-// Change the export from a named export to a default export
 export default function ScanVin() {
-  // Implementation of ScanVin component would go here
+  const navigate = useNavigate()
+
+  const handleVinScanned = (vin: string) => {
+    // Store the scanned VIN in localStorage or state management
+    localStorage.setItem('scanned-vin', vin)
+    toast.success(`VIN scanned successfully: ${vin}`)
+    
+    // Navigate to create quote with the scanned VIN
+    navigate('/estimates/create')
+  }
+
+  return (
+    <div className="container mx-auto py-6 space-y-6">
+      <h1 className="text-2xl font-bold">Scan Vehicle VIN</h1>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Camera className="h-5 w-5" />
+            Scan VIN
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center justify-center space-y-4">
+          <p className="text-center text-muted-foreground mb-2">
+            Use your camera to scan a vehicle's VIN barcode or text
+          </p>
+          
+          <VinScanner onScan={handleVinScanned} />
+          
+          <div className="text-sm text-muted-foreground mt-4 max-w-md text-center">
+            Position the VIN within the scanning frame. The system will automatically detect and validate the code.
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
 }
