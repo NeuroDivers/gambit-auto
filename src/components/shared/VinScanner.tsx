@@ -1,8 +1,9 @@
-import { Camera, Pause, Play } from "lucide-react"
+import { Camera, Pause, Play, Check, X as XIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
 import { toast } from "sonner"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog"
 import { createWorker, PSM } from 'tesseract.js'
 import { BrowserMultiFormatReader } from '@zxing/library'
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -18,6 +19,13 @@ interface ExtendedTrackCapabilities extends MediaTrackCapabilities {
   torch?: boolean;
 }
 
+interface VehicleInfo {
+  vin: string;
+  make?: string;
+  model?: string;
+  year?: string;
+}
+
 export function VinScanner({ onScan }: VinScannerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isCameraActive, setIsCameraActive] = useState(false)
@@ -29,6 +37,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const [isPaused, setIsPaused] = useState(false)
   const [scanStartTime, setScanStartTime] = useState<Date | null>(null)
   const [lastScanDuration, setLastScanDuration] = useState<number | null>(null)
+  const [detectedVehicle, setDetectedVehicle] = useState<VehicleInfo | null>(null)
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false)
+  const [remainingVariations, setRemainingVariations] = useState<string[]>([])
   const isMobile = useIsMobile()
 
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -348,32 +359,15 @@ export function VinScanner({ onScan }: VinScannerProps) {
       
       const possibleVins = correctCommonOcrMistakes(text)
       
-      for (const vin of possibleVins) {
-        addLog(`Checking possible VIN: ${vin}`)
+      if (possibleVins.length > 0) {
+        const [firstVin, ...otherVins] = possibleVins
+        setRemainingVariations(otherVins)
         
-        if (validateVIN(vin)) {
-          addLog('Local VIN validation passed')
-          const isValidVin = await validateVinWithNHTSA(vin)
-          
-          if (isValidVin) {
-            const endTime = new Date()
-            const duration = scanStartTime ? (endTime.getTime() - scanStartTime.getTime()) / 1000 : 0
-            setLastScanDuration(duration)
-            
-            addLog(`NHTSA validation passed - Valid VIN confirmed in ${duration.toFixed(2)} seconds!`)
-            onScan(vin)
-            toast.success("VIN scanned and validated successfully")
-            handleClose()
-            return
-          } else {
-            addLog('NHTSA validation failed for this variation')
-          }
-        } else {
-          addLog(`Local VIN validation failed for variation - Reason: Invalid format`)
+        const isValid = await checkVinValidity(firstVin)
+        if (!isValid && shouldScan) {
+          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
         }
-      }
-      
-      if (shouldScan) {
+      } else if (shouldScan) {
         scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
       }
     } catch (error) {
@@ -439,6 +433,79 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
 
     return preprocessImage(scaledCanvas)
+  }
+
+  const fetchVehicleInfo = async (vin: string): Promise<VehicleInfo | null> => {
+    try {
+      const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`)
+      if (!response.ok) return null
+      
+      const data = await response.json()
+      const results = data.Results
+
+      if (!Array.isArray(results)) return null
+
+      const makeResult = results.find((r: any) => r.Variable === 'Make' && r.Value)
+      const modelResult = results.find((r: any) => r.Variable === 'Model' && r.Value)
+      const yearResult = results.find((r: any) => r.Variable === 'Model Year' && r.Value)
+
+      if (makeResult?.Value && modelResult?.Value && yearResult?.Value) {
+        return {
+          vin,
+          make: makeResult.Value,
+          model: modelResult.Value,
+          year: yearResult.Value
+        }
+      }
+    } catch (error) {
+      addLog(`NHTSA API error: ${error}`)
+    }
+    return null
+  }
+
+  const checkVinValidity = async (vin: string) => {
+    addLog(`Checking possible VIN: ${vin}`)
+    
+    if (validateVIN(vin)) {
+      addLog('Local VIN validation passed')
+      const vehicleInfo = await fetchVehicleInfo(vin)
+      
+      if (vehicleInfo) {
+        const endTime = new Date()
+        const duration = scanStartTime ? (endTime.getTime() - scanStartTime.getTime()) / 1000 : 0
+        setLastScanDuration(duration)
+        
+        addLog(`NHTSA validation passed - Valid VIN found in ${duration.toFixed(2)} seconds!`)
+        addLog(`Vehicle Info - Make: ${vehicleInfo.make}, Model: ${vehicleInfo.model}, Year: ${vehicleInfo.year}`)
+        
+        setDetectedVehicle(vehicleInfo)
+        setIsConfirmationOpen(true)
+        return true
+      } else {
+        addLog('NHTSA validation failed - Could not decode vehicle info')
+      }
+    } else {
+      addLog(`Local VIN validation failed - Invalid format`)
+    }
+    return false
+  }
+
+  const handleConfirm = (confirmed: boolean) => {
+    setIsConfirmationOpen(false)
+    
+    if (confirmed && detectedVehicle) {
+      onScan(detectedVehicle.vin)
+      toast.success("VIN confirmed and saved successfully")
+      handleClose()
+    } else {
+      if (remainingVariations.length > 0) {
+        const nextVariation = remainingVariations[0]
+        setRemainingVariations(remainingVariations.slice(1))
+        checkVinValidity(nextVariation)
+      } else {
+        startOCRScanning(true)
+      }
+    }
   }
 
   const handleClose = async () => {
@@ -547,6 +614,46 @@ export function VinScanner({ onScan }: VinScannerProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={isConfirmationOpen} onOpenChange={setIsConfirmationOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Vehicle Information</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4">
+              <div className="font-mono text-lg text-primary">
+                VIN: {detectedVehicle?.vin}
+              </div>
+              {detectedVehicle && (
+                <div className="grid gap-2 text-base">
+                  <div><span className="font-semibold">Make:</span> {detectedVehicle.make}</div>
+                  <div><span className="font-semibold">Model:</span> {detectedVehicle.model}</div>
+                  <div><span className="font-semibold">Year:</span> {detectedVehicle.year}</div>
+                </div>
+              )}
+              <p className="text-sm text-muted-foreground">
+                Is this the correct vehicle information?
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => handleConfirm(false)}
+              className="flex-1"
+            >
+              <XIcon className="mr-2 h-4 w-4" />
+              Try Again
+            </Button>
+            <Button 
+              onClick={() => handleConfirm(true)}
+              className="flex-1"
+            >
+              <Check className="mr-2 h-4 w-4" />
+              Confirm
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }
