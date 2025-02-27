@@ -135,7 +135,7 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
                 </FormLabel>
                 <FormControl>
                   <div className="flex gap-2">
-                    <Input {...field} placeholder="Enter VIN" />
+                    <Input {...field} placeholder="Enter VIN" id="vehicle_vin" />
                     <VinScanner onScan={handleVinScan} />
                   </div>
                 </FormControl>
