@@ -22,30 +22,28 @@ export default function CreateQuote() {
 
   // Check for VIN scanning results when component mounts or regains focus
   useEffect(() => {
-    // Immediately check for scanned VIN
-    const scannedVin = sessionStorage.getItem('scanned-vin')
-    if (scannedVin) {
-      console.log('CreateQuote: Found scanned VIN in sessionStorage:', scannedVin)
-      // Apply it to the form with delay to ensure form is ready
-      setTimeout(() => {
+    // Define a function to check and apply scanned VIN
+    const checkForScannedVin = () => {
+      const scannedVin = sessionStorage.getItem('scanned-vin')
+      if (scannedVin) {
+        console.log('CreateQuote: Found scanned VIN in sessionStorage:', scannedVin)
         form.setValue('vehicle_vin', scannedVin, { shouldValidate: true, shouldDirty: true, shouldTouch: true })
         toast.success(`VIN imported: ${scannedVin}`)
-        sessionStorage.removeItem('scanned-vin')
-      }, 300)
-    }
-
-    // Also check when window regains focus (coming back from VIN scanner)
-    const handleFocus = () => {
-      const focusScannedVin = sessionStorage.getItem('scanned-vin')
-      if (focusScannedVin) {
-        console.log('CreateQuote (focus): Found scanned VIN:', focusScannedVin)
-        form.setValue('vehicle_vin', focusScannedVin, { shouldValidate: true, shouldDirty: true, shouldTouch: true })
-        toast.success(`VIN imported: ${focusScannedVin}`)
         sessionStorage.removeItem('scanned-vin')
       }
     }
     
+    // Check immediately on component mount
+    checkForScannedVin()
+    
+    // Also check when window regains focus (returning from scanner page)
+    const handleFocus = () => {
+      console.log('Window regained focus, checking for scanned VIN')
+      checkForScannedVin()
+    }
+    
     window.addEventListener('focus', handleFocus)
+    
     return () => {
       window.removeEventListener('focus', handleFocus)
     }
