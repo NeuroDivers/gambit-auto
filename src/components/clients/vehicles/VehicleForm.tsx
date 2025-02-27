@@ -1,3 +1,4 @@
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -8,7 +9,7 @@ import { Textarea } from "../../ui/textarea"
 import { Vehicle, VehicleFormValues } from "./types"
 import { Switch } from "../../ui/switch"
 import { useVinLookup } from "@/hooks/useVinLookup"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Loader2 } from "lucide-react"
 import { VinScanner } from "@/components/shared/VinScanner"
 
@@ -30,6 +31,8 @@ interface VehicleFormProps {
 }
 
 export function VehicleForm({ vehicle, clientId, onSubmit }: VehicleFormProps) {
+  const [scannerActive, setScannerActive] = useState(false);
+  
   const form = useForm<VehicleFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: vehicle ? {
@@ -63,6 +66,11 @@ export function VehicleForm({ vehicle, clientId, onSubmit }: VehicleFormProps) {
       if (vinData.year) form.setValue('year', vinData.year)
     }
   }, [vinData, form])
+  
+  const handleScan = (vin: string) => {
+    form.setValue('vin', vin);
+    setScannerActive(false);
+  };
 
   return (
     <Form {...form}>
@@ -142,7 +150,11 @@ export function VehicleForm({ vehicle, clientId, onSubmit }: VehicleFormProps) {
                 <FormControl>
                   <div className="flex gap-2">
                     <Input {...field} />
-                    <VinScanner onScan={(vin) => field.onChange(vin)} />
+                    <VinScanner 
+                      onScan={handleScan} 
+                      isActive={scannerActive}
+                      scanMode="text"
+                    />
                   </div>
                 </FormControl>
                 <FormMessage />

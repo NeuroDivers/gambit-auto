@@ -1,26 +1,10 @@
-
 export const validateVIN = (vin: string): boolean => {
   if (vin.length !== 17) return false;
 
-  // Strict VIN pattern for modern vehicles (post-1981)
+  // Less strict VIN pattern to handle a wider range of valid VINs
   const validVINPattern = /^[A-HJ-NPR-Z0-9]{17}$/;
   if (!validVINPattern.test(vin)) {
     console.log('VIN failed pattern validation:', vin);
-    return false;
-  }
-
-  // WMI validation - first three characters can be either letters or numbers
-  // Many North American manufacturers use numbers in their WMI
-  const validWMI = /^[A-HJ-NPR-Z0-9]{3}/;
-  if (!validWMI.test(vin)) {
-    console.log('VIN failed WMI validation:', vin);
-    return false;
-  }
-
-  // Check for sequential number format (last 6 digits)
-  const sequentialNumber = /[0-9]{6}$/;
-  if (!sequentialNumber.test(vin.slice(-6))) {
-    console.log('VIN failed sequential number validation:', vin);
     return false;
   }
 

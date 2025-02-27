@@ -82,7 +82,8 @@ export function TaxManagementForm({ initialTaxes }: TaxManagementFormProps) {
     .map(tax => tax.region)
     .filter((value, index, self) => self.indexOf(value) === index)
 
-  const defaultValues: TaxFormValues = {
+  // Note: Changed tax_rate to be a string in the default values (will be transformed to number by zod)
+  const defaultValues: Partial<TaxFormValues> = {
     region: "",
     country: "Canada",
     tax_type: "GST",
@@ -107,7 +108,7 @@ export function TaxManagementForm({ initialTaxes }: TaxManagementFormProps) {
         region: values.region,
         country: values.country,
         tax_type: values.tax_type,
-        tax_rate: Number(values.tax_rate),
+        tax_rate: Number(values.tax_rate), // Ensure it's a number
         tax_number: values.tax_number,
         is_default: values.is_default || false
       }
@@ -185,7 +186,7 @@ export function TaxManagementForm({ initialTaxes }: TaxManagementFormProps) {
       region: tax.region,
       country: tax.country,
       tax_type: tax.tax_type,
-      tax_rate: tax.tax_rate.toString(),
+      tax_rate: tax.tax_rate.toString(), // Convert number to string for the form
       tax_number: tax.tax_number,
       is_default: tax.is_default
     })
