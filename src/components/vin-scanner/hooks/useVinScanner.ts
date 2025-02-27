@@ -628,19 +628,47 @@ export const useVinScanner = ({
         addLog(`Camera: ${settings.facingMode || 'unknown'} facing, resolution: ${settings.width}x${settings.height}`);
         
         addLog('Waiting for video metadata to load...');
-        await new Promise<void>((resolve) => {
-          if (!videoRef.current) {
-            resolve();
-            return;
-          }
+        
+        // Setup a timeout promise along with the metadata loading promise
+        try {
+          await Promise.race([
+            new Promise<void>((resolve, reject) => {
+              // Add a timeout to prevent getting stuck
+              const timeoutId = setTimeout(() => {
+                reject(new Error('Video metadata loading timed out'));
+              }, 5000);
+              
+              // If videoRef is null or metadata is already loaded, resolve immediately
+              if (!videoRef.current) {
+                clearTimeout(timeoutId);
+                resolve();
+                return;
+              }
+              
+              // Handle the case where metadata might already be loaded
+              if (videoRef.current.readyState >= 1) {
+                clearTimeout(timeoutId);
+                resolve();
+                return;
+              }
+              
+              // Wait for metadata to load
+              videoRef.current.onloadedmetadata = () => {
+                clearTimeout(timeoutId);
+                resolve();
+              };
+            }),
+            // Additional timeout promise as a backup
+            new Promise<never>((_, reject) => 
+              setTimeout(() => reject(new Error('Global video metadata timeout')), 6000)
+            )
+          ]);
           
-          // Handle the case where metadata might already be loaded
-          if (videoRef.current.readyState >= 1) {
-            resolve();
-          } else {
-            videoRef.current.onloadedmetadata = () => resolve();
-          }
-        });
+          addLog('Video metadata loaded successfully');
+        } catch (error) {
+          // If metadata loading times out, try to continue anyway
+          addLog(`Warning: ${error}. Attempting to continue...`);
+        }
         
         if (!isMountedRef.current || !videoRef.current) {
           addLog('Component unmounted during video initialization');
@@ -648,13 +676,34 @@ export const useVinScanner = ({
         }
         
         addLog('Playing video stream...');
-        await videoRef.current.play().catch(err => {
-          addLog(`Error playing video: ${err}`);
-          toast.error("Camera initialization failed. Please check permissions.");
-          throw err;
-        });
         
-        addLog('Video stream started successfully');
+        // Add timeout for video play as well
+        try {
+          await Promise.race([
+            videoRef.current.play(),
+            new Promise<never>((_, reject) => 
+              setTimeout(() => reject(new Error('Video play timeout')), 5000)
+            )
+          ]);
+          addLog('Video stream started successfully');
+        } catch (err) {
+          addLog(`Error or timeout playing video: ${err}`);
+          toast.error("Camera initialization failed. Please check permissions and refresh.");
+          // Try to continue anyway in some cases
+          if (videoRef.current.paused) {
+            try {
+              // One more attempt with user interaction simulation
+              addLog('Attempting alternative video start method...');
+              videoRef.current.muted = true;
+              await videoRef.current.play();
+              addLog('Alternative video start succeeded');
+            } catch (finalErr) {
+              addLog(`Final video play error: ${finalErr}`);
+              toast.error("Could not start camera. Please try again with a different browser.");
+              throw finalErr;
+            }
+          }
+        }
 
         if (scanMode === 'text') {
           addLog('Starting OCR initialization...');
