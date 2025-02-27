@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { ArrowLeft, Clipboard, RotateCcw, Check, AlignLeft, Barcode, Info } from "lucide-react"
@@ -15,6 +16,7 @@ import { Label } from "@/components/ui/label"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Badge } from "@/components/ui/badge"
 import { PageTitle } from "@/components/shared/PageTitle"
+import { Toggle } from "@/components/ui/toggle"
 
 interface VehicleInfo {
   vin: string;
@@ -876,17 +878,23 @@ export default function ScanVin() {
         <div className="space-y-4">
           <div className="flex justify-between mb-4">
             <div className="flex space-x-2 items-center">
-              {scanMode === 'text' ? (
-                <Badge variant="default" className="h-8">
-                  <AlignLeft className="mr-1 h-3 w-3" />
-                  Text Mode
-                </Badge>
-              ) : (
-                <Badge variant="default" className="h-8">
-                  <Barcode className="mr-1 h-3 w-3" />
-                  Barcode Mode
-                </Badge>
-              )}
+              <Toggle
+                pressed={scanMode === 'text'}
+                onPressedChange={() => handleScanModeChange('text')}
+                className={`h-8 ${scanMode === 'text' ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'border'}`}
+              >
+                <AlignLeft className="mr-1 h-3 w-3" />
+                Text Mode
+              </Toggle>
+              
+              <Toggle
+                pressed={scanMode === 'barcode'}
+                onPressedChange={() => handleScanModeChange('barcode')}
+                className={`h-8 ${scanMode === 'barcode' ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'border'}`}
+              >
+                <Barcode className="mr-1 h-3 w-3" />
+                Barcode Mode
+              </Toggle>
             </div>
             <Button 
               variant="outline" 
@@ -948,27 +956,8 @@ export default function ScanVin() {
             </Button>
           </div>
 
-          <div className="mt-4 flex justify-between">
-            <div className="space-x-2">
-              <Label htmlFor="scan-mode" className="text-sm">Mode:</Label>
-              <Switch
-                id="scan-mode"
-                checked={scanMode === "barcode"}
-                onCheckedChange={(checked) =>
-                  handleScanModeChange(checked ? "barcode" : "text")
-                }
-              />
-              <Label
-                htmlFor="scan-mode"
-                className={`text-sm ${
-                  scanMode === "barcode" ? "text-foreground" : "text-muted-foreground"
-                }`}
-              >
-                {scanMode === "barcode" ? "Barcode" : "Text"}
-              </Label>
-            </div>
-            
-            {hasFlash && (
+          {hasFlash && (
+            <div className="mt-4 flex justify-end">
               <Button
                 variant="outline"
                 size="sm"
@@ -976,8 +965,8 @@ export default function ScanVin() {
               >
                 Flash {isFlashOn ? "Off" : "On"}
               </Button>
-            )}
-          </div>
+            </div>
+          )}
 
           {showLogs && (
             <Collapsible open={true} className="mt-4">
