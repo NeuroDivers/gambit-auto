@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { ArrowLeft, Clipboard, RotateCcw, Check, AlignLeft, Barcode, Info } from "lucide-react"
@@ -1074,9 +1073,9 @@ export default function ScanVin() {
                 <SelectContent>
                   {ocrPresets.map((preset) => (
                     <SelectItem key={preset.name} value={preset.name}>
-                      <div>
+                      <div className="flex flex-col space-y-1">
                         <span className="font-medium">{preset.name}</span>
-                        <p className="text-xs text-muted-foreground">{preset.description}</p>
+                        <span className="text-xs text-muted-foreground">{preset.description}</span>
                       </div>
                     </SelectItem>
                   ))}

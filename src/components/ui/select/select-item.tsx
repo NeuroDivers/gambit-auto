@@ -22,7 +22,11 @@ export const SelectItem = React.forwardRef<
       </SelectPrimitive.ItemIndicator>
     </span>
 
-    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+    <SelectPrimitive.ItemText>
+      <div className="flex flex-col w-full">
+        {children}
+      </div>
+    </SelectPrimitive.ItemText>
   </SelectPrimitive.Item>
 ))
 SelectItem.displayName = SelectPrimitive.Item.displayName
