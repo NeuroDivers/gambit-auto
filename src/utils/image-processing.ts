@@ -159,6 +159,39 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
 }
 
 export const postProcessVIN = (text: string): string => {
+  // Define valid country and manufacturer codes
+  const countryCodeMap: { [key: string]: string } = {
+    '1': 'USA',
+    '4': 'USA',
+    '5': 'USA',
+    '2': 'Canada',
+    '3': 'Mexico',
+    'J': 'Japan',
+    'K': 'South Korea',
+    'W': 'Germany',
+    'V': 'France/Spain',
+    'S': 'UK',
+    'Z': 'Italy',
+    'Y': 'Sweden/Finland',
+    'L': 'China',
+    '9': 'Brazil'
+  }
+
+  const manufacturerCodeMap: { [key: string]: string[] } = {
+    'A': ['Audi', 'Jaguar'],
+    'B': ['BMW', 'Dodge'],
+    'C': ['Chrysler'],
+    'F': ['Ford'],
+    'G': ['General Motors', 'Chevrolet'],
+    'H': ['Honda', 'Hyundai'],
+    'J': ['Jeep'],
+    'L': ['Lincoln'],
+    'M': ['Mazda', 'Mercedes-Benz'],
+    'N': ['Nissan'],
+    'T': ['Toyota'],
+    'V': ['Volvo', 'Volkswagen']
+  }
+
   // Enhanced character correction map
   const commonMistakes: { [key: string]: string } = {
     'O': '0',
@@ -183,17 +216,58 @@ export const postProcessVIN = (text: string): string => {
   // Keep original for validation
   const original = processed
 
-  // Special case: If string starts with 'R1G1', it's likely '1G1'
+  // Special case: If string starts with 'R1G1', it's likely '1G1' (GM vehicles)
   if (processed.startsWith('R1G1')) {
+    console.log('Detected R1G1 pattern, correcting to 1G1 (GM vehicle)')
     processed = '1G1' + processed.slice(4)
   }
 
-  // Apply character substitutions
-  processed = processed.split('').map(char => commonMistakes[char] || char).join('')
+  // If first character isn't a valid country code but looks like a common misread
+  if (processed.length > 0 && !countryCodeMap[processed[0]]) {
+    const firstChar = processed[0]
+    console.log(`Invalid country code detected: ${firstChar}`)
+    
+    // Common misreads for country codes
+    if (firstChar === 'R' || firstChar === 'I') {
+      console.log('Correcting first character to 1 (USA)')
+      processed = '1' + processed.slice(1)
+    } else if (firstChar === 'O') {
+      console.log('Correcting first character to 0')
+      processed = '0' + processed.slice(1)
+    }
+  }
+
+  // Special handling for second character (manufacturer)
+  if (processed.length > 1) {
+    const manufacturerChar = processed[1]
+    if (!manufacturerCodeMap[manufacturerChar]) {
+      console.log(`Potential invalid manufacturer code: ${manufacturerChar}`)
+      
+      // Check for common manufacturer code misreads
+      if (manufacturerChar === '6') {
+        console.log('Correcting manufacturer code 6 to G (General Motors)')
+        processed = processed[0] + 'G' + processed.slice(2)
+      }
+    }
+  }
+
+  // Apply character substitutions for the rest of the VIN
+  processed = processed.split('').map((char, index) => {
+    // Don't apply general substitutions to first two characters
+    if (index < 2) return char
+    return commonMistakes[char] || char
+  }).join('')
 
   // Enhanced VIN validation
   const vinPattern = /^[A-HJ-NPR-Z0-9]{17}$/
   const naVinPattern = /^[1-5][A-HJ-NPR-Z0-9]{16}$/ // North American VIN pattern
+
+  // Log validation information
+  if (processed.length === 17) {
+    const country = countryCodeMap[processed[0]] || 'Unknown'
+    const manufacturers = manufacturerCodeMap[processed[1]] || ['Unknown']
+    console.log(`Detected: Country - ${country}, Possible Manufacturers - ${manufacturers.join(' or ')}`)
+  }
 
   // Check if the processed result matches VIN patterns
   const isProcessedValid = vinPattern.test(processed)
