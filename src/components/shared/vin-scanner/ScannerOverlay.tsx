@@ -1,74 +1,90 @@
 
-import { Camera, Barcode, Lightbulb, X } from "lucide-react"
+import { X, Flashlight, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { DialogTitle, DialogDescription } from "@/components/ui/dialog"
 
 interface ScannerOverlayProps {
-  scanMode: 'text' | 'barcode'
+  scanMode: "text" | "barcode"
   onScanModeChange: (mode: string) => void
-  hasFlash?: boolean
-  isFlashOn?: boolean
-  onFlashToggle?: () => void
-  onClose?: () => void
+  hasFlash: boolean
+  isFlashOn: boolean
+  onFlashToggle: () => void
+  onClose: () => void
 }
 
-export function ScannerOverlay({ 
-  scanMode, 
+export function ScannerOverlay({
+  scanMode,
   onScanModeChange,
   hasFlash,
   isFlashOn,
   onFlashToggle,
-  onClose
+  onClose,
 }: ScannerOverlayProps) {
   return (
-    <>
-      <div className="flex items-center justify-between p-2 border-b">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onScanModeChange(scanMode === 'text' ? 'barcode' : 'text')}
-          >
-            {scanMode === 'text' ? <Barcode className="h-4 w-4" /> : <Camera className="h-4 w-4" />}
-          </Button>
+    <div className="absolute inset-x-0 top-0 z-50 p-4 bg-gradient-to-b from-black/60 to-transparent">
+      <div className="flex items-center justify-between">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-white"
+          onClick={onClose}
+        >
+          <X className="h-5 w-5" />
+        </Button>
+
+        <div className="flex items-center gap-4">
           {hasFlash && (
             <Button
               variant="ghost"
               size="icon"
+              className={`text-white ${isFlashOn ? 'bg-white/20' : ''}`}
               onClick={onFlashToggle}
-              className={isFlashOn ? "text-yellow-500" : ""}
             >
-              <Lightbulb className="h-4 w-4" />
+              <Flashlight className="h-5 w-5" />
             </Button>
           )}
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-        >
-          <X className="h-4 w-4" />
-        </Button>
       </div>
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        {/* Made the overlay container much larger */}
-        <div className="relative w-[95%] h-40 max-w-4xl">
-          {/* Larger corner markers with thicker borders */}
-          <div className="absolute -left-4 -top-4 w-8 h-8 border-l-4 border-t-4 border-primary"></div>
-          <div className="absolute -right-4 -top-4 w-8 h-8 border-r-4 border-t-4 border-primary"></div>
-          <div className="absolute -left-4 -bottom-4 w-8 h-8 border-l-4 border-b-4 border-primary"></div>
-          <div className="absolute -right-4 -bottom-4 w-8 h-8 border-r-4 border-b-4 border-primary"></div>
-          
-          {/* Larger center guide with thicker borders */}
-          <div className="absolute inset-0 border-4 border-dashed border-primary/70">
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 border-4 border-primary/70"></div>
-          </div>
-          
-          {/* Larger helper text with better visibility */}
-          <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black/70 text-white px-6 py-3 rounded-lg text-base font-medium whitespace-nowrap">
-            Position {scanMode === 'text' ? 'VIN text' : 'barcode'} within frame
-          </div>
+
+      <DialogTitle className="sr-only">
+        VIN Scanner
+      </DialogTitle>
+      <DialogDescription className="sr-only">
+        Position the VIN number within the scanning frame to capture it automatically. The scanner will detect standard 17-character VIN codes.
+      </DialogDescription>
+
+      <div className="mt-4 flex items-center justify-center gap-4">
+        <Label htmlFor="scan-mode" className="text-white text-sm">
+          Recognition Mode
+        </Label>
+        <div className="flex items-center gap-2">
+          <Label
+            htmlFor="scan-mode-text"
+            className={`text-sm ${
+              scanMode === "text" ? "text-white" : "text-white/60"
+            }`}
+          >
+            OCR
+          </Label>
+          <Switch
+            id="scan-mode"
+            checked={scanMode === "barcode"}
+            onCheckedChange={(checked) =>
+              onScanModeChange(checked ? "barcode" : "text")
+            }
+          />
+          <Label
+            htmlFor="scan-mode-barcode"
+            className={`text-sm ${
+              scanMode === "barcode" ? "text-white" : "text-white/60"
+            }`}
+          >
+            Barcode
+          </Label>
         </div>
       </div>
-    </>
+    </div>
   )
 }
