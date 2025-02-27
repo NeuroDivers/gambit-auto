@@ -27,22 +27,6 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
     }
   }, [vinData, form])
 
-  // Handle VIN scanning result
-  const handleVinScan = (scannedVin: string) => {
-    console.log('VehicleInfoSection: Setting VIN value:', scannedVin)
-    form.setValue('vehicle_vin', scannedVin, { shouldValidate: true, shouldDirty: true, shouldTouch: true })
-  }
-
-  // Check for VIN scanning results when component mounts
-  useEffect(() => {
-    const scannedVin = sessionStorage.getItem('scanned-vin')
-    if (scannedVin) {
-      console.log('VehicleInfoSection: Found scanned VIN in sessionStorage:', scannedVin)
-      form.setValue('vehicle_vin', scannedVin, { shouldValidate: true, shouldDirty: true, shouldTouch: true })
-      sessionStorage.removeItem('scanned-vin')
-    }
-  }, [form])
-
   return (
     <Card>
       <CardHeader>
@@ -135,8 +119,8 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
                 </FormLabel>
                 <FormControl>
                   <div className="flex gap-2">
-                    <Input {...field} placeholder="Enter VIN" id="vehicle_vin" />
-                    <VinScanner onScan={handleVinScan} />
+                    <Input {...field} placeholder="Enter VIN" />
+                    <VinScanner onScan={(vin) => field.onChange(vin)} />
                   </div>
                 </FormControl>
                 <FormMessage />

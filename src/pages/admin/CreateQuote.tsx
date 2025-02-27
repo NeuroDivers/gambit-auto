@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { PageTitle } from "@/components/shared/PageTitle"
 import { ArrowLeft, Search } from "lucide-react"
 import { Client } from "@/components/clients/types"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { CustomerInfoSection } from "@/components/quotes/form-sections/CustomerInfoSection"
 import { VehicleInfoSection } from "@/components/quotes/form-sections/VehicleInfoSection"
 import { ServicesSection } from "@/components/quotes/form-sections/ServicesSection"
@@ -13,41 +13,11 @@ import { NotesSection } from "@/components/quotes/form-sections/NotesSection"
 import { ClientSearchDialog } from "@/components/quotes/form-sections/ClientSearchDialog"
 import { useCreateQuoteForm } from "@/components/quotes/hooks/useCreateQuoteForm"
 import { supabase } from "@/integrations/supabase/client"
-import { toast } from "sonner"
 
 export default function CreateQuote() {
   const navigate = useNavigate()
   const [searchDialogOpen, setSearchDialogOpen] = useState(false)
   const { form, onSubmit } = useCreateQuoteForm()
-
-  // Check for VIN scanning results when component mounts or regains focus
-  useEffect(() => {
-    // Define a function to check and apply scanned VIN
-    const checkForScannedVin = () => {
-      const scannedVin = sessionStorage.getItem('scanned-vin')
-      if (scannedVin) {
-        console.log('CreateQuote: Found scanned VIN in sessionStorage:', scannedVin)
-        form.setValue('vehicle_vin', scannedVin, { shouldValidate: true, shouldDirty: true, shouldTouch: true })
-        toast.success(`VIN imported: ${scannedVin}`)
-        sessionStorage.removeItem('scanned-vin')
-      }
-    }
-    
-    // Check immediately on component mount
-    checkForScannedVin()
-    
-    // Also check when window regains focus (returning from scanner page)
-    const handleFocus = () => {
-      console.log('Window regained focus, checking for scanned VIN')
-      checkForScannedVin()
-    }
-    
-    window.addEventListener('focus', handleFocus)
-    
-    return () => {
-      window.removeEventListener('focus', handleFocus)
-    }
-  }, [form])
 
   const handleClientSelect = async (client: Client) => {
     form.setValue('customer_first_name', client.first_name)
@@ -88,7 +58,7 @@ export default function CreateQuote() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/admin/estimates')}
+            onClick={() => navigate('/estimates')}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>

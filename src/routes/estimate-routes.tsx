@@ -5,7 +5,6 @@ import Quotes from "@/pages/admin/Quotes"
 import CreateQuote from "@/pages/admin/CreateQuote"
 import QuoteDetails from "@/pages/admin/QuoteDetails"
 import QuoteRequestDetails from "@/pages/admin/QuoteRequestDetails"
-import VinScannerPage from "@/pages/admin/VinScannerPage"
 
 export const estimateRoutes: RouteObject[] = [
   {
@@ -39,9 +38,5 @@ export const estimateRoutes: RouteObject[] = [
         <CreateQuote />
       </PermissionGuard>
     ),
-  },
-  {
-    path: "vin-scanner",
-    element: <VinScannerPage />,
   },
 ]

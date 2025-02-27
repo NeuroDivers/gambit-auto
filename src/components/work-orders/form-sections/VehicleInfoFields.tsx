@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input"
 import { useVinLookup } from "@/hooks/useVinLookup"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
-import { VinScanner } from "@/components/shared/VinScanner"
 
 interface VehicleInfoFieldsProps {
   control: Control<WorkOrderFormValues>
@@ -28,30 +27,6 @@ export function VehicleInfoFields({ control, watch, setValue }: VehicleInfoField
       if (vinData.trim) setValue("vehicle_trim", vinData.trim)
     }
   }, [vinData, setValue])
-  
-  // Check for scanned VIN information in sessionStorage
-  useEffect(() => {
-    const scannedVinInfo = sessionStorage.getItem('scanned-vin-info')
-    if (scannedVinInfo) {
-      try {
-        const vehicleInfo = JSON.parse(scannedVinInfo)
-        console.log('Using scanned vehicle info:', vehicleInfo)
-        
-        if (vehicleInfo.make) setValue("vehicle_make", vehicleInfo.make)
-        if (vehicleInfo.model) setValue("vehicle_model", vehicleInfo.model)
-        if (vehicleInfo.year) setValue("vehicle_year", vehicleInfo.year)
-        
-        // Remove from sessionStorage after using
-        sessionStorage.removeItem('scanned-vin-info')
-      } catch (error) {
-        console.error('Error parsing scanned VIN info:', error)
-      }
-    }
-  }, [setValue])
-
-  const handleVinScan = (scannedVin: string) => {
-    setValue("vehicle_serial", scannedVin, { shouldValidate: true, shouldDirty: true, shouldTouch: true })
-  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -62,10 +37,7 @@ export function VehicleInfoFields({ control, watch, setValue }: VehicleInfoField
           <FormItem>
             <FormLabel>VIN</FormLabel>
             <FormControl>
-              <div className="flex gap-2">
-                <Input placeholder="Enter VIN for auto-fill" {...field} />
-                <VinScanner onScan={handleVinScan} />
-              </div>
+              <Input placeholder="Enter VIN for auto-fill" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
