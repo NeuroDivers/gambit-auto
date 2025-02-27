@@ -1,3 +1,4 @@
+
 export const preprocessImage = (canvas: HTMLCanvasElement): string => {
   const ctx = canvas.getContext('2d')
   if (!ctx) return canvas.toDataURL()
@@ -8,9 +9,9 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
   // Get processing settings from localStorage
   const settings = JSON.parse(localStorage.getItem('scanner-settings') || '{}')
   const {
-    blueEmphasis = 'high',
-    contrast = 'high',
-    morphKernelSize = '2',
+    blueEmphasis = 'very-high',
+    contrast = 'very-high',
+    morphKernelSize = '3',
     grayscaleMethod = 'blue-channel',
     autoInvert = true,
     edgeEnhancement = true,
@@ -36,6 +37,19 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
     }
   }
 
+  // Apply pre-sharpen for initial edge enhancement
+  if (edgeEnhancement) {
+    const sharpenKernel = [
+      -1, -1, -1,
+      -1,  9, -1,
+      -1, -1, -1
+    ]
+    const sharpenedData = applyConvolution(data, canvas.width, canvas.height, sharpenKernel)
+    for (let i = 0; i < data.length; i++) {
+      data[i] = sharpenedData[i]
+    }
+  }
+
   // Apply grayscale conversion based on selected method
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i]
@@ -48,14 +62,15 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
         gray = (r + g + b) / 3
         break
       case 'blue-channel':
-        gray = Math.max(b - ((r + g) / 4), 0)
+        // Enhanced blue channel isolation with red/green suppression
+        gray = Math.max(b - ((r + g) / 3), 0)
         break
       case 'luminosity':
       default:
         const weights = (() => {
           switch (blueEmphasis) {
-            case 'very-high': return { r: 0.15, g: 0.15, b: 0.7 }
-            case 'high': return { r: 0.15, g: 0.25, b: 0.6 }
+            case 'very-high': return { r: 0.1, g: 0.1, b: 0.8 }  // More extreme blue emphasis
+            case 'high': return { r: 0.15, g: 0.15, b: 0.7 }
             default: return { r: 0.2, g: 0.3, b: 0.5 }
           }
         })()
@@ -71,23 +86,24 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
       
       const contrastValues = (() => {
         switch (contrast) {
-          case 'very-high': return { dark: 0.3, light: 1.9 }
-          case 'high': return { dark: 0.4, light: 1.7 }
-          default: return { dark: 0.5, light: 1.5 }
+          case 'very-high': return { dark: 0.2, light: 2.0 }  // More extreme contrast
+          case 'high': return { dark: 0.3, light: 1.8 }
+          default: return { dark: 0.4, light: 1.6 }
         }
       })()
 
-      const contrastMultiplier = Math.max(1, 1.5 - localContrast)
+      // Enhanced contrast multiplier for better local adaptation
+      const contrastMultiplier = Math.max(1.2, 1.8 - localContrast)
       gray = gray < 128 ? 
         gray * (contrastValues.dark * contrastMultiplier) : 
         Math.min(255, gray * (contrastValues.light * contrastMultiplier))
     } else {
-      // Apply regular contrast
+      // Enhanced regular contrast
       const contrastValues = (() => {
         switch (contrast) {
-          case 'very-high': return { dark: 0.3, light: 1.9 }
-          case 'high': return { dark: 0.4, light: 1.7 }
-          default: return { dark: 0.5, light: 1.5 }
+          case 'very-high': return { dark: 0.2, light: 2.0 }
+          case 'high': return { dark: 0.3, light: 1.8 }
+          default: return { dark: 0.4, light: 1.6 }
         }
       })()
       gray = gray < 128 ? 
@@ -98,22 +114,33 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
     data[i] = data[i + 1] = data[i + 2] = gray
   }
 
-  // Apply edge enhancement if enabled
+  // Double-pass edge enhancement if enabled
   if (edgeEnhancement) {
     const blurRadius = 1
-    const amount = 1.5
-    const threshold = 10
+    const amount = 2.0  // Increased from 1.5
+    const threshold = 5 // Reduced from 10
     applyUnsharpMask(data, canvas.width, canvas.height, blurRadius, amount, threshold)
   }
 
   // Apply morphological operations
   const mKernelSize = parseInt(morphKernelSize)
+  // Dilate first to thicken characters
   dilate(data, canvas.width, canvas.height, mKernelSize)
+  dilate(data, canvas.width, canvas.height, mKernelSize) // Second pass
+  // Then erode to clean up
   erode(data, canvas.width, canvas.height, mKernelSize)
 
   // Apply noise reduction if enabled
   if (noiseReduction) {
+    // Double pass median filter with small radius
     applyMedianFilter(data, canvas.width, canvas.height, 1)
+    applyMedianFilter(data, canvas.width, canvas.height, 1)
+  }
+
+  // Final contrast adjustment to ensure black/white separation
+  for (let i = 0; i < data.length; i += 4) {
+    const value = data[i]
+    data[i] = data[i + 1] = data[i + 2] = value > 180 ? 255 : value < 75 ? 0 : value
   }
 
   ctx.putImageData(imageData, 0, 0)

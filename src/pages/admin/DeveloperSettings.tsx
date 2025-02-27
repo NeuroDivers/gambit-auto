@@ -34,9 +34,9 @@ export default function DeveloperSettings() {
   }>>([])
 
   const [settings, setSettings] = useState<ProcessingSettings>({
-    blueEmphasis: 'high',
-    contrast: 'high',
-    morphKernelSize: '2',
+    blueEmphasis: 'very-high',
+    contrast: 'very-high',
+    morphKernelSize: '3',
     confidenceThreshold: '35',
     grayscaleMethod: 'blue-channel',
     autoInvert: true,
