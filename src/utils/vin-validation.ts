@@ -1,4 +1,3 @@
-
 export const validateVIN = (vin: string): boolean => {
   if (vin.length !== 17) return false;
 
@@ -24,9 +23,10 @@ export const validateVIN = (vin: string): boolean => {
     return false;
   }
 
-  // Remove suspicious pattern checks that might be too restrictive
+  // Remove the suspicious pattern check for "too many zeros"
+  // as it was incorrectly flagging valid VINs like 5J6YH287X8L000133
+  // Only keep check for any character repeated more than 4 times
   const suspiciousPatterns = [
-    /[0]{3,}/,      // Too many zeros in a row
     /(.)\1{4,}/     // Any character repeated more than 4 times
   ];
 
