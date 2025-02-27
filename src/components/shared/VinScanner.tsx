@@ -696,7 +696,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       </Button>
 
       <Dialog open={isDialogOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-md p-0 h-[100dvh] sm:h-auto [&>button]:hidden flex flex-col">
+        <DialogContent className="sm:max-w-md p-0 h-[100dvh] sm:h-[100dvh] [&>button]:hidden flex flex-col">
           <ScannerOverlay
             scanMode={scanMode}
             onScanModeChange={handleScanModeChange}
