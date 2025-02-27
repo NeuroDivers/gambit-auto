@@ -1,5 +1,5 @@
 
-import { Camera, Pause, Play, Check, X as XIcon } from "lucide-react"
+import { Camera, Pause, Play, Check, X as XIcon, ChevronDown, ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
 import { toast } from "sonner"
@@ -40,6 +40,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const [detectedVehicle, setDetectedVehicle] = useState<VehicleInfo | null>(null)
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false)
   const [remainingVariations, setRemainingVariations] = useState<string[]>([])
+  const [showLogs, setShowLogs] = useState(false)
   const isMobile = useIsMobile()
 
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -623,6 +624,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
     setIsDialogOpen(false)
     setLogs([])
+    setShowLogs(false)
     checkedVinsRef.current.clear()
   }
 
@@ -706,7 +708,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
           <div className="flex-1 relative sm:aspect-video w-full overflow-hidden">
             {isConfirmationOpen ? (
               <div className="absolute inset-0 z-50 bg-background/95 flex flex-col">
-                <div className="flex-1 overflow-y-auto p-6 h-[50vh]">
+                <div className="flex-1 overflow-y-auto p-6 h-[80vh] md:h-[70vh]">
                   <div className="space-y-4">
                     <h2 className="text-lg font-semibold">Confirm Vehicle Information</h2>
                     <div className="bg-primary/10 p-3 rounded-lg">
@@ -786,28 +788,38 @@ export function VinScanner({ onScan }: VinScannerProps) {
               </div>
             )}
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground">Scan Logs</span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={() => setIsPaused(!isPaused)}
+              <button 
+                onClick={() => setShowLogs(!showLogs)}
+                className="flex items-center text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
-                {isPaused ? (
-                  <Play className="h-3 w-3" />
-                ) : (
-                  <Pause className="h-3 w-3" />
-                )}
-              </Button>
+                <span className="mr-1">Scan Logs</span>
+                {showLogs ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              </button>
+              {showLogs && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => setIsPaused(!isPaused)}
+                >
+                  {isPaused ? (
+                    <Play className="h-3 w-3" />
+                  ) : (
+                    <Pause className="h-3 w-3" />
+                  )}
+                </Button>
+              )}
             </div>
-            <div className="max-h-32 overflow-y-auto text-xs font-mono">
-              <div className="space-y-1">
-                {logs.map((log, index) => (
-                  <div key={index} className="text-muted-foreground">{log}</div>
-                ))}
-                <div ref={logsEndRef} />
+            {showLogs && (
+              <div className="max-h-32 overflow-y-auto text-xs font-mono">
+                <div className="space-y-1">
+                  {logs.map((log, index) => (
+                    <div key={index} className="text-muted-foreground">{log}</div>
+                  ))}
+                  <div ref={logsEndRef} />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
