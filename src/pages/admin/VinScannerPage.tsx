@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { BrowserMultiFormatReader } from '@zxing/library'
 import { createWorker } from 'tesseract.js'
-import { ArrowLeft, Camera, Clipboard, Text, Barcode, List } from "lucide-react"
+import { ArrowLeft, Camera, Clipboard, Text, Barcode, List, CheckCircle, XCircle, RotateCcw } from "lucide-react"
 import { toast } from 'sonner'
 import { Toggle } from "@/components/ui/toggle"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { postProcessVIN } from '@/utils/vin-validation'
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function VinScannerPage() {
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -25,9 +26,56 @@ export default function VinScannerPage() {
   const [isScanning, setIsScanning] = useState(false)
   const [worker, setWorker] = useState<Tesseract.Worker | null>(null)
   const scanIntervalRef = useRef<number | null>(null)
+  const [scannedVin, setScannedVin] = useState<string | null>(null)
+  const [vehicleInfo, setVehicleInfo] = useState<{
+    make?: string;
+    model?: string;
+    year?: number;
+  } | null>(null)
+  const [isLoadingVinInfo, setIsLoadingVinInfo] = useState(false)
 
   const addLog = (message: string) => {
     setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${message}`])
+  }
+
+  // Fetch vehicle info for a given VIN
+  const fetchVehicleInfo = async (vin: string) => {
+    if (!vin || vin.length !== 17) return null
+    
+    try {
+      setIsLoadingVinInfo(true)
+      addLog(`Fetching vehicle info for VIN: ${vin}`)
+      
+      const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`)
+      if (!response.ok) {
+        throw new Error(`NHTSA API responded with status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      
+      if (!data.Results || !Array.isArray(data.Results)) {
+        throw new Error('Invalid response format from NHTSA API')
+      }
+      
+      const makeInfo = data.Results.find((r: any) => r.Variable === 'Make')
+      const modelInfo = data.Results.find((r: any) => r.Variable === 'Model')
+      const yearInfo = data.Results.find((r: any) => r.Variable === 'Model Year')
+      
+      const info = {
+        make: makeInfo?.Value || undefined,
+        model: modelInfo?.Value || undefined,
+        year: yearInfo?.Value ? parseInt(yearInfo.Value) : undefined
+      }
+      
+      addLog(`Vehicle info retrieved: ${info.year} ${info.make} ${info.model}`)
+      return info
+    } catch (error) {
+      console.error('Error fetching vehicle info:', error)
+      addLog(`Error fetching vehicle info: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      return null
+    } finally {
+      setIsLoadingVinInfo(false)
+    }
   }
 
   // Initialize Tesseract worker
@@ -55,9 +103,20 @@ export default function VinScannerPage() {
     }
   }, [])
 
+  // When a VIN is scanned or entered manually, fetch vehicle info
+  useEffect(() => {
+    if (scannedVin) {
+      fetchVehicleInfo(scannedVin).then(info => {
+        setVehicleInfo(info)
+      })
+    } else {
+      setVehicleInfo(null)
+    }
+  }, [scannedVin])
+
   // Barcode scanning setup
   useEffect(() => {
-    if (scanMode !== 'barcode') return
+    if (scanMode !== 'barcode' || scannedVin) return
     
     addLog('Starting barcode scanner')
     
@@ -96,7 +155,9 @@ export default function VinScannerPage() {
               const vinCode = result.getText()
               console.log('Scanned VIN barcode:', vinCode)
               addLog(`Successfully scanned barcode: ${vinCode}`)
-              navigateWithResult(vinCode)
+              setScannedVin(vinCode)
+              // Stop scanning once we have a result
+              codeReader.reset()
             }
             if (error && !(error instanceof TypeError)) {
               // TypeError is thrown when the scanner is stopped, so we ignore it
@@ -119,11 +180,11 @@ export default function VinScannerPage() {
       addLog('Barcode scanner stopped')
       codeReader.reset()
     }
-  }, [scanMode, navigate])
+  }, [scanMode, scannedVin])
 
   // Text scanning setup
   useEffect(() => {
-    if (scanMode !== 'text' || !worker || !videoRef.current) return
+    if (scanMode !== 'text' || !worker || !videoRef.current || scannedVin) return
 
     addLog('Starting text scanner')
     
@@ -171,7 +232,7 @@ export default function VinScannerPage() {
         addLog('Text scanner stopped')
       }
     }
-  }, [scanMode, worker, navigate])
+  }, [scanMode, worker, scannedVin])
   
   const startTextScanning = () => {
     if (isScanning || !worker) return
@@ -227,8 +288,8 @@ export default function VinScannerPage() {
         // Pause scanning while processing result
         stopTextScanning()
         
-        // Navigate with result
-        navigateWithResult(vin)
+        // Set as current scanned VIN
+        setScannedVin(vin)
       }
     } catch (err) {
       console.error('Error in OCR process:', err)
@@ -236,18 +297,27 @@ export default function VinScannerPage() {
     }
   }
 
-  const navigateWithResult = (vin: string) => {
+  const confirmAndNavigate = () => {
+    if (!scannedVin) return
+    
     // Store result in sessionStorage to pass to the previous page
-    console.log('VinScannerPage: Storing scanned VIN in sessionStorage:', vin)
-    addLog(`Storing VIN in session storage: ${vin}`)
-    sessionStorage.setItem('scanned-vin', vin)
-    toast.success(`VIN scanned: ${vin}`)
+    console.log('VinScannerPage: Storing scanned VIN in sessionStorage:', scannedVin)
+    addLog(`Storing VIN in session storage: ${scannedVin}`)
+    sessionStorage.setItem('scanned-vin', scannedVin)
+    toast.success(`VIN scanned: ${scannedVin}`)
     
     // A small delay to ensure the data is saved before navigation
     setTimeout(() => {
       addLog(`Navigating back to: ${returnPath}`)
       navigate(returnPath)
     }, 100)
+  }
+
+  const resetScan = () => {
+    setScannedVin(null)
+    setVehicleInfo(null)
+    setManualVin('')
+    addLog('Resetting scan, starting again')
   }
 
   const handlePasteVin = async () => {
@@ -267,7 +337,7 @@ export default function VinScannerPage() {
   const handleUseManualVin = () => {
     addLog(`Using manually entered VIN: ${manualVin}`)
     if (manualVin.length >= 17) {
-      navigateWithResult(manualVin)
+      setScannedVin(manualVin)
     } else {
       addLog(`Invalid VIN length: ${manualVin.length} (expected 17 or more)`)
       toast.error('Please enter a valid VIN (17 characters)')
@@ -280,6 +350,8 @@ export default function VinScannerPage() {
   }
 
   const toggleScanMode = () => {
+    if (scannedVin) return // Don't toggle mode if we have a result
+    
     // Stop current scanning processes
     stopTextScanning()
     
@@ -299,66 +371,135 @@ export default function VinScannerPage() {
             <div>
               <CardTitle>Scan VIN</CardTitle>
               <CardDescription>
-                Point your camera at a VIN {scanMode === 'barcode' ? 'barcode' : 'text'} or manually enter the VIN
+                {scannedVin 
+                  ? 'Verify the scanned VIN information'
+                  : `Point your camera at a VIN ${scanMode === 'barcode' ? 'barcode' : 'text'} or manually enter the VIN`
+                }
               </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2">
-              <Toggle 
-                pressed={scanMode === 'barcode'}
-                onPressedChange={toggleScanMode}
-                aria-label="Toggle scan mode"
-              >
-                {scanMode === 'barcode' ? <Barcode className="h-4 w-4 mr-1" /> : <Text className="h-4 w-4 mr-1" />}
-                {scanMode === 'barcode' ? 'Barcode' : 'Text'} Mode
-              </Toggle>
-            </div>
-            <Collapsible open={logsOpen} onOpenChange={setLogsOpen}>
-              <CollapsibleTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <List className="h-4 w-4 mr-1" />
-                  Logs
-                </Button>
-              </CollapsibleTrigger>
-            </Collapsible>
-          </div>
-
-          <div className="bg-black relative rounded-md overflow-hidden aspect-video">
-            <video 
-              ref={videoRef} 
-              className="w-full h-full object-cover" 
-            />
-            <div className="absolute inset-0 border-2 border-primary/50 rounded-md pointer-events-none" />
-            {isScanning && scanMode === 'text' && (
-              <div className="absolute bottom-2 right-2 bg-primary text-white text-xs px-2 py-1 rounded-full animate-pulse">
-                Scanning for VIN...
+          {!scannedVin ? (
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <Toggle 
+                    pressed={scanMode === 'barcode'}
+                    onPressedChange={toggleScanMode}
+                    aria-label="Toggle scan mode"
+                  >
+                    {scanMode === 'barcode' ? <Barcode className="h-4 w-4 mr-1" /> : <Text className="h-4 w-4 mr-1" />}
+                    {scanMode === 'barcode' ? 'Barcode' : 'Text'} Mode
+                  </Toggle>
+                </div>
+                <Collapsible open={logsOpen} onOpenChange={setLogsOpen}>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <List className="h-4 w-4 mr-1" />
+                      Logs
+                    </Button>
+                  </CollapsibleTrigger>
+                </Collapsible>
               </div>
-            )}
-          </div>
 
-          <div className="flex items-center space-x-2">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={manualVin}
-                onChange={(e) => setManualVin(e.target.value)}
-                placeholder="Enter VIN manually"
-                className="w-full px-3 py-2 border rounded-md"
-              />
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="absolute right-1 top-1/2 -translate-y-1/2"
-                onClick={handlePasteVin}
-              >
-                <Clipboard className="h-4 w-4" />
-              </Button>
+              <div className="bg-black relative rounded-md overflow-hidden aspect-video">
+                <video 
+                  ref={videoRef} 
+                  className="w-full h-full object-cover" 
+                />
+                <div className="absolute inset-0 border-2 border-primary/50 rounded-md pointer-events-none" />
+                {isScanning && scanMode === 'text' && (
+                  <div className="absolute bottom-2 right-2 bg-primary text-white text-xs px-2 py-1 rounded-full animate-pulse">
+                    Scanning for VIN...
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={manualVin}
+                    onChange={(e) => setManualVin(e.target.value)}
+                    placeholder="Enter VIN manually"
+                    className="w-full px-3 py-2 border rounded-md"
+                  />
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute right-1 top-1/2 -translate-y-1/2"
+                    onClick={handlePasteVin}
+                  >
+                    <Clipboard className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Button onClick={handleUseManualVin}>Use</Button>
+              </div>
+            </>
+          ) : (
+            <div className="space-y-4">
+              <Alert className="bg-muted/50">
+                <div className="flex flex-col space-y-2">
+                  <AlertTitle className="text-lg font-bold">Scanned VIN</AlertTitle>
+                  <AlertDescription className="text-xl font-mono">
+                    {scannedVin}
+                  </AlertDescription>
+                </div>
+              </Alert>
+              
+              {isLoadingVinInfo ? (
+                <div className="flex justify-center p-4">
+                  <div className="flex items-center space-x-2">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Looking up vehicle information...</span>
+                  </div>
+                </div>
+              ) : vehicleInfo ? (
+                <Alert className="bg-green-50 dark:bg-green-950/30">
+                  <div className="flex flex-col space-y-2">
+                    <AlertTitle className="flex items-center text-green-800 dark:text-green-300">
+                      <CheckCircle className="h-4 w-4 mr-2" /> 
+                      Vehicle Information
+                    </AlertTitle>
+                    <AlertDescription className="text-green-700 dark:text-green-400">
+                      {vehicleInfo.year} {vehicleInfo.make} {vehicleInfo.model}
+                    </AlertDescription>
+                  </div>
+                </Alert>
+              ) : (
+                <Alert className="bg-yellow-50 dark:bg-yellow-950/30">
+                  <div className="flex flex-col space-y-2">
+                    <AlertTitle className="flex items-center text-yellow-800 dark:text-yellow-300">
+                      <XCircle className="h-4 w-4 mr-2" /> 
+                      Cannot Verify Vehicle
+                    </AlertTitle>
+                    <AlertDescription className="text-yellow-700 dark:text-yellow-400">
+                      Unable to decode this VIN. You can still use it, but vehicle details won't be automatically filled.
+                    </AlertDescription>
+                  </div>
+                </Alert>
+              )}
+              
+              <div className="flex justify-between pt-4">
+                <Button
+                  variant="outline"
+                  onClick={resetScan}
+                  className="flex items-center"
+                >
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Scan Again
+                </Button>
+                <Button
+                  onClick={confirmAndNavigate}
+                  className="flex items-center"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Use This VIN
+                </Button>
+              </div>
             </div>
-            <Button onClick={handleUseManualVin}>Use</Button>
-          </div>
+          )}
 
           <Collapsible open={logsOpen}>
             <CollapsibleContent>

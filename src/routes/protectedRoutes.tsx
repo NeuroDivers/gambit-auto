@@ -22,6 +22,7 @@ import ServiceSkills from "@/pages/staff/ServiceSkills"
 import StaffSkillsManagement from "@/pages/admin/StaffSkillsManagement"
 import { Suspense } from "react"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
+import VinScannerPage from "@/pages/admin/VinScannerPage"
 
 const RoleBasedLayout = () => {
   const { currentUserRole, isLoading } = usePermissions();
@@ -74,6 +75,10 @@ export const protectedRoutes: RouteObject = {
     {
       path: "admin/staff-skills",
       element: <StaffSkillsManagement />,
+    },
+    {
+      path: "admin/vin-scanner",
+      element: <VinScannerPage />,
     },
     {
       path: "chat",
