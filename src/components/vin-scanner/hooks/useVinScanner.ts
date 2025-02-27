@@ -29,6 +29,7 @@ export const useVinScanner = ({
   const [manualVin, setManualVin] = useState("");
   const isInitializedRef = useRef(false);
   const isMountedRef = useRef(true);
+  const isScanningRef = useRef(false);
   
   const toggleFlash = useCallback(async () => {
     if (!streamRef.current) return;
@@ -327,16 +328,21 @@ export const useVinScanner = ({
 
   const startOCRScanning = useCallback(async () => {
     // Don't start if already scanning
-    if (scanningRef.current) {
+    if (scanningRef.current || isScanningRef.current) {
+      addLog("OCR scanning already active, not starting again");
       return;
     }
+    
+    isScanningRef.current = true;
     
     // Ensure we have a worker
     if (!workerRef.current) {
       try {
+        addLog("Initializing OCR worker for scanning");
         workerRef.current = await initializeWorker();
       } catch (err) {
         addLog(`Failed to initialize worker: ${err}`);
+        isScanningRef.current = false;
         return;
       }
     }
@@ -345,8 +351,10 @@ export const useVinScanner = ({
     if (!videoRef.current || videoRef.current.paused) {
       try {
         if (videoRef.current) {
-          await videoRef.current.play();
-          addLog('Video started from OCR scanner');
+          addLog("Video paused, attempting to play");
+          await videoRef.current.play().catch(e => {
+            addLog(`Play failed: ${e.message}`);
+          });
         }
       } catch (err) {
         addLog(`Failed to start video: ${err}`);
@@ -362,6 +370,7 @@ export const useVinScanner = ({
     const scanFrame = async () => {
       if (!isMountedRef.current) {
         addLog("Component unmounted, stopping scan");
+        isScanningRef.current = false;
         return;
       }
       
@@ -380,9 +389,18 @@ export const useVinScanner = ({
         }
 
         // Process the frame with OCR
+        if (!workerRef.current) {
+          addLog("OCR worker not available");
+          scanningRef.current = requestAnimationFrame(scanFrame);
+          return;
+        }
+
         const result = await workerRef.current.recognize(frameData);
         
-        if (!isMountedRef.current) return;
+        if (!isMountedRef.current) {
+          isScanningRef.current = false;
+          return;
+        }
         
         const { data: { text, confidence } } = result;
         
@@ -394,7 +412,10 @@ export const useVinScanner = ({
           
           // Check if any of the variations is a valid VIN
           for (const vin of possibleVins) {
-            if (!isMountedRef.current) return;
+            if (!isMountedRef.current) {
+              isScanningRef.current = false;
+              return;
+            }
             
             if (!checkedVinsRef.current.has(vin)) {
               checkedVinsRef.current.add(vin);
@@ -403,6 +424,7 @@ export const useVinScanner = ({
               const isValid = await checkVinValidity(vin);
               if (isValid) {
                 // Valid VIN found - stop scanning
+                isScanningRef.current = false;
                 return;
               }
             }
@@ -420,6 +442,8 @@ export const useVinScanner = ({
       // Continue scanning if component is still mounted
       if (isMountedRef.current) {
         scanningRef.current = requestAnimationFrame(scanFrame);
+      } else {
+        isScanningRef.current = false;
       }
     };
     
@@ -509,6 +533,8 @@ export const useVinScanner = ({
   const stopCamera = useCallback(() => {
     addLog("Stopping camera");
     
+    isScanningRef.current = false;
+    
     // Stop scanning
     if (scanningRef.current) {
       cancelAnimationFrame(scanningRef.current);
@@ -527,8 +553,12 @@ export const useVinScanner = ({
     
     // Stop video playback
     if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.srcObject = null;
+      try {
+        videoRef.current.pause();
+        videoRef.current.srcObject = null;
+      } catch (e) {
+        console.error("Error stopping video:", e);
+      }
     }
     
     // Stop all camera tracks
@@ -629,6 +659,15 @@ export const useVinScanner = ({
       videoRef.current.playsInline = true;
       videoRef.current.autoplay = true;
       
+      // Try to play the video
+      try {
+        await videoRef.current.play();
+        addLog('Initial video playback started');
+      } catch (playError) {
+        addLog(`Initial play failed: ${playError}. This is normal on some browsers.`);
+        // We'll try again later during scanning
+      }
+      
       // Mark as initialized
       isInitializedRef.current = true;
       
@@ -718,25 +757,28 @@ export const useVinScanner = ({
     }
   }, [fetchVehicleInfo, manualVin, setDetectedVehicle, setIsConfirmationView]);
 
-  // Clean up resources when component unmounts
+  // Set mounted flag on first mount
   useEffect(() => {
+    isMountedRef.current = true;
+    
     return () => {
+      // Clear mounted flag to prevent callbacks from running
       isMountedRef.current = false;
       
       // Clean up resources
       if (scanningRef.current) {
         cancelAnimationFrame(scanningRef.current);
+        scanningRef.current = undefined;
       }
       
       if (workerRef.current) {
         workerRef.current.terminate().catch((err: any) => {
           console.error("Error terminating OCR worker:", err);
         });
+        workerRef.current = null;
       }
-      
-      stopCamera();
     };
-  }, [stopCamera]);
+  }, []);
 
   return {
     videoRef,

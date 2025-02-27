@@ -35,17 +35,25 @@ export default function ScanVin() {
     isLoading, setIsLoading
   } = scannerState
   
-  const scanner = useVinScanner({
-    scanMode, 
-    setIsScanning, 
-    addLog, 
-    setTextDetected: (val) => textDetected.current = val,
-    setIsFlashOn,
-    setHasFlash: (val) => hasFlash.current = val,
-    setDetectedVehicle,
-    setIsConfirmationView,
-    setIsLoading
-  })
+  // Create a stable reference to avoid recreating the scanner on re-renders
+  const scannerRef = useRef(null)
+  
+  // Initialize scanner only once
+  if (!scannerRef.current) {
+    scannerRef.current = useVinScanner({
+      scanMode, 
+      setIsScanning, 
+      addLog, 
+      setTextDetected: (val) => textDetected.current = val,
+      setIsFlashOn,
+      setHasFlash: (val) => hasFlash.current = val,
+      setDetectedVehicle,
+      setIsConfirmationView,
+      setIsLoading
+    })
+  }
+  
+  const scanner = scannerRef.current
   
   const {
     videoRef, 
@@ -57,39 +65,30 @@ export default function ScanVin() {
     logsEndRef
   } = scanner
   
-  // Use a ref to track if the camera is already initialized
-  const isCameraInitializedRef = useRef(false)
-  // Track mount state to prevent effects after unmount
-  const isMountedRef = useRef(false)
+  // Initialization flag
+  const hasInitializedRef = useRef(false)
   
   useEffect(() => {
-    // Set mounted flag
-    isMountedRef.current = true;
-    
-    // Only start the camera on the initial mount
-    if (!isCameraInitializedRef.current) {
-      console.log("Starting camera on first mount");
-      isCameraInitializedRef.current = true;
+    console.log("ScanVin mount effect running")
+    // Only start the camera on first mount
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true
+      console.log("Starting camera on first mount")
       
-      // Small delay to ensure component is fully rendered before starting camera
-      const initTimer = setTimeout(() => {
-        if (isMountedRef.current) {
-          startCamera();
-        }
-      }, 100);
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        startCamera()
+      }, 500)
       
-      return () => {
-        clearTimeout(initTimer);
-      };
+      return () => clearTimeout(timer)
     }
     
     // Clean up on unmount
     return () => {
-      console.log("Stopping camera on unmount");
-      isMountedRef.current = false;
-      stopCamera();
-    };
-  }, [startCamera, stopCamera]);
+      console.log("Stopping camera on unmount")
+      stopCamera()
+    }
+  }, [startCamera, stopCamera])
 
   const handleConfirm = () => {
     if (detectedVehicle) {
