@@ -10,13 +10,8 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Input } from "@/components/ui/input"
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger,
-  DropdownMenuSeparator
-} from "@/components/ui/dropdown-menu"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import {
   Dialog,
   DialogContent,
@@ -86,7 +81,6 @@ export default function DeveloperSettings() {
     }
   })
 
-  // New preset state
   const [presets, setPresets] = useState<Preset[]>(() => {
     const savedPresets = localStorage.getItem('scanner-presets')
     if (savedPresets) {
@@ -104,10 +98,8 @@ export default function DeveloperSettings() {
   const [showNewPresetDialog, setShowNewPresetDialog] = useState(false)
   const [activePresetId, setActivePresetId] = useState<string | null>(null)
 
-  // Generate default presets if none exist
   useEffect(() => {
     if (presets.length === 0) {
-      // Add built-in presets
       const defaultPresets: Preset[] = [
         {
           id: 'default-preset',
@@ -158,7 +150,7 @@ export default function DeveloperSettings() {
             contrast: 'normal',
             morphKernelSize: '2',
             confidenceThreshold: '40',
-            grayscaleMethod: 'average', // Approximation for green emphasis
+            grayscaleMethod: 'average',
             autoInvert: false,
             autoInvertDark: false,
             edgeEnhancement: false,
@@ -176,7 +168,7 @@ export default function DeveloperSettings() {
           settings: {
             blueEmphasis: 'high',
             contrast: 'very-high',
-            morphKernelSize: '4', // Approximation for 5x5
+            morphKernelSize: '4',
             confidenceThreshold: '35',
             grayscaleMethod: 'blue-channel',
             autoInvert: false,
@@ -198,7 +190,7 @@ export default function DeveloperSettings() {
             contrast: 'high',
             morphKernelSize: '3',
             confidenceThreshold: '40',
-            grayscaleMethod: 'luminosity', // To approximate red channel emphasis
+            grayscaleMethod: 'luminosity',
             autoInvert: true,
             autoInvertDark: false,
             edgeEnhancement: false,
@@ -216,16 +208,16 @@ export default function DeveloperSettings() {
           settings: {
             blueEmphasis: 'normal',
             contrast: 'high',
-            morphKernelSize: '4', // Approximation for 5x5
+            morphKernelSize: '4',
             confidenceThreshold: '40',
-            grayscaleMethod: 'average', // Approximation for green emphasis
+            grayscaleMethod: 'average',
             autoInvert: false,
             autoInvertDark: false,
             edgeEnhancement: false,
             noiseReduction: true,
             adaptiveContrast: true,
             tesseractConfig: {
-              psm: 13, // Closest option to 4
+              psm: 13,
               oem: 1
             }
           }
@@ -236,7 +228,6 @@ export default function DeveloperSettings() {
       localStorage.setItem('scanner-presets', JSON.stringify(defaultPresets))
       setActivePresetId('default-preset')
     } else if (!activePresetId) {
-      // Set active preset to default or first one
       const defaultPreset = presets.find(p => p.isDefault) || presets[0]
       setActivePresetId(defaultPreset.id)
     }
@@ -323,7 +314,6 @@ export default function DeveloperSettings() {
   }
 
   const deletePreset = (presetId: string) => {
-    // Don't allow deleting default preset
     const preset = presets.find(p => p.id === presetId)
     if (!preset || preset.isDefault) return
 
@@ -331,7 +321,6 @@ export default function DeveloperSettings() {
     setPresets(updatedPresets)
     localStorage.setItem('scanner-presets', JSON.stringify(updatedPresets))
     
-    // If the active preset was deleted, set to default
     if (activePresetId === presetId) {
       const defaultPreset = updatedPresets.find(p => p.isDefault) || updatedPresets[0]
       if (defaultPreset) {
@@ -395,46 +384,24 @@ export default function DeveloperSettings() {
               </CardTitle>
               
               <div className="flex items-center gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="gap-2">
-                      {activePresetId ? getActivePresetName() : "Presets"}
-                      <Check className={activePresetId ? "h-4 w-4" : "h-4 w-4 opacity-0"} />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
+                <Select
+                  value={activePresetId || undefined}
+                  onValueChange={(value) => loadPreset(value)}
+                >
+                  <SelectTrigger className="w-[220px]">
+                    <SelectValue placeholder="Select a preset" />
+                  </SelectTrigger>
+                  <SelectContent>
                     {presets.map(preset => (
-                      <DropdownMenuItem 
-                        key={preset.id}
-                        onClick={() => loadPreset(preset.id)}
-                        className="flex justify-between"
-                      >
-                        <span>{preset.name}</span>
-                        {preset.isDefault && <span className="text-xs text-muted-foreground">Default</span>}
-                      </DropdownMenuItem>
+                      <SelectItem key={preset.id} value={preset.id}>
+                        <div className="flex flex-col w-full py-1">
+                          <span className="font-medium">{preset.name}</span>
+                          {preset.isDefault && <span className="text-xs text-muted-foreground">Default</span>}
+                        </div>
+                      </SelectItem>
                     ))}
-                    
-                    <DropdownMenuSeparator />
-                    
-                    <DropdownMenuItem
-                      onClick={() => setShowNewPresetDialog(true)}
-                      className="gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Save as new preset</span>
-                    </DropdownMenuItem>
-                    
-                    {activePresetId && !presets.find(p => p.id === activePresetId)?.isDefault && (
-                      <DropdownMenuItem
-                        onClick={() => deletePreset(activePresetId)}
-                        className="text-destructive gap-2"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span>Delete current preset</span>
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  </SelectContent>
+                </Select>
                 
                 {activePresetId && (
                   <Button
@@ -444,6 +411,27 @@ export default function DeveloperSettings() {
                     onClick={updateCurrentPreset}
                   >
                     <Save className="h-4 w-4" />
+                  </Button>
+                )}
+                
+                <Button
+                  variant="outline"
+                  size="icon"
+                  title="Save as new preset"
+                  onClick={() => setShowNewPresetDialog(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+                
+                {activePresetId && !presets.find(p => p.id === activePresetId)?.isDefault && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    title="Delete current preset"
+                    onClick={() => deletePreset(activePresetId)}
+                    className="text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
               </div>
@@ -817,7 +805,6 @@ export default function DeveloperSettings() {
         </TabsContent>
       </Tabs>
 
-      {/* Dialog for creating a new preset */}
       <Dialog open={showNewPresetDialog} onOpenChange={setShowNewPresetDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

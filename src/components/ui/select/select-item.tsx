@@ -22,10 +22,8 @@ export const SelectItem = React.forwardRef<
       </SelectPrimitive.ItemIndicator>
     </span>
 
-    <SelectPrimitive.ItemText>
-      <div className="flex flex-col w-full">
-        {children}
-      </div>
+    <SelectPrimitive.ItemText className="flex flex-grow">
+      {children}
     </SelectPrimitive.ItemText>
   </SelectPrimitive.Item>
 ))

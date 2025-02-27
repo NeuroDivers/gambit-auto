@@ -57,44 +57,8 @@ const ocrPresets: OcrPreset[] = [
     }
   },
   {
-    name: "High Precision",
-    description: "More accurate but slower scanning",
-    config: {
-      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-      pagesegMode: PSM.SINGLE_BLOCK,
-      preserveInterwordSpaces: "0",
-      minWordLength: 17,
-      createWordBoxes: "1",
-      createBoxes: "1"
-    }
-  },
-  {
-    name: "Fast Scan",
-    description: "Quicker but less accurate",
-    config: {
-      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-      pagesegMode: PSM.SPARSE_TEXT,
-      preserveInterwordSpaces: "0",
-      minWordLength: 15,
-      createWordBoxes: "0",
-      createBoxes: "0"
-    }
-  },
-  {
-    name: "Faded Text",
-    description: "Better for hard-to-read VINs",
-    config: {
-      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-      pagesegMode: PSM.SINGLE_WORD,
-      preserveInterwordSpaces: "0",
-      minWordLength: 15,
-      createWordBoxes: "1",
-      createBoxes: "1"
-    }
-  },
-  {
     name: "Windshield Scanning",
-    description: "Optimized for reading through glass",
+    description: "Optimized for reading VINs through windshield glass",
     config: {
       whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
       pagesegMode: PSM.SINGLE_BLOCK,
@@ -106,7 +70,7 @@ const ocrPresets: OcrPreset[] = [
   },
   {
     name: "Monitor/Screen",
-    description: "For VINs displayed on screens",
+    description: "For VINs displayed on digital screens",
     config: {
       whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
       pagesegMode: PSM.SINGLE_LINE,
@@ -142,12 +106,48 @@ const ocrPresets: OcrPreset[] = [
   },
   {
     name: "Paper Document",
-    description: "For printed VINs on paper",
+    description: "For printed VINs on paper documents",
     config: {
       whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
       pagesegMode: PSM.RAW_LINE,
       preserveInterwordSpaces: "0",
       minWordLength: 17,
+      createWordBoxes: "1",
+      createBoxes: "1"
+    }
+  },
+  {
+    name: "High Precision",
+    description: "More accurate but slower scanning",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SINGLE_BLOCK,
+      preserveInterwordSpaces: "0",
+      minWordLength: 17,
+      createWordBoxes: "1",
+      createBoxes: "1"
+    }
+  },
+  {
+    name: "Fast Scan",
+    description: "Quicker but less accurate",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SPARSE_TEXT,
+      preserveInterwordSpaces: "0",
+      minWordLength: 15,
+      createWordBoxes: "0",
+      createBoxes: "0"
+    }
+  },
+  {
+    name: "Faded Text",
+    description: "Better for hard-to-read VINs",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SINGLE_WORD,
+      preserveInterwordSpaces: "0",
+      minWordLength: 15,
       createWordBoxes: "1",
       createBoxes: "1"
     }
