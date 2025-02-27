@@ -1,5 +1,5 @@
 
-import { Trash2, Sun, Globe, Shield, Database, Code, Camera } from "lucide-react"
+import { Trash2, Sun, Globe, Shield, Database, Code, Camera, Save, Undo, Check, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useState, useEffect } from "react"
@@ -10,6 +10,23 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Input } from "@/components/ui/input"
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 interface ProcessingSettings {
   blueEmphasis: 'zero' | 'normal' | 'high' | 'very-high';
@@ -26,6 +43,13 @@ interface ProcessingSettings {
     psm: 6 | 7 | 8 | 13;
     oem: 1 | 3;
   }
+}
+
+interface Preset {
+  id: string;
+  name: string;
+  settings: ProcessingSettings;
+  isDefault?: boolean;
 }
 
 export default function DeveloperSettings() {
@@ -63,6 +87,44 @@ export default function DeveloperSettings() {
     }
   })
 
+  // New preset state
+  const [presets, setPresets] = useState<Preset[]>(() => {
+    const savedPresets = localStorage.getItem('scanner-presets')
+    if (savedPresets) {
+      try {
+        return JSON.parse(savedPresets)
+      } catch (error) {
+        console.error('Error parsing saved scanner presets:', error)
+        return []
+      }
+    }
+    return []
+  })
+
+  const [newPresetName, setNewPresetName] = useState("")
+  const [showNewPresetDialog, setShowNewPresetDialog] = useState(false)
+  const [activePresetId, setActivePresetId] = useState<string | null>(null)
+
+  // Initialize with default preset if none exist
+  useEffect(() => {
+    if (presets.length === 0) {
+      // Add current settings as default preset
+      const defaultPreset: Preset = {
+        id: 'default-preset',
+        name: 'Default OCR Settings',
+        settings: settings,
+        isDefault: true
+      }
+      setPresets([defaultPreset])
+      localStorage.setItem('scanner-presets', JSON.stringify([defaultPreset]))
+      setActivePresetId('default-preset')
+    } else if (!activePresetId) {
+      // Set active preset to default or first one
+      const defaultPreset = presets.find(p => p.isDefault) || presets[0]
+      setActivePresetId(defaultPreset.id)
+    }
+  }, [presets, activePresetId, settings])
+
   useEffect(() => {
     const logs = JSON.parse(localStorage.getItem('scanner-logs') || '[]')
     setScannerLogs(logs)
@@ -96,6 +158,77 @@ export default function DeveloperSettings() {
 
   const handleVinScanned = (vin: string) => {
     toast.success(`VIN scanned: ${vin}`)
+  }
+
+  const saveAsNewPreset = () => {
+    if (!newPresetName.trim()) {
+      toast.error("Please enter a preset name")
+      return
+    }
+
+    const newPreset: Preset = {
+      id: `preset-${Date.now()}`,
+      name: newPresetName,
+      settings: { ...settings }
+    }
+
+    const updatedPresets = [...presets, newPreset]
+    setPresets(updatedPresets)
+    localStorage.setItem('scanner-presets', JSON.stringify(updatedPresets))
+    setActivePresetId(newPreset.id)
+    setNewPresetName("")
+    setShowNewPresetDialog(false)
+    
+    toast.success(`Preset "${newPresetName}" saved`)
+  }
+
+  const updateCurrentPreset = () => {
+    if (!activePresetId) return
+
+    const updatedPresets = presets.map(preset => 
+      preset.id === activePresetId 
+        ? { ...preset, settings: { ...settings } } 
+        : preset
+    )
+    
+    setPresets(updatedPresets)
+    localStorage.setItem('scanner-presets', JSON.stringify(updatedPresets))
+    toast.success("Current preset updated with latest settings")
+  }
+
+  const loadPreset = (presetId: string) => {
+    const preset = presets.find(p => p.id === presetId)
+    if (!preset) return
+
+    setSettings({ ...preset.settings })
+    setActivePresetId(preset.id)
+    toast.info(`Loaded preset: ${preset.name}`)
+  }
+
+  const deletePreset = (presetId: string) => {
+    // Don't allow deleting default preset
+    const preset = presets.find(p => p.id === presetId)
+    if (!preset || preset.isDefault) return
+
+    const updatedPresets = presets.filter(p => p.id !== presetId)
+    setPresets(updatedPresets)
+    localStorage.setItem('scanner-presets', JSON.stringify(updatedPresets))
+    
+    // If the active preset was deleted, set to default
+    if (activePresetId === presetId) {
+      const defaultPreset = updatedPresets.find(p => p.isDefault) || updatedPresets[0]
+      if (defaultPreset) {
+        setActivePresetId(defaultPreset.id)
+        setSettings({ ...defaultPreset.settings })
+      }
+    }
+    
+    toast.success(`Deleted preset: ${preset.name}`)
+  }
+
+  const getActivePresetName = () => {
+    const preset = presets.find(p => p.id === activePresetId)
+    return preset ? preset.name : "Unknown"
   }
 
   return (
@@ -138,10 +271,65 @@ export default function DeveloperSettings() {
 
         <TabsContent value="logs" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-medium">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-lg font-medium flex items-center gap-2">
+                <Camera className="h-5 w-5" />
                 Processing Settings
               </CardTitle>
+              
+              <div className="flex items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="gap-2">
+                      {activePresetId ? getActivePresetName() : "Presets"}
+                      <Check className={activePresetId ? "h-4 w-4" : "h-4 w-4 opacity-0"} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    {presets.map(preset => (
+                      <DropdownMenuItem 
+                        key={preset.id}
+                        onClick={() => loadPreset(preset.id)}
+                        className="flex justify-between"
+                      >
+                        <span>{preset.name}</span>
+                        {preset.isDefault && <span className="text-xs text-muted-foreground">Default</span>}
+                      </DropdownMenuItem>
+                    ))}
+                    
+                    <DropdownMenuSeparator />
+                    
+                    <DropdownMenuItem
+                      onClick={() => setShowNewPresetDialog(true)}
+                      className="gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>Save as new preset</span>
+                    </DropdownMenuItem>
+                    
+                    {activePresetId && !presets.find(p => p.id === activePresetId)?.isDefault && (
+                      <DropdownMenuItem
+                        onClick={() => deletePreset(activePresetId)}
+                        className="text-destructive gap-2"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span>Delete current preset</span>
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
+                {activePresetId && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    title="Update current preset"
+                    onClick={updateCurrentPreset}
+                  >
+                    <Save className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -511,6 +699,38 @@ export default function DeveloperSettings() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialog for creating a new preset */}
+      <Dialog open={showNewPresetDialog} onOpenChange={setShowNewPresetDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Save Current Settings as Preset</DialogTitle>
+            <DialogDescription>
+              Enter a name for your preset to save the current OCR scanner settings.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="preset-name" className="text-right">
+                Preset Name
+              </Label>
+              <Input
+                id="preset-name"
+                value={newPresetName}
+                onChange={(e) => setNewPresetName(e.target.value)}
+                className="col-span-3"
+                placeholder="e.g., 'High Contrast VIN Setting'"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNewPresetDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveAsNewPreset}>Save Preset</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

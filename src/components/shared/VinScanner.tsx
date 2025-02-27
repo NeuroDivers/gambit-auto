@@ -1,3 +1,4 @@
+
 import { Camera, Pause, Play, Check, X as XIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
@@ -574,7 +575,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const handleScanModeChange = async (value: string) => {
     if (value === 'text' || value === 'barcode') {
-      setScanMode(value)
+      setScanMode(value as 'text' | 'barcode')
       stopCamera()
       setLogs([])
       await startCamera()
