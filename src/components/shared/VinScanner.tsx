@@ -1,4 +1,5 @@
-import { Camera, Pause, Play, Check, X as XIcon, ChevronDown, ChevronUp } from "lucide-react"
+<lov-code>
+import { Camera, Pause, Play, Check, X as XIcon, ChevronDown, ChevronUp, Square, CheckSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
 import { toast } from "sonner"
@@ -11,7 +12,8 @@ import { preprocessImage } from "@/utils/image-processing"
 import { ScannerOverlay } from "./vin-scanner/ScannerOverlay"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface VinScannerProps {
   onScan: (vin: string) => void
@@ -847,6 +849,10 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }, [])
   
+  const getCurrentOcrPreset = (): OcrPreset => {
+    return ocrPresets.find(preset => preset.name === ocrPreset) || ocrPresets[0];
+  };
+
   const currentPreset = getCurrentOcrPreset();
 
   return (
@@ -880,23 +886,38 @@ export function VinScanner({ onScan }: VinScannerProps) {
           
           {scanMode === 'text' && (
             <div className="bg-background px-4 py-2 border-b">
-              <Label htmlFor="modal-ocr-preset" className="text-sm mb-1 block">
+              <Label className="text-sm mb-2 block">
                 OCR Settings Preset
               </Label>
-              <Select value={ocrPreset} onValueChange={handleOcrPresetChange}>
-                <SelectTrigger id="modal-ocr-preset" className="w-full">
-                  <SelectValue placeholder="Select OCR preset" />
-                </SelectTrigger>
-                <SelectContent>
+              <ScrollArea className="h-52 pr-3">
+                <div className="grid grid-cols-1 gap-2">
                   {ocrPresets.map((preset) => (
-                    <SelectItem key={preset.name} value={preset.name}>
-                      {preset.name}
-                    </SelectItem>
+                    <Card 
+                      key={preset.name} 
+                      className={`cursor-pointer transition-all hover:bg-accent ${ocrPreset === preset.name ? 'border-primary bg-primary/10' : ''}`}
+                      onClick={() => handleOcrPresetChange(preset.name)}
+                    >
+                      <CardContent className="p-3">
+                        <div className="flex items-start gap-2">
+                          <div className="pt-0.5">
+                            {ocrPreset === preset.name ? (
+                              <CheckSquare className="h-4 w-4 text-primary" />
+                            ) : (
+                              <Square className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div>
+                            <div className="font-medium text-sm">{preset.name}</div>
+                            <div className="text-xs text-muted-foreground">{preset.description}</div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                {currentPreset.description}
+                </div>
+              </ScrollArea>
+              <p className="text-xs text-muted-foreground mt-2">
+                Current: {currentPreset.name}
               </p>
             </div>
           )}
@@ -907,74 +928,4 @@ export function VinScanner({ onScan }: VinScannerProps) {
                 <div className="flex-1 overflow-y-auto p-6 h-[80vh] md:h-[70vh]">
                   <div className="space-y-4">
                     <h2 className="text-lg font-semibold">Confirm Vehicle Information</h2>
-                    <div className="bg-primary/10 p-3 rounded-lg">
-                      <div className="font-mono text-lg text-primary break-all">
-                        VIN: {detectedVehicle?.vin}
-                      </div>
-                    </div>
-                    {detectedVehicle && (
-                      <div className="grid gap-2 text-base">
-                        <div><span className="font-semibold">Make:</span> {detectedVehicle.make}</div>
-                        <div><span className="font-semibold">Model:</span> {detectedVehicle.model}</div>
-                        <div><span className="font-semibold">Year:</span> {detectedVehicle.year}</div>
-                      </div>
-                    )}
-                    <p className="text-sm text-muted-foreground">
-                      Is this the correct vehicle information?
-                    </p>
-                  </div>
-                </div>
-                <div className="p-6 border-t bg-background/80 backdrop-blur-sm">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => handleConfirm(false)}
-                    >
-                      <XIcon className="mr-2 h-4 w-4" />
-                      Try Again
-                    </Button>
-                    <Button 
-                      onClick={() => handleConfirm(true)}
-                    >
-                      <Check className="mr-2 h-4 w-4" />
-                      Confirm
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <>
-                <video
-                  ref={videoRef}
-                  className="absolute inset-0 h-full w-full object-cover"
-                  playsInline
-                  autoPlay
-                  muted
-                />
-                <canvas
-                  ref={canvasRef}
-                  className="absolute inset-0 h-full w-full object-cover opacity-0"
-                />
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] h-40">
-                  <div className="absolute inset-0 border-2 border-primary rounded-lg" />
-                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                    <div className="relative">
-                      <div className="absolute w-8 h-[2px] bg-primary/80 left-1/2 -translate-x-1/2"></div>
-                      <div className="absolute h-8 w-[2px] bg-primary/80 top-1/2 -translate-y-1/2"></div>
-                      <div className="absolute w-2 h-2 rounded-full bg-[#F2FCE2] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"></div>
-                    </div>
-                  </div>
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/60 px-4 py-2 rounded-lg">
-                    <p className="text-white text-center text-sm">
-                      Position {scanMode === 'text' ? 'VIN text' : 'barcode'} within frame
-                    </p>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
-  )
-}
+                    <div className="bg-primary/10 p
