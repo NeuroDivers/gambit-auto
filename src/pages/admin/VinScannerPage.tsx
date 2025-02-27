@@ -16,7 +16,8 @@ export default function VinScannerPage() {
   const returnPath = returnTo || '/admin/estimates'
   const navigate = useNavigate()
   const [manualVin, setManualVin] = useState('')
-  const [scanMode, setScanMode] = useState<'text' | 'barcode'>('barcode')
+  // Change default mode to 'text' instead of 'barcode'
+  const [scanMode, setScanMode] = useState<'text' | 'barcode'>('text')
   const [logs, setLogs] = useState<string[]>([])
   const [logsOpen, setLogsOpen] = useState(false)
 
@@ -128,9 +129,9 @@ export default function VinScannerPage() {
   }
 
   const toggleScanMode = () => {
-    const newMode = scanMode === 'barcode' ? 'text' : 'barcode'
-    addLog(`Changing scan mode from ${scanMode} to ${newMode}`)
-    setScanMode(newMode)
+    // Fix toggle functionality by properly setting the new mode value
+    setScanMode(prevMode => prevMode === 'barcode' ? 'text' : 'barcode')
+    addLog(`Changing scan mode from ${scanMode} to ${scanMode === 'barcode' ? 'text' : 'barcode'}`)
   }
 
   return (
@@ -154,7 +155,7 @@ export default function VinScannerPage() {
             <div className="flex items-center space-x-2">
               <Toggle 
                 pressed={scanMode === 'barcode'}
-                onPressedChange={() => toggleScanMode()}
+                onPressedChange={toggleScanMode}
                 aria-label="Toggle scan mode"
               >
                 {scanMode === 'barcode' ? <Barcode className="h-4 w-4 mr-1" /> : <Text className="h-4 w-4 mr-1" />}
