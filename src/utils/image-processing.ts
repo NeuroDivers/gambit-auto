@@ -40,67 +40,6 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
     }
   }
 
-  // Apply pre-sharpen for initial edge enhancement
-  if (edgeEnhancement) {
-    // Vertical edge detection kernel (emphasizes vertical edges)
-    const verticalKernel = [
-      -0.25, -0.5, -0.25,
-       0,     0,    0,
-       0.25,  0.5,  0.25
-    ]
-    
-    const tempData = new Uint8ClampedArray(data.length)
-    tempData.set(data) // Copy original data
-    
-    // Apply vertical edge detection with very conservative thresholds
-    for (let y = 3; y < canvas.height - 3; y++) {
-      for (let x = 3; x < canvas.width - 3; x++) {
-        const idx = (y * canvas.width + x) * 4
-        let sum = 0
-
-        // Calculate edge response
-        for (let ky = -1; ky <= 1; ky++) {
-          for (let kx = -1; kx <= 1; kx++) {
-            const pixel = ((y + ky) * canvas.width + (x + kx)) * 4
-            const value = (data[pixel] + data[pixel + 1] + data[pixel + 2]) / 3
-            const kernelValue = verticalKernel[(ky + 1) * 3 + (kx + 1)]
-            sum += value * kernelValue
-          }
-        }
-
-        // Apply a very conservative enhancement
-        const magnitude = Math.abs(sum) * 0.15 // Reduced intensity factor
-        
-        // Only enhance if the edge response is significant
-        if (magnitude > 10) { // Threshold to avoid noise
-          for (let i = 0; i < 3; i++) {
-            const enhanced = data[idx + i] + (sum > 0 ? magnitude : -magnitude)
-            tempData[idx + i] = Math.min(255, Math.max(0, enhanced))
-          }
-        }
-        tempData[idx + 3] = data[idx + 3] // Preserve alpha
-      }
-    }
-
-    // Preserve a wider border of unmodified pixels
-    const borderWidth = 3
-    for (let y = 0; y < canvas.height; y++) {
-      for (let x = 0; x < canvas.width; x++) {
-        if (y < borderWidth || y >= canvas.height - borderWidth || 
-            x < borderWidth || x >= canvas.width - borderWidth) {
-          const idx = (y * canvas.width + x) * 4
-          tempData[idx] = data[idx]
-          tempData[idx + 1] = data[idx + 1]
-          tempData[idx + 2] = data[idx + 2]
-          tempData[idx + 3] = data[idx + 3]
-        }
-      }
-    }
-
-    // Copy back the processed data
-    data.set(tempData)
-  }
-
   // Apply grayscale conversion based on selected method
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i]
