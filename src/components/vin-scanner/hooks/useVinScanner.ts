@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback, useEffect } from "react";
 import { createWorker, PSM } from 'tesseract.js';
 import { BrowserMultiFormatReader, BarcodeFormat, Result } from '@zxing/library';
@@ -7,9 +8,9 @@ import { validateVIN, postProcessVIN, validateVinWithNHTSA } from "@/utils/vin-v
 import { VehicleInfo, ExtendedTrackCapabilities, ScanMode, VinScannerProps } from "../types";
 
 export const useVinScanner = ({
-  scanMode,
-  setIsScanning,
-  addLog,
+  scanMode, 
+  setIsScanning, 
+  addLog, 
   setTextDetected,
   setIsFlashOn,
   setHasFlash,
@@ -26,8 +27,8 @@ export const useVinScanner = ({
   const logsEndRef = useRef<HTMLDivElement>(null);
   const checkedVinsRef = useRef<Set<string>>(new Set());
   const [manualVin, setManualVin] = useState("");
+  const isInitializedRef = useRef(false);
   const isMountedRef = useRef(true);
-  const workerInitializedRef = useRef(false);
   
   const toggleFlash = useCallback(async () => {
     if (!streamRef.current) return;
@@ -35,12 +36,13 @@ export const useVinScanner = ({
       const track = streamRef.current.getVideoTracks()[0];
       const capabilities = track.getCapabilities() as ExtendedTrackCapabilities;
       if ('torch' in capabilities) {
+        const newFlashState = !videoRef.current!.dataset.flashOn;
         await track.applyConstraints({
-          advanced: [{ torch: !videoRef.current!.dataset.flashOn } as any]
+          advanced: [{ torch: newFlashState } as any]
         });
-        setIsFlashOn(videoRef.current!.dataset.flashOn !== 'true');
-        videoRef.current!.dataset.flashOn = videoRef.current!.dataset.flashOn !== 'true' ? 'true' : 'false';
-        addLog(`Flash ${videoRef.current!.dataset.flashOn === 'true' ? 'enabled' : 'disabled'}`);
+        setIsFlashOn(newFlashState);
+        videoRef.current!.dataset.flashOn = newFlashState ? 'true' : 'false';
+        addLog(`Flash ${newFlashState ? 'enabled' : 'disabled'}`);
       }
     } catch (err) {
       addLog(`Flash control error: ${err}`);
@@ -88,19 +90,6 @@ export const useVinScanner = ({
 
     return generateVinVariations(text);
   }, [addLog, setTextDetected]);
-
-  const cleanVinBarcode = useCallback((scannedText: string): string => {
-    let cleaned = scannedText.trim();
-    
-    if (cleaned.startsWith('I') && cleaned.length === 18) {
-      addLog('Detected and removing leading I character from barcode scan');
-      cleaned = cleaned.substring(1);
-    }
-    
-    cleaned = cleaned.replace(/\s+/g, '').toUpperCase();
-    
-    return cleaned;
-  }, [addLog]);
 
   const generateVinVariations = useCallback((text: string): string[] => {
     const handle9thCharacter = (char: string): string => {
@@ -168,12 +157,15 @@ export const useVinScanner = ({
     const vinPattern = /[A-HJ-NPR-Z0-9]{17}/;
     
     addLog(`Generated ${variations.length} possible variations`);
-    variations.forEach((variant, index) => {
-      addLog(`Variation ${index + 1}: ${variant}`);
-      if (variant.length >= 9) {
-        addLog(`Check digit (pos 9) in variation ${index + 1}: ${variant[8]}`);
-      }
-    });
+    
+    // Only log a subset of variations to avoid overwhelming logs
+    if (variations.length > 10) {
+      addLog(`First 10 of ${variations.length} variations: ${variations.slice(0, 10).join(', ')}`);
+    } else {
+      variations.forEach((variant, index) => {
+        addLog(`Variation ${index + 1}: ${variant}`);
+      });
+    }
     
     const validVariations = variations.filter(v => {
       const isValidFormat = vinPattern.test(v);
@@ -186,150 +178,17 @@ export const useVinScanner = ({
     return validVariations;
   }, [addLog]);
 
-  const initializeWorker = useCallback(async () => {
-    if (workerInitializedRef.current && workerRef.current) {
-      return workerRef.current;
-    }
-
-    try {
-      addLog('Initializing OCR worker with enhanced settings...');
-      
-      // Set a timeout to prevent potential hang
-      const workerPromise = createWorker();
-      
-      // Create a timeout promise
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Worker initialization timed out')), 10000);
-      });
-      
-      // Race between worker initialization and timeout
-      const worker = await Promise.race([workerPromise, timeoutPromise]) as any;
-      
-      if (!isMountedRef.current) return null;
-      
-      addLog('Created worker instance, configuring parameters...');
-      
-      await worker.reinitialize('eng');
-      addLog('Worker language set to English');
-      
-      await worker.setParameters({
-        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-        tessedit_pageseg_mode: PSM.SINGLE_LINE,
-        preserve_interword_spaces: '0',
-        tessedit_min_word_length: 17,
-        tessjs_create_word_level_boxes: '1',
-        tessjs_create_box: '1',
-        debug_file: '/dev/null',
-        tessjs_mock_parameter: '1'
-      });
-
-      addLog('OCR worker initialized with enhanced settings');
-      workerInitializedRef.current = true;
-      return worker;
-    } catch (error) {
-      addLog(`Error initializing OCR worker: ${error}`);
-      workerInitializedRef.current = false;
-      toast.error("OCR initialization failed. Please refresh and try again.");
-      throw error;
-    }
-  }, [addLog]);
-
-  const stopCamera = useCallback(() => {
-    console.log("Stopping camera, cleaning up resources");
+  const cleanVinBarcode = useCallback((scannedText: string): string => {
+    let cleaned = scannedText.trim();
     
-    // Reset references
-    if (scanningRef.current) {
-      cancelAnimationFrame(scanningRef.current);
-      scanningRef.current = undefined;
+    if (cleaned.startsWith('I') && cleaned.length === 18) {
+      addLog('Detected and removing leading I character from barcode scan');
+      cleaned = cleaned.substring(1);
     }
     
-    if (barcodeReaderRef.current) {
-      barcodeReaderRef.current.reset();
-      barcodeReaderRef.current = null;
-    }
+    cleaned = cleaned.replace(/\s+/g, '').toUpperCase();
     
-    setIsScanning(false);
-    setIsFlashOn(false);
-    
-    // Reset video element before stopping tracks
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.srcObject = null;
-    }
-    
-    // Stop all tracks
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => {
-        try {
-          track.stop();
-        } catch (e) {
-          console.error("Error stopping track:", e);
-        }
-      });
-      streamRef.current = null;
-    }
-  }, [setIsScanning, setIsFlashOn]);
-
-  const captureFrame = useCallback(() => {
-    if (!videoRef.current || !canvasRef.current) {
-      return null;
-    }
-
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
-    const ctx = canvas.getContext('2d');
-    
-    if (!ctx || video.readyState !== video.HAVE_ENOUGH_DATA) {
-      return null;
-    }
-
-    try {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-
-      const scanAreaWidth = video.videoWidth * 0.95;
-      const scanAreaHeight = (40 / video.clientHeight) * video.videoHeight;
-      const startX = (video.videoWidth - scanAreaWidth) / 2;
-      const startY = (video.videoHeight - scanAreaHeight) / 2;
-
-      addLog(`Video dimensions: ${video.videoWidth}x${video.videoHeight}`);
-      addLog(`Scan area: ${Math.round(scanAreaWidth)}x${Math.round(scanAreaHeight)} px`);
-      addLog(`Scan position: ${Math.round(startX)},${Math.round(startY)}`);
-
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = scanAreaWidth;
-      tempCanvas.height = scanAreaHeight;
-      const tempCtx = tempCanvas.getContext('2d');
-
-      if (!tempCtx) {
-        return null;
-      }
-
-      tempCtx.drawImage(
-        video,
-        startX, startY, scanAreaWidth, scanAreaHeight,
-        0, 0, scanAreaWidth, scanAreaHeight
-      );
-
-      const scaledCanvas = document.createElement('canvas');
-      scaledCanvas.width = scanAreaWidth * 2;
-      scaledCanvas.height = scanAreaHeight * 2;
-      const scaledCtx = scaledCanvas.getContext('2d');
-      
-      if (scaledCtx) {
-        scaledCtx.imageSmoothingEnabled = false;
-        scaledCtx.drawImage(
-          tempCanvas,
-          0, 0, tempCanvas.width, tempCanvas.height,
-          0, 0, scaledCanvas.width, scaledCanvas.height
-        );
-      }
-
-      return preprocessImage(scaledCanvas);
-    } catch (error) {
-      addLog(`Error capturing frame: ${error}`);
-      return null;
-    }
+    return cleaned;
   }, [addLog]);
 
   const fetchVehicleInfo = useCallback(async (vin: string): Promise<VehicleInfo | null> => {
@@ -386,508 +245,475 @@ export const useVinScanner = ({
     return false;
   }, [addLog, fetchVehicleInfo, setDetectedVehicle, setIsConfirmationView]);
 
-  const startOCRScanning = useCallback(async (immediateScanning?: boolean) => {
-    const shouldScan = immediateScanning ?? true;
-
-    if (!videoRef.current || !streamRef.current || !workerRef.current || !shouldScan || !isMountedRef.current) {
-      addLog("Cannot start OCR scanning: missing required resources");
-      return;
+  const captureFrame = useCallback(() => {
+    if (!videoRef.current || !canvasRef.current) {
+      return null;
     }
 
-    // Verify the video element is in a good state
+    const canvas = canvasRef.current;
     const video = videoRef.current;
-    if (video.readyState < 2) {
-      addLog(`Video not ready yet, readyState=${video.readyState}`);
-      
-      // Try again after a short delay
-      setTimeout(() => {
-        if (isMountedRef.current) {
-          startOCRScanning(shouldScan);
-        }
-      }, 500);
-      return;
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) {
+      return null;
+    }
+    
+    // Video must be playing and have valid dimensions
+    if (video.paused || video.videoWidth === 0 || video.videoHeight === 0) {
+      return null;
     }
 
-    addLog(`Video ready, starting OCR scan with readyState=${video.readyState}`);
+    try {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      const scanAreaWidth = video.videoWidth * 0.95;
+      const scanAreaHeight = (40 / Math.max(video.clientHeight, 1)) * video.videoHeight;
+      const startX = (video.videoWidth - scanAreaWidth) / 2;
+      const startY = (video.videoHeight - scanAreaHeight) / 2;
+
+      // Only log dimensions occasionally to avoid filling logs
+      if (Math.random() < 0.01) {  // 1% chance to log
+        addLog(`Capture: ${video.videoWidth}x${video.videoHeight}`);
+      }
+
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = scanAreaWidth;
+      tempCanvas.height = scanAreaHeight;
+      const tempCtx = tempCanvas.getContext('2d');
+
+      if (!tempCtx) {
+        return null;
+      }
+
+      // Draw video frame to temp canvas
+      tempCtx.drawImage(
+        video,
+        startX, startY, scanAreaWidth, scanAreaHeight,
+        0, 0, scanAreaWidth, scanAreaHeight
+      );
+
+      // Process the image to enhance text detection
+      return preprocessImage(tempCanvas);
+    } catch (error) {
+      addLog(`Error capturing frame: ${error}`);
+      return null;
+    }
+  }, [addLog]);
+
+  const initializeWorker = useCallback(async () => {
+    try {
+      addLog('Initializing OCR worker...');
+      const worker = await createWorker();
+      
+      await worker.reinitialize('eng');
+      addLog('Worker language set to English');
+      
+      await worker.setParameters({
+        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        tessedit_pageseg_mode: PSM.SINGLE_LINE,
+        preserve_interword_spaces: '0',
+        tessedit_min_word_length: 17
+      });
+
+      addLog('OCR worker initialized with enhanced settings');
+      return worker;
+    } catch (error) {
+      addLog(`Error initializing OCR worker: ${error}`);
+      toast.error("OCR initialization failed. Please refresh and try again.");
+      throw error;
+    }
+  }, [addLog]);
+
+  const startOCRScanning = useCallback(async () => {
+    // Don't start if already scanning
+    if (scanningRef.current) {
+      return;
+    }
     
-    // Keep track of frame count to add debugging info periodically
+    // Ensure we have a worker
+    if (!workerRef.current) {
+      try {
+        workerRef.current = await initializeWorker();
+      } catch (err) {
+        addLog(`Failed to initialize worker: ${err}`);
+        return;
+      }
+    }
+    
+    // Check if video is playing
+    if (!videoRef.current || videoRef.current.paused) {
+      try {
+        if (videoRef.current) {
+          await videoRef.current.play();
+          addLog('Video started from OCR scanner');
+        }
+      } catch (err) {
+        addLog(`Failed to start video: ${err}`);
+      }
+    }
+    
+    addLog(`Starting OCR scan loop - video state: ${videoRef.current?.paused ? 'paused' : 'playing'}`);
+    setIsScanning(true);
+    
+    // Frame counter for debugging
     let frameCount = 0;
     
     const scanFrame = async () => {
-      if (!isMountedRef.current || !workerRef.current) {
-        addLog("Scan stopped: component unmounted or worker terminated");
+      if (!isMountedRef.current) {
+        addLog("Component unmounted, stopping scan");
         return;
       }
       
+      frameCount++;
+      
+      if (frameCount % 30 === 0) {
+        addLog(`Processed ${frameCount} frames`);
+      }
+      
       try {
-        // Increment frame counter
-        frameCount++;
-        
-        // Add periodic debugging info
-        if (frameCount % 30 === 0) {
-          addLog(`OCR scanning active: processed ${frameCount} frames`);
-        }
-        
         const frameData = captureFrame();
         if (!frameData) {
-          if (shouldScan && isMountedRef.current) {
-            scanningRef.current = requestAnimationFrame(scanFrame);
-          }
+          // Schedule next frame and continue
+          scanningRef.current = requestAnimationFrame(scanFrame);
           return;
         }
 
-        // Set a timeout to prevent recognition from hanging
-        const recognitionPromise = workerRef.current.recognize(frameData);
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('OCR recognition timed out')), 3000);
-        });
-        
-        // Race between recognition and timeout
-        const result = await Promise.race([recognitionPromise, timeoutPromise]);
+        // Process the frame with OCR
+        const result = await workerRef.current.recognize(frameData);
         
         if (!isMountedRef.current) return;
         
         const { data: { text, confidence } } = result;
         
-        addLog(`Raw scan result: ${text}`);
-        addLog(`Raw confidence: ${confidence}%`);
-        
-        // If the text is empty or too short, mark as not detected
-        if (!text || text.trim().length < 10) {
-          setTextDetected(false);
-        }
-        
-        const possibleVins = correctCommonOcrMistakes(text);
-        
-        let foundValidVin = false;
-        
-        for (const vin of possibleVins) {
-          if (!isMountedRef.current) return;
+        if (text && text.length > 3) {
+          addLog(`Raw text: ${text} (${confidence.toFixed(1)}%)`);
           
-          if (!checkedVinsRef.current.has(vin)) {
-            addLog(`Checking new VIN variation: ${vin}`);
-            checkedVinsRef.current.add(vin);
-            const isValid = await checkVinValidity(vin);
-            if (isValid) {
-              foundValidVin = true;
-              setTextDetected(true);
-              break;
+          // Process the detected text
+          const possibleVins = correctCommonOcrMistakes(text);
+          
+          // Check if any of the variations is a valid VIN
+          for (const vin of possibleVins) {
+            if (!isMountedRef.current) return;
+            
+            if (!checkedVinsRef.current.has(vin)) {
+              checkedVinsRef.current.add(vin);
+              
+              // Check if this might be a valid VIN
+              const isValid = await checkVinValidity(vin);
+              if (isValid) {
+                // Valid VIN found - stop scanning
+                return;
+              }
             }
-          } else {
-            addLog(`Skipping already checked VIN: ${vin}`);
           }
-        }
-        
-        if (!foundValidVin && shouldScan && isMountedRef.current) {
-          scanningRef.current = requestAnimationFrame(scanFrame);
         }
       } catch (error) {
-        addLog(`OCR error: ${error}`);
-        setTextDetected(false);
-        
-        // If we get too many errors, restart the worker
-        if (frameCount > 100) {
-          addLog("Too many errors, attempting to restart OCR worker");
-          frameCount = 0;
-          
-          if (workerRef.current) {
-            try {
-              await workerRef.current.terminate();
-            } catch (e) {
-              addLog(`Error terminating worker: ${e}`);
-            }
-            workerRef.current = null;
-            workerInitializedRef.current = false;
-          }
-          
-          try {
-            workerRef.current = await initializeWorker();
-            addLog("OCR worker restarted successfully");
-          } catch (e) {
-            addLog(`Failed to restart OCR worker: ${e}`);
-            toast.error("OCR scanning failed. Please try again.");
-            return;
-          }
+        // Ignore common errors to reduce log noise
+        if (String(error).includes('Not enough data')) {
+          // This is a common OCR error, don't log
+        } else {
+          addLog(`OCR error: ${error}`);
         }
-        
-        if (shouldScan && isMountedRef.current) {
-          scanningRef.current = requestAnimationFrame(scanFrame);
-        }
+      }
+      
+      // Continue scanning if component is still mounted
+      if (isMountedRef.current) {
+        scanningRef.current = requestAnimationFrame(scanFrame);
       }
     };
     
-    // Start the scanning loop
-    addLog("Starting OCR scan loop");
-    setIsScanning(true);
+    // Start the scan loop
     scanningRef.current = requestAnimationFrame(scanFrame);
-  }, [addLog, captureFrame, checkVinValidity, correctCommonOcrMistakes, setTextDetected, initializeWorker, setIsScanning]);
+  }, [addLog, captureFrame, checkVinValidity, correctCommonOcrMistakes, initializeWorker, setIsScanning]);
 
   const initializeBarcodeScanner = useCallback(async () => {
     try {
       const hints = new Map();
       const formats = [BarcodeFormat.CODE_39, BarcodeFormat.DATA_MATRIX, BarcodeFormat.CODE_128];
-      hints.set(2, formats);
-      hints.set(4, 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789');
+      hints.set(2, formats); // Format hints
       
       const codeReader = new BrowserMultiFormatReader(hints);
       barcodeReaderRef.current = codeReader;
 
       if (videoRef.current) {
-        addLog('Starting enhanced barcode scanning for VIN codes...');
+        addLog('Starting barcode scanning...');
         
         const scanLoop = async () => {
           try {
             if (!videoRef.current || !barcodeReaderRef.current || !isMountedRef.current) return;
             
-            const resultPromise = barcodeReaderRef.current.decodeOnce(videoRef.current);
-            const timeoutPromise = new Promise<never>((_, reject) => {
-              setTimeout(() => reject(new Error('Barcode detection timed out')), 3000);
-            });
-            
-            // Properly type the result from Promise.race
-            const result = await Promise.race<Result>([resultPromise, timeoutPromise]);
+            // Try to decode a barcode from the current video frame
+            const result = await barcodeReaderRef.current.decodeOnceFromVideoElement(videoRef.current);
             
             if (!isMountedRef.current) return;
             
-            // Now result is properly typed as Result
-            if (result && result.getText) {
-              let scannedValue = result.getText();
-              addLog(`Raw barcode detected: ${scannedValue}`);
+            if (result && result.getText()) {
+              const scannedText = result.getText();
+              addLog(`Barcode detected: ${scannedText}`);
               
-              scannedValue = cleanVinBarcode(scannedValue);
-              addLog(`Processed barcode: ${scannedValue}`);
+              // Process the barcode text
+              const cleanedVin = cleanVinBarcode(scannedText);
               
-              setTextDetected(true);
-              
-              if (validateVIN(scannedValue)) {
-                addLog('Valid VIN detected!');
+              // Check if it's a valid VIN
+              if (validateVIN(cleanedVin)) {
+                addLog('Valid VIN barcode detected!');
                 
-                const vehicleInfo = await fetchVehicleInfo(scannedValue);
-                if (!isMountedRef.current) return;
+                // Get vehicle info
+                const vehicleInfo = await fetchVehicleInfo(cleanedVin);
                 
                 if (vehicleInfo) {
-                  addLog(`NHTSA validation passed - Valid VIN found!`);
-                  addLog(`Vehicle Info - Make: ${vehicleInfo.make}, Model: ${vehicleInfo.model}, Year: ${vehicleInfo.year}`);
-                  
+                  addLog(`Vehicle info found: ${vehicleInfo.make} ${vehicleInfo.model} ${vehicleInfo.year}`);
                   setDetectedVehicle(vehicleInfo);
                   setIsConfirmationView(true);
                   return;
                 } else {
-                  addLog('NHTSA lookup failed, but VIN format is valid - proceeding with confirmation');
-                  const dummyVehicleInfo = {
-                    vin: scannedValue,
+                  // VIN format is valid but no info found
+                  addLog('VIN format valid but no vehicle info found');
+                  setDetectedVehicle({
+                    vin: cleanedVin,
                     make: "Unknown",
                     model: "Unknown",
                     year: "Unknown"
-                  };
-                  setDetectedVehicle(dummyVehicleInfo);
+                  });
                   setIsConfirmationView(true);
                   return;
                 }
               } else {
-                addLog(`Invalid VIN format: ${scannedValue}`);
+                addLog(`Invalid VIN format: ${cleanedVin}`);
               }
-            } else {
-              setTextDetected(false);
             }
           } catch (error: any) {
+            // Ignore not found errors to reduce log noise
             if (error?.name !== 'NotFoundException') {
               addLog(`Barcode scan error: ${error}`);
             }
-            setTextDetected(false);
           }
           
+          // Continue scanning if component is still mounted
           if (isMountedRef.current) {
             requestAnimationFrame(scanLoop);
           }
         };
         
+        // Start the scan loop
         scanLoop();
       }
     } catch (error) {
       addLog(`Error initializing barcode scanner: ${error}`);
       toast.error("Failed to initialize barcode scanner. Please try again.");
-      throw error;
     }
-  }, [addLog, cleanVinBarcode, fetchVehicleInfo, setDetectedVehicle, setIsConfirmationView, setTextDetected]);
+  }, [addLog, cleanVinBarcode, fetchVehicleInfo, setDetectedVehicle, setIsConfirmationView]);
 
-  const setupVideoElement = useCallback((video: HTMLVideoElement) => {
-    if (!video) return;
+  const stopCamera = useCallback(() => {
+    addLog("Stopping camera");
     
-    // Set essential properties for mobile compatibility
-    video.setAttribute('playsinline', 'true');
-    video.setAttribute('muted', 'true');
-    video.muted = true;
-    video.playsInline = true;
-    video.autoplay = true;
-    
-    // Create a new audio context to help unstick some mobile browsers
-    try {
-      // @ts-ignore - AudioContext may not be defined in all environments
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (AudioContext) {
-        new AudioContext();
-      }
-    } catch (e) {
-      // Ignore errors here, just trying to unblock audio context
+    // Stop scanning
+    if (scanningRef.current) {
+      cancelAnimationFrame(scanningRef.current);
+      scanningRef.current = undefined;
     }
-  }, []);
+    
+    // Reset barcode reader
+    if (barcodeReaderRef.current) {
+      barcodeReaderRef.current.reset();
+      barcodeReaderRef.current = null;
+    }
+    
+    // Update state
+    setIsScanning(false);
+    setIsFlashOn(false);
+    
+    // Stop video playback
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.srcObject = null;
+    }
+    
+    // Stop all camera tracks
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
+        try {
+          track.stop();
+        } catch (e) {
+          console.error("Error stopping track:", e);
+        }
+      });
+      streamRef.current = null;
+    }
+    
+    // Mark as uninitialized
+    isInitializedRef.current = false;
+  }, [addLog, setIsFlashOn, setIsScanning]);
 
   const startCamera = useCallback(async () => {
+    // Only initialize once
+    if (isInitializedRef.current) {
+      addLog("Camera already initialized");
+      return;
+    }
+    
     try {
       addLog('Starting camera initialization...');
       isMountedRef.current = true;
       
-      // First, ensure any existing camera streams are stopped
+      // Stop any existing camera stream
       stopCamera();
       
-      // Set up the video element before requesting camera
-      if (videoRef.current) {
-        setupVideoElement(videoRef.current);
-      }
-      
+      // Request camera access with low resolution first
       addLog('Requesting camera access...');
       
-      // Low resolution constraints for faster loading and better compatibility
-      const constraints = {
-        video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          facingMode: 'environment' // Preferred but not exact requirement
-        }
-      };
-      
-      // Try to get the camera stream with environment facing preference
       let stream: MediaStream;
       try {
+        // Try to get environment-facing camera first (typically back camera on phones)
         addLog('Attempting to access environment-facing camera...');
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            facingMode: { exact: "environment" }, // Try exact requirement first
+            facingMode: { exact: "environment" },
             width: { ideal: 640 },
             height: { ideal: 480 }
-          }
+          },
+          audio: false
         });
         addLog('Successfully accessed environment-facing camera');
       } catch (envError) {
-        // If environment camera fails, fall back to any camera with default constraints
+        // Fall back to any available camera
         addLog(`Could not access environment camera: ${envError}. Falling back to default camera.`);
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          },
+          audio: false
+        });
         addLog('Successfully accessed default camera');
       }
       
       if (!isMountedRef.current) {
-        // Component unmounted during camera initialization
-        addLog('Component unmounted during camera initialization');
+        // Component unmounted during initialization
         stream.getTracks().forEach(track => track.stop());
         return;
       }
       
       if (!videoRef.current) {
-        addLog('Video element reference is not available');
+        addLog('Video element not found');
         stream.getTracks().forEach(track => track.stop());
-        toast.error("Camera initialization failed. Please refresh and try again.");
         return;
       }
       
-      // Store stream reference first so we can clean up properly if needed
+      // Store the stream for later cleanup
       streamRef.current = stream;
       
-      // Get information about the camera we're using
-      const track = stream.getVideoTracks()[0];
-      if (track) {
-        const capabilities = track.getCapabilities() as ExtendedTrackCapabilities;
-        setHasFlash('torch' in capabilities);
-        if ('torch' in capabilities) {
+      // Check for flash capability
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack) {
+        const capabilities = videoTrack.getCapabilities() as ExtendedTrackCapabilities;
+        const hasFlashCapability = 'torch' in capabilities;
+        setHasFlash(hasFlashCapability);
+        
+        if (hasFlashCapability) {
           addLog('Flash capability detected');
         }
         
-        const settings = track.getSettings();
+        const settings = videoTrack.getSettings();
         addLog(`Camera: ${settings.facingMode || 'unknown'} facing, resolution: ${settings.width}x${settings.height}`);
-      } else {
-        addLog('No video track available in the stream');
       }
       
-      // Prepare the video element
+      // Set up the video element
       addLog('Setting up video element...');
-      const video = videoRef.current;
       
-      // Create a promise that resolves when the video can play
-      const videoReadyPromise = new Promise<void>((resolve, reject) => {
-        if (!video) {
-          reject(new Error('Video element not available'));
-          return;
-        }
-        
-        // Set handlers before assigning srcObject to avoid missing events
-        const handleCanPlay = () => {
-          addLog('Video can now play');
-          video.removeEventListener('canplay', handleCanPlay);
-          resolve();
-        };
-        
-        const handleError = (error: Event) => {
-          addLog(`Video error: ${error}`);
-          video.removeEventListener('error', handleError);
-          reject(new Error('Video element error'));
-        };
-        
-        video.addEventListener('canplay', handleCanPlay);
-        video.addEventListener('error', handleError);
-        
-        // Setup a timeout in case events don't fire
-        const timeoutId = setTimeout(() => {
-          video.removeEventListener('canplay', handleCanPlay);
-          video.removeEventListener('error', handleError);
-          addLog('Video ready timeout - continuing anyway');
-          resolve(); // Resolve anyway and try to continue
-        }, 3000);
-        
-        // Cleanup function
-        const cleanup = () => {
-          clearTimeout(timeoutId);
-          video.removeEventListener('canplay', handleCanPlay);
-          video.removeEventListener('error', handleError);
-        };
-        
-        // Add cleanup to the promise
-        (resolve as any).cleanup = cleanup;
-        (reject as any).cleanup = cleanup;
-      });
+      // Prepare video element for playback
+      videoRef.current.srcObject = stream;
+      videoRef.current.muted = true;
+      videoRef.current.playsInline = true;
+      videoRef.current.autoplay = true;
       
-      try {
-        // Now assign the stream to video element
-        video.srcObject = stream;
-        
-        // Force a play attempt first, which might fail but that's okay
-        try {
-          await video.play();
-          addLog('Initial play() succeeded');
-        } catch (playError) {
-          // This is expected on many mobile browsers, we'll try again after canplay
-          addLog(`Initial play() failed: ${playError}. This is normal on some browsers.`);
-        }
-        
-        // Wait for the video to be ready to play
-        await videoReadyPromise;
-        
-        // Try playing again if needed
-        if (video.paused) {
-          addLog('Video still paused after ready event, trying play() again');
-          try {
-            // Try one more time to play
-            await video.play();
-            addLog('Second play() succeeded');
-          } catch (finalPlayError) {
-            addLog(`Final play() attempt failed: ${finalPlayError}`);
-            // Continue anyway - the scanner might still work with a paused video on some browsers
-          }
-        } else {
-          addLog('Video is already playing');
-        }
-      } catch (videoError) {
-        addLog(`Error setting up video: ${videoError}`);
-        // Try to continue anyway
-      } finally {
-        // Clean up event listeners
-        if ((videoReadyPromise as any).cleanup) {
-          (videoReadyPromise as any).cleanup();
-        }
-      }
+      // Mark as initialized
+      isInitializedRef.current = true;
       
-      // Initialize scanner even if video might have issues
-      // Sometimes the scanning can still work in partially initialized state
+      // Initialize the appropriate scanner based on mode
       if (scanMode === 'text') {
         addLog('Starting OCR initialization...');
+        workerRef.current = await initializeWorker();
+        addLog('OCR worker initialized successfully');
         
-        try {
-          workerRef.current = await initializeWorker();
-          
-          if (!isMountedRef.current) {
-            addLog('Component unmounted during OCR initialization');
-            return;
+        // Start OCR scanning after a brief delay
+        setTimeout(() => {
+          if (isMountedRef.current) {
+            startOCRScanning();
           }
-          
-          addLog('OCR worker initialized successfully');
-          
-          // Start scanning with a short delay to ensure video has had time to start
-          setTimeout(() => {
-            if (isMountedRef.current) {
-              startOCRScanning(true);
-            }
-          }, 500);
-        } catch (error) {
-          addLog(`OCR initialization failed: ${error}`);
-          toast.error("Failed to initialize OCR scanner. Please try again.");
-        }
+        }, 500);
       } else {
-        addLog('Initializing barcode reader...');
+        addLog('Initializing barcode scanner...');
         await initializeBarcodeScanner();
       }
     } catch (error) {
       addLog(`Error accessing camera: ${error}`);
       toast.error("Could not access camera. Please check camera permissions.");
     }
-  }, [addLog, initializeBarcodeScanner, initializeWorker, scanMode, setHasFlash, setupVideoElement, startOCRScanning, stopCamera]);
+  }, [
+    addLog, 
+    initializeBarcodeScanner, 
+    initializeWorker, 
+    scanMode, 
+    setHasFlash, 
+    startOCRScanning, 
+    stopCamera
+  ]);
 
   const handleScanModeChange = useCallback(async (value: ScanMode) => {
     addLog(`Switching scan mode to: ${value}`);
     
-    // Clean up existing resources before mode change
-    if (scanningRef.current) {
-      cancelAnimationFrame(scanningRef.current);
-      scanningRef.current = undefined;
-    }
+    // Clean up existing resources
+    stopCamera();
     
+    // Terminate worker if it exists
     if (workerRef.current) {
-      addLog('Terminating OCR worker before mode change');
       try {
         await workerRef.current.terminate();
+        workerRef.current = null;
       } catch (e) {
         addLog(`Error terminating worker: ${e}`);
       }
-      workerRef.current = null;
-      workerInitializedRef.current = false;
     }
     
-    if (barcodeReaderRef.current) {
-      addLog('Resetting barcode reader before mode change');
-      barcodeReaderRef.current.reset();
-      barcodeReaderRef.current = null;
-    }
-    
-    // Restart camera with new mode
-    stopCamera();
-    await startCamera();
+    // Wait a moment for resources to clean up
+    setTimeout(() => {
+      // Restart camera with new mode
+      startCamera();
+    }, 300);
   }, [addLog, startCamera, stopCamera]);
 
   const handleManualVinSubmit = useCallback(async () => {
-    // Get the manually entered VIN from the window object (temporary solution due to refactoring)
     const enteredVin = (window as any).tempManualVin || manualVin;
     
-    if (enteredVin.trim().length === 17) {
-      if (validateVIN(enteredVin)) {
-        const processedVin = postProcessVIN(enteredVin);
-        const vehicleInfo = await fetchVehicleInfo(processedVin);
-        
-        if (vehicleInfo) {
-          setDetectedVehicle(vehicleInfo);
-          setIsConfirmationView(true);
-        } else {
-          const dummyVehicleInfo = {
-            vin: processedVin,
-            make: "Unknown",
-            model: "Unknown",
-            year: "Unknown"
-          };
-          setDetectedVehicle(dummyVehicleInfo);
-          setIsConfirmationView(true);
-        }
+    if (!enteredVin || enteredVin.trim().length !== 17) {
+      toast.error("VIN must be 17 characters long");
+      return;
+    }
+    
+    if (validateVIN(enteredVin)) {
+      // Process the VIN
+      const processedVin = postProcessVIN(enteredVin);
+      
+      // Get vehicle info
+      const vehicleInfo = await fetchVehicleInfo(processedVin);
+      
+      if (vehicleInfo) {
+        setDetectedVehicle(vehicleInfo);
+        setIsConfirmationView(true);
       } else {
-        toast.error("Invalid VIN format");
+        // Valid VIN format but no info found
+        setDetectedVehicle({
+          vin: processedVin,
+          make: "Unknown",
+          model: "Unknown",
+          year: "Unknown"
+        });
+        setIsConfirmationView(true);
       }
     } else {
-      toast.error("VIN must be 17 characters long");
+      toast.error("Invalid VIN format");
     }
   }, [fetchVehicleInfo, manualVin, setDetectedVehicle, setIsConfirmationView]);
 
@@ -896,22 +722,17 @@ export const useVinScanner = ({
     return () => {
       isMountedRef.current = false;
       
-      // Clear any animation frames
+      // Clean up resources
       if (scanningRef.current) {
         cancelAnimationFrame(scanningRef.current);
-        scanningRef.current = undefined;
       }
       
-      // Terminate OCR worker
       if (workerRef.current) {
         workerRef.current.terminate().catch((err: any) => {
           console.error("Error terminating OCR worker:", err);
         });
-        workerRef.current = null;
-        workerInitializedRef.current = false;
       }
       
-      // Stop camera and clean up resources
       stopCamera();
     };
   }, [stopCamera]);
