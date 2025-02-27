@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { useQuery } from '@tanstack/react-query'
@@ -51,9 +52,13 @@ export function useVinLookup(vin: string | undefined | null) {
 
         if (existingData) {
           console.log('Using cached VIN data:', existingData)
+          const series = extractFromRawData(existingData.raw_data, 'Series')
+          const model = existingData.model || ''
+          const modelWithSeries = series ? `${model} (${series})` : model
+          
           return {
             make: existingData.make || '',
-            model: existingData.model || '',
+            model: modelWithSeries,
             year: existingData.year || 0,
             bodyClass: extractFromRawData(existingData.raw_data, 'Body Class') || '',
             doors: parseInt(extractFromRawData(existingData.raw_data, 'Doors') || '0', 10) || 0,
@@ -102,6 +107,8 @@ export function useVinLookup(vin: string | undefined | null) {
         // Extract values with helper function
         const make = getValueByVariable(results, 'Make')
         const model = getValueByVariable(results, 'Model')
+        const series = getValueByVariable(results, 'Series')
+        const modelWithSeries = series ? `${model} (${series})` : model
         const yearStr = getValueByVariable(results, 'Model Year')
         const year = yearStr ? parseInt(yearStr, 10) : 0
         const bodyClass = getValueByVariable(results, 'Body Class')
@@ -121,12 +128,12 @@ export function useVinLookup(vin: string | undefined | null) {
             raw_data: data,
           })
 
-        console.log('Decoded VIN:', { make, model, year, bodyClass, doors, trim })
+        console.log('Decoded VIN:', { make, model, modelWithSeries, year, bodyClass, doors, trim, series })
         
         // Return the extracted values
         return { 
           make: make || '', 
-          model: model || '', 
+          model: modelWithSeries || '', 
           year: year || 0,
           bodyClass: bodyClass || '',
           doors: doors || 0,
