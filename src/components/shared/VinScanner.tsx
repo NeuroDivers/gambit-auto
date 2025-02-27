@@ -1,9 +1,8 @@
-import { Camera, Pause, Play, Check, X as XIcon } from "lucide-react"
+import { Camera, Pause, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
 import { toast } from "sonner"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog"
 import { createWorker, PSM } from 'tesseract.js'
 import { BrowserMultiFormatReader } from '@zxing/library'
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -30,9 +29,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const [isPaused, setIsPaused] = useState(false)
   const [scanStartTime, setScanStartTime] = useState<Date | null>(null)
   const [lastScanDuration, setLastScanDuration] = useState<number | null>(null)
-  const [potentialVin, setPotentialVin] = useState<string | null>(null)
-  const [remainingVariations, setRemainingVariations] = useState<string[]>([])
-  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false)
   const isMobile = useIsMobile()
 
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -315,15 +311,32 @@ export function VinScanner({ onScan }: VinScannerProps) {
       
       const possibleVins = correctCommonOcrMistakes(text)
       
-      if (possibleVins.length > 0) {
-        const [firstVin, ...otherVins] = possibleVins
-        setRemainingVariations(otherVins)
+      for (const vin of possibleVins) {
+        addLog(`Checking possible VIN: ${vin}`)
         
-        const isValid = await checkVinValidity(firstVin)
-        if (!isValid && shouldScan) {
-          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+        if (validateVIN(vin)) {
+          addLog('Local VIN validation passed')
+          const isValidVin = await validateVinWithNHTSA(vin)
+          
+          if (isValidVin) {
+            const endTime = new Date()
+            const duration = scanStartTime ? (endTime.getTime() - scanStartTime.getTime()) / 1000 : 0
+            setLastScanDuration(duration)
+            
+            addLog(`NHTSA validation passed - Valid VIN confirmed in ${duration.toFixed(2)} seconds!`)
+            onScan(vin)
+            toast.success("VIN scanned and validated successfully")
+            handleClose()
+            return
+          } else {
+            addLog('NHTSA validation failed for this variation')
+          }
+        } else {
+          addLog(`Local VIN validation failed for variation - Reason: Invalid format`)
         }
-      } else if (shouldScan) {
+      }
+      
+      if (shouldScan) {
         scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
       }
     } catch (error) {
@@ -332,31 +345,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
         scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
       }
     }
-  }
-
-  const checkVinValidity = async (vin: string) => {
-    addLog(`Checking possible VIN: ${vin}`)
-    
-    if (validateVIN(vin)) {
-      addLog('Local VIN validation passed')
-      const isValidVin = await validateVinWithNHTSA(vin)
-      
-      if (isValidVin) {
-        const endTime = new Date()
-        const duration = scanStartTime ? (endTime.getTime() - scanStartTime.getTime()) / 1000 : 0
-        setLastScanDuration(duration)
-        
-        addLog(`NHTSA validation passed - Valid VIN found in ${duration.toFixed(2)} seconds!`)
-        setPotentialVin(vin)
-        setIsConfirmationOpen(true)
-        return true
-      } else {
-        addLog('NHTSA validation failed for this variation')
-      }
-    } else {
-      addLog(`Local VIN validation failed for variation - Reason: Invalid format`)
-    }
-    return false
   }
 
   const captureFrame = () => {
@@ -441,24 +429,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }
 
-  const handleConfirm = (confirmed: boolean) => {
-    setIsConfirmationOpen(false)
-    
-    if (confirmed && potentialVin) {
-      onScan(potentialVin)
-      toast.success("VIN confirmed and saved successfully")
-      handleClose()
-    } else {
-      if (remainingVariations.length > 0) {
-        const nextVariation = remainingVariations[0]
-        setRemainingVariations(remainingVariations.slice(1))
-        checkVinValidity(nextVariation)
-      } else {
-        startOCRScanning(true)
-      }
-    }
-  }
-
   useEffect(() => {
     return () => {
       handleClose()
@@ -540,37 +510,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
           </div>
         </DialogContent>
       </Dialog>
-
-      <AlertDialog open={isConfirmationOpen} onOpenChange={setIsConfirmationOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm VIN</AlertDialogTitle>
-            <AlertDialogDescription>
-              Is this the correct VIN number?
-              <div className="mt-2 font-mono text-lg text-primary font-bold tracking-wider">
-                {potentialVin}
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => handleConfirm(false)}
-              className="flex-1"
-            >
-              <XIcon className="mr-2 h-4 w-4" />
-              Try Again
-            </Button>
-            <Button 
-              onClick={() => handleConfirm(true)}
-              className="flex-1"
-            >
-              <Check className="mr-2 h-4 w-4" />
-              Confirm
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   )
 }
