@@ -73,6 +73,7 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
       default:
         const weights = (() => {
           switch (blueEmphasis) {
+            case 'zero': return { r: 0.33, g: 0.33, b: 0.33 }  // No blue emphasis
             case 'very-high': return { r: 0.1, g: 0.1, b: 0.8 }  // More extreme blue emphasis
             case 'high': return { r: 0.15, g: 0.15, b: 0.7 }
             default: return { r: 0.2, g: 0.3, b: 0.5 }

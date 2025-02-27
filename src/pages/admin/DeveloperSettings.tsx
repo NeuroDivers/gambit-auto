@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 interface ProcessingSettings {
-  blueEmphasis: 'normal' | 'high' | 'very-high';
+  blueEmphasis: 'zero' | 'normal' | 'high' | 'very-high';
   contrast: 'normal' | 'high' | 'very-high';
   morphKernelSize: '2' | '3' | '4';
   confidenceThreshold: '35' | '40' | '45';
@@ -259,22 +259,26 @@ export default function DeveloperSettings() {
                     <Label>Blue Channel Emphasis</Label>
                     <RadioGroup
                       value={settings.blueEmphasis}
-                      onValueChange={(value: 'normal' | 'high' | 'very-high') => 
+                      onValueChange={(value: 'zero' | 'normal' | 'high' | 'very-high') => 
                         setSettings(prev => ({ ...prev, blueEmphasis: value }))
                       }
                       className="mt-2"
                     >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="zero" id="blue-zero" />
+                        <Label htmlFor="blue-zero">Zero (0.33)</Label>
+                      </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="normal" id="blue-normal" />
                         <Label htmlFor="blue-normal">Normal (0.5)</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="high" id="blue-high" />
-                        <Label htmlFor="blue-high">High (0.6)</Label>
+                        <Label htmlFor="blue-high">High (0.7)</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="very-high" id="blue-very-high" />
-                        <Label htmlFor="blue-very-high">Very High (0.7)</Label>
+                        <Label htmlFor="blue-very-high">Very High (0.8)</Label>
                       </div>
                     </RadioGroup>
                   </div>
