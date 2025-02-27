@@ -13,6 +13,7 @@ import { NotesSection } from "@/components/quotes/form-sections/NotesSection"
 import { ClientSearchDialog } from "@/components/quotes/form-sections/ClientSearchDialog"
 import { useCreateQuoteForm } from "@/components/quotes/hooks/useCreateQuoteForm"
 import { supabase } from "@/integrations/supabase/client"
+import { toast } from "sonner"
 
 export default function CreateQuote() {
   const navigate = useNavigate()
@@ -23,6 +24,7 @@ export default function CreateQuote() {
   // Check if we're returning from the VIN scanner page
   useEffect(() => {
     if (location.state?.scannedVin) {
+      console.log("VIN scanner returned:", location.state);
       form.setValue('vehicle_vin', location.state.scannedVin)
       
       // Set vehicle info if available
@@ -32,8 +34,13 @@ export default function CreateQuote() {
         if (model) form.setValue('vehicle_model', model)
         if (year) form.setValue('vehicle_year', parseInt(year))
       }
+
+      // Clear the state to prevent re-applying on refresh
+      navigate(location.pathname, { replace: true });
+      
+      toast.success("VIN data imported successfully");
     }
-  }, [location.state, form])
+  }, [location.state, form, navigate, location.pathname])
 
   const handleClientSelect = async (client: Client) => {
     form.setValue('customer_first_name', client.first_name)

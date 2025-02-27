@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { ArrowLeft, Clipboard, RotateCcw, Check, AlignLeft, Barcode, Info } from "lucide-react"
@@ -15,6 +14,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Badge } from "@/components/ui/badge"
+import { PageTitle } from "@/components/shared/PageTitle"
 
 interface VehicleInfo {
   vin: string;
@@ -113,6 +113,7 @@ const decodeVIN = (vin: string): {
 };
 
 export default function ScanVin() {
+  console.log("ScanVin component rendered");
   const navigate = useNavigate()
   const location = useLocation()
   const { state } = location
@@ -166,8 +167,10 @@ export default function ScanVin() {
   }
 
   useEffect(() => {
+    console.log("Starting camera on mount");
     startCamera()
     return () => {
+      console.log("Stopping camera on unmount");
       stopCamera()
     }
   }, [])
@@ -228,18 +231,14 @@ export default function ScanVin() {
     return generateVinVariations(text);
   };
 
-  // Also used for processing barcode scan results
   const cleanVinBarcode = (scannedText: string): string => {
-    // Remove any leading 'I' characters (common barcode scanning error)
     let cleaned = scannedText.trim();
     
-    // Some barcode scanners add an 'I' prefix to the VIN
     if (cleaned.startsWith('I') && cleaned.length === 18) {
       addLog('Detected and removing leading I character from barcode scan');
       cleaned = cleaned.substring(1);
     }
     
-    // Remove any whitespace and make uppercase
     cleaned = cleaned.replace(/\s+/g, '').toUpperCase();
     
     return cleaned;
@@ -435,15 +434,11 @@ export default function ScanVin() {
 
   const initializeBarcodeScanner = async () => {
     try {
-      // Create barcode reader with specific hints for VIN barcodes
       const hints = new Map();
-      // Format hint - focus on Code 39 and Data Matrix which are commonly used for VIN barcodes
       const formats = [BarcodeFormat.CODE_39, BarcodeFormat.DATA_MATRIX, BarcodeFormat.CODE_128];
-      hints.set(2, formats); // 2 is FORMAT_HINT_TYPE
-
-      // Try to make character set more restrictive for VINs (A-Z, 0-9)
-      hints.set(4, 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789'); // 4 is CHARACTER_SET hint
-
+      hints.set(2, formats);
+      hints.set(4, 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789');
+      
       const codeReader = new BrowserMultiFormatReader(hints);
       barcodeReaderRef.current = codeReader;
 
@@ -459,14 +454,12 @@ export default function ScanVin() {
               let scannedValue = result.getText();
               addLog(`Raw barcode detected: ${scannedValue}`);
               
-              // Process the barcode to handle common issues
               scannedValue = cleanVinBarcode(scannedValue);
               addLog(`Processed barcode: ${scannedValue}`);
               
               if (validateVIN(scannedValue)) {
                 addLog('Valid VIN detected!');
                 
-                // Attempt to get vehicle info for confirmation
                 const vehicleInfo = await fetchVehicleInfo(scannedValue);
                 if (vehicleInfo) {
                   const endTime = new Date();
@@ -480,8 +473,6 @@ export default function ScanVin() {
                   setIsConfirmationView(true);
                   return;
                 } else {
-                  // VIN format is valid but couldn't fetch vehicle info
-                  // Still allow confirmation as the VIN might be valid but not in NHTSA database
                   addLog('NHTSA lookup failed, but VIN format is valid - proceeding with confirmation');
                   const dummyVehicleInfo = {
                     vin: scannedValue,
@@ -494,7 +485,6 @@ export default function ScanVin() {
                   return;
                 }
               } else {
-                // Invalid VIN - log and continue scanning
                 addLog(`Invalid VIN format: ${scannedValue}`);
               }
             }
@@ -504,7 +494,6 @@ export default function ScanVin() {
             }
           }
           
-          // Continue scanning loop
           requestAnimationFrame(scanLoop);
         };
         
@@ -638,7 +627,6 @@ export default function ScanVin() {
       const modelResult = results.find((r: any) => r.Variable === 'Model' && r.Value)
       const yearResult = results.find((r: any) => r.Variable === 'Model Year' && r.Value)
 
-      // Also store the additional vehicle details for display
       setVehicleDetails(results)
 
       if (makeResult?.Value && modelResult?.Value && yearResult?.Value) {
@@ -686,7 +674,7 @@ export default function ScanVin() {
 
   const handleConfirm = () => {
     if (detectedVehicle) {
-      // Pass the VIN back to the create quote form
+      console.log("Navigating back to:", returnPath, "with VIN:", detectedVehicle.vin);
       navigate(returnPath, { 
         state: { 
           scannedVin: detectedVehicle.vin,
@@ -710,7 +698,6 @@ export default function ScanVin() {
     setDetectedVehicle(null)
     checkedVinsRef.current.clear()
     
-    // Restart camera if needed
     if (!videoRef.current?.srcObject) {
       startCamera().then(() => {
         startOCRScanning(true)
@@ -724,7 +711,6 @@ export default function ScanVin() {
     addLog(`Switching scan mode to: ${value}`)
     setScanMode(value)
     
-    // First properly clean up the current mode
     if (scanningRef.current) {
       cancelAnimationFrame(scanningRef.current)
       scanningRef.current = undefined
@@ -742,13 +728,11 @@ export default function ScanVin() {
       barcodeReaderRef.current = null
     }
     
-    // Need to ensure we have an active camera before switching modes
     if (!isCameraActive || !streamRef.current) {
       addLog('Camera not active, restarting camera with new mode')
       stopCamera()
       await startCamera()
     } else {
-      // Camera is already active, just initialize the new scanner mode
       if (value === 'text') {
         addLog('Initializing OCR for text mode')
         workerRef.current = await initializeWorker()
@@ -771,7 +755,6 @@ export default function ScanVin() {
           setDetectedVehicle(vehicleInfo)
           setIsConfirmationView(true)
         } else {
-          // VIN format is valid but couldn't fetch vehicle info
           const dummyVehicleInfo = {
             vin: processedVin,
             make: "Unknown",
@@ -789,11 +772,9 @@ export default function ScanVin() {
     }
   }
 
-  // Additional VIN details for display
   const getVinDetails = () => {
     if (!detectedVehicle?.vin) return null
     
-    // Use the local decoding function to get details
     return decodeVIN(detectedVehicle.vin)
   }
   
@@ -938,7 +919,6 @@ export default function ScanVin() {
               </div>
             </div>
             
-            {/* Scanning indicator */}
             <div className="absolute bottom-2 right-2">
               <div className="bg-purple-600 text-white text-xs px-3 py-1 rounded-full flex items-center">
                 <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
@@ -946,7 +926,6 @@ export default function ScanVin() {
               </div>
             </div>
             
-            {/* Targeting overlay */}
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-16">
               <div className="absolute inset-0 border-2 border-white/60 rounded-lg" />
             </div>

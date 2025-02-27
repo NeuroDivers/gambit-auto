@@ -9,26 +9,10 @@ import ScanVin from "@/pages/admin/ScanVin"
 
 export const estimateRoutes: RouteObject[] = [
   {
-    path: "estimates",
+    path: "estimates/scan-vin",
     element: (
       <PermissionGuard resource="quotes" type="page_access">
-        <Quotes />
-      </PermissionGuard>
-    ),
-  },
-  {
-    path: "estimates/:id",
-    element: (
-      <PermissionGuard resource="quotes" type="page_access">
-        <QuoteDetails />
-      </PermissionGuard>
-    ),
-  },
-  {
-    path: "estimates/requests/:id",
-    element: (
-      <PermissionGuard resource="quotes" type="page_access">
-        <QuoteRequestDetails />
+        <ScanVin />
       </PermissionGuard>
     ),
   },
@@ -41,10 +25,26 @@ export const estimateRoutes: RouteObject[] = [
     ),
   },
   {
-    path: "estimates/scan-vin",
+    path: "estimates",
     element: (
       <PermissionGuard resource="quotes" type="page_access">
-        <ScanVin />
+        <Quotes />
+      </PermissionGuard>
+    ),
+  },
+  {
+    path: "estimates/requests/:id",
+    element: (
+      <PermissionGuard resource="quotes" type="page_access">
+        <QuoteRequestDetails />
+      </PermissionGuard>
+    ),
+  },
+  {
+    path: "estimates/:id",
+    element: (
+      <PermissionGuard resource="quotes" type="page_access">
+        <QuoteDetails />
       </PermissionGuard>
     ),
   },
