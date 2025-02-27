@@ -1,3 +1,4 @@
+
 export const validateVIN = (vin: string): boolean => {
   if (vin.length !== 17) return false;
 
@@ -36,6 +37,155 @@ export const validateVIN = (vin: string): boolean => {
   }
 
   return true;
+}
+
+/**
+ * Validates a VIN with check digit validation
+ * The 9th character is a calculated check digit based on a formula
+ */
+export const validateVinWithCheckDigit = (vin: string): boolean => {
+  // Basic VIN pattern validation
+  if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) {
+    console.log("VIN failed pattern validation");
+    return false;
+  }
+  
+  // Check digit validation (9th character)
+  // Convert characters to their numeric values
+  const values: {[key: string]: number} = {
+    'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8,
+    'J': 1, 'K': 2, 'L': 3, 'M': 4, 'N': 5, 'P': 7, 'R': 9,
+    'S': 2, 'T': 3, 'U': 4, 'V': 5, 'W': 6, 'X': 7, 'Y': 8, 'Z': 9,
+    '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '0': 0
+  };
+  
+  // Weight factors for each position
+  const weights = [8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2];
+  
+  // Calculate check digit
+  let sum = 0;
+  for (let i = 0; i < 17; i++) {
+    if (i !== 8) { // Skip the check digit position
+      const char = vin.charAt(i);
+      const value = values[char];
+      sum += value * weights[i];
+    }
+  }
+  
+  // Calculate the remainder modulo 11
+  const remainder = sum % 11;
+  
+  // Determine the expected check digit
+  const expectedCheckDigit = remainder === 10 ? 'X' : remainder.toString();
+  
+  // Get the actual check digit from the VIN
+  const actualCheckDigit = vin.charAt(8);
+  
+  // Compare the expected and actual check digits
+  const isValid = actualCheckDigit === expectedCheckDigit;
+  
+  if (!isValid) {
+    console.log(`VIN check digit validation failed: expected ${expectedCheckDigit}, got ${actualCheckDigit}`);
+  }
+  
+  return isValid;
+}
+
+/**
+ * Decode VIN information based on the standard VIN structure
+ */
+export const decodeVIN = (vin: string): {
+  countryCode: string;
+  country: string;
+  manufacturerCode: string;
+  manufacturer: string;
+  vehicleTypeCode: string;
+  vehicleType: string;
+  isValid: boolean;
+} => {
+  // Default return object
+  const result = {
+    countryCode: '',
+    country: 'Unknown',
+    manufacturerCode: '',
+    manufacturer: 'Unknown',
+    vehicleTypeCode: '',
+    vehicleType: 'Unknown',
+    isValid: false
+  };
+  
+  if (!vin || vin.length !== 17) {
+    return result;
+  }
+  
+  // Extract codes
+  result.countryCode = vin.charAt(0);
+  result.manufacturerCode = vin.charAt(1);
+  result.vehicleTypeCode = vin.charAt(2);
+  
+  // Determine country of origin (1st character)
+  const countryMap: {[key: string]: string} = {
+    '1': 'United States',
+    '4': 'United States',
+    '5': 'United States',
+    '2': 'Canada',
+    '3': 'Mexico',
+    'J': 'Japan',
+    'K': 'South Korea',
+    'L': 'China',
+    'S': 'United Kingdom',
+    'V': 'France/Spain',
+    'W': 'Germany',
+    'Y': 'Sweden/Finland',
+    'Z': 'Italy',
+    '9': 'Brazil'
+  };
+  result.country = countryMap[result.countryCode] || 'Unknown';
+  
+  // Determine manufacturer (2nd character)
+  const manufacturerMap: {[key: string]: string} = {
+    'A': 'Audi/Jaguar',
+    'B': 'BMW/Dodge',
+    'C': 'Chrysler',
+    'F': 'Ford',
+    'G': 'General Motors',
+    'H': 'Honda/Hyundai',
+    'J': 'Jeep',
+    'L': 'Lincoln',
+    'M': 'Mazda/Mercedes-Benz',
+    'N': 'Nissan',
+    'T': 'Toyota',
+    'V': 'Volvo/Volkswagen'
+  };
+  result.manufacturer = manufacturerMap[result.manufacturerCode] || 'Unknown';
+  
+  // Set vehicle type based on WMI (first 3 characters)
+  const wmi = vin.substring(0, 3);
+  const vehicleTypeMap: {[key: string]: string} = {
+    '1GC': 'Chevrolet Truck',
+    'JHM': 'Honda Passenger Car',
+    'WBA': 'BMW Passenger Car',
+    '1FA': 'Ford Passenger Car',
+    '1FT': 'Ford Truck',
+    '1G1': 'Chevrolet Passenger Car',
+    '2T1': 'Toyota Passenger Car (Canada)',
+    '3VW': 'Volkswagen (Mexico)',
+    '5YJ': 'Tesla',
+    'JN1': 'Nissan Passenger Car',
+    'JH4': 'Acura Passenger Car',
+    'KM8': 'Hyundai SUV',
+    'KND': 'Kia SUV',
+    'WDD': 'Mercedes-Benz Passenger Car',
+    'WP0': 'Porsche Passenger Car',
+    'YV1': 'Volvo Passenger Car',
+    // Add more as needed
+  };
+  result.vehicleType = vehicleTypeMap[wmi] || 'Unknown';
+  
+  // Validate the VIN
+  result.isValid = validateVinWithCheckDigit(vin);
+  
+  return result;
 }
 
 export const postProcessVIN = (text: string): string => {

@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { BrowserMultiFormatReader } from '@zxing/library'
 import { createWorker, PSM } from 'tesseract.js'
-import { ArrowLeft, Camera, Clipboard, Text, Barcode, List, CheckCircle, XCircle, RotateCcw, Loader2 } from "lucide-react"
+import { ArrowLeft, Camera, Clipboard, Text, Barcode, List, CheckCircle, XCircle, RotateCcw, Loader2, Info } from "lucide-react"
 import { toast } from 'sonner'
 import { Toggle } from "@/components/ui/toggle"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { postProcessVIN } from '@/utils/vin-validation'
+import { postProcessVIN, validateVinWithCheckDigit, decodeVIN } from '@/utils/vin-validation'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 // Interface for OCR settings from developer settings
 interface OCRSettings {
@@ -48,6 +49,16 @@ const defaultOCRSettings: OCRSettings = {
   }
 };
 
+interface VinInfoType {
+  countryCode: string;
+  country: string;
+  manufacturerCode: string;
+  manufacturer: string;
+  vehicleTypeCode: string;
+  vehicleType: string;
+  isValid: boolean;
+}
+
 export default function VinScannerPage() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -63,6 +74,7 @@ export default function VinScannerPage() {
   const [worker, setWorker] = useState<Tesseract.Worker | null>(null)
   const scanIntervalRef = useRef<number | null>(null)
   const [scannedVin, setScannedVin] = useState<string | null>(null)
+  const [vinInfo, setVinInfo] = useState<VinInfoType | null>(null)
   const [vehicleInfo, setVehicleInfo] = useState<{
     make?: string;
     model?: string;
@@ -169,6 +181,11 @@ export default function VinScannerPage() {
       setIsLoadingVinInfo(true)
       addLog(`Fetching vehicle info for VIN: ${vin}`)
       
+      // First decode local VIN information
+      const localVinInfo = decodeVIN(vin)
+      setVinInfo(localVinInfo)
+      addLog(`Local VIN decoding: ${localVinInfo.country} - ${localVinInfo.manufacturer} - ${localVinInfo.vehicleType}`)
+      
       const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`)
       if (!response.ok) {
         throw new Error(`NHTSA API responded with status: ${response.status}`)
@@ -249,59 +266,9 @@ export default function VinScannerPage() {
       })
     } else {
       setVehicleInfo(null)
+      setVinInfo(null)
     }
   }, [scannedVin])
-
-  // Validate VIN with advanced rules including check digit
-  const validateVinWithCheckDigit = (vin: string): boolean => {
-    // Basic VIN pattern validation
-    if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) {
-      addLog("VIN failed pattern validation")
-      return false
-    }
-    
-    // Check digit validation (9th character)
-    // Convert characters to their numeric values
-    const values: {[key: string]: number} = {
-      'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8,
-      'J': 1, 'K': 2, 'L': 3, 'M': 4, 'N': 5, 'P': 7, 'R': 9,
-      'S': 2, 'T': 3, 'U': 4, 'V': 5, 'W': 6, 'X': 7, 'Y': 8, 'Z': 9,
-      '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '0': 0
-    }
-    
-    // Weight factors for each position
-    const weights = [8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2]
-    
-    // Calculate check digit
-    let sum = 0
-    for (let i = 0; i < 17; i++) {
-      if (i !== 8) { // Skip the check digit position
-        const char = vin.charAt(i)
-        const value = values[char]
-        sum += value * weights[i]
-      }
-    }
-    
-    // Calculate the remainder modulo 11
-    const remainder = sum % 11
-    
-    // Determine the expected check digit
-    const expectedCheckDigit = remainder === 10 ? 'X' : remainder.toString()
-    
-    // Get the actual check digit from the VIN
-    const actualCheckDigit = vin.charAt(8)
-    
-    // Compare the expected and actual check digits
-    const isValid = actualCheckDigit === expectedCheckDigit
-    
-    if (!isValid) {
-      addLog(`VIN check digit validation failed: expected ${expectedCheckDigit}, got ${actualCheckDigit}`)
-    } else {
-      addLog("VIN check digit validation passed")
-    }
-    
-    return isValid
-  }
 
   // Barcode scanning setup
   useEffect(() => {
@@ -444,10 +411,133 @@ export default function VinScannerPage() {
       }
     }
     
+    // Apply edge enhancement if enabled
+    if (ocrSettings.edgeEnhancement) {
+      // Apply a simple sharpening kernel
+      const tempCanvas = document.createElement('canvas')
+      tempCanvas.width = canvas.width
+      tempCanvas.height = canvas.height
+      const tempCtx = tempCanvas.getContext('2d')
+      
+      if (tempCtx) {
+        tempCtx.drawImage(canvas, 0, 0)
+        const tempData = tempCtx.getImageData(0, 0, canvas.width, canvas.height)
+        const kernel = [0, -1, 0, -1, 5, -1, 0, -1, 0]
+        
+        // Loop through each pixel and apply kernel
+        for (let y = 1; y < canvas.height - 1; y++) {
+          for (let x = 1; x < canvas.width - 1; x++) {
+            const centerPixel = (y * canvas.width + x) * 4
+            
+            for (let c = 0; c < 3; c++) {
+              let sum = 0
+              
+              // Apply kernel
+              for (let ky = -1; ky <= 1; ky++) {
+                for (let kx = -1; kx <= 1; kx++) {
+                  const pixel = ((y + ky) * canvas.width + (x + kx)) * 4
+                  const kernelValue = kernel[(ky + 1) * 3 + (kx + 1)]
+                  sum += tempData.data[pixel + c] * kernelValue
+                }
+              }
+              
+              // Clamp values
+              data[centerPixel + c] = Math.max(0, Math.min(255, sum))
+            }
+          }
+        }
+        
+        addLog("Applied edge enhancement")
+      }
+    }
+    
+    // Apply noise reduction if enabled
+    if (ocrSettings.noiseReduction) {
+      const tempCanvas = document.createElement('canvas')
+      tempCanvas.width = canvas.width
+      tempCanvas.height = canvas.height
+      const tempCtx = tempCanvas.getContext('2d')
+      
+      if (tempCtx) {
+        tempCtx.drawImage(canvas, 0, 0)
+        const tempData = tempCtx.getImageData(0, 0, canvas.width, canvas.height)
+        
+        // Simple 3x3 median filter
+        for (let y = 1; y < canvas.height - 1; y++) {
+          for (let x = 1; x < canvas.width - 1; x++) {
+            const centerPixel = (y * canvas.width + x) * 4
+            
+            for (let c = 0; c < 3; c++) {
+              const values = []
+              
+              // Gather surrounding values
+              for (let ky = -1; ky <= 1; ky++) {
+                for (let kx = -1; kx <= 1; kx++) {
+                  const pixel = ((y + ky) * canvas.width + (x + kx)) * 4
+                  values.push(tempData.data[pixel + c])
+                }
+              }
+              
+              // Sort values and take median
+              values.sort((a, b) => a - b)
+              data[centerPixel + c] = values[4] // Middle value of 9 pixels
+            }
+          }
+        }
+        
+        addLog("Applied noise reduction")
+      }
+    }
+    
     // Put the modified image data back on the canvas
     ctx.putImageData(imageData, 0, 0)
     
-    // Create a new canvas for threshold operation if needed
+    // Apply adaptive contrast if enabled
+    if (ocrSettings.adaptiveContrast) {
+      const adaptiveCanvas = document.createElement('canvas')
+      adaptiveCanvas.width = canvas.width
+      adaptiveCanvas.height = canvas.height
+      const adaptiveCtx = adaptiveCanvas.getContext('2d')
+      
+      if (adaptiveCtx) {
+        adaptiveCtx.drawImage(canvas, 0, 0)
+        const adaptiveData = adaptiveCtx.getImageData(0, 0, canvas.width, canvas.height)
+        const adaptivePixels = adaptiveData.data
+        
+        // Adaptive threshold based on surrounding pixels
+        const blockSize = parseInt(ocrSettings.morphKernelSize) || 3
+        const halfBlock = Math.floor(blockSize / 2)
+        
+        for (let y = halfBlock; y < canvas.height - halfBlock; y++) {
+          for (let x = halfBlock; x < canvas.width - halfBlock; x++) {
+            const pixel = (y * canvas.width + x) * 4
+            let sum = 0
+            let count = 0
+            
+            // Calculate local average
+            for (let ky = -halfBlock; ky <= halfBlock; ky++) {
+              for (let kx = -halfBlock; kx <= halfBlock; kx++) {
+                const localPixel = ((y + ky) * canvas.width + (x + kx)) * 4
+                sum += adaptivePixels[localPixel]
+                count++
+              }
+            }
+            
+            // Apply adaptive threshold
+            const threshold = (sum / count) * 0.95 // 0.95 is a bias factor
+            adaptivePixels[pixel] = adaptivePixels[pixel + 1] = adaptivePixels[pixel + 2] = 
+              adaptivePixels[pixel] > threshold ? 255 : 0
+          }
+        }
+        
+        adaptiveCtx.putImageData(adaptiveData, 0, 0)
+        addLog("Applied adaptive contrast")
+        
+        return adaptiveCanvas
+      }
+    }
+    
+    // Create a new canvas for threshold operation
     const thresholdCanvas = document.createElement('canvas')
     thresholdCanvas.width = canvas.width
     thresholdCanvas.height = canvas.height
@@ -568,6 +658,9 @@ export default function VinScannerPage() {
       addLog('Analyzing image for VIN...')
       const { data } = await worker.recognize(processedCanvas)
       
+      // Log confidence
+      addLog(`OCR confidence: ${data.confidence.toFixed(2)}%`)
+      
       // Process OCR result for potential VINs
       const text = data.text.replace(/\s+/g, '')
       addLog(`OCR detected text: ${text.substring(0, 30)}${text.length > 30 ? '...' : ''}`)
@@ -585,8 +678,12 @@ export default function VinScannerPage() {
         const isValidVin = validateVinWithCheckDigit(vin)
         if (isValidVin) {
           addLog(`VIN validation successful: ${vin}`)
+          
+          // Get VIN information
+          const vinDetails = decodeVIN(vin)
+          addLog(`VIN origin: ${vinDetails.country}, Manufacturer: ${vinDetails.manufacturer}, Type: ${vinDetails.vehicleType}`)
         } else {
-          addLog(`Warning: VIN may be invalid, but continuing: ${vin}`)
+          addLog(`Warning: VIN check digit validation failed, but continuing: ${vin}`)
         }
         
         // Pause scanning while processing result
@@ -627,6 +724,7 @@ export default function VinScannerPage() {
   const resetScan = () => {
     setScannedVin(null)
     setVehicleInfo(null)
+    setVinInfo(null)
     setManualVin('')
     addLog('Resetting scan, starting again')
   }
@@ -763,6 +861,45 @@ export default function VinScannerPage() {
                 </div>
               </Alert>
               
+              {vinInfo && (
+                <TooltipProvider>
+                  <Alert className="bg-blue-50 dark:bg-blue-950/30">
+                    <div className="flex items-start justify-between">
+                      <div className="flex flex-col space-y-1">
+                        <AlertTitle className="flex items-center text-blue-800 dark:text-blue-300">
+                          <Info className="h-4 w-4 mr-2" /> 
+                          VIN Details
+                        </AlertTitle>
+                        <AlertDescription className="text-blue-700 dark:text-blue-400">
+                          <div className="flex flex-col space-y-1 text-sm">
+                            <span>Country: {vinInfo.country}</span>
+                            <span>Manufacturer: {vinInfo.manufacturer}</span>
+                            <span>Type: {vinInfo.vehicleType}</span>
+                          </div>
+                        </AlertDescription>
+                      </div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <Info className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="w-[300px]">
+                          <div className="text-xs">
+                            <p><strong>VIN Structure:</strong></p>
+                            <p>1st character ({scannedVin?.[0]}) - Country code</p>
+                            <p>2nd character ({scannedVin?.[1]}) - Manufacturer</p> 
+                            <p>3rd character ({scannedVin?.[2]}) - Vehicle type</p>
+                            <p>9th character ({scannedVin?.[8]}) - Check digit</p>
+                            <p>Last 6 chars - Serial number</p>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </Alert>
+                </TooltipProvider>
+              )}
+              
               {isLoadingVinInfo ? (
                 <div className="flex justify-center p-4">
                   <div className="flex items-center space-x-2">
@@ -790,7 +927,7 @@ export default function VinScannerPage() {
                       Cannot Verify Vehicle
                     </AlertTitle>
                     <AlertDescription className="text-yellow-700 dark:text-yellow-400">
-                      Unable to decode this VIN. You can still use it, but vehicle details won't be automatically filled.
+                      Unable to decode this VIN with NHTSA API. You can still use it, but vehicle details won't be automatically filled.
                     </AlertDescription>
                   </div>
                 </Alert>
