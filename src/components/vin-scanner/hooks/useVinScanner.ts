@@ -1,5 +1,5 @@
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { createWorker, PSM } from 'tesseract.js';
 import { BrowserMultiFormatReader, BarcodeFormat } from '@zxing/library';
 import { toast } from "sonner";
