@@ -1,19 +1,36 @@
-
 export const preprocessImage = (canvas: HTMLCanvasElement): string => {
-  // Get processing settings from localStorage
-  const settings = JSON.parse(localStorage.getItem('scanner-settings') || '{}')
-  const {
-    blueEmphasis = 'normal',
-    contrast = 'normal',
-    morphKernelSize = '2',
-    grayscaleMethod = 'luminosity'
-  } = settings
-
   const ctx = canvas.getContext('2d')
   if (!ctx) return canvas.toDataURL()
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
   const data = imageData.data
+
+  // First pass: Detect if we have light text on dark background
+  let lightTextOnDark = false
+  let totalBrightness = 0
+  for (let i = 0; i < data.length; i += 4) {
+    totalBrightness += (data[i] + data[i + 1] + data[i + 2]) / 3
+  }
+  const avgBrightness = totalBrightness / (data.length / 4)
+  lightTextOnDark = avgBrightness < 128
+
+  // Invert colors if we have light text on dark background
+  if (lightTextOnDark) {
+    for (let i = 0; i < data.length; i += 4) {
+      data[i] = 255 - data[i]         // R
+      data[i + 1] = 255 - data[i + 1] // G
+      data[i + 2] = 255 - data[i + 2] // B
+    }
+  }
+
+  // Get processing settings from localStorage
+  const settings = JSON.parse(localStorage.getItem('scanner-settings') || '{}')
+  const {
+    blueEmphasis = 'high',  // Changed default to high
+    contrast = 'high',      // Changed default to high
+    morphKernelSize = '2',
+    grayscaleMethod = 'blue-channel'  // Changed default to blue-channel
+  } = settings
 
   // Apply grayscale conversion based on selected method
   for (let i = 0; i < data.length; i += 4) {
@@ -27,11 +44,11 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
         gray = (r + g + b) / 3
         break
       case 'blue-channel':
-        gray = b
+        // Enhanced blue channel processing
+        gray = Math.max(b - ((r + g) / 4), 0) // Emphasize blue while reducing noise
         break
       case 'luminosity':
       default:
-        // Get blue emphasis weights based on settings
         const weights = (() => {
           switch (blueEmphasis) {
             case 'very-high': return { r: 0.15, g: 0.15, b: 0.7 }
@@ -42,7 +59,12 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
         gray = weights.r * r + weights.g * g + weights.b * b
     }
 
-    // Apply contrast enhancement
+    // Adaptive local contrast enhancement
+    const x = Math.floor((i / 4) % canvas.width)
+    const y = Math.floor((i / 4) / canvas.width)
+    const localArea = getLocalArea(data, x, y, canvas.width, canvas.height)
+    const localContrast = getLocalContrast(localArea)
+    
     const contrastValues = (() => {
       switch (contrast) {
         case 'very-high': return { dark: 0.3, light: 1.9 }
@@ -51,49 +73,86 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
       }
     })()
 
+    // Apply stronger contrast to areas with lower local contrast
+    const contrastMultiplier = Math.max(1, 1.5 - localContrast)
     const enhanced = gray < 128 ? 
-      gray * contrastValues.dark : 
-      Math.min(255, gray * contrastValues.light)
+      gray * (contrastValues.dark * contrastMultiplier) : 
+      Math.min(255, gray * (contrastValues.light * contrastMultiplier))
     
     data[i] = data[i + 1] = data[i + 2] = enhanced
   }
 
-  // Apply sharpening kernel
-  const sharpenKernel = [
-    0, -1, 0,
-    -1, 5, -1,
-    0, -1, 0
-  ]
-  
-  const sharpenedData = applyConvolution(data, canvas.width, canvas.height, sharpenKernel)
-  for (let i = 0; i < data.length; i++) {
-    data[i] = sharpenedData[i]
-  }
-
-  // Apply Gaussian blur with adaptive sigma
-  const sigma = grayscaleMethod === 'blue-channel' ? 0.8 : 1.2
-  const kernelSize = Math.ceil(sigma * 3) * 2 + 1
-  const kernel = createGaussianKernel(kernelSize, sigma)
-  
-  const blurredData = applyConvolution(data, canvas.width, canvas.height, kernel)
-  for (let i = 0; i < data.length; i++) {
-    data[i] = blurredData[i]
-  }
-
-  // Apply Otsu's thresholding
-  const threshold = calculateOtsuThreshold(data)
-  for (let i = 0; i < data.length; i += 4) {
-    const value = data[i] < threshold ? 0 : 255
-    data[i] = data[i + 1] = data[i + 2] = value
-  }
+  // Apply unsharp masking for edge enhancement
+  const blurRadius = 1
+  const amount = 1.5
+  const threshold = 10
+  applyUnsharpMask(data, canvas.width, canvas.height, blurRadius, amount, threshold)
 
   // Apply morphological operations with configurable kernel size
   const mKernelSize = parseInt(morphKernelSize)
   dilate(data, canvas.width, canvas.height, mKernelSize)
   erode(data, canvas.width, canvas.height, mKernelSize)
 
+  // Final cleanup with median filter to remove salt-and-pepper noise
+  applyMedianFilter(data, canvas.width, canvas.height, 1)
+
   ctx.putImageData(imageData, 0, 0)
-  return canvas.toDataURL('image/png', 1.0)
+  return canvas.toDataURL()
+}
+
+// New helper functions for improved processing
+
+function getLocalArea(data: Uint8ClampedArray, x: number, y: number, width: number, height: number): number[] {
+  const area = []
+  const radius = 2
+  for (let dy = -radius; dy <= radius; dy++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      const nx = Math.min(Math.max(x + dx, 0), width - 1)
+      const ny = Math.min(Math.max(y + dy, 0), height - 1)
+      const idx = (ny * width + nx) * 4
+      area.push(data[idx])
+    }
+  }
+  return area
+}
+
+function getLocalContrast(area: number[]): number {
+  const min = Math.min(...area)
+  const max = Math.max(...area)
+  return (max - min) / 255
+}
+
+function applyUnsharpMask(data: Uint8ClampedArray, width: number, height: number, radius: number, amount: number, threshold: number) {
+  const original = new Uint8ClampedArray(data)
+  const blurred = new Uint8ClampedArray(data.length)
+  
+  // Apply Gaussian blur
+  const kernel = createGaussianKernel(radius * 2 + 1, radius)
+  const blurredData = applyConvolution(data, width, height, kernel)
+  
+  // Apply unsharp mask
+  for (let i = 0; i < data.length; i += 4) {
+    for (let j = 0; j < 3; j++) {
+      const diff = original[i + j] - blurredData[i + j]
+      if (Math.abs(diff) > threshold) {
+        data[i + j] = Math.min(255, Math.max(0, original[i + j] + diff * amount))
+      }
+    }
+  }
+}
+
+function applyMedianFilter(data: Uint8ClampedArray, width: number, height: number, radius: number) {
+  const temp = new Uint8ClampedArray(data)
+  
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = (y * width + x) * 4
+      const area = getLocalArea(temp, x, y, width, height)
+      const median = area.sort((a, b) => a - b)[Math.floor(area.length / 2)]
+      
+      data[idx] = data[idx + 1] = data[idx + 2] = median
+    }
+  }
 }
 
 // Calculate Otsu's threshold
