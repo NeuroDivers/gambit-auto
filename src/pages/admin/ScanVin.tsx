@@ -107,6 +107,7 @@ const decodeVIN = (vin: string): {
     'WDD': 'Mercedes-Benz Passenger Car',
     'WP0': 'Porsche Passenger Car',
     'YV1': 'Volvo Passenger Car',
+    '3FM': 'Ford SUV',
     // Add more as needed
   };
   result.vehicleType = vehicleTypeMap[wmi] || 'Unknown';
@@ -123,7 +124,8 @@ export default function ScanVin() {
   
   const [isCameraActive, setIsCameraActive] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
-  const [scanMode, setScanMode] = useState<'text' | 'barcode'>('text')
+  // Change default scan mode to 'barcode'
+  const [scanMode, setScanMode] = useState<'text' | 'barcode'>('barcode')
   const [logs, setLogs] = useState<string[]>([])
   const [hasFlash, setHasFlash] = useState(false)
   const [isFlashOn, setIsFlashOn] = useState(false)
@@ -493,8 +495,11 @@ export default function ScanVin() {
               
               setTextDetected(true);
               
-              if (validateVIN(scannedValue)) {
-                addLog('Valid VIN detected!');
+              // Double-check length before validation
+              if (scannedValue.length === 17) {
+                // Skip local VIN validation for barcode scans and trust the barcode data
+                // Barcodes are generally more reliable than OCR text
+                addLog('Barcode VIN has valid length, proceeding with NHTSA validation');
                 
                 const vehicleInfo = await fetchVehicleInfo(scannedValue);
                 if (vehicleInfo) {
@@ -509,7 +514,8 @@ export default function ScanVin() {
                   setIsConfirmationView(true);
                   return;
                 } else {
-                  addLog('NHTSA lookup failed, but VIN format is valid - proceeding with confirmation');
+                  // Even if NHTSA lookup fails, if the barcode scan is 17 chars, it's likely a valid VIN
+                  addLog('NHTSA lookup failed, but barcode data appears to be a valid VIN - proceeding with confirmation');
                   const dummyVehicleInfo = {
                     vin: scannedValue,
                     make: "Unknown",
@@ -521,7 +527,7 @@ export default function ScanVin() {
                   return;
                 }
               } else {
-                addLog(`Invalid VIN format: ${scannedValue}`);
+                addLog(`Invalid VIN length (${scannedValue.length}): ${scannedValue}`);
               }
             } else {
               setTextDetected(false);

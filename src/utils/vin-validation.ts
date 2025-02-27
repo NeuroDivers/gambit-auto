@@ -1,3 +1,4 @@
+
 export const validateVIN = (vin: string): boolean => {
   if (vin.length !== 17) return false;
 
@@ -17,7 +18,9 @@ export const validateVIN = (vin: string): boolean => {
   }
 
   // Check for sequential number format (last 6 digits)
-  const sequentialNumber = /[0-9]{6}$/;
+  // Note: We're making this more flexible to allow for different formats
+  // across manufacturers while still maintaining basic validation
+  const sequentialNumber = /[0-9A-HJ-NPR-Z]{6}$/;
   if (!sequentialNumber.test(vin.slice(-6))) {
     console.log('VIN failed sequential number validation:', vin);
     return false;
@@ -27,7 +30,7 @@ export const validateVIN = (vin: string): boolean => {
   // as it was incorrectly flagging valid VINs like 5J6YH287X8L000133
   // Only keep check for any character repeated more than 4 times
   const suspiciousPatterns = [
-    /(.)\1{4,}/     // Any character repeated more than 4 times
+    /(.)\1{7,}/     // Any character repeated more than 7 times
   ];
 
   if (suspiciousPatterns.some(pattern => pattern.test(vin))) {
@@ -106,7 +109,7 @@ export const validateVinWithNHTSA = async (vin: string): Promise<boolean> => {
     const modelResult = results.find((r: any) => r.Variable === 'Model' && r.Value && r.Value !== 'null')
     const yearResult = results.find((r: any) => r.Variable === 'Model Year' && r.Value && r.Value !== 'null')
 
-    return !!(makeResult && modelResult && yearResult)
+    return !!(makeResult || modelResult || yearResult)
   } catch (error) {
     return false
   }
