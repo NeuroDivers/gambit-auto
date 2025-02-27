@@ -82,54 +82,20 @@ export function VinScanner({ onScan }: VinScannerProps) {
   }
 
   const correctCommonOcrMistakes = (text: string): string[] => {
-    const handle9thCharacter = (char: string): string => {
-      if (/[0-9X]/.test(char)) {
-        return char
-      }
-      
-      const numericMappings: { [key: string]: string } = {
-        'O': '0',
-        'I': '1',
-        'L': '1',
-        'Z': '2',
-        'E': '3',
-        'A': '4',
-        'H': '4',
-        'S': '5',
-        'G': '6',
-        'T': '7',
-        'B': '8',
-        'Q': '9'
-      }
-      
-      return numericMappings[char] || '0'
-    }
-
     let corrected = text
+      .replace(/[oO]/g, '0')
+      .replace(/[iIl|]/g, '1')
+      .replace(/[sS]/g, '5')
+      .replace(/[zZ]/g, '2')
+      .replace(/[bB]/g, '8')
+      .replace(/[gG]/g, '6')
+      .replace(/[tT]/g, '7')
       .replace(/\s+/g, '')
       .toUpperCase()
 
-    let chars = corrected.split('')
-
-    chars = chars.map((char, index) => {
-      if (index === 8) {
-        return handle9thCharacter(char)
-      }
-
-      if (char === 'O' || char === 'Q') return '0'
-      if (char === 'I' || char === 'L' || char === '|') return '1'
-      if (char === 'Z') return '2'
-      if (char === 'S') return '5'
-      if (char === 'G') return '6'
-      if (char === 'T') return '7'
-      return char
-    })
-
-    corrected = chars.join('')
-
     const bOrEightPositions: number[] = []
-    chars.forEach((char, index) => {
-      if (index !== 8 && (char === 'B' || char === '8')) {
+    corrected.split('').forEach((char, index) => {
+      if (char === 'B' || char === '8') {
         bOrEightPositions.push(index)
       }
     })
@@ -138,7 +104,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
     const totalCombinations = Math.pow(2, bOrEightPositions.length)
 
     for (let i = 0; i < totalCombinations; i++) {
-      let variant = chars.slice()
+      let variant = corrected.split('')
       bOrEightPositions.forEach((pos, index) => {
         variant[pos] = (i & (1 << index)) ? 'B' : '8'
       })
@@ -155,19 +121,10 @@ export function VinScanner({ onScan }: VinScannerProps) {
     addLog(`Generated ${variations.length} possible variations`)
     variations.forEach((variant, index) => {
       addLog(`Variation ${index + 1}: ${variant}`)
-      addLog(`9th character in variation ${index + 1}: ${variant[8]} (position 9)`)
     })
     
-    const validVariations = variations.filter(v => {
-      const isValidFormat = vinPattern.test(v)
-      const hasValidCheckDigit = /[0-9X]/.test(v[8])
-      return isValidFormat && hasValidCheckDigit
-    })
-
+    const validVariations = variations.filter(v => vinPattern.test(v))
     addLog(`Found ${validVariations.length} valid VIN pattern matches`)
-    validVariations.forEach((v, i) => {
-      addLog(`Valid variation ${i + 1}: ${v} (check digit: ${v[8]})`)
-    })
     
     return validVariations
   }
@@ -230,7 +187,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const startCamera = async () => {
     try {
-      setScanStartTime(new Date())
+      setScanStartTime(new Date()) // Start timing when camera starts
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { exact: "environment" },
