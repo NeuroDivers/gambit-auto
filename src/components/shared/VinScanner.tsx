@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button"
 import { useState, useRef, useEffect } from "react"
 import { toast } from "sonner"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog"
 import { createWorker, PSM } from 'tesseract.js'
 import { BrowserMultiFormatReader } from '@zxing/library'
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -569,25 +568,67 @@ export function VinScanner({ onScan }: VinScannerProps) {
             onClose={handleClose}
           />
           <div className="relative h-[calc(100dvh-12rem)] sm:h-auto sm:aspect-video w-full overflow-hidden">
-            <video
-              ref={videoRef}
-              className="absolute inset-0 h-full w-full object-cover"
-              playsInline
-              autoPlay
-              muted
-            />
-            <canvas
-              ref={canvasRef}
-              className="absolute inset-0 h-full w-full object-cover opacity-0"
-            />
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] h-40">
-              <div className="absolute inset-0 border-2 border-primary rounded-lg" />
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/60 px-4 py-2 rounded-lg">
-                <p className="text-white text-center text-sm">
-                  Position {scanMode === 'text' ? 'VIN text' : 'barcode'} within frame
-                </p>
+            {isConfirmationOpen ? (
+              <div className="absolute inset-0 z-50 bg-background/95 p-6">
+                <div className="h-full flex flex-col">
+                  <div className="space-y-4">
+                    <h2 className="text-lg font-semibold">Confirm Vehicle Information</h2>
+                    <div className="font-mono text-lg text-primary">
+                      VIN: {detectedVehicle?.vin}
+                    </div>
+                    {detectedVehicle && (
+                      <div className="grid gap-2 text-base">
+                        <div><span className="font-semibold">Make:</span> {detectedVehicle.make}</div>
+                        <div><span className="font-semibold">Model:</span> {detectedVehicle.model}</div>
+                        <div><span className="font-semibold">Year:</span> {detectedVehicle.year}</div>
+                      </div>
+                    )}
+                    <p className="text-sm text-muted-foreground">
+                      Is this the correct vehicle information?
+                    </p>
+                  </div>
+                  <div className="mt-auto flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => handleConfirm(false)}
+                      className="flex-1"
+                    >
+                      <XIcon className="mr-2 h-4 w-4" />
+                      Try Again
+                    </Button>
+                    <Button 
+                      onClick={() => handleConfirm(true)}
+                      className="flex-1"
+                    >
+                      <Check className="mr-2 h-4 w-4" />
+                      Confirm
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              <>
+                <video
+                  ref={videoRef}
+                  className="absolute inset-0 h-full w-full object-cover"
+                  playsInline
+                  autoPlay
+                  muted
+                />
+                <canvas
+                  ref={canvasRef}
+                  className="absolute inset-0 h-full w-full object-cover opacity-0"
+                />
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] h-40">
+                  <div className="absolute inset-0 border-2 border-primary rounded-lg" />
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/60 px-4 py-2 rounded-lg">
+                    <p className="text-white text-center text-sm">
+                      Position {scanMode === 'text' ? 'VIN text' : 'barcode'} within frame
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
           <div className="bg-muted p-4">
             {lastScanDuration !== null && (
@@ -621,46 +662,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
           </div>
         </DialogContent>
       </Dialog>
-
-      <AlertDialog open={isConfirmationOpen} onOpenChange={setIsConfirmationOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Vehicle Information</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-4">
-              <div className="font-mono text-lg text-primary">
-                VIN: {detectedVehicle?.vin}
-              </div>
-              {detectedVehicle && (
-                <div className="grid gap-2 text-base">
-                  <div><span className="font-semibold">Make:</span> {detectedVehicle.make}</div>
-                  <div><span className="font-semibold">Model:</span> {detectedVehicle.model}</div>
-                  <div><span className="font-semibold">Year:</span> {detectedVehicle.year}</div>
-                </div>
-              )}
-              <p className="text-sm text-muted-foreground">
-                Is this the correct vehicle information?
-              </p>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => handleConfirm(false)}
-              className="flex-1"
-            >
-              <XIcon className="mr-2 h-4 w-4" />
-              Try Again
-            </Button>
-            <Button 
-              onClick={() => handleConfirm(true)}
-              className="flex-1"
-            >
-              <Check className="mr-2 h-4 w-4" />
-              Confirm
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   )
 }
