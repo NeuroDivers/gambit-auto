@@ -24,18 +24,30 @@ import {
 } from "@/components/ui/dialog"
 
 interface ProcessingSettings {
+  // Basic settings
   blueEmphasis: 'zero' | 'normal' | 'high' | 'very-high';
   contrast: 'normal' | 'high' | 'very-high';
-  morphKernelSize: '2' | '3' | '4';
+  morphKernelSize: '2' | '3' | '4' | '5';
+  morphKernelType: 'rect' | 'cross' | 'ellipse';
   confidenceThreshold: '35' | '40' | '45';
-  grayscaleMethod: 'luminosity' | 'average' | 'blue-channel';
+  grayscaleMethod: 'luminosity' | 'average' | 'blue-channel' | 'red-channel' | 'green-channel';
   autoInvert: boolean;
   autoInvertDark: boolean;
   edgeEnhancement: boolean;
   noiseReduction: boolean;
   adaptiveContrast: boolean;
+  
+  // Advanced OpenCV options
+  preprocessing: 'basic' | 'adaptive-threshold' | 'clahe' | 'high-pass' | 'inverted-threshold' | 'deskewing';
+  denoising: 'none' | 'median' | 'gaussian' | 'bilateral' | 'non-local-means';
+  edgeDetection: 'none' | 'canny' | 'sobel';
+  deskewing: boolean;
+  deblurring: 'none' | 'gaussian' | 'wiener';
+  contrastEnhancement: 'none' | 'histogram-equalization' | 'clahe';
+  angleCorrection: boolean;
+  
   tesseractConfig: {
-    psm: 6 | 7 | 8 | 13;
+    psm: 6 | 7 | 8 | 13 | 4; // Added PSM 4 for column of text
     oem: 1 | 3;
   }
 }
@@ -43,6 +55,7 @@ interface ProcessingSettings {
 interface Preset {
   id: string;
   name: string;
+  description?: string;
   settings: ProcessingSettings;
   isDefault?: boolean;
 }
@@ -68,6 +81,7 @@ export default function DeveloperSettings() {
       blueEmphasis: 'very-high',
       contrast: 'very-high',
       morphKernelSize: '3',
+      morphKernelType: 'rect',
       confidenceThreshold: '35',
       grayscaleMethod: 'blue-channel',
       autoInvert: true,
@@ -75,6 +89,13 @@ export default function DeveloperSettings() {
       edgeEnhancement: true,
       noiseReduction: true,
       adaptiveContrast: true,
+      preprocessing: 'adaptive-threshold',
+      denoising: 'median',
+      edgeDetection: 'none',
+      deskewing: false,
+      deblurring: 'none',
+      contrastEnhancement: 'none',
+      angleCorrection: false,
       tesseractConfig: {
         psm: 7,
         oem: 1
@@ -96,6 +117,7 @@ export default function DeveloperSettings() {
   })
 
   const [newPresetName, setNewPresetName] = useState("")
+  const [newPresetDescription, setNewPresetDescription] = useState("")
   const [showNewPresetDialog, setShowNewPresetDialog] = useState(false)
   const [activePresetId, setActivePresetId] = useState<string | null>(null)
 
@@ -105,10 +127,12 @@ export default function DeveloperSettings() {
         {
           id: 'default-preset',
           name: 'Default OCR Settings',
+          description: 'Balanced settings for general VIN scanning',
           settings: {
             blueEmphasis: 'very-high',
             contrast: 'very-high',
             morphKernelSize: '3',
+            morphKernelType: 'rect',
             confidenceThreshold: '35',
             grayscaleMethod: 'blue-channel',
             autoInvert: true,
@@ -116,6 +140,13 @@ export default function DeveloperSettings() {
             edgeEnhancement: true,
             noiseReduction: true,
             adaptiveContrast: true,
+            preprocessing: 'adaptive-threshold',
+            denoising: 'median',
+            edgeDetection: 'none',
+            deskewing: false,
+            deblurring: 'none',
+            contrastEnhancement: 'none',
+            angleCorrection: false,
             tesseractConfig: {
               psm: 7,
               oem: 1
@@ -126,10 +157,12 @@ export default function DeveloperSettings() {
         {
           id: 'windshield-preset',
           name: 'Windshield Scanning',
+          description: 'Optimized for reading VINs through windshield glass',
           settings: {
             blueEmphasis: 'very-high',
             contrast: 'very-high',
             morphKernelSize: '3',
+            morphKernelType: 'rect',
             confidenceThreshold: '35',
             grayscaleMethod: 'blue-channel',
             autoInvert: false,
@@ -137,6 +170,13 @@ export default function DeveloperSettings() {
             edgeEnhancement: true,
             noiseReduction: true,
             adaptiveContrast: true,
+            preprocessing: 'adaptive-threshold',
+            denoising: 'median',
+            edgeDetection: 'canny',
+            deskewing: false,
+            deblurring: 'wiener',
+            contrastEnhancement: 'clahe',
+            angleCorrection: true,
             tesseractConfig: {
               psm: 6,
               oem: 1
@@ -146,17 +186,26 @@ export default function DeveloperSettings() {
         {
           id: 'monitor-preset',
           name: 'Monitor/Screen Scanning',
+          description: 'For VINs displayed on digital screens',
           settings: {
             blueEmphasis: 'normal',
             contrast: 'normal',
             morphKernelSize: '2',
+            morphKernelType: 'rect',
             confidenceThreshold: '40',
-            grayscaleMethod: 'average',
+            grayscaleMethod: 'green-channel',
             autoInvert: false,
             autoInvertDark: false,
             edgeEnhancement: false,
             noiseReduction: true,
             adaptiveContrast: false,
+            preprocessing: 'high-pass',
+            denoising: 'gaussian',
+            edgeDetection: 'none',
+            deskewing: false,
+            deblurring: 'gaussian',
+            contrastEnhancement: 'histogram-equalization',
+            angleCorrection: false,
             tesseractConfig: {
               psm: 7,
               oem: 3
@@ -166,10 +215,12 @@ export default function DeveloperSettings() {
         {
           id: 'low-light-preset',
           name: 'Low Light Conditions',
+          description: 'Enhanced for poor lighting conditions',
           settings: {
             blueEmphasis: 'high',
             contrast: 'very-high',
-            morphKernelSize: '4',
+            morphKernelSize: '5',
+            morphKernelType: 'rect',
             confidenceThreshold: '35',
             grayscaleMethod: 'blue-channel',
             autoInvert: false,
@@ -177,6 +228,13 @@ export default function DeveloperSettings() {
             edgeEnhancement: true,
             noiseReduction: true,
             adaptiveContrast: true,
+            preprocessing: 'clahe',
+            denoising: 'non-local-means',
+            edgeDetection: 'sobel',
+            deskewing: false,
+            deblurring: 'none',
+            contrastEnhancement: 'clahe',
+            angleCorrection: false,
             tesseractConfig: {
               psm: 6,
               oem: 1
@@ -186,17 +244,26 @@ export default function DeveloperSettings() {
         {
           id: 'bright-light-preset',
           name: 'Bright Light/Reflections',
+          description: 'For dealing with glare and reflections',
           settings: {
             blueEmphasis: 'zero',
             contrast: 'high',
             morphKernelSize: '3',
+            morphKernelType: 'cross',
             confidenceThreshold: '40',
-            grayscaleMethod: 'luminosity',
+            grayscaleMethod: 'red-channel',
             autoInvert: true,
             autoInvertDark: false,
             edgeEnhancement: false,
             noiseReduction: true,
             adaptiveContrast: false,
+            preprocessing: 'inverted-threshold',
+            denoising: 'bilateral',
+            edgeDetection: 'none',
+            deskewing: false,
+            deblurring: 'none',
+            contrastEnhancement: 'none',
+            angleCorrection: false,
             tesseractConfig: {
               psm: 6,
               oem: 1
@@ -206,19 +273,28 @@ export default function DeveloperSettings() {
         {
           id: 'paper-preset',
           name: 'Paper Document Scanning',
+          description: 'For printed VINs on paper documents',
           settings: {
             blueEmphasis: 'normal',
             contrast: 'high',
-            morphKernelSize: '4',
+            morphKernelSize: '5',
+            morphKernelType: 'rect',
             confidenceThreshold: '40',
-            grayscaleMethod: 'average',
+            grayscaleMethod: 'green-channel',
             autoInvert: false,
             autoInvertDark: false,
             edgeEnhancement: false,
             noiseReduction: true,
             adaptiveContrast: true,
+            preprocessing: 'deskewing',
+            denoising: 'median',
+            edgeDetection: 'none',
+            deskewing: true,
+            deblurring: 'none',
+            contrastEnhancement: 'none',
+            angleCorrection: true,
             tesseractConfig: {
-              psm: 13,
+              psm: 4,
               oem: 1
             }
           }
@@ -249,6 +325,7 @@ export default function DeveloperSettings() {
       blueEmphasis: 'very-high',
       contrast: 'very-high',
       morphKernelSize: '3',
+      morphKernelType: 'rect',
       confidenceThreshold: '35',
       grayscaleMethod: 'blue-channel',
       autoInvert: true,
@@ -256,6 +333,13 @@ export default function DeveloperSettings() {
       edgeEnhancement: true,
       noiseReduction: true,
       adaptiveContrast: true,
+      preprocessing: 'adaptive-threshold',
+      denoising: 'median',
+      edgeDetection: 'none',
+      deskewing: false,
+      deblurring: 'none',
+      contrastEnhancement: 'none',
+      angleCorrection: false,
       tesseractConfig: {
         psm: 7,
         oem: 1
@@ -278,6 +362,7 @@ export default function DeveloperSettings() {
     const newPreset: Preset = {
       id: `preset-${Date.now()}`,
       name: newPresetName,
+      description: newPresetDescription || undefined,
       settings: { ...settings }
     }
 
@@ -286,6 +371,7 @@ export default function DeveloperSettings() {
     localStorage.setItem('scanner-presets', JSON.stringify(updatedPresets))
     setActivePresetId(newPreset.id)
     setNewPresetName("")
+    setNewPresetDescription("")
     setShowNewPresetDialog(false)
     
     toast.success(`Preset "${newPresetName}" saved`)
@@ -336,6 +422,11 @@ export default function DeveloperSettings() {
   const getActivePresetName = () => {
     const preset = presets.find(p => p.id === activePresetId)
     return preset ? preset.name : "Unknown"
+  }
+
+  const getActivePresetDescription = () => {
+    const preset = presets.find(p => p.id === activePresetId)
+    return preset?.description || ""
   }
 
   return (
@@ -438,6 +529,9 @@ export default function DeveloperSettings() {
                             </div>
                             <div>
                               <div className="font-medium text-sm">{preset.name}</div>
+                              {preset.description && (
+                                <div className="text-xs text-muted-foreground mb-1">{preset.description}</div>
+                              )}
                               <div className="text-xs text-muted-foreground">
                                 {preset.isDefault && "(Default) "}
                                 PSM: {preset.settings.tesseractConfig.psm}, 
@@ -450,12 +544,19 @@ export default function DeveloperSettings() {
                     ))}
                   </div>
                 </ScrollArea>
-                <p className="text-xs text-muted-foreground">
-                  Current: {getActivePresetName()}
-                </p>
+                <div className="text-xs">
+                  <p className="text-muted-foreground">
+                    Current: {getActivePresetName()}
+                  </p>
+                  {getActivePresetDescription() && (
+                    <p className="text-muted-foreground mt-1">
+                      {getActivePresetDescription()}
+                    </p>
+                  )}
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="space-y-4">
                   <div className="space-y-4 border-b pb-4">
                     <Label className="text-base font-medium">Image Processing Features</Label>
@@ -539,6 +640,38 @@ export default function DeveloperSettings() {
                           }
                         />
                       </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="deskewing" className="flex-1">
+                          Deskewing
+                          <p className="text-sm text-muted-foreground">
+                            Automatically correct skewed text
+                          </p>
+                        </Label>
+                        <Switch
+                          id="deskewing"
+                          checked={settings.deskewing}
+                          onCheckedChange={(checked) =>
+                            setSettings(prev => ({ ...prev, deskewing: checked }))
+                          }
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="angle-correction" className="flex-1">
+                          Angle Correction
+                          <p className="text-sm text-muted-foreground">
+                            Use Hough transform to correct rotation
+                          </p>
+                        </Label>
+                        <Switch
+                          id="angle-correction"
+                          checked={settings.angleCorrection}
+                          onCheckedChange={(checked) =>
+                            setSettings(prev => ({ ...prev, angleCorrection: checked }))
+                          }
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -546,7 +679,7 @@ export default function DeveloperSettings() {
                     <Label className="text-base font-medium">Grayscale Method</Label>
                     <RadioGroup
                       value={settings.grayscaleMethod}
-                      onValueChange={(value: 'luminosity' | 'average' | 'blue-channel') => 
+                      onValueChange={(value: 'luminosity' | 'average' | 'blue-channel' | 'red-channel' | 'green-channel') => 
                         setSettings(prev => ({ ...prev, grayscaleMethod: value }))
                       }
                       className="mt-2 space-y-2"
@@ -561,7 +694,15 @@ export default function DeveloperSettings() {
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="blue-channel" id="gray-blue" />
-                        <Label htmlFor="gray-blue">Blue Channel Only</Label>
+                        <Label htmlFor="gray-blue">Blue Channel Only (VIN Plates)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="green-channel" id="gray-green" />
+                        <Label htmlFor="gray-green">Green Channel (Screens/Print)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="red-channel" id="gray-red" />
+                        <Label htmlFor="gray-red">Red Channel (Glare Reduction)</Label>
                       </div>
                     </RadioGroup>
                   </div>
@@ -593,30 +734,6 @@ export default function DeveloperSettings() {
                       </div>
                     </RadioGroup>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-base font-medium">Contrast Enhancement</Label>
-                    <RadioGroup
-                      value={settings.contrast}
-                      onValueChange={(value: 'normal' | 'high' | 'very-high') => 
-                        setSettings(prev => ({ ...prev, contrast: value }))
-                      }
-                      className="mt-2 space-y-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="normal" id="contrast-normal" />
-                        <Label htmlFor="contrast-normal">Normal (0.5/1.5)</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="high" id="contrast-high" />
-                        <Label htmlFor="contrast-high">High (0.4/1.7)</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="very-high" id="contrast-very-high" />
-                        <Label htmlFor="contrast-very-high">Very High (0.3/1.9)</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
                 </div>
 
                 <div className="space-y-4">
@@ -629,7 +746,7 @@ export default function DeveloperSettings() {
                           ...prev,
                           tesseractConfig: {
                             ...prev.tesseractConfig,
-                            psm: parseInt(value) as 6 | 7 | 8 | 13
+                            psm: parseInt(value) as 6 | 7 | 8 | 13 | 4
                           }
                         }))
                       }
@@ -650,6 +767,10 @@ export default function DeveloperSettings() {
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="13" id="psm-13" />
                         <Label htmlFor="psm-13">Raw Line (PSM 13)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="4" id="psm-4" />
+                        <Label htmlFor="psm-4">Column of Text (PSM 4)</Label>
                       </div>
                     </RadioGroup>
                   </div>
@@ -684,22 +805,192 @@ export default function DeveloperSettings() {
                     <Label className="text-base font-medium">Morphological Kernel Size</Label>
                     <RadioGroup
                       value={settings.morphKernelSize}
-                      onValueChange={(value: '2' | '3' | '4') => 
+                      onValueChange={(value: '2' | '3' | '4' | '5') => 
                         setSettings(prev => ({ ...prev, morphKernelSize: value }))
                       }
                       className="mt-2 space-y-2"
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="2" id="kernel-2" />
-                        <Label htmlFor="kernel-2">2px</Label>
+                        <Label htmlFor="kernel-2">2px (Minimal)</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="3" id="kernel-3" />
-                        <Label htmlFor="kernel-3">3px</Label>
+                        <Label htmlFor="kernel-3">3px (Standard)</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="4" id="kernel-4" />
-                        <Label htmlFor="kernel-4">4px</Label>
+                        <Label htmlFor="kernel-4">4px (Medium)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="5" id="kernel-5" />
+                        <Label htmlFor="kernel-5">5px (Aggressive)</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-base font-medium">Kernel Type</Label>
+                    <RadioGroup
+                      value={settings.morphKernelType}
+                      onValueChange={(value: 'rect' | 'cross' | 'ellipse') => 
+                        setSettings(prev => ({ ...prev, morphKernelType: value }))
+                      }
+                      className="mt-2 space-y-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="rect" id="kernel-rect" />
+                        <Label htmlFor="kernel-rect">Rectangular (General)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="cross" id="kernel-cross" />
+                        <Label htmlFor="kernel-cross">Cross (Reflection Removal)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="ellipse" id="kernel-ellipse" />
+                        <Label htmlFor="kernel-ellipse">Elliptical (Smoother)</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-base font-medium">Preprocessing Method</Label>
+                    <RadioGroup
+                      value={settings.preprocessing}
+                      onValueChange={(value: 'basic' | 'adaptive-threshold' | 'clahe' | 'high-pass' | 'inverted-threshold' | 'deskewing') => 
+                        setSettings(prev => ({ ...prev, preprocessing: value }))
+                      }
+                      className="mt-2 space-y-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="basic" id="preprocess-basic" />
+                        <Label htmlFor="preprocess-basic">Basic (Simple Threshold)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="adaptive-threshold" id="preprocess-adaptive" />
+                        <Label htmlFor="preprocess-adaptive">Adaptive Threshold</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="clahe" id="preprocess-clahe" />
+                        <Label htmlFor="preprocess-clahe">CLAHE (Best for Low Light)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="high-pass" id="preprocess-highpass" />
+                        <Label htmlFor="preprocess-highpass">High-Pass Filter (Screens)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="inverted-threshold" id="preprocess-inverted" />
+                        <Label htmlFor="preprocess-inverted">Inverted Threshold (Bright)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="deskewing" id="preprocess-deskew" />
+                        <Label htmlFor="preprocess-deskew">Deskewing (Angled Text)</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-base font-medium">Denoising Method</Label>
+                    <RadioGroup
+                      value={settings.denoising}
+                      onValueChange={(value: 'none' | 'median' | 'gaussian' | 'bilateral' | 'non-local-means') => 
+                        setSettings(prev => ({ ...prev, denoising: value }))
+                      }
+                      className="mt-2 space-y-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="none" id="denoise-none" />
+                        <Label htmlFor="denoise-none">None</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="median" id="denoise-median" />
+                        <Label htmlFor="denoise-median">Median Filter (Standard)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="gaussian" id="denoise-gaussian" />
+                        <Label htmlFor="denoise-gaussian">Gaussian (Screen Content)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="bilateral" id="denoise-bilateral" />
+                        <Label htmlFor="denoise-bilateral">Bilateral (Preserves Edges)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="non-local-means" id="denoise-nlm" />
+                        <Label htmlFor="denoise-nlm">Non-Local Means (Best Quality)</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-base font-medium">Edge Detection</Label>
+                    <RadioGroup
+                      value={settings.edgeDetection}
+                      onValueChange={(value: 'none' | 'canny' | 'sobel') => 
+                        setSettings(prev => ({ ...prev, edgeDetection: value }))
+                      }
+                      className="mt-2 space-y-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="none" id="edge-none" />
+                        <Label htmlFor="edge-none">None</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="canny" id="edge-canny" />
+                        <Label htmlFor="edge-canny">Canny (Precise)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="sobel" id="edge-sobel" />
+                        <Label htmlFor="edge-sobel">Sobel (Stronger)</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-base font-medium">Deblurring Method</Label>
+                    <RadioGroup
+                      value={settings.deblurring}
+                      onValueChange={(value: 'none' | 'gaussian' | 'wiener') => 
+                        setSettings(prev => ({ ...prev, deblurring: value }))
+                      }
+                      className="mt-2 space-y-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="none" id="deblur-none" />
+                        <Label htmlFor="deblur-none">None</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="gaussian" id="deblur-gaussian" />
+                        <Label htmlFor="deblur-gaussian">Gaussian Blur</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="wiener" id="deblur-wiener" />
+                        <Label htmlFor="deblur-wiener">Wiener Filter (Advanced)</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-base font-medium">Contrast Enhancement</Label>
+                    <RadioGroup
+                      value={settings.contrastEnhancement}
+                      onValueChange={(value: 'none' | 'histogram-equalization' | 'clahe') => 
+                        setSettings(prev => ({ ...prev, contrastEnhancement: value }))
+                      }
+                      className="mt-2 space-y-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="none" id="contrast-none" />
+                        <Label htmlFor="contrast-none">None</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="histogram-equalization" id="contrast-equalization" />
+                        <Label htmlFor="contrast-equalization">Histogram Equalization</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="clahe" id="contrast-clahe" />
+                        <Label htmlFor="contrast-clahe">CLAHE (Adaptive)</Label>
                       </div>
                     </RadioGroup>
                   </div>
@@ -715,15 +1006,15 @@ export default function DeveloperSettings() {
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="35" id="confidence-35" />
-                        <Label htmlFor="confidence-35">35%</Label>
+                        <Label htmlFor="confidence-35">35% (More Results)</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="40" id="confidence-40" />
-                        <Label htmlFor="confidence-40">40%</Label>
+                        <Label htmlFor="confidence-40">40% (Balanced)</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="45" id="confidence-45" />
-                        <Label htmlFor="confidence-45">45%</Label>
+                        <Label htmlFor="confidence-45">45% (More Accurate)</Label>
                       </div>
                     </RadioGroup>
                   </div>
@@ -842,6 +1133,18 @@ export default function DeveloperSettings() {
                 onChange={(e) => setNewPresetName(e.target.value)}
                 className="col-span-3"
                 placeholder="e.g., 'High Contrast VIN Setting'"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="preset-description" className="text-right">
+                Description
+              </Label>
+              <Input
+                id="preset-description"
+                value={newPresetDescription}
+                onChange={(e) => setNewPresetDescription(e.target.value)}
+                className="col-span-3"
+                placeholder="Optional description of this preset"
               />
             </div>
           </div>
