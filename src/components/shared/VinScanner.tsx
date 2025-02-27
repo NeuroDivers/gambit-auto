@@ -260,13 +260,22 @@ export function VinScanner({ onScan }: VinScannerProps) {
         return
       }
 
-      const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
+      const { data: { text, confidence, words } } = await workerRef.current.recognize(frameData)
       
+      addLog(`Raw scan result: ${text}`)
+      addLog(`Individual words detected: ${JSON.stringify(words)}`)
       addLog(`Raw confidence: ${confidence}%`)
+      
       const correctedText = correctCommonOcrMistakes(text)
+      addLog(`After corrections: ${correctedText}`)
+      
+      const charComparison = text.split('').map((char, i) => {
+        return `${char}->${correctedText[i] || ''}`
+      }).join(', ')
+      addLog(`Character transformations: ${charComparison}`)
       
       if (confidence < 40 || correctedText.length < 15) {
-        addLog(`Low quality scan: Confidence ${confidence}%, Length: ${correctedText.length}`)
+        addLog(`Low quality scan rejected: Confidence ${confidence}%, Length: ${correctedText.length}`)
         if (shouldScan) {
           scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
         }
@@ -289,7 +298,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
             addLog('NHTSA validation failed - continuing scan...')
           }
         } else {
-          addLog('Local VIN validation failed - continuing scan...')
+          addLog(`Local VIN validation failed - Reason: Invalid format`)
         }
       }
       
@@ -317,13 +326,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
       return null
     }
 
-    // Match the scan area with the outline box (95% width, 40px height)
     const scanAreaWidth = video.videoWidth * 0.95
-    const scanAreaHeight = (40 / video.clientHeight) * video.videoHeight // Convert 40px to video height ratio
+    const scanAreaHeight = (40 / video.clientHeight) * video.videoHeight
     const startX = (video.videoWidth - scanAreaWidth) / 2
     const startY = (video.videoHeight - scanAreaHeight) / 2
 
-    // Log scanning dimensions
     addLog(`Scan area: ${Math.round(scanAreaWidth)}x${Math.round(scanAreaHeight)} px`)
 
     const tempCanvas = document.createElement('canvas')
@@ -409,7 +416,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
               ref={canvasRef}
               className="absolute inset-0 h-full w-full object-cover opacity-0"
             />
-            {/* Simplified scanning area */}
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] h-40">
               <div className="absolute inset-0 border-2 border-primary rounded-lg" />
               <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/60 px-4 py-2 rounded-lg">
