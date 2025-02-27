@@ -29,3 +29,8 @@ export const SelectItem = React.forwardRef<
   </SelectPrimitive.Item>
 ))
 SelectItem.displayName = SelectPrimitive.Item.displayName
+
+// Change the export from a named export to a default export
+export default function ScanVin() {
+  // Implementation of ScanVin component would go here
+}
