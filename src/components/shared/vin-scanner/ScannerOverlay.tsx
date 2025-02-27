@@ -54,37 +54,6 @@ export function ScannerOverlay({
       <DialogDescription className="sr-only">
         Position the VIN number within the scanning frame to capture it automatically. The scanner will detect standard 17-character VIN codes.
       </DialogDescription>
-
-      <div className="mt-4 flex items-center justify-center gap-4">
-        <Label htmlFor="scan-mode" className="text-white text-sm">
-          Recognition Mode
-        </Label>
-        <div className="flex items-center gap-2">
-          <Label
-            htmlFor="scan-mode-text"
-            className={`text-sm ${
-              scanMode === "text" ? "text-white" : "text-white/60"
-            }`}
-          >
-            OCR
-          </Label>
-          <Switch
-            id="scan-mode"
-            checked={scanMode === "barcode"}
-            onCheckedChange={(checked) =>
-              onScanModeChange(checked ? "barcode" : "text")
-            }
-          />
-          <Label
-            htmlFor="scan-mode-barcode"
-            className={`text-sm ${
-              scanMode === "barcode" ? "text-white" : "text-white/60"
-            }`}
-          >
-            Barcode
-          </Label>
-        </div>
-      </div>
     </div>
   )
 }

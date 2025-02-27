@@ -10,6 +10,8 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { validateVIN, validateVinWithNHTSA } from "@/utils/vin-validation"
 import { preprocessImage } from "@/utils/image-processing"
 import { ScannerOverlay } from "./vin-scanner/ScannerOverlay"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 
 interface VinScannerProps {
   onScan: (vin: string) => void
@@ -696,7 +698,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       </Button>
 
       <Dialog open={isDialogOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-md p-0 h-[100dvh] sm:h-[100dvh] [&>button]:hidden flex flex-col">
+        <DialogContent className="sm:max-w-md p-0 h-[100dvh] sm:h-auto [&>button]:hidden flex flex-col">
           <ScannerOverlay
             scanMode={scanMode}
             onScanModeChange={handleScanModeChange}
@@ -782,6 +784,37 @@ export function VinScanner({ onScan }: VinScannerProps) {
             )}
           </div>
           <div className="bg-muted p-4">
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <Label htmlFor="scan-mode" className="text-sm">
+                Recognition Mode
+              </Label>
+              <div className="flex items-center gap-2">
+                <Label
+                  htmlFor="scan-mode-text"
+                  className={`text-sm ${
+                    scanMode === "text" ? "text-foreground" : "text-muted-foreground"
+                  }`}
+                >
+                  OCR
+                </Label>
+                <Switch
+                  id="scan-mode"
+                  checked={scanMode === "barcode"}
+                  onCheckedChange={(checked) =>
+                    handleScanModeChange(checked ? "barcode" : "text")
+                  }
+                />
+                <Label
+                  htmlFor="scan-mode-barcode"
+                  className={`text-sm ${
+                    scanMode === "barcode" ? "text-foreground" : "text-muted-foreground"
+                  }`}
+                >
+                  Barcode
+                </Label>
+              </div>
+            </div>
+            
             {lastScanDuration !== null && (
               <div className="mb-2 text-sm font-medium text-primary">
                 Last successful scan took: {lastScanDuration.toFixed(2)} seconds
