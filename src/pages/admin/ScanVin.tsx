@@ -140,7 +140,8 @@ export default function ScanVin() {
   
   // Handle manual VIN submission
   const handleManualVinSubmit = async () => {
-    const vinInput = document.getElementById("manual-vin-input");
+    // Fix: Explicitly type the input element as HTMLInputElement
+    const vinInput = document.getElementById("manual-vin-input") as HTMLInputElement;
     if (!vinInput) return;
     
     const enteredVin = vinInput.value;
