@@ -116,17 +116,22 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const initializeWorker = async () => {
     try {
-      addLog('Initializing OCR worker with basic settings...')
+      addLog('Initializing OCR worker with enhanced settings...')
       const worker = await createWorker()
       
       await worker.reinitialize('eng')
       await worker.setParameters({
         tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
         tessedit_pageseg_mode: PSM.SINGLE_LINE,
-        preserve_interword_spaces: '0'
+        preserve_interword_spaces: '0',
+        tessedit_min_word_length: 17,
+        tessjs_create_word_level_boxes: '1',
+        tessjs_create_box: '1',
+        debug_file: '/dev/null',
+        tessjs_mock_parameter: '1'
       })
 
-      addLog('OCR worker initialized')
+      addLog('OCR worker initialized with enhanced settings')
       return worker
     } catch (error) {
       addLog(`Error initializing OCR worker: ${error}`)
@@ -154,7 +159,16 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: true
+        video: {
+          facingMode: { exact: "environment" },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
+      }).catch(async () => {
+        addLog('Falling back to default camera...')
+        return await navigator.mediaDevices.getUserMedia({
+          video: true
+        })
       })
       
       if (videoRef.current) {
@@ -168,6 +182,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
         if ('torch' in capabilities) {
           addLog('Flash capability detected')
         }
+        
+        const settings = track.getSettings()
+        addLog(`Camera: ${settings.facingMode || 'unknown'} facing`)
         
         await new Promise((resolve) => {
           if (videoRef.current) {
@@ -326,12 +343,17 @@ export function VinScanner({ onScan }: VinScannerProps) {
       return null
     }
 
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+
     const scanAreaWidth = video.videoWidth * 0.95
     const scanAreaHeight = (40 / video.clientHeight) * video.videoHeight
     const startX = (video.videoWidth - scanAreaWidth) / 2
     const startY = (video.videoHeight - scanAreaHeight) / 2
 
+    addLog(`Video dimensions: ${video.videoWidth}x${video.videoHeight}`)
     addLog(`Scan area: ${Math.round(scanAreaWidth)}x${Math.round(scanAreaHeight)} px`)
+    addLog(`Scan position: ${Math.round(startX)},${Math.round(startY)}`)
 
     const tempCanvas = document.createElement('canvas')
     tempCanvas.width = scanAreaWidth
@@ -348,7 +370,21 @@ export function VinScanner({ onScan }: VinScannerProps) {
       0, 0, scanAreaWidth, scanAreaHeight
     )
 
-    return preprocessImage(tempCanvas)
+    const scaledCanvas = document.createElement('canvas')
+    scaledCanvas.width = scanAreaWidth * 2
+    scaledCanvas.height = scanAreaHeight * 2
+    const scaledCtx = scaledCanvas.getContext('2d')
+    
+    if (scaledCtx) {
+      scaledCtx.imageSmoothingEnabled = false
+      scaledCtx.drawImage(
+        tempCanvas,
+        0, 0, tempCanvas.width, tempCanvas.height,
+        0, 0, scaledCanvas.width, scaledCanvas.height
+      )
+    }
+
+    return preprocessImage(scaledCanvas)
   }
 
   const handleClose = async () => {
