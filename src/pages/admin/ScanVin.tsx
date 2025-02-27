@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createWorker, PSM } from 'tesseract.js'
 import { BrowserMultiFormatReader, BarcodeFormat } from '@zxing/library'
-import { validateVIN, postProcessVIN, validateVinWithNHTSA, decodeVIN } from "@/utils/vin-validation"
+import { validateVIN, postProcessVIN, validateVinWithNHTSA } from "@/utils/vin-validation"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { preprocessImage } from "@/utils/image-processing"
 import { toast } from "sonner"
@@ -26,6 +26,91 @@ interface VehicleInfo {
 interface ExtendedTrackCapabilities extends MediaTrackCapabilities {
   torch?: boolean;
 }
+
+// Simple VIN decoder implementation since we don't have access to the imported one
+const decodeVIN = (vin: string): {
+  country: string;
+  manufacturer: string;
+  vehicleType: string;
+} => {
+  // Default return object
+  const result = {
+    country: 'Unknown',
+    manufacturer: 'Unknown',
+    vehicleType: 'Unknown',
+  };
+  
+  if (!vin || vin.length !== 17) {
+    return result;
+  }
+  
+  // Extract codes
+  const countryCode = vin.charAt(0);
+  const manufacturerCode = vin.charAt(1);
+  
+  // Determine country of origin (1st character)
+  const countryMap: {[key: string]: string} = {
+    '1': 'United States',
+    '4': 'United States',
+    '5': 'United States',
+    '2': 'Canada',
+    '3': 'Mexico',
+    'J': 'Japan',
+    'K': 'South Korea',
+    'L': 'China',
+    'S': 'United Kingdom',
+    'V': 'France/Spain',
+    'W': 'Germany',
+    'Y': 'Sweden/Finland',
+    'Z': 'Italy',
+    '9': 'Brazil'
+  };
+  result.country = countryMap[countryCode] || 'Unknown';
+  
+  // Determine manufacturer (2nd character)
+  const manufacturerMap: {[key: string]: string} = {
+    'A': 'Audi/Jaguar',
+    'B': 'BMW/Dodge',
+    'C': 'Chrysler',
+    'F': 'Ford',
+    'G': 'General Motors',
+    'H': 'Honda/Hyundai',
+    'J': 'Jeep',
+    'L': 'Lincoln',
+    'M': 'Mazda/Mercedes-Benz',
+    'N': 'Nissan',
+    'T': 'Toyota',
+    'V': 'Volvo/Volkswagen'
+  };
+  result.manufacturer = manufacturerMap[manufacturerCode] || 'Unknown';
+  
+  // Set vehicle type based on WMI (first 3 characters)
+  const wmi = vin.substring(0, 3);
+  const vehicleTypeMap: {[key: string]: string} = {
+    '1GC': 'Chevrolet Truck',
+    '1G1': 'Chevrolet Passenger Car',
+    '1GY': 'Cadillac',
+    'JHM': 'Honda Passenger Car',
+    'WBA': 'BMW Passenger Car',
+    'WAU': 'Audi',
+    '1FA': 'Ford Passenger Car',
+    '1FT': 'Ford Truck',
+    '2T1': 'Toyota Passenger Car (Canada)',
+    '3VW': 'Volkswagen (Mexico)',
+    '5YJ': 'Tesla',
+    'JN1': 'Nissan Passenger Car',
+    'JH4': 'Acura Passenger Car',
+    'KM8': 'Hyundai SUV',
+    'KND': 'Kia SUV',
+    'WDD': 'Mercedes-Benz Passenger Car',
+    'WP0': 'Porsche Passenger Car',
+    'YV1': 'Volvo Passenger Car',
+    // Add more as needed
+  };
+  result.vehicleType = vehicleTypeMap[wmi] || 'Unknown';
+  
+  return result;
+};
 
 export default function ScanVin() {
   const navigate = useNavigate()
@@ -708,10 +793,8 @@ export default function ScanVin() {
   const getVinDetails = () => {
     if (!detectedVehicle?.vin) return null
     
-    // Use the decoding function to get details
-    const decoded = decodeVIN(detectedVehicle.vin)
-    
-    return decoded
+    // Use the local decoding function to get details
+    return decodeVIN(detectedVehicle.vin)
   }
   
   const vinDetails = getVinDetails()
