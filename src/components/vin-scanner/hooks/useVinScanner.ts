@@ -1,6 +1,7 @@
+
 import { useState, useRef, useCallback, useEffect } from "react";
 import { createWorker, PSM } from 'tesseract.js';
-import { BrowserMultiFormatReader, BarcodeFormat } from '@zxing/library';
+import { BrowserMultiFormatReader, BarcodeFormat, Result } from '@zxing/library';
 import { toast } from "sonner";
 import { preprocessImage } from "@/utils/image-processing";
 import { validateVIN, postProcessVIN, validateVinWithNHTSA } from "@/utils/vin-validation";
@@ -513,14 +514,17 @@ export const useVinScanner = ({
             if (!videoRef.current || !barcodeReaderRef.current || !isMountedRef.current) return;
             
             const resultPromise = barcodeReaderRef.current.decodeOnce(videoRef.current);
-            const timeoutPromise = new Promise((_, reject) => {
+            const timeoutPromise = new Promise<never>((_, reject) => {
               setTimeout(() => reject(new Error('Barcode detection timed out')), 3000);
             });
             
-            const result = await Promise.race([resultPromise, timeoutPromise]);
+            // Properly type the result from Promise.race
+            const result = await Promise.race<Result>([resultPromise, timeoutPromise]);
+            
             if (!isMountedRef.current) return;
             
-            if (result?.getText()) {
+            // Now result is properly typed as Result
+            if (result && result.getText) {
               let scannedValue = result.getText();
               addLog(`Raw barcode detected: ${scannedValue}`);
               
