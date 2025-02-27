@@ -58,7 +58,7 @@ export default function CreateQuote() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/admin/estimates')}
+            onClick={() => navigate('/estimates')}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
