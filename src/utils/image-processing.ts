@@ -12,31 +12,27 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
     contrast = 'very-high',
     morphKernelSize = '3',
     grayscaleMethod = 'blue-channel',
-    autoInvertLight = true,
-    autoInvertDark = false,
+    autoInvert = true,
     edgeEnhancement = true,
     noiseReduction = true,
     adaptiveContrast = true
   } = settings
 
-  // Calculate average brightness
-  let totalBrightness = 0
-  for (let i = 0; i < data.length; i += 4) {
-    totalBrightness += (data[i] + data[i + 1] + data[i + 2]) / 3
-  }
-  const avgBrightness = totalBrightness / (data.length / 4)
-  
-  // Determine if we should invert based on settings and brightness
-  const shouldInvert = (
-    (autoInvertLight && avgBrightness < 128) || // Light text on dark background
-    (autoInvertDark && avgBrightness >= 128)    // Dark text on light background
-  )
-
-  if (shouldInvert) {
+  // Auto invert if enabled
+  if (autoInvert) {
+    let totalBrightness = 0
     for (let i = 0; i < data.length; i += 4) {
-      data[i] = 255 - data[i]         // Invert red
-      data[i + 1] = 255 - data[i + 1] // Invert green
-      data[i + 2] = 255 - data[i + 2] // Invert blue
+      totalBrightness += (data[i] + data[i + 1] + data[i + 2]) / 3
+    }
+    const avgBrightness = totalBrightness / (data.length / 4)
+    const lightTextOnDark = avgBrightness < 128
+
+    if (lightTextOnDark) {
+      for (let i = 0; i < data.length; i += 4) {
+        data[i] = 255 - data[i]
+        data[i + 1] = 255 - data[i + 1]
+        data[i + 2] = 255 - data[i + 2]
+      }
     }
   }
 
