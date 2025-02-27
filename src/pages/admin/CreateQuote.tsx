@@ -94,7 +94,7 @@ export default function CreateQuote() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={onSubmit} className="space-y-6">
           <div className="flex justify-end">
             <Button
               type="button"
