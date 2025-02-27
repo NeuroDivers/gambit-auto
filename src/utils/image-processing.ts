@@ -1,3 +1,4 @@
+
 export const preprocessImage = (canvas: HTMLCanvasElement): string => {
   const ctx = canvas.getContext('2d')
   if (!ctx) return canvas.toDataURL()
@@ -43,13 +44,51 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
   // Apply pre-sharpen for initial edge enhancement
   if (edgeEnhancement) {
     const sharpenKernel = [
-      -1, -1, -1,
-      -1,  9, -1,
-      -1, -1, -1
+      -0.5, -0.5, -0.5,
+      -0.5,  5.0, -0.5,
+      -0.5, -0.5, -0.5
     ]
-    const sharpenedData = applyConvolution(data, canvas.width, canvas.height, sharpenKernel)
+    // Create a copy of the data for the convolution
+    const tempData = new Uint8ClampedArray(data.length)
+    for (let y = 1; y < canvas.height - 1; y++) {
+      for (let x = 1; x < canvas.width - 1; x++) {
+        const idx = (y * canvas.width + x) * 4
+        let sumR = 0, sumG = 0, sumB = 0
+
+        // Apply convolution only to non-edge pixels
+        for (let ky = -1; ky <= 1; ky++) {
+          for (let kx = -1; kx <= 1; kx++) {
+            const kernelIdx = (ky + 1) * 3 + (kx + 1)
+            const pixelIdx = ((y + ky) * canvas.width + (x + kx)) * 4
+            sumR += data[pixelIdx] * sharpenKernel[kernelIdx]
+            sumG += data[pixelIdx + 1] * sharpenKernel[kernelIdx]
+            sumB += data[pixelIdx + 2] * sharpenKernel[kernelIdx]
+          }
+        }
+
+        tempData[idx] = Math.min(255, Math.max(0, sumR))
+        tempData[idx + 1] = Math.min(255, Math.max(0, sumG))
+        tempData[idx + 2] = Math.min(255, Math.max(0, sumB))
+        tempData[idx + 3] = data[idx + 3] // Preserve alpha
+      }
+    }
+
+    // Copy edge pixels without modification
+    for (let y = 0; y < canvas.height; y++) {
+      for (let x = 0; x < canvas.width; x++) {
+        if (y === 0 || y === canvas.height - 1 || x === 0 || x === canvas.width - 1) {
+          const idx = (y * canvas.width + x) * 4
+          tempData[idx] = data[idx]
+          tempData[idx + 1] = data[idx + 1]
+          tempData[idx + 2] = data[idx + 2]
+          tempData[idx + 3] = data[idx + 3]
+        }
+      }
+    }
+
+    // Copy back the processed data
     for (let i = 0; i < data.length; i++) {
-      data[i] = sharpenedData[i]
+      data[i] = tempData[i]
     }
   }
 
@@ -117,28 +156,19 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
     data[i] = data[i + 1] = data[i + 2] = gray
   }
 
-  // Double-pass edge enhancement if enabled
-  if (edgeEnhancement) {
-    const blurRadius = 1
-    const amount = 2.0  // Increased from 1.5
-    const threshold = 5 // Reduced from 10
-    applyUnsharpMask(data, canvas.width, canvas.height, blurRadius, amount, threshold)
-  }
-
-  // Apply morphological operations
-  const mKernelSize = parseInt(morphKernelSize)
-  // Dilate first to thicken characters
-  dilate(data, canvas.width, canvas.height, mKernelSize)
-  dilate(data, canvas.width, canvas.height, mKernelSize) // Second pass
-  // Then erode to clean up
-  erode(data, canvas.width, canvas.height, mKernelSize)
-
   // Apply noise reduction if enabled
   if (noiseReduction) {
     // Double pass median filter with small radius
     applyMedianFilter(data, canvas.width, canvas.height, 1)
     applyMedianFilter(data, canvas.width, canvas.height, 1)
   }
+
+  // Apply morphological operations
+  const mKernelSize = parseInt(morphKernelSize)
+  // Dilate first to thicken characters
+  dilate(data, canvas.width, canvas.height, mKernelSize)
+  // Then erode to clean up
+  erode(data, canvas.width, canvas.height, mKernelSize)
 
   // Final contrast adjustment to ensure black/white separation
   for (let i = 0; i < data.length; i += 4) {
