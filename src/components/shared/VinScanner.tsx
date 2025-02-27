@@ -307,6 +307,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         
         await videoRef.current.play()
         addLog('Video stream started')
+        setIsCameraActive(true)
 
         if (scanMode === 'text') {
           addLog('Starting OCR initialization...')
@@ -575,10 +576,44 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const handleScanModeChange = async (value: string) => {
     if (value === 'text' || value === 'barcode') {
+      addLog(`Switching scan mode to: ${value}`)
       setScanMode(value as 'text' | 'barcode')
-      stopCamera()
-      setLogs([])
-      await startCamera()
+      
+      // First properly clean up the current mode
+      if (scanningRef.current) {
+        cancelAnimationFrame(scanningRef.current)
+        scanningRef.current = undefined
+      }
+      
+      if (workerRef.current) {
+        addLog('Terminating OCR worker before mode change')
+        await workerRef.current.terminate()
+        workerRef.current = null
+      }
+      
+      if (barcodeReaderRef.current) {
+        addLog('Resetting barcode reader before mode change')
+        barcodeReaderRef.current.reset()
+        barcodeReaderRef.current = null
+      }
+      
+      // Need to ensure we have an active camera before switching modes
+      if (!isCameraActive || !streamRef.current) {
+        addLog('Camera not active, restarting camera with new mode')
+        stopCamera()
+        await startCamera()
+      } else {
+        // Camera is already active, just initialize the new scanner mode
+        if (value === 'text') {
+          addLog('Initializing OCR for text mode')
+          workerRef.current = await initializeWorker()
+          setIsScanning(true)
+          startOCRScanning(true)
+        } else {
+          addLog('Initializing barcode scanner for barcode mode')
+          await initializeBarcodeScanner()
+        }
+      }
     }
   }
 
