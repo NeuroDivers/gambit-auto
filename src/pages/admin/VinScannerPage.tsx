@@ -4,7 +4,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { BrowserMultiFormatReader } from '@zxing/library'
-import { createWorker } from 'tesseract.js'
+import { createWorker, PSM } from 'tesseract.js'
 import { ArrowLeft, Camera, Clipboard, Text, Barcode, List, CheckCircle, XCircle, RotateCcw, Loader2 } from "lucide-react"
 import { toast } from 'sonner'
 import { Toggle } from "@/components/ui/toggle"
@@ -145,6 +145,22 @@ export default function VinScannerPage() {
     }
   }
 
+  // Helper to convert numeric PSM to Tesseract PSM enum
+  const convertToPSM = (psmValue: number): PSM => {
+    switch (psmValue) {
+      case 6:
+        return PSM.SINGLE_BLOCK
+      case 7:
+        return PSM.SINGLE_LINE
+      case 8:
+        return PSM.SINGLE_WORD
+      case 13:
+        return PSM.RAW_LINE
+      default:
+        return PSM.SINGLE_LINE // default to SINGLE_LINE (7)
+    }
+  }
+
   // Fetch vehicle info for a given VIN
   const fetchVehicleInfo = async (vin: string) => {
     if (!vin || vin.length !== 17) return null
@@ -197,13 +213,16 @@ export default function VinScannerPage() {
         // Create Tesseract worker with the language model
         const newWorker = await createWorker('eng')
         
+        // Convert numeric PSM value to Tesseract PSM enum
+        const psmEnum = convertToPSM(tesseractConfig.psm)
+        
         // Set parameters after worker creation
         await newWorker.setParameters({
-          tessedit_pageseg_mode: tesseractConfig.psm.toString(),
+          tessedit_pageseg_mode: psmEnum,
           tessedit_ocr_engine_mode: tesseractConfig.oem.toString(),
         })
         
-        addLog(`OCR engine initialized with PSM=${tesseractConfig.psm}, OEM=${tesseractConfig.oem}`)
+        addLog(`OCR engine initialized with PSM=${tesseractConfig.psm} (${psmEnum}), OEM=${tesseractConfig.oem}`)
         setWorker(newWorker)
       } catch (err) {
         console.error('Failed to initialize Tesseract worker:', err)
