@@ -27,8 +27,9 @@ export const useVinScanner = ({
   const logsEndRef = useRef<HTMLDivElement>(null);
   const checkedVinsRef = useRef<Set<string>>(new Set());
   const [manualVin, setManualVin] = useState("");
+  const isMountedRef = useRef(true);
   
-  const toggleFlash = async () => {
+  const toggleFlash = useCallback(async () => {
     if (!streamRef.current) return;
     try {
       const track = streamRef.current.getVideoTracks()[0];
@@ -45,9 +46,9 @@ export const useVinScanner = ({
       addLog(`Flash control error: ${err}`);
       toast.error('Failed to toggle flash');
     }
-  };
+  }, [setIsFlashOn, addLog]);
 
-  const correctCommonOcrMistakes = (text: string): string[] => {
+  const correctCommonOcrMistakes = useCallback((text: string): string[] => {
     let cleanText = text
       .replace(/\s+/g, '')
       .toUpperCase();
@@ -86,9 +87,9 @@ export const useVinScanner = ({
     }
 
     return generateVinVariations(text);
-  };
+  }, [addLog, setTextDetected]);
 
-  const cleanVinBarcode = (scannedText: string): string => {
+  const cleanVinBarcode = useCallback((scannedText: string): string => {
     let cleaned = scannedText.trim();
     
     if (cleaned.startsWith('I') && cleaned.length === 18) {
@@ -99,9 +100,9 @@ export const useVinScanner = ({
     cleaned = cleaned.replace(/\s+/g, '').toUpperCase();
     
     return cleaned;
-  };
+  }, [addLog]);
 
-  const generateVinVariations = (text: string): string[] => {
+  const generateVinVariations = useCallback((text: string): string[] => {
     const handle9thCharacter = (char: string): string => {
       if (/[0-9X]/.test(char)) {
         return char;
@@ -183,12 +184,14 @@ export const useVinScanner = ({
     addLog(`Found ${validVariations.length} valid VIN pattern matches`);
     
     return validVariations;
-  };
+  }, [addLog]);
 
-  const initializeWorker = async () => {
+  const initializeWorker = useCallback(async () => {
     try {
       addLog('Initializing OCR worker with enhanced settings...');
       const worker = await createWorker();
+      
+      if (!isMountedRef.current) return null;
       
       await worker.reinitialize('eng');
       await worker.setParameters({
@@ -208,7 +211,7 @@ export const useVinScanner = ({
       addLog(`Error initializing OCR worker: ${error}`);
       throw error;
     }
-  };
+  }, [addLog]);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -217,6 +220,7 @@ export const useVinScanner = ({
     }
     if (scanningRef.current) {
       cancelAnimationFrame(scanningRef.current);
+      scanningRef.current = undefined;
     }
     if (barcodeReaderRef.current) {
       barcodeReaderRef.current.reset();
@@ -226,7 +230,7 @@ export const useVinScanner = ({
     setIsFlashOn(false);
   }, [setIsScanning, setIsFlashOn]);
 
-  const captureFrame = () => {
+  const captureFrame = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) {
       return null;
     }
@@ -281,9 +285,9 @@ export const useVinScanner = ({
     }
 
     return preprocessImage(scaledCanvas);
-  };
+  }, [addLog]);
 
-  const fetchVehicleInfo = async (vin: string): Promise<VehicleInfo | null> => {
+  const fetchVehicleInfo = useCallback(async (vin: string): Promise<VehicleInfo | null> => {
     setIsLoading(true);
     try {
       const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`);
@@ -312,9 +316,9 @@ export const useVinScanner = ({
       setIsLoading(false);
     }
     return null;
-  };
+  }, [setIsLoading, addLog]);
 
-  const checkVinValidity = async (vin: string) => {
+  const checkVinValidity = useCallback(async (vin: string) => {
     addLog(`Checking possible VIN: ${vin}`);
     
     if (validateVIN(vin)) {
@@ -335,25 +339,27 @@ export const useVinScanner = ({
       addLog(`Local VIN validation failed - Invalid format`);
     }
     return false;
-  };
+  }, [addLog, fetchVehicleInfo, setDetectedVehicle, setIsConfirmationView]);
 
-  const startOCRScanning = async (immediateScanning?: boolean) => {
+  const startOCRScanning = useCallback(async (immediateScanning?: boolean) => {
     const shouldScan = immediateScanning ?? true;
 
-    if (!streamRef.current || !workerRef.current || !shouldScan) {
+    if (!streamRef.current || !workerRef.current || !shouldScan || !isMountedRef.current) {
       return;
     }
 
     try {
       const frameData = captureFrame();
       if (!frameData) {
-        if (shouldScan) {
+        if (shouldScan && isMountedRef.current) {
           scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan));
         }
         return;
       }
 
       const { data: { text, confidence } } = await workerRef.current.recognize(frameData);
+      
+      if (!isMountedRef.current) return;
       
       addLog(`Raw scan result: ${text}`);
       addLog(`Raw confidence: ${confidence}%`);
@@ -368,6 +374,8 @@ export const useVinScanner = ({
       let foundValidVin = false;
       
       for (const vin of possibleVins) {
+        if (!isMountedRef.current) return;
+        
         if (!checkedVinsRef.current.has(vin)) {
           addLog(`Checking new VIN variation: ${vin}`);
           checkedVinsRef.current.add(vin);
@@ -382,19 +390,19 @@ export const useVinScanner = ({
         }
       }
 
-      if (!foundValidVin && shouldScan) {
+      if (!foundValidVin && shouldScan && isMountedRef.current) {
         scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan));
       }
     } catch (error) {
       addLog(`OCR error: ${error}`);
       setTextDetected(false);
-      if (shouldScan) {
+      if (shouldScan && isMountedRef.current) {
         scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan));
       }
     }
-  };
+  }, [addLog, captureFrame, checkVinValidity, correctCommonOcrMistakes, setTextDetected]);
 
-  const initializeBarcodeScanner = async () => {
+  const initializeBarcodeScanner = useCallback(async () => {
     try {
       const hints = new Map();
       const formats = [BarcodeFormat.CODE_39, BarcodeFormat.DATA_MATRIX, BarcodeFormat.CODE_128];
@@ -409,9 +417,11 @@ export const useVinScanner = ({
         
         const scanLoop = async () => {
           try {
-            if (!videoRef.current || !barcodeReaderRef.current) return;
+            if (!videoRef.current || !barcodeReaderRef.current || !isMountedRef.current) return;
             
             const result = await barcodeReaderRef.current.decodeOnce(videoRef.current);
+            if (!isMountedRef.current) return;
+            
             if (result?.getText()) {
               let scannedValue = result.getText();
               addLog(`Raw barcode detected: ${scannedValue}`);
@@ -425,6 +435,8 @@ export const useVinScanner = ({
                 addLog('Valid VIN detected!');
                 
                 const vehicleInfo = await fetchVehicleInfo(scannedValue);
+                if (!isMountedRef.current) return;
+                
                 if (vehicleInfo) {
                   addLog(`NHTSA validation passed - Valid VIN found!`);
                   addLog(`Vehicle Info - Make: ${vehicleInfo.make}, Model: ${vehicleInfo.model}, Year: ${vehicleInfo.year}`);
@@ -457,7 +469,9 @@ export const useVinScanner = ({
             setTextDetected(false);
           }
           
-          requestAnimationFrame(scanLoop);
+          if (isMountedRef.current) {
+            requestAnimationFrame(scanLoop);
+          }
         };
         
         scanLoop();
@@ -466,10 +480,12 @@ export const useVinScanner = ({
       addLog(`Error initializing barcode scanner: ${error}`);
       throw error;
     }
-  };
+  }, [addLog, cleanVinBarcode, fetchVehicleInfo, setDetectedVehicle, setIsConfirmationView, setTextDetected]);
 
   const startCamera = useCallback(async () => {
     try {
+      isMountedRef.current = true;
+      
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { exact: "environment" },
@@ -482,6 +498,12 @@ export const useVinScanner = ({
           video: true
         });
       });
+      
+      if (!isMountedRef.current) {
+        // Component unmounted during camera initialization
+        stream.getTracks().forEach(track => track.stop());
+        return;
+      }
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -498,11 +520,16 @@ export const useVinScanner = ({
         const settings = track.getSettings();
         addLog(`Camera: ${settings.facingMode || 'unknown'} facing`);
         
-        await new Promise((resolve) => {
-          if (videoRef.current) {
-            videoRef.current.onloadedmetadata = resolve;
+        await new Promise<void>((resolve) => {
+          if (!videoRef.current) {
+            resolve();
+            return;
           }
+          
+          videoRef.current.onloadedmetadata = () => resolve();
         });
+        
+        if (!isMountedRef.current || !videoRef.current) return;
         
         await videoRef.current.play();
         addLog('Video stream started');
@@ -510,6 +537,9 @@ export const useVinScanner = ({
         if (scanMode === 'text') {
           addLog('Starting OCR initialization...');
           workerRef.current = await initializeWorker();
+          
+          if (!isMountedRef.current) return;
+          
           addLog('Worker reference created');
           
           setIsScanning(true);
@@ -525,9 +555,9 @@ export const useVinScanner = ({
       addLog(`Error accessing camera: ${error}`);
       toast.error("Could not access camera. Please check camera permissions.");
     }
-  }, [scanMode, setIsScanning, addLog, setHasFlash]);
+  }, [addLog, initializeBarcodeScanner, initializeWorker, scanMode, setHasFlash, setIsScanning, startOCRScanning]);
 
-  const handleScanModeChange = async (value: ScanMode) => {
+  const handleScanModeChange = useCallback(async (value: ScanMode) => {
     addLog(`Switching scan mode to: ${value}`);
     
     if (scanningRef.current) {
@@ -549,12 +579,15 @@ export const useVinScanner = ({
     
     stopCamera();
     await startCamera();
-  };
+  }, [addLog, startCamera, stopCamera]);
 
-  const handleManualVinSubmit = async () => {
-    if (manualVin.trim().length === 17) {
-      if (validateVIN(manualVin)) {
-        const processedVin = postProcessVIN(manualVin);
+  const handleManualVinSubmit = useCallback(async () => {
+    // Get the manually entered VIN from the window object (temporary solution due to refactoring)
+    const enteredVin = (window as any).tempManualVin || manualVin;
+    
+    if (enteredVin.trim().length === 17) {
+      if (validateVIN(enteredVin)) {
+        const processedVin = postProcessVIN(enteredVin);
         const vehicleInfo = await fetchVehicleInfo(processedVin);
         
         if (vehicleInfo) {
@@ -576,7 +609,19 @@ export const useVinScanner = ({
     } else {
       toast.error("VIN must be 17 characters long");
     }
-  };
+  }, [fetchVehicleInfo, manualVin, setDetectedVehicle, setIsConfirmationView]);
+
+  // Clean up resources when component unmounts
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      if (workerRef.current) {
+        workerRef.current.terminate();
+        workerRef.current = null;
+      }
+      stopCamera();
+    };
+  }, [stopCamera]);
 
   return {
     videoRef,

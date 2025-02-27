@@ -22,6 +22,7 @@ export default function ScanVin() {
   const { state } = location
   const returnPath = state?.returnPath || "/estimates/create"
   
+  const scannerState = useScannerState()
   const {
     scanMode, setScanMode,
     logs, addLog,
@@ -32,17 +33,9 @@ export default function ScanVin() {
     showLogs, setShowLogs,
     textDetected, isFlashingRed,
     isLoading, setIsLoading
-  } = useScannerState()
+  } = scannerState
   
-  const {
-    videoRef, 
-    canvasRef,
-    startCamera,
-    stopCamera,
-    handleScanModeChange,
-    handleManualVinSubmit,
-    logsEndRef
-  } = useVinScanner({
+  const scanner = useVinScanner({
     scanMode, 
     setIsScanning, 
     addLog, 
@@ -54,9 +47,28 @@ export default function ScanVin() {
     setIsLoading
   })
   
+  const {
+    videoRef, 
+    canvasRef,
+    startCamera,
+    stopCamera,
+    handleScanModeChange,
+    handleManualVinSubmit,
+    logsEndRef
+  } = scanner
+  
+  // Use a ref to track if the camera is already initialized
+  const isCameraInitializedRef = useRef(false)
+  
   useEffect(() => {
-    console.log("Starting camera on mount");
-    startCamera()
+    // Only start the camera on the initial mount
+    if (!isCameraInitializedRef.current) {
+      console.log("Starting camera on first mount");
+      isCameraInitializedRef.current = true
+      startCamera()
+    }
+    
+    // Clean up on unmount
     return () => {
       console.log("Stopping camera on unmount");
       stopCamera()

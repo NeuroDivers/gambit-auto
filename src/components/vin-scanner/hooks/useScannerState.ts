@@ -1,5 +1,5 @@
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { VehicleInfo, ScanMode } from "../types";
 
 export const useScannerState = () => {
@@ -22,7 +22,7 @@ export const useScannerState = () => {
   
   const flashingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const addLog = (message: string) => {
+  const addLog = useCallback((message: string) => {
     if (!isPaused) {
       const logEntry = {
         timestamp: new Date().toISOString(),
@@ -32,19 +32,26 @@ export const useScannerState = () => {
       
       setLogs(prev => [...prev, message]);
       
-      const existingLogs = JSON.parse(localStorage.getItem('scanner-logs') || '[]');
-      existingLogs.push(logEntry);
-      localStorage.setItem('scanner-logs', JSON.stringify(existingLogs.slice(-1000)));
+      try {
+        const existingLogs = JSON.parse(localStorage.getItem('scanner-logs') || '[]');
+        existingLogs.push(logEntry);
+        localStorage.setItem('scanner-logs', JSON.stringify(existingLogs.slice(-1000)));
+      } catch (error) {
+        console.error('Error saving logs to localStorage:', error);
+      }
     }
-  };
+  }, [isPaused]);
 
-  // Set up the flashing border effect
+  // Set up the flashing border effect with stable dependencies
   useEffect(() => {
+    const isTextDetected = textDetected.current;
+    
     if (flashingIntervalRef.current) {
       clearInterval(flashingIntervalRef.current);
+      flashingIntervalRef.current = null;
     }
 
-    if (!textDetected.current && isScanning && !isConfirmationView) {
+    if (!isTextDetected && isScanning && !isConfirmationView) {
       // Start flashing the border when no text is detected
       flashingIntervalRef.current = setInterval(() => {
         setIsFlashingRed(prevState => !prevState);
@@ -57,14 +64,22 @@ export const useScannerState = () => {
     return () => {
       if (flashingIntervalRef.current) {
         clearInterval(flashingIntervalRef.current);
+        flashingIntervalRef.current = null;
       }
     };
-  }, [textDetected.current, isScanning, isConfirmationView]);
+  }, [isScanning, isConfirmationView]);
 
-  const toggleFlash = async () => {
-    // This is a placeholder. The actual implementation is in useVinScanner
-    setIsFlashOn(!isFlashOn);
-  };
+  // Update flashing state when text detection changes
+  useEffect(() => {
+    const isTextDetected = textDetected.current;
+    if (isTextDetected) {
+      setIsFlashingRed(false);
+    }
+  }, []);
+
+  const toggleFlash = useCallback(() => {
+    setIsFlashOn(prev => !prev);
+  }, []);
 
   return {
     isCameraActive, setIsCameraActive,
