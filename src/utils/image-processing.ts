@@ -1,4 +1,3 @@
-
 export const preprocessImage = (canvas: HTMLCanvasElement): string => {
   const ctx = canvas.getContext('2d')
   if (!ctx) return canvas.toDataURL()
@@ -17,12 +16,7 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
     autoInvertDark = false,
     edgeEnhancement = true,
     noiseReduction = true,
-    adaptiveContrast = true,
-    // Add new edge enhancement parameters with defaults
-    edgeIntensity = '1.5',        // Edge enhancement intensity
-    edgeThreshold = '10',         // Edge detection threshold
-    edgeKernelType = 'standard',  // Type of kernel to use
-    edgeBlurRadius = '1'          // Blur radius for unsharp mask
+    adaptiveContrast = true
   } = settings
 
   // Calculate average brightness
@@ -48,52 +42,11 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
 
   // Apply pre-sharpen for initial edge enhancement
   if (edgeEnhancement) {
-    // Use different kernels based on settings
-    let sharpenKernel;
-    
-    switch (edgeKernelType) {
-      case 'vertical':
-        // Emphasize vertical edges
-        sharpenKernel = [
-          -0.5, 0, 0.5,
-          -1.0, 0, 1.0,
-          -0.5, 0, 0.5
-        ];
-        break;
-      case 'horizontal':
-        // Emphasize horizontal edges
-        sharpenKernel = [
-          -0.5, -1.0, -0.5,
-           0.0,  0.0,  0.0,
-           0.5,  1.0,  0.5
-        ];
-        break;
-      case 'gentle':
-        // More gentle sharpening
-        sharpenKernel = [
-          -0.5, -0.5, -0.5,
-          -0.5,  5.0, -0.5,
-          -0.5, -0.5, -0.5
-        ];
-        break;
-      case 'strong':
-        // Stronger sharpening
-        sharpenKernel = [
-          -1.0, -1.0, -1.0,
-          -1.0, 10.0, -1.0,
-          -1.0, -1.0, -1.0
-        ];
-        break;
-      case 'standard':
-      default:
-        // Standard sharpening kernel
-        sharpenKernel = [
-          -1, -1, -1,
-          -1,  9, -1,
-          -1, -1, -1
-        ];
-    }
-    
+    const sharpenKernel = [
+      -1, -1, -1,
+      -1,  9, -1,
+      -1, -1, -1
+    ]
     const sharpenedData = applyConvolution(data, canvas.width, canvas.height, sharpenKernel)
     for (let i = 0; i < data.length; i++) {
       data[i] = sharpenedData[i]
@@ -166,9 +119,9 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
 
   // Double-pass edge enhancement if enabled
   if (edgeEnhancement) {
-    const blurRadius = parseInt(edgeBlurRadius)
-    const amount = parseFloat(edgeIntensity)  
-    const threshold = parseInt(edgeThreshold)
+    const blurRadius = 1
+    const amount = 2.0  // Increased from 1.5
+    const threshold = 5 // Reduced from 10
     applyUnsharpMask(data, canvas.width, canvas.height, blurRadius, amount, threshold)
   }
 
