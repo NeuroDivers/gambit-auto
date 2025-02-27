@@ -58,11 +58,12 @@ export function useVinLookup(vin: string | undefined | null) {
           const series = extractFromRawData(existingData.raw_data, 'Series')
           const series2 = extractFromRawData(existingData.raw_data, 'Series2')
           
-          const combinedTrim = combineAndDeduplicate([trim, trim2, series, series2])
+          const model = existingData.model || ''
+          const combinedTrim = combineAndDeduplicate([trim, trim2, series, series2], model)
           
           return {
             make: existingData.make || '',
-            model: existingData.model || '',
+            model: model,
             year: existingData.year || 0,
             bodyClass: extractFromRawData(existingData.raw_data, 'Body Class') || '',
             doors: parseInt(extractFromRawData(existingData.raw_data, 'Doors') || '0', 10) || 0,
@@ -123,7 +124,7 @@ export function useVinLookup(vin: string | undefined | null) {
         const series2 = getValueByVariable(results, 'Series2')
         
         // Combine and remove duplicates
-        const combinedTrim = combineAndDeduplicate([trim, trim2, series, series2])
+        const combinedTrim = combineAndDeduplicate([trim, trim2, series, series2], model)
 
         // Store in cache
         await supabase
@@ -193,22 +194,28 @@ function extractFromRawData(rawData: any, variableName: string): string {
 }
 
 // Helper function to combine multiple strings and remove duplicates
-function combineAndDeduplicate(strings: string[]): string {
+function combineAndDeduplicate(strings: string[], modelToFilter: string = ''): string {
   // Filter out empty strings
   const validStrings = strings.filter(str => !!str)
   if (validStrings.length === 0) return ''
   
-  // Split each string into words, flatten the array, and convert to lowercase for comparison
+  // Split each string into words, flatten the array
   const allWords = validStrings.flatMap(str => str.split(/\s+/))
+  
+  // Split model into words to check for duplicates
+  const modelWords = new Set(
+    modelToFilter.toLowerCase().split(/\s+/).filter(word => word.length > 0)
+  )
   
   // Use a Set to track which words we've seen (in lowercase for comparison)
   const seenWords = new Set<string>()
   const uniqueWords: string[] = []
   
   // Keep the original casing but use lowercase for duplicate detection
+  // and filter out any words that are also in the model
   allWords.forEach(word => {
     const lowerWord = word.toLowerCase()
-    if (!seenWords.has(lowerWord)) {
+    if (!seenWords.has(lowerWord) && !modelWords.has(lowerWord)) {
       seenWords.add(lowerWord)
       uniqueWords.push(word)
     }
