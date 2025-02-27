@@ -242,6 +242,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
         tessjs_mock_parameter: '1'
       })
 
+      const params = await worker.getParameters()
+      addLog(`OCR PSM mode: ${params.tessedit_pageseg_mode}`)
       addLog('OCR worker initialized with enhanced settings')
       return worker
     } catch (error) {
