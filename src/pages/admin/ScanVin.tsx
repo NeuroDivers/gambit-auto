@@ -35,12 +35,22 @@ export default function ScanVin() {
     isLoading, setIsLoading
   } = scannerState
   
-  // Create a stable reference to avoid recreating the scanner on re-renders
-  const scannerRef = useRef(null)
-  
-  // Initialize scanner only once
-  if (!scannerRef.current) {
-    scannerRef.current = useVinScanner({
+  // Create a stable reference to scanner config
+  const scannerConfigRef = useRef({
+    scanMode, 
+    setIsScanning, 
+    addLog, 
+    setTextDetected: (val) => textDetected.current = val,
+    setIsFlashOn,
+    setHasFlash: (val) => hasFlash.current = val,
+    setDetectedVehicle,
+    setIsConfirmationView,
+    setIsLoading
+  })
+
+  // Update config ref when dependencies change
+  useEffect(() => {
+    scannerConfigRef.current = {
       scanMode, 
       setIsScanning, 
       addLog, 
@@ -50,7 +60,25 @@ export default function ScanVin() {
       setDetectedVehicle,
       setIsConfirmationView,
       setIsLoading
-    })
+    }
+  }, [
+    scanMode, 
+    setIsScanning, 
+    addLog, 
+    textDetected, 
+    setIsFlashOn, 
+    hasFlash, 
+    setDetectedVehicle, 
+    setIsConfirmationView, 
+    setIsLoading
+  ])
+  
+  // Create a stable reference to avoid recreating the scanner on re-renders
+  const scannerRef = useRef(null)
+  
+  // Initialize scanner only once using the config ref
+  if (!scannerRef.current) {
+    scannerRef.current = useVinScanner(scannerConfigRef.current)
   }
   
   const scanner = scannerRef.current
@@ -68,8 +96,10 @@ export default function ScanVin() {
   // Initialization flag
   const hasInitializedRef = useRef(false)
   
+  // Safe camera initialization effect
   useEffect(() => {
     console.log("ScanVin mount effect running")
+    
     // Only start the camera on first mount
     if (!hasInitializedRef.current) {
       hasInitializedRef.current = true
@@ -77,18 +107,24 @@ export default function ScanVin() {
       
       // Small delay to ensure DOM is ready
       const timer = setTimeout(() => {
-        startCamera()
+        if (startCamera && typeof startCamera === 'function') {
+          startCamera()
+        }
       }, 500)
       
       return () => clearTimeout(timer)
     }
-    
-    // Clean up on unmount
+  }, []) // Empty dependency array since we're using refs
+  
+  // Cleanup effect
+  useEffect(() => {
     return () => {
-      console.log("Stopping camera on unmount")
-      stopCamera()
+      console.log("Cleanup effect running - stopping camera")
+      if (stopCamera && typeof stopCamera === 'function') {
+        stopCamera()
+      }
     }
-  }, [startCamera, stopCamera])
+  }, []) // Empty dependency array since we're using refs
 
   const handleConfirm = () => {
     if (detectedVehicle) {
@@ -116,7 +152,9 @@ export default function ScanVin() {
     setDetectedVehicle(null)
     
     if (!videoRef.current?.srcObject) {
-      startCamera()
+      if (startCamera && typeof startCamera === 'function') {
+        startCamera()
+      }
     } else {
       setIsScanning(true)
     }
