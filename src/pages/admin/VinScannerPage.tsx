@@ -4,29 +4,62 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { BrowserMultiFormatReader } from '@zxing/library'
+import { createWorker } from 'tesseract.js'
 import { ArrowLeft, Camera, Clipboard, Text, Barcode, List } from "lucide-react"
 import { toast } from 'sonner'
 import { Toggle } from "@/components/ui/toggle"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { postProcessVIN } from '@/utils/vin-validation'
 
 export default function VinScannerPage() {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
   const [searchParams] = useSearchParams()
   const returnTo = searchParams.get('returnTo') || '/admin/estimates'
   const returnPath = returnTo || '/admin/estimates'
   const navigate = useNavigate()
   const [manualVin, setManualVin] = useState('')
-  // Change default mode to 'text' instead of 'barcode'
   const [scanMode, setScanMode] = useState<'text' | 'barcode'>('text')
   const [logs, setLogs] = useState<string[]>([])
   const [logsOpen, setLogsOpen] = useState(false)
+  const [isScanning, setIsScanning] = useState(false)
+  const [worker, setWorker] = useState<Tesseract.Worker | null>(null)
+  const scanIntervalRef = useRef<number | null>(null)
 
   const addLog = (message: string) => {
     setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${message}`])
   }
 
+  // Initialize Tesseract worker
   useEffect(() => {
-    addLog('Scanner initialized')
+    const initWorker = async () => {
+      try {
+        addLog("Initializing OCR engine...")
+        const newWorker = await createWorker('eng')
+        addLog("OCR engine initialized")
+        setWorker(newWorker)
+      } catch (err) {
+        console.error('Failed to initialize Tesseract worker:', err)
+        addLog(`Failed to initialize OCR engine: ${err instanceof Error ? err.message : 'Unknown error'}`)
+        toast.error('Error initializing text recognition. Try barcode mode instead.')
+      }
+    }
+
+    initWorker()
+
+    return () => {
+      if (worker) {
+        worker.terminate()
+        addLog("OCR engine terminated")
+      }
+    }
+  }, [])
+
+  // Barcode scanning setup
+  useEffect(() => {
+    if (scanMode !== 'barcode') return
+    
+    addLog('Starting barcode scanner')
     
     const codeReader = new BrowserMultiFormatReader()
     let selectedDeviceId: string | undefined
@@ -61,14 +94,17 @@ export default function VinScannerPage() {
           (result, error) => {
             if (result) {
               const vinCode = result.getText()
-              console.log('Scanned VIN:', vinCode)
-              addLog(`Successfully scanned code: ${vinCode}`)
+              console.log('Scanned VIN barcode:', vinCode)
+              addLog(`Successfully scanned barcode: ${vinCode}`)
               navigateWithResult(vinCode)
             }
             if (error && !(error instanceof TypeError)) {
               // TypeError is thrown when the scanner is stopped, so we ignore it
               console.error('Scanner error:', error)
-              addLog(`Error: ${error.message || 'Unknown scanner error'}`)
+              // Only log certain errors to avoid flooding the log
+              if (!error.message.includes('No MultiFormat Readers were able to detect the code')) {
+                addLog(`Error: ${error.message || 'Unknown scanner error'}`)
+              }
             }
           }
         )
@@ -80,10 +116,125 @@ export default function VinScannerPage() {
       })
 
     return () => {
-      addLog('Scanner stopped')
+      addLog('Barcode scanner stopped')
       codeReader.reset()
     }
   }, [scanMode, navigate])
+
+  // Text scanning setup
+  useEffect(() => {
+    if (scanMode !== 'text' || !worker || !videoRef.current) return
+
+    addLog('Starting text scanner')
+    
+    // Setup camera for text scanning
+    navigator.mediaDevices.getUserMedia({ 
+      video: { 
+        facingMode: 'environment',
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      } 
+    })
+    .then((stream) => {
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        videoRef.current.play()
+        
+        // Setup canvas for capturing frames
+        if (!canvasRef.current) {
+          const canvas = document.createElement('canvas')
+          canvas.style.display = 'none'
+          document.body.appendChild(canvas)
+          canvasRef.current = canvas
+        }
+        
+        addLog('Text scanner ready')
+        
+        // Start periodic scanning for text
+        startTextScanning()
+      }
+    })
+    .catch((err) => {
+      console.error('Error accessing camera for text scanning:', err)
+      addLog(`Failed to access camera: ${err.message || 'Unknown error'}`)
+      toast.error('Error accessing camera. Please check permissions.')
+    })
+    
+    return () => {
+      stopTextScanning()
+      
+      // Stop video stream
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream
+        stream.getTracks().forEach(track => track.stop())
+        videoRef.current.srcObject = null
+        addLog('Text scanner stopped')
+      }
+    }
+  }, [scanMode, worker, navigate])
+  
+  const startTextScanning = () => {
+    if (isScanning || !worker) return
+    
+    setIsScanning(true)
+    addLog('Starting text recognition')
+    
+    // Run OCR every 3 seconds
+    scanIntervalRef.current = window.setInterval(captureAndRecognize, 3000)
+  }
+  
+  const stopTextScanning = () => {
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current)
+      scanIntervalRef.current = null
+    }
+    setIsScanning(false)
+  }
+  
+  const captureAndRecognize = async () => {
+    if (!worker || !videoRef.current || !canvasRef.current) return
+    
+    try {
+      const video = videoRef.current
+      const canvas = canvasRef.current
+      
+      // Set canvas dimensions to match video
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      
+      // Draw current video frame to canvas
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+      
+      // Process image with OCR
+      addLog('Analyzing image for VIN...')
+      const { data } = await worker.recognize(canvas)
+      
+      // Process OCR result for potential VINs
+      const text = data.text.replace(/\s+/g, '')
+      addLog(`OCR detected text: ${text.substring(0, 30)}${text.length > 30 ? '...' : ''}`)
+      
+      // Look for 17-character sequences that might be VINs
+      const vinPattern = /[A-HJ-NPR-Z0-9]{17}/g
+      const potentialVins = text.match(vinPattern)
+      
+      if (potentialVins && potentialVins.length > 0) {
+        const vin = postProcessVIN(potentialVins[0])
+        addLog(`Potential VIN detected: ${vin}`)
+        
+        // Pause scanning while processing result
+        stopTextScanning()
+        
+        // Navigate with result
+        navigateWithResult(vin)
+      }
+    } catch (err) {
+      console.error('Error in OCR process:', err)
+      addLog(`OCR error: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    }
+  }
 
   const navigateWithResult = (vin: string) => {
     // Store result in sessionStorage to pass to the previous page
@@ -129,7 +280,10 @@ export default function VinScannerPage() {
   }
 
   const toggleScanMode = () => {
-    // Fix toggle functionality by properly setting the new mode value
+    // Stop current scanning processes
+    stopTextScanning()
+    
+    // Toggle mode
     setScanMode(prevMode => prevMode === 'barcode' ? 'text' : 'barcode')
     addLog(`Changing scan mode from ${scanMode} to ${scanMode === 'barcode' ? 'text' : 'barcode'}`)
   }
@@ -178,6 +332,11 @@ export default function VinScannerPage() {
               className="w-full h-full object-cover" 
             />
             <div className="absolute inset-0 border-2 border-primary/50 rounded-md pointer-events-none" />
+            {isScanning && scanMode === 'text' && (
+              <div className="absolute bottom-2 right-2 bg-primary text-white text-xs px-2 py-1 rounded-full animate-pulse">
+                Scanning for VIN...
+              </div>
+            )}
           </div>
 
           <div className="flex items-center space-x-2">
