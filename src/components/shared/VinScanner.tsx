@@ -231,9 +231,12 @@ export function VinScanner({ onScan }: VinScannerProps) {
       const worker = await createWorker()
       
       await worker.reinitialize('eng')
+      const psmMode = PSM.SINGLE_LINE
+      addLog(`Setting OCR PSM mode to: ${psmMode}`)
+      
       await worker.setParameters({
         tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-        tessedit_pageseg_mode: PSM.SINGLE_LINE,
+        tessedit_pageseg_mode: psmMode,
         preserve_interword_spaces: '0',
         tessedit_min_word_length: 17,
         tessjs_create_word_level_boxes: '1',
@@ -242,8 +245,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
         tessjs_mock_parameter: '1'
       })
 
-      const params = await worker.getParameters()
-      addLog(`OCR PSM mode: ${params.tessedit_pageseg_mode}`)
       addLog('OCR worker initialized with enhanced settings')
       return worker
     } catch (error) {
