@@ -16,6 +16,11 @@ interface ProcessingSettings {
   contrast: 'normal' | 'high' | 'very-high';
   morphKernelSize: '2' | '3' | '4';
   confidenceThreshold: '35' | '40' | '45';
+  grayscaleMethod: 'luminosity' | 'average' | 'blue-channel';
+  tesseractConfig: {
+    psm: 6 | 7 | 8 | 13;
+    oem: 1 | 3;
+  }
 }
 
 export default function DeveloperSettings() {
@@ -29,14 +34,17 @@ export default function DeveloperSettings() {
     blueEmphasis: 'normal',
     contrast: 'normal',
     morphKernelSize: '2',
-    confidenceThreshold: '40'
+    confidenceThreshold: '40',
+    grayscaleMethod: 'luminosity',
+    tesseractConfig: {
+      psm: 7,
+      oem: 1
+    }
   })
 
   useEffect(() => {
     const logs = JSON.parse(localStorage.getItem('scanner-logs') || '[]')
     setScannerLogs(logs)
-    
-    // Store settings in localStorage
     localStorage.setItem('scanner-settings', JSON.stringify(settings))
   }, [settings])
 
@@ -99,11 +107,35 @@ export default function DeveloperSettings() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
+                    <Label>Grayscale Method</Label>
+                    <RadioGroup
+                      value={settings.grayscaleMethod}
+                      onValueChange={(value: 'luminosity' | 'average' | 'blue-channel') => 
+                        setSettings(prev => ({ ...prev, grayscaleMethod: value }))
+                      }
+                      className="mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="luminosity" id="gray-luminosity" />
+                        <Label htmlFor="gray-luminosity">Luminosity (Default)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="average" id="gray-average" />
+                        <Label htmlFor="gray-average">Average</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="blue-channel" id="gray-blue" />
+                        <Label htmlFor="gray-blue">Blue Channel Only</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div>
                     <Label>Blue Channel Emphasis</Label>
                     <RadioGroup
                       value={settings.blueEmphasis}
-                      onValueChange={(value) => 
-                        setSettings(prev => ({ ...prev, blueEmphasis: value as any }))
+                      onValueChange={(value: 'normal' | 'high' | 'very-high') => 
+                        setSettings(prev => ({ ...prev, blueEmphasis: value }))
                       }
                       className="mt-2"
                     >
@@ -126,8 +158,8 @@ export default function DeveloperSettings() {
                     <Label>Contrast Enhancement</Label>
                     <RadioGroup
                       value={settings.contrast}
-                      onValueChange={(value) => 
-                        setSettings(prev => ({ ...prev, contrast: value as any }))
+                      onValueChange={(value: 'normal' | 'high' | 'very-high') => 
+                        setSettings(prev => ({ ...prev, contrast: value }))
                       }
                       className="mt-2"
                     >
@@ -149,11 +181,71 @@ export default function DeveloperSettings() {
 
                 <div className="space-y-4">
                   <div>
+                    <Label>Tesseract Page Segmentation Mode</Label>
+                    <RadioGroup
+                      value={settings.tesseractConfig.psm.toString()}
+                      onValueChange={(value) => 
+                        setSettings(prev => ({
+                          ...prev,
+                          tesseractConfig: {
+                            ...prev.tesseractConfig,
+                            psm: parseInt(value) as 6 | 7 | 8 | 13
+                          }
+                        }))
+                      }
+                      className="mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="7" id="psm-7" />
+                        <Label htmlFor="psm-7">Single Line (PSM 7)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="6" id="psm-6" />
+                        <Label htmlFor="psm-6">Uniform Block (PSM 6)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="8" id="psm-8" />
+                        <Label htmlFor="psm-8">Single Word (PSM 8)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="13" id="psm-13" />
+                        <Label htmlFor="psm-13">Raw Line (PSM 13)</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div>
+                    <Label>OCR Engine Mode</Label>
+                    <RadioGroup
+                      value={settings.tesseractConfig.oem.toString()}
+                      onValueChange={(value) => 
+                        setSettings(prev => ({
+                          ...prev,
+                          tesseractConfig: {
+                            ...prev.tesseractConfig,
+                            oem: parseInt(value) as 1 | 3
+                          }
+                        }))
+                      }
+                      className="mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="1" id="oem-1" />
+                        <Label htmlFor="oem-1">Neural Nets Only (OEM 1)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="3" id="oem-3" />
+                        <Label htmlFor="oem-3">Default (OEM 3)</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div>
                     <Label>Morphological Kernel Size</Label>
                     <RadioGroup
                       value={settings.morphKernelSize}
-                      onValueChange={(value) => 
-                        setSettings(prev => ({ ...prev, morphKernelSize: value as any }))
+                      onValueChange={(value: '2' | '3' | '4') => 
+                        setSettings(prev => ({ ...prev, morphKernelSize: value }))
                       }
                       className="mt-2"
                     >
@@ -176,8 +268,8 @@ export default function DeveloperSettings() {
                     <Label>Confidence Threshold</Label>
                     <RadioGroup
                       value={settings.confidenceThreshold}
-                      onValueChange={(value) => 
-                        setSettings(prev => ({ ...prev, confidenceThreshold: value as any }))
+                      onValueChange={(value: '35' | '40' | '45') => 
+                        setSettings(prev => ({ ...prev, confidenceThreshold: value }))
                       }
                       className="mt-2"
                     >
@@ -198,38 +290,41 @@ export default function DeveloperSettings() {
                 </div>
               </div>
 
-              <div className="pt-6">
-                <CardTitle className="text-lg font-medium flex items-center justify-between">
-                  Scanner Debug
+              <div className="pt-6 border-t">
+                <div className="flex items-center justify-between mb-4">
+                  <CardTitle className="text-lg font-medium">
+                    Scanner Debug
+                  </CardTitle>
                   <VinScanner onScan={handleVinScanned} />
-                </CardTitle>
-              </div>
-
-              <div className="relative">
-                <Button 
-                  variant="outline" 
-                  className="absolute right-0 top-0"
-                  onClick={() => {
-                    localStorage.removeItem('scanner-logs')
-                    setScannerLogs([])
-                    toast.success("Scanner logs cleared")
-                  }}
-                >
-                  Clear Logs
-                </Button>
-                <ScrollArea className="h-[500px] w-full rounded-md border p-4 mt-12">
-                  <div className="space-y-2">
-                    {scannerLogs.map((log, index) => (
-                      <div key={index} className="text-sm font-mono">
-                        <span className="text-muted-foreground">
-                          {new Date(log.timestamp).toLocaleString()}
-                        </span>
-                        <span className="mx-2">-</span>
-                        <span>{log.message}</span>
-                      </div>
-                    ))}
+                </div>
+                
+                <div className="relative">
+                  <div className="flex justify-end mb-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        localStorage.removeItem('scanner-logs')
+                        setScannerLogs([])
+                        toast.success("Scanner logs cleared")
+                      }}
+                    >
+                      Clear Logs
+                    </Button>
                   </div>
-                </ScrollArea>
+                  <ScrollArea className="h-[500px] w-full rounded-md border p-4">
+                    <div className="space-y-2">
+                      {scannerLogs.map((log, index) => (
+                        <div key={index} className="text-sm font-mono">
+                          <span className="text-muted-foreground">
+                            {new Date(log.timestamp).toLocaleString()}
+                          </span>
+                          <span className="mx-2">-</span>
+                          <span>{log.message}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
               </div>
             </CardContent>
           </Card>

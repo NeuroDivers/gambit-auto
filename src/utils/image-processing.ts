@@ -5,44 +5,52 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
   const {
     blueEmphasis = 'normal',
     contrast = 'normal',
-    morphKernelSize = '2'
+    morphKernelSize = '2',
+    grayscaleMethod = 'luminosity'
   } = settings
 
   const ctx = canvas.getContext('2d')
   if (!ctx) return canvas.toDataURL()
 
-  // Get original image data
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
   const data = imageData.data
 
-  // Get blue emphasis weights based on settings
-  const getChannelWeights = () => {
-    switch (blueEmphasis) {
-      case 'very-high': return { r: 0.15, g: 0.15, b: 0.7 }
-      case 'high': return { r: 0.15, g: 0.25, b: 0.6 }
-      default: return { r: 0.2, g: 0.3, b: 0.5 }
-    }
-  }
-
-  // Get contrast values based on settings
-  const getContrastValues = () => {
-    switch (contrast) {
-      case 'very-high': return { dark: 0.3, light: 1.9 }
-      case 'high': return { dark: 0.4, light: 1.7 }
-      default: return { dark: 0.5, light: 1.5 }
-    }
-  }
-
-  const weights = getChannelWeights()
-  const contrastValues = getContrastValues()
-
-  // Convert to grayscale and enhance contrast
+  // Apply grayscale conversion based on selected method
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i]
     const g = data[i + 1]
     const b = data[i + 2]
     
-    const gray = weights.r * r + weights.g * g + weights.b * b
+    let gray
+    switch (grayscaleMethod) {
+      case 'average':
+        gray = (r + g + b) / 3
+        break
+      case 'blue-channel':
+        gray = b
+        break
+      case 'luminosity':
+      default:
+        // Get blue emphasis weights based on settings
+        const weights = (() => {
+          switch (blueEmphasis) {
+            case 'very-high': return { r: 0.15, g: 0.15, b: 0.7 }
+            case 'high': return { r: 0.15, g: 0.25, b: 0.6 }
+            default: return { r: 0.2, g: 0.3, b: 0.5 }
+          }
+        })()
+        gray = weights.r * r + weights.g * g + weights.b * b
+    }
+
+    // Apply contrast enhancement
+    const contrastValues = (() => {
+      switch (contrast) {
+        case 'very-high': return { dark: 0.3, light: 1.9 }
+        case 'high': return { dark: 0.4, light: 1.7 }
+        default: return { dark: 0.5, light: 1.5 }
+      }
+    })()
+
     const enhanced = gray < 128 ? 
       gray * contrastValues.dark : 
       Math.min(255, gray * contrastValues.light)
@@ -50,8 +58,20 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
     data[i] = data[i + 1] = data[i + 2] = enhanced
   }
 
-  // Apply Gaussian blur
-  const sigma = 1.2
+  // Apply sharpening kernel
+  const sharpenKernel = [
+    0, -1, 0,
+    -1, 5, -1,
+    0, -1, 0
+  ]
+  
+  const sharpenedData = applyConvolution(data, canvas.width, canvas.height, sharpenKernel)
+  for (let i = 0; i < data.length; i++) {
+    data[i] = sharpenedData[i]
+  }
+
+  // Apply Gaussian blur with adaptive sigma
+  const sigma = grayscaleMethod === 'blue-channel' ? 0.8 : 1.2
   const kernelSize = Math.ceil(sigma * 3) * 2 + 1
   const kernel = createGaussianKernel(kernelSize, sigma)
   
