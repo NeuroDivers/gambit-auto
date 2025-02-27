@@ -389,17 +389,12 @@ export default function DeveloperSettings() {
                   onValueChange={(value) => loadPreset(value)}
                 >
                   <SelectTrigger className="w-[220px]">
-                    <SelectValue placeholder="Select a preset">
-                      {activePresetId ? getActivePresetName() : "Select preset"}
-                    </SelectValue>
+                    <SelectValue placeholder="Select a preset" />
                   </SelectTrigger>
                   <SelectContent>
                     {presets.map(preset => (
                       <SelectItem key={preset.id} value={preset.id}>
-                        {preset.name}
-                        {preset.isDefault && (
-                          <span className="ml-2 text-xs text-muted-foreground">(Default)</span>
-                        )}
+                        {preset.name} {preset.isDefault && "(Default)"}
                       </SelectItem>
                     ))}
                   </SelectContent>
