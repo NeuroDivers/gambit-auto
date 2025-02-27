@@ -5,32 +5,36 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
   const data = imageData.data
 
-  // First pass: Detect if we have light text on dark background
-  let lightTextOnDark = false
-  let totalBrightness = 0
-  for (let i = 0; i < data.length; i += 4) {
-    totalBrightness += (data[i] + data[i + 1] + data[i + 2]) / 3
-  }
-  const avgBrightness = totalBrightness / (data.length / 4)
-  lightTextOnDark = avgBrightness < 128
-
-  // Invert colors if we have light text on dark background
-  if (lightTextOnDark) {
-    for (let i = 0; i < data.length; i += 4) {
-      data[i] = 255 - data[i]         // R
-      data[i + 1] = 255 - data[i + 1] // G
-      data[i + 2] = 255 - data[i + 2] // B
-    }
-  }
-
   // Get processing settings from localStorage
   const settings = JSON.parse(localStorage.getItem('scanner-settings') || '{}')
   const {
-    blueEmphasis = 'high',  // Changed default to high
-    contrast = 'high',      // Changed default to high
+    blueEmphasis = 'high',
+    contrast = 'high',
     morphKernelSize = '2',
-    grayscaleMethod = 'blue-channel'  // Changed default to blue-channel
+    grayscaleMethod = 'blue-channel',
+    autoInvert = true,
+    edgeEnhancement = true,
+    noiseReduction = true,
+    adaptiveContrast = true
   } = settings
+
+  // Auto invert if enabled
+  if (autoInvert) {
+    let totalBrightness = 0
+    for (let i = 0; i < data.length; i += 4) {
+      totalBrightness += (data[i] + data[i + 1] + data[i + 2]) / 3
+    }
+    const avgBrightness = totalBrightness / (data.length / 4)
+    const lightTextOnDark = avgBrightness < 128
+
+    if (lightTextOnDark) {
+      for (let i = 0; i < data.length; i += 4) {
+        data[i] = 255 - data[i]
+        data[i + 1] = 255 - data[i + 1]
+        data[i + 2] = 255 - data[i + 2]
+      }
+    }
+  }
 
   // Apply grayscale conversion based on selected method
   for (let i = 0; i < data.length; i += 4) {
@@ -44,8 +48,7 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
         gray = (r + g + b) / 3
         break
       case 'blue-channel':
-        // Enhanced blue channel processing
-        gray = Math.max(b - ((r + g) / 4), 0) // Emphasize blue while reducing noise
+        gray = Math.max(b - ((r + g) / 4), 0)
         break
       case 'luminosity':
       default:
@@ -59,42 +62,59 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
         gray = weights.r * r + weights.g * g + weights.b * b
     }
 
-    // Adaptive local contrast enhancement
-    const x = Math.floor((i / 4) % canvas.width)
-    const y = Math.floor((i / 4) / canvas.width)
-    const localArea = getLocalArea(data, x, y, canvas.width, canvas.height)
-    const localContrast = getLocalContrast(localArea)
-    
-    const contrastValues = (() => {
-      switch (contrast) {
-        case 'very-high': return { dark: 0.3, light: 1.9 }
-        case 'high': return { dark: 0.4, light: 1.7 }
-        default: return { dark: 0.5, light: 1.5 }
-      }
-    })()
+    // Apply adaptive contrast if enabled
+    if (adaptiveContrast) {
+      const x = Math.floor((i / 4) % canvas.width)
+      const y = Math.floor((i / 4) / canvas.width)
+      const localArea = getLocalArea(data, x, y, canvas.width, canvas.height)
+      const localContrast = getLocalContrast(localArea)
+      
+      const contrastValues = (() => {
+        switch (contrast) {
+          case 'very-high': return { dark: 0.3, light: 1.9 }
+          case 'high': return { dark: 0.4, light: 1.7 }
+          default: return { dark: 0.5, light: 1.5 }
+        }
+      })()
 
-    // Apply stronger contrast to areas with lower local contrast
-    const contrastMultiplier = Math.max(1, 1.5 - localContrast)
-    const enhanced = gray < 128 ? 
-      gray * (contrastValues.dark * contrastMultiplier) : 
-      Math.min(255, gray * (contrastValues.light * contrastMultiplier))
-    
-    data[i] = data[i + 1] = data[i + 2] = enhanced
+      const contrastMultiplier = Math.max(1, 1.5 - localContrast)
+      gray = gray < 128 ? 
+        gray * (contrastValues.dark * contrastMultiplier) : 
+        Math.min(255, gray * (contrastValues.light * contrastMultiplier))
+    } else {
+      // Apply regular contrast
+      const contrastValues = (() => {
+        switch (contrast) {
+          case 'very-high': return { dark: 0.3, light: 1.9 }
+          case 'high': return { dark: 0.4, light: 1.7 }
+          default: return { dark: 0.5, light: 1.5 }
+        }
+      })()
+      gray = gray < 128 ? 
+        gray * contrastValues.dark : 
+        Math.min(255, gray * contrastValues.light)
+    }
+
+    data[i] = data[i + 1] = data[i + 2] = gray
   }
 
-  // Apply unsharp masking for edge enhancement
-  const blurRadius = 1
-  const amount = 1.5
-  const threshold = 10
-  applyUnsharpMask(data, canvas.width, canvas.height, blurRadius, amount, threshold)
+  // Apply edge enhancement if enabled
+  if (edgeEnhancement) {
+    const blurRadius = 1
+    const amount = 1.5
+    const threshold = 10
+    applyUnsharpMask(data, canvas.width, canvas.height, blurRadius, amount, threshold)
+  }
 
-  // Apply morphological operations with configurable kernel size
+  // Apply morphological operations
   const mKernelSize = parseInt(morphKernelSize)
   dilate(data, canvas.width, canvas.height, mKernelSize)
   erode(data, canvas.width, canvas.height, mKernelSize)
 
-  // Final cleanup with median filter to remove salt-and-pepper noise
-  applyMedianFilter(data, canvas.width, canvas.height, 1)
+  // Apply noise reduction if enabled
+  if (noiseReduction) {
+    applyMedianFilter(data, canvas.width, canvas.height, 1)
+  }
 
   ctx.putImageData(imageData, 0, 0)
   return canvas.toDataURL()

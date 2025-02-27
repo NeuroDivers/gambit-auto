@@ -1,4 +1,3 @@
-
 import { Trash2, Sun, Globe, Shield, Database, Code, Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
@@ -17,6 +16,10 @@ interface ProcessingSettings {
   morphKernelSize: '2' | '3' | '4';
   confidenceThreshold: '35' | '40' | '45';
   grayscaleMethod: 'luminosity' | 'average' | 'blue-channel';
+  autoInvert: boolean;
+  edgeEnhancement: boolean;
+  noiseReduction: boolean;
+  adaptiveContrast: boolean;
   tesseractConfig: {
     psm: 6 | 7 | 8 | 13;
     oem: 1 | 3;
@@ -31,11 +34,15 @@ export default function DeveloperSettings() {
   }>>([])
 
   const [settings, setSettings] = useState<ProcessingSettings>({
-    blueEmphasis: 'normal',
-    contrast: 'normal',
+    blueEmphasis: 'high',
+    contrast: 'high',
     morphKernelSize: '2',
-    confidenceThreshold: '40',
-    grayscaleMethod: 'luminosity',
+    confidenceThreshold: '35',
+    grayscaleMethod: 'blue-channel',
+    autoInvert: true,
+    edgeEnhancement: true,
+    noiseReduction: true,
+    adaptiveContrast: true,
     tesseractConfig: {
       psm: 7,
       oem: 1
@@ -106,6 +113,75 @@ export default function DeveloperSettings() {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
+                  <div className="space-y-4 border-b pb-4">
+                    <Label>Image Processing Features</Label>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="auto-invert" className="flex-1">
+                          Auto Invert Colors
+                          <p className="text-sm text-muted-foreground">
+                            Automatically detect and invert light text on dark background
+                          </p>
+                        </Label>
+                        <Switch
+                          id="auto-invert"
+                          checked={settings.autoInvert}
+                          onCheckedChange={(checked) =>
+                            setSettings(prev => ({ ...prev, autoInvert: checked }))
+                          }
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="edge-enhancement" className="flex-1">
+                          Edge Enhancement
+                          <p className="text-sm text-muted-foreground">
+                            Apply unsharp masking for better edge definition
+                          </p>
+                        </Label>
+                        <Switch
+                          id="edge-enhancement"
+                          checked={settings.edgeEnhancement}
+                          onCheckedChange={(checked) =>
+                            setSettings(prev => ({ ...prev, edgeEnhancement: checked }))
+                          }
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="noise-reduction" className="flex-1">
+                          Noise Reduction
+                          <p className="text-sm text-muted-foreground">
+                            Apply median filter to remove noise
+                          </p>
+                        </Label>
+                        <Switch
+                          id="noise-reduction"
+                          checked={settings.noiseReduction}
+                          onCheckedChange={(checked) =>
+                            setSettings(prev => ({ ...prev, noiseReduction: checked }))
+                          }
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="adaptive-contrast" className="flex-1">
+                          Adaptive Contrast
+                          <p className="text-sm text-muted-foreground">
+                            Dynamically adjust contrast based on local area
+                          </p>
+                        </Label>
+                        <Switch
+                          id="adaptive-contrast"
+                          checked={settings.adaptiveContrast}
+                          onCheckedChange={(checked) =>
+                            setSettings(prev => ({ ...prev, adaptiveContrast: checked }))
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <div>
                     <Label>Grayscale Method</Label>
                     <RadioGroup
