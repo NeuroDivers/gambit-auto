@@ -175,6 +175,11 @@ export const postProcessVIN = (text: string): string => {
   // Keep original for validation
   const original = processed
 
+  // Special case: If string starts with 'R1G1', it's likely '1G1'
+  if (processed.startsWith('R1G1')) {
+    processed = '1G1' + processed.slice(4)
+  }
+
   // Apply character substitutions
   processed = processed.split('').map(char => commonMistakes[char] || char).join('')
 
