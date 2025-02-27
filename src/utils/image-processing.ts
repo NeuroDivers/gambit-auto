@@ -1,4 +1,3 @@
-
 export const preprocessImage = (canvas: HTMLCanvasElement): string => {
   const ctx = canvas.getContext('2d')
   if (!ctx) return canvas.toDataURL()
@@ -38,6 +37,19 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
       data[i] = 255 - data[i]         // Invert red
       data[i + 1] = 255 - data[i + 1] // Invert green
       data[i + 2] = 255 - data[i + 2] // Invert blue
+    }
+  }
+
+  // Apply pre-sharpen for initial edge enhancement
+  if (edgeEnhancement) {
+    const sharpenKernel = [
+      -1, -1, -1,
+      -1,  9, -1,
+      -1, -1, -1
+    ]
+    const sharpenedData = applyConvolution(data, canvas.width, canvas.height, sharpenKernel)
+    for (let i = 0; i < data.length; i++) {
+      data[i] = sharpenedData[i]
     }
   }
 
@@ -105,19 +117,28 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
     data[i] = data[i + 1] = data[i + 2] = gray
   }
 
-  // Apply noise reduction if enabled
-  if (noiseReduction) {
-    // Double pass median filter with small radius
-    applyMedianFilter(data, canvas.width, canvas.height, 1)
-    applyMedianFilter(data, canvas.width, canvas.height, 1)
+  // Double-pass edge enhancement if enabled
+  if (edgeEnhancement) {
+    const blurRadius = 1
+    const amount = 2.0  // Increased from 1.5
+    const threshold = 5 // Reduced from 10
+    applyUnsharpMask(data, canvas.width, canvas.height, blurRadius, amount, threshold)
   }
 
   // Apply morphological operations
   const mKernelSize = parseInt(morphKernelSize)
   // Dilate first to thicken characters
   dilate(data, canvas.width, canvas.height, mKernelSize)
+  dilate(data, canvas.width, canvas.height, mKernelSize) // Second pass
   // Then erode to clean up
   erode(data, canvas.width, canvas.height, mKernelSize)
+
+  // Apply noise reduction if enabled
+  if (noiseReduction) {
+    // Double pass median filter with small radius
+    applyMedianFilter(data, canvas.width, canvas.height, 1)
+    applyMedianFilter(data, canvas.width, canvas.height, 1)
+  }
 
   // Final contrast adjustment to ensure black/white separation
   for (let i = 0; i < data.length; i += 4) {
@@ -130,7 +151,7 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
 }
 
 export const postProcessVIN = (text: string): string => {
-  // Enhanced character correction map - specifically targeting common VIN misreads
+  // Enhanced character correction map
   const commonMistakes: { [key: string]: string } = {
     'O': '0',
     'Q': '0',
@@ -154,45 +175,25 @@ export const postProcessVIN = (text: string): string => {
   // Keep original for validation
   const original = processed
 
-  // Apply position-specific corrections for known problem areas
-  const chars = processed.split('')
-  
-  // Specific fixes based on common OCR errors in VINs
-  if (chars.length >= 10) {
-    // Handle the common T/7 confusion in position 9 (check digit position)
-    if (chars[8] === 'T') chars[8] = '7'
-    
-    // M/4 confusion in VINs
-    for (let i = 0; i < chars.length; i++) {
-      if (chars[i] === 'M') {
-        // In most positions, M is more likely to be a 4
-        // Especially in the later part of the VIN which should be mostly numeric
-        if (i >= 10) {
-          chars[i] = '4'
-        }
-      }
-    }
-  }
-  
-  // Apply general character substitutions
-  const corrected = chars.map(char => commonMistakes[char] || char).join('')
+  // Apply character substitutions
+  processed = processed.split('').map(char => commonMistakes[char] || char).join('')
 
   // Enhanced VIN validation
   const vinPattern = /^[A-HJ-NPR-Z0-9]{17}$/
   const naVinPattern = /^[1-5][A-HJ-NPR-Z0-9]{16}$/ // North American VIN pattern
 
-  // Check if the corrected result matches VIN patterns
-  const isCorrectedValid = vinPattern.test(corrected)
-  const isCorrectedNA = naVinPattern.test(corrected)
+  // Check if the processed result matches VIN patterns
+  const isProcessedValid = vinPattern.test(processed)
+  const isProcessedNA = naVinPattern.test(processed)
   const isOriginalValid = vinPattern.test(original)
   const isOriginalNA = naVinPattern.test(original)
 
   // Prefer North American VINs if detected
-  if (isCorrectedNA) return corrected
+  if (isProcessedNA) return processed
   if (isOriginalNA) return original
 
   // Fall back to general VIN format
-  if (isCorrectedValid) return corrected
+  if (isProcessedValid) return processed
   if (isOriginalValid) return original
 
   // If no valid VIN is found, return the cleaned original text
