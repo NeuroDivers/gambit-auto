@@ -563,7 +563,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       </Button>
 
       <Dialog open={isDialogOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[850px] lg:max-w-[1000px] p-0 h-[100dvh] sm:h-[80vh] [&>button]:hidden">
+        <DialogContent className="sm:max-w-[850px] lg:max-w-[1000px] p-0 h-[100dvh] sm:h-[80vh] max-h-[900px] [&>button]:hidden">
           <div className="flex h-full">
             <div className="flex-1 flex flex-col">
               <ScannerOverlay
@@ -641,8 +641,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
               </div>
             </div>
 
-            <div className="w-80 border-l bg-muted flex flex-col">
-              <div className="p-4 border-b bg-background">
+            <div className="w-80 border-l bg-muted flex flex-col max-h-full overflow-hidden">
+              <div className="p-4 border-b bg-background shrink-0">
                 {lastScanDuration !== null && (
                   <div className="text-sm font-medium text-primary">
                     Last successful scan: {lastScanDuration.toFixed(2)}s
@@ -664,7 +664,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
                   </Button>
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto p-4 min-h-0">
                 <div className="space-y-1 text-xs font-mono">
                   {logs.map((log, index) => (
                     <div key={index} className="text-muted-foreground">{log}</div>
