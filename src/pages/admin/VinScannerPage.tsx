@@ -12,6 +12,42 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { postProcessVIN } from '@/utils/vin-validation'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
+// Interface for OCR settings from developer settings
+interface OCRSettings {
+  blueEmphasis: 'zero' | 'normal' | 'high' | 'very-high';
+  contrast: 'normal' | 'high' | 'very-high';
+  morphKernelSize: '2' | '3' | '4';
+  confidenceThreshold: '35' | '40' | '45';
+  grayscaleMethod: 'luminosity' | 'average' | 'blue-channel';
+  autoInvert: boolean;
+  autoInvertDark: boolean;
+  edgeEnhancement: boolean;
+  noiseReduction: boolean;
+  adaptiveContrast: boolean;
+  tesseractConfig: {
+    psm: 6 | 7 | 8 | 13;
+    oem: 1 | 3;
+  }
+}
+
+// Default OCR settings if none are found
+const defaultOCRSettings: OCRSettings = {
+  blueEmphasis: 'very-high',
+  contrast: 'very-high',
+  morphKernelSize: '3',
+  confidenceThreshold: '35',
+  grayscaleMethod: 'blue-channel',
+  autoInvert: true,
+  autoInvertDark: false,
+  edgeEnhancement: true,
+  noiseReduction: true,
+  adaptiveContrast: true,
+  tesseractConfig: {
+    psm: 7,
+    oem: 1
+  }
+};
+
 export default function VinScannerPage() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -33,9 +69,80 @@ export default function VinScannerPage() {
     year?: number;
   } | null>(null)
   const [isLoadingVinInfo, setIsLoadingVinInfo] = useState(false)
+  const [ocrSettings, setOcrSettings] = useState<OCRSettings>(defaultOCRSettings)
+  const [activePresetName, setActivePresetName] = useState<string>("Default OCR Settings")
+
+  // Load OCR settings from localStorage
+  useEffect(() => {
+    try {
+      // Get scanner settings
+      const savedSettings = localStorage.getItem('scanner-settings')
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings)
+        setOcrSettings(settings)
+        addLog("Loaded OCR settings from localStorage")
+      }
+
+      // Get active preset name
+      const savedPresets = localStorage.getItem('scanner-presets')
+      if (savedPresets) {
+        const presets = JSON.parse(savedPresets)
+        const activePreset = presets.find((p: any) => 
+          p.settings === ocrSettings || 
+          JSON.stringify(p.settings) === JSON.stringify(ocrSettings)
+        )
+        if (activePreset) {
+          setActivePresetName(activePreset.name)
+          addLog(`Using OCR preset: ${activePreset.name}`)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading OCR settings:', error)
+      addLog(`Error loading OCR settings: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }, [])
 
   const addLog = (message: string) => {
     setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${message}`])
+    
+    // Also save to scanner-logs in localStorage
+    try {
+      const existingLogs = JSON.parse(localStorage.getItem('scanner-logs') || '[]')
+      const newLog = {
+        timestamp: new Date().toISOString(),
+        message,
+        type: 'info'
+      }
+      const updatedLogs = [...existingLogs, newLog].slice(-100) // Keep last 100 logs
+      localStorage.setItem('scanner-logs', JSON.stringify(updatedLogs))
+    } catch (error) {
+      console.error('Error saving log:', error)
+    }
+  }
+
+  // Helper to determine actual contrast values based on settings
+  const getContrastValues = (contrastSetting: 'normal' | 'high' | 'very-high') => {
+    switch (contrastSetting) {
+      case 'normal': 
+        return { low: 0.5, high: 1.5 }
+      case 'high': 
+        return { low: 0.4, high: 1.7 }
+      case 'very-high': 
+        return { low: 0.3, high: 1.9 }
+      default: 
+        return { low: 0.5, high: 1.5 }
+    }
+  }
+
+  // Helper to determine blue channel emphasis value
+  const getBlueEmphasisValue = (setting: 'zero' | 'normal' | 'high' | 'very-high') => {
+    switch (setting) {
+      case 'zero': return 0.33
+      case 'normal': return 0.5
+      case 'high': return 0.7
+      case 'very-high': return 0.8
+      default: return 0.33
+    }
   }
 
   // Fetch vehicle info for a given VIN
@@ -78,13 +185,22 @@ export default function VinScannerPage() {
     }
   }
 
-  // Initialize Tesseract worker
+  // Initialize Tesseract worker with custom settings
   useEffect(() => {
     const initWorker = async () => {
       try {
-        addLog("Initializing OCR engine...")
-        const newWorker = await createWorker('eng')
-        addLog("OCR engine initialized")
+        addLog(`Initializing OCR engine with preset: ${activePresetName}`)
+        
+        // Configure Tesseract based on settings
+        const { tesseractConfig } = ocrSettings
+        
+        const newWorker = await createWorker('eng', {
+          // Explicitly set PSM mode based on settings
+          tessedit_pageseg_mode: tesseractConfig.psm,
+          tessedit_ocr_engine_mode: tesseractConfig.oem,
+        })
+        
+        addLog(`OCR engine initialized with PSM=${tesseractConfig.psm}, OEM=${tesseractConfig.oem}`)
         setWorker(newWorker)
       } catch (err) {
         console.error('Failed to initialize Tesseract worker:', err)
@@ -101,7 +217,7 @@ export default function VinScannerPage() {
         addLog("OCR engine terminated")
       }
     }
-  }, [])
+  }, [ocrSettings])
 
   // When a VIN is scanned or entered manually, fetch vehicle info
   useEffect(() => {
@@ -113,6 +229,57 @@ export default function VinScannerPage() {
       setVehicleInfo(null)
     }
   }, [scannedVin])
+
+  // Validate VIN with advanced rules including check digit
+  const validateVinWithCheckDigit = (vin: string): boolean => {
+    // Basic VIN pattern validation
+    if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) {
+      addLog("VIN failed pattern validation")
+      return false
+    }
+    
+    // Check digit validation (9th character)
+    // Convert characters to their numeric values
+    const values: {[key: string]: number} = {
+      'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8,
+      'J': 1, 'K': 2, 'L': 3, 'M': 4, 'N': 5, 'P': 7, 'R': 9,
+      'S': 2, 'T': 3, 'U': 4, 'V': 5, 'W': 6, 'X': 7, 'Y': 8, 'Z': 9,
+      '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '0': 0
+    }
+    
+    // Weight factors for each position
+    const weights = [8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2]
+    
+    // Calculate check digit
+    let sum = 0
+    for (let i = 0; i < 17; i++) {
+      if (i !== 8) { // Skip the check digit position
+        const char = vin.charAt(i)
+        const value = values[char]
+        sum += value * weights[i]
+      }
+    }
+    
+    // Calculate the remainder modulo 11
+    const remainder = sum % 11
+    
+    // Determine the expected check digit
+    const expectedCheckDigit = remainder === 10 ? 'X' : remainder.toString()
+    
+    // Get the actual check digit from the VIN
+    const actualCheckDigit = vin.charAt(8)
+    
+    // Compare the expected and actual check digits
+    const isValid = actualCheckDigit === expectedCheckDigit
+    
+    if (!isValid) {
+      addLog(`VIN check digit validation failed: expected ${expectedCheckDigit}, got ${actualCheckDigit}`)
+    } else {
+      addLog("VIN check digit validation passed")
+    }
+    
+    return isValid
+  }
 
   // Barcode scanning setup
   useEffect(() => {
@@ -181,6 +348,109 @@ export default function VinScannerPage() {
       codeReader.reset()
     }
   }, [scanMode, scannedVin])
+
+  // Apply image processing based on settings
+  const processImageForOCR = (canvas: HTMLCanvasElement): HTMLCanvasElement => {
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return canvas
+    
+    addLog(`Applying image processing with ${activePresetName} settings`)
+    
+    // Get image data
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    const data = imageData.data
+    
+    // Apply grayscale based on method selected in settings
+    const blueEmphasis = getBlueEmphasisValue(ocrSettings.blueEmphasis)
+    
+    // Apply method based on setting
+    switch (ocrSettings.grayscaleMethod) {
+      case 'luminosity':
+        for (let i = 0; i < data.length; i += 4) {
+          const gray = 0.299 * data[i] + 0.587 * data[i + 1] + blueEmphasis * data[i + 2]
+          data[i] = data[i + 1] = data[i + 2] = gray
+        }
+        break
+      case 'average':
+        for (let i = 0; i < data.length; i += 4) {
+          const avg = (data[i] + data[i + 1] + data[i + 2]) / 3
+          data[i] = data[i + 1] = data[i + 2] = avg
+        }
+        break
+      case 'blue-channel':
+        for (let i = 0; i < data.length; i += 4) {
+          // Emphasize blue channel
+          data[i] = data[i + 1] = data[i + 2] = data[i + 2]
+        }
+        break
+      default:
+        // Default to luminosity if no method specified
+        for (let i = 0; i < data.length; i += 4) {
+          const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]
+          data[i] = data[i + 1] = data[i + 2] = gray
+        }
+    }
+    
+    // Apply contrast adjustment
+    if (ocrSettings.contrast !== 'normal') {
+      const contrastValues = getContrastValues(ocrSettings.contrast)
+      const factor = (259 * (contrastValues.high * 100 + 255)) / (255 * (259 - contrastValues.low * 100))
+      
+      for (let i = 0; i < data.length; i += 4) {
+        data[i] = factor * (data[i] - 128) + 128
+        data[i + 1] = factor * (data[i + 1] - 128) + 128
+        data[i + 2] = factor * (data[i + 2] - 128) + 128
+      }
+    }
+    
+    // Apply auto-invert if enabled
+    if (ocrSettings.autoInvert) {
+      // Simple check for light text on dark background
+      let darkPixels = 0
+      for (let i = 0; i < data.length; i += 4) {
+        if (data[i] < 128) darkPixels++
+      }
+      
+      // If more than 60% of pixels are dark, invert for light text on dark background
+      if (darkPixels > data.length / 4 * 0.6) {
+        for (let i = 0; i < data.length; i += 4) {
+          data[i] = 255 - data[i]
+          data[i + 1] = 255 - data[i + 1]
+          data[i + 2] = 255 - data[i + 2]
+        }
+        addLog("Applied auto-invert (detected dark background)")
+      }
+    }
+    
+    // Put the modified image data back on the canvas
+    ctx.putImageData(imageData, 0, 0)
+    
+    // Create a new canvas for threshold operation if needed
+    const thresholdCanvas = document.createElement('canvas')
+    thresholdCanvas.width = canvas.width
+    thresholdCanvas.height = canvas.height
+    const thresholdCtx = thresholdCanvas.getContext('2d')
+    
+    if (thresholdCtx) {
+      // Draw the processed image to the new canvas
+      thresholdCtx.drawImage(canvas, 0, 0)
+      
+      // Apply simple threshold for better OCR
+      const thresholdData = thresholdCtx.getImageData(0, 0, thresholdCanvas.width, thresholdCanvas.height)
+      const thresholdPixels = thresholdData.data
+      
+      for (let i = 0; i < thresholdPixels.length; i += 4) {
+        const value = thresholdPixels[i] > 128 ? 255 : 0
+        thresholdPixels[i] = thresholdPixels[i + 1] = thresholdPixels[i + 2] = value
+      }
+      
+      thresholdCtx.putImageData(thresholdData, 0, 0)
+      
+      return thresholdCanvas
+    }
+    
+    return canvas
+  }
 
   // Text scanning setup
   useEffect(() => {
@@ -269,9 +539,12 @@ export default function VinScannerPage() {
       
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
       
+      // Process the image using our settings before OCR
+      const processedCanvas = processImageForOCR(canvas)
+      
       // Process image with OCR
       addLog('Analyzing image for VIN...')
-      const { data } = await worker.recognize(canvas)
+      const { data } = await worker.recognize(processedCanvas)
       
       // Process OCR result for potential VINs
       const text = data.text.replace(/\s+/g, '')
@@ -282,8 +555,17 @@ export default function VinScannerPage() {
       const potentialVins = text.match(vinPattern)
       
       if (potentialVins && potentialVins.length > 0) {
+        // Process and validate the potential VIN
         const vin = postProcessVIN(potentialVins[0])
         addLog(`Potential VIN detected: ${vin}`)
+        
+        // Additional validation with check digit
+        const isValidVin = validateVinWithCheckDigit(vin)
+        if (isValidVin) {
+          addLog(`VIN validation successful: ${vin}`)
+        } else {
+          addLog(`Warning: VIN may be invalid, but continuing: ${vin}`)
+        }
         
         // Pause scanning while processing result
         stopTextScanning()
@@ -304,6 +586,13 @@ export default function VinScannerPage() {
     console.log('VinScannerPage: Storing scanned VIN in sessionStorage:', scannedVin)
     addLog(`Storing VIN in session storage: ${scannedVin}`)
     sessionStorage.setItem('scanned-vin', scannedVin)
+    
+    // Also store vehicle info if available
+    if (vehicleInfo) {
+      sessionStorage.setItem('scanned-vin-info', JSON.stringify(vehicleInfo))
+      addLog(`Storing vehicle info in session storage: ${JSON.stringify(vehicleInfo)}`)
+    }
+    
     toast.success(`VIN scanned: ${scannedVin}`)
     
     // A small delay to ensure the data is saved before navigation
@@ -401,6 +690,10 @@ export default function VinScannerPage() {
                     </Button>
                   </CollapsibleTrigger>
                 </Collapsible>
+              </div>
+
+              <div className="text-xs text-muted-foreground mb-2">
+                Using preset: {activePresetName}
               </div>
 
               <div className="bg-black relative rounded-md overflow-hidden aspect-video">

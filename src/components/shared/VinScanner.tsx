@@ -26,6 +26,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
       onScan(scannedVin)
       toast.success(`VIN scanned: ${scannedVin}`)
       sessionStorage.removeItem('scanned-vin')
+      
+      // Also clear the vehicle info if it exists
+      sessionStorage.removeItem('scanned-vin-info')
     }
   }, [onScan])
 

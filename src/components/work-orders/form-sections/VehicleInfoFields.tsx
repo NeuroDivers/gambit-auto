@@ -28,6 +28,26 @@ export function VehicleInfoFields({ control, watch, setValue }: VehicleInfoField
       if (vinData.trim) setValue("vehicle_trim", vinData.trim)
     }
   }, [vinData, setValue])
+  
+  // Check for scanned VIN information in sessionStorage
+  useEffect(() => {
+    const scannedVinInfo = sessionStorage.getItem('scanned-vin-info')
+    if (scannedVinInfo) {
+      try {
+        const vehicleInfo = JSON.parse(scannedVinInfo)
+        console.log('Using scanned vehicle info:', vehicleInfo)
+        
+        if (vehicleInfo.make) setValue("vehicle_make", vehicleInfo.make)
+        if (vehicleInfo.model) setValue("vehicle_model", vehicleInfo.model)
+        if (vehicleInfo.year) setValue("vehicle_year", vehicleInfo.year)
+        
+        // Remove from sessionStorage after using
+        sessionStorage.removeItem('scanned-vin-info')
+      } catch (error) {
+        console.error('Error parsing scanned VIN info:', error)
+      }
+    }
+  }, [setValue])
 
   const handleVinScan = (scannedVin: string) => {
     setValue("vehicle_serial", scannedVin, { shouldValidate: true, shouldDirty: true, shouldTouch: true })
