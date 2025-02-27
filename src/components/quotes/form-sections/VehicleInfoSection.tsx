@@ -1,18 +1,19 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { UseFormReturn } from "react-hook-form"
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { UseFormReturn } from "react-hook-form"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useVinLookup } from "@/hooks/useVinLookup"
 import { useEffect } from "react"
-import { Loader2 } from "lucide-react"
-import { VinScanner } from "@/components/shared/VinScanner"
+import { Loader2, Camera } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 interface VehicleInfoSectionProps {
   form: UseFormReturn<any>
+  scanVinAction?: () => void
 }
 
-export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
+export function VehicleInfoSection({ form, scanVinAction }: VehicleInfoSectionProps) {
   const vin = form.watch('vehicle_vin')
   const { data: vinData, isLoading: isLoadingVin } = useVinLookup(vin)
 
@@ -32,8 +33,40 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
       <CardHeader>
         <CardTitle>Vehicle Information</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="vehicle_vin"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>VIN</FormLabel>
+                <FormControl>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Input placeholder="Enter VIN" {...field} />
+                      {isLoadingVin && (
+                        <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                      )}
+                    </div>
+                    {scanVinAction && (
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="icon"
+                        onClick={scanVinAction}
+                        className="shrink-0"
+                      >
+                        <Camera className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="vehicle_make"
@@ -42,11 +75,7 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
                 <FormLabel>Make</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Input 
-                      {...field} 
-                      disabled={isLoadingVin}
-                      placeholder="e.g. Toyota" 
-                    />
+                    <Input placeholder="e.g. Toyota" {...field} />
                     {isLoadingVin && (
                       <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
                     )}
@@ -65,11 +94,7 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
                 <FormLabel>Model</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Input 
-                      {...field} 
-                      disabled={isLoadingVin}
-                      placeholder="e.g. Camry" 
-                    />
+                    <Input placeholder="e.g. Camry" {...field} />
                     {isLoadingVin && (
                       <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
                     )}
@@ -79,9 +104,7 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
               </FormItem>
             )}
           />
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="vehicle_year"
@@ -91,12 +114,10 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
                 <FormControl>
                   <div className="relative">
                     <Input 
-                      type="number"
+                      type="number" 
+                      placeholder="e.g. 2022" 
                       {...field}
-                      disabled={isLoadingVin}
-                      onChange={(e) => field.onChange(parseInt(e.target.value))}
-                      min={1900}
-                      max={new Date().getFullYear() + 1}
+                      onChange={e => field.onChange(parseInt(e.target.value))}
                     />
                     {isLoadingVin && (
                       <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
@@ -110,39 +131,13 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
 
           <FormField
             control={form.control}
-            name="vehicle_vin"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  VIN
-                  <span className="text-xs text-muted-foreground ml-2">(Auto-fills vehicle info)</span>
-                </FormLabel>
-                <FormControl>
-                  <div className="flex gap-2">
-                    <Input {...field} placeholder="Enter VIN" />
-                    <VinScanner onScan={(vin) => field.onChange(vin)} />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <FormField
-            control={form.control}
             name="vehicle_body_class"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Body Class</FormLabel>
+                <FormLabel>Body Type</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Input 
-                      {...field} 
-                      disabled={isLoadingVin}
-                      placeholder="e.g. Sedan" 
-                    />
+                    <Input placeholder="e.g. Sedan" {...field} />
                     {isLoadingVin && (
                       <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
                     )}
@@ -162,13 +157,10 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
                 <FormControl>
                   <div className="relative">
                     <Input 
-                      type="number"
-                      {...field}
-                      disabled={isLoadingVin}
-                      onChange={(e) => field.onChange(parseInt(e.target.value))}
-                      min={1}
-                      max={6}
+                      type="number" 
                       placeholder="e.g. 4" 
+                      {...field}
+                      onChange={e => field.onChange(parseInt(e.target.value))}
                     />
                     {isLoadingVin && (
                       <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
@@ -188,11 +180,7 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
                 <FormLabel>Trim</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Input 
-                      {...field} 
-                      disabled={isLoadingVin}
-                      placeholder="e.g. LE" 
-                    />
+                    <Input placeholder="e.g. LE" {...field} />
                     {isLoadingVin && (
                       <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
                     )}
