@@ -1,3 +1,4 @@
+
 import { Trash2, Sun, Globe, Shield, Database, Code, Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
@@ -9,6 +10,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Input } from "@/components/ui/input"
+import { Slider } from "@/components/ui/slider"
 
 interface ProcessingSettings {
   blueEmphasis: 'normal' | 'high' | 'very-high';
@@ -21,6 +24,10 @@ interface ProcessingSettings {
   edgeEnhancement: boolean;
   noiseReduction: boolean;
   adaptiveContrast: boolean;
+  edgeIntensity: string;
+  edgeThreshold: string;
+  edgeKernelType: 'standard' | 'vertical' | 'horizontal' | 'gentle' | 'strong';
+  edgeBlurRadius: string;
   tesseractConfig: {
     psm: 6 | 7 | 8 | 13;
     oem: 1 | 3;
@@ -55,6 +62,10 @@ export default function DeveloperSettings() {
       edgeEnhancement: true,
       noiseReduction: true,
       adaptiveContrast: true,
+      edgeIntensity: '1.5',
+      edgeThreshold: '10',
+      edgeKernelType: 'standard',
+      edgeBlurRadius: '1',
       tesseractConfig: {
         psm: 7,
         oem: 1
@@ -84,6 +95,10 @@ export default function DeveloperSettings() {
       edgeEnhancement: true,
       noiseReduction: true,
       adaptiveContrast: true,
+      edgeIntensity: '1.5',
+      edgeThreshold: '10',
+      edgeKernelType: 'standard',
+      edgeBlurRadius: '1',
       tesseractConfig: {
         psm: 7,
         oem: 1
@@ -304,6 +319,123 @@ export default function DeveloperSettings() {
                 </div>
 
                 <div className="space-y-4">
+                  {/* Edge Enhancement Settings Section */}
+                  <div className="space-y-4 border-b pb-4">
+                    <Label>Edge Enhancement Settings</Label>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <Label htmlFor="edge-kernel-type">Kernel Type</Label>
+                        <RadioGroup
+                          value={settings.edgeKernelType}
+                          onValueChange={(value: 'standard' | 'vertical' | 'horizontal' | 'gentle' | 'strong') => 
+                            setSettings(prev => ({ ...prev, edgeKernelType: value }))
+                          }
+                          className="mt-2 grid grid-cols-2 gap-1"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="standard" id="kernel-standard" />
+                            <Label htmlFor="kernel-standard">Standard</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="vertical" id="kernel-vertical" />
+                            <Label htmlFor="kernel-vertical">Vertical Edges</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="horizontal" id="kernel-horizontal" />
+                            <Label htmlFor="kernel-horizontal">Horizontal Edges</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="gentle" id="kernel-gentle" />
+                            <Label htmlFor="kernel-gentle">Gentle</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="strong" id="kernel-strong" />
+                            <Label htmlFor="kernel-strong">Strong</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="flex justify-between">
+                          <Label htmlFor="edge-intensity">Edge Intensity: {settings.edgeIntensity}</Label>
+                        </div>
+                        <div className="flex gap-2 items-center">
+                          <Input
+                            id="edge-intensity"
+                            type="number"
+                            min="0.1"
+                            max="3.0"
+                            step="0.1"
+                            value={settings.edgeIntensity}
+                            onChange={(e) => setSettings(prev => ({ ...prev, edgeIntensity: e.target.value }))}
+                            className="w-20"
+                          />
+                          <Slider 
+                            min={0.1}
+                            max={3.0}
+                            step={0.1}
+                            value={[parseFloat(settings.edgeIntensity)]}
+                            onValueChange={(value) => setSettings(prev => ({ ...prev, edgeIntensity: value[0].toString() }))}
+                            className="flex-1"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="flex justify-between">
+                          <Label htmlFor="edge-threshold">Edge Threshold: {settings.edgeThreshold}</Label>
+                        </div>
+                        <div className="flex gap-2 items-center">
+                          <Input
+                            id="edge-threshold"
+                            type="number"
+                            min="0"
+                            max="50"
+                            step="1"
+                            value={settings.edgeThreshold}
+                            onChange={(e) => setSettings(prev => ({ ...prev, edgeThreshold: e.target.value }))}
+                            className="w-20"
+                          />
+                          <Slider 
+                            min={0}
+                            max={50}
+                            step={1}
+                            value={[parseInt(settings.edgeThreshold)]}
+                            onValueChange={(value) => setSettings(prev => ({ ...prev, edgeThreshold: value[0].toString() }))}
+                            className="flex-1"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="flex justify-between">
+                          <Label htmlFor="edge-blur-radius">Blur Radius: {settings.edgeBlurRadius}</Label>
+                        </div>
+                        <div className="flex gap-2 items-center">
+                          <Input
+                            id="edge-blur-radius"
+                            type="number"
+                            min="1"
+                            max="5"
+                            step="1"
+                            value={settings.edgeBlurRadius}
+                            onChange={(e) => setSettings(prev => ({ ...prev, edgeBlurRadius: e.target.value }))}
+                            className="w-20"
+                          />
+                          <Slider 
+                            min={1}
+                            max={5}
+                            step={1}
+                            value={[parseInt(settings.edgeBlurRadius)]}
+                            onValueChange={(value) => setSettings(prev => ({ ...prev, edgeBlurRadius: value[0].toString() }))}
+                            className="flex-1"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div>
                     <Label>Tesseract Page Segmentation Mode</Label>
                     <RadioGroup
