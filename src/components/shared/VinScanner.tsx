@@ -613,7 +613,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
           <div className="flex-1 relative sm:aspect-video w-full overflow-hidden">
             {isConfirmationOpen ? (
               <div className="absolute inset-0 z-50 bg-background/95 flex flex-col">
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="flex-1 overflow-y-auto p-6 h-[50vh]">
                   <div className="space-y-4">
                     <h2 className="text-lg font-semibold">Confirm Vehicle Information</h2>
                     <div className="bg-primary/10 p-3 rounded-lg">
@@ -666,6 +666,17 @@ export function VinScanner({ onScan }: VinScannerProps) {
                 />
                 <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] h-40">
                   <div className="absolute inset-0 border-2 border-primary rounded-lg" />
+                  {/* Center indicator cross */}
+                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <div className="relative">
+                      {/* Horizontal line */}
+                      <div className="absolute w-8 h-[2px] bg-primary/80 left-1/2 -translate-x-1/2"></div>
+                      {/* Vertical line */}
+                      <div className="absolute h-8 w-[2px] bg-primary/80 top-1/2 -translate-y-1/2"></div>
+                      {/* Center dot */}
+                      <div className="absolute w-2 h-2 rounded-full bg-[#F2FCE2] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"></div>
+                    </div>
+                  </div>
                   <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/60 px-4 py-2 rounded-lg">
                     <p className="text-white text-center text-sm">
                       Position {scanMode === 'text' ? 'VIN text' : 'barcode'} within frame
