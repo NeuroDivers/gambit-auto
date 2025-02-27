@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback, useEffect } from "react";
 import { createWorker, PSM } from 'tesseract.js';
 import { BrowserMultiFormatReader, BarcodeFormat, Result } from '@zxing/library';
@@ -237,11 +236,8 @@ export const useVinScanner = ({
 
   const stopCamera = useCallback(() => {
     console.log("Stopping camera, cleaning up resources");
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
     
+    // Reset references
     if (scanningRef.current) {
       cancelAnimationFrame(scanningRef.current);
       scanningRef.current = undefined;
@@ -255,9 +251,22 @@ export const useVinScanner = ({
     setIsScanning(false);
     setIsFlashOn(false);
     
-    // Reset the video element
+    // Reset video element before stopping tracks
     if (videoRef.current) {
+      videoRef.current.pause();
       videoRef.current.srcObject = null;
+    }
+    
+    // Stop all tracks
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
+        try {
+          track.stop();
+        } catch (e) {
+          console.error("Error stopping track:", e);
+        }
+      });
+      streamRef.current = null;
     }
   }, [setIsScanning, setIsFlashOn]);
 
@@ -380,11 +389,27 @@ export const useVinScanner = ({
   const startOCRScanning = useCallback(async (immediateScanning?: boolean) => {
     const shouldScan = immediateScanning ?? true;
 
-    if (!streamRef.current || !workerRef.current || !shouldScan || !isMountedRef.current) {
+    if (!videoRef.current || !streamRef.current || !workerRef.current || !shouldScan || !isMountedRef.current) {
       addLog("Cannot start OCR scanning: missing required resources");
       return;
     }
 
+    // Verify the video element is in a good state
+    const video = videoRef.current;
+    if (video.readyState < 2) {
+      addLog(`Video not ready yet, readyState=${video.readyState}`);
+      
+      // Try again after a short delay
+      setTimeout(() => {
+        if (isMountedRef.current) {
+          startOCRScanning(shouldScan);
+        }
+      }, 500);
+      return;
+    }
+
+    addLog(`Video ready, starting OCR scan with readyState=${video.readyState}`);
+    
     // Keep track of frame count to add debugging info periodically
     let frameCount = 0;
     
@@ -493,8 +518,9 @@ export const useVinScanner = ({
     
     // Start the scanning loop
     addLog("Starting OCR scan loop");
+    setIsScanning(true);
     scanningRef.current = requestAnimationFrame(scanFrame);
-  }, [addLog, captureFrame, checkVinValidity, correctCommonOcrMistakes, setTextDetected, initializeWorker]);
+  }, [addLog, captureFrame, checkVinValidity, correctCommonOcrMistakes, setTextDetected, initializeWorker, setIsScanning]);
 
   const initializeBarcodeScanner = useCallback(async () => {
     try {
@@ -585,37 +611,66 @@ export const useVinScanner = ({
     }
   }, [addLog, cleanVinBarcode, fetchVehicleInfo, setDetectedVehicle, setIsConfirmationView, setTextDetected]);
 
+  const setupVideoElement = useCallback((video: HTMLVideoElement) => {
+    if (!video) return;
+    
+    // Set essential properties for mobile compatibility
+    video.setAttribute('playsinline', 'true');
+    video.setAttribute('muted', 'true');
+    video.muted = true;
+    video.playsInline = true;
+    video.autoplay = true;
+    
+    // Create a new audio context to help unstick some mobile browsers
+    try {
+      // @ts-ignore - AudioContext may not be defined in all environments
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) {
+        new AudioContext();
+      }
+    } catch (e) {
+      // Ignore errors here, just trying to unblock audio context
+    }
+  }, []);
+
   const startCamera = useCallback(async () => {
     try {
+      addLog('Starting camera initialization...');
       isMountedRef.current = true;
       
       // First, ensure any existing camera streams are stopped
       stopCamera();
       
+      // Set up the video element before requesting camera
+      if (videoRef.current) {
+        setupVideoElement(videoRef.current);
+      }
+      
       addLog('Requesting camera access...');
       
-      // Set up constraints with a lower resolution to start with
+      // Low resolution constraints for faster loading and better compatibility
       const constraints = {
         video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: 'environment' // Preferred but not exact requirement
         }
       };
       
-      // Try to access the camera with environment facing first if on mobile
+      // Try to get the camera stream with environment facing preference
       let stream: MediaStream;
       try {
         addLog('Attempting to access environment-facing camera...');
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            facingMode: { exact: "environment" },
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
+            facingMode: { exact: "environment" }, // Try exact requirement first
+            width: { ideal: 640 },
+            height: { ideal: 480 }
           }
         });
         addLog('Successfully accessed environment-facing camera');
       } catch (envError) {
-        // If environment camera fails, fall back to any camera
+        // If environment camera fails, fall back to any camera with default constraints
         addLog(`Could not access environment camera: ${envError}. Falling back to default camera.`);
         stream = await navigator.mediaDevices.getUserMedia(constraints);
         addLog('Successfully accessed default camera');
@@ -635,16 +690,10 @@ export const useVinScanner = ({
         return;
       }
       
-      // Set these properties before assigning srcObject
-      videoRef.current.muted = true;
-      videoRef.current.playsInline = true;
-      videoRef.current.autoplay = true;
-      
-      // Explicitly prepare the video element
-      addLog('Setting up video element...');
-      videoRef.current.srcObject = stream;
+      // Store stream reference first so we can clean up properly if needed
       streamRef.current = stream;
       
+      // Get information about the camera we're using
       const track = stream.getVideoTracks()[0];
       if (track) {
         const capabilities = track.getCapabilities() as ExtendedTrackCapabilities;
@@ -659,89 +708,95 @@ export const useVinScanner = ({
         addLog('No video track available in the stream');
       }
       
-      // Wait for the video to be ready using both loadedmetadata and loadeddata events
-      addLog('Waiting for video to be ready...');
+      // Prepare the video element
+      addLog('Setting up video element...');
+      const video = videoRef.current;
       
-      await new Promise<void>((resolve, reject) => {
-        if (!videoRef.current) {
+      // Create a promise that resolves when the video can play
+      const videoReadyPromise = new Promise<void>((resolve, reject) => {
+        if (!video) {
           reject(new Error('Video element not available'));
           return;
         }
         
-        const timeoutId = setTimeout(() => {
-          reject(new Error('Video load timeout'));
-        }, 5000);
-        
-        // If already loaded, resolve immediately
-        if (videoRef.current.readyState >= 2) {
-          clearTimeout(timeoutId);
-          resolve();
-          return;
-        }
-        
-        // Listen for both events to ensure video is truly ready
-        const handleLoaded = () => {
-          clearTimeout(timeoutId);
-          if (videoRef.current) {
-            videoRef.current.removeEventListener('loadeddata', handleLoaded);
-            videoRef.current.removeEventListener('loadedmetadata', handleLoaded);
-          }
+        // Set handlers before assigning srcObject to avoid missing events
+        const handleCanPlay = () => {
+          addLog('Video can now play');
+          video.removeEventListener('canplay', handleCanPlay);
           resolve();
         };
         
-        videoRef.current.addEventListener('loadeddata', handleLoaded);
-        videoRef.current.addEventListener('loadedmetadata', handleLoaded);
-      }).catch(error => {
-        addLog(`Video load error: ${error}. Attempting to continue anyway.`);
+        const handleError = (error: Event) => {
+          addLog(`Video error: ${error}`);
+          video.removeEventListener('error', handleError);
+          reject(new Error('Video element error'));
+        };
+        
+        video.addEventListener('canplay', handleCanPlay);
+        video.addEventListener('error', handleError);
+        
+        // Setup a timeout in case events don't fire
+        const timeoutId = setTimeout(() => {
+          video.removeEventListener('canplay', handleCanPlay);
+          video.removeEventListener('error', handleError);
+          addLog('Video ready timeout - continuing anyway');
+          resolve(); // Resolve anyway and try to continue
+        }, 3000);
+        
+        // Cleanup function
+        const cleanup = () => {
+          clearTimeout(timeoutId);
+          video.removeEventListener('canplay', handleCanPlay);
+          video.removeEventListener('error', handleError);
+        };
+        
+        // Add cleanup to the promise
+        (resolve as any).cleanup = cleanup;
+        (reject as any).cleanup = cleanup;
       });
       
-      if (!isMountedRef.current) {
-        addLog('Component unmounted while waiting for video to load');
-        return;
-      }
-      
-      // Play the video with error handling
-      addLog('Starting video playback...');
-      
       try {
-        // Set these properties again just to be sure
-        if (videoRef.current) {
-          videoRef.current.muted = true;
-          
-          // Use a simple play with a short timeout
-          await Promise.race([
-            videoRef.current.play(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Play timeout')), 3000))
-          ]);
-          
-          addLog('Video playback started successfully');
-        }
-      } catch (playError) {
-        addLog(`Video play error: ${playError}`);
+        // Now assign the stream to video element
+        video.srcObject = stream;
         
-        // Try one more approach - create a user interaction event
+        // Force a play attempt first, which might fail but that's okay
         try {
-          addLog('Trying alternative playback method...');
-          
-          if (videoRef.current) {
-            // Simulate a user interaction
-            const playPromise = videoRef.current.play();
-            if (playPromise !== undefined) {
-              playPromise.then(() => {
-                addLog('Alternative playback successful');
-              }).catch(finalError => {
-                addLog(`Final play error: ${finalError}`);
-                // Continue anyway - the OCR or barcode scanner might still work
-              });
-            }
+          await video.play();
+          addLog('Initial play() succeeded');
+        } catch (playError) {
+          // This is expected on many mobile browsers, we'll try again after canplay
+          addLog(`Initial play() failed: ${playError}. This is normal on some browsers.`);
+        }
+        
+        // Wait for the video to be ready to play
+        await videoReadyPromise;
+        
+        // Try playing again if needed
+        if (video.paused) {
+          addLog('Video still paused after ready event, trying play() again');
+          try {
+            // Try one more time to play
+            await video.play();
+            addLog('Second play() succeeded');
+          } catch (finalPlayError) {
+            addLog(`Final play() attempt failed: ${finalPlayError}`);
+            // Continue anyway - the scanner might still work with a paused video on some browsers
           }
-        } catch (finalError) {
-          addLog(`Failed all play attempts: ${finalError}`);
+        } else {
+          addLog('Video is already playing');
+        }
+      } catch (videoError) {
+        addLog(`Error setting up video: ${videoError}`);
+        // Try to continue anyway
+      } finally {
+        // Clean up event listeners
+        if ((videoReadyPromise as any).cleanup) {
+          (videoReadyPromise as any).cleanup();
         }
       }
       
-      // Initialize scanner even if video might not be playing properly
-      // Sometimes the scanning can still work
+      // Initialize scanner even if video might have issues
+      // Sometimes the scanning can still work in partially initialized state
       if (scanMode === 'text') {
         addLog('Starting OCR initialization...');
         
@@ -754,10 +809,13 @@ export const useVinScanner = ({
           }
           
           addLog('OCR worker initialized successfully');
-          setIsScanning(true);
           
-          addLog('Starting OCR scanning...');
-          await startOCRScanning(true);
+          // Start scanning with a short delay to ensure video has had time to start
+          setTimeout(() => {
+            if (isMountedRef.current) {
+              startOCRScanning(true);
+            }
+          }, 500);
         } catch (error) {
           addLog(`OCR initialization failed: ${error}`);
           toast.error("Failed to initialize OCR scanner. Please try again.");
@@ -770,7 +828,7 @@ export const useVinScanner = ({
       addLog(`Error accessing camera: ${error}`);
       toast.error("Could not access camera. Please check camera permissions.");
     }
-  }, [addLog, initializeBarcodeScanner, initializeWorker, scanMode, setHasFlash, setIsScanning, startOCRScanning, stopCamera]);
+  }, [addLog, initializeBarcodeScanner, initializeWorker, scanMode, setHasFlash, setupVideoElement, startOCRScanning, stopCamera]);
 
   const handleScanModeChange = useCallback(async (value: ScanMode) => {
     addLog(`Switching scan mode to: ${value}`);

@@ -59,21 +59,37 @@ export default function ScanVin() {
   
   // Use a ref to track if the camera is already initialized
   const isCameraInitializedRef = useRef(false)
+  // Track mount state to prevent effects after unmount
+  const isMountedRef = useRef(false)
   
   useEffect(() => {
+    // Set mounted flag
+    isMountedRef.current = true;
+    
     // Only start the camera on the initial mount
     if (!isCameraInitializedRef.current) {
       console.log("Starting camera on first mount");
-      isCameraInitializedRef.current = true
-      startCamera()
+      isCameraInitializedRef.current = true;
+      
+      // Small delay to ensure component is fully rendered before starting camera
+      const initTimer = setTimeout(() => {
+        if (isMountedRef.current) {
+          startCamera();
+        }
+      }, 100);
+      
+      return () => {
+        clearTimeout(initTimer);
+      };
     }
     
     // Clean up on unmount
     return () => {
       console.log("Stopping camera on unmount");
-      stopCamera()
-    }
-  }, [startCamera, stopCamera])
+      isMountedRef.current = false;
+      stopCamera();
+    };
+  }, [startCamera, stopCamera]);
 
   const handleConfirm = () => {
     if (detectedVehicle) {
