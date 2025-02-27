@@ -243,11 +243,25 @@ export const postProcessVIN = (text: string): string => {
     if (!manufacturerCodeMap[manufacturerChar]) {
       console.log(`Potential invalid manufacturer code: ${manufacturerChar}`)
       
-      // Check for common manufacturer code misreads
-      if (manufacturerChar === '6') {
-        console.log('Correcting manufacturer code 6 to G (General Motors)')
-        processed = processed[0] + 'G' + processed.slice(2)
+      // If second character is a number, try to determine the correct manufacturer
+      if (/[0-9]/.test(manufacturerChar)) {
+        // If it starts with 1 and second char is number, likely GM (G)
+        if (processed[0] === '1') {
+          console.log('Correcting numeric manufacturer code to G (General Motors)')
+          processed = processed[0] + 'G' + processed.slice(2)
+        }
+        // Add more manufacturer corrections based on patterns if needed
       }
+    }
+  }
+
+  // Special handling for common GM VIN patterns
+  if (processed.length >= 3) {
+    const wmi = processed.slice(0, 3)
+    if (/^[1-5][0-9]1/.test(wmi)) {
+      // If WMI looks like "161", "151", etc., it's likely "1G1"
+      console.log(`Correcting invalid WMI ${wmi} to 1G1 (GM pattern)`)
+      processed = '1G1' + processed.slice(3)
     }
   }
 
@@ -261,6 +275,7 @@ export const postProcessVIN = (text: string): string => {
   // Enhanced VIN validation
   const vinPattern = /^[A-HJ-NPR-Z0-9]{17}$/
   const naVinPattern = /^[1-5][A-HJ-NPR-Z0-9]{16}$/ // North American VIN pattern
+  const manufacturerPattern = /^[1-9][A-Z][A-Z0-9]{15}$/ // Ensures second char is letter
 
   // Log validation information
   if (processed.length === 17) {
@@ -270,10 +285,10 @@ export const postProcessVIN = (text: string): string => {
   }
 
   // Check if the processed result matches VIN patterns
-  const isProcessedValid = vinPattern.test(processed)
-  const isProcessedNA = naVinPattern.test(processed)
-  const isOriginalValid = vinPattern.test(original)
-  const isOriginalNA = naVinPattern.test(original)
+  const isProcessedValid = vinPattern.test(processed) && manufacturerPattern.test(processed)
+  const isProcessedNA = naVinPattern.test(processed) && manufacturerPattern.test(processed)
+  const isOriginalValid = vinPattern.test(original) && manufacturerPattern.test(original)
+  const isOriginalNA = naVinPattern.test(original) && manufacturerPattern.test(original)
 
   // Prefer North American VINs if detected
   if (isProcessedNA) return processed
