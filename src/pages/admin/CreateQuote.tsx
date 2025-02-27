@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { PageTitle } from "@/components/shared/PageTitle"
 import { ArrowLeft, Search } from "lucide-react"
 import { Client } from "@/components/clients/types"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { CustomerInfoSection } from "@/components/quotes/form-sections/CustomerInfoSection"
 import { VehicleInfoSection } from "@/components/quotes/form-sections/VehicleInfoSection"
 import { ServicesSection } from "@/components/quotes/form-sections/ServicesSection"
@@ -18,6 +18,27 @@ export default function CreateQuote() {
   const navigate = useNavigate()
   const [searchDialogOpen, setSearchDialogOpen] = useState(false)
   const { form, onSubmit } = useCreateQuoteForm()
+
+  // Check for VIN scanning results when component mounts or regains focus
+  useEffect(() => {
+    const checkForScannedVin = () => {
+      const scannedVin = sessionStorage.getItem('scanned-vin')
+      if (scannedVin) {
+        form.setValue('vehicle_vin', scannedVin, { shouldValidate: true, shouldDirty: true, shouldTouch: true })
+        sessionStorage.removeItem('scanned-vin')
+      }
+    }
+
+    // Check immediately when component mounts
+    checkForScannedVin()
+
+    // Also check when window regains focus
+    window.addEventListener('focus', checkForScannedVin)
+    
+    return () => {
+      window.removeEventListener('focus', checkForScannedVin)
+    }
+  }, [form])
 
   const handleClientSelect = async (client: Client) => {
     form.setValue('customer_first_name', client.first_name)
