@@ -936,7 +936,7 @@ export default function ScanVin() {
             </div>
             
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-16">
-              <div className="absolute inset-0 border-2 border-white/60 rounded-lg" />
+              <div className="absolute inset-0 border-2 border-purple-500 rounded-lg" />
             </div>
           </div>
 
