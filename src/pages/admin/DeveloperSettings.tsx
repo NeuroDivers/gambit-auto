@@ -233,12 +233,12 @@ export default function DeveloperSettings() {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Developer Settings</h1>
         <Button 
           variant="outline" 
           onClick={handleClearCache}
-          className="gap-2 w-full sm:w-auto"
+          className="gap-2"
         >
           <Trash2 className="h-4 w-4" />
           Clear Cache
@@ -246,24 +246,24 @@ export default function DeveloperSettings() {
       </div>
 
       <Tabs defaultValue="logs" className="space-y-4">
-        <TabsList className="flex flex-wrap h-auto">
-          <TabsTrigger value="logs" className="space-x-2 flex-grow">
+        <TabsList>
+          <TabsTrigger value="logs" className="space-x-2">
             <Code className="h-4 w-4" />
             <span>Scanner Debug</span>
           </TabsTrigger>
-          <TabsTrigger value="theme" className="space-x-2 flex-grow">
+          <TabsTrigger value="theme" className="space-x-2">
             <Sun className="h-4 w-4" />
-            <span>Theme</span>
+            <span>Theme Configuration</span>
           </TabsTrigger>
-          <TabsTrigger value="api" className="space-x-2 flex-grow">
+          <TabsTrigger value="api" className="space-x-2">
             <Globe className="h-4 w-4" />
-            <span>API</span>
+            <span>API Configuration</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="space-x-2 flex-grow">
+          <TabsTrigger value="security" className="space-x-2">
             <Shield className="h-4 w-4" />
             <span>Security</span>
           </TabsTrigger>
-          <TabsTrigger value="database" className="space-x-2 flex-grow">
+          <TabsTrigger value="database" className="space-x-2">
             <Database className="h-4 w-4" />
             <span>Database</span>
           </TabsTrigger>
@@ -271,7 +271,7 @@ export default function DeveloperSettings() {
 
         <TabsContent value="logs" className="space-y-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg font-medium flex items-center gap-2">
                 <Camera className="h-5 w-5" />
                 Processing Settings
@@ -335,8 +335,8 @@ export default function DeveloperSettings() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div className="space-y-4 border-b pb-4">
-                    <Label className="text-base font-medium">Image Processing Features</Label>
-                    <div className="space-y-4">
+                    <Label>Image Processing Features</Label>
+                    <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="auto-invert" className="flex-1">
                           Auto Invert Light Text
@@ -419,14 +419,14 @@ export default function DeveloperSettings() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-base font-medium">Grayscale Method</Label>
+                  <div>
+                    <Label>Grayscale Method</Label>
                     <RadioGroup
                       value={settings.grayscaleMethod}
                       onValueChange={(value: 'luminosity' | 'average' | 'blue-channel') => 
                         setSettings(prev => ({ ...prev, grayscaleMethod: value }))
                       }
-                      className="mt-2 space-y-2"
+                      className="mt-2"
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="luminosity" id="gray-luminosity" />
@@ -443,14 +443,14 @@ export default function DeveloperSettings() {
                     </RadioGroup>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-base font-medium">Blue Channel Emphasis</Label>
+                  <div>
+                    <Label>Blue Channel Emphasis</Label>
                     <RadioGroup
                       value={settings.blueEmphasis}
                       onValueChange={(value: 'zero' | 'normal' | 'high' | 'very-high') => 
                         setSettings(prev => ({ ...prev, blueEmphasis: value }))
                       }
-                      className="mt-2 space-y-2"
+                      className="mt-2"
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="zero" id="blue-zero" />
@@ -471,14 +471,14 @@ export default function DeveloperSettings() {
                     </RadioGroup>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-base font-medium">Contrast Enhancement</Label>
+                  <div>
+                    <Label>Contrast Enhancement</Label>
                     <RadioGroup
                       value={settings.contrast}
                       onValueChange={(value: 'normal' | 'high' | 'very-high') => 
                         setSettings(prev => ({ ...prev, contrast: value }))
                       }
-                      className="mt-2 space-y-2"
+                      className="mt-2"
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="normal" id="contrast-normal" />
@@ -497,8 +497,8 @@ export default function DeveloperSettings() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-base font-medium">Tesseract Page Segmentation Mode</Label>
+                  <div>
+                    <Label>Tesseract Page Segmentation Mode</Label>
                     <RadioGroup
                       value={settings.tesseractConfig.psm.toString()}
                       onValueChange={(value) => 
@@ -510,7 +510,7 @@ export default function DeveloperSettings() {
                           }
                         }))
                       }
-                      className="mt-2 space-y-2"
+                      className="mt-2"
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="7" id="psm-7" />
@@ -531,8 +531,8 @@ export default function DeveloperSettings() {
                     </RadioGroup>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-base font-medium">OCR Engine Mode</Label>
+                  <div>
+                    <Label>OCR Engine Mode</Label>
                     <RadioGroup
                       value={settings.tesseractConfig.oem.toString()}
                       onValueChange={(value) => 
@@ -544,7 +544,7 @@ export default function DeveloperSettings() {
                           }
                         }))
                       }
-                      className="mt-2 space-y-2"
+                      className="mt-2"
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="1" id="oem-1" />
@@ -557,14 +557,14 @@ export default function DeveloperSettings() {
                     </RadioGroup>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-base font-medium">Morphological Kernel Size</Label>
+                  <div>
+                    <Label>Morphological Kernel Size</Label>
                     <RadioGroup
                       value={settings.morphKernelSize}
                       onValueChange={(value: '2' | '3' | '4') => 
                         setSettings(prev => ({ ...prev, morphKernelSize: value }))
                       }
-                      className="mt-2 space-y-2"
+                      className="mt-2"
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="2" id="kernel-2" />
@@ -581,14 +581,14 @@ export default function DeveloperSettings() {
                     </RadioGroup>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-base font-medium">Confidence Threshold</Label>
+                  <div>
+                    <Label>Confidence Threshold</Label>
                     <RadioGroup
                       value={settings.confidenceThreshold}
                       onValueChange={(value: '35' | '40' | '45') => 
                         setSettings(prev => ({ ...prev, confidenceThreshold: value }))
                       }
-                      className="mt-2 space-y-2"
+                      className="mt-2"
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="35" id="confidence-35" />
@@ -608,7 +608,7 @@ export default function DeveloperSettings() {
               </div>
 
               <div className="pt-6 border-t">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                <div className="flex items-center justify-between mb-4">
                   <CardTitle className="text-lg font-medium">
                     Scanner Debug
                   </CardTitle>
@@ -628,10 +628,10 @@ export default function DeveloperSettings() {
                       Clear Logs
                     </Button>
                   </div>
-                  <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                  <ScrollArea className="h-[500px] w-full rounded-md border p-4">
                     <div className="space-y-2">
                       {scannerLogs.map((log, index) => (
-                        <div key={index} className="text-sm font-mono break-words">
+                        <div key={index} className="text-sm font-mono">
                           <span className="text-muted-foreground">
                             {new Date(log.timestamp).toLocaleString()}
                           </span>

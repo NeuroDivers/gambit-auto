@@ -1,11 +1,11 @@
 
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { PageTitle } from "@/components/shared/PageTitle"
-import { ArrowLeft, Search, Camera } from "lucide-react"
+import { ArrowLeft, Search } from "lucide-react"
 import { Client } from "@/components/clients/types"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { CustomerInfoSection } from "@/components/quotes/form-sections/CustomerInfoSection"
 import { VehicleInfoSection } from "@/components/quotes/form-sections/VehicleInfoSection"
 import { ServicesSection } from "@/components/quotes/form-sections/ServicesSection"
@@ -13,34 +13,11 @@ import { NotesSection } from "@/components/quotes/form-sections/NotesSection"
 import { ClientSearchDialog } from "@/components/quotes/form-sections/ClientSearchDialog"
 import { useCreateQuoteForm } from "@/components/quotes/hooks/useCreateQuoteForm"
 import { supabase } from "@/integrations/supabase/client"
-import { toast } from "sonner"
 
 export default function CreateQuote() {
   const navigate = useNavigate()
-  const location = useLocation()
   const [searchDialogOpen, setSearchDialogOpen] = useState(false)
   const { form, onSubmit } = useCreateQuoteForm()
-
-  // Check if we're returning from the VIN scanner page
-  useEffect(() => {
-    if (location.state?.scannedVin) {
-      console.log("VIN scanner returned:", location.state);
-      form.setValue('vehicle_vin', location.state.scannedVin)
-      
-      // Set vehicle info if available
-      if (location.state.vehicleInfo) {
-        const { make, model, year } = location.state.vehicleInfo
-        if (make) form.setValue('vehicle_make', make)
-        if (model) form.setValue('vehicle_model', model)
-        if (year) form.setValue('vehicle_year', parseInt(year))
-      }
-
-      // Clear the state to prevent re-applying on refresh
-      navigate(location.pathname, { replace: true });
-      
-      toast.success("VIN data imported successfully");
-    }
-  }, [location.state, form, navigate, location.pathname])
 
   const handleClientSelect = async (client: Client) => {
     form.setValue('customer_first_name', client.first_name)
@@ -72,10 +49,6 @@ export default function CreateQuote() {
       form.setValue('vehicle_doors', vehicles.doors || undefined)
       form.setValue('vehicle_trim', vehicles.trim || '')
     }
-  }
-
-  const handleScanVin = () => {
-    navigate('/estimates/scan-vin', { state: { returnPath: '/estimates/create' } })
   }
 
   return (
@@ -112,7 +85,7 @@ export default function CreateQuote() {
 
           <div className="grid grid-cols-1 gap-6">
             <CustomerInfoSection form={form} />
-            <VehicleInfoSection form={form} scanVinAction={handleScanVin} />
+            <VehicleInfoSection form={form} />
             <ServicesSection form={form} />
             <NotesSection form={form} />
           </div>

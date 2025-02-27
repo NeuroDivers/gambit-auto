@@ -44,8 +44,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const [remainingVariations, setRemainingVariations] = useState<string[]>([])
   const [showLogs, setShowLogs] = useState(false)
   const isMobile = useIsMobile()
-  // Flag to track if the dialog was manually closed
-  const manualCloseRef = useRef(false)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -620,11 +618,10 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }
 
-  const handleClose = () => {
-    manualCloseRef.current = true
+  const handleClose = async () => {
     stopCamera()
     if (workerRef.current) {
-      workerRef.current.terminate()
+      await workerRef.current.terminate()
       workerRef.current = null
     }
     setIsDialogOpen(false)
@@ -634,7 +631,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
   }
 
   const handleOpen = async () => {
-    manualCloseRef.current = false
     setIsDialogOpen(true)
     setLogs([])
     await startCamera()
@@ -683,39 +679,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }
 
-  // Handle orientation change
-  useEffect(() => {
-    // Prevent the dialog from closing on orientation change
-    const handleOrientationChange = () => {
-      addLog('Orientation change detected')
-      
-      if (!isDialogOpen || manualCloseRef.current) return
-      
-      // If the dialog was open and not manually closed,
-      // ensure it stays open and camera remains active
-      if (!isCameraActive && streamRef.current === null) {
-        addLog('Restarting camera after orientation change')
-        startCamera().catch(error => {
-          addLog(`Failed to restart camera: ${error}`)
-        })
-      }
-    }
-
-    // Listen for orientation change and resize events
-    window.addEventListener('orientationchange', handleOrientationChange)
-    window.addEventListener('resize', handleOrientationChange)
-
-    return () => {
-      window.removeEventListener('orientationchange', handleOrientationChange)
-      window.removeEventListener('resize', handleOrientationChange)
-    }
-  }, [isDialogOpen, isCameraActive])
-
   useEffect(() => {
     return () => {
-      if (isDialogOpen) {
-        handleClose()
-      }
+      handleClose()
     }
   }, [])
 
@@ -731,14 +697,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
         <Camera className="h-4 w-4" />
       </Button>
 
-      <Dialog open={isDialogOpen} onOpenChange={(open) => {
-        if (!open) {
-          handleClose()
-        }
-      }}>
-        <DialogContent 
-          className="sm:max-w-md p-0 h-[100dvh] sm:h-auto [&>button]:hidden flex flex-col"
-        >
+      <Dialog open={isDialogOpen} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-md p-0 h-[100dvh] sm:h-auto [&>button]:hidden flex flex-col">
           <ScannerOverlay
             scanMode={scanMode}
             onScanModeChange={handleScanModeChange}
