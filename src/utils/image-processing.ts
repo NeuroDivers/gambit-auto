@@ -1,3 +1,4 @@
+
 export const preprocessImage = (canvas: HTMLCanvasElement): string => {
   const ctx = canvas.getContext('2d')
   if (!ctx) return canvas.toDataURL()
@@ -129,7 +130,7 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
 }
 
 export const postProcessVIN = (text: string): string => {
-  // Enhanced character correction map
+  // Enhanced character correction map - specifically targeting common VIN misreads
   const commonMistakes: { [key: string]: string } = {
     'O': '0',
     'Q': '0',
@@ -153,25 +154,45 @@ export const postProcessVIN = (text: string): string => {
   // Keep original for validation
   const original = processed
 
-  // Apply character substitutions
-  processed = processed.split('').map(char => commonMistakes[char] || char).join('')
+  // Apply position-specific corrections for known problem areas
+  const chars = processed.split('')
+  
+  // Specific fixes based on common OCR errors in VINs
+  if (chars.length >= 10) {
+    // Handle the common T/7 confusion in position 9 (check digit position)
+    if (chars[8] === 'T') chars[8] = '7'
+    
+    // M/4 confusion in VINs
+    for (let i = 0; i < chars.length; i++) {
+      if (chars[i] === 'M') {
+        // In most positions, M is more likely to be a 4
+        // Especially in the later part of the VIN which should be mostly numeric
+        if (i >= 10) {
+          chars[i] = '4'
+        }
+      }
+    }
+  }
+  
+  // Apply general character substitutions
+  const corrected = chars.map(char => commonMistakes[char] || char).join('')
 
   // Enhanced VIN validation
   const vinPattern = /^[A-HJ-NPR-Z0-9]{17}$/
   const naVinPattern = /^[1-5][A-HJ-NPR-Z0-9]{16}$/ // North American VIN pattern
 
-  // Check if the processed result matches VIN patterns
-  const isProcessedValid = vinPattern.test(processed)
-  const isProcessedNA = naVinPattern.test(processed)
+  // Check if the corrected result matches VIN patterns
+  const isCorrectedValid = vinPattern.test(corrected)
+  const isCorrectedNA = naVinPattern.test(corrected)
   const isOriginalValid = vinPattern.test(original)
   const isOriginalNA = naVinPattern.test(original)
 
   // Prefer North American VINs if detected
-  if (isProcessedNA) return processed
+  if (isCorrectedNA) return corrected
   if (isOriginalNA) return original
 
   // Fall back to general VIN format
-  if (isProcessedValid) return processed
+  if (isCorrectedValid) return corrected
   if (isOriginalValid) return original
 
   // If no valid VIN is found, return the cleaned original text
