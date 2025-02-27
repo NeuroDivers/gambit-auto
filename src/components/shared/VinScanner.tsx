@@ -12,6 +12,7 @@ import { preprocessImage } from "@/utils/image-processing"
 import { ScannerOverlay } from "./vin-scanner/ScannerOverlay"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface VinScannerProps {
   onScan: (vin: string) => void
@@ -28,11 +29,138 @@ interface VehicleInfo {
   year?: string;
 }
 
+// OCR presets - different configurations for Tesseract
+interface OcrPreset {
+  name: string;
+  description: string;
+  config: {
+    whitelist?: string;
+    pagesegMode?: PSM;
+    preserveInterwordSpaces?: string;
+    minWordLength?: number;
+    createWordBoxes?: string;
+    createBoxes?: string;
+  }
+}
+
+const ocrPresets: OcrPreset[] = [
+  {
+    name: "Default",
+    description: "Balanced accuracy for most VIN formats",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SINGLE_LINE,
+      preserveInterwordSpaces: "0",
+      minWordLength: 17,
+      createWordBoxes: "1",
+      createBoxes: "1"
+    }
+  },
+  {
+    name: "High Precision",
+    description: "More accurate but slower scanning",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SINGLE_BLOCK,
+      preserveInterwordSpaces: "0",
+      minWordLength: 17,
+      createWordBoxes: "1",
+      createBoxes: "1"
+    }
+  },
+  {
+    name: "Fast Scan",
+    description: "Quicker but less accurate",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SPARSE_TEXT,
+      preserveInterwordSpaces: "0",
+      minWordLength: 15,
+      createWordBoxes: "0",
+      createBoxes: "0"
+    }
+  },
+  {
+    name: "Faded Text",
+    description: "Better for hard-to-read VINs",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SINGLE_WORD,
+      preserveInterwordSpaces: "0",
+      minWordLength: 15,
+      createWordBoxes: "1",
+      createBoxes: "1"
+    }
+  },
+  {
+    name: "Windshield Scanning",
+    description: "Optimized for reading through glass",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SINGLE_BLOCK,
+      preserveInterwordSpaces: "0",
+      minWordLength: 17,
+      createWordBoxes: "1",
+      createBoxes: "1"
+    }
+  },
+  {
+    name: "Monitor/Screen",
+    description: "For VINs displayed on screens",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SINGLE_LINE,
+      preserveInterwordSpaces: "0",
+      minWordLength: 17,
+      createWordBoxes: "1",
+      createBoxes: "1"
+    }
+  },
+  {
+    name: "Low Light",
+    description: "Enhanced for poor lighting conditions",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SINGLE_BLOCK,
+      preserveInterwordSpaces: "0",
+      minWordLength: 17,
+      createWordBoxes: "1",
+      createBoxes: "1"
+    }
+  },
+  {
+    name: "Bright Light",
+    description: "For dealing with glare and reflections",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SINGLE_BLOCK,
+      preserveInterwordSpaces: "0",
+      minWordLength: 17,
+      createWordBoxes: "1",
+      createBoxes: "1"
+    }
+  },
+  {
+    name: "Paper Document",
+    description: "For printed VINs on paper",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.RAW_LINE,
+      preserveInterwordSpaces: "0",
+      minWordLength: 17,
+      createWordBoxes: "1",
+      createBoxes: "1"
+    }
+  }
+];
+
 export function VinScanner({ onScan }: VinScannerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isCameraActive, setIsCameraActive] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
-  const [scanMode, setScanMode] = useState<'text' | 'barcode'>('text')
+  // Change default scan mode to 'barcode'
+  const [scanMode, setScanMode] = useState<'text' | 'barcode'>('barcode')
+  const [ocrPreset, setOcrPreset] = useState<string>("Default")
   const [logs, setLogs] = useState<string[]>([])
   const [hasFlash, setHasFlash] = useState(false)
   const [isFlashOn, setIsFlashOn] = useState(false)
@@ -248,28 +376,36 @@ export function VinScanner({ onScan }: VinScannerProps) {
     return diff || 'Perfect match!'
   }
 
+  const getCurrentOcrPreset = (): OcrPreset => {
+    return ocrPresets.find(preset => preset.name === ocrPreset) || ocrPresets[0];
+  };
+
   const initializeWorker = async () => {
     try {
-      addLog('Initializing OCR worker with enhanced settings...')
-      const worker = await createWorker()
+      const selectedPreset = getCurrentOcrPreset();
+      addLog(`Initializing OCR worker with ${selectedPreset.name} settings...`);
       
-      await worker.reinitialize('eng')
+      const worker = await createWorker();
+      
+      await worker.reinitialize('eng');
+      
+      // Apply the selected preset configuration
       await worker.setParameters({
-        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-        tessedit_pageseg_mode: PSM.SINGLE_LINE,
-        preserve_interword_spaces: '0',
-        tessedit_min_word_length: 17,
-        tessjs_create_word_level_boxes: '1',
-        tessjs_create_box: '1',
+        tessedit_char_whitelist: selectedPreset.config.whitelist,
+        tessedit_pageseg_mode: selectedPreset.config.pagesegMode,
+        preserve_interword_spaces: selectedPreset.config.preserveInterwordSpaces,
+        tessedit_min_word_length: selectedPreset.config.minWordLength,
+        tessjs_create_word_level_boxes: selectedPreset.config.createWordBoxes,
+        tessjs_create_box: selectedPreset.config.createBoxes,
         debug_file: '/dev/null',
         tessjs_mock_parameter: '1'
-      })
+      });
 
-      addLog('OCR worker initialized with enhanced settings')
-      return worker
+      addLog(`OCR worker initialized with ${selectedPreset.name} settings`);
+      return worker;
     } catch (error) {
-      addLog(`Error initializing OCR worker: ${error}`)
-      throw error
+      addLog(`Error initializing OCR worker: ${error}`);
+      throw error;
     }
   }
 
@@ -383,8 +519,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
               scannedValue = cleanVinBarcode(scannedValue);
               addLog(`Processed barcode: ${scannedValue}`);
               
-              if (validateVIN(scannedValue)) {
-                addLog('Valid VIN detected!');
+              // For barcode scans, skip local VIN validation if length is 17
+              if (scannedValue.length === 17) {
+                addLog('Barcode VIN has valid length, proceeding with NHTSA validation');
                 
                 // Attempt to get vehicle info for confirmation
                 const vehicleInfo = await fetchVehicleInfo(scannedValue);
@@ -402,7 +539,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
                 } else {
                   // VIN format is valid but couldn't fetch vehicle info
                   // Still allow confirmation as the VIN might be valid but not in NHTSA database
-                  addLog('NHTSA lookup failed, but VIN format is valid - proceeding with confirmation');
+                  addLog('NHTSA lookup failed, but barcode data appears to be a valid VIN - proceeding with confirmation');
                   const dummyVehicleInfo = {
                     vin: scannedValue,
                     make: "Unknown",
@@ -415,7 +552,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
                 }
               } else {
                 // Invalid VIN - log and continue scanning
-                addLog(`Invalid VIN format: ${scannedValue}`);
+                addLog(`Invalid VIN length (${scannedValue.length}): ${scannedValue}`);
               }
             }
           } catch (error: any) {
@@ -683,6 +820,25 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }
 
+  const handleOcrPresetChange = async (value: string) => {
+    setOcrPreset(value);
+    addLog(`Switching OCR preset to: ${value}`);
+    
+    // Only restart OCR if we're currently in text mode
+    if (scanMode === 'text') {
+      if (workerRef.current) {
+        addLog('Terminating OCR worker to apply new preset');
+        await workerRef.current.terminate();
+        workerRef.current = null;
+      }
+      
+      addLog('Reinitializing OCR with new preset');
+      workerRef.current = await initializeWorker();
+      setIsScanning(true);
+      startOCRScanning(true);
+    }
+  };
+
   // Handle orientation change
   useEffect(() => {
     // Prevent the dialog from closing on orientation change
@@ -718,6 +874,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
       }
     }
   }, [])
+  
+  const currentPreset = getCurrentOcrPreset();
 
   return (
     <>
@@ -747,7 +905,34 @@ export function VinScanner({ onScan }: VinScannerProps) {
             onFlashToggle={toggleFlash}
             onClose={handleClose}
           />
-          <div className="flex-1 relative sm:aspect-video w-full overflow-hidden">
+          
+          {scanMode === 'text' && (
+            <div className="bg-background px-4 py-2 border-b">
+              <Label htmlFor="modal-ocr-preset" className="text-sm mb-1 block">
+                OCR Settings Preset
+              </Label>
+              <Select value={ocrPreset} onValueChange={handleOcrPresetChange}>
+                <SelectTrigger id="modal-ocr-preset" className="w-full">
+                  <SelectValue placeholder="Select OCR preset" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ocrPresets.map((preset) => (
+                    <SelectItem key={preset.name} value={preset.name}>
+                      <div>
+                        <span className="font-medium">{preset.name}</span>
+                        <p className="text-xs text-muted-foreground">{preset.description}</p>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                {currentPreset.description}
+              </p>
+            </div>
+          )}
+          
+          <div className="relative bg-black flex-1 overflow-hidden">
             {isConfirmationOpen ? (
               <div className="absolute inset-0 z-50 bg-background/95 flex flex-col">
                 <div className="flex-1 overflow-y-auto p-6 h-[80vh] md:h-[70vh]">
@@ -821,77 +1006,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
                   </div>
                 </div>
               </>
-            )}
-          </div>
-          <div className="bg-muted p-4">
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <Label htmlFor="scan-mode" className="text-sm">
-                Recognition Mode
-              </Label>
-              <div className="flex items-center gap-2">
-                <Label
-                  htmlFor="scan-mode-text"
-                  className={`text-sm ${
-                    scanMode === "text" ? "text-foreground" : "text-muted-foreground"
-                  }`}
-                >
-                  OCR
-                </Label>
-                <Switch
-                  id="scan-mode"
-                  checked={scanMode === "barcode"}
-                  onCheckedChange={(checked) =>
-                    handleScanModeChange(checked ? "barcode" : "text")
-                  }
-                />
-                <Label
-                  htmlFor="scan-mode-barcode"
-                  className={`text-sm ${
-                    scanMode === "barcode" ? "text-foreground" : "text-muted-foreground"
-                  }`}
-                >
-                  Barcode
-                </Label>
-              </div>
-            </div>
-            
-            {lastScanDuration !== null && (
-              <div className="mb-2 text-sm font-medium text-primary">
-                Last successful scan took: {lastScanDuration.toFixed(2)} seconds
-              </div>
-            )}
-            <div className="flex items-center justify-between mb-2">
-              <button 
-                onClick={() => setShowLogs(!showLogs)}
-                className="flex items-center text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <span className="mr-1">Scan Logs</span>
-                {showLogs ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-              </button>
-              {showLogs && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => setIsPaused(!isPaused)}
-                >
-                  {isPaused ? (
-                    <Play className="h-3 w-3" />
-                  ) : (
-                    <Pause className="h-3 w-3" />
-                  )}
-                </Button>
-              )}
-            </div>
-            {showLogs && (
-              <div className="max-h-32 overflow-y-auto text-xs font-mono">
-                <div className="space-y-1">
-                  {logs.map((log, index) => (
-                    <div key={index} className="text-muted-foreground">{log}</div>
-                  ))}
-                  <div ref={logsEndRef} />
-                </div>
-              </div>
             )}
           </div>
         </DialogContent>

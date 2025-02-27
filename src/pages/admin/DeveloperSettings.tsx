@@ -105,18 +105,136 @@ export default function DeveloperSettings() {
   const [showNewPresetDialog, setShowNewPresetDialog] = useState(false)
   const [activePresetId, setActivePresetId] = useState<string | null>(null)
 
-  // Initialize with default preset if none exist
+  // Generate default presets if none exist
   useEffect(() => {
     if (presets.length === 0) {
-      // Add current settings as default preset
-      const defaultPreset: Preset = {
-        id: 'default-preset',
-        name: 'Default OCR Settings',
-        settings: settings,
-        isDefault: true
-      }
-      setPresets([defaultPreset])
-      localStorage.setItem('scanner-presets', JSON.stringify([defaultPreset]))
+      // Add built-in presets
+      const defaultPresets: Preset[] = [
+        {
+          id: 'default-preset',
+          name: 'Default OCR Settings',
+          settings: {
+            blueEmphasis: 'very-high',
+            contrast: 'very-high',
+            morphKernelSize: '3',
+            confidenceThreshold: '35',
+            grayscaleMethod: 'blue-channel',
+            autoInvert: true,
+            autoInvertDark: false,
+            edgeEnhancement: true,
+            noiseReduction: true,
+            adaptiveContrast: true,
+            tesseractConfig: {
+              psm: 7,
+              oem: 1
+            }
+          },
+          isDefault: true
+        },
+        {
+          id: 'windshield-preset',
+          name: 'Windshield Scanning',
+          settings: {
+            blueEmphasis: 'very-high',
+            contrast: 'very-high',
+            morphKernelSize: '3',
+            confidenceThreshold: '35',
+            grayscaleMethod: 'blue-channel',
+            autoInvert: false,
+            autoInvertDark: false,
+            edgeEnhancement: true,
+            noiseReduction: true,
+            adaptiveContrast: true,
+            tesseractConfig: {
+              psm: 6,
+              oem: 1
+            }
+          }
+        },
+        {
+          id: 'monitor-preset',
+          name: 'Monitor/Screen Scanning',
+          settings: {
+            blueEmphasis: 'normal',
+            contrast: 'normal',
+            morphKernelSize: '2',
+            confidenceThreshold: '40',
+            grayscaleMethod: 'average', // Approximation for green emphasis
+            autoInvert: false,
+            autoInvertDark: false,
+            edgeEnhancement: false,
+            noiseReduction: true,
+            adaptiveContrast: false,
+            tesseractConfig: {
+              psm: 7,
+              oem: 3
+            }
+          }
+        },
+        {
+          id: 'low-light-preset',
+          name: 'Low Light Conditions',
+          settings: {
+            blueEmphasis: 'high',
+            contrast: 'very-high',
+            morphKernelSize: '4', // Approximation for 5x5
+            confidenceThreshold: '35',
+            grayscaleMethod: 'blue-channel',
+            autoInvert: false,
+            autoInvertDark: true,
+            edgeEnhancement: true,
+            noiseReduction: true,
+            adaptiveContrast: true,
+            tesseractConfig: {
+              psm: 6,
+              oem: 1
+            }
+          }
+        },
+        {
+          id: 'bright-light-preset',
+          name: 'Bright Light/Reflections',
+          settings: {
+            blueEmphasis: 'zero',
+            contrast: 'high',
+            morphKernelSize: '3',
+            confidenceThreshold: '40',
+            grayscaleMethod: 'luminosity', // To approximate red channel emphasis
+            autoInvert: true,
+            autoInvertDark: false,
+            edgeEnhancement: false,
+            noiseReduction: true,
+            adaptiveContrast: false,
+            tesseractConfig: {
+              psm: 6,
+              oem: 1
+            }
+          }
+        },
+        {
+          id: 'paper-preset',
+          name: 'Paper Document Scanning',
+          settings: {
+            blueEmphasis: 'normal',
+            contrast: 'high',
+            morphKernelSize: '4', // Approximation for 5x5
+            confidenceThreshold: '40',
+            grayscaleMethod: 'average', // Approximation for green emphasis
+            autoInvert: false,
+            autoInvertDark: false,
+            edgeEnhancement: false,
+            noiseReduction: true,
+            adaptiveContrast: true,
+            tesseractConfig: {
+              psm: 13, // Closest option to 4
+              oem: 1
+            }
+          }
+        }
+      ]
+      
+      setPresets(defaultPresets)
+      localStorage.setItem('scanner-presets', JSON.stringify(defaultPresets))
       setActivePresetId('default-preset')
     } else if (!activePresetId) {
       // Set active preset to default or first one
