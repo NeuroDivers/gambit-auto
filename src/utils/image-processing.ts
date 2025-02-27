@@ -65,14 +65,22 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
         gray = (r + g + b) / 3
         break
       case 'blue-channel':
-        // Enhanced blue channel isolation with red/green suppression
-        gray = Math.max(b - ((r + g) / 3), 0)
+        // Enhanced blue channel isolation with reduced artifacts for first character
+        const x = Math.floor((i / 4) % canvas.width)
+        const isFirstCharRegion = x < canvas.width * 0.15 // First 15% of width
+        if (isFirstCharRegion) {
+          // Use more balanced weights for the first character region
+          gray = (r * 0.3 + g * 0.3 + b * 0.4)
+        } else {
+          // Enhanced blue channel isolation with red/green suppression for rest
+          gray = Math.max(b - ((r + g) / 3), 0)
+        }
         break
       case 'luminosity':
       default:
         const weights = (() => {
           switch (blueEmphasis) {
-            case 'very-high': return { r: 0.1, g: 0.1, b: 0.8 }  // More extreme blue emphasis
+            case 'very-high': return { r: 0.1, g: 0.1, b: 0.8 }
             case 'high': return { r: 0.15, g: 0.15, b: 0.7 }
             default: return { r: 0.2, g: 0.3, b: 0.5 }
           }
@@ -89,7 +97,7 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
       
       const contrastValues = (() => {
         switch (contrast) {
-          case 'very-high': return { dark: 0.2, light: 2.0 }  // More extreme contrast
+          case 'very-high': return { dark: 0.2, light: 2.0 }
           case 'high': return { dark: 0.3, light: 1.8 }
           default: return { dark: 0.4, light: 1.6 }
         }
