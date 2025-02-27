@@ -1,4 +1,3 @@
-
 export const preprocessImage = (canvas: HTMLCanvasElement): string => {
   const ctx = canvas.getContext('2d')
   if (!ctx) return canvas.toDataURL()
@@ -145,6 +144,56 @@ export const preprocessImage = (canvas: HTMLCanvasElement): string => {
 
   ctx.putImageData(imageData, 0, 0)
   return canvas.toDataURL()
+}
+
+export const postProcessVIN = (text: string): string => {
+  // Enhanced character correction map
+  const commonMistakes: { [key: string]: string } = {
+    'O': '0',
+    'Q': '0',
+    'D': '0',
+    'I': '1',
+    'L': '1',
+    'Z': '2',
+    'S': '5',
+    'B': '8',
+    'G': '6',
+    'T': '7',
+    'A': '4', // Only if confidence is low
+    'H': '4', // Only if confidence is low
+    'U': '0', // Only if confidence is low
+    'V': 'Y' // Only if in known position
+  }
+
+  // Remove all non-alphanumeric characters and spaces
+  let processed = text.replace(/[^A-HJ-NPR-Z0-9]/g, '')
+
+  // Keep original for validation
+  const original = processed
+
+  // Apply character substitutions
+  processed = processed.split('').map(char => commonMistakes[char] || char).join('')
+
+  // Enhanced VIN validation
+  const vinPattern = /^[A-HJ-NPR-Z0-9]{17}$/
+  const naVinPattern = /^[1-5][A-HJ-NPR-Z0-9]{16}$/ // North American VIN pattern
+
+  // Check if the processed result matches VIN patterns
+  const isProcessedValid = vinPattern.test(processed)
+  const isProcessedNA = naVinPattern.test(processed)
+  const isOriginalValid = vinPattern.test(original)
+  const isOriginalNA = naVinPattern.test(original)
+
+  // Prefer North American VINs if detected
+  if (isProcessedNA) return processed
+  if (isOriginalNA) return original
+
+  // Fall back to general VIN format
+  if (isProcessedValid) return processed
+  if (isOriginalValid) return original
+
+  // If no valid VIN is found, return the cleaned original text
+  return original.toUpperCase()
 }
 
 // New helper functions for improved processing
@@ -379,56 +428,6 @@ function erode(data: Uint8ClampedArray, width: number, height: number, kernelSiz
   for (let i = 0; i < data.length; i++) {
     data[i] = result[i]
   }
-}
-
-export const postProcessVIN = (text: string): string => {
-  // Enhanced character correction map
-  const commonMistakes: { [key: string]: string } = {
-    'O': '0',
-    'Q': '0',
-    'D': '0',
-    'I': '1',
-    'L': '1',
-    'Z': '2',
-    'S': '5',
-    'B': '8',
-    'G': '6',
-    'T': '7',
-    'A': '4', // Only if confidence is low
-    'H': '4', // Only if confidence is low
-    'U': '0', // Only if confidence is low
-    'V': 'Y' // Only if in known position
-  }
-
-  // Remove all non-alphanumeric characters and spaces
-  let processed = text.replace(/[^A-HJ-NPR-Z0-9]/g, '')
-
-  // Keep original for validation
-  const original = processed
-
-  // Apply character substitutions
-  processed = processed.split('').map(char => commonMistakes[char] || char).join('')
-
-  // Enhanced VIN validation
-  const vinPattern = /^[A-HJ-NPR-Z0-9]{17}$/
-  const naVinPattern = /^[1-5][A-HJ-NPR-Z0-9]{16}$/ // North American VIN pattern
-
-  // Check if the processed result matches VIN patterns
-  const isProcessedValid = vinPattern.test(processed)
-  const isProcessedNA = naVinPattern.test(processed)
-  const isOriginalValid = vinPattern.test(original)
-  const isOriginalNA = naVinPattern.test(original)
-
-  // Prefer North American VINs if detected
-  if (isProcessedNA) return processed
-  if (isOriginalNA) return original
-
-  // Fall back to general VIN format
-  if (isProcessedValid) return processed
-  if (isOriginalValid) return original
-
-  // If no valid VIN is found, return the cleaned original text
-  return original.toUpperCase()
 }
 
 export const cropToVinRegion = (canvas: HTMLCanvasElement): HTMLCanvasElement => {
