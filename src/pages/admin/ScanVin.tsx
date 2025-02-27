@@ -17,6 +17,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Badge } from "@/components/ui/badge"
 import { PageTitle } from "@/components/shared/PageTitle"
 import { Toggle } from "@/components/ui/toggle"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface VehicleInfo {
   vin: string;
@@ -28,6 +29,71 @@ interface VehicleInfo {
 interface ExtendedTrackCapabilities extends MediaTrackCapabilities {
   torch?: boolean;
 }
+
+// OCR presets - different configurations for Tesseract
+interface OcrPreset {
+  name: string;
+  description: string;
+  config: {
+    whitelist?: string;
+    pagesegMode?: PSM;
+    preserveInterwordSpaces?: string;
+    minWordLength?: number;
+    createWordBoxes?: string;
+    createBoxes?: string;
+  }
+}
+
+const ocrPresets: OcrPreset[] = [
+  {
+    name: "Default",
+    description: "Balanced accuracy for most VIN formats",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SINGLE_LINE,
+      preserveInterwordSpaces: "0",
+      minWordLength: 17,
+      createWordBoxes: "1",
+      createBoxes: "1"
+    }
+  },
+  {
+    name: "High Precision",
+    description: "More accurate but slower scanning",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SINGLE_BLOCK,
+      preserveInterwordSpaces: "0",
+      minWordLength: 17,
+      createWordBoxes: "1",
+      createBoxes: "1"
+    }
+  },
+  {
+    name: "Fast Scan",
+    description: "Quicker but less accurate",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SPARSE_TEXT,
+      preserveInterwordSpaces: "0",
+      minWordLength: 15,
+      createWordBoxes: "0",
+      createBoxes: "0"
+    }
+  },
+  {
+    name: "Faded Text",
+    description: "Better for hard-to-read VINs",
+    config: {
+      whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      pagesegMode: PSM.SINGLE_WORD,
+      preserveInterwordSpaces: "0",
+      minWordLength: 15,
+      createWordBoxes: "1",
+      createBoxes: "1"
+    }
+  }
+];
 
 // Simple VIN decoder implementation since we don't have access to the imported one
 const decodeVIN = (vin: string): {
@@ -126,6 +192,7 @@ export default function ScanVin() {
   const [isScanning, setIsScanning] = useState(false)
   // Change default scan mode to 'barcode'
   const [scanMode, setScanMode] = useState<'text' | 'barcode'>('barcode')
+  const [ocrPreset, setOcrPreset] = useState<string>("Default")
   const [logs, setLogs] = useState<string[]>([])
   const [hasFlash, setHasFlash] = useState(false)
   const [isFlashOn, setIsFlashOn] = useState(false)
@@ -364,30 +431,38 @@ export default function ScanVin() {
     return validVariations;
   };
 
+  const getCurrentOcrPreset = (): OcrPreset => {
+    return ocrPresets.find(preset => preset.name === ocrPreset) || ocrPresets[0];
+  };
+
   const initializeWorker = async () => {
     try {
-      addLog('Initializing OCR worker with enhanced settings...')
-      const worker = await createWorker()
+      const selectedPreset = getCurrentOcrPreset();
+      addLog(`Initializing OCR worker with ${selectedPreset.name} settings...`);
       
-      await worker.reinitialize('eng')
+      const worker = await createWorker();
+      
+      await worker.reinitialize('eng');
+      
+      // Apply the selected preset configuration
       await worker.setParameters({
-        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-        tessedit_pageseg_mode: PSM.SINGLE_LINE,
-        preserve_interword_spaces: '0',
-        tessedit_min_word_length: 17,
-        tessjs_create_word_level_boxes: '1',
-        tessjs_create_box: '1',
+        tessedit_char_whitelist: selectedPreset.config.whitelist,
+        tessedit_pageseg_mode: selectedPreset.config.pagesegMode,
+        preserve_interword_spaces: selectedPreset.config.preserveInterwordSpaces,
+        tessedit_min_word_length: selectedPreset.config.minWordLength,
+        tessjs_create_word_level_boxes: selectedPreset.config.createWordBoxes,
+        tessjs_create_box: selectedPreset.config.createBoxes,
         debug_file: '/dev/null',
         tessjs_mock_parameter: '1'
-      })
+      });
 
-      addLog('OCR worker initialized with enhanced settings')
-      return worker
+      addLog(`OCR worker initialized with ${selectedPreset.name} settings`);
+      return worker;
     } catch (error) {
-      addLog(`Error initializing OCR worker: ${error}`)
-      throw error
+      addLog(`Error initializing OCR worker: ${error}`);
+      throw error;
     }
-  }
+  };
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -752,10 +827,14 @@ export default function ScanVin() {
     
     if (!videoRef.current?.srcObject) {
       startCamera().then(() => {
-        startOCRScanning(true)
+        if (scanMode === 'text') {
+          startOCRScanning(true)
+        }
       })
     } else {
-      startOCRScanning(true)
+      if (scanMode === 'text') {
+        startOCRScanning(true)
+      }
     }
   }
 
@@ -797,6 +876,25 @@ export default function ScanVin() {
     }
   }
 
+  const handleOcrPresetChange = async (value: string) => {
+    setOcrPreset(value);
+    addLog(`Switching OCR preset to: ${value}`);
+    
+    // Only restart OCR if we're currently in text mode
+    if (scanMode === 'text') {
+      if (workerRef.current) {
+        addLog('Terminating OCR worker to apply new preset');
+        await workerRef.current.terminate();
+        workerRef.current = null;
+      }
+      
+      addLog('Reinitializing OCR with new preset');
+      workerRef.current = await initializeWorker();
+      setIsScanning(true);
+      startOCRScanning(true);
+    }
+  };
+
   const handleManualVinSubmit = async () => {
     if (manualVin.trim().length === 17) {
       if (validateVIN(manualVin)) {
@@ -836,6 +934,8 @@ export default function ScanVin() {
   const borderColorClass = isFlashingRed ? 
     "border-red-500" : 
     (textDetected ? "border-green-500" : "border-purple-500");
+
+  const currentPreset = getCurrentOcrPreset();
 
   return (
     <div className="container max-w-md mx-auto p-4">
@@ -962,7 +1062,34 @@ export default function ScanVin() {
             </Button>
           </div>
 
-          <p className="text-xs text-muted-foreground">Using preset: Default OCR Settings</p>
+          {scanMode === 'text' && (
+            <div className="mb-4">
+              <Label htmlFor="ocr-preset" className="text-sm mb-1 block">
+                OCR Settings Preset
+              </Label>
+              <Select value={ocrPreset} onValueChange={handleOcrPresetChange}>
+                <SelectTrigger id="ocr-preset" className="w-full">
+                  <SelectValue placeholder="Select OCR preset" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ocrPresets.map((preset) => (
+                    <SelectItem key={preset.name} value={preset.name}>
+                      <div>
+                        <span className="font-medium">{preset.name}</span>
+                        <p className="text-xs text-muted-foreground">{preset.description}</p>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <p className="text-xs text-muted-foreground">
+            {scanMode === 'text' 
+              ? `Using preset: ${currentPreset.name} - ${currentPreset.description}`
+              : 'Using barcode scanner for VIN detection'}
+          </p>
 
           <div className="relative bg-black rounded-lg overflow-hidden aspect-video w-full">
             <video
