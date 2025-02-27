@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react"
 import { toast } from "sonner"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { createWorker, PSM } from 'tesseract.js'
-import { BrowserMultiFormatReader } from '@zxing/library'
+import { BrowserMultiFormatReader, BarcodeFormat } from '@zxing/library'
 import { useIsMobile } from "@/hooks/use-mobile"
 import { validateVIN, validateVinWithNHTSA } from "@/utils/vin-validation"
 import { preprocessImage } from "@/utils/image-processing"
@@ -126,6 +126,23 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
 
     return generateVinVariations(text);
+  };
+
+  // Also used for processing barcode scan results
+  const cleanVinBarcode = (scannedText: string): string => {
+    // Remove any leading 'I' characters (common barcode scanning error)
+    let cleaned = scannedText.trim();
+    
+    // Some barcode scanners add an 'I' prefix to the VIN
+    if (cleaned.startsWith('I') && cleaned.length === 18) {
+      addLog('Detected and removing leading I character from barcode scan');
+      cleaned = cleaned.substring(1);
+    }
+    
+    // Remove any whitespace and make uppercase
+    cleaned = cleaned.replace(/\s+/g, '').toUpperCase();
+    
+    return cleaned;
   };
 
   const generateVinVariations = (text: string): string[] => {
@@ -333,11 +350,20 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const initializeBarcodeScanner = async () => {
     try {
-      const codeReader = new BrowserMultiFormatReader()
-      barcodeReaderRef.current = codeReader
+      // Create barcode reader with specific hints for VIN barcodes
+      const hints = new Map();
+      // Format hint - focus on Code 39 and Data Matrix which are commonly used for VIN barcodes
+      const formats = [BarcodeFormat.CODE_39, BarcodeFormat.DATA_MATRIX, BarcodeFormat.CODE_128];
+      hints.set(2, formats); // 2 is FORMAT_HINT_TYPE
+
+      // Try to make character set more restrictive for VINs (A-Z, 0-9)
+      hints.set(4, 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789'); // 4 is CHARACTER_SET hint
+
+      const codeReader = new BrowserMultiFormatReader(hints);
+      barcodeReaderRef.current = codeReader;
 
       if (videoRef.current) {
-        addLog('Starting barcode scanning...')
+        addLog('Starting enhanced barcode scanning for VIN codes...');
         
         const scanLoop = async () => {
           try {
@@ -345,33 +371,65 @@ export function VinScanner({ onScan }: VinScannerProps) {
             
             const result = await barcodeReaderRef.current.decodeOnce(videoRef.current);
             if (result?.getText()) {
-              const scannedValue = result.getText()
-              addLog(`Barcode detected: ${scannedValue}`)
+              let scannedValue = result.getText();
+              addLog(`Raw barcode detected: ${scannedValue}`);
+              
+              // Process the barcode to handle common issues
+              scannedValue = cleanVinBarcode(scannedValue);
+              addLog(`Processed barcode: ${scannedValue}`);
               
               if (validateVIN(scannedValue)) {
-                addLog('Valid VIN detected!')
-                onScan(scannedValue.toUpperCase())
-                toast.success("VIN scanned successfully")
-                handleClose()
-                return
+                addLog('Valid VIN detected!');
+                
+                // Attempt to get vehicle info for confirmation
+                const vehicleInfo = await fetchVehicleInfo(scannedValue);
+                if (vehicleInfo) {
+                  const endTime = new Date();
+                  const duration = scanStartTime ? (endTime.getTime() - scanStartTime.getTime()) / 1000 : 0;
+                  setLastScanDuration(duration);
+                  
+                  addLog(`NHTSA validation passed - Valid VIN found in ${duration.toFixed(2)} seconds!`);
+                  addLog(`Vehicle Info - Make: ${vehicleInfo.make}, Model: ${vehicleInfo.model}, Year: ${vehicleInfo.year}`);
+                  
+                  setDetectedVehicle(vehicleInfo);
+                  setIsConfirmationOpen(true);
+                  return;
+                } else {
+                  // VIN format is valid but couldn't fetch vehicle info
+                  // Still allow confirmation as the VIN might be valid but not in NHTSA database
+                  addLog('NHTSA lookup failed, but VIN format is valid - proceeding with confirmation');
+                  const dummyVehicleInfo = {
+                    vin: scannedValue,
+                    make: "Unknown",
+                    model: "Unknown",
+                    year: "Unknown"
+                  };
+                  setDetectedVehicle(dummyVehicleInfo);
+                  setIsConfirmationOpen(true);
+                  return;
+                }
+              } else {
+                // Invalid VIN - log and continue scanning
+                addLog(`Invalid VIN format: ${scannedValue}`);
               }
             }
           } catch (error: any) {
             if (error?.name !== 'NotFoundException') {
-              addLog(`Barcode scan error: ${error}`)
+              addLog(`Barcode scan error: ${error}`);
             }
           }
           
+          // Continue scanning loop if dialog is still open
           if (isDialogOpen) {
-            requestAnimationFrame(scanLoop)
+            requestAnimationFrame(scanLoop);
           }
-        }
+        };
         
-        scanLoop()
+        scanLoop();
       }
     } catch (error) {
-      addLog(`Error initializing barcode scanner: ${error}`)
-      throw error
+      addLog(`Error initializing barcode scanner: ${error}`);
+      throw error;
     }
   }
 
