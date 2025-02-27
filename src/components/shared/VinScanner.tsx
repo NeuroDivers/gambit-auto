@@ -13,13 +13,15 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const navigate = useNavigate()
 
   const handleOpen = () => {
+    // Store the current pathname to return to
     navigate(`/admin/vin-scanner?returnTo=${window.location.pathname}`)
   }
 
-  // Check if there's a scanned VIN in session storage when component mounts
+  // Check if there's a scanned VIN in session storage when component mounts or on updates
   useEffect(() => {
     const scannedVin = sessionStorage.getItem('scanned-vin')
     if (scannedVin) {
+      console.log('VinScanner: Found scanned VIN in sessionStorage:', scannedVin)
       // Use the scanned VIN and clear storage
       onScan(scannedVin)
       toast.success(`VIN scanned: ${scannedVin}`)

@@ -13,6 +13,7 @@ import { NotesSection } from "@/components/quotes/form-sections/NotesSection"
 import { ClientSearchDialog } from "@/components/quotes/form-sections/ClientSearchDialog"
 import { useCreateQuoteForm } from "@/components/quotes/hooks/useCreateQuoteForm"
 import { supabase } from "@/integrations/supabase/client"
+import { toast } from "sonner"
 
 export default function CreateQuote() {
   const navigate = useNavigate()
@@ -24,8 +25,10 @@ export default function CreateQuote() {
     const checkForScannedVin = () => {
       const scannedVin = sessionStorage.getItem('scanned-vin')
       if (scannedVin) {
+        console.log('CreateQuote: Found scanned VIN in sessionStorage:', scannedVin)
         form.setValue('vehicle_vin', scannedVin, { shouldValidate: true, shouldDirty: true, shouldTouch: true })
         sessionStorage.removeItem('scanned-vin')
+        toast.success(`VIN imported: ${scannedVin}`)
       }
     }
 
@@ -79,7 +82,7 @@ export default function CreateQuote() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/estimates')}
+            onClick={() => navigate('/admin/estimates')}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -91,7 +94,7 @@ export default function CreateQuote() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={onSubmit} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="flex justify-end">
             <Button
               type="button"

@@ -598,6 +598,7 @@ export default function VinScannerPage() {
 
   const navigateWithResult = (vin: string) => {
     // Store result in sessionStorage to pass to the previous page
+    console.log('VinScannerPage: Storing scanned VIN in sessionStorage:', vin)
     sessionStorage.setItem('scanned-vin', vin)
     navigate(returnPath)
   }
