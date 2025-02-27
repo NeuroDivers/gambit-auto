@@ -1,3 +1,4 @@
+
 export const validateVIN = (vin: string): boolean => {
   if (vin.length !== 17) return false;
 
@@ -8,8 +9,9 @@ export const validateVIN = (vin: string): boolean => {
     return false;
   }
 
-  // Common manufacturer codes for first position
-  const validWMI = /^[A-HJ-NPR-Z][A-HJ-NPR-Z0-9]{2}/;
+  // WMI validation - first three characters can be either letters or numbers
+  // Many North American manufacturers use numbers in their WMI
+  const validWMI = /^[A-HJ-NPR-Z0-9]{3}/;
   if (!validWMI.test(vin)) {
     console.log('VIN failed WMI validation:', vin);
     return false;
