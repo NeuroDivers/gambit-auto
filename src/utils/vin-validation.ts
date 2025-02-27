@@ -1,26 +1,5 @@
 
 export const validateVIN = (vin: string): boolean => {
-  // Check for 18-character VINs and try to extract a valid 17-character VIN
-  if (vin.length === 18) {
-    console.log('Processing 18-character VIN:', vin);
-    
-    // Try removing first character
-    const withoutFirst = vin.substring(1);
-    if (validateVIN(withoutFirst)) {
-      console.log('Valid VIN found after removing first character:', withoutFirst);
-      return true;
-    }
-    
-    // Try removing last character
-    const withoutLast = vin.substring(0, 17);
-    if (validateVIN(withoutLast)) {
-      console.log('Valid VIN found after removing last character:', withoutLast);
-      return true;
-    }
-    
-    return false;
-  }
-
   if (vin.length !== 17) return false;
 
   // Strict VIN pattern for modern vehicles (post-1981)
@@ -76,21 +55,6 @@ export const postProcessVIN = (text: string): string => {
     'H': '4', // Only if confidence is low
     'U': '0', // Only if confidence is low
     'V': 'Y' // Only if in known position
-  }
-
-  // Check for 18-character VINs
-  if (text.length === 18) {
-    // Try removing first character
-    const withoutFirst = text.substring(1);
-    if (validateVIN(withoutFirst)) {
-      return withoutFirst.toUpperCase();
-    }
-    
-    // Try removing last character
-    const withoutLast = text.substring(0, 17);
-    if (validateVIN(withoutLast)) {
-      return withoutLast.toUpperCase();
-    }
   }
 
   // Remove all non-alphanumeric characters and spaces

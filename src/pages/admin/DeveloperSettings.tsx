@@ -1,31 +1,31 @@
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageTitle } from "@/components/shared/PageTitle";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { VinScanner } from "@/components/shared/VinScanner";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { useState, useEffect, useRef } from "react";
-import { preprocessImage, postProcessVIN, cropToVinRegion } from "@/utils/image-processing";
-import { FileSpreadsheet, FileCode, FileSearch, Settings, Terminal, BookOpen } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { PageTitle } from "@/components/shared/PageTitle"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { VinScanner } from "@/components/shared/VinScanner"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { useState, useEffect, useRef } from "react"
+import { preprocessImage, postProcessVIN, cropToVinRegion } from "@/utils/image-processing"
+import { FileSpreadsheet, FileCode, FileSearch, Settings, Terminal, BookOpen } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 export default function DeveloperSettings() {
   // Common state
-  const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("logs");
+  const { toast } = useToast()
+  const [activeTab, setActiveTab] = useState("logs")
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({
     VITE_MAPBOX_ACCESS_TOKEN: import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || '',
     VITE_NHTSA_API_URL: import.meta.env.VITE_NHTSA_API_URL || 'https://vpic.nhtsa.dot.gov/api',
-  });
+  })
 
   // Log tab state
-  const [logEntries, setLogEntries] = useState<string[]>([]);
-  const logEndRef = useRef<HTMLDivElement>(null);
+  const [logEntries, setLogEntries] = useState<string[]>([])
+  const logEndRef = useRef<HTMLDivElement>(null)
 
   // Scanner tab state
-  const [scannerActive, setScannerActive] = useState(false);
+  const [scannerActive, setScannerActive] = useState(false)
   const [scannerSettings, setScannerSettings] = useState({
     blueEmphasis: 'very-high',
     contrast: 'very-high',
@@ -36,126 +36,154 @@ export default function DeveloperSettings() {
     edgeEnhancement: true,
     noiseReduction: true,
     adaptiveContrast: true
-  });
-  const [scanResults, setScanResults] = useState<string[]>([]);
-  const [finalResult, setFinalResult] = useState("");
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanLog, setScanLog] = useState<string[]>([]);
-  const [isInitialized, setIsInitialized] = useState(false);
+  })
+  const [scanResults, setScanResults] = useState<string[]>([])
+  const [finalResult, setFinalResult] = useState("")
+  const [isScanning, setIsScanning] = useState(false)
+  const [scanLog, setScanLog] = useState<string[]>([])
+  const [isInitialized, setIsInitialized] = useState(false)
 
-  // Handle OCR result
+  // Process an image from the scanner
+  const processImage = (canvas: HTMLCanvasElement, decodeResult?: string) => {
+    try {
+      // Only process if we're in the OCR tab and scanning is active
+      if (activeTab !== "ocr-scanner" || !scannerActive) return;
+
+      // Process the image
+      const croppedCanvas = cropToVinRegion(canvas)
+      const processedImage = preprocessImage(croppedCanvas)
+      
+      if (decodeResult) {
+        const processed = postProcessVIN(decodeResult)
+        
+        // Add to results
+        addScanLog(`Barcode scan result: ${decodeResult}`)
+        addScanLog(`Processed result: ${processed}`)
+        
+        if (processed && processed.length >= 11) {
+          setScanResults(prev => [processed, ...prev].slice(0, 10))
+          setFinalResult(processed)
+          setScannerActive(false)
+        }
+      }
+    } catch (error) {
+      console.error('Error processing image:', error)
+      addScanLog(`Error: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+
   const handleOcrComplete = (result: string) => {
     try {
       if (!result) {
-        addScanLog('OCR returned empty result');
-        return;
+        addScanLog('OCR returned empty result')
+        return
       }
       
-      addScanLog(`OCR raw result: ${result}`);
-      const processed = postProcessVIN(result);
-      addScanLog(`Processed result: ${processed}`);
+      addScanLog(`OCR raw result: ${result}`)
+      const processed = postProcessVIN(result)
+      addScanLog(`Processed result: ${processed}`)
       
       if (processed && processed.length >= 11) {
-        setScanResults(prev => [processed, ...prev].slice(0, 10));
-        setFinalResult(processed);
-        setScannerActive(false);
+        setScanResults(prev => [processed, ...prev].slice(0, 10))
+        setFinalResult(processed)
+        setScannerActive(false)
       }
     } catch (error) {
-      console.error('Error handling OCR result:', error);
-      addScanLog(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      console.error('Error handling OCR result:', error)
+      addScanLog(`Error: ${error instanceof Error ? error.message : String(error)}`)
     }
-  };
+  }
 
   const addScanLog = (message: string) => {
-    setScanLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${message}`]);
-  };
+    setScanLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${message}`])
+  }
 
   const startScanner = () => {
-    setScannerActive(true);
-    setIsScanning(true);
-    setScanLog([]);
-    addScanLog('Scanner activated');
-  };
+    setScannerActive(true)
+    setIsScanning(true)
+    setScanLog([])
+    addScanLog('Scanner activated')
+  }
 
   const stopScanner = () => {
-    setScannerActive(false);
-    setIsScanning(false);
-    addScanLog('Scanner stopped');
-  };
+    setScannerActive(false)
+    setIsScanning(false)
+    addScanLog('Scanner stopped')
+  }
 
   // Save scanner settings to localStorage
   const saveSettings = () => {
-    localStorage.setItem('scanner-settings', JSON.stringify(scannerSettings));
+    localStorage.setItem('scanner-settings', JSON.stringify(scannerSettings))
     toast({
       title: "Settings saved",
       description: "Scanner settings have been saved to local storage"
-    });
-  };
+    })
+  }
 
   // Initialize scanner settings from localStorage
   useEffect(() => {
-    const savedSettings = localStorage.getItem('scanner-settings');
+    const savedSettings = localStorage.getItem('scanner-settings')
     if (savedSettings) {
       try {
-        const settings = JSON.parse(savedSettings);
-        setScannerSettings(settings);
+        const settings = JSON.parse(savedSettings)
+        setScannerSettings(settings)
       } catch (e) {
-        console.error('Error parsing scanner settings:', e);
+        console.error('Error parsing scanner settings:', e)
       }
     }
-    setIsInitialized(true);
-  }, []);
+    setIsInitialized(true)
+  }, [])
 
   // Console log interceptor
   useEffect(() => {
-    const originalConsoleLog = console.log;
-    const originalConsoleError = console.error;
-    const originalConsoleWarn = console.warn;
-    const originalConsoleInfo = console.info;
+    const originalConsoleLog = console.log
+    const originalConsoleError = console.error
+    const originalConsoleWarn = console.warn
+    const originalConsoleInfo = console.info
 
     console.log = (...args) => {
-      originalConsoleLog(...args);
-      setLogEntries(prev => [...prev, `[LOG] ${args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ')}`]);
-    };
+      originalConsoleLog(...args)
+      setLogEntries(prev => [...prev, `[LOG] ${args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ')}`])
+    }
 
     console.error = (...args) => {
-      originalConsoleError(...args);
-      setLogEntries(prev => [...prev, `[ERROR] ${args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ')}`]);
-    };
+      originalConsoleError(...args)
+      setLogEntries(prev => [...prev, `[ERROR] ${args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ')}`])
+    }
 
     console.warn = (...args) => {
-      originalConsoleWarn(...args);
-      setLogEntries(prev => [...prev, `[WARN] ${args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ')}`]);
-    };
+      originalConsoleWarn(...args)
+      setLogEntries(prev => [...prev, `[WARN] ${args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ')}`])
+    }
 
     console.info = (...args) => {
-      originalConsoleInfo(...args);
-      setLogEntries(prev => [...prev, `[INFO] ${args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ')}`]);
-    };
+      originalConsoleInfo(...args)
+      setLogEntries(prev => [...prev, `[INFO] ${args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ')}`])
+    }
 
     return () => {
-      console.log = originalConsoleLog;
-      console.error = originalConsoleError;
-      console.warn = originalConsoleWarn;
-      console.info = originalConsoleInfo;
-    };
-  }, []);
+      console.log = originalConsoleLog
+      console.error = originalConsoleError
+      console.warn = originalConsoleWarn
+      console.info = originalConsoleInfo
+    }
+  }, [])
 
   // Auto-scroll logs to bottom
   useEffect(() => {
     if (logEndRef.current) {
-      logEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      logEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [logEntries]);
+  }, [logEntries])
 
   useEffect(() => {
-    console.log(`Switched to tab: ${activeTab}`);
-  }, [activeTab]);
+    console.log(`Switched to tab: ${activeTab}`)
+  }, [activeTab])
 
   // Handle API key changes
   const handleApiKeyChange = (key: string, value: string) => {
-    setApiKeys(prev => ({ ...prev, [key]: value }));
-  };
+    setApiKeys(prev => ({ ...prev, [key]: value }))
+  }
   
   return (
     <div className="container py-6 space-y-6">
@@ -211,15 +239,15 @@ export default function DeveloperSettings() {
                 </Button>
                 <Button
                   onClick={() => {
-                    const blob = new Blob([logEntries.join('\n')], { type: 'text/plain' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `logs-${new Date().toISOString()}.txt`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
+                    const blob = new Blob([logEntries.join('\n')], { type: 'text/plain' })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = `logs-${new Date().toISOString()}.txt`
+                    document.body.appendChild(a)
+                    a.click()
+                    document.body.removeChild(a)
+                    URL.revokeObjectURL(url)
                   }}
                 >
                   Download Logs
@@ -245,6 +273,7 @@ export default function DeveloperSettings() {
                   <div className={`${scannerActive ? 'block' : 'hidden'}`}>
                     <VinScanner
                       onScan={handleOcrComplete}
+                      onImageCapture={processImage}
                       isActive={scannerActive}
                       scanMode="text"
                     />
@@ -264,11 +293,11 @@ export default function DeveloperSettings() {
                         <Button
                           variant="outline"
                           onClick={() => {
-                            navigator.clipboard.writeText(finalResult);
+                            navigator.clipboard.writeText(finalResult)
                             toast({
                               title: "Copied",
                               description: "VIN copied to clipboard"
-                            });
+                            })
                           }}
                         >
                           Copy
@@ -485,18 +514,18 @@ export default function DeveloperSettings() {
                       setApiKeys({
                         VITE_MAPBOX_ACCESS_TOKEN: import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || '',
                         VITE_NHTSA_API_URL: 'https://vpic.nhtsa.dot.gov/api',
-                      });
+                      })
                     }}
                   >
                     Reset
                   </Button>
                   <Button
                     onClick={() => {
-                      localStorage.setItem('api-keys', JSON.stringify(apiKeys));
+                      localStorage.setItem('api-keys', JSON.stringify(apiKeys))
                       toast({
                         title: "API Keys Saved",
                         description: "Changes will take effect after reload"
-                      });
+                      })
                     }}
                   >
                     Save API Keys
@@ -519,5 +548,5 @@ export default function DeveloperSettings() {
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

@@ -7,7 +7,6 @@ export interface ChatMessage {
   read_at: string | null
   created_at: string
   updated_at: string
-  sender?: any // Add this to support the sender property
 }
 
 export interface ChatRole {

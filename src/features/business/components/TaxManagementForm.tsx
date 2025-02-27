@@ -44,7 +44,7 @@ const taxFormSchema = z.object({
   region: z.string().min(1, "Region is required"),
   country: z.string().min(1, "Country is required"),
   tax_type: z.string().min(1, "Tax type is required"),
-  tax_rate: z.coerce.number().min(0, "Tax rate must be a positive number"),
+  tax_rate: z.string().transform(val => Number(val)),
   tax_number: z.string().min(1, "Tax registration number is required"),
   is_default: z.boolean().optional()
 })
@@ -82,11 +82,11 @@ export function TaxManagementForm({ initialTaxes }: TaxManagementFormProps) {
     .map(tax => tax.region)
     .filter((value, index, self) => self.indexOf(value) === index)
 
-  const defaultValues: TaxFormValues = {
+  const defaultValues = {
     region: "",
     country: "Canada",
     tax_type: "GST",
-    tax_rate: 0,
+    tax_rate: "0",
     tax_number: "",
     is_default: false
   }
@@ -185,7 +185,7 @@ export function TaxManagementForm({ initialTaxes }: TaxManagementFormProps) {
       region: tax.region,
       country: tax.country,
       tax_type: tax.tax_type,
-      tax_rate: tax.tax_rate,
+      tax_rate: tax.tax_rate.toString(),
       tax_number: tax.tax_number,
       is_default: tax.is_default
     })
@@ -331,12 +331,7 @@ export function TaxManagementForm({ initialTaxes }: TaxManagementFormProps) {
                       <FormItem>
                         <FormLabel>Tax Rate (%)</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="number" 
-                            step="0.01" 
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
-                          />
+                          <Input type="number" step="0.01" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

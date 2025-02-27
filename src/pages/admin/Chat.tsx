@@ -97,7 +97,9 @@ export default function Chat() {
             queryClient.invalidateQueries({ queryKey: ["chat-users"] })
           }
         )
-        .subscribe()
+        .subscribe((status) => {
+          console.log("Chat messages subscription status:", status)
+        })
 
       // Subscribe to message read status changes
       readStatusChannelRef.current = supabase
@@ -116,7 +118,9 @@ export default function Chat() {
             queryClient.invalidateQueries({ queryKey: ["chat-users"] })
           }
         )
-        .subscribe()
+        .subscribe((status) => {
+          console.log("Read status subscription status:", status)
+        })
 
       // Also subscribe to profile updates for online status
       const profileStatusChannel = supabase
