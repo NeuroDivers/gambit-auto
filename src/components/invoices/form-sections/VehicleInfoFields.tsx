@@ -2,7 +2,7 @@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useVinLookup } from "@/hooks/useVinLookup"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { VinScanner } from "@/components/shared/VinScanner"
 
@@ -41,7 +41,6 @@ export function VehicleInfoFields({
 }: VehicleInfoFieldsProps) {
   const { data: vinData, isLoading: isLoadingVin } = useVinLookup(vehicleVin)
   const currentYear = new Date().getFullYear()
-  const [scannerActive, setScannerActive] = useState(false);
 
   useEffect(() => {
     if (vinData && !vinData.error) {
@@ -60,11 +59,6 @@ export function VehicleInfoFields({
       setVehicleYear(yearValue)
     }
   }
-  
-  const handleScan = (vin: string) => {
-    setVehicleVin(vin);
-    setScannerActive(false);
-  };
 
   return (
     <div className="space-y-4">
@@ -81,11 +75,7 @@ export function VehicleInfoFields({
             placeholder="Enter VIN for auto-fill"
             autoComplete="off"
           />
-          <VinScanner 
-            onScan={handleScan} 
-            isActive={scannerActive}
-            scanMode="text"
-          />
+          <VinScanner onScan={(vin) => setVehicleVin(vin)} />
         </div>
       </div>
 

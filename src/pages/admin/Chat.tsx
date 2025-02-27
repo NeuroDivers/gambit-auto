@@ -81,37 +81,60 @@ export default function Chat() {
       }
 
       // Subscribe to new messages
-      const messageChannel = supabase
-        .channel('chat_messages_updates');
-      
-      messageChannel.on('broadcast', { event: 'new_message' }, async (payload) => {
-          console.log('New message received, updating counts:', payload)
-          // Invalidate the query to trigger a refresh of the user list with new counts
-          queryClient.invalidateQueries({ queryKey: ["chat-users"] })
-      }).subscribe();
-      
-      messageChannelRef.current = messageChannel;
+      messageChannelRef.current = supabase
+        .channel('chat_messages_updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'chat_messages',
+            filter: `recipient_id=eq.${user.id}`
+          },
+          async (payload) => {
+            console.log('New message received, updating counts:', payload)
+            // Invalidate the query to trigger a refresh of the user list with new counts
+            queryClient.invalidateQueries({ queryKey: ["chat-users"] })
+          }
+        )
+        .subscribe()
 
       // Subscribe to message read status changes
-      const readStatusChannel = supabase
-        .channel('read_status_updates');
-      
-      readStatusChannel.on('broadcast', { event: 'read_status' }, async (payload) => {
-        console.log('Message read status updated:', payload)
-        // Invalidate the query to trigger a refresh
-        queryClient.invalidateQueries({ queryKey: ["chat-users"] })
-      }).subscribe();
-      
-      readStatusChannelRef.current = readStatusChannel;
+      readStatusChannelRef.current = supabase
+        .channel('read_status_updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'chat_messages',
+            filter: `recipient_id=eq.${user.id}`
+          },
+          async (payload) => {
+            console.log('Message read status updated:', payload)
+            // Invalidate the query to trigger a refresh
+            queryClient.invalidateQueries({ queryKey: ["chat-users"] })
+          }
+        )
+        .subscribe()
 
       // Also subscribe to profile updates for online status
       const profileStatusChannel = supabase
-        .channel('profile_status_updates');
-      
-      profileStatusChannel.on('broadcast', { event: 'profile_update' }, async () => {
-        // Refresh user list to update online statuses
-        queryClient.invalidateQueries({ queryKey: ["chat-users"] })
-      }).subscribe();
+        .channel('profile_status_updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+            columns: ['last_seen_at']
+          },
+          async () => {
+            // Refresh user list to update online statuses
+            queryClient.invalidateQueries({ queryKey: ["chat-users"] })
+          }
+        )
+        .subscribe()
 
       return () => {
         if (messageChannelRef.current) {

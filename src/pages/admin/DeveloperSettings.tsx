@@ -509,15 +509,4 @@ export default function DeveloperSettings() {
                     Important Note
                   </h4>
                   <p>
-                    For security, API keys should be set in your project's environment variables.
-                    The keys stored here are only used for local testing and development.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
-  )
-}
+                    For
