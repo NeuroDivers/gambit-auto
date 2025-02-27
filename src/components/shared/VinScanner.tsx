@@ -90,9 +90,47 @@ export function VinScanner({ onScan }: VinScannerProps) {
   }
 
   const correctCommonOcrMistakes = (text: string): string[] => {
+    let cleanText = text
+      .replace(/\s+/g, '')
+      .toUpperCase();
+    
+    addLog(`Initial cleaned text: ${cleanText}`);
+
+    if (cleanText.length !== 17) {
+      addLog('Text length is not 17, proceeding with variations');
+      return generateVinVariations(text);
+    }
+
+    const invalidChars = new Set(['I', 'O', 'Q']);
+    const hasInvalidChars = [...cleanText].some(char => invalidChars.has(char));
+    
+    const ninthChar = cleanText[8];
+    const isValidCheckDigit = /[0-9X]/.test(ninthChar);
+
+    if (!hasInvalidChars && isValidCheckDigit) {
+      addLog('Raw scan looks promising, testing before generating variations');
+      if (validateVIN(cleanText)) {
+        addLog('Raw scan is a valid VIN!');
+        return [cleanText];
+      }
+      addLog('Raw scan validation failed, proceeding with variations');
+    } else {
+      addLog(`Found invalid characters or check digit, generating variations`);
+      if (hasInvalidChars) {
+        addLog(`Invalid characters detected: ${[...cleanText].filter(char => invalidChars.has(char)).join(', ')}`);
+      }
+      if (!isValidCheckDigit) {
+        addLog(`Invalid check digit detected: ${ninthChar}`);
+      }
+    }
+
+    return generateVinVariations(text);
+  };
+
+  const generateVinVariations = (text: string): string[] => {
     const handle9thCharacter = (char: string): string => {
       if (/[0-9X]/.test(char)) {
-        return char
+        return char;
       }
       
       const checkDigitMappings: { [key: string]: string } = {
@@ -110,7 +148,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
         'Q': '9'
       }
       
-      return checkDigitMappings[char] || '0'
+      return checkDigitMappings[char] || '0';
     }
 
     let corrected = text
@@ -121,58 +159,57 @@ export function VinScanner({ onScan }: VinScannerProps) {
       .replace(/[gG]/g, '6')
       .replace(/[tT]/g, '7')
       .replace(/\s+/g, '')
-      .toUpperCase()
+      .toUpperCase();
 
     if (corrected.length >= 9) {
-      const beforeCheck = corrected.slice(0, 8)
-      const afterCheck = corrected.slice(9)
-      const checkDigit = handle9thCharacter(corrected[8])
-      corrected = beforeCheck + checkDigit + afterCheck
+      const beforeCheck = corrected.slice(0, 8);
+      const afterCheck = corrected.slice(9);
+      const checkDigit = handle9thCharacter(corrected[8]);
+      corrected = beforeCheck + checkDigit + afterCheck;
     }
 
-    const bOrEightPositions: number[] = []
+    const bOrEightPositions: number[] = [];
     corrected.split('').forEach((char, index) => {
       if (index !== 8 && (char === 'B' || char === '8')) {
-        bOrEightPositions.push(index)
+        bOrEightPositions.push(index);
       }
-    })
+    });
 
-    const variations: string[] = []
-    const totalCombinations = Math.pow(2, bOrEightPositions.length)
+    const variations: string[] = [];
+    const totalCombinations = Math.pow(2, bOrEightPositions.length);
 
     for (let i = 0; i < totalCombinations; i++) {
-      let variant = corrected.split('')
+      let variant = corrected.split('');
       bOrEightPositions.forEach((pos, index) => {
-        variant[pos] = (i & (1 << index)) ? 'B' : '8'
-      })
-      variations.push(variant.join(''))
+        variant[pos] = (i & (1 << index)) ? 'B' : '8';
+      });
+      variations.push(variant.join(''));
     }
 
     if (variations.length === 0) {
-      variations.push(corrected)
+      variations.push(corrected);
     }
 
-    const vinPattern = /[A-HJ-NPR-Z0-9]{17}/
+    const vinPattern = /[A-HJ-NPR-Z0-9]{17}/;
     
-    addLog(`Raw text detected: ${text}`)
-    addLog(`Generated ${variations.length} possible variations`)
+    addLog(`Generated ${variations.length} possible variations`);
     variations.forEach((variant, index) => {
-      addLog(`Variation ${index + 1}: ${variant}`)
+      addLog(`Variation ${index + 1}: ${variant}`);
       if (variant.length >= 9) {
-        addLog(`Check digit (pos 9) in variation ${index + 1}: ${variant[8]}`)
+        addLog(`Check digit (pos 9) in variation ${index + 1}: ${variant[8]}`);
       }
-    })
+    });
     
     const validVariations = variations.filter(v => {
-      const isValidFormat = vinPattern.test(v)
-      const hasValidCheckDigit = v.length >= 9 && /[0-9X]/.test(v[8])
-      return isValidFormat && hasValidCheckDigit
-    })
+      const isValidFormat = vinPattern.test(v);
+      const hasValidCheckDigit = v.length >= 9 && /[0-9X]/.test(v[8]);
+      return isValidFormat && hasValidCheckDigit;
+    });
 
-    addLog(`Found ${validVariations.length} valid VIN pattern matches`)
+    addLog(`Found ${validVariations.length} valid VIN pattern matches`);
     
-    return validVariations
-  }
+    return validVariations;
+  };
 
   const compareVins = (detected: string, expected: string): string => {
     if (detected.length !== expected.length) {
