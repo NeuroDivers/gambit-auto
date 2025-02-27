@@ -49,6 +49,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const scanningRef = useRef<number>()
   const logsEndRef = useRef<HTMLDivElement>(null)
 
+  // Add a Set to track checked VINs
+  const checkedVinsRef = useRef<Set<string>>(new Set())
+
   const addLog = (message: string) => {
     if (!isPaused) {
       const logEntry = {
@@ -138,7 +141,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
     const variations: string[] = []
     const totalCombinations = Math.pow(2, bOrEightPositions.length)
 
-    for (let i = 0; i < totalCombinations; i++) {
+    for (let i = 0; < totalCombinations; i++) {
       let variant = corrected.split('')
       bOrEightPositions.forEach((pos, index) => {
         variant[pos] = (i & (1 << index)) ? 'B' : '8'
@@ -359,17 +362,20 @@ export function VinScanner({ onScan }: VinScannerProps) {
       const possibleVins = correctCommonOcrMistakes(text)
       
       if (possibleVins.length > 0) {
-        // Try each variation one by one
+        // Try each variation that hasn't been checked yet
         for (const vin of possibleVins) {
-          addLog(`Trying VIN variation: ${vin}`)
-          const isValid = await checkVinValidity(vin)
-          if (isValid) {
-            // If a valid VIN is found, stop checking other variations
-            return
+          if (!checkedVinsRef.current.has(vin)) {
+            addLog(`Trying new VIN variation: ${vin}`)
+            checkedVinsRef.current.add(vin)
+            const isValid = await checkVinValidity(vin)
+            if (isValid) {
+              // If a valid VIN is found, stop checking other variations
+              return
+            }
           }
         }
 
-        // If we get here, none of the variations were valid
+        // If we get here, none of the new variations were valid
         if (shouldScan) {
           scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
         }
@@ -504,7 +510,10 @@ export function VinScanner({ onScan }: VinScannerProps) {
       toast.success("VIN confirmed and saved successfully")
       handleClose()
     } else {
+      // Continue scanning with a fresh start
       setDetectedVehicle(null)
+      // Clear the checked VINs when trying again
+      checkedVinsRef.current.clear()
       if (!videoRef.current?.srcObject) {
         startCamera().then(() => {
           startOCRScanning(true)
@@ -523,6 +532,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
     setIsDialogOpen(false)
     setLogs([])
+    // Clear checked VINs when closing
+    checkedVinsRef.current.clear()
   }
 
   const handleOpen = async () => {
