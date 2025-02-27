@@ -1,184 +1,177 @@
+import { useEffect, useState } from 'react'
+import { supabase } from '@/integrations/supabase/client'
+import { useQuery } from '@tanstack/react-query'
+import { validateVIN } from '@/utils/vin-validation'
+import { toast } from 'sonner'
 
-import { useQuery } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
-import { toast } from "sonner"
-
-interface VinLookupResult {
-  make?: string
-  model?: string
-  year?: number
-  bodyClass?: string
-  doors?: number
-  trim?: string
+interface VinData {
+  make: string
+  model: string
+  year: number
+  bodyClass: string
+  doors: number
+  trim: string
   error?: string
 }
 
-export function useVinLookup(vin: string) {
+export function useVinLookup(vin: string | undefined | null) {
+  const [validVin, setValidVin] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!vin || vin.length < 17) {
+      setValidVin(null)
+      return
+    }
+
+    // Clean and validate the VIN
+    const cleanedVin = vin.trim().toUpperCase()
+    
+    if (validateVIN(cleanedVin)) {
+      setValidVin(cleanedVin)
+    } else {
+      setValidVin(null)
+    }
+  }, [vin])
+
   return useQuery({
-    queryKey: ['vin-lookup', vin],
-    queryFn: async (): Promise<VinLookupResult> => {
-      if (!vin || vin.length !== 17) {
-        return {}
+    queryKey: ['vin', validVin],
+    queryFn: async (): Promise<VinData> => {
+      if (!validVin) {
+        return { make: '', model: '', year: 0, bodyClass: '', doors: 0, trim: '', error: 'Invalid VIN' }
       }
 
       try {
-        // First clear any existing cached error for this VIN
-        const { error: deleteError } = await supabase
-          .from('vin_lookups')
-          .delete()
-          .eq('vin', vin)
-          .eq('success', false)
-
-        if (deleteError) {
-          console.error('Error clearing cached error:', deleteError)
-        }
-
-        // Then check our local cache for successful lookups
-        const { data: cachedData, error: cacheError } = await supabase
+        // First check if we have this VIN in our cache
+        const { data: existingData } = await supabase
           .from('vin_lookups')
           .select('*')
-          .eq('vin', vin)
+          .eq('vin', validVin)
           .eq('success', true)
           .maybeSingle()
 
-        if (cacheError) {
-          console.error('Cache lookup error:', cacheError)
-          throw cacheError
-        }
-
-        if (cachedData) {
-          console.log('Found cached successful VIN data:', cachedData)
+        if (existingData) {
+          console.log('Using cached VIN data:', existingData)
           return {
-            make: cachedData.make,
-            model: cachedData.model,
-            year: cachedData.year,
-            bodyClass: cachedData.body_class,
-            doors: cachedData.doors,
-            trim: cachedData.trim
+            make: existingData.make || '',
+            model: existingData.model || '',
+            year: existingData.year || 0,
+            bodyClass: extractFromRawData(existingData.raw_data, 'Body Class') || '',
+            doors: parseInt(extractFromRawData(existingData.raw_data, 'Doors') || '0', 10) || 0,
+            trim: extractFromRawData(existingData.raw_data, 'Trim') || 
+                  extractFromRawData(existingData.raw_data, 'Trim2') || '',
           }
         }
 
-        // If not in cache, fetch from NHTSA API
-        console.log('Fetching from NHTSA API for VIN:', vin)
-        const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`)
-        if (!response.ok) {
-          throw new Error(`NHTSA API error: ${response.status} ${response.statusText}`)
-        }
-
+        // Fetch from NHTSA API
+        console.log('Fetching VIN data from NHTSA API:', validVin)
+        const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${validVin}?format=json`)
         const data = await response.json()
-        const results = data.Results
 
-        if (!Array.isArray(results)) {
-          const error = 'Invalid response format from NHTSA API'
-          await cacheErrorResult(vin, error)
-          return { error }
-        }
-
-        // Log the entire results array for debugging
-        console.log('NHTSA API complete response:', results)
-        
-        // Find the make, model, and year from the results
-        const makeResult = results.find((r: any) => r.Variable === 'Make' && r.Value && r.Value !== 'null')
-        const modelResult = results.find((r: any) => r.Variable === 'Model' && r.Value && r.Value !== 'null')
-        const yearResult = results.find((r: any) => r.Variable === 'Model Year' && r.Value && r.Value !== 'null')
-        const bodyClassResult = results.find((r: any) => r.Variable === 'Body Class' && r.Value && r.Value !== 'null')
-        const doorsResult = results.find((r: any) => r.Variable === 'Doors' && r.Value && r.Value !== 'null')
-        const trimResult = results.find((r: any) => r.Variable === 'Trim' && r.Value && r.Value !== 'null')
-
-        // Log specific fields we're looking for
-        console.log('Make result:', makeResult)
-        console.log('Model result:', modelResult)
-        console.log('Year result:', yearResult)
-        console.log('Body Class result:', bodyClassResult)
-        console.log('Doors result:', doorsResult)
-        console.log('Trim result:', trimResult)
-
-        const make = makeResult?.Value
-        const model = modelResult?.Value
-        const year = yearResult?.Value ? parseInt(yearResult.Value) : undefined
-        const bodyClass = bodyClassResult?.Value
-        const doors = doorsResult?.Value
-        const trim = trimResult?.Value
-
-        // Log the extracted values
-        console.log('Extracted values:', { make, model, year, bodyClass, doors, trim })
-
-        if (!make) {
-          const error = 'Could not decode VIN - make information missing'
-          await cacheErrorResult(vin, error)
-          return { error }
-        }
-
-        if (!model) {
-          const error = 'Could not decode VIN - model information missing'
-          await cacheErrorResult(vin, error)
-          return { error }
-        }
-
-        if (!year) {
-          const error = 'Could not decode VIN - year information missing'
-          await cacheErrorResult(vin, error)
-          return { error }
-        }
-
-        const timestamp = new Date().toISOString()
-
-        // Cache the successful result
-        const { error: upsertError } = await supabase
+        // Clean up potential bad VIN lookups to keep the DB clean
+        await supabase
           .from('vin_lookups')
-          .upsert({
-            vin,
+          .delete()
+          .eq('vin', validVin)
+          .eq('success', false)
+
+        if (!response.ok || !data || !data.Results || !Array.isArray(data.Results)) {
+          // Record the failure
+          await supabase
+            .from('vin_lookups')
+            .insert({
+              vin: validVin,
+              success: false,
+              error_message: 'API response error',
+            })
+            
+          console.error('Failed to fetch VIN data:', data)
+          return { 
+            make: '', 
+            model: '', 
+            year: 0, 
+            bodyClass: '', 
+            doors: 0, 
+            trim: '', 
+            error: 'API response error' 
+          }
+        }
+
+        // Extract the values from the API response
+        const results = data.Results
+        
+        // Extract values with helper function
+        const make = getValueByVariable(results, 'Make')
+        const model = getValueByVariable(results, 'Model')
+        const yearStr = getValueByVariable(results, 'Model Year')
+        const year = yearStr ? parseInt(yearStr, 10) : 0
+        const bodyClass = getValueByVariable(results, 'Body Class')
+        const doorsStr = getValueByVariable(results, 'Doors')
+        const doors = doorsStr ? parseInt(doorsStr, 10) : 0
+        const trim = getValueByVariable(results, 'Trim') || getValueByVariable(results, 'Trim2')
+
+        // Store in cache
+        await supabase
+          .from('vin_lookups')
+          .insert({
+            vin: validVin,
             make,
             model,
             year,
-            raw_data: data,
             success: true,
-            error_message: null,
-            created_at: timestamp,
-            updated_at: timestamp
-          }, {
-            onConflict: 'vin'
+            raw_data: data,
           })
 
-        if (upsertError) {
-          console.error('Failed to cache VIN lookup:', upsertError)
-          toast.error('Failed to cache VIN lookup')
+        console.log('Decoded VIN:', { make, model, year, bodyClass, doors, trim })
+        
+        // Return the extracted values
+        return { 
+          make: make || '', 
+          model: model || '', 
+          year: year || 0,
+          bodyClass: bodyClass || '',
+          doors: doors || 0,
+          trim: trim || '',
         }
-
-        return { make, model, year, bodyClass, doors, trim }
-      } catch (error: any) {
-        console.error('VIN lookup error:', error)
-        await cacheErrorResult(vin, error.message)
-        return { error: error.message }
+      } catch (error) {
+        console.error('Error in VIN lookup:', error)
+        toast.error('Error decoding VIN. Please try again or enter the information manually.')
+        
+        // Record the error
+        await supabase
+          .from('vin_lookups')
+          .insert({
+            vin: validVin,
+            success: false,
+            error_message: error instanceof Error ? error.message : 'Unknown error',
+          })
+          
+        return { 
+          make: '', 
+          model: '', 
+          year: 0, 
+          bodyClass: '', 
+          doors: 0, 
+          trim: '', 
+          error: 'Lookup failed' 
+        }
       }
     },
-    enabled: vin?.length === 17,
-    staleTime: 1000 * 60 * 60, // Cache for 1 hour
-    retry: false // Don't retry failed lookups
+    enabled: !!validVin,
+    staleTime: 1000 * 60 * 60 // 1 hour
   })
 }
 
-async function cacheErrorResult(vin: string, errorMessage: string) {
-  const timestamp = new Date().toISOString()
-  
-  const { error: upsertError } = await supabase
-    .from('vin_lookups')
-    .upsert({
-      vin,
-      success: false,
-      error_message: errorMessage,
-      make: null,
-      model: null,
-      year: null,
-      raw_data: null,
-      created_at: timestamp,
-      updated_at: timestamp
-    }, {
-      onConflict: 'vin'
-    })
+// Helper function to get a value by variable name
+function getValueByVariable(results: any[], variableName: string): string {
+  const found = results.find(item => item.Variable === variableName)
+  return found && found.Value !== null ? found.Value : ''
+}
 
-  if (upsertError) {
-    console.error('Failed to cache VIN lookup error:', upsertError)
-    toast.error('Failed to cache VIN lookup error')
+// Helper function to extract values from raw_data
+function extractFromRawData(rawData: any, variableName: string): string {
+  if (!rawData || !rawData.Results || !Array.isArray(rawData.Results)) {
+    return ''
   }
+  
+  return getValueByVariable(rawData.Results, variableName)
 }
