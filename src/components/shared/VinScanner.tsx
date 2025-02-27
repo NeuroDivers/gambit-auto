@@ -431,7 +431,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       </Button>
 
       <Dialog open={isDialogOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-md p-0 [&>button]:hidden">
+        <DialogContent className="sm:max-w-md p-0 h-[100dvh] sm:h-auto [&>button]:hidden">
           <ScannerOverlay
             scanMode={scanMode}
             onScanModeChange={handleScanModeChange}
@@ -440,7 +440,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
             onFlashToggle={toggleFlash}
             onClose={handleClose}
           />
-          <div className="relative aspect-video w-full overflow-hidden">
+          <div className="relative h-[calc(100dvh-12rem)] sm:h-auto sm:aspect-video w-full overflow-hidden">
             <video
               ref={videoRef}
               className="absolute inset-0 h-full w-full object-cover"
