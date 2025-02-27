@@ -77,7 +77,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }
 
-  const correctCommonOcrMistakes = (text: string): string => {
+  const correctCommonOcrMistakes = (text: string): string[] => {
     let corrected = text
       .replace(/[oO]/g, '0')
       .replace(/[iIl|]/g, '1')
@@ -89,17 +89,40 @@ export function VinScanner({ onScan }: VinScannerProps) {
       .replace(/\s+/g, '')
       .toUpperCase()
 
+    const bOrEightPositions: number[] = []
+    corrected.split('').forEach((char, index) => {
+      if (char === 'B' || char === '8') {
+        bOrEightPositions.push(index)
+      }
+    })
+
+    const variations: string[] = []
+    const totalCombinations = Math.pow(2, bOrEightPositions.length)
+
+    for (let i = 0; i < totalCombinations; i++) {
+      let variant = corrected.split('')
+      bOrEightPositions.forEach((pos, index) => {
+        variant[pos] = (i & (1 << index)) ? 'B' : '8'
+      })
+      variations.push(variant.join(''))
+    }
+
+    if (variations.length === 0) {
+      variations.push(corrected)
+    }
+
     const vinPattern = /[A-HJ-NPR-Z0-9]{17}/
-    const match = corrected.match(vinPattern)
     
     addLog(`Raw text detected: ${text}`)
-    addLog(`After corrections: ${corrected}`)
-    addLog(`VIN Pattern check: ${match ? 'MATCHED' : 'NO MATCH'} - Current text: ${corrected}`)
-    addLog(`Expected pattern: 17 characters [A-HJ-NPR-Z0-9] (no I, O, Q)`)
-    addLog(`Expected VIN: W1K5J5BB3MN196786`)
-    addLog(`Character diff: ${compareVins(corrected, 'W1K5J5BB3MN196786')}`)
+    addLog(`Generated ${variations.length} possible variations`)
+    variations.forEach((variant, index) => {
+      addLog(`Variation ${index + 1}: ${variant}`)
+    })
     
-    return match ? match[0] : corrected
+    const validVariations = variations.filter(v => vinPattern.test(v))
+    addLog(`Found ${validVariations.length} valid VIN pattern matches`)
+    
+    return validVariations
   }
 
   const compareVins = (detected: string, expected: string): string => {
@@ -286,27 +309,14 @@ export function VinScanner({ onScan }: VinScannerProps) {
       addLog(`Individual words detected: ${JSON.stringify(words)}`)
       addLog(`Raw confidence: ${confidence}%`)
       
-      const correctedText = correctCommonOcrMistakes(text)
-      addLog(`After corrections: ${correctedText}`)
+      const possibleVins = correctCommonOcrMistakes(text)
       
-      const charComparison = text.split('').map((char, i) => {
-        return `${char}->${correctedText[i] || ''}`
-      }).join(', ')
-      addLog(`Character transformations: ${charComparison}`)
-      
-      if (confidence < 40 || correctedText.length < 15) {
-        addLog(`Low quality scan rejected: Confidence ${confidence}%, Length: ${correctedText.length}`)
-        if (shouldScan) {
-          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
-        }
-        return
-      }
-
-      if (correctedText.length === 17) {
-        addLog(`Potential VIN found: ${correctedText}`)
-        if (validateVIN(correctedText)) {
+      for (const vin of possibleVins) {
+        addLog(`Checking possible VIN: ${vin}`)
+        
+        if (validateVIN(vin)) {
           addLog('Local VIN validation passed')
-          const isValidVin = await validateVinWithNHTSA(correctedText)
+          const isValidVin = await validateVinWithNHTSA(vin)
           
           if (isValidVin) {
             const endTime = new Date()
@@ -314,15 +324,15 @@ export function VinScanner({ onScan }: VinScannerProps) {
             setLastScanDuration(duration)
             
             addLog(`NHTSA validation passed - Valid VIN confirmed in ${duration.toFixed(2)} seconds!`)
-            onScan(correctedText)
+            onScan(vin)
             toast.success("VIN scanned and validated successfully")
             handleClose()
             return
           } else {
-            addLog('NHTSA validation failed - continuing scan...')
+            addLog('NHTSA validation failed for this variation')
           }
         } else {
-          addLog(`Local VIN validation failed - Reason: Invalid format`)
+          addLog(`Local VIN validation failed for variation - Reason: Invalid format`)
         }
       }
       
