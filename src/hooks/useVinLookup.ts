@@ -51,14 +51,22 @@ export function useVinLookup(vin: string | undefined | null) {
 
         if (existingData) {
           console.log('Using cached VIN data:', existingData)
+          
+          // Extract trim-related information from cached data
+          const trim = extractFromRawData(existingData.raw_data, 'Trim')
+          const trim2 = extractFromRawData(existingData.raw_data, 'Trim2')
+          const series = extractFromRawData(existingData.raw_data, 'Series')
+          const series2 = extractFromRawData(existingData.raw_data, 'Series2')
+          
+          const combinedTrim = combineAndDeduplicate([trim, trim2, series, series2])
+          
           return {
             make: existingData.make || '',
             model: existingData.model || '',
             year: existingData.year || 0,
             bodyClass: extractFromRawData(existingData.raw_data, 'Body Class') || '',
             doors: parseInt(extractFromRawData(existingData.raw_data, 'Doors') || '0', 10) || 0,
-            trim: extractFromRawData(existingData.raw_data, 'Trim') || 
-                  extractFromRawData(existingData.raw_data, 'Trim2') || '',
+            trim: combinedTrim,
           }
         }
 
@@ -107,7 +115,15 @@ export function useVinLookup(vin: string | undefined | null) {
         const bodyClass = getValueByVariable(results, 'Body Class')
         const doorsStr = getValueByVariable(results, 'Doors')
         const doors = doorsStr ? parseInt(doorsStr, 10) : 0
-        const trim = getValueByVariable(results, 'Trim') || getValueByVariable(results, 'Trim2')
+        
+        // Extract all trim-related information
+        const trim = getValueByVariable(results, 'Trim')
+        const trim2 = getValueByVariable(results, 'Trim2')
+        const series = getValueByVariable(results, 'Series')
+        const series2 = getValueByVariable(results, 'Series2')
+        
+        // Combine and remove duplicates
+        const combinedTrim = combineAndDeduplicate([trim, trim2, series, series2])
 
         // Store in cache
         await supabase
@@ -121,7 +137,7 @@ export function useVinLookup(vin: string | undefined | null) {
             raw_data: data,
           })
 
-        console.log('Decoded VIN:', { make, model, year, bodyClass, doors, trim })
+        console.log('Decoded VIN:', { make, model, year, bodyClass, doors, combinedTrim })
         
         // Return the extracted values
         return { 
@@ -130,7 +146,7 @@ export function useVinLookup(vin: string | undefined | null) {
           year: year || 0,
           bodyClass: bodyClass || '',
           doors: doors || 0,
-          trim: trim || '',
+          trim: combinedTrim,
         }
       } catch (error) {
         console.error('Error in VIN lookup:', error)
@@ -174,4 +190,29 @@ function extractFromRawData(rawData: any, variableName: string): string {
   }
   
   return getValueByVariable(rawData.Results, variableName)
+}
+
+// Helper function to combine multiple strings and remove duplicates
+function combineAndDeduplicate(strings: string[]): string {
+  // Filter out empty strings
+  const validStrings = strings.filter(str => !!str)
+  if (validStrings.length === 0) return ''
+  
+  // Split each string into words, flatten the array, and convert to lowercase for comparison
+  const allWords = validStrings.flatMap(str => str.split(/\s+/))
+  
+  // Use a Set to track which words we've seen (in lowercase for comparison)
+  const seenWords = new Set<string>()
+  const uniqueWords: string[] = []
+  
+  // Keep the original casing but use lowercase for duplicate detection
+  allWords.forEach(word => {
+    const lowerWord = word.toLowerCase()
+    if (!seenWords.has(lowerWord)) {
+      seenWords.add(lowerWord)
+      uniqueWords.push(word)
+    }
+  })
+  
+  return uniqueWords.join(' ')
 }
