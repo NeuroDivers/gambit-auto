@@ -385,7 +385,7 @@ export default function DeveloperSettings() {
               
               <div className="flex items-center gap-2">
                 <Select
-                  value={activePresetId || undefined}
+                  value={activePresetId || ""}
                   onValueChange={(value) => loadPreset(value)}
                 >
                   <SelectTrigger className="w-[220px]">
@@ -394,7 +394,7 @@ export default function DeveloperSettings() {
                   <SelectContent>
                     {presets.map(preset => (
                       <SelectItem key={preset.id} value={preset.id}>
-                        {preset.name} {preset.isDefault && "(Default)"}
+                        {preset.name} {preset.isDefault ? "(Default)" : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>
