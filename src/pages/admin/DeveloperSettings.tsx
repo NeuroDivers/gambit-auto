@@ -1,3 +1,4 @@
+
 import { Trash2, Sun, Globe, Shield, Database, Code, Camera, Save, Undo, Check, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
@@ -10,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Input } from "@/components/ui/input"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { CheckSquare, Square } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import {
   Dialog,
@@ -384,32 +385,14 @@ export default function DeveloperSettings() {
               </CardTitle>
               
               <div className="flex items-center gap-2">
-                <Select
-                  value={activePresetId || ""}
-                  onValueChange={(value) => loadPreset(value)}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  title="Update current preset"
+                  onClick={updateCurrentPreset}
                 >
-                  <SelectTrigger className="w-[220px]">
-                    <SelectValue placeholder="Select a preset" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {presets.map(preset => (
-                      <SelectItem key={preset.id} value={preset.id}>
-                        {preset.name} {preset.isDefault ? "(Default)" : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                {activePresetId && (
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    title="Update current preset"
-                    onClick={updateCurrentPreset}
-                  >
-                    <Save className="h-4 w-4" />
-                  </Button>
-                )}
+                  <Save className="h-4 w-4" />
+                </Button>
                 
                 <Button
                   variant="outline"
@@ -434,6 +417,44 @@ export default function DeveloperSettings() {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <Label className="text-base font-medium">Preset Selection</Label>
+                <ScrollArea className="h-52 border rounded-md p-4">
+                  <div className="grid grid-cols-1 gap-2">
+                    {presets.map((preset) => (
+                      <Card 
+                        key={preset.id} 
+                        className={`cursor-pointer transition-all hover:bg-accent ${activePresetId === preset.id ? 'border-primary bg-primary/10' : ''}`}
+                        onClick={() => loadPreset(preset.id)}
+                      >
+                        <CardContent className="p-3">
+                          <div className="flex items-start gap-2">
+                            <div className="pt-0.5">
+                              {activePresetId === preset.id ? (
+                                <CheckSquare className="h-4 w-4 text-primary" />
+                              ) : (
+                                <Square className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-medium text-sm">{preset.name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {preset.isDefault && "(Default) "}
+                                PSM: {preset.settings.tesseractConfig.psm}, 
+                                OEM: {preset.settings.tesseractConfig.oem}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </ScrollArea>
+                <p className="text-xs text-muted-foreground">
+                  Current: {getActivePresetName()}
+                </p>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div className="space-y-4 border-b pb-4">
