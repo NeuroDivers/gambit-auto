@@ -27,6 +27,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const [hasFlash, setHasFlash] = useState(false)
   const [isFlashOn, setIsFlashOn] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
+  const [scanStartTime, setScanStartTime] = useState<Date | null>(null)
+  const [lastScanDuration, setLastScanDuration] = useState<number | null>(null)
   const isMobile = useIsMobile()
 
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -158,6 +160,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const startCamera = async () => {
     try {
+      setScanStartTime(new Date()) // Start timing when camera starts
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { exact: "environment" },
@@ -306,7 +309,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
           const isValidVin = await validateVinWithNHTSA(correctedText)
           
           if (isValidVin) {
-            addLog('NHTSA validation passed - Valid VIN confirmed!')
+            const endTime = new Date()
+            const duration = scanStartTime ? (endTime.getTime() - scanStartTime.getTime()) / 1000 : 0
+            setLastScanDuration(duration)
+            
+            addLog(`NHTSA validation passed - Valid VIN confirmed in ${duration.toFixed(2)} seconds!`)
             onScan(correctedText)
             toast.success("VIN scanned and validated successfully")
             handleClose()
@@ -462,6 +469,11 @@ export function VinScanner({ onScan }: VinScannerProps) {
             </div>
           </div>
           <div className="bg-muted p-4">
+            {lastScanDuration !== null && (
+              <div className="mb-2 text-sm font-medium text-primary">
+                Last successful scan took: {lastScanDuration.toFixed(2)} seconds
+              </div>
+            )}
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-muted-foreground">Scan Logs</span>
               <Button
