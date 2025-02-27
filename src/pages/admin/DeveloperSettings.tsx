@@ -16,7 +16,8 @@ interface ProcessingSettings {
   morphKernelSize: '2' | '3' | '4';
   confidenceThreshold: '35' | '40' | '45';
   grayscaleMethod: 'luminosity' | 'average' | 'blue-channel';
-  autoInvert: boolean;
+  autoInvertLight: boolean;
+  autoInvertDark: boolean;
   edgeEnhancement: boolean;
   noiseReduction: boolean;
   adaptiveContrast: boolean;
@@ -49,7 +50,8 @@ export default function DeveloperSettings() {
       morphKernelSize: '3',
       confidenceThreshold: '35',
       grayscaleMethod: 'blue-channel',
-      autoInvert: true,
+      autoInvertLight: true,
+      autoInvertDark: false,
       edgeEnhancement: true,
       noiseReduction: true,
       adaptiveContrast: true,
@@ -77,7 +79,8 @@ export default function DeveloperSettings() {
       morphKernelSize: '3',
       confidenceThreshold: '35',
       grayscaleMethod: 'blue-channel',
-      autoInvert: true,
+      autoInvertLight: true,
+      autoInvertDark: false,
       edgeEnhancement: true,
       noiseReduction: true,
       adaptiveContrast: true,
@@ -146,17 +149,33 @@ export default function DeveloperSettings() {
                     <Label>Image Processing Features</Label>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="auto-invert" className="flex-1">
-                          Auto Invert Colors
+                        <Label htmlFor="auto-invert-light" className="flex-1">
+                          Auto Invert Light Text
                           <p className="text-sm text-muted-foreground">
-                            Automatically detect and invert light text on dark background
+                            Automatically invert light text on dark background
                           </p>
                         </Label>
                         <Switch
-                          id="auto-invert"
-                          checked={settings.autoInvert}
+                          id="auto-invert-light"
+                          checked={settings.autoInvertLight}
                           onCheckedChange={(checked) =>
-                            setSettings(prev => ({ ...prev, autoInvert: checked }))
+                            setSettings(prev => ({ ...prev, autoInvertLight: checked }))
+                          }
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="auto-invert-dark" className="flex-1">
+                          Auto Invert Dark Text
+                          <p className="text-sm text-muted-foreground">
+                            Automatically invert dark text on light background
+                          </p>
+                        </Label>
+                        <Switch
+                          id="auto-invert-dark"
+                          checked={settings.autoInvertDark}
+                          onCheckedChange={(checked) =>
+                            setSettings(prev => ({ ...prev, autoInvertDark: checked }))
                           }
                         />
                       </div>
