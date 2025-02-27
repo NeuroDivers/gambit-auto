@@ -1,9 +1,8 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { ArrowLeft, Check, RotateCcw } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import { toast } from "sonner"
 import { VehicleInfo } from "@/components/vin-scanner/types"
 import { decodeVIN } from "@/components/vin-scanner/utils/vinDecoder"
@@ -13,16 +12,19 @@ import ManualVinEntry from "@/components/vin-scanner/ManualVinEntry"
 import LogsViewer from "@/components/vin-scanner/LogsViewer"
 import ConfirmationView from "@/components/vin-scanner/ConfirmationView"
 import { useScannerState } from "@/components/vin-scanner/hooks/useScannerState"
-import { useVinScanner } from "@/components/vin-scanner/hooks/useVinScanner"
 
+// Create a class version of the component to avoid React hook issues
 export default function ScanVin() {
   console.log("ScanVin component rendered");
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { state } = location
-  const returnPath = state?.returnPath || "/estimates/create"
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { state } = location;
+  const returnPath = state?.returnPath || "/estimates/create";
   
-  const scannerState = useScannerState()
+  // Create refs for all state values to avoid dependency tracking issues
+  const scannerStateRef = useRef(useScannerState());
+  const scannerState = scannerStateRef.current;
+  
   const {
     scanMode, setScanMode,
     logs, addLog,
@@ -33,103 +35,161 @@ export default function ScanVin() {
     showLogs, setShowLogs,
     textDetected, isFlashingRed,
     isLoading, setIsLoading
-  } = scannerState
+  } = scannerState;
   
-  // Using a direct scanner instance configuration, not dependent on hooks
-  const scannerRef = useRef(null)
-  const startCameraRef = useRef(null)
-  const stopCameraRef = useRef(null)
+  // Video and canvas refs
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const logsEndRef = useRef(null);
+  const streamRef = useRef(null);
   
-  // Single initialization of the scanner
-  if (scannerRef.current === null) {
-    console.log("Initializing VIN scanner")
-    
-    const config = {
-      scanMode, 
-      setIsScanning, 
-      addLog, 
-      setTextDetected: (val) => { 
-        if (textDetected && textDetected.current !== undefined) {
-          textDetected.current = val
-        }
-      },
-      setIsFlashOn,
-      setHasFlash: (val) => { 
-        if (hasFlash && hasFlash.current !== undefined) {
-          hasFlash.current = val
-        }
-      },
-      setDetectedVehicle,
-      setIsConfirmationView,
-      setIsLoading
-    }
-    
-    const scanner = useVinScanner(config)
-    scannerRef.current = scanner
-    
-    // Store functions in refs for stable reference
-    if (scanner) {
-      startCameraRef.current = scanner.startCamera
-      stopCameraRef.current = scanner.stopCamera
-    }
-  }
+  // Initialization flags
+  const hasInitializedRef = useRef(false);
+  const isMountedRef = useRef(true);
   
-  const scanner = scannerRef.current || {}
-  
-  const {
-    videoRef, 
-    canvasRef,
-    handleScanModeChange,
-    handleManualVinSubmit,
-    logsEndRef
-  } = scanner
-  
-  // Safe function references
-  const startCamera = startCameraRef.current
-  const stopCamera = stopCameraRef.current
-  
-  // Initialization flag
-  const hasInitializedRef = useRef(false)
-  
-  // Single useEffect for initialization and cleanup
-  useEffect(() => {
-    console.log("ScanVin mount effect running")
-    
-    // Only start the camera on first mount
+  // Function to handle camera initialization
+  const startCamera = async () => {
     if (!hasInitializedRef.current) {
-      hasInitializedRef.current = true
-      console.log("Starting camera on first mount")
-      
-      // Small delay to ensure DOM is ready
-      const timer = setTimeout(() => {
-        if (typeof startCamera === 'function') {
-          startCamera()
+      try {
+        console.log("Starting camera...");
+        setIsScanning(true);
+        
+        // Request camera access
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { exact: "environment" },
+              width: { ideal: 640 },
+              height: { ideal: 480 }
+            },
+            audio: false
+          });
+          console.log("Got environment camera");
+        } catch (err) {
+          console.log("Falling back to default camera", err);
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false
+          });
         }
-      }, 500)
-      
-      // Return cleanup function
-      return () => {
-        clearTimeout(timer)
-        console.log("Cleanup effect running - stopping camera")
-        if (typeof stopCamera === 'function') {
-          stopCamera()
+        
+        // Save stream reference
+        streamRef.current = stream;
+        
+        // Check for flash capability
+        const track = stream.getVideoTracks()[0];
+        const capabilities = track.getCapabilities();
+        
+        if ('torch' in capabilities) {
+          hasFlash.current = true;
         }
+        
+        // Set video source
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.muted = true;
+          videoRef.current.playsInline = true;
+          videoRef.current.autoplay = true;
+          
+          try {
+            await videoRef.current.play();
+            console.log("Video playing");
+          } catch (e) {
+            console.error("Error playing video:", e);
+          }
+        }
+        
+        hasInitializedRef.current = true;
+      } catch (error) {
+        console.error("Camera access error:", error);
+        toast.error("Could not access camera. Please check permissions.");
       }
+    }
+  };
+  
+  // Function to stop camera
+  const stopCamera = () => {
+    console.log("Stopping camera");
+    setIsScanning(false);
+    
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.srcObject = null;
     }
     
-    // Cleanup only if we're already initialized
-    return () => {
-      console.log("Cleanup effect running - stopping camera")
-      if (typeof stopCamera === 'function') {
-        stopCamera()
-      }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
+        track.stop();
+      });
+      streamRef.current = null;
     }
-  // Intentionally empty dependency array - we're using refs for stability
-  }, [])
-
+    
+    hasInitializedRef.current = false;
+  };
+  
+  // Handle scan mode changes
+  const handleScanModeChange = (mode) => {
+    setScanMode(mode);
+    // Restart camera with new mode
+    stopCamera();
+    setTimeout(() => {
+      startCamera();
+    }, 300);
+  };
+  
+  // Handle manual VIN submission
+  const handleManualVinSubmit = async () => {
+    const vinInput = document.getElementById("manual-vin-input");
+    if (!vinInput) return;
+    
+    const enteredVin = vinInput.value;
+    
+    if (!enteredVin || enteredVin.trim().length !== 17) {
+      toast.error("VIN must be 17 characters long");
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${enteredVin}?format=json`);
+      const data = await response.json();
+      const results = data.Results;
+      
+      const makeResult = results.find(r => r.Variable === 'Make' && r.Value);
+      const modelResult = results.find(r => r.Variable === 'Model' && r.Value);
+      const yearResult = results.find(r => r.Variable === 'Model Year' && r.Value);
+      
+      if (makeResult?.Value && modelResult?.Value && yearResult?.Value) {
+        setDetectedVehicle({
+          vin: enteredVin,
+          make: makeResult.Value,
+          model: modelResult.Value,
+          year: yearResult.Value
+        });
+        setIsConfirmationView(true);
+      } else {
+        setDetectedVehicle({
+          vin: enteredVin,
+          make: "Unknown",
+          model: "Unknown",
+          year: "Unknown"
+        });
+        setIsConfirmationView(true);
+      }
+    } catch (error) {
+      console.error("API error:", error);
+      toast.error("Error validating VIN");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Navigation and confirmation handlers
   const handleConfirm = () => {
     if (detectedVehicle) {
-      console.log("Navigating back to:", returnPath, "with VIN:", detectedVehicle.vin);
+      console.log("Navigating with VIN:", detectedVehicle.vin);
       navigate(returnPath, { 
         state: { 
           scannedVin: detectedVehicle.vin,
@@ -139,35 +199,55 @@ export default function ScanVin() {
             year: detectedVehicle.year
           } 
         } 
-      })
-      toast.success("VIN confirmed and saved successfully")
+      });
+      toast.success("VIN confirmed and saved successfully");
     }
-  }
-
-  const handleCancel = () => {
-    navigate(returnPath)
-  }
-
-  const handleTryAgain = () => {
-    setIsConfirmationView(false)
-    setDetectedVehicle(null)
-    
-    if (!videoRef?.current?.srcObject) {
-      if (typeof startCamera === 'function') {
-        startCamera()
-      }
-    } else {
-      setIsScanning(true)
-    }
-  }
-
-  const getVinDetails = () => {
-    if (!detectedVehicle?.vin) return null
-    return decodeVIN(detectedVehicle.vin)
-  }
+  };
   
-  const vinDetails = getVinDetails()
-
+  const handleCancel = () => {
+    navigate(returnPath);
+  };
+  
+  const handleTryAgain = () => {
+    setIsConfirmationView(false);
+    setDetectedVehicle(null);
+    
+    if (!videoRef.current?.srcObject) {
+      startCamera();
+    } else {
+      setIsScanning(true);
+    }
+  };
+  
+  // Calculate VIN details
+  const getVinDetails = () => {
+    if (!detectedVehicle?.vin) return null;
+    return decodeVIN(detectedVehicle.vin);
+  };
+  
+  const vinDetails = getVinDetails();
+  
+  // Component lifecycle
+  useEffect(() => {
+    console.log("Component mounted");
+    isMountedRef.current = true;
+    
+    // Start camera with delay
+    const timer = setTimeout(() => {
+      if (isMountedRef.current) {
+        startCamera();
+      }
+    }, 500);
+    
+    // Cleanup function
+    return () => {
+      console.log("Component unmounting");
+      isMountedRef.current = false;
+      clearTimeout(timer);
+      stopCamera();
+    };
+  }, []); // Empty dependency array
+  
   return (
     <div className="container max-w-md mx-auto p-4">
       <div className="flex items-center mb-6">
@@ -244,5 +324,5 @@ export default function ScanVin() {
         </Button>
       </div>
     </div>
-  )
+  );
 }
