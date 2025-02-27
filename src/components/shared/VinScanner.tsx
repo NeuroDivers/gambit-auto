@@ -49,7 +49,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
   const scanningRef = useRef<number>()
   const logsEndRef = useRef<HTMLDivElement>(null)
 
-  // Add a Set to track checked VINs
   const checkedVinsRef = useRef<Set<string>>(new Set())
 
   const addLog = (message: string) => {
@@ -141,7 +140,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
     const variations: string[] = []
     const totalCombinations = Math.pow(2, bOrEightPositions.length)
 
-    for (let i = 0; < totalCombinations; i++) {
+    for (let i = 0; i < totalCombinations; i++) {
       let variant = corrected.split('')
       bOrEightPositions.forEach((pos, index) => {
         variant[pos] = (i & (1 << index)) ? 'B' : '8'
@@ -233,7 +232,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
   const startCamera = async () => {
     try {
-      setScanStartTime(new Date()) // Start timing when camera starts
+      setScanStartTime(new Date())
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { exact: "environment" },
@@ -353,33 +352,30 @@ export function VinScanner({ onScan }: VinScannerProps) {
         return
       }
 
-      const { data: { text, confidence, words } } = await workerRef.current.recognize(frameData)
+      const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
       
       addLog(`Raw scan result: ${text}`)
-      addLog(`Individual words detected: ${JSON.stringify(words)}`)
       addLog(`Raw confidence: ${confidence}%`)
       
       const possibleVins = correctCommonOcrMistakes(text)
       
-      if (possibleVins.length > 0) {
-        // Try each variation that hasn't been checked yet
-        for (const vin of possibleVins) {
-          if (!checkedVinsRef.current.has(vin)) {
-            addLog(`Trying new VIN variation: ${vin}`)
-            checkedVinsRef.current.add(vin)
-            const isValid = await checkVinValidity(vin)
-            if (isValid) {
-              // If a valid VIN is found, stop checking other variations
-              return
-            }
+      let foundValidVin = false
+      
+      for (const vin of possibleVins) {
+        if (!checkedVinsRef.current.has(vin)) {
+          addLog(`Checking new VIN variation: ${vin}`)
+          checkedVinsRef.current.add(vin)
+          const isValid = await checkVinValidity(vin)
+          if (isValid) {
+            foundValidVin = true
+            break
           }
+        } else {
+          addLog(`Skipping already checked VIN: ${vin}`)
         }
+      }
 
-        // If we get here, none of the new variations were valid
-        if (shouldScan) {
-          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
-        }
-      } else if (shouldScan) {
+      if (!foundValidVin && shouldScan) {
         scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
       }
     } catch (error) {
@@ -510,9 +506,7 @@ export function VinScanner({ onScan }: VinScannerProps) {
       toast.success("VIN confirmed and saved successfully")
       handleClose()
     } else {
-      // Continue scanning with a fresh start
       setDetectedVehicle(null)
-      // Clear the checked VINs when trying again
       checkedVinsRef.current.clear()
       if (!videoRef.current?.srcObject) {
         startCamera().then(() => {
@@ -532,7 +526,6 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
     setIsDialogOpen(false)
     setLogs([])
-    // Clear checked VINs when closing
     checkedVinsRef.current.clear()
   }
 
@@ -581,37 +574,35 @@ export function VinScanner({ onScan }: VinScannerProps) {
           />
           <div className="flex-1 relative sm:aspect-video w-full overflow-hidden">
             {isConfirmationOpen ? (
-              <div className="absolute inset-0 z-50 bg-background/95 p-6 flex flex-col max-h-[calc(100vh-16rem)] sm:max-h-none overflow-y-auto">
-                <div className="flex-1">
-                  <div className="space-y-4">
-                    <h2 className="text-lg font-semibold">Confirm Vehicle Information</h2>
+              <div className="absolute inset-0 z-50 bg-background/95 p-6 flex flex-col max-h-[calc(100vh-12rem)] sm:max-h-none">
+                <div className="space-y-4">
+                  <h2 className="text-lg font-semibold">Confirm Vehicle Information</h2>
+                  <div className="bg-primary/10 p-3 rounded-lg">
                     <div className="font-mono text-lg text-primary break-all">
                       VIN: {detectedVehicle?.vin}
                     </div>
-                    {detectedVehicle && (
-                      <div className="grid gap-2 text-base">
-                        <div><span className="font-semibold">Make:</span> {detectedVehicle.make}</div>
-                        <div><span className="font-semibold">Model:</span> {detectedVehicle.model}</div>
-                        <div><span className="font-semibold">Year:</span> {detectedVehicle.year}</div>
-                      </div>
-                    )}
-                    <p className="text-sm text-muted-foreground">
-                      Is this the correct vehicle information?
-                    </p>
                   </div>
+                  {detectedVehicle && (
+                    <div className="grid gap-2 text-base">
+                      <div><span className="font-semibold">Make:</span> {detectedVehicle.make}</div>
+                      <div><span className="font-semibold">Model:</span> {detectedVehicle.model}</div>
+                      <div><span className="font-semibold">Year:</span> {detectedVehicle.year}</div>
+                    </div>
+                  )}
+                  <p className="text-sm text-muted-foreground">
+                    Is this the correct vehicle information?
+                  </p>
                 </div>
-                <div className="mt-4 flex gap-2 sticky bottom-0">
+                <div className="mt-4 grid grid-cols-2 gap-2">
                   <Button 
                     variant="outline" 
                     onClick={() => handleConfirm(false)}
-                    className="flex-1"
                   >
                     <XIcon className="mr-2 h-4 w-4" />
                     Try Again
                   </Button>
                   <Button 
                     onClick={() => handleConfirm(true)}
-                    className="flex-1"
                   >
                     <Check className="mr-2 h-4 w-4" />
                     Confirm
