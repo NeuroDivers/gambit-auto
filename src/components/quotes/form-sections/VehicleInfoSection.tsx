@@ -27,6 +27,11 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
     }
   }, [vinData, form])
 
+  // Handle VIN scanning result
+  const handleVinScan = (scannedVin: string) => {
+    form.setValue('vehicle_vin', scannedVin, { shouldValidate: true, shouldDirty: true, shouldTouch: true })
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -120,7 +125,7 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
                 <FormControl>
                   <div className="flex gap-2">
                     <Input {...field} placeholder="Enter VIN" />
-                    <VinScanner onScan={(vin) => field.onChange(vin)} />
+                    <VinScanner onScan={handleVinScan} />
                   </div>
                 </FormControl>
                 <FormMessage />
