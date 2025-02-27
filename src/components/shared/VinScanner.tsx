@@ -574,39 +574,43 @@ export function VinScanner({ onScan }: VinScannerProps) {
           />
           <div className="flex-1 relative sm:aspect-video w-full overflow-hidden">
             {isConfirmationOpen ? (
-              <div className="absolute inset-0 z-50 bg-background/95 p-6 flex flex-col max-h-[calc(100vh-12rem)] sm:max-h-none">
-                <div className="space-y-4">
-                  <h2 className="text-lg font-semibold">Confirm Vehicle Information</h2>
-                  <div className="bg-primary/10 p-3 rounded-lg">
-                    <div className="font-mono text-lg text-primary break-all">
-                      VIN: {detectedVehicle?.vin}
+              <div className="absolute inset-0 z-50 bg-background/95 flex flex-col">
+                <div className="flex-1 overflow-y-auto p-6">
+                  <div className="space-y-4">
+                    <h2 className="text-lg font-semibold">Confirm Vehicle Information</h2>
+                    <div className="bg-primary/10 p-3 rounded-lg">
+                      <div className="font-mono text-lg text-primary break-all">
+                        VIN: {detectedVehicle?.vin}
+                      </div>
                     </div>
+                    {detectedVehicle && (
+                      <div className="grid gap-2 text-base">
+                        <div><span className="font-semibold">Make:</span> {detectedVehicle.make}</div>
+                        <div><span className="font-semibold">Model:</span> {detectedVehicle.model}</div>
+                        <div><span className="font-semibold">Year:</span> {detectedVehicle.year}</div>
+                      </div>
+                    )}
+                    <p className="text-sm text-muted-foreground">
+                      Is this the correct vehicle information?
+                    </p>
                   </div>
-                  {detectedVehicle && (
-                    <div className="grid gap-2 text-base">
-                      <div><span className="font-semibold">Make:</span> {detectedVehicle.make}</div>
-                      <div><span className="font-semibold">Model:</span> {detectedVehicle.model}</div>
-                      <div><span className="font-semibold">Year:</span> {detectedVehicle.year}</div>
-                    </div>
-                  )}
-                  <p className="text-sm text-muted-foreground">
-                    Is this the correct vehicle information?
-                  </p>
                 </div>
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => handleConfirm(false)}
-                  >
-                    <XIcon className="mr-2 h-4 w-4" />
-                    Try Again
-                  </Button>
-                  <Button 
-                    onClick={() => handleConfirm(true)}
-                  >
-                    <Check className="mr-2 h-4 w-4" />
-                    Confirm
-                  </Button>
+                <div className="p-6 border-t bg-background/80 backdrop-blur-sm">
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => handleConfirm(false)}
+                    >
+                      <XIcon className="mr-2 h-4 w-4" />
+                      Try Again
+                    </Button>
+                    <Button 
+                      onClick={() => handleConfirm(true)}
+                    >
+                      <Check className="mr-2 h-4 w-4" />
+                      Confirm
+                    </Button>
+                  </div>
                 </div>
               </div>
             ) : (
