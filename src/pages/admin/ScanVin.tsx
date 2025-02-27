@@ -136,8 +136,6 @@ export default function ScanVin() {
   const [showLogs, setShowLogs] = useState(false)
   const [vehicleDetails, setVehicleDetails] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [textDetected, setTextDetected] = useState(false)
-  const [isFlashingRed, setIsFlashingRed] = useState(false)
   
   const isMobile = useIsMobile()
   
@@ -149,7 +147,6 @@ export default function ScanVin() {
   const scanningRef = useRef<number>()
   const logsEndRef = useRef<HTMLDivElement>(null)
   const checkedVinsRef = useRef<Set<string>>(new Set())
-  const flashingIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const addLog = (message: string) => {
     if (!isPaused) {
@@ -177,34 +174,8 @@ export default function ScanVin() {
     return () => {
       console.log("Stopping camera on unmount");
       stopCamera()
-      if (flashingIntervalRef.current) {
-        clearInterval(flashingIntervalRef.current)
-      }
     }
   }, [])
-
-  // Set up the flashing border effect
-  useEffect(() => {
-    if (flashingIntervalRef.current) {
-      clearInterval(flashingIntervalRef.current);
-    }
-
-    if (!textDetected && isScanning && !isConfirmationView) {
-      // Start flashing the border when no text is detected
-      flashingIntervalRef.current = setInterval(() => {
-        setIsFlashingRed(prevState => !prevState);
-      }, 500); // Flash every 500ms
-    } else {
-      // Reset flashing state when text is detected
-      setIsFlashingRed(false);
-    }
-
-    return () => {
-      if (flashingIntervalRef.current) {
-        clearInterval(flashingIntervalRef.current);
-      }
-    };
-  }, [textDetected, isScanning, isConfirmationView]);
 
   const toggleFlash = async () => {
     if (!streamRef.current) return
@@ -230,9 +201,6 @@ export default function ScanVin() {
       .toUpperCase();
     
     addLog(`Initial cleaned text: ${cleanText}`);
-
-    // Set textDetected to true if we have some substantial text content
-    setTextDetected(cleanText.length >= 10);
 
     if (cleanText.length !== 17) {
       addLog('Text length is not 17, proceeding with variations');
@@ -491,8 +459,6 @@ export default function ScanVin() {
               scannedValue = cleanVinBarcode(scannedValue);
               addLog(`Processed barcode: ${scannedValue}`);
               
-              setTextDetected(true);
-              
               if (validateVIN(scannedValue)) {
                 addLog('Valid VIN detected!');
                 
@@ -523,14 +489,11 @@ export default function ScanVin() {
               } else {
                 addLog(`Invalid VIN format: ${scannedValue}`);
               }
-            } else {
-              setTextDetected(false);
             }
           } catch (error: any) {
             if (error?.name !== 'NotFoundException') {
               addLog(`Barcode scan error: ${error}`);
             }
-            setTextDetected(false);
           }
           
           requestAnimationFrame(scanLoop);
@@ -565,11 +528,6 @@ export default function ScanVin() {
       addLog(`Raw scan result: ${text}`)
       addLog(`Raw confidence: ${confidence}%`)
       
-      // If the text is empty or too short, mark as not detected
-      if (!text || text.trim().length < 10) {
-        setTextDetected(false);
-      }
-      
       const possibleVins = correctCommonOcrMistakes(text)
       
       let foundValidVin = false
@@ -580,8 +538,7 @@ export default function ScanVin() {
           checkedVinsRef.current.add(vin)
           const isValid = await checkVinValidity(vin)
           if (isValid) {
-            foundValidVin = true;
-            setTextDetected(true);
+            foundValidVin = true
             break
           }
         } else {
@@ -594,7 +551,6 @@ export default function ScanVin() {
       }
     } catch (error) {
       addLog(`OCR error: ${error}`)
-      setTextDetected(false);
       if (shouldScan) {
         scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
       }
@@ -826,11 +782,6 @@ export default function ScanVin() {
   
   const vinDetails = getVinDetails()
 
-  // Determine the border color class based on detection status
-  const borderColorClass = isFlashingRed ? 
-    "border-red-500" : 
-    (textDetected ? "border-green-500" : "border-purple-500");
-
   return (
     <div className="container max-w-md mx-auto p-4">
       <div className="flex items-center mb-6">
@@ -985,7 +936,7 @@ export default function ScanVin() {
             </div>
             
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-16">
-              <div className={`absolute inset-0 border-2 ${borderColorClass} rounded-lg transition-colors duration-300`} />
+              <div className="absolute inset-0 border-2 border-purple-500 rounded-lg" />
             </div>
           </div>
 
