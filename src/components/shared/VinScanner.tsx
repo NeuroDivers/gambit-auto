@@ -78,20 +78,49 @@ export function VinScanner({ onScan }: VinScannerProps) {
   }
 
   const correctCommonOcrMistakes = (text: string): string[] => {
+    const handle9thCharacter = (char: string): string => {
+      if (/[0-9X]/.test(char)) {
+        return char
+      }
+      
+      const checkDigitMappings: { [key: string]: string } = {
+        'O': '0',
+        'I': '1',
+        'L': '1',
+        'Z': '2',
+        'E': '3',
+        'A': '4',
+        'H': '4',
+        'S': '5',
+        'G': '6',
+        'T': '7',
+        'B': '8',
+        'Q': '9'
+      }
+      
+      return checkDigitMappings[char] || '0'
+    }
+
     let corrected = text
       .replace(/[oO]/g, '0')
       .replace(/[iIl|]/g, '1')
       .replace(/[sS]/g, '5')
       .replace(/[zZ]/g, '2')
-      .replace(/[bB]/g, '8')
       .replace(/[gG]/g, '6')
       .replace(/[tT]/g, '7')
       .replace(/\s+/g, '')
       .toUpperCase()
 
+    if (corrected.length >= 9) {
+      const beforeCheck = corrected.slice(0, 8)
+      const afterCheck = corrected.slice(9)
+      const checkDigit = handle9thCharacter(corrected[8])
+      corrected = beforeCheck + checkDigit + afterCheck
+    }
+
     const bOrEightPositions: number[] = []
     corrected.split('').forEach((char, index) => {
-      if (char === 'B' || char === '8') {
+      if (index !== 8 && (char === 'B' || char === '8')) {
         bOrEightPositions.push(index)
       }
     })
@@ -117,9 +146,17 @@ export function VinScanner({ onScan }: VinScannerProps) {
     addLog(`Generated ${variations.length} possible variations`)
     variations.forEach((variant, index) => {
       addLog(`Variation ${index + 1}: ${variant}`)
+      if (variant.length >= 9) {
+        addLog(`Check digit (pos 9) in variation ${index + 1}: ${variant[8]}`)
+      }
     })
     
-    const validVariations = variations.filter(v => vinPattern.test(v))
+    const validVariations = variations.filter(v => {
+      const isValidFormat = vinPattern.test(v)
+      const hasValidCheckDigit = v.length >= 9 && /[0-9X]/.test(v[8])
+      return isValidFormat && hasValidCheckDigit
+    })
+
     addLog(`Found ${validVariations.length} valid VIN pattern matches`)
     
     return validVariations
