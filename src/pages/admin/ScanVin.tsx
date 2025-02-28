@@ -1,7 +1,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { ArrowLeft, Clipboard, RotateCcw, Check, AlignLeft, Barcode, Info, Play, Pause } from "lucide-react"
+import { ArrowLeft, Clipboard, RotateCcw, Check, AlignLeft, Barcode, Info, Play, Pause, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createWorker, PSM, Worker } from 'tesseract.js'
@@ -616,11 +616,11 @@ export default function ScanVin() {
       ) : (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
-            <div className="flex w-full sm:w-auto gap-2">
+            <div className="flex w-full sm:w-[80%] gap-2">
               <Toggle
                 pressed={scanMode === 'text'}
                 onPressedChange={() => handleScanModeChange('text')}
-                className={`flex-1 h-8 ${scanMode === 'text' ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'border'}`}
+                className={`flex-1 h-8 px-3 ${scanMode === 'text' ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'border'}`}
               >
                 <AlignLeft className="mr-1 h-3 w-3" />
                 Text Mode
@@ -629,20 +629,21 @@ export default function ScanVin() {
               <Toggle
                 pressed={scanMode === 'barcode'}
                 onPressedChange={() => handleScanModeChange('barcode')}
-                className={`flex-1 h-8 ${scanMode === 'barcode' ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'border'}`}
+                className={`flex-1 h-8 px-3 ${scanMode === 'barcode' ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'border'}`}
               >
                 <Barcode className="mr-1 h-3 w-3" />
                 Barcode Mode
               </Toggle>
             </div>
-            <div className="flex gap-2 ml-auto">
+            <div className="flex ml-auto">
               <Button 
                 variant="outline" 
-                size="sm"
+                size="icon"
                 onClick={() => setShowLogs(!showLogs)}
+                className="w-8 h-8 p-0"
+                title="Show Logs"
               >
-                <AlignLeft className="h-4 w-4 mr-1" />
-                Logs
+                <FileText className="h-4 w-4" />
               </Button>
             </div>
           </div>
