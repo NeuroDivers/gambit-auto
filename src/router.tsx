@@ -43,7 +43,7 @@ export const router = createBrowserRouter([
     path: "/estimates/scan-vin",
     element: <ScanVin />
   },
-  ...protectedRoutes,
+  protectedRoutes, // Changed from ...protectedRoutes to protectedRoutes
   {
     path: "*",
     element: <NotFound />
