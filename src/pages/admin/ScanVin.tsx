@@ -43,6 +43,7 @@ interface OcrPreset {
     tessedit_pageseg_mode: PSM
     tessedit_char_whitelist?: string
   }
+  description?: string
 }
 
 const ocrPresets: OcrPreset[] = [
@@ -51,19 +52,22 @@ const ocrPresets: OcrPreset[] = [
     config: {
       tessedit_pageseg_mode: PSM.SINGLE_LINE,
       tessedit_char_whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ"
-    }
+    },
+    description: "Best for clear VIN labels with high contrast"
   },
   {
     name: "Balanced",
     config: {
       tessedit_pageseg_mode: PSM.SINGLE_LINE
-    }
+    },
+    description: "Good balance between accuracy and speed"
   },
   {
     name: "Fast",
     config: {
       tessedit_pageseg_mode: PSM.SINGLE_WORD
-    }
+    },
+    description: "Fastest recognition but less accurate"
   }
 ]
 
@@ -639,29 +643,36 @@ export default function ScanVin() {
               <DialogHeader>
                 <DialogTitle>OCR Settings</DialogTitle>
                 <DialogDescription>
-                  Adjust the OCR engine parameters for better text recognition.
+                  Select a preset for OCR text recognition.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full justify-between">
-                      {currentPreset.name}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56">
-                    <DropdownMenuLabel>Select a preset</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {ocrPresets.map(preset => (
-                      <DropdownMenuItem key={preset.name} onClick={() => handleScanModeChangePreset(preset)}>
-                        {preset.name}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="grid grid-cols-1 gap-4">
+                  {ocrPresets.map((preset) => (
+                    <Card 
+                      key={preset.name}
+                      className={`cursor-pointer hover:border-primary transition-colors ${
+                        currentPreset.name === preset.name ? 'border-primary bg-primary/5' : ''
+                      }`}
+                      onClick={() => handleScanModeChangePreset(preset)}
+                    >
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg flex items-center">
+                          {currentPreset.name === preset.name && (
+                            <Check className="h-4 w-4 mr-2 text-primary" />
+                          )}
+                          {preset.name}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">{preset.description}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
               <DialogFooter>
-                <Button type="submit" onClick={() => setIsOcrSettingsOpen(false)}>
+                <Button onClick={() => setIsOcrSettingsOpen(false)}>
                   Close
                 </Button>
               </DialogFooter>
@@ -669,6 +680,7 @@ export default function ScanVin() {
           </Dialog>
         </div>
       )}
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
     </div>
   );
 }
