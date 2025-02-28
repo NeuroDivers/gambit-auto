@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { ArrowLeft, Clipboard, RotateCcw, Check, AlignLeft, Barcode, Info, Play, Pause, FileText } from "lucide-react"
@@ -30,7 +29,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { SettingsSelector } from "@/components/shared/settings/SettingsSelector"
 
-// Define the structure of NHTSA response data
 interface NhtsaResponse {
   Count: number
   Message: string
@@ -523,14 +521,12 @@ export default function ScanVin() {
     }
   }
 
-  // Helper function to extract value from NHTSA results
   const getValueFromNHTSA = (results: Array<{Variable: string, Value: string | null}>, variableName: string): string => {
     if (!results || !Array.isArray(results)) return '';
     const found = results.find(item => item.Variable === variableName);
     return found && found.Value !== null ? found.Value : '';
   };
 
-  // Helper function to combine strings and remove duplicates
   const combineAndDeduplicate = (strings: string[], modelToFilter: string = ''): string => {
     // Filter out empty strings
     const validStrings = strings.filter(str => !!str);
@@ -594,12 +590,10 @@ export default function ScanVin() {
     setIsNHTSALookupLoading(true)
     try {
       // Get data from NHTSA
-      const response = await validateVinWithNHTSA(vin);
+      const responseData = await validateVinWithNHTSA(vin);
       
-      // Check if we received valid data from NHTSA
-      // Fix: Handle the null case properly by checking if response exists first
-      if (response === null) {
-        // Handle the null response case explicitly
+      // Handle the null response case explicitly
+      if (responseData === null) {
         setVinData(prev => ({
           ...prev,
           nhtsaLookup: null,
@@ -615,6 +609,9 @@ export default function ScanVin() {
         return;
       }
       
+      // Type assertion after null check - now TypeScript knows responseData is not null
+      const response = responseData as NhtsaResponse;
+      
       // Now we know response is not null, we can safely check its properties
       const isValidResponse = 
         typeof response === 'object' && 
@@ -622,20 +619,17 @@ export default function ScanVin() {
         Array.isArray(response.Results);
       
       if (isValidResponse) {
-        // We know now that response is a valid NhtsaResponse
-        const nhtsaData = response as NhtsaResponse;
-        
         // Extract vehicle information
-        const make = getValueFromNHTSA(nhtsaData.Results, 'Make');
-        const model = getValueFromNHTSA(nhtsaData.Results, 'Model');
-        const yearStr = getValueFromNHTSA(nhtsaData.Results, 'Model Year');
+        const make = getValueFromNHTSA(response.Results, 'Make');
+        const model = getValueFromNHTSA(response.Results, 'Model');
+        const yearStr = getValueFromNHTSA(response.Results, 'Model Year');
         const year = yearStr ? parseInt(yearStr, 10) : 0;
         
         // Get trim information
-        const trim = getValueFromNHTSA(nhtsaData.Results, 'Trim');
-        const trim2 = getValueFromNHTSA(nhtsaData.Results, 'Trim2');
-        const series = getValueFromNHTSA(nhtsaData.Results, 'Series');
-        const series2 = getValueFromNHTSA(nhtsaData.Results, 'Series2');
+        const trim = getValueFromNHTSA(response.Results, 'Trim');
+        const trim2 = getValueFromNHTSA(response.Results, 'Trim2');
+        const series = getValueFromNHTSA(response.Results, 'Series');
+        const series2 = getValueFromNHTSA(response.Results, 'Series2');
         
         // Combine and deduplicate trim information
         const combinedTrim = combineAndDeduplicate([trim, trim2, series, series2], model);
@@ -644,7 +638,7 @@ export default function ScanVin() {
         
         setVinData(prev => ({
           ...prev,
-          nhtsaLookup: nhtsaData,
+          nhtsaLookup: response,
           nhtsaValid: true,
           vehicleInfo: {
             make,
