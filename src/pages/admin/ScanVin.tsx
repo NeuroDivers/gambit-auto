@@ -1,7 +1,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { ArrowLeft, Clipboard, RotateCcw, Check, AlignLeft, Barcode, Info, Play, Pause, Settings, Sliders } from "lucide-react"
+import { ArrowLeft, Clipboard, RotateCcw, Check, AlignLeft, Barcode, Info, Play, Pause } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createWorker, PSM, Worker } from 'tesseract.js'
@@ -28,7 +28,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel
 } from "@/components/ui/dropdown-menu"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface VinData {
   vin: string | null
@@ -115,12 +114,6 @@ export default function ScanVin() {
     };
   });
   
-  const [morphKernelSize, setMorphKernelSize] = useState<string>(() => {
-    const savedSettings = JSON.parse(localStorage.getItem('scanner-settings') || '{}')
-    return savedSettings.morphKernelSize || '3'
-  })
-  const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState(false)
-  
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const workerRef = useRef<Worker | null>(null)
@@ -162,26 +155,14 @@ export default function ScanVin() {
   const setupTesseract = async () => {
     try {
       log('Initializing Tesseract...');
-      // Create the worker with options for Tesseract.js v4
-      const worker = await createWorker({
-        logger: progress => {
-          if (progress.status === 'recognizing text') {
-            // Optionally log progress
-            console.log(`OCR progress: ${Math.round(progress.progress * 100)}%`);
-          }
-        }
-      });
+      // Create worker
+      const worker = createWorker();
       
-      // Initialize with language
-      await worker.load();
-      await worker.loadLanguage('eng');
-      await worker.initialize('eng');
+      // Wait for worker to initialize
+      workerRef.current = await worker;
       
-      // Apply the preset configuration
-      await worker.setParameters(currentPreset.config);
-      
-      // Store worker reference
-      workerRef.current = worker;
+      // Set parameters
+      await workerRef.current.setParameters(currentPreset.config);
       
       log('Tesseract OCR engine is ready.');
     } catch (error: any) {
@@ -434,16 +415,6 @@ export default function ScanVin() {
       }
     }
   }
-  
-  const updateMorphKernelSize = (size: string) => {
-    setMorphKernelSize(size)
-    
-    const savedSettings = JSON.parse(localStorage.getItem('scanner-settings') || '{}')
-    savedSettings.morphKernelSize = size
-    localStorage.setItem('scanner-settings', JSON.stringify(savedSettings))
-    
-    toast.success(`Morphological kernel size set to ${size}x${size}`)
-  }
 
   return (
     <div className="container max-w-md mx-auto p-4">
@@ -565,14 +536,6 @@ export default function ScanVin() {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => setIsQuickSettingsOpen(true)}
-              >
-                <Sliders className="h-4 w-4 mr-1" />
-                Settings
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
                 onClick={() => setShowLogs(!showLogs)}
               >
                 <AlignLeft className="h-4 w-4 mr-1" />
@@ -580,30 +543,6 @@ export default function ScanVin() {
               </Button>
             </div>
           </div>
-
-          {scanMode === 'text' && (
-            <div className="mb-4">
-              <Label htmlFor="morph-kernel-size" className="mb-2 block text-sm">Morphological Kernel Size</Label>
-              <Select
-                value={morphKernelSize}
-                onValueChange={updateMorphKernelSize}
-              >
-                <SelectTrigger id="morph-kernel-size" className="w-full">
-                  <SelectValue placeholder="Select kernel size" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1x1 (No effect)</SelectItem>
-                  <SelectItem value="3">3x3 (Light)</SelectItem>
-                  <SelectItem value="5">5x5 (Medium)</SelectItem>
-                  <SelectItem value="7">7x7 (Strong)</SelectItem>
-                  <SelectItem value="9">9x9 (Very Strong)</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                Controls the thickness of characters. Larger values help with faded text.
-              </p>
-            </div>
-          )}
           
           {scanMode === 'text' && (
             <div className="mb-4">
@@ -613,8 +552,8 @@ export default function ScanVin() {
                 onClick={() => setIsOcrSettingsOpen(true)}
               >
                 <div className="flex items-center">
-                  <Settings className="h-4 w-4 mr-2" />
-                  OCR Settings
+                  <AlignLeft className="h-4 w-4 mr-2" />
+                  OCR Preset
                 </div>
                 <span className="ml-auto text-sm text-muted-foreground">
                   {currentPreset.name}
@@ -723,88 +662,6 @@ export default function ScanVin() {
               </div>
               <DialogFooter>
                 <Button type="submit" onClick={() => setIsOcrSettingsOpen(false)}>
-                  Close
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={isQuickSettingsOpen} onOpenChange={setIsQuickSettingsOpen}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Quick Settings</DialogTitle>
-                <DialogDescription>
-                  Adjust common scanning parameters
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="quickMorphKernelSize">Morphological Kernel Size</Label>
-                  <Select
-                    value={morphKernelSize}
-                    onValueChange={updateMorphKernelSize}
-                  >
-                    <SelectTrigger id="quickMorphKernelSize">
-                      <SelectValue placeholder="Select kernel size" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1x1 (No effect)</SelectItem>
-                      <SelectItem value="3">3x3 (Light)</SelectItem>
-                      <SelectItem value="5">5x5 (Medium)</SelectItem>
-                      <SelectItem value="7">7x7 (Strong)</SelectItem>
-                      <SelectItem value="9">9x9 (Very Strong)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Controls the thickness of text characters. Larger values help with faded text.
-                  </p>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="quick-edge-enhancement" className="flex-1">
-                    Edge Enhancement
-                    <p className="text-xs text-muted-foreground">
-                      Improves edge detection for clearer text
-                    </p>
-                  </Label>
-                  <Switch
-                    id="quick-edge-enhancement"
-                    checked={settings?.edgeEnhancement ?? true}
-                    onCheckedChange={(checked) => {
-                      const savedSettings = JSON.parse(localStorage.getItem('scanner-settings') || '{}')
-                      savedSettings.edgeEnhancement = checked
-                      localStorage.setItem('scanner-settings', JSON.stringify(savedSettings))
-                      toast.success(`Edge enhancement ${checked ? 'enabled' : 'disabled'}`)
-                    }}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="quick-noise-reduction" className="flex-1">
-                    Noise Reduction
-                    <p className="text-xs text-muted-foreground">
-                      Removes speckles and artifacts from the image
-                    </p>
-                  </Label>
-                  <Switch
-                    id="quick-noise-reduction"
-                    checked={settings?.noiseReduction ?? true}
-                    onCheckedChange={(checked) => {
-                      const savedSettings = JSON.parse(localStorage.getItem('scanner-settings') || '{}')
-                      savedSettings.noiseReduction = checked
-                      localStorage.setItem('scanner-settings', JSON.stringify(savedSettings))
-                      toast.success(`Noise reduction ${checked ? 'enabled' : 'disabled'}`)
-                    }}
-                  />
-                </div>
-              </div>
-              
-              <DialogFooter>
-                <Button onClick={() => navigate('/admin/developer-settings')}>
-                  Advanced Settings
-                </Button>
-                <Button onClick={() => setIsQuickSettingsOpen(false)}>
                   Close
                 </Button>
               </DialogFooter>
