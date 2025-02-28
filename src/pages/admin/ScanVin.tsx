@@ -597,14 +597,31 @@ export default function ScanVin() {
       const response = await validateVinWithNHTSA(vin);
       
       // Check if we received valid data from NHTSA
-      // Fix: Add null check before checking object properties
+      // Fix: Handle the null case properly by checking if response exists first
+      if (response === null) {
+        // Handle the null response case explicitly
+        setVinData(prev => ({
+          ...prev,
+          nhtsaLookup: null,
+          nhtsaValid: false
+        }));
+        
+        toast.warning('Failed to get data from NHTSA, but scan can continue.');
+        
+        // Only show confirmation view for text mode
+        if (scanMode !== 'barcode') {
+          setIsConfirmationView(true);
+        }
+        return;
+      }
+      
+      // Now we know response is not null, we can safely check its properties
       const isValidResponse = 
-        response !== null && 
         typeof response === 'object' && 
         'Results' in response && 
-        Array.isArray((response as NhtsaResponse).Results);
+        Array.isArray(response.Results);
       
-      if (isValidResponse && response !== null) {
+      if (isValidResponse) {
         // We know now that response is a valid NhtsaResponse
         const nhtsaData = response as NhtsaResponse;
         
