@@ -93,7 +93,15 @@ export function useVinLookup(vin: string | undefined | null) {
         const bodyClass = getValueByVariable(results, 'Body Class')
         const doorsStr = getValueByVariable(results, 'Doors')
         const doors = doorsStr ? parseInt(doorsStr, 10) : 0
-        const trim = getValueByVariable(results, 'Trim')
+        
+        // Get trim information from multiple fields and merge them
+        const trim1 = getValueByVariable(results, 'Trim')
+        const trim2 = getValueByVariable(results, 'Trim2')
+        const series = getValueByVariable(results, 'Series')
+        const series2 = getValueByVariable(results, 'Series2')
+        
+        // Merge trim values without duplicates
+        const trim = mergeTrims([trim1, trim2, series, series2])
 
         // Store in cache
         await supabase
@@ -140,4 +148,25 @@ export function useVinLookup(vin: string | undefined | null) {
 function getValueByVariable(results: any[], variableName: string): string {
   const found = results.find(item => item.Variable === variableName)
   return found && found.Value !== null ? found.Value : ''
+}
+
+// Function to merge trim values without duplicates
+function mergeTrims(trimValues: string[]): string {
+  // Filter out empty values
+  const validValues = trimValues.filter(val => val !== null && val !== '' && val !== 'null')
+  
+  if (validValues.length === 0) return ''
+  
+  // Split each value into words and create a set of unique words
+  const words = new Set<string>()
+  validValues.forEach(val => {
+    val.split(/\s+/).forEach(word => {
+      if (word.trim()) {
+        words.add(word.trim())
+      }
+    })
+  })
+  
+  // Convert the set back to a string
+  return Array.from(words).join(' ')
 }
