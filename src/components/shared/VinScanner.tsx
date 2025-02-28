@@ -2,7 +2,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Camera, X } from "lucide-react"
-import { BrowserMultiFormatReader, BarcodeFormat, DecodeHintType } from "@zxing/browser"
+import { BrowserMultiFormatReader, BarcodeFormat } from "@zxing/browser"
 import { 
   Dialog, 
   DialogContent, 
@@ -20,6 +20,7 @@ interface VinScannerProps {
 export function VinScanner({ onScan }: VinScannerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
+  const [reader, setReader] = useState<BrowserMultiFormatReader | null>(null)
 
   const startScanning = async () => {
     try {
@@ -30,20 +31,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
         throw new Error("Video element not found")
       }
 
-      // Configure barcode reader
-      const hints = new Map<DecodeHintType, any>()
-      const formats = [
-        BarcodeFormat.CODE_128, 
-        BarcodeFormat.CODE_39, 
-        BarcodeFormat.DATA_MATRIX,
-        BarcodeFormat.QR_CODE,
-        BarcodeFormat.PDF_417
-      ]
-      
-      hints.set(DecodeHintType.POSSIBLE_FORMATS, formats)
-      hints.set(DecodeHintType.TRY_HARDER, true)
-      
-      const reader = new BrowserMultiFormatReader(hints)
+      // Create a new reader instance
+      const newReader = new BrowserMultiFormatReader()
+      setReader(newReader)
       
       try {
         // Request camera access with preference for environment-facing camera
@@ -53,7 +43,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
           }
         }
 
-        await reader.decodeFromConstraints(
+        // Start continuous scanning
+        await newReader.decodeFromConstraints(
           constraints, 
           videoElement, 
           (result, error) => {
@@ -67,7 +58,16 @@ export function VinScanner({ onScan }: VinScannerProps) {
               
               if (processedVin && isValidVinFormat(processedVin)) {
                 // Close scanner and return processed VIN
-                reader.reset()
+                if (newReader) {
+                  try {
+                    // Stop scanning
+                    newReader.stopContinuousDecode();
+                    stopStreamTracks(videoElement);
+                  } catch (e) {
+                    console.error("Error stopping scanner:", e);
+                  }
+                }
+                
                 setIsScanning(false)
                 setIsOpen(false)
                 onScan(processedVin)
@@ -95,14 +95,28 @@ export function VinScanner({ onScan }: VinScannerProps) {
     }
   }
 
-  const stopScanning = () => {
-    // Find all media streams and stop them
-    const videoElement = document.getElementById('video-preview') as HTMLVideoElement
+  const stopStreamTracks = (videoElement: HTMLVideoElement) => {
     if (videoElement && videoElement.srcObject) {
       const stream = videoElement.srcObject as MediaStream
       stream.getTracks().forEach(track => track.stop())
       videoElement.srcObject = null
     }
+  }
+
+  const stopScanning = () => {
+    // Stop the scanner if it's running
+    if (reader) {
+      try {
+        reader.stopContinuousDecode();
+      } catch (e) {
+        console.error("Error stopping scanner:", e);
+      }
+    }
+    
+    // Stop all media streams
+    const videoElement = document.getElementById('video-preview') as HTMLVideoElement
+    stopStreamTracks(videoElement);
+    
     setIsScanning(false)
   }
 
