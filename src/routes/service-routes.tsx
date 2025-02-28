@@ -8,7 +8,7 @@ export const serviceRoutes: RouteObject[] = [
   {
     path: "service-types",
     element: (
-      <PermissionGuard requiredPermission={{ resource: "service_types", type: "page_access" }}>
+      <PermissionGuard resource="service_types" type="page_access">
         <ServiceTypes />
       </PermissionGuard>
     ),
@@ -16,7 +16,7 @@ export const serviceRoutes: RouteObject[] = [
   {
     path: "service-bays",
     element: (
-      <PermissionGuard requiredPermission={{ resource: "service_bays", type: "page_access" }}>
+      <PermissionGuard resource="service_bays" type="page_access">
         <ServiceBays />
       </PermissionGuard>
     ),
