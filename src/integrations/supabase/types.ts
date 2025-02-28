@@ -1803,6 +1803,7 @@ export type Database = {
           model: string | null
           raw_data: Json | null
           success: boolean | null
+          trim: string | null
           updated_at: string | null
           vin: string
           year: number | null
@@ -1815,6 +1816,7 @@ export type Database = {
           model?: string | null
           raw_data?: Json | null
           success?: boolean | null
+          trim?: string | null
           updated_at?: string | null
           vin: string
           year?: number | null
@@ -1827,6 +1829,7 @@ export type Database = {
           model?: string | null
           raw_data?: Json | null
           success?: boolean | null
+          trim?: string | null
           updated_at?: string | null
           vin?: string
           year?: number | null
