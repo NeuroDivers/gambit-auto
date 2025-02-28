@@ -24,6 +24,13 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
       if (vinData.bodyClass) form.setValue('vehicle_body_class', vinData.bodyClass)
       if (vinData.doors) form.setValue('vehicle_doors', vinData.doors)
       if (vinData.trim) form.setValue('vehicle_trim', vinData.trim)
+      
+      // Log what we're setting for debugging
+      console.log('Setting VIN data:', {
+        bodyClass: vinData.bodyClass,
+        doors: vinData.doors,
+        trim: vinData.trim
+      })
     }
   }, [vinData, form])
 
