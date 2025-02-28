@@ -1,9 +1,10 @@
+
 import { useState, useRef, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { ArrowLeft, Clipboard, RotateCcw, Check, AlignLeft, Barcode, Info, Play, Pause, Settings, Sliders } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { createWorker, PSM } from 'tesseract.js'
+import { createWorker, PSM, Worker, ImageLike } from 'tesseract.js'
 import { BrowserMultiFormatReader, BarcodeFormat, DecodeHintType } from '@zxing/library'
 import { validateVIN, postProcessVIN, validateVinWithNHTSA } from "@/utils/vin-validation"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -122,7 +123,7 @@ export default function ScanVin() {
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const workerRef = useRef<Tesseract.Worker | null>(null)
+  const workerRef = useRef<Worker | null>(null)
   const barcodeReaderRef = useRef<BrowserMultiFormatReader | null>(null)
   const isMobile = useIsMobile()
   
@@ -160,13 +161,19 @@ export default function ScanVin() {
 
   const setupTesseract = async () => {
     try {
+      // Create the worker 
       const worker = await createWorker();
-      workerRef.current = worker;
-
-      await worker.load();
+      
+      // In Tesseract.js v6, the worker API is different
+      // We first need to load the worker with the language and engine
       await worker.loadLanguage('eng');
-      await worker.initialize('eng');
+      await worker.reinitialize('eng');
+      
+      // Set the parameters
       await worker.setParameters(currentPreset.config);
+      
+      // Store the worker reference
+      workerRef.current = worker;
 
       log('Tesseract OCR engine is ready.');
     } catch (error: any) {
@@ -177,8 +184,16 @@ export default function ScanVin() {
 
   const setupBarcodeScanner = async () => {
     try {
-      const hints = new Map();
-      const formats = [BarcodeFormat.CODE_128, BarcodeFormat.CODE_39, BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.UPC_E, BarcodeFormat.ITF];
+      const hints = new Map<DecodeHintType, any>();
+      const formats = [
+        BarcodeFormat.CODE_128, 
+        BarcodeFormat.CODE_39, 
+        BarcodeFormat.EAN_13, 
+        BarcodeFormat.EAN_8, 
+        BarcodeFormat.UPC_A, 
+        BarcodeFormat.UPC_E, 
+        BarcodeFormat.ITF
+      ];
       
       hints.set(DecodeHintType.POSSIBLE_FORMATS, formats);
       
@@ -304,7 +319,7 @@ export default function ScanVin() {
     setIsOcrLoading(true)
     try {
       log('Starting OCR...')
-      const { data } = await workerRef.current.recognize(imageData)
+      const { data } = await workerRef.current.recognize(imageData as ImageLike)
       const rawText = data.text
       log(`Raw OCR Text: ${rawText}`)
 
