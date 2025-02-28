@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom"
 import { ArrowLeft, Clipboard, RotateCcw, Check, AlignLeft, Barcode, Info, Play, Pause, Settings, Sliders } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { createWorker, PSM, Worker, ImageLike } from 'tesseract.js'
+import { createWorker, PSM, Worker } from 'tesseract.js'
 import { BrowserMultiFormatReader, BarcodeFormat, DecodeHintType } from '@zxing/library'
 import { validateVIN, postProcessVIN, validateVinWithNHTSA } from "@/utils/vin-validation"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -161,20 +161,28 @@ export default function ScanVin() {
 
   const setupTesseract = async () => {
     try {
-      // Create the worker 
-      const worker = await createWorker();
+      log('Initializing Tesseract...');
+      // Create the worker with options for Tesseract.js v4
+      const worker = await createWorker({
+        logger: progress => {
+          if (progress.status === 'recognizing text') {
+            // Optionally log progress
+            console.log(`OCR progress: ${Math.round(progress.progress * 100)}%`);
+          }
+        }
+      });
       
-      // In Tesseract.js v6, the worker API is different
-      // We first need to load the worker with the language and engine
+      // Initialize with language
+      await worker.load();
       await worker.loadLanguage('eng');
-      await worker.reinitialize('eng');
+      await worker.initialize('eng');
       
-      // Set the parameters
+      // Apply the preset configuration
       await worker.setParameters(currentPreset.config);
       
-      // Store the worker reference
+      // Store worker reference
       workerRef.current = worker;
-
+      
       log('Tesseract OCR engine is ready.');
     } catch (error: any) {
       console.error('Error setting up Tesseract:', error);
@@ -319,7 +327,7 @@ export default function ScanVin() {
     setIsOcrLoading(true)
     try {
       log('Starting OCR...')
-      const { data } = await workerRef.current.recognize(imageData as ImageLike)
+      const { data } = await workerRef.current.recognize(imageData)
       const rawText = data.text
       log(`Raw OCR Text: ${rawText}`)
 
