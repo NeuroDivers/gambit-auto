@@ -636,19 +636,29 @@ export default function ScanVin() {
             trim: combinedTrim
           }
         }));
+        
+        // Show confirmation view
+        setIsConfirmationView(true);
       } else {
         setVinData(prev => ({
           ...prev,
           nhtsaLookup: null,
           nhtsaValid: false
         }));
-        toast.error('VIN not found in NHTSA database.');
+        
+        // Only show toast, but don't stop the scanning if NHTSA data is not found
+        toast.warning('VIN not found in NHTSA database, but scan can continue.');
+        
+        // Don't show confirmation view automatically for invalid NHTSA data
+        // Let the scanning continue unless the user manually confirms the VIN
+        if (scanMode !== 'barcode') {
+          // For non-barcode scanning, still show confirmation view
+          setIsConfirmationView(true);
+        }
       }
-
-      setIsConfirmationView(true)
     } catch (error: any) {
       console.error('NHTSA Lookup Error:', error)
-      toast.error(`NHTSA lookup failed: ${error.message}`)
+      toast.error(`NHTSA lookup failed: ${error.message}`);
       
       setVinData(prev => ({
         ...prev,
@@ -656,7 +666,10 @@ export default function ScanVin() {
         nhtsaValid: false
       }));
       
-      setIsConfirmationView(true)
+      // Don't show confirmation view automatically for NHTSA errors in barcode mode
+      if (scanMode !== 'barcode') {
+        setIsConfirmationView(true);
+      }
     } finally {
       setIsNHTSALookupLoading(false)
     }
