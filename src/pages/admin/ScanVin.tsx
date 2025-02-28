@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { ArrowLeft, Clipboard, RotateCcw, Check, AlignLeft, Barcode, Info, Play, Pause, FileText } from "lucide-react"
@@ -36,6 +35,12 @@ interface VinData {
   valid: boolean
   nhtsaLookup: any | null
   nhtsaValid: boolean
+  vehicleInfo?: {
+    make: string
+    model: string
+    year: number
+    trim: string
+  }
 }
 
 interface OcrPreset {
@@ -469,7 +474,7 @@ export default function ScanVin() {
       const videoEl = videoRef.current
       
       try {
-        const result = await barcodeReaderRef.current.decodeOnceFromVideoElement(videoEl)
+        const result = await barcodeReaderRef.current.decodeFromVideoElement(videoEl)
         const rawText = result.getText()
         log(`Raw Barcode Text: ${rawText}`)
 
@@ -504,6 +509,42 @@ export default function ScanVin() {
     }
   }
 
+  const getValueFromNHTSA = (results: any[], variableName: string): string => {
+    if (!results || !Array.isArray(results)) return '';
+    const found = results.find(item => item.Variable === variableName);
+    return found && found.Value !== null ? found.Value : '';
+  };
+
+  const combineAndDeduplicate = (strings: string[], modelToFilter: string = ''): string => {
+    // Filter out empty strings
+    const validStrings = strings.filter(str => !!str);
+    if (validStrings.length === 0) return '';
+    
+    // Split each string into words, flatten the array
+    const allWords = validStrings.flatMap(str => str.split(/\s+/));
+    
+    // Split model into words to check for duplicates
+    const modelWords = new Set(
+      modelToFilter.toLowerCase().split(/\s+/).filter(word => word.length > 0)
+    );
+    
+    // Use a Set to track which words we've seen (in lowercase for comparison)
+    const seenWords = new Set<string>();
+    const uniqueWords: string[] = [];
+    
+    // Keep the original casing but use lowercase for duplicate detection
+    // and filter out any words that are also in the model
+    allWords.forEach(word => {
+      const lowerWord = word.toLowerCase();
+      if (!seenWords.has(lowerWord) && !modelWords.has(lowerWord)) {
+        seenWords.add(lowerWord);
+        uniqueWords.push(word);
+      }
+    });
+    
+    return uniqueWords.join(' ');
+  };
+
   const processVin = async (vin: string, confidence: number = 0) => {
     // Skip processing if VIN is empty
     if (!vin || vin.trim() === '') {
@@ -520,7 +561,8 @@ export default function ScanVin() {
       confidence,
       valid: isValid,
       nhtsaLookup: null,
-      nhtsaValid: false
+      nhtsaValid: false,
+      vehicleInfo: undefined
     }))
 
     if (isValid) {
@@ -538,14 +580,42 @@ export default function ScanVin() {
       const nhtsaData = await validateVinWithNHTSA(vin)
       const nhtsaValid = nhtsaData !== null
 
-      setVinData(prev => ({
-        ...prev,
-        nhtsaLookup: nhtsaData,
-        nhtsaValid
-      }))
+      if (nhtsaValid && nhtsaData && nhtsaData.Results) {
+        // Extract vehicle information
+        const make = getValueFromNHTSA(nhtsaData.Results, 'Make');
+        const model = getValueFromNHTSA(nhtsaData.Results, 'Model');
+        const yearStr = getValueFromNHTSA(nhtsaData.Results, 'Model Year');
+        const year = yearStr ? parseInt(yearStr, 10) : 0;
+        
+        // Get trim information
+        const trim = getValueFromNHTSA(nhtsaData.Results, 'Trim');
+        const trim2 = getValueFromNHTSA(nhtsaData.Results, 'Trim2');
+        const series = getValueFromNHTSA(nhtsaData.Results, 'Series');
+        const series2 = getValueFromNHTSA(nhtsaData.Results, 'Series2');
+        
+        // Combine and deduplicate trim information
+        const combinedTrim = combineAndDeduplicate([trim, trim2, series, series2], model);
+        
+        log(`Vehicle Make: ${make}, Model: ${model}, Year: ${year}, Trim: ${combinedTrim}`);
 
-      if (!nhtsaValid) {
-        toast.error('VIN not found in NHTSA database.')
+        setVinData(prev => ({
+          ...prev,
+          nhtsaLookup: nhtsaData,
+          nhtsaValid: true,
+          vehicleInfo: {
+            make,
+            model,
+            year,
+            trim: combinedTrim
+          }
+        }));
+      } else {
+        setVinData(prev => ({
+          ...prev,
+          nhtsaLookup: nhtsaData,
+          nhtsaValid: false
+        }));
+        toast.error('VIN not found in NHTSA database.');
       }
 
       setIsConfirmationView(true)
@@ -614,7 +684,31 @@ export default function ScanVin() {
               )}
             </div>
 
-            <div className="space-y-2">
+            {vinData.vehicleInfo && (
+              <div className="space-y-2 border-t pt-3">
+                <p className="text-sm font-medium">Vehicle Information:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Make</p>
+                    <p className="font-medium">{vinData.vehicleInfo.make || 'Unknown'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Model</p>
+                    <p className="font-medium">{vinData.vehicleInfo.model || 'Unknown'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Year</p>
+                    <p className="font-medium">{vinData.vehicleInfo.year || 'Unknown'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Trim</p>
+                    <p className="font-medium">{vinData.vehicleInfo.trim || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2 border-t pt-3">
               <p className="text-sm font-medium">VIN Status:</p>
               {vinData.valid ? (
                 <Badge variant="outline">
