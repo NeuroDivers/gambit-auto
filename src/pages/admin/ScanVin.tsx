@@ -28,6 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel
 } from "@/components/ui/dropdown-menu"
+import { SettingsSelector } from "@/components/shared/settings/SettingsSelector"
 
 interface VinData {
   vin: string | null
@@ -48,26 +49,124 @@ interface OcrPreset {
 
 const ocrPresets: OcrPreset[] = [
   {
-    name: "Aggressive",
+    name: "Default",
     config: {
       tessedit_pageseg_mode: PSM.SINGLE_LINE,
       tessedit_char_whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ"
     },
-    description: "Best for clear VIN labels with high contrast"
+    description: "Balanced settings for most VIN scanning scenarios"
   },
   {
-    name: "Balanced",
+    name: "Windshield VIN",
     config: {
-      tessedit_pageseg_mode: PSM.SINGLE_LINE
+      tessedit_pageseg_mode: PSM.SINGLE_LINE,
+      tessedit_char_whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ"
     },
-    description: "Good balance between accuracy and speed"
+    description: "Optimized for reading VINs through windshield glass"
   },
   {
-    name: "Fast",
+    name: "Low Light",
     config: {
-      tessedit_pageseg_mode: PSM.SINGLE_WORD
+      tessedit_pageseg_mode: PSM.SINGLE_LINE,
+      tessedit_char_whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ"
     },
-    description: "Fastest recognition but less accurate"
+    description: "Enhanced for poor lighting conditions"
+  },
+  {
+    name: "High Contrast",
+    config: {
+      tessedit_pageseg_mode: PSM.SINGLE_WORD,
+      tessedit_char_whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ"
+    },
+    description: "For VINs with strong contrast against background"
+  },
+  {
+    name: "Metal Plate",
+    config: {
+      tessedit_pageseg_mode: PSM.SINGLE_LINE,
+      tessedit_char_whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ"
+    },
+    description: "Optimized for stamped metal VIN plates"
+  },
+  {
+    name: "Sticker VIN",
+    config: {
+      tessedit_pageseg_mode: PSM.SINGLE_LINE,
+      tessedit_char_whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ"
+    },
+    description: "For printed sticker VINs (door jamb, etc.)"
+  },
+  {
+    name: "Faded Text",
+    config: {
+      tessedit_pageseg_mode: PSM.SINGLE_LINE,
+      tessedit_char_whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ"
+    },
+    description: "For worn or faded VIN characters"
+  },
+  {
+    name: "High Precision",
+    config: {
+      tessedit_pageseg_mode: PSM.SINGLE_BLOCK,
+      tessedit_char_whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ"
+    },
+    description: "Slower but more accurate scanning"
+  },
+  {
+    name: "Fast Scan",
+    config: {
+      tessedit_pageseg_mode: PSM.SINGLE_WORD,
+      tessedit_char_whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ"
+    },
+    description: "Quicker but less accurate scanning"
+  },
+  {
+    name: "Monitor/Screen",
+    config: {
+      tessedit_pageseg_mode: PSM.SINGLE_LINE,
+      tessedit_char_whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ"
+    },
+    description: "Basic settings for VINs displayed on digital screens"
+  },
+  {
+    name: "Advanced Monitor VIN",
+    config: {
+      tessedit_pageseg_mode: PSM.SINGLE_LINE,
+      tessedit_char_whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ"
+    },
+    description: "Specialized processing for screens with anti-aliasing"
+  },
+  {
+    name: "Auto-Adjusting Monitor",
+    config: {
+      tessedit_pageseg_mode: PSM.SINGLE_LINE,
+      tessedit_char_whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ"
+    },
+    description: "Automatically adapts to different screen conditions"
+  },
+  {
+    name: "High Refresh Rate Screen",
+    config: {
+      tessedit_pageseg_mode: PSM.SINGLE_LINE,
+      tessedit_char_whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ"
+    },
+    description: "For OLED or high refresh rate displays (90Hz+)"
+  },
+  {
+    name: "Moving/Handheld Camera",
+    config: {
+      tessedit_pageseg_mode: PSM.SINGLE_LINE,
+      tessedit_char_whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ"
+    },
+    description: "Reduces motion blur while scanning on the move"
+  },
+  {
+    name: "High Brightness/Glare",
+    config: {
+      tessedit_pageseg_mode: PSM.SINGLE_LINE,
+      tessedit_char_whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ"
+    },
+    description: "Handles bright lighting conditions and glare"
   }
 ]
 
@@ -646,30 +745,32 @@ export default function ScanVin() {
                   Select a preset for OCR text recognition.
                 </DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-1 gap-4">
-                  {ocrPresets.map((preset) => (
-                    <Card 
-                      key={preset.name}
-                      className={`cursor-pointer hover:border-primary transition-colors ${
-                        currentPreset.name === preset.name ? 'border-primary bg-primary/5' : ''
-                      }`}
-                      onClick={() => handleScanModeChangePreset(preset)}
-                    >
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-lg flex items-center">
-                          {currentPreset.name === preset.name && (
-                            <Check className="h-4 w-4 mr-2 text-primary" />
-                          )}
-                          {preset.name}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground">{preset.description}</p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+              <div className="py-4">
+                <ScrollArea className="h-[400px] pr-4">
+                  <div className="grid grid-cols-1 gap-4">
+                    {ocrPresets.map((preset) => (
+                      <Card 
+                        key={preset.name}
+                        className={`cursor-pointer hover:border-primary transition-colors ${
+                          currentPreset.name === preset.name ? 'border-primary bg-primary/5' : ''
+                        }`}
+                        onClick={() => handleScanModeChangePreset(preset)}
+                      >
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-lg flex items-center">
+                            {currentPreset.name === preset.name && (
+                              <Check className="h-4 w-4 mr-2 text-primary" />
+                            )}
+                            {preset.name}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground">{preset.description}</p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </ScrollArea>
               </div>
               <DialogFooter>
                 <Button onClick={() => setIsOcrSettingsOpen(false)}>
