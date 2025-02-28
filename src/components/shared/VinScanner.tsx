@@ -60,8 +60,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
                 // Close scanner and return processed VIN
                 if (newReader) {
                   try {
-                    // Stop scanning
-                    newReader.stopContinuousDecode();
+                    // Stop scanning - using the correct method according to ZXing API
+                    newReader.reset();
                     stopStreamTracks(videoElement);
                   } catch (e) {
                     console.error("Error stopping scanner:", e);
@@ -107,7 +107,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
     // Stop the scanner if it's running
     if (reader) {
       try {
-        reader.stopContinuousDecode();
+        // Using the correct method according to ZXing API
+        reader.reset();
       } catch (e) {
         console.error("Error stopping scanner:", e);
       }
@@ -198,6 +199,12 @@ export function VinScanner({ onScan }: VinScannerProps) {
 
 /**
  * Implements intelligent barcode text processing based on common VIN scanning issues
+ * 
+ * This implements the logic from:
+ * IFS( LEFT([VINBarcode],1) = "I", RIGHT([VINBarcode], 17),
+ *      CONTAINS([VINBarcode], ","), LEFT([VINBarcode], 17),
+ *      CONTAINS([VINBarcode], " "), LEFT([VINBarcode], 17),
+ *      RIGHT([VINBarcode],18) = "G", LEFT([VINBarcode],17), ...)
  */
 function processRawBarcodeText(text: string): string {
   if (!text || text.length < 17) {
