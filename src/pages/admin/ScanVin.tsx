@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { ArrowLeft, Clipboard, RotateCcw, Check, AlignLeft, Barcode, Info, Play, Pause, FileText } from "lucide-react"
@@ -609,16 +610,28 @@ export default function ScanVin() {
         return;
       }
       
-      // Type assertion after null check - now TypeScript knows responseData is not null
+      // Check if the response is a boolean (which means the API responded but validation failed)
+      if (typeof responseData === 'boolean') {
+        setVinData(prev => ({
+          ...prev,
+          nhtsaLookup: null,
+          nhtsaValid: false
+        }));
+        
+        toast.warning('VIN not found in NHTSA database, but scan can continue.');
+        
+        // Only show confirmation view for text mode
+        if (scanMode !== 'barcode') {
+          setIsConfirmationView(true);
+        }
+        return;
+      }
+      
+      // At this point, we know responseData is a NhtsaResponse object
       const response = responseData as NhtsaResponse;
       
-      // Now we know response is not null, we can safely check its properties
-      const isValidResponse = 
-        typeof response === 'object' && 
-        'Results' in response && 
-        Array.isArray(response.Results);
-      
-      if (isValidResponse) {
+      // Verify that the response has the expected structure
+      if ('Results' in response && Array.isArray(response.Results)) {
         // Extract vehicle information
         const make = getValueFromNHTSA(response.Results, 'Make');
         const model = getValueFromNHTSA(response.Results, 'Model');
@@ -651,19 +664,16 @@ export default function ScanVin() {
         // Show confirmation view
         setIsConfirmationView(true);
       } else {
+        // Response doesn't have the expected structure
         setVinData(prev => ({
           ...prev,
           nhtsaLookup: null,
           nhtsaValid: false
         }));
         
-        // Only show toast, but don't stop the scanning if NHTSA data is not found
-        toast.warning('VIN not found in NHTSA database, but scan can continue.');
+        toast.warning('Invalid response from NHTSA, but scan can continue.');
         
-        // Don't show confirmation view automatically for invalid NHTSA data
-        // Let the scanning continue unless the user manually confirms the VIN
         if (scanMode !== 'barcode') {
-          // For non-barcode scanning, still show confirmation view
           setIsConfirmationView(true);
         }
       }
