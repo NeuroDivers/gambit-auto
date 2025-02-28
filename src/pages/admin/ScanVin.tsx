@@ -300,7 +300,6 @@ export default function ScanVin() {
   };
 
   const startCamera = async () => {
-    setIsCameraActive(true)
     try {
       const constraints: MediaStreamConstraints = {
         video: {
@@ -317,22 +316,24 @@ export default function ScanVin() {
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         await videoRef.current.play()
+        setIsCameraActive(true)
         log('Camera started.')
       }
     } catch (error: any) {
       console.error('Error accessing camera:', error)
       toast.error(`Could not access camera: ${error.message}`)
+      setIsCameraActive(false)
     }
   }
 
   const stopCamera = () => {
-    setIsCameraActive(false)
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream
       stream.getTracks().forEach(track => track.stop())
       videoRef.current.srcObject = null
       log('Camera stopped.')
     }
+    setIsCameraActive(false)
   }
 
   const handleScanModeChange = (mode: 'text' | 'barcode') => {
@@ -378,7 +379,20 @@ export default function ScanVin() {
     startCamera()
   }
 
+  const toggleCamera = () => {
+    if (isCameraActive) {
+      stopCamera()
+    } else {
+      startCamera()
+    }
+  }
+
   const handleScan = async () => {
+    if (!isCameraActive) {
+      toast.error('Camera is not active. Please enable the camera first.')
+      return
+    }
+    
     if (scanMode === 'text') {
       await scanText()
     } else if (scanMode === 'barcode') {
@@ -683,18 +697,13 @@ export default function ScanVin() {
 
           <Button
             className="w-full"
-            onClick={handleScan}
-            disabled={isOcrLoading || !isCameraActive}
+            onClick={toggleCamera}
+            variant={isCameraActive ? "secondary" : "default"}
           >
-            {isOcrLoading ? (
+            {isCameraActive ? (
               <>
-                <RotateCcw className="mr-2 h-4 w-4 animate-spin" />
-                Scanning...
-              </>
-            ) : isCameraActive ? (
-              <>
-                <Play className="mr-2 h-4 w-4" />
-                Start Scan
+                <Pause className="mr-2 h-4 w-4" />
+                Stop Camera
               </>
             ) : (
               <>
@@ -702,6 +711,15 @@ export default function ScanVin() {
                 Enable Camera
               </>
             )}
+          </Button>
+
+          <Button
+            className="w-full"
+            onClick={handleScan}
+            disabled={isOcrLoading || !isCameraActive}
+          >
+            <Play className="mr-2 h-4 w-4" />
+            Start Scan
           </Button>
 
           <div className="flex items-center space-x-2">
