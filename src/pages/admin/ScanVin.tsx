@@ -30,11 +30,24 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { SettingsSelector } from "@/components/shared/settings/SettingsSelector"
 
+// Define the structure of NHTSA response data
+interface NhtsaResponse {
+  Count: number
+  Message: string
+  SearchCriteria: string
+  Results: Array<{
+    Variable: string
+    Value: string | null
+    ValueId: string | null
+    VariableId: number
+  }>
+}
+
 interface VinData {
   vin: string | null
   confidence: number
   valid: boolean
-  nhtsaLookup: any | null
+  nhtsaLookup: NhtsaResponse | null
   nhtsaValid: boolean
   vehicleInfo?: {
     make: string
@@ -511,7 +524,7 @@ export default function ScanVin() {
   }
 
   // Helper function to extract value from NHTSA results
-  const getValueFromNHTSA = (results: any[], variableName: string): string => {
+  const getValueFromNHTSA = (results: Array<{Variable: string, Value: string | null}>, variableName: string): string => {
     if (!results || !Array.isArray(results)) return '';
     const found = results.find(item => item.Variable === variableName);
     return found && found.Value !== null ? found.Value : '';
@@ -580,12 +593,20 @@ export default function ScanVin() {
   const lookupNHTSA = async (vin: string) => {
     setIsNHTSALookupLoading(true)
     try {
-      const nhtsaData = await validateVinWithNHTSA(vin)
+      // Get data from NHTSA
+      const response = await validateVinWithNHTSA(vin);
       
-      // Fix: Check if nhtsaData is an object with Results property
-      const nhtsaValid = nhtsaData !== null && typeof nhtsaData === 'object' && 'Results' in nhtsaData;
-
-      if (nhtsaValid && nhtsaData && nhtsaData.Results) {
+      // Check if we received valid data from NHTSA
+      const isValidResponse = 
+        response !== null && 
+        typeof response === 'object' && 
+        'Results' in response && 
+        Array.isArray(response.Results);
+      
+      if (isValidResponse) {
+        // We know now that response is a valid NhtsaResponse
+        const nhtsaData = response as NhtsaResponse;
+        
         // Extract vehicle information
         const make = getValueFromNHTSA(nhtsaData.Results, 'Make');
         const model = getValueFromNHTSA(nhtsaData.Results, 'Model');
@@ -602,7 +623,7 @@ export default function ScanVin() {
         const combinedTrim = combineAndDeduplicate([trim, trim2, series, series2], model);
         
         log(`Vehicle Make: ${make}, Model: ${model}, Year: ${year}, Trim: ${combinedTrim}`);
-
+        
         setVinData(prev => ({
           ...prev,
           nhtsaLookup: nhtsaData,
@@ -617,7 +638,7 @@ export default function ScanVin() {
       } else {
         setVinData(prev => ({
           ...prev,
-          nhtsaLookup: nhtsaData,
+          nhtsaLookup: null,
           nhtsaValid: false
         }));
         toast.error('VIN not found in NHTSA database.');
@@ -627,6 +648,14 @@ export default function ScanVin() {
     } catch (error: any) {
       console.error('NHTSA Lookup Error:', error)
       toast.error(`NHTSA lookup failed: ${error.message}`)
+      
+      setVinData(prev => ({
+        ...prev,
+        nhtsaLookup: null,
+        nhtsaValid: false
+      }));
+      
+      setIsConfirmationView(true)
     } finally {
       setIsNHTSALookupLoading(false)
     }
