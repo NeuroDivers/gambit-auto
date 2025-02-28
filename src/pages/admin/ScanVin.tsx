@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { ArrowLeft, Clipboard, RotateCcw, Check, AlignLeft, Barcode, Info, Play, Pause, FileText } from "lucide-react"
@@ -509,12 +510,14 @@ export default function ScanVin() {
     }
   }
 
+  // Helper function to extract value from NHTSA results
   const getValueFromNHTSA = (results: any[], variableName: string): string => {
     if (!results || !Array.isArray(results)) return '';
     const found = results.find(item => item.Variable === variableName);
     return found && found.Value !== null ? found.Value : '';
   };
 
+  // Helper function to combine strings and remove duplicates
   const combineAndDeduplicate = (strings: string[], modelToFilter: string = ''): string => {
     // Filter out empty strings
     const validStrings = strings.filter(str => !!str);
@@ -578,7 +581,9 @@ export default function ScanVin() {
     setIsNHTSALookupLoading(true)
     try {
       const nhtsaData = await validateVinWithNHTSA(vin)
-      const nhtsaValid = nhtsaData !== null
+      
+      // Fix: Check if nhtsaData is an object with Results property
+      const nhtsaValid = nhtsaData !== null && typeof nhtsaData === 'object' && 'Results' in nhtsaData;
 
       if (nhtsaValid && nhtsaData && nhtsaData.Results) {
         // Extract vehicle information
