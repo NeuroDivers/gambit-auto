@@ -1,1685 +1,920 @@
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { toast } from "sonner";
-import { PageTitle } from "@/components/shared/PageTitle";
-import { CheckSquare, Square, Settings, Code, Database, Globe, Shield, Sun, Camera, FileText, Cpu, Network, Key, AlertTriangle, BarChart } from "lucide-react";
-import { Toggle } from "@/components/ui/toggle";
-import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
-
-interface ProcessingSettings {
-  // Basic settings
-  autoInvert: boolean;
-  autoInvertDark: boolean;
-  edgeEnhancement: boolean;
-  noiseReduction: boolean;
-  adaptiveContrast: boolean;
-  deskewing: boolean;
-  angleCorrection: boolean;
-  grayscaleMethod: 'luminosity' | 'average' | 'blue-channel' | 'green-channel' | 'red-channel';
-  blueEmphasis: 'zero' | 'normal' | 'high' | 'very-high';
-  thresholdMethod: 'global' | 'adaptive' | 'otsu';
-  thresholdValue: number;
-  adaptiveBlockSize: number;
-  adaptiveConstant: number;
-  contrastAdjustment: number;
-  brightnessAdjustment: number;
-  sharpenAmount: number;
-  
-  // Advanced settings
-  moireReduction: boolean;
-  autoAdjusting: boolean;
-  frameRate: 'auto' | '15fps' | '30fps' | '60fps' | '120fps';
-  laplacianSharpening: boolean;
-  fourierTransform: boolean;
-  adaptiveDenoising: boolean;
-  unsharpMasking: boolean;
-  highPassFilter: boolean;
-  
-  tesseractConfig: {
-    psm: number;
-    oem: number;
-    whitelist: string;
-    blacklist: string;
-    minConfidence: number;
-  };
-}
-
-interface Preset {
-  id: string;
-  name: string;
-  description?: string;
-  isDefault?: boolean;
-  settings: ProcessingSettings;
-}
-
-// Define the sidebar items
-interface SidebarItem {
-  name: string;
-  icon: React.ReactNode;
-  id: string;
-}
-
-const sidebarItems: SidebarItem[] = [
-  { name: "OCR Scanner", icon: <Camera className="h-5 w-5" />, id: "ocr" },
-  { name: "API Keys", icon: <Key className="h-5 w-5" />, id: "api-keys" },
-  { name: "Database", icon: <Database className="h-5 w-5" />, id: "database" },
-  { name: "Logging", icon: <FileText className="h-5 w-5" />, id: "logging" },
-  { name: "Performance", icon: <Cpu className="h-5 w-5" />, id: "performance" },
-  { name: "Network", icon: <Network className="h-5 w-5" />, id: "network" },
-  { name: "Security", icon: <Shield className="h-5 w-5" />, id: "security" },
-  { name: "Themes", icon: <Sun className="h-5 w-5" />, id: "themes" },
-  { name: "Analytics", icon: <BarChart className="h-5 w-5" />, id: "analytics" },
-  { name: "Advanced", icon: <AlertTriangle className="h-5 w-5" />, id: "advanced" },
-];
-
-const defaultPresets: Preset[] = [
-  {
-    id: "default",
-    name: "Default",
-    description: "Balanced settings for most VIN scanning scenarios",
-    isDefault: true,
-    settings: {
-      autoInvert: true,
-      autoInvertDark: false,
-      edgeEnhancement: true,
-      noiseReduction: true,
-      adaptiveContrast: true,
-      deskewing: false,
-      angleCorrection: false,
-      grayscaleMethod: 'luminosity',
-      blueEmphasis: 'normal',
-      thresholdMethod: 'adaptive',
-      thresholdValue: 127,
-      adaptiveBlockSize: 11,
-      adaptiveConstant: 2,
-      contrastAdjustment: 0,
-      brightnessAdjustment: 0,
-      sharpenAmount: 0.5,
-      moireReduction: false,
-      autoAdjusting: false,
-      frameRate: 'auto',
-      laplacianSharpening: false,
-      fourierTransform: false,
-      adaptiveDenoising: false,
-      unsharpMasking: false,
-      highPassFilter: false,
-      tesseractConfig: {
-        psm: 7,
-        oem: 1,
-        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
-        blacklist: "IOQ",
-        minConfidence: 60
-      }
-    }
-  },
-  {
-    id: "windshield",
-    name: "Windshield VIN",
-    description: "Optimized for reading VINs through windshield glass",
-    settings: {
-      autoInvert: true,
-      autoInvertDark: false,
-      edgeEnhancement: true,
-      noiseReduction: true,
-      adaptiveContrast: true,
-      deskewing: true,
-      angleCorrection: true,
-      grayscaleMethod: 'blue-channel',
-      blueEmphasis: 'high',
-      thresholdMethod: 'adaptive',
-      thresholdValue: 127,
-      adaptiveBlockSize: 15,
-      adaptiveConstant: 5,
-      contrastAdjustment: 20,
-      brightnessAdjustment: 10,
-      sharpenAmount: 0.7,
-      moireReduction: false,
-      autoAdjusting: false,
-      frameRate: '30fps',
-      laplacianSharpening: false,
-      fourierTransform: false,
-      adaptiveDenoising: false,
-      unsharpMasking: false,
-      highPassFilter: false,
-      tesseractConfig: {
-        psm: 7,
-        oem: 1,
-        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
-        blacklist: "IOQ",
-        minConfidence: 50
-      }
-    }
-  },
-  {
-    id: "low-light",
-    name: "Low Light",
-    description: "Enhanced for poor lighting conditions",
-    settings: {
-      autoInvert: true,
-      autoInvertDark: false,
-      edgeEnhancement: true,
-      noiseReduction: true,
-      adaptiveContrast: true,
-      deskewing: false,
-      angleCorrection: false,
-      grayscaleMethod: 'luminosity',
-      blueEmphasis: 'normal',
-      thresholdMethod: 'adaptive',
-      thresholdValue: 100,
-      adaptiveBlockSize: 19,
-      adaptiveConstant: 3,
-      contrastAdjustment: 30,
-      brightnessAdjustment: 20,
-      sharpenAmount: 0.6,
-      moireReduction: false,
-      autoAdjusting: false,
-      frameRate: '15fps',
-      laplacianSharpening: false,
-      fourierTransform: false,
-      adaptiveDenoising: true,
-      unsharpMasking: false,
-      highPassFilter: false,
-      tesseractConfig: {
-        psm: 7,
-        oem: 1,
-        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
-        blacklist: "IOQ",
-        minConfidence: 40
-      }
-    }
-  },
-  {
-    id: "high-contrast",
-    name: "High Contrast",
-    description: "For VINs with strong contrast against background",
-    settings: {
-      autoInvert: false,
-      autoInvertDark: false,
-      edgeEnhancement: true,
-      noiseReduction: false,
-      adaptiveContrast: false,
-      deskewing: false,
-      angleCorrection: false,
-      grayscaleMethod: 'luminosity',
-      blueEmphasis: 'zero',
-      thresholdMethod: 'global',
-      thresholdValue: 140,
-      adaptiveBlockSize: 11,
-      adaptiveConstant: 2,
-      contrastAdjustment: 40,
-      brightnessAdjustment: 0,
-      sharpenAmount: 0.4,
-      moireReduction: false,
-      autoAdjusting: false,
-      frameRate: 'auto',
-      laplacianSharpening: false,
-      fourierTransform: false,
-      adaptiveDenoising: false,
-      unsharpMasking: false,
-      highPassFilter: false,
-      tesseractConfig: {
-        psm: 7,
-        oem: 1,
-        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
-        blacklist: "IOQ",
-        minConfidence: 70
-      }
-    }
-  },
-  {
-    id: "metal-plate",
-    name: "Metal Plate",
-    description: "Optimized for stamped metal VIN plates",
-    settings: {
-      autoInvert: false,
-      autoInvertDark: false,
-      edgeEnhancement: true,
-      noiseReduction: true,
-      adaptiveContrast: true,
-      deskewing: true,
-      angleCorrection: true,
-      grayscaleMethod: 'blue-channel',
-      blueEmphasis: 'high',
-      thresholdMethod: 'adaptive',
-      thresholdValue: 127,
-      adaptiveBlockSize: 13,
-      adaptiveConstant: 4,
-      contrastAdjustment: 25,
-      brightnessAdjustment: 5,
-      sharpenAmount: 0.8,
-      moireReduction: false,
-      autoAdjusting: false,
-      frameRate: '30fps',
-      laplacianSharpening: false,
-      fourierTransform: false,
-      adaptiveDenoising: false,
-      unsharpMasking: false,
-      highPassFilter: false,
-      tesseractConfig: {
-        psm: 7,
-        oem: 1,
-        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
-        blacklist: "IOQ",
-        minConfidence: 55
-      }
-    }
-  },
-  {
-    id: "sticker",
-    name: "Sticker VIN",
-    description: "For printed sticker VINs (door jamb, etc.)",
-    settings: {
-      autoInvert: false,
-      autoInvertDark: false,
-      edgeEnhancement: true,
-      noiseReduction: true,
-      adaptiveContrast: true,
-      deskewing: true,
-      angleCorrection: false,
-      grayscaleMethod: 'luminosity',
-      blueEmphasis: 'normal',
-      thresholdMethod: 'otsu',
-      thresholdValue: 127,
-      adaptiveBlockSize: 11,
-      adaptiveConstant: 2,
-      contrastAdjustment: 10,
-      brightnessAdjustment: 0,
-      sharpenAmount: 0.5,
-      moireReduction: false,
-      autoAdjusting: false,
-      frameRate: '15fps',
-      laplacianSharpening: false,
-      fourierTransform: false,
-      adaptiveDenoising: false,
-      unsharpMasking: false,
-      highPassFilter: false,
-      tesseractConfig: {
-        psm: 7,
-        oem: 1,
-        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
-        blacklist: "IOQ",
-        minConfidence: 65
-      }
-    }
-  },
-  {
-    id: "faded",
-    name: "Faded Text",
-    description: "For worn or faded VIN characters",
-    settings: {
-      autoInvert: true,
-      autoInvertDark: true,
-      edgeEnhancement: true,
-      noiseReduction: true,
-      adaptiveContrast: true,
-      deskewing: false,
-      angleCorrection: false,
-      grayscaleMethod: 'blue-channel',
-      blueEmphasis: 'very-high',
-      thresholdMethod: 'adaptive',
-      thresholdValue: 110,
-      adaptiveBlockSize: 21,
-      adaptiveConstant: 5,
-      contrastAdjustment: 35,
-      brightnessAdjustment: 15,
-      sharpenAmount: 0.9,
-      moireReduction: false,
-      autoAdjusting: false,
-      frameRate: '30fps',
-      laplacianSharpening: false,
-      fourierTransform: false,
-      adaptiveDenoising: false,
-      unsharpMasking: false,
-      highPassFilter: false,
-      tesseractConfig: {
-        psm: 7,
-        oem: 1,
-        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
-        blacklist: "IOQ",
-        minConfidence: 45
-      }
-    }
-  },
-  {
-    id: "high-precision",
-    name: "High Precision",
-    description: "Slower but more accurate scanning",
-    settings: {
-      autoInvert: true,
-      autoInvertDark: true,
-      edgeEnhancement: true,
-      noiseReduction: true,
-      adaptiveContrast: true,
-      deskewing: true,
-      angleCorrection: true,
-      grayscaleMethod: 'luminosity',
-      blueEmphasis: 'normal',
-      thresholdMethod: 'adaptive',
-      thresholdValue: 127,
-      adaptiveBlockSize: 17,
-      adaptiveConstant: 3,
-      contrastAdjustment: 15,
-      brightnessAdjustment: 5,
-      sharpenAmount: 0.6,
-      moireReduction: false,
-      autoAdjusting: false,
-      frameRate: '15fps',
-      laplacianSharpening: false,
-      fourierTransform: false,
-      adaptiveDenoising: false,
-      unsharpMasking: false,
-      highPassFilter: false,
-      tesseractConfig: {
-        psm: 6,
-        oem: 1,
-        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
-        blacklist: "IOQ",
-        minConfidence: 75
-      }
-    }
-  },
-  {
-    id: "fast-scan",
-    name: "Fast Scan",
-    description: "Quicker but less accurate scanning",
-    settings: {
-      autoInvert: false,
-      autoInvertDark: false,
-      edgeEnhancement: false,
-      noiseReduction: false,
-      adaptiveContrast: false,
-      deskewing: false,
-      angleCorrection: false,
-      grayscaleMethod: 'average',
-      blueEmphasis: 'zero',
-      thresholdMethod: 'global',
-      thresholdValue: 127,
-      adaptiveBlockSize: 11,
-      adaptiveConstant: 2,
-      contrastAdjustment: 0,
-      brightnessAdjustment: 0,
-      sharpenAmount: 0,
-      moireReduction: false,
-      autoAdjusting: false,
-      frameRate: '60fps',
-      laplacianSharpening: false,
-      fourierTransform: false,
-      adaptiveDenoising: false,
-      unsharpMasking: false,
-      highPassFilter: false,
-      tesseractConfig: {
-        psm: 7,
-        oem: 0,
-        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
-        blacklist: "IOQ",
-        minConfidence: 50
-      }
-    }
-  },
-  // New monitor-specific presets
-  {
-    id: "monitor-basic",
-    name: "Monitor/Screen",
-    description: "Basic settings for VINs displayed on digital screens",
-    settings: {
-      autoInvert: false,
-      autoInvertDark: false,
-      edgeEnhancement: true,
-      noiseReduction: true,
-      adaptiveContrast: false,
-      deskewing: false,
-      angleCorrection: false,
-      grayscaleMethod: 'green-channel',
-      blueEmphasis: 'zero',
-      thresholdMethod: 'adaptive',
-      thresholdValue: 127,
-      adaptiveBlockSize: 11,
-      adaptiveConstant: 2,
-      contrastAdjustment: 10,
-      brightnessAdjustment: 5,
-      sharpenAmount: 0.3,
-      moireReduction: true,
-      autoAdjusting: false,
-      frameRate: '30fps',
-      laplacianSharpening: false,
-      fourierTransform: false,
-      adaptiveDenoising: true,
-      unsharpMasking: true,
-      highPassFilter: true,
-      tesseractConfig: {
-        psm: 7,
-        oem: 3,
-        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
-        blacklist: "IOQ",
-        minConfidence: 55
-      }
-    }
-  },
-  {
-    id: "monitor-advanced",
-    name: "Advanced Monitor VIN",
-    description: "Specialized processing for anti-aliasing, moiré patterns, and refresh rate artifacts",
-    settings: {
-      autoInvert: false,
-      autoInvertDark: false,
-      edgeEnhancement: true,
-      noiseReduction: true,
-      adaptiveContrast: true,
-      deskewing: false,
-      angleCorrection: false,
-      grayscaleMethod: 'green-channel',
-      blueEmphasis: 'zero',
-      thresholdMethod: 'adaptive',
-      thresholdValue: 127,
-      adaptiveBlockSize: 11,
-      adaptiveConstant: 2,
-      contrastAdjustment: 15,
-      brightnessAdjustment: 5,
-      sharpenAmount: 0.6,
-      moireReduction: true,
-      autoAdjusting: false,
-      frameRate: '60fps',
-      laplacianSharpening: true,
-      fourierTransform: true,
-      adaptiveDenoising: true,
-      unsharpMasking: true,
-      highPassFilter: true,
-      tesseractConfig: {
-        psm: 7,
-        oem: 3,
-        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
-        blacklist: "IOQ",
-        minConfidence: 60
-      }
-    }
-  },
-  {
-    id: "monitor-auto",
-    name: "Auto-Adjusting Monitor",
-    description: "Automatically adapts to different screen brightnesses and conditions",
-    settings: {
-      autoInvert: true,
-      autoInvertDark: true,
-      edgeEnhancement: true,
-      noiseReduction: true,
-      adaptiveContrast: true,
-      deskewing: false,
-      angleCorrection: false,
-      grayscaleMethod: 'green-channel',
-      blueEmphasis: 'zero',
-      thresholdMethod: 'adaptive',
-      thresholdValue: 127,
-      adaptiveBlockSize: 11,
-      adaptiveConstant: 2,
-      contrastAdjustment: 0,
-      brightnessAdjustment: 0,
-      sharpenAmount: 0.5,
-      moireReduction: true,
-      autoAdjusting: true,
-      frameRate: '60fps',
-      laplacianSharpening: true,
-      fourierTransform: true,
-      adaptiveDenoising: true,
-      unsharpMasking: true,
-      highPassFilter: true,
-      tesseractConfig: {
-        psm: 7,
-        oem: 3,
-        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
-        blacklist: "IOQ",
-        minConfidence: 50
-      }
-    }
-  },
-  {
-    id: "high-refresh-monitor",
-    name: "High Refresh Rate Screen",
-    description: "For OLED or high refresh rate displays (90Hz+)",
-    settings: {
-      autoInvert: false,
-      autoInvertDark: false,
-      edgeEnhancement: true,
-      noiseReduction: true,
-      adaptiveContrast: true,
-      deskewing: false,
-      angleCorrection: false,
-      grayscaleMethod: 'green-channel',
-      blueEmphasis: 'zero',
-      thresholdMethod: 'adaptive',
-      thresholdValue: 127,
-      adaptiveBlockSize: 11,
-      adaptiveConstant: 2,
-      contrastAdjustment: 10,
-      brightnessAdjustment: 5,
-      sharpenAmount: 0.4,
-      moireReduction: true,
-      autoAdjusting: false,
-      frameRate: '120fps',
-      laplacianSharpening: true,
-      fourierTransform: true,
-      adaptiveDenoising: true,
-      unsharpMasking: true,
-      highPassFilter: true,
-      tesseractConfig: {
-        psm: 7,
-        oem: 3,
-        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
-        blacklist: "IOQ",
-        minConfidence: 55
-      }
-    }
-  },
-  {
-    id: "moving-camera",
-    name: "Moving/Handheld Camera",
-    description: "Reduces motion blur while scanning on the move",
-    settings: {
-      autoInvert: true,
-      autoInvertDark: false,
-      edgeEnhancement: true,
-      noiseReduction: true,
-      adaptiveContrast: true,
-      deskewing: true,
-      angleCorrection: true,
-      grayscaleMethod: 'luminosity',
-      blueEmphasis: 'normal',
-      thresholdMethod: 'adaptive',
-      thresholdValue: 127,
-      adaptiveBlockSize: 11,
-      adaptiveConstant: 2,
-      contrastAdjustment: 15,
-      brightnessAdjustment: 0,
-      sharpenAmount: 0.7,
-      moireReduction: false,
-      autoAdjusting: false,
-      frameRate: '60fps',
-      laplacianSharpening: false,
-      fourierTransform: false,
-      adaptiveDenoising: true,
-      unsharpMasking: true,
-      highPassFilter: false,
-      tesseractConfig: {
-        psm: 7,
-        oem: 1,
-        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
-        blacklist: "IOQ",
-        minConfidence: 55
-      }
-    }
-  },
-  {
-    id: "high-brightness-glare",
-    name: "High Brightness/Glare",
-    description: "Captures multiple frames quickly to get a glare-free shot",
-    settings: {
-      autoInvert: false,
-      autoInvertDark: true,
-      edgeEnhancement: true,
-      noiseReduction: true,
-      adaptiveContrast: true,
-      deskewing: false,
-      angleCorrection: false,
-      grayscaleMethod: 'red-channel',
-      blueEmphasis: 'zero',
-      thresholdMethod: 'adaptive',
-      thresholdValue: 127,
-      adaptiveBlockSize: 15,
-      adaptiveConstant: 5,
-      contrastAdjustment: -10,
-      brightnessAdjustment: -15,
-      sharpenAmount: 0.5,
-      moireReduction: false,
-      autoAdjusting: false,
-      frameRate: '120fps',
-      laplacianSharpening: false,
-      fourierTransform: false,
-      adaptiveDenoising: true,
-      unsharpMasking: false,
-      highPassFilter: false,
-      tesseractConfig: {
-        psm: 7,
-        oem: 1,
-        whitelist: "0123456789ABCDEFGHJKLMNPRSTUVWXYZ",
-        blacklist: "IOQ",
-        minConfidence: 55
-      }
-    }
-  }
-];
+import { useState } from "react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { Slider } from "@/components/ui/slider"
+import { useAdminStatus } from "@/hooks/useAdminStatus"
+import { Progress } from "@/components/ui/progress"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { toast } from "sonner"
+import { 
+  Code, 
+  Database, 
+  Key, 
+  FileText, 
+  Palette, 
+  Globe, 
+  Shield, 
+  BarChart, 
+  Settings, 
+  RotateCcw, 
+  LoaderCircle, 
+  Trash2, 
+  Plus,
+  Copy,
+  RefreshCcw,
+  Download,
+  Upload,
+  Activity
+} from "lucide-react"
 
 export default function DeveloperSettings() {
-  const [activeSection, setActiveSection] = useState<string>("ocr");
-  const [settings, setSettings] = useState<ProcessingSettings>(() => {
-    const savedSettings = localStorage.getItem('vin-scanner-settings');
-    if (savedSettings) {
-      try {
-        return JSON.parse(savedSettings);
-      } catch (e) {
-        console.error("Failed to parse saved settings", e);
-      }
-    }
-    
-    // Default settings if none saved
-    return defaultPresets[0].settings;
-  });
-
-  const [presets, setPresets] = useState<Preset[]>(() => {
-    const savedPresets = localStorage.getItem('vin-scanner-presets');
-    if (savedPresets) {
-      try {
-        const parsedPresets = JSON.parse(savedPresets);
-        return parsedPresets;
-      } catch (e) {
-        console.error("Failed to parse saved presets", e);
-        return defaultPresets;
-      }
-    }
-    return defaultPresets;
-  });
-
-  const [activePresetId, setActivePresetId] = useState<string>(() => {
-    const savedActivePresetId = localStorage.getItem('vin-scanner-active-preset');
-    return savedActivePresetId || "default";
-  });
+  const { isAdmin } = useAdminStatus()
+  const [activeTab, setActiveTab] = useState("performance")
+  const [cpuUsage, setCpuUsage] = useState(32)
+  const [memoryUsage, setMemoryUsage] = useState(45)
+  const [selectedTheme, setSelectedTheme] = useState("system")
+  const [fontSize, setFontSize] = useState(16)
+  const [kernelSize, setKernelSize] = useState(3)
+  const [logLevel, setLogLevel] = useState("info")
+  const [enableMetrics, setEnableMetrics] = useState(true)
+  const [enableTelemetry, setEnableTelemetry] = useState(false)
   
-  const [newPresetName, setNewPresetName] = useState<string>("");
+  // Sample API keys
+  const [apiKeys] = useState([
+    { id: 1, name: "Production API Key", key: "sk_prod_2aB7cD8eF9gH0iJ1kL2m", lastUsed: "2023-05-15", usageCount: 1458, active: true },
+    { id: 2, name: "Development API Key", key: "sk_dev_3bC8dE9fG0hI1jJ2kL3m", lastUsed: "2023-05-10", usageCount: 721, active: true },
+    { id: 3, name: "Testing API Key", key: "sk_test_4cD9eF0gH1iJ2jK3lL4m", lastUsed: "2023-04-28", usageCount: 345, active: false },
+  ])
 
-  useEffect(() => {
-    // Save settings to localStorage
-    localStorage.setItem('vin-scanner-settings', JSON.stringify(settings));
-  }, [settings]);
+  // Sample connections
+  const [connections] = useState([
+    { id: 1, name: "Primary Database", host: "db.example.com", status: "Connected", type: "PostgreSQL" },
+    { id: 2, name: "Analytics Database", host: "analytics.example.com", status: "Disconnected", type: "MySQL" },
+    { id: 3, name: "Cache Server", host: "cache.example.com", status: "Connected", type: "Redis" },
+  ])
 
-  useEffect(() => {
-    // Save active preset ID
-    localStorage.setItem('vin-scanner-active-preset', activePresetId);
-  }, [activePresetId]);
+  const handleClearCache = () => {
+    toast.success("Cache cleared successfully")
+  }
 
-  useEffect(() => {
-    // Save presets to localStorage
-    localStorage.setItem('vin-scanner-presets', JSON.stringify(presets));
-  }, [presets]);
+  const handleCopyApiKey = (key: string) => {
+    navigator.clipboard.writeText(key)
+    toast.success("API key copied to clipboard")
+  }
 
-  const loadPreset = (presetId: string) => {
-    const preset = presets.find(p => p.id === presetId);
-    if (preset) {
-      setSettings({ ...preset.settings });
-      setActivePresetId(presetId);
-      toast.success(`Loaded preset: ${preset.name}`);
-    }
-  };
+  const handleDatabaseBackup = () => {
+    toast.success("Database backup initiated")
+  }
 
-  const savePreset = () => {
-    if (newPresetName.trim() === "") {
-      toast.error("Please enter a preset name");
-      return;
-    }
+  const handleRestoreBackup = () => {
+    toast.success("Backup restoration initiated")
+  }
 
-    const newPreset: Preset = {
-      id: Date.now().toString(),
-      name: newPresetName,
-      settings: { ...settings }
-    };
-
-    setPresets([...presets, newPreset]);
-    setActivePresetId(newPreset.id);
-    setNewPresetName("");
-    toast.success(`Saved new preset: ${newPresetName}`);
-  };
-
-  const deletePreset = (presetId: string) => {
-    const preset = presets.find(p => p.id === presetId);
-    if (!preset) return;
-
-    if (preset.isDefault) {
-      toast.error("Cannot delete default presets");
-      return;
-    }
-
-    const newPresets = presets.filter(p => p.id !== presetId);
-    setPresets(newPresets);
-
-    if (activePresetId === presetId) {
-      // If we deleted the active preset, switch to default
-      const defaultPreset = newPresets.find(p => p.isDefault) || newPresets[0];
-      if (defaultPreset) {
-        setActivePresetId(defaultPreset.id);
-        setSettings({ ...defaultPreset.settings });
-      }
-    }
-
-    toast.success(`Deleted preset: ${preset.name}`);
-  };
-
-  const resetToDefaults = () => {
-    setPresets(defaultPresets);
-    const defaultPreset = defaultPresets.find(p => p.isDefault);
-    if (defaultPreset) {
-      setActivePresetId(defaultPreset.id);
-      setSettings({ ...defaultPreset.settings });
-    }
-    localStorage.removeItem('vin-scanner-presets');
-    localStorage.removeItem('vin-scanner-settings');
-    localStorage.removeItem('vin-scanner-active-preset');
-    toast.success("Reset all settings to defaults");
-  };
-
-  const getActivePresetName = () => {
-    const preset = presets.find(p => p.id === activePresetId);
-    return preset ? preset.name : "Custom";
-  };
-
-  const getActivePresetDescription = () => {
-    const preset = presets.find(p => p.id === activePresetId);
-    return preset?.description || "";
-  };
+  const handleUpdateKernelSize = (value: number[]) => {
+    setKernelSize(value[0])
+  }
 
   return (
-    <div className="space-y-6 p-6">
-      <PageTitle title="Developer Settings" description="Advanced configuration options for developers" />
-
-      <div className="flex flex-col sm:flex-row gap-6">
-        {/* Child Sidebar */}
-        <div className="w-full sm:w-64 flex-shrink-0">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Settings className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-semibold">Settings</h3>
-              </div>
-              <ScrollArea className="h-[calc(100vh-220px)]">
-                <div className="space-y-1">
-                  {sidebarItems.map((item) => (
-                    <Button
-                      key={item.id}
-                      variant={activeSection === item.id ? "default" : "ghost"}
-                      className={cn(
-                        "w-full justify-start",
-                        activeSection === item.id 
-                          ? "bg-primary text-primary-foreground"
-                          : "hover:bg-muted"
-                      )}
-                      onClick={() => setActiveSection(item.id)}
-                    >
-                      <div className="flex items-center gap-3">
-                        {item.icon}
-                        <span>{item.name}</span>
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
+    <div className="container py-10">
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Developer Settings</h1>
+          <p className="text-muted-foreground">
+            Configure advanced system settings for developers and administrators.
+          </p>
         </div>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <div className="flex justify-between">
+            <TabsList className="grid grid-cols-4 w-full md:w-auto md:grid-cols-9">
+              <TabsTrigger value="performance" className="flex gap-1 items-center">
+                <Activity className="h-4 w-4" />
+                <span className="hidden md:inline">Performance</span>
+              </TabsTrigger>
+              <TabsTrigger value="apikeys" className="flex gap-1 items-center">
+                <Key className="h-4 w-4" />
+                <span className="hidden md:inline">API Keys</span>
+              </TabsTrigger>
+              <TabsTrigger value="database" className="flex gap-1 items-center">
+                <Database className="h-4 w-4" />
+                <span className="hidden md:inline">Database</span>
+              </TabsTrigger>
+              <TabsTrigger value="logging" className="flex gap-1 items-center">
+                <FileText className="h-4 w-4" />
+                <span className="hidden md:inline">Logging</span>
+              </TabsTrigger>
+              <TabsTrigger value="themes" className="flex gap-1 items-center">
+                <Palette className="h-4 w-4" />
+                <span className="hidden md:inline">Themes</span>
+              </TabsTrigger>
+              <TabsTrigger value="network" className="flex gap-1 items-center">
+                <Globe className="h-4 w-4" />
+                <span className="hidden md:inline">Network</span>
+              </TabsTrigger>
+              <TabsTrigger value="security" className="flex gap-1 items-center">
+                <Shield className="h-4 w-4" />
+                <span className="hidden md:inline">Security</span>
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="flex gap-1 items-center">
+                <BarChart className="h-4 w-4" />
+                <span className="hidden md:inline">Analytics</span>
+              </TabsTrigger>
+              <TabsTrigger value="advanced" className="flex gap-1 items-center">
+                <Code className="h-4 w-4" />
+                <span className="hidden md:inline">Advanced</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-        {/* Main Content Area */}
-        <div className="flex-1">
-          {activeSection === "ocr" && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row gap-4 justify-between">
+          {/* Performance Tab */}
+          <TabsContent value="performance" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>System Performance</CardTitle>
+                <CardDescription>
+                  Monitor system resource usage and manage performance settings.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <h2 className="text-xl font-semibold">VIN Scanner Settings</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Configure image processing and OCR parameters for optimal VIN detection
-                  </p>
+                  <div className="flex justify-between">
+                    <Label htmlFor="cpu">CPU Usage</Label>
+                    <span className="text-sm text-muted-foreground">{cpuUsage}%</span>
+                  </div>
+                  <Progress value={cpuUsage} className="h-2" />
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={resetToDefaults}>
-                    Reset All
-                  </Button>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <Label htmlFor="memory">Memory Usage</Label>
+                    <span className="text-sm text-muted-foreground">{memoryUsage}%</span>
+                  </div>
+                  <Progress value={memoryUsage} className="h-2" />
                 </div>
-              </div>
+                <div className="space-y-2 pt-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="cache-size">Cache Size Limit</Label>
+                    <span className="text-sm text-muted-foreground">512 MB</span>
+                  </div>
+                  <Slider defaultValue={[50]} max={100} step={10} />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" className="mr-2" onClick={handleClearCache}>
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Clear Cache
+                </Button>
+                <Button onClick={() => toast.success("Performance settings saved")}>
+                  Save Settings
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
 
-              <div className="space-y-4">
-                <Label className="text-base font-medium">Preset Selection</Label>
-                <ScrollArea className="h-[400px] border rounded-md p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {presets.map((preset) => (
-                      <Card 
-                        key={preset.id} 
-                        className={`cursor-pointer transition-all hover:bg-primary/10 hover:border-primary ${
-                          activePresetId === preset.id ? 'border-primary bg-primary/10' : ''
-                        }`}
-                        onClick={() => loadPreset(preset.id)}
-                      >
-                        <CardContent className="p-3">
-                          <div className="flex items-start gap-2">
-                            <div className="pt-0.5">
-                              {activePresetId === preset.id ? (
-                                <CheckSquare className="h-4 w-4 text-primary" />
-                              ) : (
-                                <Square className="h-4 w-4 text-muted-foreground" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-sm truncate">{preset.name}</div>
-                              {preset.description && (
-                                <div className="text-xs text-muted-foreground line-clamp-2 mt-1">{preset.description}</div>
-                              )}
-                              <div className="text-xs text-muted-foreground mt-1">
-                                {preset.isDefault && "(Default) "}
-                                PSM: {preset.settings.tesseractConfig.psm}, 
-                                OEM: {preset.settings.tesseractConfig.oem}
-                              </div>
-                            </div>
+          {/* API Keys Tab */}
+          <TabsContent value="apikeys" className="space-y-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                  <CardTitle>API Keys Management</CardTitle>
+                  <CardDescription>
+                    Create and manage API keys for external service integration.
+                  </CardDescription>
+                </div>
+                <Button size="sm">
+                  <Plus className="mr-2 h-4 w-4" />
+                  New API Key
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Key</TableHead>
+                      <TableHead>Last Used</TableHead>
+                      <TableHead>Usage</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {apiKeys.map((apiKey) => (
+                      <TableRow key={apiKey.id}>
+                        <TableCell>{apiKey.name}</TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {apiKey.key.substring(0, 8)}...
+                        </TableCell>
+                        <TableCell>{apiKey.lastUsed}</TableCell>
+                        <TableCell>{apiKey.usageCount}</TableCell>
+                        <TableCell>
+                          <div className={`flex items-center gap-2 ${apiKey.active ? 'text-green-600' : 'text-red-600'}`}>
+                            <div className={`h-2 w-2 rounded-full ${apiKey.active ? 'bg-green-600' : 'bg-red-600'}`} />
+                            {apiKey.active ? 'Active' : 'Inactive'}
                           </div>
-                        </CardContent>
-                      </Card>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => handleCopyApiKey(apiKey.key)}>
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => toast.success("API key refreshed")}>
+                              <RefreshCcw className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => toast.success("API key deleted")}>
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </div>
-                </ScrollArea>
-                <div className="text-xs">
-                  <p className="text-muted-foreground">
-                    Current: {getActivePresetName()}
-                  </p>
-                  {getActivePresetDescription() && (
-                    <p className="text-muted-foreground mt-1">
-                      {getActivePresetDescription()}
-                    </p>
-                  )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Database Tab */}
+          <TabsContent value="database" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Database Management</CardTitle>
+                <CardDescription>
+                  Manage database connections and perform maintenance tasks.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Host</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {connections.map((connection) => (
+                      <TableRow key={connection.id}>
+                        <TableCell>{connection.name}</TableCell>
+                        <TableCell>{connection.host}</TableCell>
+                        <TableCell>{connection.type}</TableCell>
+                        <TableCell>
+                          <div className={`flex items-center gap-2 ${connection.status === 'Connected' ? 'text-green-600' : 'text-red-600'}`}>
+                            <div className={`h-2 w-2 rounded-full ${connection.status === 'Connected' ? 'bg-green-600' : 'bg-red-600'}`} />
+                            {connection.status}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => toast.success(`${connection.status === 'Connected' ? 'Disconnected from' : 'Connected to'} ${connection.name}`)}
+                          >
+                            {connection.status === 'Connected' ? 'Disconnect' : 'Connect'}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">Backup & Restore</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <Button className="w-full" onClick={handleDatabaseBackup}>
+                        <Download className="mr-2 h-4 w-4" />
+                        Backup Database
+                      </Button>
+                      <Button variant="outline" className="w-full" onClick={handleRestoreBackup}>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Restore from Backup
+                      </Button>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">Maintenance</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <Button className="w-full" onClick={() => toast.success("Database optimization complete")}>
+                        <Settings className="mr-2 h-4 w-4" />
+                        Optimize Database
+                      </Button>
+                      <Button variant="outline" className="w-full" onClick={() => toast.success("Database vacuum complete")}>
+                        <RotateCcw className="mr-2 h-4 w-4" />
+                        Vacuum Database
+                      </Button>
+                    </CardContent>
+                  </Card>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="space-y-4">
-                  <div className="space-y-4 border-b pb-4">
-                    <Label className="text-base font-medium">Image Processing Features</Label>
-                    <div className="space-y-4">
-                      {[
-                        {
-                          id: "auto-invert",
-                          label: "Auto Invert Light Text",
-                          description: "Automatically invert light text on dark background",
-                          checked: settings.autoInvert,
-                          onChange: (checked: boolean) => setSettings(prev => ({ ...prev, autoInvert: checked }))
-                        },
-                        {
-                          id: "auto-invert-dark",
-                          label: "Auto Invert Dark Text",
-                          description: "Automatically invert dark text on light background",
-                          checked: settings.autoInvertDark,
-                          onChange: (checked: boolean) => setSettings(prev => ({ ...prev, autoInvertDark: checked }))
-                        },
-                        {
-                          id: "edge-enhancement",
-                          label: "Edge Enhancement",
-                          description: "Apply unsharp masking for better edge definition",
-                          checked: settings.edgeEnhancement,
-                          onChange: (checked: boolean) => setSettings(prev => ({ ...prev, edgeEnhancement: checked }))
-                        },
-                        {
-                          id: "noise-reduction",
-                          label: "Noise Reduction",
-                          description: "Apply median filter to remove noise",
-                          checked: settings.noiseReduction,
-                          onChange: (checked: boolean) => setSettings(prev => ({ ...prev, noiseReduction: checked }))
-                        },
-                        {
-                          id: "adaptive-contrast",
-                          label: "Adaptive Contrast",
-                          description: "Dynamically adjust contrast based on local area",
-                          checked: settings.adaptiveContrast,
-                          onChange: (checked: boolean) => setSettings(prev => ({ ...prev, adaptiveContrast: checked }))
-                        },
-                        {
-                          id: "deskewing",
-                          label: "Deskewing",
-                          description: "Automatically correct skewed text",
-                          checked: settings.deskewing,
-                          onChange: (checked: boolean) => setSettings(prev => ({ ...prev, deskewing: checked }))
-                        },
-                        {
-                          id: "angle-correction",
-                          label: "Angle Correction",
-                          description: "Use Hough transform to correct rotation",
-                          checked: settings.angleCorrection,
-                          onChange: (checked: boolean) => setSettings(prev => ({ ...prev, angleCorrection: checked }))
-                        }
-                      ].map((feature) => (
-                        <div key={feature.id} className="flex items-center justify-between">
-                          <Label htmlFor={feature.id} className="flex-1">
-                            {feature.label}
-                            <p className="text-sm text-muted-foreground">
-                              {feature.description}
-                            </p>
-                          </Label>
-                          <Switch
-                            id={feature.id}
-                            checked={feature.checked}
-                            onCheckedChange={feature.onChange}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Replace RadioGroup with Toggle buttons for Grayscale Method */}
-                  <div className="space-y-2">
-                    <Label className="text-base font-medium">Grayscale Method</Label>
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      {[
-                        { value: 'luminosity', label: 'Luminosity (Default)' },
-                        { value: 'average', label: 'Average' },
-                        { value: 'blue-channel', label: 'Blue Channel Only' },
-                        { value: 'green-channel', label: 'Green Channel' },
-                        { value: 'red-channel', label: 'Red Channel' }
-                      ].map((method) => (
-                        <Toggle
-                          key={method.value}
-                          pressed={settings.grayscaleMethod === method.value}
-                          onPressedChange={() => 
-                            setSettings(prev => ({ 
-                              ...prev, 
-                              grayscaleMethod: method.value as typeof settings.grayscaleMethod 
-                            }))
-                          }
-                          className={`${
-                            settings.grayscaleMethod === method.value 
-                              ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
-                              : ''
-                          }`}
-                        >
-                          {method.label}
-                        </Toggle>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Replace RadioGroup with Toggle buttons for Blue Emphasis */}
-                  <div className="space-y-2">
-                    <Label className="text-base font-medium">Blue Channel Emphasis</Label>
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      {[
-                        { value: 'zero', label: 'Zero (0.33)' },
-                        { value: 'normal', label: 'Normal (0.5)' },
-                        { value: 'high', label: 'High (0.7)' },
-                        { value: 'very-high', label: 'Very High (0.8)' }
-                      ].map((emphasis) => (
-                        <Toggle
-                          key={emphasis.value}
-                          pressed={settings.blueEmphasis === emphasis.value}
-                          onPressedChange={() => 
-                            setSettings(prev => ({ 
-                              ...prev, 
-                              blueEmphasis: emphasis.value as typeof settings.blueEmphasis 
-                            }))
-                          }
-                          className={`${
-                            settings.blueEmphasis === emphasis.value 
-                              ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
-                              : ''
-                          }`}
-                        >
-                          {emphasis.label}
-                        </Toggle>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-4 border-b pb-4">
-                    <Label className="text-base font-medium">Thresholding</Label>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Threshold Method</Label>
-                        <RadioGroup
-                          value={settings.thresholdMethod}
-                          onValueChange={(value) => 
-                            setSettings(prev => ({ 
-                              ...prev, 
-                              thresholdMethod: value as typeof settings.thresholdMethod 
-                            }))
-                          }
-                          className="flex flex-col space-y-1"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="global" id="global" />
-                            <Label htmlFor="global">Global</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="adaptive" id="adaptive" />
-                            <Label htmlFor="adaptive">Adaptive</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="otsu" id="otsu" />
-                            <Label htmlFor="otsu">Otsu</Label>
-                          </div>
-                        </RadioGroup>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <Label htmlFor="threshold-value">Threshold Value</Label>
-                          <span className="text-sm">{settings.thresholdValue}</span>
-                        </div>
-                        <Slider
-                          id="threshold-value"
-                          min={0}
-                          max={255}
-                          step={1}
-                          value={[settings.thresholdValue]}
-                          onValueChange={([value]) => 
-                            setSettings(prev => ({ ...prev, thresholdValue: value }))
-                          }
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <Label htmlFor="adaptive-block-size">Adaptive Block Size</Label>
-                          <span className="text-sm">{settings.adaptiveBlockSize}</span>
-                        </div>
-                        <Slider
-                          id="adaptive-block-size"
-                          min={3}
-                          max={51}
-                          step={2}
-                          value={[settings.adaptiveBlockSize]}
-                          onValueChange={([value]) => 
-                            setSettings(prev => ({ ...prev, adaptiveBlockSize: value }))
-                          }
-                          disabled={settings.thresholdMethod !== 'adaptive'}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <Label htmlFor="adaptive-constant">Adaptive Constant</Label>
-                          <span className="text-sm">{settings.adaptiveConstant}</span>
-                        </div>
-                        <Slider
-                          id="adaptive-constant"
-                          min={0}
-                          max={20}
-                          step={1}
-                          value={[settings.adaptiveConstant]}
-                          onValueChange={([value]) => 
-                            setSettings(prev => ({ ...prev, adaptiveConstant: value }))
-                          }
-                          disabled={settings.thresholdMethod !== 'adaptive'}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
+          {/* Logging Tab */}
+          <TabsContent value="logging" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Logging Configuration</CardTitle>
+                <CardDescription>
+                  Configure system logging and monitoring settings.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <Label className="text-base font-medium">Image Adjustments</Label>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <Label htmlFor="contrast-adjustment">Contrast Adjustment</Label>
-                          <span className="text-sm">{settings.contrastAdjustment}%</span>
-                        </div>
-                        <Slider
-                          id="contrast-adjustment"
-                          min={-50}
-                          max={50}
-                          step={1}
-                          value={[settings.contrastAdjustment]}
-                          onValueChange={([value]) => 
-                            setSettings(prev => ({ ...prev, contrastAdjustment: value }))
-                          }
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <Label htmlFor="brightness-adjustment">Brightness Adjustment</Label>
-                          <span className="text-sm">{settings.brightnessAdjustment}%</span>
-                        </div>
-                        <Slider
-                          id="brightness-adjustment"
-                          min={-50}
-                          max={50}
-                          step={1}
-                          value={[settings.brightnessAdjustment]}
-                          onValueChange={([value]) => 
-                            setSettings(prev => ({ ...prev, brightnessAdjustment: value }))
-                          }
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <Label htmlFor="sharpen-amount">Sharpen Amount</Label>
-                          <span className="text-sm">{settings.sharpenAmount.toFixed(1)}</span>
-                        </div>
-                        <Slider
-                          id="sharpen-amount"
-                          min={0}
-                          max={2}
-                          step={0.1}
-                          value={[settings.sharpenAmount]}
-                          onValueChange={([value]) => 
-                            setSettings(prev => ({ ...prev, sharpenAmount: value }))
-                          }
-                        />
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="log-level">Log Level</Label>
+                      <Select value={logLevel} onValueChange={setLogLevel}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select log level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="trace">Trace</SelectItem>
+                          <SelectItem value="debug">Debug</SelectItem>
+                          <SelectItem value="info">Info</SelectItem>
+                          <SelectItem value="warn">Warning</SelectItem>
+                          <SelectItem value="error">Error</SelectItem>
+                          <SelectItem value="fatal">Fatal</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="log-format">Log Format</Label>
+                      <Select defaultValue="json">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select log format" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="json">JSON</SelectItem>
+                          <SelectItem value="text">Plain Text</SelectItem>
+                          <SelectItem value="csv">CSV</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="log-retention">Log Retention (days)</Label>
+                      <Input type="number" id="log-retention" defaultValue="30" />
                     </div>
                   </div>
-
-                  {/* New section for Frame Rate settings */}
-                  <div className="space-y-2">
-                    <Label className="text-base font-medium">Camera Frame Rate</Label>
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      {[
-                        { value: 'auto', label: 'Auto (Default)' },
-                        { value: '15fps', label: 'Low (15 FPS)' },
-                        { value: '30fps', label: 'Medium (30 FPS)' },
-                        { value: '60fps', label: 'High (60 FPS)' },
-                        { value: '120fps', label: 'Ultra (120 FPS)' }
-                      ].map((rate) => (
-                        <Toggle
-                          key={rate.value}
-                          pressed={settings.frameRate === rate.value}
-                          onPressedChange={() => 
-                            setSettings(prev => ({ 
-                              ...prev, 
-                              frameRate: rate.value as typeof settings.frameRate 
-                            }))
-                          }
-                          className={`${
-                            settings.frameRate === rate.value 
-                              ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
-                              : ''
-                          }`}
-                        >
-                          {rate.label}
-                        </Toggle>
-                      ))}
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Log Categories</Label>
+                      <div className="rounded-md border p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="log-system" className="cursor-pointer">System Logs</Label>
+                          <Switch id="log-system" defaultChecked />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="log-app" className="cursor-pointer">Application Logs</Label>
+                          <Switch id="log-app" defaultChecked />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="log-access" className="cursor-pointer">Access Logs</Label>
+                          <Switch id="log-access" defaultChecked />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="log-error" className="cursor-pointer">Error Logs</Label>
+                          <Switch id="log-error" defaultChecked />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="log-audit" className="cursor-pointer">Audit Logs</Label>
+                          <Switch id="log-audit" defaultChecked />
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Recommended: 30-60 FPS for monitors, 15-30 FPS for static VINs, 60+ FPS for moving cameras
-                    </p>
                   </div>
                 </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-4 border-b pb-4">
-                    <Label className="text-base font-medium">Tesseract OCR Configuration</Label>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="psm">Page Segmentation Mode (PSM)</Label>
-                        <div className="flex items-center space-x-2">
-                          <Input
-                            id="psm"
-                            type="number"
-                            min={0}
-                            max={13}
-                            value={settings.tesseractConfig.psm}
-                            onChange={(e) => 
-                              setSettings(prev => ({ 
-                                ...prev, 
-                                tesseractConfig: {
-                                  ...prev.tesseractConfig,
-                                  psm: parseInt(e.target.value) || 0
-                                }
-                              }))
-                            }
-                            className="w-20"
-                          />
-                          <span className="text-sm text-muted-foreground">
-                            (0-13, 7=single line, 6=single block)
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="oem">OCR Engine Mode (OEM)</Label>
-                        <div className="flex items-center space-x-2">
-                          <Input
-                            id="oem"
-                            type="number"
-                            min={0}
-                            max={3}
-                            value={settings.tesseractConfig.oem}
-                            onChange={(e) => 
-                              setSettings(prev => ({ 
-                                ...prev, 
-                                tesseractConfig: {
-                                  ...prev.tesseractConfig,
-                                  oem: parseInt(e.target.value) || 0
-                                }
-                              }))
-                            }
-                            className="w-20"
-                          />
-                          <span className="text-sm text-muted-foreground">
-                            (0=legacy, 1=LSTM, 3=both)
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="whitelist">Character Whitelist</Label>
-                        <Input
-                          id="whitelist"
-                          value={settings.tesseractConfig.whitelist}
-                          onChange={(e) => 
-                            setSettings(prev => ({ 
-                              ...prev, 
-                              tesseractConfig: {
-                                ...prev.tesseractConfig,
-                                whitelist: e.target.value
-                              }
-                            }))
-                          }
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Characters to recognize (VINs use 0-9, A-Z except I,O,Q)
-                        </p>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="blacklist">Character Blacklist</Label>
-                        <Input
-                          id="blacklist"
-                          value={settings.tesseractConfig.blacklist}
-                          onChange={(e) => 
-                            setSettings(prev => ({ 
-                              ...prev, 
-                              tesseractConfig: {
-                                ...prev.tesseractConfig,
-                                blacklist: e.target.value
-                              }
-                            }))
-                          }
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Characters to exclude (typically I,O,Q for VINs)
-                        </p>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <Label htmlFor="min-confidence">Minimum Confidence (%)</Label>
-                          <span className="text-sm">{settings.tesseractConfig.minConfidence}%</span>
-                        </div>
-                        <Slider
-                          id="min-confidence"
-                          min={0}
-                          max={100}
-                          step={1}
-                          value={[settings.tesseractConfig.minConfidence]}
-                          onValueChange={([value]) => 
-                            setSettings(prev => ({ 
-                              ...prev, 
-                              tesseractConfig: {
-                                ...prev.tesseractConfig,
-                                minConfidence: value
-                              }
-                            }))
-                          }
-                        />
-                      </div>
+                <div className="space-y-2 pt-4">
+                  <Label>Advanced Options</Label>
+                  <div className="rounded-md border p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="log-compression" className="cursor-pointer">Enable Log Compression</Label>
+                      <Switch id="log-compression" defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="log-remote" className="cursor-pointer">Remote Logging</Label>
+                      <Switch id="log-remote" />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="log-stacktrace" className="cursor-pointer">Include Stack Traces</Label>
+                      <Switch id="log-stacktrace" defaultChecked />
                     </div>
                   </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={() => toast.success("Logging settings saved")}>Save Settings</Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
 
-                  {/* Advanced Monitor/Screen Settings */}
-                  <div className="space-y-4 border-b pb-4">
-                    <Label className="text-base font-medium">Advanced Monitor/Screen Settings</Label>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="moire-reduction" className="flex-1">
-                          Moiré Pattern Reduction
-                          <p className="text-sm text-muted-foreground">
-                            Reduces wavy distortions from screen pixel alignment
-                          </p>
-                        </Label>
-                        <Switch
-                          id="moire-reduction"
-                          checked={settings.moireReduction}
-                          onCheckedChange={(checked) =>
-                            setSettings(prev => ({ ...prev, moireReduction: checked }))
-                          }
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="auto-adjusting" className="flex-1">
-                          Auto-Adjusting Processing
-                          <p className="text-sm text-muted-foreground">
-                            Automatically adapts to screen brightness and conditions
-                          </p>
-                        </Label>
-                        <Switch
-                          id="auto-adjusting"
-                          checked={settings.autoAdjusting}
-                          onCheckedChange={(checked) =>
-                            setSettings(prev => ({ ...prev, autoAdjusting: checked }))
-                          }
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="laplacian-sharpening" className="flex-1">
-                          Laplacian Sharpening
-                          <p className="text-sm text-muted-foreground">
-                            Advanced edge enhancement for screen text
-                          </p>
-                        </Label>
-                        <Switch
-                          id="laplacian-sharpening"
-                          checked={settings.laplacianSharpening}
-                          onCheckedChange={(checked) =>
-                            setSettings(prev => ({ ...prev, laplacianSharpening: checked }))
-                          }
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="fourier-transform" className="flex-1">
-                          Fourier Transform
-                          <p className="text-sm text-muted-foreground">
-                            Removes repeating screen artifacts and patterns
-                          </p>
-                        </Label>
-                        <Switch
-                          id="fourier-transform"
-                          checked={settings.fourierTransform}
-                          onCheckedChange={(checked) =>
-                            setSettings(prev => ({ ...prev, fourierTransform: checked }))
-                          }
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="adaptive-denoising" className="flex-1">
-                          Adaptive Denoising
-                          <p className="text-sm text-muted-foreground">
-                            Smart noise reduction based on image characteristics
-                          </p>
-                        </Label>
-                        <Switch
-                          id="adaptive-denoising"
-                          checked={settings.adaptiveDenoising}
-                          onCheckedChange={(checked) =>
-                            setSettings(prev => ({ ...prev, adaptiveDenoising: checked }))
-                          }
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="unsharp-masking" className="flex-1">
-                          Unsharp Masking
-                          <p className="text-sm text-muted-foreground">
-                            Enhances apparent sharpness while preserving details
-                          </p>
-                        </Label>
-                        <Switch
-                          id="unsharp-masking"
-                          checked={settings.unsharpMasking}
-                          onCheckedChange={(checked) =>
-                            setSettings(prev => ({ ...prev, unsharpMasking: checked }))
-                          }
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="high-pass-filter" className="flex-1">
-                          High-Pass Filter
-                          <p className="text-sm text-muted-foreground">
-                            Reduces screen flicker and enhances text details
-                          </p>
-                        </Label>
-                        <Switch
-                          id="high-pass-filter"
-                          checked={settings.highPassFilter}
-                          onCheckedChange={(checked) =>
-                            setSettings(prev => ({ ...prev, highPassFilter: checked }))
-                          }
-                        />
-                      </div>
-                    </div>
-                  </div>
-
+          {/* Themes Tab */}
+          <TabsContent value="themes" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Theme & Appearance</CardTitle>
+                <CardDescription>
+                  Customize the application appearance and visual settings.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <Label className="text-base font-medium">Save Custom Preset</Label>
-                    <div className="flex space-x-2">
-                      <Input
-                        placeholder="Preset name"
-                        value={newPresetName}
-                        onChange={(e) => setNewPresetName(e.target.value)}
+                    <div className="space-y-2">
+                      <Label htmlFor="theme-select">Theme Mode</Label>
+                      <Select value={selectedTheme} onValueChange={setSelectedTheme}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select theme" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="light">Light</SelectItem>
+                          <SelectItem value="dark">Dark</SelectItem>
+                          <SelectItem value="system">System</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="color-scheme">Color Scheme</Label>
+                      <Select defaultValue="default">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select color scheme" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="default">Default</SelectItem>
+                          <SelectItem value="blue">Blue</SelectItem>
+                          <SelectItem value="green">Green</SelectItem>
+                          <SelectItem value="purple">Purple</SelectItem>
+                          <SelectItem value="orange">Orange</SelectItem>
+                          <SelectItem value="custom">Custom</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label htmlFor="font-size">Font Size ({fontSize}px)</Label>
+                      </div>
+                      <Slider 
+                        id="font-size" 
+                        defaultValue={[16]} 
+                        min={12} 
+                        max={24} 
+                        step={1}
+                        onValueChange={(values) => setFontSize(values[0])}
                       />
-                      <Button onClick={savePreset} disabled={!newPresetName.trim()}>
-                        Save
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="density">UI Density</Label>
+                      <Select defaultValue="normal">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select density" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="compact">Compact</SelectItem>
+                          <SelectItem value="normal">Normal</SelectItem>
+                          <SelectItem value="comfortable">Comfortable</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Theme Preview</Label>
+                      <div className={`rounded-md border h-80 p-4 ${selectedTheme === 'dark' ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`}>
+                        <div className="flex flex-col h-full justify-between">
+                          <div>
+                            <h3 className="font-semibold" style={{ fontSize: `${fontSize}px` }}>Preview Title</h3>
+                            <p className="text-muted-foreground" style={{ fontSize: `${fontSize - 2}px` }}>This is how your content will appear with the current settings.</p>
+                          </div>
+                          <div className="space-y-2">
+                            <div className={`rounded p-2 ${selectedTheme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                              <p style={{ fontSize: `${fontSize - 2}px` }}>Card element</p>
+                            </div>
+                            <div className="flex gap-2">
+                              <button className={`px-3 py-1 rounded ${selectedTheme === 'dark' ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'}`} style={{ fontSize: `${fontSize - 2}px` }}>
+                                Primary Button
+                              </button>
+                              <button className={`px-3 py-1 rounded border ${selectedTheme === 'dark' ? 'border-slate-700 bg-slate-800' : 'border-slate-300 bg-slate-50'}`} style={{ fontSize: `${fontSize - 2}px` }}>
+                                Secondary Button
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-4">
+                  <Label>Advanced Appearance Options</Label>
+                  <div className="rounded-md border p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="animations" className="cursor-pointer">Enable Animations</Label>
+                      <Switch id="animations" defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="rounded-corners" className="cursor-pointer">Rounded Corners</Label>
+                      <Switch id="rounded-corners" defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="shadows" className="cursor-pointer">Show Shadows</Label>
+                      <Switch id="shadows" defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="contrast" className="cursor-pointer">High Contrast Mode</Label>
+                      <Switch id="contrast" />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={() => toast.success("Theme settings saved")}>Save Settings</Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+
+          {/* Network Tab */}
+          <TabsContent value="network" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Network Settings</CardTitle>
+                <CardDescription>
+                  Configure network connections and proxy settings.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="timeout">Request Timeout (seconds)</Label>
+                      <Input type="number" id="timeout" defaultValue="30" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="retry-count">Max Retry Count</Label>
+                      <Input type="number" id="retry-count" defaultValue="3" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="throttling">Request Throttling</Label>
+                      <Select defaultValue="none">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select throttling option" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="low">Low (100 req/min)</SelectItem>
+                          <SelectItem value="medium">Medium (50 req/min)</SelectItem>
+                          <SelectItem value="high">High (10 req/min)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Proxy Configuration</Label>
+                      <div className="rounded-md border p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="use-proxy" className="cursor-pointer">Use Proxy</Label>
+                          <Switch id="use-proxy" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="proxy-host">Proxy Host</Label>
+                          <Input type="text" id="proxy-host" placeholder="proxy.example.com" disabled />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="proxy-port">Port</Label>
+                          <Input type="number" id="proxy-port" placeholder="8080" disabled />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2 pt-4">
+                  <Label>Advanced Network Options</Label>
+                  <div className="rounded-md border p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="keep-alive" className="cursor-pointer">HTTP Keep-Alive</Label>
+                      <Switch id="keep-alive" defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="compression" className="cursor-pointer">Content Compression</Label>
+                      <Switch id="compression" defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="dns-prefetch" className="cursor-pointer">DNS Prefetching</Label>
+                      <Switch id="dns-prefetch" defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="http2" className="cursor-pointer">Enable HTTP/2</Label>
+                      <Switch id="http2" defaultChecked />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={() => toast.success("Network settings saved")}>Save Settings</Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+
+          {/* Security Tab */}
+          <TabsContent value="security" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Security Configuration</CardTitle>
+                <CardDescription>
+                  Configure security settings and access controls.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="session-timeout">Session Timeout (minutes)</Label>
+                      <Input type="number" id="session-timeout" defaultValue="60" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="max-login-attempts">Max Login Attempts</Label>
+                      <Input type="number" id="max-login-attempts" defaultValue="5" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password-policy">Password Policy</Label>
+                      <Select defaultValue="strong">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select password policy" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="basic">Basic (8+ characters)</SelectItem>
+                          <SelectItem value="medium">Medium (8+ chars, mixed case)</SelectItem>
+                          <SelectItem value="strong">Strong (8+ chars, mixed case, numbers)</SelectItem>
+                          <SelectItem value="very-strong">Very Strong (12+ chars, mixed case, numbers, symbols)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Authentication Options</Label>
+                      <div className="rounded-md border p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="two-factor" className="cursor-pointer">Require Two-Factor Authentication</Label>
+                          <Switch id="two-factor" defaultChecked />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="sso" className="cursor-pointer">Single Sign-On (SSO)</Label>
+                          <Switch id="sso" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="device-verification" className="cursor-pointer">Device Verification</Label>
+                          <Switch id="device-verification" defaultChecked />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="account-lockout">Account Lockout Duration (minutes)</Label>
+                      <Input type="number" id="account-lockout" defaultValue="30" />
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2 pt-4">
+                  <Label>Advanced Security Options</Label>
+                  <div className="rounded-md border p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="ip-restriction" className="cursor-pointer">IP Address Restrictions</Label>
+                      <Switch id="ip-restriction" />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="audit-logging" className="cursor-pointer">Audit Logging</Label>
+                      <Switch id="audit-logging" defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="brute-force" className="cursor-pointer">Brute Force Protection</Label>
+                      <Switch id="brute-force" defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="content-security" className="cursor-pointer">Content Security Policy</Label>
+                      <Switch id="content-security" defaultChecked />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={() => toast.success("Security settings saved")}>Save Settings</Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Analytics Settings</CardTitle>
+                <CardDescription>
+                  Configure usage tracking and analytics settings.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="enable-metrics" className="cursor-pointer">Enable Usage Metrics</Label>
+                        <Switch id="enable-metrics" checked={enableMetrics} onCheckedChange={setEnableMetrics} />
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Collect anonymous usage statistics to help improve the application.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="enable-telemetry" className="cursor-pointer">Enable Telemetry</Label>
+                        <Switch id="enable-telemetry" checked={enableTelemetry} onCheckedChange={setEnableTelemetry} />
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Collect detailed telemetry data for debugging and performance optimization.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="reporting-interval">Reporting Interval (minutes)</Label>
+                      <Input type="number" id="reporting-interval" defaultValue="15" disabled={!enableMetrics} />
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Data Collection Settings</Label>
+                      <div className="rounded-md border p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="collect-errors" className="cursor-pointer">Collect Error Reports</Label>
+                          <Switch id="collect-errors" defaultChecked disabled={!enableMetrics} />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="collect-usage" className="cursor-pointer">Collect Usage Patterns</Label>
+                          <Switch id="collect-usage" defaultChecked disabled={!enableMetrics} />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="collect-performance" className="cursor-pointer">Collect Performance Metrics</Label>
+                          <Switch id="collect-performance" defaultChecked disabled={!enableMetrics} />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="data-retention">Data Retention Period (days)</Label>
+                      <Select defaultValue="90" disabled={!enableMetrics}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select retention period" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="30">30 days</SelectItem>
+                          <SelectItem value="60">60 days</SelectItem>
+                          <SelectItem value="90">90 days</SelectItem>
+                          <SelectItem value="180">180 days</SelectItem>
+                          <SelectItem value="365">365 days</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2 pt-4">
+                  <Label>Advanced Analytics Configuration</Label>
+                  <div className="rounded-md border p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="privacy-mode" className="cursor-pointer">Enhanced Privacy Mode</Label>
+                      <Switch id="privacy-mode" defaultChecked />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="tracking-id">Analytics Tracking ID</Label>
+                      <Input type="text" id="tracking-id" placeholder="UA-XXXXXXXXX-X" disabled={!enableMetrics} />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="ip-anonymization" className="cursor-pointer">IP Anonymization</Label>
+                      <Switch id="ip-anonymization" defaultChecked disabled={!enableMetrics} />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={() => toast.success("Analytics settings saved")}>Save Settings</Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+
+          {/* Advanced Tab */}
+          <TabsContent value="advanced" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Advanced Settings</CardTitle>
+                <CardDescription>
+                  Configure advanced technical settings and developer options.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="debug-mode">Debug Mode</Label>
+                      <Select defaultValue="disabled">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select debug mode" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="disabled">Disabled</SelectItem>
+                          <SelectItem value="errors">Errors Only</SelectItem>
+                          <SelectItem value="warnings">Warnings & Errors</SelectItem>
+                          <SelectItem value="verbose">Verbose</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label htmlFor="morphology-kernel-size">Morphology Kernel Size ({kernelSize}x{kernelSize})</Label>
+                      </div>
+                      <Slider 
+                        id="morphology-kernel-size" 
+                        defaultValue={[3]} 
+                        min={1} 
+                        max={9} 
+                        step={2}
+                        onValueChange={handleUpdateKernelSize}
+                      />
+                      <p className="text-xs text-muted-foreground">Kernel size for morphological operations on image processing.</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="worker-threads">Worker Threads</Label>
+                      <Input type="number" id="worker-threads" defaultValue="4" />
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Developer Options</Label>
+                      <div className="rounded-md border p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="dev-mode" className="cursor-pointer">Developer Mode</Label>
+                          <Switch id="dev-mode" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="trace-rendering" className="cursor-pointer">Trace Rendering</Label>
+                          <Switch id="trace-rendering" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="debug-api" className="cursor-pointer">Debug API Calls</Label>
+                          <Switch id="debug-api" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="experimental">Experimental Features</Label>
+                      <div className="rounded-md border p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="exp-ui" className="cursor-pointer">Experimental UI</Label>
+                          <Switch id="exp-ui" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="exp-algorithm" className="cursor-pointer">Experimental Algorithms</Label>
+                          <Switch id="exp-algorithm" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2 pt-4">
+                  <Label className="text-red-500">Danger Zone</Label>
+                  <div className="rounded-md border border-red-200 p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h4 className="font-medium">Reset All Settings</h4>
+                        <p className="text-sm text-muted-foreground">Reset all settings to their default values.</p>
+                      </div>
+                      <Button variant="destructive" onClick={() => toast.success("All settings have been reset to defaults")}>
+                        Reset
+                      </Button>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h4 className="font-medium">Clear All Data</h4>
+                        <p className="text-sm text-muted-foreground">This will permanently delete all cached data.</p>
+                      </div>
+                      <Button variant="destructive" onClick={() => toast.success("All data has been cleared")}>
+                        Clear Data
                       </Button>
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <Tabs defaultValue="presets" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="presets">Manage Presets</TabsTrigger>
-                  <TabsTrigger value="debug">Debug Info</TabsTrigger>
-                </TabsList>
-                <TabsContent value="presets" className="space-y-4 pt-4">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Your Presets</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {presets.map((preset) => (
-                        <Card key={preset.id}>
-                          <CardContent className="pt-6 flex justify-between items-center">
-                            <div>
-                              <h4 className="font-medium">{preset.name}</h4>
-                              {preset.description && (
-                                <p className="text-sm text-muted-foreground">{preset.description}</p>
-                              )}
-                              {preset.isDefault && (
-                                <p className="text-xs text-muted-foreground mt-1">Default preset</p>
-                              )}
-                            </div>
-                            <div className="flex gap-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={() => loadPreset(preset.id)}
-                              >
-                                Load
-                              </Button>
-                              {!preset.isDefault && (
-                                <Button 
-                                  variant="destructive" 
-                                  size="sm"
-                                  onClick={() => deletePreset(preset.id)}
-                                >
-                                  Delete
-                                </Button>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                </TabsContent>
-                <TabsContent value="debug" className="space-y-4 pt-4">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Current Settings</h3>
-                    <pre className="bg-muted p-4 rounded-md overflow-auto text-xs">
-                      {JSON.stringify(settings, null, 2)}
-                    </pre>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
-          )}
-
-          {activeSection === "api-keys" && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row gap-4 justify-between">
-                <div className="space-y-2">
-                  <h2 className="text-xl font-semibold">API Keys</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Manage API keys for external services
-                  </p>
-                </div>
-              </div>
-              <Card>
-                <CardContent className="p-6">
-                  <p className="text-muted-foreground">API Key management will be available soon.</p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeSection === "database" && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row gap-4 justify-between">
-                <div className="space-y-2">
-                  <h2 className="text-xl font-semibold">Database Settings</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Configure database connection and migration settings
-                  </p>
-                </div>
-              </div>
-              <Card>
-                <CardContent className="p-6">
-                  <p className="text-muted-foreground">Database settings will be available soon.</p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeSection === "logging" && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row gap-4 justify-between">
-                <div className="space-y-2">
-                  <h2 className="text-xl font-semibold">Logging Configuration</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Configure logging levels and destinations
-                  </p>
-                </div>
-              </div>
-              <Card>
-                <CardContent className="p-6">
-                  <p className="text-muted-foreground">Logging configuration will be available soon.</p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeSection === "performance" && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row gap-4 justify-between">
-                <div className="space-y-2">
-                  <h2 className="text-xl font-semibold">Performance Settings</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Configure caching and optimization settings
-                  </p>
-                </div>
-              </div>
-              <Card>
-                <CardContent className="p-6">
-                  <p className="text-muted-foreground">Performance settings will be available soon.</p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeSection === "network" && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row gap-4 justify-between">
-                <div className="space-y-2">
-                  <h2 className="text-xl font-semibold">Network Configuration</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Configure network timeouts and proxy settings
-                  </p>
-                </div>
-              </div>
-              <Card>
-                <CardContent className="p-6">
-                  <p className="text-muted-foreground">Network configuration will be available soon.</p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeSection === "security" && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row gap-4 justify-between">
-                <div className="space-y-2">
-                  <h2 className="text-xl font-semibold">Security Settings</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Configure encryption and authentication settings
-                  </p>
-                </div>
-              </div>
-              <Card>
-                <CardContent className="p-6">
-                  <p className="text-muted-foreground">Security settings will be available soon.</p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeSection === "themes" && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row gap-4 justify-between">
-                <div className="space-y-2">
-                  <h2 className="text-xl font-semibold">Theme Configuration</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Customize app appearance and branding
-                  </p>
-                </div>
-              </div>
-              <Card>
-                <CardContent className="p-6">
-                  <p className="text-muted-foreground">Theme configuration will be available soon.</p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeSection === "analytics" && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row gap-4 justify-between">
-                <div className="space-y-2">
-                  <h2 className="text-xl font-semibold">Analytics Configuration</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Configure analytics providers and tracking settings
-                  </p>
-                </div>
-              </div>
-              <Card>
-                <CardContent className="p-6">
-                  <p className="text-muted-foreground">Analytics configuration will be available soon.</p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeSection === "advanced" && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row gap-4 justify-between">
-                <div className="space-y-2">
-                  <h2 className="text-xl font-semibold">Advanced Settings</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Configure experimental features and advanced options
-                  </p>
-                </div>
-              </div>
-              <Card>
-                <CardContent className="p-6">
-                  <p className="text-muted-foreground">Advanced settings will be available soon.</p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </div>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={() => toast.success("Advanced settings saved")}>Save Settings</Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
-  );
+  )
 }
