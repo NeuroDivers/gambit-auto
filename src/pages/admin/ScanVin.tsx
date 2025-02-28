@@ -307,9 +307,19 @@ export default function ScanVin() {
   const logsEndRef = useRef<HTMLDivElement>(null)
   const checkedVinsRef = useRef<Set<string>>(new Set())
   const flashingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  // Flag to track if scanning should continue
+  const shouldContinueScanning = useRef<boolean>(false)
 
   const addLog = (message: string) => {
-    if (!isPaused) {
+    // Make this check more explicit - only add logs if we're actively scanning
+    // or if it's an important system message
+    if (shouldContinueScanning.current || 
+        message.includes('initialized') || 
+        message.includes('stopped') || 
+        message.includes('started') ||
+        message.includes('Switching') ||
+        message.includes('Terminating')) {
+      
       const logEntry = {
         timestamp: new Date().toISOString(),
         message,
@@ -363,6 +373,23 @@ export default function ScanVin() {
     };
   }, [textDetected, isScanning, isConfirmationView]);
 
+  // Updated effect to track scanning state changes
+  useEffect(() => {
+    // Update our ref when scanning state changes
+    shouldContinueScanning.current = isScanning;
+    
+    // Additional cleanup when scanning is turned off
+    if (!isScanning) {
+      if (scanningRef.current) {
+        cancelAnimationFrame(scanningRef.current);
+        scanningRef.current = undefined;
+      }
+      
+      // Reset detection state
+      setTextDetected(false);
+    }
+  }, [isScanning]);
+
   const toggleFlash = async () => {
     if (!streamRef.current) return
     try {
@@ -382,14 +409,19 @@ export default function ScanVin() {
   }
 
   const correctCommonOcrMistakes = (text: string): string[] => {
+    // Don't process if scanning has stopped
+    if (!shouldContinueScanning.current) return [];
+    
     let cleanText = text
       .replace(/\s+/g, '')
       .toUpperCase();
     
     addLog(`Initial cleaned text: ${cleanText}`);
 
-    // Set textDetected to true if we have some substantial text content
-    setTextDetected(cleanText.length >= 10);
+    // Only set textDetected if we're still scanning
+    if (shouldContinueScanning.current) {
+      setTextDetected(cleanText.length >= 10);
+    }
 
     if (cleanText.length !== 17) {
       addLog('Text length is not 17, proceeding with variations');
@@ -436,6 +468,9 @@ export default function ScanVin() {
   };
 
   const generateVinVariations = (text: string): string[] => {
+    // Don't generate variations if scanning has stopped
+    if (!shouldContinueScanning.current) return [];
+    
     const handle9thCharacter = (char: string): string => {
       if (/[0-9X]/.test(char)) {
         return char;
@@ -557,16 +592,25 @@ export default function ScanVin() {
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
     }
+    
     if (scanningRef.current) {
       cancelAnimationFrame(scanningRef.current)
+      scanningRef.current = undefined
     }
+    
     if (barcodeReaderRef.current) {
       barcodeReaderRef.current.reset()
       barcodeReaderRef.current = null
     }
+    
     setIsCameraActive(false)
     setIsScanning(false)
     setIsFlashOn(false)
+    
+    // Update the ref to reflect scanning has stopped
+    shouldContinueScanning.current = false
+    
+    addLog('Camera and scanning stopped')
   }
 
   const startCamera = async () => {
@@ -613,6 +657,7 @@ export default function ScanVin() {
         // Don't start scanning automatically anymore
         // The user will press the start scan button
         setIsScanning(false)
+        shouldContinueScanning.current = false
       }
     } catch (error) {
       addLog(`Error accessing camera: ${error}`)
@@ -621,6 +666,9 @@ export default function ScanVin() {
   }
 
   const initializeBarcodeScanner = async () => {
+    // Only initialize if we're still in scanning mode
+    if (!shouldContinueScanning.current) return;
+    
     try {
       const hints = new Map();
       const formats = [BarcodeFormat.CODE_39, BarcodeFormat.DATA_MATRIX, BarcodeFormat.CODE_128];
@@ -634,10 +682,16 @@ export default function ScanVin() {
         addLog('Starting enhanced barcode scanning for VIN codes...');
         
         const scanLoop = async () => {
+          // Check if scanning has been stopped
+          if (!shouldContinueScanning.current || !videoRef.current || !barcodeReaderRef.current) {
+            return;
+          }
+          
           try {
-            if (!videoRef.current || !barcodeReaderRef.current || isPaused || !isScanning) return;
-            
             const result = await barcodeReaderRef.current.decodeOnce(videoRef.current);
+            // Check again after the async operation
+            if (!shouldContinueScanning.current) return;
+            
             if (result?.getText()) {
               let scannedValue = result.getText();
               addLog(`Raw barcode detected: ${scannedValue}`);
@@ -654,6 +708,9 @@ export default function ScanVin() {
                 addLog('Barcode VIN has valid length, proceeding with NHTSA validation');
                 
                 const vehicleInfo = await fetchVehicleInfo(scannedValue);
+                // Check once more if still scanning before proceeding
+                if (!shouldContinueScanning.current) return;
+                
                 if (vehicleInfo) {
                   const endTime = new Date();
                   const duration = scanStartTime ? (endTime.getTime() - scanStartTime.getTime()) / 1000 : 0;
@@ -691,12 +748,13 @@ export default function ScanVin() {
             setTextDetected(false);
           }
           
-          if (isScanning) {
+          // Continue scanning only if still active
+          if (shouldContinueScanning.current) {
             requestAnimationFrame(scanLoop);
           }
         };
         
-        if (isScanning) {
+        if (shouldContinueScanning.current) {
           scanLoop();
         }
       }
@@ -707,61 +765,85 @@ export default function ScanVin() {
   }
 
   const startOCRScanning = async (immediateScanning?: boolean) => {
-    const shouldScan = immediateScanning ?? isScanning
-
-    if (!streamRef.current || !workerRef.current || !shouldScan || isPaused) {
-      return
+    // This function will handle one OCR frame scan and then schedule the next one
+    // if scanning should continue
+    
+    // First, check if we should be scanning at all
+    const shouldScan = immediateScanning ?? isScanning;
+    if (!shouldContinueScanning.current || !streamRef.current || !workerRef.current || !shouldScan || isPaused) {
+      return;
     }
 
     try {
-      const frameData = captureFrame()
-      if (!frameData) {
-        if (shouldScan) {
-          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+      const frameData = captureFrame();
+      // Bail early if we couldn't capture a frame or if scanning was stopped
+      if (!frameData || !shouldContinueScanning.current) {
+        if (shouldScan && shouldContinueScanning.current) {
+          scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan));
         }
-        return
+        return;
       }
 
-      const { data: { text, confidence } } = await workerRef.current.recognize(frameData)
+      // Perform OCR recognition
+      const { data: { text, confidence } } = await workerRef.current.recognize(frameData);
       
-      addLog(`Raw scan result: ${text}`)
-      addLog(`Raw confidence: ${confidence}%`)
+      // Very important: Check AGAIN if we should still be scanning after the async operation
+      if (!shouldContinueScanning.current) {
+        addLog("OCR scan completed but scanning flag is off - stopping scan loop");
+        return;
+      }
+      
+      addLog(`Raw scan result: ${text}`);
+      addLog(`Raw confidence: ${confidence}%`);
       
       // If the text is empty or too short, mark as not detected
       if (!text || text.trim().length < 10) {
         setTextDetected(false);
       }
       
-      const possibleVins = correctCommonOcrMistakes(text)
+      const possibleVins = correctCommonOcrMistakes(text);
       
-      let foundValidVin = false
+      let foundValidVin = false;
       
+      // Check each possible VIN but only if we're still scanning
       for (const vin of possibleVins) {
+        if (!shouldContinueScanning.current) {
+          addLog("Stopping VIN validation loop as scanning was turned off");
+          return;
+        }
+        
         if (!checkedVinsRef.current.has(vin)) {
-          addLog(`Checking new VIN variation: ${vin}`)
-          checkedVinsRef.current.add(vin)
-          const isValid = await checkVinValidity(vin)
+          addLog(`Checking new VIN variation: ${vin}`);
+          checkedVinsRef.current.add(vin);
+          const isValid = await checkVinValidity(vin);
+          
+          // Check again if still scanning after async validation
+          if (!shouldContinueScanning.current) return;
+          
           if (isValid) {
             foundValidVin = true;
             setTextDetected(true);
-            break
+            break;
           }
         } else {
-          addLog(`Skipping already checked VIN: ${vin}`)
+          addLog(`Skipping already checked VIN: ${vin}`);
         }
       }
 
-      if (!foundValidVin && shouldScan) {
-        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+      // Schedule next scan only if we should continue and didn't find a valid VIN
+      if (!foundValidVin && shouldScan && shouldContinueScanning.current) {
+        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan));
       }
     } catch (error) {
-      addLog(`OCR error: ${error}`)
+      addLog(`OCR error: ${error}`);
       setTextDetected(false);
-      if (shouldScan) {
-        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan))
+      
+      // Only continue scanning if we're still active
+      if (shouldScan && shouldContinueScanning.current) {
+        scanningRef.current = requestAnimationFrame(() => startOCRScanning(shouldScan));
       }
     }
-  }
+  };
 
   const captureFrame = () => {
     if (!videoRef.current || !canvasRef.current) {
@@ -854,11 +936,17 @@ export default function ScanVin() {
   }
 
   const checkVinValidity = async (vin: string) => {
+    // Check if scanning has been stopped during the validation process
+    if (!shouldContinueScanning.current) return false;
+    
     addLog(`Checking possible VIN: ${vin}`)
     
     if (validateVIN(vin)) {
       addLog('Local VIN validation passed')
       const vehicleInfo = await fetchVehicleInfo(vin)
+      
+      // Check again if scanning is still active
+      if (!shouldContinueScanning.current) return false;
       
       if (vehicleInfo) {
         const endTime = new Date()
@@ -910,22 +998,33 @@ export default function ScanVin() {
       startCamera().then(() => {
         // Don't auto-start scanning
         setIsScanning(false)
+        shouldContinueScanning.current = false
       })
     }
   }
 
   const handleScanModeChange = async (value: 'text' | 'barcode') => {
+    // First, stop any current scanning
+    if (isScanning) {
+      setIsScanning(false);
+      shouldContinueScanning.current = false;
+      
+      if (scanningRef.current) {
+        cancelAnimationFrame(scanningRef.current);
+        scanningRef.current = undefined;
+      }
+    }
+    
     addLog(`Switching scan mode to: ${value}`)
     setScanMode(value)
     
-    if (scanningRef.current) {
-      cancelAnimationFrame(scanningRef.current)
-      scanningRef.current = undefined
-    }
-    
     if (workerRef.current) {
       addLog('Terminating OCR worker before mode change')
-      await workerRef.current.terminate()
+      try {
+        await workerRef.current.terminate()
+      } catch (e) {
+        addLog(`Error terminating worker: ${e}`)
+      }
       workerRef.current = null
     }
     
@@ -939,17 +1038,11 @@ export default function ScanVin() {
       addLog('Camera not active, restarting camera with new mode')
       stopCamera()
       await startCamera()
-    } else if (isScanning) {
-      // If already scanning, initialize the appropriate scanner for the new mode
-      if (value === 'text') {
-        addLog('Initializing OCR for text mode')
-        workerRef.current = await initializeWorker()
-        startOCRScanning(true)
-      } else {
-        addLog('Initializing barcode scanner for barcode mode')
-        await initializeBarcodeScanner()
-      }
     }
+    
+    // Don't automatically start scanning after mode change
+    setIsScanning(false);
+    shouldContinueScanning.current = false;
   }
 
   const handleOcrPresetChange = async (presetId: string) => {
@@ -959,15 +1052,31 @@ export default function ScanVin() {
     
     // Only restart OCR if we're currently in text mode and scanning
     if (scanMode === 'text' && isScanning) {
+      // Stop scanning temporarily
+      setIsScanning(false);
+      shouldContinueScanning.current = false;
+      
+      if (scanningRef.current) {
+        cancelAnimationFrame(scanningRef.current);
+        scanningRef.current = undefined;
+      }
+      
       if (workerRef.current) {
         addLog('Terminating OCR worker to apply new preset');
         await workerRef.current.terminate();
         workerRef.current = null;
       }
       
+      // Restart scanning with new preset
       addLog('Reinitializing OCR with new preset');
       workerRef.current = await initializeWorker();
+      
+      // Resume scanning
+      setIsScanning(true);
+      shouldContinueScanning.current = true;
       startOCRScanning(true);
+      
+      addLog('Scanning resumed with new OCR preset');
     }
   };
 
@@ -1006,20 +1115,42 @@ export default function ScanVin() {
   
   const vinDetails = getVinDetails()
 
-  // New function to toggle scanning (start/stop)
+  // Updated function to toggle scanning (start/stop)
   const toggleScanning = async () => {
     if (isScanning) {
       // Stop scanning
+      addLog('Stopping scanning process...');
       setIsScanning(false);
+      shouldContinueScanning.current = false;
+      
+      // Cancel any pending animation frames
       if (scanningRef.current) {
         cancelAnimationFrame(scanningRef.current);
         scanningRef.current = undefined;
+        addLog('Animation frame cancelled');
       }
+      
+      // If we have an OCR worker and we're in text mode, terminate it to ensure processing stops
+      if (scanMode === 'text' && workerRef.current) {
+        addLog('Terminating OCR worker on scan stop');
+        try {
+          await workerRef.current.terminate();
+          workerRef.current = null;
+        } catch (e) {
+          addLog(`Error terminating worker: ${e}`);
+        }
+      }
+      
+      // Reset text detection state
+      setTextDetected(false);
       addLog('Scanning paused');
+      
     } else {
       // Start scanning
+      addLog('Starting scanning process...');
       setIsScanning(true);
-      addLog('Scanning started');
+      shouldContinueScanning.current = true;
+      setScanStartTime(new Date());
       
       // Initialize the appropriate scanner based on the current mode
       if (scanMode === 'text') {
@@ -1030,6 +1161,8 @@ export default function ScanVin() {
       } else {
         await initializeBarcodeScanner();
       }
+      
+      addLog('Scanning started');
     }
   };
 
