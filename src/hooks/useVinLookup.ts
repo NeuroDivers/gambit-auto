@@ -43,14 +43,18 @@ export function useVinLookup(vin: string | undefined | null) {
 
       try {
         // First check if we have this VIN in our cache
-        const { data: existingData } = await supabase
+        const { data: existingData, error: cacheError } = await supabase
           .from('vin_lookups')
           .select('*')
           .eq('vin', validVin)
-          .eq('success', true)
-          .maybeSingle()
+          .single()
 
-        if (existingData) {
+        if (cacheError && cacheError.code !== 'PGRST116') {
+          // PGRST116 is "no rows returned" - other errors should be logged
+          console.error('Error checking VIN cache:', cacheError)
+        }
+
+        if (existingData && existingData.success) {
           console.log('Using cached VIN data:', existingData)
           
           // Extract data from cached record
@@ -86,6 +90,19 @@ export function useVinLookup(vin: string | undefined | null) {
 
         if (!response.ok || !data || !data.Results || !Array.isArray(data.Results)) {
           console.error('Failed to fetch VIN data:', data)
+          
+          // Store the failed lookup in cache to avoid repeated failures
+          await supabase
+            .from('vin_lookups')
+            .upsert({
+              vin: validVin,
+              success: false,
+              error_message: 'API response error',
+              raw_data: data || null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'vin' })
+            
           return { 
             make: '', 
             model: '', 
@@ -128,10 +145,10 @@ export function useVinLookup(vin: string | undefined | null) {
           trim
         });
 
-        // Store in cache - make sure to store all our fields
+        // Store in cache - using upsert to handle cases where the VIN exists but success was false
         await supabase
           .from('vin_lookups')
-          .insert({
+          .upsert({
             vin: validVin,
             make,
             model,
@@ -141,7 +158,9 @@ export function useVinLookup(vin: string | undefined | null) {
             trim,
             success: true,
             raw_data: data,
-          })
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'vin' })
 
         // Return the extracted values
         return { 
@@ -156,6 +175,21 @@ export function useVinLookup(vin: string | undefined | null) {
         console.error('Error in VIN lookup:', error)
         toast.error('Error decoding VIN. Please try again or enter the information manually.')
         
+        // Store the error in the database to prevent repeated API calls for known errors
+        try {
+          await supabase
+            .from('vin_lookups')
+            .upsert({
+              vin: validVin,
+              success: false,
+              error_message: error instanceof Error ? error.message : 'Unknown error',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'vin' })
+        } catch (cacheError) {
+          console.error('Failed to cache VIN lookup error:', cacheError)
+        }
+        
         return { 
           make: '', 
           model: '', 
@@ -168,7 +202,7 @@ export function useVinLookup(vin: string | undefined | null) {
       }
     },
     enabled: !!validVin,
-    staleTime: 1000 * 60 * 60 // 1 hour
+    staleTime: 1000 * 60 * 60 * 24 * 7 // 1 week - increased from 1 hour since VIN data rarely changes
   })
 }
 
