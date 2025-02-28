@@ -5,15 +5,13 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useVinLookup } from "@/hooks/useVinLookup"
 import { useEffect } from "react"
-import { Loader2, Camera } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Loader2 } from "lucide-react"
 
 interface VehicleInfoSectionProps {
   form: UseFormReturn<any>
-  scanVinAction?: () => void
 }
 
-export function VehicleInfoSection({ form, scanVinAction }: VehicleInfoSectionProps) {
+export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
   const vin = form.watch('vehicle_vin')
   const { data: vinData, isLoading: isLoadingVin } = useVinLookup(vin)
 
@@ -42,23 +40,10 @@ export function VehicleInfoSection({ form, scanVinAction }: VehicleInfoSectionPr
               <FormItem>
                 <FormLabel>VIN</FormLabel>
                 <FormControl>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Input placeholder="Enter VIN" {...field} />
-                      {isLoadingVin && (
-                        <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
-                      )}
-                    </div>
-                    {scanVinAction && (
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="icon"
-                        onClick={scanVinAction}
-                        className="shrink-0"
-                      >
-                        <Camera className="h-4 w-4" />
-                      </Button>
+                  <div className="relative">
+                    <Input placeholder="Enter VIN" {...field} />
+                    {isLoadingVin && (
+                      <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
                     )}
                   </div>
                 </FormControl>
