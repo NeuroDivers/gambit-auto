@@ -2,7 +2,7 @@
 import { RouteObject } from "react-router-dom"
 import ServiceTypes from "@/pages/admin/ServiceTypes"
 import ServiceBays from "@/pages/admin/ServiceBays"
-import PermissionGuard from "@/components/auth/PermissionGuard"
+import { PermissionGuard } from "@/components/auth/PermissionGuard"
 
 export const serviceRoutes: RouteObject[] = [
   {
