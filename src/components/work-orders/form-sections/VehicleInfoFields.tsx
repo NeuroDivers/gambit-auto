@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { useVinLookup } from "@/hooks/useVinLookup"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
+import { VinScanner } from "@/components/shared/VinScanner"
 
 interface VehicleInfoFieldsProps {
   control: Control<WorkOrderFormValues>
@@ -37,7 +38,13 @@ export function VehicleInfoFields({ control, watch, setValue }: VehicleInfoField
           <FormItem>
             <FormLabel>VIN</FormLabel>
             <FormControl>
-              <Input placeholder="Enter VIN for auto-fill" {...field} />
+              <div className="relative flex gap-2">
+                <Input placeholder="Enter VIN for auto-fill" {...field} className="flex-1" />
+                <VinScanner onScan={(scannedVin) => field.onChange(scannedVin)} />
+                {isLoadingVin && (
+                  <Loader2 className="absolute right-12 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                )}
+              </div>
             </FormControl>
             <FormMessage />
           </FormItem>

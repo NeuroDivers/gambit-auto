@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useVinLookup } from "@/hooks/useVinLookup"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
+import { VinScanner } from "@/components/shared/VinScanner"
 
 interface VehicleInfoSectionProps {
   form: UseFormReturn<any>
@@ -40,10 +41,11 @@ export function VehicleInfoSection({ form }: VehicleInfoSectionProps) {
               <FormItem>
                 <FormLabel>VIN</FormLabel>
                 <FormControl>
-                  <div className="relative">
-                    <Input placeholder="Enter VIN" {...field} />
+                  <div className="relative flex gap-2">
+                    <Input placeholder="Enter VIN" {...field} className="flex-1" />
+                    <VinScanner onScan={(scannedVin) => field.onChange(scannedVin)} />
                     {isLoadingVin && (
-                      <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                      <Loader2 className="absolute right-12 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
                     )}
                   </div>
                 </FormControl>
