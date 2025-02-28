@@ -8,11 +8,12 @@ import { SettingsSelector } from "./settings/SettingsSelector";
 import { toast } from "sonner";
 
 interface VINScannerProps {
-  onDetect: (vin: string) => void;
+  onDetect?: (vin: string) => void;
+  onScan?: (vin: string) => void; // Added for backward compatibility
   onCancel?: () => void;
 }
 
-export function VinScanner({ onDetect, onCancel }: VINScannerProps) {
+export function VinScanner({ onDetect, onScan, onCancel }: VINScannerProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [detectedVin, setDetectedVin] = useState<string | null>(null);
@@ -150,7 +151,9 @@ export function VinScanner({ onDetect, onCancel }: VINScannerProps) {
   
   const handleConfirm = () => {
     if (detectedVin) {
-      onDetect(detectedVin);
+      // Support both callback methods for backwards compatibility
+      if (onDetect) onDetect(detectedVin);
+      if (onScan) onScan(detectedVin);
     }
   };
   

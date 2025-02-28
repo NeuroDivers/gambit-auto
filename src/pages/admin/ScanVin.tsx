@@ -4,7 +4,7 @@ import { ArrowLeft, Clipboard, RotateCcw, Check, AlignLeft, Barcode, Info, Play,
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createWorker, PSM } from 'tesseract.js'
-import { BrowserMultiFormatReader, BarcodeFormat } from '@zxing/library'
+import { BrowserMultiFormatReader, BarcodeFormat, DecodeHintType } from '@zxing/library'
 import { validateVIN, postProcessVIN, validateVinWithNHTSA } from "@/utils/vin-validation"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { preprocessImage } from "@/utils/image-processing"
@@ -92,7 +92,6 @@ export default function ScanVin() {
   const [isOcrSettingsOpen, setIsOcrSettingsOpen] = useState(false)
   const [currentPreset, setCurrentPreset] = useState<OcrPreset>(ocrPresets[0])
   const [settings, setSettings] = useState(() => {
-    // Load settings from localStorage or use defaults
     const savedSettings = localStorage.getItem('scanner-settings');
     if (savedSettings) {
       try {
@@ -115,7 +114,6 @@ export default function ScanVin() {
     };
   });
   
-  // New state for morphological kernel size quick access
   const [morphKernelSize, setMorphKernelSize] = useState<string>(() => {
     const savedSettings = JSON.parse(localStorage.getItem('scanner-settings') || '{}')
     return savedSettings.morphKernelSize || '3'
@@ -125,8 +123,8 @@ export default function ScanVin() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const workerRef = useRef<Tesseract.Worker | null>(null)
+  const barcodeReaderRef = useRef<BrowserMultiFormatReader | null>(null)
   const isMobile = useIsMobile()
-  const barcodeRef = useRef<BrowserMultiFormatReader | null>(null)
   
   useEffect(() => {
     console.log("Settings changed:", settings);
@@ -148,8 +146,8 @@ export default function ScanVin() {
       if (workerRef.current) {
         workerRef.current.terminate()
       }
-      if (barcodeRef.current) {
-        barcodeRef.current.reset()
+      if (barcodeReaderRef.current) {
+        barcodeReaderRef.current.reset()
       }
     }
   }, [scanMode])
@@ -162,35 +160,37 @@ export default function ScanVin() {
 
   const setupTesseract = async () => {
     try {
-      const worker = createWorker()
-      workerRef.current = worker
+      const worker = await createWorker();
+      workerRef.current = worker;
 
-      await worker.load()
-      await worker.loadLanguage('eng')
-      await worker.initialize('eng')
-      await worker.setParameters(currentPreset.config)
+      await worker.load();
+      await worker.loadLanguage('eng');
+      await worker.initialize('eng');
+      await worker.setParameters(currentPreset.config);
 
-      log('Tesseract OCR engine is ready.')
+      log('Tesseract OCR engine is ready.');
     } catch (error: any) {
-      console.error('Error setting up Tesseract:', error)
-      toast.error(`Failed to setup OCR engine: ${error.message}`)
+      console.error('Error setting up Tesseract:', error);
+      toast.error(`Failed to setup OCR engine: ${error.message}`);
     }
-  }
+  };
 
   const setupBarcodeScanner = async () => {
     try {
-      const reader = new BrowserMultiFormatReader({
-        formats: [BarcodeFormat.CODE_128, BarcodeFormat.CODE_39, BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.UPC_E, BarcodeFormat.ITF],
-        hints: { [BarcodeFormat.CODE_128]: {} }
-      })
-      barcodeRef.current = reader
+      const hints = new Map();
+      const formats = [BarcodeFormat.CODE_128, BarcodeFormat.CODE_39, BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.UPC_E, BarcodeFormat.ITF];
+      
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, formats);
+      
+      const reader = new BrowserMultiFormatReader(hints);
+      barcodeReaderRef.current = reader;
 
-      log('ZXing barcode scanner is ready.')
+      log('ZXing barcode scanner is ready.');
     } catch (error: any) {
-      console.error('Error setting up ZXing barcode scanner:', error)
-      toast.error(`Failed to setup barcode scanner: ${error.message}`)
+      console.error('Error setting up ZXing barcode scanner:', error);
+      toast.error(`Failed to setup barcode scanner: ${error.message}`);
     }
-  }
+  };
 
   const startCamera = async () => {
     setIsCameraActive(true)
@@ -204,7 +204,6 @@ export default function ScanVin() {
       }
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints).catch(async () => {
-        // Fallback to any available camera
         return await navigator.mediaDevices.getUserMedia({ video: true })
       })
 
@@ -295,14 +294,11 @@ export default function ScanVin() {
       return
     }
 
-    // Set canvas dimensions to match video
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
 
-    // Draw current video frame to canvas
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
 
-    // Preprocess the image
     const imageData = preprocessImage(canvas)
 
     setIsOcrLoading(true)
@@ -325,7 +321,7 @@ export default function ScanVin() {
   }
 
   const scanBarcode = async () => {
-    if (!videoRef.current || !barcodeRef.current) {
+    if (!videoRef.current || !barcodeReaderRef.current) {
       toast.error('Camera or barcode scanner not ready. Please wait and try again.')
       return
     }
@@ -334,7 +330,7 @@ export default function ScanVin() {
     try {
       log('Starting barcode scan...')
       const videoEl = videoRef.current
-      const result = await barcodeRef.current.decodeFromVideoElement(videoEl)
+      const result = await barcodeReaderRef.current.decodeFromVideoElement(videoEl)
       const rawText = result.getText()
       log(`Raw Barcode Text: ${rawText}`)
 
@@ -416,11 +412,9 @@ export default function ScanVin() {
     }
   }
   
-  // Add a function to update the kernel size
   const updateMorphKernelSize = (size: string) => {
     setMorphKernelSize(size)
     
-    // Update localStorage settings
     const savedSettings = JSON.parse(localStorage.getItem('scanner-settings') || '{}')
     savedSettings.morphKernelSize = size
     localStorage.setItem('scanner-settings', JSON.stringify(savedSettings))
@@ -428,7 +422,6 @@ export default function ScanVin() {
     toast.success(`Morphological kernel size set to ${size}x${size}`)
   }
 
-  // Insert the Quick Settings dropdown into the component return
   return (
     <div className="container max-w-md mx-auto p-4">
       <div className="flex items-center mb-6">
@@ -565,7 +558,6 @@ export default function ScanVin() {
             </div>
           </div>
 
-          {/* Morphological Kernel Size control - visible on main UI */}
           {scanMode === 'text' && (
             <div className="mb-4">
               <Label htmlFor="morph-kernel-size" className="mb-2 block text-sm">Morphological Kernel Size</Label>
@@ -680,7 +672,6 @@ export default function ScanVin() {
             </Card>
           )}
 
-          {/* OCR Settings Dialog */}
           <Dialog open={isOcrSettingsOpen} onOpenChange={setIsOcrSettingsOpen}>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
@@ -715,7 +706,6 @@ export default function ScanVin() {
             </DialogContent>
           </Dialog>
 
-          {/* Quick Settings Dialog */}
           <Dialog open={isQuickSettingsOpen} onOpenChange={setIsQuickSettingsOpen}>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
