@@ -429,8 +429,24 @@ export default function ScanVin() {
       const rawText = data.text
       log(`Raw OCR Text: ${rawText}`)
 
+      // Skip if the OCR result is empty
+      if (!rawText || rawText.trim() === '') {
+        log('OCR returned empty result, retrying...')
+        setIsOcrLoading(false)
+        toast.info('No text detected. Please adjust camera position and try again.')
+        return
+      }
+
       const processedVin = postProcessVIN(rawText)
       log(`Processed VIN: ${processedVin}`)
+
+      // Skip if the processed VIN is empty
+      if (!processedVin || processedVin.trim() === '') {
+        log('Processed VIN is empty, skipping validation')
+        setIsOcrLoading(false)
+        toast.info('Could not extract a VIN from the image. Please try again.')
+        return
+      }
 
       await processVin(processedVin, data.confidence)
     } catch (error: any) {
@@ -451,14 +467,35 @@ export default function ScanVin() {
     try {
       log('Starting barcode scan...')
       const videoEl = videoRef.current
-      const result = await barcodeReaderRef.current.decodeFromVideoElement(videoEl)
-      const rawText = result.getText()
-      log(`Raw Barcode Text: ${rawText}`)
+      
+      try {
+        const result = await barcodeReaderRef.current.decodeOnceFromVideoElement(videoEl)
+        const rawText = result.getText()
+        log(`Raw Barcode Text: ${rawText}`)
 
-      const processedVin = postProcessVIN(rawText)
-      log(`Processed VIN: ${processedVin}`)
+        // Skip if the barcode result is empty
+        if (!rawText || rawText.trim() === '') {
+          log('Barcode scan returned empty result')
+          toast.info('No barcode detected. Please adjust camera position and try again.')
+          return
+        }
 
-      await processVin(processedVin)
+        const processedVin = postProcessVIN(rawText)
+        log(`Processed VIN: ${processedVin}`)
+
+        // Skip if the processed VIN is empty
+        if (!processedVin || processedVin.trim() === '') {
+          log('Processed VIN is empty, skipping validation')
+          toast.info('Could not extract a VIN from the barcode. Please try again.')
+          return
+        }
+
+        await processVin(processedVin)
+      } catch (scanError: any) {
+        // This is normal when no barcode is found
+        log('No barcode found in current frame')
+        toast.info('No barcode detected. Please adjust camera position and try again.')
+      }
     } catch (error: any) {
       console.error('Barcode Scan Error:', error)
       toast.error(`Barcode scan failed: ${error.message}`)
@@ -468,6 +505,12 @@ export default function ScanVin() {
   }
 
   const processVin = async (vin: string, confidence: number = 0) => {
+    // Skip processing if VIN is empty
+    if (!vin || vin.trim() === '') {
+      log('Empty VIN received, skipping processing')
+      return
+    }
+    
     log(`Validating VIN: ${vin}`)
     const isValid = validateVIN(vin)
 
