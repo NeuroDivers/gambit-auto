@@ -597,13 +597,14 @@ export default function ScanVin() {
       const response = await validateVinWithNHTSA(vin);
       
       // Check if we received valid data from NHTSA
+      // Fix: Add null check before checking object properties
       const isValidResponse = 
         response !== null && 
         typeof response === 'object' && 
         'Results' in response && 
-        Array.isArray(response.Results);
+        Array.isArray((response as NhtsaResponse).Results);
       
-      if (isValidResponse) {
+      if (isValidResponse && response !== null) {
         // We know now that response is a valid NhtsaResponse
         const nhtsaData = response as NhtsaResponse;
         
