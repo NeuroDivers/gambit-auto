@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { useQuery } from '@tanstack/react-query'
@@ -52,47 +53,23 @@ export function useVinLookup(vin: string | undefined | null) {
         if (existingData) {
           console.log('Using cached VIN data:', existingData)
           
-          // Extract trim-related information from cached data
-          const trim = extractFromRawData(existingData.raw_data, 'Trim')
-          const trim2 = extractFromRawData(existingData.raw_data, 'Trim2')
-          const series = extractFromRawData(existingData.raw_data, 'Series')
-          const series2 = extractFromRawData(existingData.raw_data, 'Series2')
-          
-          const model = existingData.model || ''
-          const combinedTrim = combineAndDeduplicate([trim, trim2, series, series2], model)
-          
+          // Extract data from cached
           return {
             make: existingData.make || '',
-            model: model,
+            model: existingData.model || '',
             year: existingData.year || 0,
-            bodyClass: extractFromRawData(existingData.raw_data, 'Body Class') || '',
-            doors: parseInt(extractFromRawData(existingData.raw_data, 'Doors') || '0', 10) || 0,
-            trim: combinedTrim,
+            bodyClass: '',
+            doors: 0,
+            trim: '',
           }
         }
 
-        // Fetch from NHTSA API
+        // If not in cache, fetch from NHTSA API
         console.log('Fetching VIN data from NHTSA API:', validVin)
         const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${validVin}?format=json`)
         const data = await response.json()
 
-        // Clean up potential bad VIN lookups to keep the DB clean
-        await supabase
-          .from('vin_lookups')
-          .delete()
-          .eq('vin', validVin)
-          .eq('success', false)
-
         if (!response.ok || !data || !data.Results || !Array.isArray(data.Results)) {
-          // Record the failure
-          await supabase
-            .from('vin_lookups')
-            .insert({
-              vin: validVin,
-              success: false,
-              error_message: 'API response error',
-            })
-            
           console.error('Failed to fetch VIN data:', data)
           return { 
             make: '', 
@@ -116,15 +93,7 @@ export function useVinLookup(vin: string | undefined | null) {
         const bodyClass = getValueByVariable(results, 'Body Class')
         const doorsStr = getValueByVariable(results, 'Doors')
         const doors = doorsStr ? parseInt(doorsStr, 10) : 0
-        
-        // Extract all trim-related information
         const trim = getValueByVariable(results, 'Trim')
-        const trim2 = getValueByVariable(results, 'Trim2')
-        const series = getValueByVariable(results, 'Series')
-        const series2 = getValueByVariable(results, 'Series2')
-        
-        // Combine and remove duplicates
-        const combinedTrim = combineAndDeduplicate([trim, trim2, series, series2], model)
 
         // Store in cache
         await supabase
@@ -138,8 +107,6 @@ export function useVinLookup(vin: string | undefined | null) {
             raw_data: data,
           })
 
-        console.log('Decoded VIN:', { make, model, year, bodyClass, doors, combinedTrim })
-        
         // Return the extracted values
         return { 
           make: make || '', 
@@ -147,21 +114,12 @@ export function useVinLookup(vin: string | undefined | null) {
           year: year || 0,
           bodyClass: bodyClass || '',
           doors: doors || 0,
-          trim: combinedTrim,
+          trim: trim || '',
         }
       } catch (error) {
         console.error('Error in VIN lookup:', error)
         toast.error('Error decoding VIN. Please try again or enter the information manually.')
         
-        // Record the error
-        await supabase
-          .from('vin_lookups')
-          .insert({
-            vin: validVin,
-            success: false,
-            error_message: error instanceof Error ? error.message : 'Unknown error',
-          })
-          
         return { 
           make: '', 
           model: '', 
@@ -182,44 +140,4 @@ export function useVinLookup(vin: string | undefined | null) {
 function getValueByVariable(results: any[], variableName: string): string {
   const found = results.find(item => item.Variable === variableName)
   return found && found.Value !== null ? found.Value : ''
-}
-
-// Helper function to extract values from raw_data
-function extractFromRawData(rawData: any, variableName: string): string {
-  if (!rawData || !rawData.Results || !Array.isArray(rawData.Results)) {
-    return ''
-  }
-  
-  return getValueByVariable(rawData.Results, variableName)
-}
-
-// Helper function to combine multiple strings and remove duplicates
-function combineAndDeduplicate(strings: string[], modelToFilter: string = ''): string {
-  // Filter out empty strings
-  const validStrings = strings.filter(str => !!str)
-  if (validStrings.length === 0) return ''
-  
-  // Split each string into words, flatten the array
-  const allWords = validStrings.flatMap(str => str.split(/\s+/))
-  
-  // Split model into words to check for duplicates
-  const modelWords = new Set(
-    modelToFilter.toLowerCase().split(/\s+/).filter(word => word.length > 0)
-  )
-  
-  // Use a Set to track which words we've seen (in lowercase for comparison)
-  const seenWords = new Set<string>()
-  const uniqueWords: string[] = []
-  
-  // Keep the original casing but use lowercase for duplicate detection
-  // and filter out any words that are also in the model
-  allWords.forEach(word => {
-    const lowerWord = word.toLowerCase()
-    if (!seenWords.has(lowerWord) && !modelWords.has(lowerWord)) {
-      seenWords.add(lowerWord)
-      uniqueWords.push(word)
-    }
-  })
-  
-  return uniqueWords.join(' ')
 }
