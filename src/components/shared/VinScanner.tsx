@@ -2,7 +2,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Camera, X } from "lucide-react"
-import { BrowserMultiFormatReader, BarcodeFormat } from "@zxing/browser"
+import { BrowserMultiFormatReader } from "@zxing/browser"
 import { 
   Dialog, 
   DialogContent, 
@@ -60,9 +60,9 @@ export function VinScanner({ onScan }: VinScannerProps) {
                 // Close scanner and return processed VIN
                 if (newReader) {
                   try {
-                    // Stop scanning - using the correct method according to ZXing API
-                    newReader.reset();
+                    // Fix the reset method issue
                     stopStreamTracks(videoElement);
+                    // We won't call reset() since it's causing errors
                   } catch (e) {
                     console.error("Error stopping scanner:", e);
                   }
@@ -107,8 +107,8 @@ export function VinScanner({ onScan }: VinScannerProps) {
     // Stop the scanner if it's running
     if (reader) {
       try {
-        // Using the correct method according to ZXing API
-        reader.reset();
+        // Don't use reset() as it's causing errors
+        // Just stop the stream tracks
       } catch (e) {
         console.error("Error stopping scanner:", e);
       }

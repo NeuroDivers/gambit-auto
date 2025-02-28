@@ -53,14 +53,29 @@ export function useVinLookup(vin: string | undefined | null) {
         if (existingData) {
           console.log('Using cached VIN data:', existingData)
           
-          // Extract data from cached
+          // Extract data from cached record
+          // Here we need to make sure we have all the fields we need
+          const bodyClass = existingData.body_class || '';
+          const doors = existingData.doors || 0;
+          const trim = existingData.trim || '';
+          
+          // Log complete data retrieval for debugging
+          console.log('Extracted from cache:', {
+            make: existingData.make,
+            model: existingData.model,
+            year: existingData.year,
+            bodyClass,
+            doors,
+            trim
+          });
+          
           return {
             make: existingData.make || '',
             model: existingData.model || '',
             year: existingData.year || 0,
-            bodyClass: '',
-            doors: 0,
-            trim: '',
+            bodyClass,
+            doors,
+            trim,
           }
         }
 
@@ -102,8 +117,18 @@ export function useVinLookup(vin: string | undefined | null) {
         
         // Merge trim values without duplicates
         const trim = mergeTrims([trim1, trim2, series, series2])
+        
+        // Log what we've extracted from the API for debugging
+        console.log('Extracted from API:', {
+          make,
+          model,
+          year,
+          bodyClass,
+          doors,
+          trim
+        });
 
-        // Store in cache
+        // Store in cache - make sure to store all our fields
         await supabase
           .from('vin_lookups')
           .insert({
@@ -111,6 +136,9 @@ export function useVinLookup(vin: string | undefined | null) {
             make,
             model,
             year,
+            body_class: bodyClass,
+            doors,
+            trim,
             success: true,
             raw_data: data,
           })
