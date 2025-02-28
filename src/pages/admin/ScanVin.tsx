@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { ArrowLeft, Clipboard, RotateCcw, Check, AlignLeft, Barcode, Info, Play, Pause, FileText } from "lucide-react"
@@ -212,6 +211,8 @@ export default function ScanVin() {
   const [isCameraActive, setIsCameraActive] = useState(false)
   const [isOcrSettingsOpen, setIsOcrSettingsOpen] = useState(false)
   const [currentPreset, setCurrentPreset] = useState<OcrPreset>(ocrPresets[0])
+  const [barcodeScanning, setBarcodeScanning] = useState(false)
+  const [barcodeScanInterval, setBarcodeScanInterval] = useState<NodeJS.Timeout | null>(null)
   const [settings, setSettings] = useState(() => {
     const savedSettings = localStorage.getItem('scanner-settings');
     if (savedSettings) {
@@ -264,6 +265,7 @@ export default function ScanVin() {
       if (barcodeReaderRef.current) {
         barcodeReaderRef.current.reset()
       }
+      stopBarcodeScanning();
     }
   }, [scanMode])
 
@@ -272,6 +274,12 @@ export default function ScanVin() {
       startCamera()
     }
   }, [isCameraActive])
+
+  useEffect(() => {
+    return () => {
+      stopBarcodeScanning();
+    };
+  }, []);
 
   const setupTesseract = async () => {
     try {
@@ -352,10 +360,12 @@ export default function ScanVin() {
       log('Camera stopped.')
     }
     setIsCameraActive(false)
+    stopBarcodeScanning();
   }
 
   const handleScanModeChange = (mode: 'text' | 'barcode') => {
     stopCamera()
+    stopBarcodeScanning();
     setScanMode(mode)
     setVinData({
       vin: null,
@@ -377,11 +387,13 @@ export default function ScanVin() {
 
   const handleCancel = () => {
     stopCamera()
+    stopBarcodeScanning();
     navigate(returnPath)
   }
 
   const handleConfirm = () => {
     stopCamera()
+    stopBarcodeScanning();
     navigate(returnPath, { state: { vin: vinData.vin } })
   }
 
@@ -414,7 +426,7 @@ export default function ScanVin() {
     if (scanMode === 'text') {
       await scanText()
     } else if (scanMode === 'barcode') {
-      await scanBarcode()
+      startBarcodeScan()
     }
   }
 
@@ -475,52 +487,84 @@ export default function ScanVin() {
     }
   }
 
-  const scanBarcode = async () => {
-    if (!videoRef.current || !barcodeReaderRef.current) {
-      toast.error('Camera or barcode scanner not ready. Please wait and try again.')
-      return
+  const startBarcodeScan = () => {
+    if (barcodeScanning) {
+      stopBarcodeScanning();
+      return;
     }
+    
+    setIsOcrLoading(true);
+    setBarcodeScanning(true);
+    log('Starting barcode scan...');
+    
+    // Start continuous scanning with interval
+    const intervalId = setInterval(() => {
+      if (!isCameraActive || !videoRef.current || !barcodeReaderRef.current) {
+        stopBarcodeScanning();
+        return;
+      }
+      
+      singleBarcodeScan();
+    }, 500); // Scan every 500ms
+    
+    setBarcodeScanInterval(intervalId);
+  };
+  
+  const stopBarcodeScanning = () => {
+    if (barcodeScanInterval) {
+      clearInterval(barcodeScanInterval);
+    }
+    setBarcodeScanning(false);
+    setIsOcrLoading(false);
+    setBarcodeScanInterval(null);
+  };
 
-    setIsOcrLoading(true)
+  const singleBarcodeScan = async () => {
+    if (!videoRef.current || !barcodeReaderRef.current) {
+      stopBarcodeScanning();
+      toast.error('Camera or barcode scanner not ready. Please wait and try again.');
+      return;
+    }
+    
     try {
-      log('Starting barcode scan...')
-      const videoEl = videoRef.current
+      const videoEl = videoRef.current;
       
       try {
-        const result = await barcodeReaderRef.current.decodeFromVideoElement(videoEl)
-        const rawText = result.getText()
-        log(`Raw Barcode Text: ${rawText}`)
+        const result = await barcodeReaderRef.current.decodeFromVideoElement(videoEl);
+        const rawText = result.getText();
+        log(`Raw Barcode Text: ${rawText}`);
+
+        // Stop scanning when a barcode is detected
+        stopBarcodeScanning();
 
         // Skip if the barcode result is empty
         if (!rawText || rawText.trim() === '') {
-          log('Barcode scan returned empty result')
-          toast.info('No barcode detected. Please adjust camera position and try again.')
-          return
+          log('Barcode scan returned empty result');
+          toast.info('No barcode detected. Please adjust camera position and try again.');
+          return;
         }
 
-        const processedVin = postProcessVIN(rawText)
-        log(`Processed VIN: ${processedVin}`)
+        const processedVin = postProcessVIN(rawText);
+        log(`Processed VIN: ${processedVin}`);
 
         // Skip if the processed VIN is empty
         if (!processedVin || processedVin.trim() === '') {
-          log('Processed VIN is empty, skipping validation')
-          toast.info('Could not extract a VIN from the barcode. Please try again.')
-          return
+          log('Processed VIN is empty, skipping validation');
+          toast.info('Could not extract a VIN from the barcode. Please try again.');
+          return;
         }
 
-        await processVin(processedVin)
+        await processVin(processedVin);
       } catch (scanError: any) {
         // This is normal when no barcode is found
-        log('No barcode found in current frame')
-        toast.info('No barcode detected. Please adjust camera position and try again.')
+        // We don't want to log this for every scan attempt to keep logs cleaner
       }
     } catch (error: any) {
-      console.error('Barcode Scan Error:', error)
-      toast.error(`Barcode scan failed: ${error.message}`)
-    } finally {
-      setIsOcrLoading(false)
+      console.error('Barcode Scan Error:', error);
+      toast.error(`Barcode scan failed: ${error.message}`);
+      stopBarcodeScanning();
     }
-  }
+  };
 
   const getValueFromNHTSA = (results: Array<{Variable: string, Value: string | null}>, variableName: string): string => {
     if (!results || !Array.isArray(results)) return '';
@@ -922,10 +966,20 @@ export default function ScanVin() {
           <Button
             className="w-full"
             onClick={handleScan}
-            disabled={isOcrLoading || !isCameraActive}
+            disabled={!isCameraActive}
+            variant={barcodeScanning ? "destructive" : "default"}
           >
-            <Play className="mr-2 h-4 w-4" />
-            Start Scan
+            {barcodeScanning ? (
+              <>
+                <Pause className="mr-2 h-4 w-4" />
+                Stop Scanning
+              </>
+            ) : (
+              <>
+                <Play className="mr-2 h-4 w-4" />
+                Start Scan
+              </>
+            )}
           </Button>
 
           <div className="flex items-center space-x-2">
