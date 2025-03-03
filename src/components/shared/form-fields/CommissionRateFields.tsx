@@ -32,7 +32,7 @@ export function CommissionRateFields({
   form,
   namePrefix,
   label = "Commission",
-  hidden = false
+  hidden = true // Default to hidden now
 }: CommissionRateFieldsProps) {
   if (hidden) return null;
   

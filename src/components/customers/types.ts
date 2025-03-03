@@ -33,9 +33,9 @@ export type Customer = {
     status: string
     created_at: string
   }>
-  estimates?: Array<{
+  quotes?: Array<{
     id: string
-    estimate_number: string
+    quote_number: string
     total: number
     status: string
     created_at: string

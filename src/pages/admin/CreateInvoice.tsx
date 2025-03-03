@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useForm } from "react-hook-form"
@@ -21,7 +22,6 @@ import { CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { InvoiceTaxSummary } from "@/components/invoices/form-sections/InvoiceTaxSummary"
-import { ClientInfoFields } from "@/components/invoices/form-sections/ClientInfoFields"
 
 interface LocationState {
   preselectedCustomer?: Customer;
@@ -172,7 +172,7 @@ export default function CreateInvoice() {
         </Button>
         <PageTitle 
           title="Create Invoice" 
-          description="Create a new invoice for a client"
+          description="Create a new invoice for a customer"
         />
       </div>
       
@@ -227,20 +227,20 @@ export default function CreateInvoice() {
 
               <Card>
                 <CardContent className="pt-6">
-                  <ClientInfoFields 
-                    clientFirstName={form.watch('customer_first_name')}
-                    setClientFirstName={(value) => form.setValue('customer_first_name', value)}
-                    clientLastName={form.watch('customer_last_name')}
-                    setClientLastName={(value) => form.setValue('customer_last_name', value)}
-                    clientEmail={form.watch('customer_email')}
-                    setClientEmail={(value) => form.setValue('customer_email', value)}
-                    clientPhone={form.watch('customer_phone')}
-                    setClientPhone={(value) => form.setValue('customer_phone', value)}
-                    clientAddress={form.watch('customer_address')}
-                    setClientAddress={(value) => form.setValue('customer_address', value)}
-                    clients={customers}
-                    isLoadingClients={isLoadingCustomers}
-                    onClientSelect={onCustomerSelect}
+                  <CustomerInfoFields 
+                    customerFirstName={form.watch('customer_first_name')}
+                    setCustomerFirstName={(value) => form.setValue('customer_first_name', value)}
+                    customerLastName={form.watch('customer_last_name')}
+                    setCustomerLastName={(value) => form.setValue('customer_last_name', value)}
+                    customerEmail={form.watch('customer_email')}
+                    setCustomerEmail={(value) => form.setValue('customer_email', value)}
+                    customerPhone={form.watch('customer_phone')}
+                    setCustomerPhone={(value) => form.setValue('customer_phone', value)}
+                    customerAddress={form.watch('customer_address')}
+                    setCustomerAddress={(value) => form.setValue('customer_address', value)}
+                    customers={customers}
+                    isLoadingCustomers={isLoadingCustomers}
+                    onCustomerSelect={onCustomerSelect}
                   />
                 </CardContent>
               </Card>

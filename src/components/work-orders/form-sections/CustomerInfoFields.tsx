@@ -1,20 +1,21 @@
 
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { UseFormReturn } from "react-hook-form"
+import { Control } from "react-hook-form"
+import { WorkOrderFormValues } from "../types"
 
-interface PersonalInfoFieldsProps {
-  form: UseFormReturn<any>
-  fieldPrefix?: string
+interface CustomerInfoFieldsProps {
+  control: Control<WorkOrderFormValues>
 }
 
-export function PersonalInfoFields({ form, fieldPrefix = "customer_" }: PersonalInfoFieldsProps) {
+export function CustomerInfoFields({ control }: CustomerInfoFieldsProps) {
   return (
-    <div className="flex flex-col space-y-4">
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">Customer Information</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
-          control={form.control}
-          name={`${fieldPrefix}first_name`}
+          control={control}
+          name="first_name"
           render={({ field }) => (
             <FormItem>
               <FormLabel>First Name</FormLabel>
@@ -25,10 +26,9 @@ export function PersonalInfoFields({ form, fieldPrefix = "customer_" }: Personal
             </FormItem>
           )}
         />
-
         <FormField
-          control={form.control}
-          name={`${fieldPrefix}last_name`}
+          control={control}
+          name="last_name"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Last Name</FormLabel>
@@ -40,11 +40,10 @@ export function PersonalInfoFields({ form, fieldPrefix = "customer_" }: Personal
           )}
         />
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
-          control={form.control}
-          name={`${fieldPrefix}email`}
+          control={control}
+          name="email"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
@@ -55,10 +54,9 @@ export function PersonalInfoFields({ form, fieldPrefix = "customer_" }: Personal
             </FormItem>
           )}
         />
-
         <FormField
-          control={form.control}
-          name={`${fieldPrefix}phone`}
+          control={control}
+          name="phone_number"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Phone</FormLabel>
@@ -70,6 +68,19 @@ export function PersonalInfoFields({ form, fieldPrefix = "customer_" }: Personal
           )}
         />
       </div>
+      <FormField
+        control={control}
+        name="address"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Address</FormLabel>
+            <FormControl>
+              <Input {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   )
 }
