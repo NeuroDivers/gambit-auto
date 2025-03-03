@@ -6,7 +6,7 @@ import { PageTitle } from "@/components/shared/PageTitle"
 import { ArrowLeft } from "lucide-react"
 import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
-import { InvoiceFormValues } from "@/components/invoices/types"
+import { InvoiceFormValues, InvoiceItem } from "@/components/invoices/types"
 import { Customer } from "@/components/customers/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { CustomerInfoFields } from "@/components/invoices/form-sections/CustomerInfoFields"
@@ -62,12 +62,10 @@ export default function CreateInvoice() {
   const onSubmit = async (values: InvoiceFormValues) => {
     setIsPending(true)
     try {
-      // Calculate totals
       const subtotal = values.invoice_items.reduce((sum, item) => 
         sum + (item.quantity * item.unit_price), 0
       )
 
-      // Create invoice
       const { data: invoice, error } = await supabase
         .from('invoices')
         .insert({
@@ -83,7 +81,7 @@ export default function CreateInvoice() {
           notes: values.notes,
           due_date: values.due_date,
           subtotal,
-          total: subtotal, // Add tax calculation if needed
+          total: subtotal,
           status: 'draft',
           customer_id: preselectedCustomer?.id
         })
@@ -92,7 +90,6 @@ export default function CreateInvoice() {
 
       if (error) throw error
 
-      // Create invoice items
       if (invoice && values.invoice_items.length > 0) {
         const { error: itemsError } = await supabase
           .from('invoice_items')
@@ -153,6 +150,10 @@ export default function CreateInvoice() {
     form.setValue('qst_amount', qst)
     form.setValue('total', total)
   }
+
+  const handleItemsChange = (items: InvoiceItem[] | any[]) => {
+    form.setValue('invoice_items', items as InvoiceItem[]);
+  };
 
   const onCustomerSelect = (customerId: string) => {
     console.log("Customer selected:", customerId)
@@ -271,7 +272,7 @@ export default function CreateInvoice() {
                   <h3 className="text-lg font-semibold mb-4">Service Items</h3>
                   <InvoiceItemsFields
                     items={form.watch('invoice_items')}
-                    setItems={(items) => form.setValue('invoice_items', items)}
+                    setItems={handleItemsChange}
                     allowPriceEdit={true}
                   />
                 </CardContent>

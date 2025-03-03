@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { InvoiceItemsFields } from "../form-sections/InvoiceItemsFields"
 import { UseFormReturn } from "react-hook-form"
-import { InvoiceFormValues } from "../types"
+import { InvoiceFormValues, InvoiceItem } from "../types"
 import { InvoiceTaxSummary } from "../form-sections/InvoiceTaxSummary"
 
 type InvoiceServiceItemsProps = {
@@ -17,6 +17,11 @@ export function InvoiceServiceItems({ form }: InvoiceServiceItemsProps) {
     form.setValue('total', total)
   }
 
+  const handleItemsChange = (items: InvoiceItem[] | any[]) => {
+    // Ensure we're setting the correct type (InvoiceItem[])
+    form.setValue('invoice_items', items as InvoiceItem[]);
+  };
+
   return (
     <div className="space-y-4">
       <Card className="border-border/5">
@@ -26,7 +31,7 @@ export function InvoiceServiceItems({ form }: InvoiceServiceItemsProps) {
         <CardContent>
           <InvoiceItemsFields
             items={form.watch('invoice_items')}
-            setItems={(items) => form.setValue('invoice_items', items)}
+            setItems={handleItemsChange}
             allowPriceEdit={true}
           />
         </CardContent>

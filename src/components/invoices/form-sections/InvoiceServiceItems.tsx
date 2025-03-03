@@ -1,36 +1,26 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { InvoiceItemsFields } from "../form-sections/InvoiceItemsFields"
 import { UseFormReturn } from "react-hook-form"
-import { InvoiceFormValues } from "../types"
+import { InvoiceFormValues, InvoiceItem } from "../types"
 import { InvoiceTaxSummary } from "../form-sections/InvoiceTaxSummary"
-import { useQuery } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
 
 type InvoiceServiceItemsProps = {
   form: UseFormReturn<InvoiceFormValues>
 }
 
 export function InvoiceServiceItems({ form }: InvoiceServiceItemsProps) {
-  const { data: isAdmin } = useQuery({
-    queryKey: ['is-admin'],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return false
-      
-      const { data, error } = await supabase
-        .rpc('is_admin', { user_id: user.id })
-      
-      if (error) throw error
-      return data || false
-    }
-  })
-
   const handleTotalCalculated = (subtotal: number, gst: number, qst: number, total: number) => {
     form.setValue('subtotal', subtotal)
     form.setValue('gst_amount', gst)
     form.setValue('qst_amount', qst)
     form.setValue('total', total)
   }
+
+  const handleItemsChange = (items: InvoiceItem[] | any[]) => {
+    // Ensure we're setting the correct type (InvoiceItem[])
+    form.setValue('invoice_items', items as InvoiceItem[]);
+  };
 
   return (
     <div className="space-y-4">
@@ -41,9 +31,8 @@ export function InvoiceServiceItems({ form }: InvoiceServiceItemsProps) {
         <CardContent>
           <InvoiceItemsFields
             items={form.watch('invoice_items')}
-            setItems={(items) => form.setValue('invoice_items', items)}
+            setItems={handleItemsChange}
             allowPriceEdit={true}
-            showCommission={isAdmin}
           />
         </CardContent>
       </Card>

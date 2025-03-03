@@ -34,24 +34,16 @@ export function InvoiceItemsFields({
   // Handle the conversion back
   const handleItemsChange = (updatedItems: ServiceItemType[]) => {
     const convertedItems = updatedItems.map(item => {
-      const invoiceItem: any = {
+      const invoiceItem: InvoiceItem = {
         service_id: item.service_id,
         service_name: item.service_name,
         quantity: item.quantity,
         unit_price: item.unit_price,
         description: item.description || "",
+        commission_rate: item.commission_rate,
+        commission_type: item.commission_type,
+        package_id: item.package_id
       };
-      
-      // Add commission fields if they exist
-      if (item.commission_rate !== undefined) {
-        invoiceItem.commission_rate = item.commission_rate;
-      }
-      if (item.commission_type !== undefined) {
-        invoiceItem.commission_type = item.commission_type;
-      }
-      if (item.package_id) {
-        invoiceItem.package_id = item.package_id;
-      }
       
       return invoiceItem;
     });
