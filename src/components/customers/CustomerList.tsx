@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -17,15 +18,68 @@ export function CustomerList() {
   const { data: customers, isLoading, error } = useQuery({
     queryKey: ['customers'],
     queryFn: async () => {
-      // Using the client_statistics view that joins customer info with statistics
+      // Fetch customers with their stats
       const { data, error } = await supabase
-        .from('client_statistics')
-        .select('*')
-        .order('last_invoice_date', { ascending: false })
-        .is('last_invoice_date', null)
+        .from('customers')
+        .select(`
+          id, 
+          first_name, 
+          last_name, 
+          email, 
+          city, 
+          state_province,
+          profile_id,
+          created_at
+        `)
+        .order('created_at', { ascending: false })
       
       if (error) throw error
-      return data as Customer[]
+      
+      // For customers with profile_id, fetch most recent profile data
+      const customersWithProfiles = await Promise.all(data.map(async (customer) => {
+        if (customer.profile_id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('first_name, last_name, email, phone_number')
+            .eq('id', customer.profile_id)
+            .maybeSingle()
+          
+          if (profile) {
+            // Overlay profile data (profile data takes precedence)
+            customer.first_name = profile.first_name || customer.first_name
+            customer.last_name = profile.last_name || customer.last_name
+            customer.email = profile.email || customer.email
+            customer.phone_number = profile.phone_number
+          }
+        }
+        
+        // Fetch customer statistics
+        let totalSpent = 0
+        let totalInvoices = 0
+        let lastInvoiceDate = null
+        
+        const { data: invoices } = await supabase
+          .from('invoices')
+          .select('id, total, created_at')
+          .eq('customer_id', customer.id)
+        
+        if (invoices && invoices.length > 0) {
+          totalInvoices = invoices.length
+          totalSpent = invoices.reduce((sum, invoice) => sum + (invoice.total || 0), 0)
+          lastInvoiceDate = invoices.sort((a, b) => 
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          )[0].created_at
+        }
+        
+        return {
+          ...customer,
+          total_spent: totalSpent,
+          total_invoices: totalInvoices,
+          last_invoice_date: lastInvoiceDate
+        }
+      }))
+      
+      return customersWithProfiles as Customer[]
     }
   })
 

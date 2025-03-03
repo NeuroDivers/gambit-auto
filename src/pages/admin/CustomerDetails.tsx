@@ -19,9 +19,9 @@ export default function CustomerDetails() {
   const { data: customer, isLoading } = useQuery({
     queryKey: ['customer', id],
     queryFn: async () => {
-      // Use customer_profiles view which joins customers and profiles
+      // Get customer data and join with profile data if available
       const { data: customerData, error: customerError } = await supabase
-        .from('customer_profiles')
+        .from('customers')
         .select(`
           id,
           profile_id,
@@ -35,10 +35,9 @@ export default function CustomerDetails() {
           updated_at,
           user_id,
           access_token,
+          email,
           first_name,
           last_name,
-          email,
-          phone_number,
           invoices (
             id,
             invoice_number,
@@ -46,7 +45,7 @@ export default function CustomerDetails() {
             status,
             created_at
           ),
-          quotes!quotes_client_id_fkey (
+          quotes:quotes_client_id_fkey (
             id,
             quote_number,
             total,
@@ -58,16 +57,35 @@ export default function CustomerDetails() {
         .single()
       
       if (customerError) throw customerError
-            
-      // We don't need to fetch the spending data here anymore
-      // as we're using a separate hook for this in the SpendingChart component
       
+      // If there's a profile_id, get the profile data to get the most up-to-date info
+      let profileData = null;
+      if (customerData.profile_id) {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, email, phone_number')
+          .eq('id', customerData.profile_id)
+          .single();
+          
+        if (!profileError && profile) {
+          // Merge profile data over customer data (profile takes precedence)
+          profileData = {
+            first_name: profile.first_name || customerData.first_name,
+            last_name: profile.last_name || customerData.last_name,
+            email: profile.email || customerData.email,
+            phone_number: profile.phone_number
+          };
+        }
+      }
+            
+      // Calculate summary statistics
       const total_spent = 0 // This will be calculated in the CustomerStats component
       const total_invoices = customerData?.invoices?.length || 0
       const total_work_orders = 0
 
       return {
         ...customerData,
+        ...(profileData || {}), // Overlay profile data if available
         total_spent,
         total_invoices,
         total_work_orders

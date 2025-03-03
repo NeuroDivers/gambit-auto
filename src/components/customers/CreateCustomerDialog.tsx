@@ -51,25 +51,44 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
   const handleSubmit = async (data: CustomerFormValues) => {
     setIsSubmitting(true)
     try {
-      // First create profile
-      const { data: newProfile, error: profileError } = await supabase
-        .from("profiles")
-        .insert([{
-          first_name: data.first_name,
-          last_name: data.last_name,
-          email: data.email,
-          phone_number: data.phone_number,
-        }])
-        .select()
-        .single()
-
-      if (profileError) throw profileError
+      // First, check if a profile with this email already exists
+      const { data: existingProfiles, error: profileQueryError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', data.email)
+        .maybeSingle()
       
-      // Now create customer linked to profile
+      if (profileQueryError) {
+        console.error("Error checking for existing profile:", profileQueryError)
+      }
+      
+      let profileId = existingProfiles?.id;
+      
+      // If no existing profile, create one
+      if (!profileId) {
+        const { data: newProfile, error: profileError } = await supabase
+          .from("profiles")
+          .insert([{
+            first_name: data.first_name,
+            last_name: data.last_name,
+            email: data.email,
+            phone_number: data.phone_number,
+          }])
+          .select('id')
+          .single()
+
+        if (profileError) throw profileError
+        profileId = newProfile.id
+      }
+      
+      // Now create or update customer linked to profile
       const { data: newCustomer, error: customerError } = await supabase
         .from("customers")
         .insert([{
-          profile_id: newProfile.id,
+          profile_id: profileId,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          email: data.email,
           street_address: data.street_address,
           city: data.city,
           state_province: data.state_province,
