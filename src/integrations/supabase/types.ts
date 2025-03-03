@@ -1939,6 +1939,8 @@ export type Database = {
       }
       staff: {
         Row: {
+          city: string | null
+          country: string | null
           created_at: string
           department: string | null
           emergency_contact_name: string | null
@@ -1948,11 +1950,17 @@ export type Database = {
           id: string
           is_full_time: boolean | null
           position: string | null
+          postal_code: string | null
           profile_id: string
+          state_province: string | null
           status: string | null
+          street_address: string | null
+          unit_number: string | null
           updated_at: string
         }
         Insert: {
+          city?: string | null
+          country?: string | null
           created_at?: string
           department?: string | null
           emergency_contact_name?: string | null
@@ -1962,11 +1970,17 @@ export type Database = {
           id?: string
           is_full_time?: boolean | null
           position?: string | null
+          postal_code?: string | null
           profile_id: string
+          state_province?: string | null
           status?: string | null
+          street_address?: string | null
+          unit_number?: string | null
           updated_at?: string
         }
         Update: {
+          city?: string | null
+          country?: string | null
           created_at?: string
           department?: string | null
           emergency_contact_name?: string | null
@@ -1976,8 +1990,12 @@ export type Database = {
           id?: string
           is_full_time?: boolean | null
           position?: string | null
+          postal_code?: string | null
           profile_id?: string
+          state_province?: string | null
           status?: string | null
+          street_address?: string | null
+          unit_number?: string | null
           updated_at?: string
         }
         Relationships: [

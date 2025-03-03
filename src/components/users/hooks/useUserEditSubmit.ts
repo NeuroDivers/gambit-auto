@@ -59,6 +59,13 @@ export const useUserEditSubmit = ({ userId, currentRole, staffData, onSuccess }:
             is_full_time: values.is_full_time,
             emergency_contact_name: values.emergency_contact_name,
             emergency_contact_phone: values.emergency_contact_phone,
+            // Add the address fields for staff table
+            street_address: values.street_address,
+            unit_number: values.unit_number,
+            city: values.city,
+            state_province: values.state_province,
+            postal_code: values.postal_code,
+            country: values.country
           })
           .eq("profile_id", userId);
 
@@ -77,6 +84,13 @@ export const useUserEditSubmit = ({ userId, currentRole, staffData, onSuccess }:
             is_full_time: values.is_full_time !== undefined ? values.is_full_time : true,
             emergency_contact_name: values.emergency_contact_name,
             emergency_contact_phone: values.emergency_contact_phone,
+            // Add the address fields for new staff creation
+            street_address: values.street_address,
+            unit_number: values.unit_number,
+            city: values.city,
+            state_province: values.state_province,
+            postal_code: values.postal_code,
+            country: values.country
           });
 
         if (newStaffError) throw newStaffError;

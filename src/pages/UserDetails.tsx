@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageTitle } from "@/components/shared/PageTitle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
-import { ArrowLeft, Calendar, Check, ChevronLeft, Loader2, Mail, Phone, Shield, UserRound, Briefcase, Building, IdCard, Calendar as CalendarIcon, ClockIcon } from "lucide-react";
+import { ArrowLeft, Calendar, Check, ChevronLeft, Loader2, Mail, Phone, Shield, UserRound, Briefcase, Building, IdCard, Calendar as CalendarIcon, ClockIcon, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
