@@ -1,4 +1,3 @@
-
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
@@ -31,7 +30,6 @@ export const UserFilters = ({
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // Fetch roles
   const { data: roles } = useQuery({
     queryKey: ["roles"],
     queryFn: async () => {
@@ -44,7 +42,6 @@ export const UserFilters = ({
     },
   });
 
-  // Fetch departments if showing staff filters
   const { data: departments } = useQuery({
     queryKey: ["staff_departments"],
     queryFn: async () => {
@@ -56,7 +53,6 @@ export const UserFilters = ({
       
       if (error) throw error;
 
-      // Get unique departments
       const uniqueDepartments = [...new Set(data.map(item => item.department))];
       return uniqueDepartments.filter(Boolean) as string[];
     },
@@ -147,7 +143,6 @@ export const UserFilters = ({
         </div>
       </div>
       
-      {/* Active Filters */}
       {(excludedRoles.length > 0 || roleFilter !== 'all' || (showStaffFilters && (departmentFilter !== 'all' || statusFilter !== 'all'))) && (
         <div className="flex flex-wrap gap-2">
           {roleFilter !== 'all' && roles && (
@@ -185,7 +180,7 @@ export const UserFilters = ({
             if (!role) return null;
             return (
               <Badge key={roleId} variant="secondary" className="flex items-center gap-1">
-                Excluding: {role.nicename}
+                Excluding {role.nicename}
                 <X 
                   className="h-3 w-3 cursor-pointer hover:text-destructive" 
                   onClick={() => onRemoveExcludedRole?.(roleId)}

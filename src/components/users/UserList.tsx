@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserCard } from "./UserCard";
@@ -20,9 +19,7 @@ export const UserList = ({
 }: UserListProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState(initialRoleFilter);
-  const [excludedRoles, setExcludedRoles] = useState<string[]>(
-    excludeClients ? [CLIENT_ROLE_ID] : []
-  );
+  const [excludedRoles, setExcludedRoles] = useState<string[]>([]);
   
   // Always fetch both data sources - this ensures we have data for both tabs
   const { data: regularUsers, isLoading: isLoadingUsers } = useUserData();
