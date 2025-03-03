@@ -1,7 +1,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { Vehicle, VehicleFormValues } from "../types"
+import { Vehicle } from "../types"
 import { toast } from "sonner"
 
 export function useVehicles(customerId: string) {
@@ -13,131 +13,86 @@ export function useVehicles(customerId: string) {
       const { data, error } = await supabase
         .from('vehicles')
         .select('*')
-        .eq('customer_id', customerId) // Updated from client_id to customer_id
+        .eq('customer_id', customerId)
         .order('is_primary', { ascending: false })
-
-      if (error) throw error
+        
+      if (error) {
+        toast.error("Failed to load vehicles")
+        console.error("Error loading vehicles:", error)
+        throw error
+      }
+      
       return data as Vehicle[]
     }
   })
 
   const addVehicle = useMutation({
-    mutationFn: async (values: VehicleFormValues) => {
-      console.log("Adding vehicle with values:", { ...values, customer_id: customerId })
-
-      // First, if this vehicle should be primary, unset any existing primary vehicles
-      if (values.is_primary) {
-        console.log("Unsetting existing primary vehicles")
-        const { error: updateError } = await supabase
-          .from('vehicles')
-          .update({ is_primary: false })
-          .eq('customer_id', customerId) // Updated from client_id to customer_id
-
-        if (updateError) {
-          console.error("Error unsetting primary vehicles:", updateError)
-          throw updateError
-        }
-      }
-
-      // Then insert the new vehicle
-      const { data, error: insertError } = await supabase
+    mutationFn: async (newVehicle: Omit<Vehicle, 'id' | 'created_at' | 'updated_at'>) => {
+      const { data, error } = await supabase
         .from('vehicles')
-        .insert([{ 
-          ...values, 
-          customer_id: customerId, // Updated from client_id to customer_id
-          is_primary: values.is_primary // Explicitly set is_primary
-        }])
+        .insert({ ...newVehicle, customer_id: customerId })
         .select()
         .single()
-
-      if (insertError) {
-        console.error("Error inserting vehicle:", insertError)
-        throw insertError
+      
+      if (error) {
+        toast.error("Failed to add vehicle")
+        throw error
       }
-
-      console.log("Successfully added vehicle:", data)
+      
+      toast.success("Vehicle added successfully")
       return data
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicles', customerId] })
-      console.log("Vehicle added successfully:", data)
-      if (data.is_primary) {
-        toast.success("Vehicle saved and set as primary")
-      } else {
-        toast.success("Vehicle saved successfully")
-      }
-    },
-    onError: (error) => {
-      console.error("Vehicle mutation error:", error)
-      toast.error("Failed to save vehicle")
     }
   })
 
   const updateVehicle = useMutation({
-    mutationFn: async ({ id, values }: { id: string; values: VehicleFormValues }) => {
-      console.log("Updating vehicle:", id, "with values:", values)
-
-      if (values.is_primary) {
-        console.log("Unsetting other primary vehicles")
-        const { error: updateError } = await supabase
-          .from('vehicles')
-          .update({ is_primary: false })
-          .eq('customer_id', customerId) // Updated from client_id to customer_id
-          .neq('id', id)
-
-        if (updateError) {
-          console.error("Error unsetting other primary vehicles:", updateError)
-          throw updateError
-        }
-      }
-
-      const { error } = await supabase
+    mutationFn: async (vehicle: Partial<Vehicle> & { id: string }) => {
+      const { data, error } = await supabase
         .from('vehicles')
-        .update({ ...values, is_primary: values.is_primary })
-        .eq('id', id)
-
+        .update(vehicle)
+        .eq('id', vehicle.id)
+        .select()
+        .single()
+      
       if (error) {
-        console.error("Error updating vehicle:", error)
+        toast.error("Failed to update vehicle")
         throw error
       }
-
-      console.log("Vehicle updated successfully")
-      return Promise.resolve()
+      
+      toast.success("Vehicle updated successfully")
+      return data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicles', customerId] })
-      toast.success("Vehicle updated successfully")
-    },
-    onError: (error) => {
-      console.error("Error updating vehicle:", error)
-      toast.error(error.message)
     }
   })
 
   const deleteVehicle = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (vehicleId: string) => {
       const { error } = await supabase
         .from('vehicles')
         .delete()
-        .eq('id', id)
-
-      if (error) throw error
-      return Promise.resolve()
+        .eq('id', vehicleId)
+      
+      if (error) {
+        toast.error("Failed to delete vehicle")
+        throw error
+      }
+      
+      toast.success("Vehicle deleted successfully")
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicles', customerId] })
-      toast.success("Vehicle deleted successfully")
-    },
-    onError: (error) => {
-      toast.error(error.message)
     }
   })
 
   return {
-    vehicles,
+    vehicles: vehicles || [],
     isLoading,
-    addVehicle,
-    updateVehicle,
-    deleteVehicle
+    addVehicle: addVehicle.mutate,
+    updateVehicle: updateVehicle.mutate,
+    deleteVehicle: deleteVehicle.mutate
   }
 }

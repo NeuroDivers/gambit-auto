@@ -524,6 +524,13 @@ export type Database = {
             foreignKeyName: "customer_history_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "customer_history_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -569,6 +576,13 @@ export type Database = {
             foreignKeyName: "customer_monthly_spending_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "customer_monthly_spending_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -587,6 +601,7 @@ export type Database = {
           last_name: string
           phone_number: string | null
           postal_code: string | null
+          profile_id: string | null
           state_province: string | null
           street_address: string | null
           unit_number: string | null
@@ -605,6 +620,7 @@ export type Database = {
           last_name: string
           phone_number?: string | null
           postal_code?: string | null
+          profile_id?: string | null
           state_province?: string | null
           street_address?: string | null
           unit_number?: string | null
@@ -623,13 +639,36 @@ export type Database = {
           last_name?: string
           phone_number?: string | null
           postal_code?: string | null
+          profile_id?: string | null
           state_province?: string | null
           street_address?: string | null
           unit_number?: string | null
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "staff_commission_analytics"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "customers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "staff_view"
+            referencedColumns: ["profile_id"]
+          },
+        ]
       }
       estimate_items: {
         Row: {
@@ -758,6 +797,13 @@ export type Database = {
             foreignKeyName: "quote_requests_client_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "quote_requests_client_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -875,6 +921,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "client_statistics"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_client_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "quotes_client_id_fkey"
@@ -1126,6 +1179,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "client_statistics"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_client_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "invoices_client_id_fkey"
@@ -1679,6 +1739,13 @@ export type Database = {
             foreignKeyName: "service_ratings_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "service_ratings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -2005,6 +2072,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "client_statistics"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicles_client_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "vehicles_client_id_fkey"
@@ -2405,6 +2479,13 @@ export type Database = {
             foreignKeyName: "work_orders_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "work_orders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -2425,6 +2506,49 @@ export type Database = {
           total_work_orders: number | null
         }
         Relationships: []
+      }
+      customer_profiles: {
+        Row: {
+          access_token: string | null
+          city: string | null
+          country: string | null
+          created_at: string | null
+          customer_id: string | null
+          email: string | null
+          first_name: string | null
+          last_name: string | null
+          phone_number: string | null
+          postal_code: string | null
+          profile_id: string | null
+          state_province: string | null
+          street_address: string | null
+          unit_number: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "staff_commission_analytics"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "customers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "staff_view"
+            referencedColumns: ["profile_id"]
+          },
+        ]
       }
       estimate_statistics: {
         Row: {

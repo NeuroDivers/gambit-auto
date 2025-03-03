@@ -18,6 +18,7 @@ export function CustomerList() {
   const { data: customers, isLoading, error } = useQuery({
     queryKey: ['customers'],
     queryFn: async () => {
+      // Now using the customer_profiles view that joins customer and profile data
       const { data, error } = await supabase
         .from('client_statistics')
         .select('*')

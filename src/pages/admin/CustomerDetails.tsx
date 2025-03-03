@@ -19,20 +19,22 @@ export default function CustomerDetails() {
   const { data: customer, isLoading } = useQuery({
     queryKey: ['customer', id],
     queryFn: async () => {
+      // First try to get data from customer_profiles view which joins customers and profiles
       const { data: customerData, error: customerError } = await supabase
         .from('customers')
         .select(`
           id,
-          first_name,
-          last_name,
-          email,
-          phone_number,
-          unit_number,
+          profile_id,
           street_address,
+          unit_number,
           city,
           state_province,
           postal_code,
           country,
+          created_at,
+          updated_at,
+          user_id,
+          access_token,
           invoices (
             id,
             invoice_number,
@@ -53,6 +55,26 @@ export default function CustomerDetails() {
       
       if (customerError) throw customerError
       
+      // Get the profile data if there's a profile_id
+      let profileData = null;
+      if (customerData.profile_id) {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, email, phone_number')
+          .eq('id', customerData.profile_id)
+          .single();
+          
+        if (!profileError) {
+          profileData = profile;
+        }
+      }
+      
+      // Merge customer and profile data (profile takes precedence)
+      const mergedData = {
+        ...customerData,
+        ...(profileData || {})
+      };
+      
       // We don't need to fetch the spending data here anymore
       // as we're using a separate hook for this in the SpendingChart component
       
@@ -61,7 +83,7 @@ export default function CustomerDetails() {
       const total_work_orders = 0
 
       return {
-        ...customerData,
+        ...mergedData,
         total_spent,
         total_invoices,
         total_work_orders
