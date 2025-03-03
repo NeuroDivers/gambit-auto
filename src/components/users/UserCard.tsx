@@ -54,7 +54,7 @@ export const UserCard = ({ user, isStaffView = false }: UserCardProps) => {
     : user.email;
 
   const handleCardClick = () => {
-    navigate(`/users/${user.id}`);
+    navigate(`/staff/${user.id}`);
   };
 
   // Staff-specific properties

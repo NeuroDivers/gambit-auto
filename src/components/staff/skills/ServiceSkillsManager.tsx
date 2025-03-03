@@ -1,5 +1,5 @@
 
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
@@ -21,6 +21,8 @@ interface ServiceSkillsManagerProps {
 }
 
 export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
+  const queryClient = useQueryClient()
+  
   const { data: currentUser } = useQuery({
     queryKey: ['current-user'],
     queryFn: async () => {
@@ -29,7 +31,46 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
     }
   })
 
-  const { data: skills, isLoading, refetch } = useQuery({
+  // Use mutation instead of direct function call for better error handling
+  const updateSkillMutation = useMutation({
+    mutationFn: async ({ 
+      skillId, 
+      targetId, 
+      serviceId, 
+      isActive 
+    }: { 
+      skillId: string; 
+      targetId: string; 
+      serviceId: string; 
+      isActive: boolean 
+    }) => {
+      if (skillId) {
+        // Update existing skill
+        const { error } = await supabase
+          .from('staff_service_skills')
+          .update({ is_active: !isActive })
+          .eq('id', skillId)
+
+        if (error) throw error
+      } else {
+        // Create new skill
+        const { error } = await supabase
+          .from('staff_service_skills')
+          .insert({
+            profile_id: targetId,
+            service_id: serviceId,
+            is_active: true
+          })
+
+        if (error) throw error
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['service-skills'] })
+    }
+  })
+
+  const { data: skills, isLoading } = useQuery({
     queryKey: ['service-skills', profileId || currentUser?.id],
     queryFn: async () => {
       const targetId = profileId || currentUser?.id
@@ -83,38 +124,22 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
 
       const serviceName = skills?.find(skill => skill.service_id === serviceId)?.service_types.name
 
-      if (skillId) {
-        // Update existing skill
-        const { error } = await supabase
-          .from('staff_service_skills')
-          .update({ is_active: !currentStatus })
-          .eq('id', skillId)
-
-        if (error) throw error
-      } else {
-        // Create new skill
-        const { error } = await supabase
-          .from('staff_service_skills')
-          .insert({
-            profile_id: targetId,
-            service_id: serviceId,
-            is_active: true
-          })
-
-        if (error) throw error
-      }
+      await updateSkillMutation.mutateAsync({ 
+        skillId, 
+        targetId, 
+        serviceId, 
+        isActive: currentStatus 
+      })
 
       // Show success toast with specific message
       const action = currentStatus ? "disabled" : "enabled"
       toast.success(`${serviceName} skill ${action}`, {
         description: `You have successfully ${action} this service skill.`
       })
-      
-      refetch()
     } catch (error) {
       console.error('Error updating skill:', error)
       toast.error("Failed to update skill", {
-        description: "There was an error updating your service skill. Please try again."
+        description: "There was an error updating the service skill. Please try again."
       })
     }
   }
