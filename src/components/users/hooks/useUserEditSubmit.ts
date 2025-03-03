@@ -23,7 +23,7 @@ export const useUserEditSubmit = ({ userId, currentRole, staffData, onSuccess }:
       setIsSubmitting(true);
       console.log("Updating profile for user:", userId, "with values:", values);
       
-      // Update the profile information
+      // Update the profile information - remove address fields if this is a staff user
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
@@ -32,13 +32,15 @@ export const useUserEditSubmit = ({ userId, currentRole, staffData, onSuccess }:
           role_id: values.role,
           email: values.email,
           phone_number: values.phone_number,
-          // Detailed address fields
-          street_address: values.street_address,
-          unit_number: values.unit_number,
-          city: values.city,
-          state_province: values.state_province,
-          postal_code: values.postal_code,
-          country: values.country,
+          // Only include address fields for non-staff users
+          ...(staffData ? {} : {
+            street_address: values.street_address,
+            unit_number: values.unit_number,
+            city: values.city,
+            state_province: values.state_province,
+            postal_code: values.postal_code,
+            country: values.country,
+          }),
           bio: values.bio
         })
         .eq("id", userId);
@@ -47,7 +49,7 @@ export const useUserEditSubmit = ({ userId, currentRole, staffData, onSuccess }:
 
       // Check if this user has staff data
       if (staffData) {
-        // Update staff info if it exists
+        // Update staff info if it exists, including address fields
         const { error: staffError } = await supabase
           .from("staff")
           .update({

@@ -215,63 +215,113 @@ export default function UserDetails() {
                     </dt>
                     <dd>{user?.role?.nicename || 'No role assigned'}</dd>
                   </div>
-                  <div>
-                    <dt className="text-sm text-muted-foreground">Address</dt>
-                    <dd>{user?.address || 'Not provided'}</dd>
-                  </div>
                 </dl>
               </CardContent>
             </Card>
 
             {staffData && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Briefcase className="h-5 w-5" />
-                    Staff Details
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <dl className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <dt className="text-sm text-muted-foreground">
-                        <IdCard className="h-4 w-4" />
-                      </dt>
-                      <dd>Employee ID: {staffData?.employee_id || 'Not assigned'}</dd>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <dt className="text-sm text-muted-foreground">
-                        <Briefcase className="h-4 w-4" />
-                      </dt>
-                      <dd>Position: {staffData?.position || 'Not specified'}</dd>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <dt className="text-sm text-muted-foreground">
-                        <Building className="h-4 w-4" />
-                      </dt>
-                      <dd>Department: {staffData?.department || 'Not specified'}</dd>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <dt className="text-sm text-muted-foreground">
-                        <CalendarIcon className="h-4 w-4" />
-                      </dt>
-                      <dd>Hired: {staffData?.employment_date ? format(new Date(staffData.employment_date), 'PPP') : 'Not specified'}</dd>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <dt className="text-sm text-muted-foreground">
-                        <ClockIcon className="h-4 w-4" />
-                      </dt>
-                      <dd>Status: {staffData?.status || 'Active'}</dd>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <dt className="text-sm text-muted-foreground">
-                        Employment:
-                      </dt>
-                      <dd>{staffData?.is_full_time ? 'Full-time' : 'Part-time'}</dd>
-                    </div>
-                  </dl>
-                </CardContent>
-              </Card>
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Briefcase className="h-5 w-5" />
+                      Staff Details
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <dl className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <dt className="text-sm text-muted-foreground">
+                          <IdCard className="h-4 w-4" />
+                        </dt>
+                        <dd>Employee ID: {staffData?.employee_id || 'Not assigned'}</dd>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <dt className="text-sm text-muted-foreground">
+                          <Briefcase className="h-4 w-4" />
+                        </dt>
+                        <dd>Position: {staffData?.position || 'Not specified'}</dd>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <dt className="text-sm text-muted-foreground">
+                          <Building className="h-4 w-4" />
+                        </dt>
+                        <dd>Department: {staffData?.department || 'Not specified'}</dd>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <dt className="text-sm text-muted-foreground">
+                          <CalendarIcon className="h-4 w-4" />
+                        </dt>
+                        <dd>Hired: {staffData?.employment_date ? format(new Date(staffData.employment_date), 'PPP') : 'Not specified'}</dd>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <dt className="text-sm text-muted-foreground">
+                          <ClockIcon className="h-4 w-4" />
+                        </dt>
+                        <dd>Status: {staffData?.status || 'Active'}</dd>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <dt className="text-sm text-muted-foreground">
+                          Employment:
+                        </dt>
+                        <dd>{staffData?.is_full_time ? 'Full-time' : 'Part-time'}</dd>
+                      </div>
+                    </dl>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MapPin className="h-5 w-5" />
+                      Staff Address
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <dl className="space-y-2">
+                      {staffData?.street_address && (
+                        <div>
+                          <dt className="text-sm text-muted-foreground">Street Address</dt>
+                          <dd>{staffData.street_address}</dd>
+                        </div>
+                      )}
+                      {staffData?.unit_number && (
+                        <div>
+                          <dt className="text-sm text-muted-foreground">Unit/Apt #</dt>
+                          <dd>{staffData.unit_number}</dd>
+                        </div>
+                      )}
+                      {staffData?.city && (
+                        <div>
+                          <dt className="text-sm text-muted-foreground">City</dt>
+                          <dd>{staffData.city}</dd>
+                        </div>
+                      )}
+                      {staffData?.state_province && (
+                        <div>
+                          <dt className="text-sm text-muted-foreground">State/Province</dt>
+                          <dd>{staffData.state_province}</dd>
+                        </div>
+                      )}
+                      {staffData?.postal_code && (
+                        <div>
+                          <dt className="text-sm text-muted-foreground">Postal/ZIP Code</dt>
+                          <dd>{staffData.postal_code}</dd>
+                        </div>
+                      )}
+                      {staffData?.country && (
+                        <div>
+                          <dt className="text-sm text-muted-foreground">Country</dt>
+                          <dd>{staffData.country}</dd>
+                        </div>
+                      )}
+                      {!staffData?.street_address && !staffData?.city && !staffData?.postal_code && (
+                        <p className="text-sm text-muted-foreground">No address information provided</p>
+                      )}
+                    </dl>
+                  </CardContent>
+                </Card>
+              </>
             )}
 
             <Card>
