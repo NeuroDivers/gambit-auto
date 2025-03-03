@@ -23,7 +23,7 @@ export const ServiceCardHeader = ({
 
   return <CardHeader className="!p-0">
       <div className="flex flex-wrap gap-2 items-start">
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 md:p-2">
           <div className="flex items-center gap-2">
             <CardTitle className="text-lg truncate">{service.name}</CardTitle>
             {hasSubServices && <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={onToggleExpand}>
