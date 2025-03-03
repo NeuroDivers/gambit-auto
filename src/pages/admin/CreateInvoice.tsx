@@ -129,7 +129,7 @@ export default function CreateInvoice() {
   }, [preselectedClient?.id, form])
 
   return (
-    <div className="min-h-screen">
+    <div className="container mx-auto">
       <div className="flex items-center gap-4 p-6 border-b">
         <Button
           variant="ghost"
@@ -144,12 +144,14 @@ export default function CreateInvoice() {
         />
       </div>
       
-      <EditInvoiceForm
-        form={form}
-        onSubmit={onSubmit}
-        isPending={false}
-        invoiceId={undefined}
-      />
+      <div className="p-6">
+        <EditInvoiceForm
+          form={form}
+          onSubmit={onSubmit}
+          isPending={false}
+          invoiceId={undefined}
+        />
+      </div>
     </div>
   )
 }

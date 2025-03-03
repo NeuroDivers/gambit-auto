@@ -514,36 +514,6 @@ export type Database = {
           },
         ]
       }
-      employees: {
-        Row: {
-          active: boolean | null
-          created_at: string
-          email: string
-          id: string
-          name: string
-          role: Database["public"]["Enums"]["user_role"]
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean | null
-          created_at?: string
-          email: string
-          id?: string
-          name: string
-          role?: Database["public"]["Enums"]["user_role"]
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean | null
-          created_at?: string
-          email?: string
-          id?: string
-          name?: string
-          role?: Database["public"]["Enums"]["user_role"]
-          updated_at?: string
-        }
-        Relationships: []
-      }
       invoice_items: {
         Row: {
           assigned_profile_id: string | null
@@ -949,12 +919,9 @@ export type Database = {
       }
       profiles: {
         Row: {
-          address: string | null
           avatar_url: string | null
           bio: string | null
           calendar_settings: Json | null
-          city: string | null
-          country: string | null
           created_at: string
           email: string | null
           first_name: string | null
@@ -962,20 +929,13 @@ export type Database = {
           last_name: string | null
           notification_preferences: Json | null
           phone_number: string | null
-          postal_code: string | null
           role_id: string
-          state_province: string | null
-          street_address: string | null
-          unit_number: string | null
           updated_at: string
         }
         Insert: {
-          address?: string | null
           avatar_url?: string | null
           bio?: string | null
           calendar_settings?: Json | null
-          city?: string | null
-          country?: string | null
           created_at?: string
           email?: string | null
           first_name?: string | null
@@ -983,20 +943,13 @@ export type Database = {
           last_name?: string | null
           notification_preferences?: Json | null
           phone_number?: string | null
-          postal_code?: string | null
           role_id: string
-          state_province?: string | null
-          street_address?: string | null
-          unit_number?: string | null
           updated_at?: string
         }
         Update: {
-          address?: string | null
           avatar_url?: string | null
           bio?: string | null
           calendar_settings?: Json | null
-          city?: string | null
-          country?: string | null
           created_at?: string
           email?: string | null
           first_name?: string | null
@@ -1004,11 +957,7 @@ export type Database = {
           last_name?: string | null
           notification_preferences?: Json | null
           phone_number?: string | null
-          postal_code?: string | null
           role_id?: string
-          state_province?: string | null
-          street_address?: string | null
-          unit_number?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1645,7 +1594,6 @@ export type Database = {
           id: string
           name: string
           parent_service_id: string | null
-          price: number | null
           pricing_model:
             | Database["public"]["Enums"]["service_pricing_model"]
             | null
@@ -1667,7 +1615,6 @@ export type Database = {
           id?: string
           name: string
           parent_service_id?: string | null
-          price?: number | null
           pricing_model?:
             | Database["public"]["Enums"]["service_pricing_model"]
             | null
@@ -1689,7 +1636,6 @@ export type Database = {
           id?: string
           name?: string
           parent_service_id?: string | null
-          price?: number | null
           pricing_model?:
             | Database["public"]["Enums"]["service_pricing_model"]
             | null
