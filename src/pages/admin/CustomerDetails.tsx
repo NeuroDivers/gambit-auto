@@ -71,7 +71,7 @@ export default function CustomerDetails() {
         .select('id, invoice_number, total, status, created_at, vehicle_id')
         .eq('customer_id', id);
       
-      // Get quotes
+      // Get quotes/estimates
       const { data: quotes } = await supabase
         .from('estimates')
         .select('id, estimate_number as quote_number, total, status, created_at, vehicle_id')
@@ -82,7 +82,7 @@ export default function CustomerDetails() {
       const total_invoices = invoices?.length || 0;
       const total_work_orders = 0; // This will be calculated separately
 
-      return {
+      const customerResult = {
         ...customerData,
         profile: profileData,
         invoices: invoices || [],
@@ -90,7 +90,9 @@ export default function CustomerDetails() {
         total_spent,
         total_invoices,
         total_work_orders
-      } as Customer
+      } as Customer;
+      
+      return customerResult;
     }
   })
 

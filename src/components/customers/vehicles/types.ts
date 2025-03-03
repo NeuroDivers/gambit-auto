@@ -1,7 +1,7 @@
 
 export interface Vehicle {
   id: string
-  customer_id: string // Updated from client_id to customer_id
+  customer_id: string
   make: string
   model: string
   year: number

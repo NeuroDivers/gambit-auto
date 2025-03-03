@@ -1,16 +1,16 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Vehicle } from "@/components/customers/types";
+import { Vehicle as CustomerVehicle } from "@/components/customers/types";
+import { Vehicle } from "./types";
 import { VehicleCard } from "./VehicleCard";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-// We would typically add VehicleFormDialog here for adding new vehicles
 
 interface VehicleListProps {
   customerId: string;
-  vehicles?: Vehicle[];
+  vehicles?: CustomerVehicle[];
 }
 
 export function VehicleList({ customerId, vehicles: initialVehicles }: VehicleListProps) {
@@ -26,10 +26,20 @@ export function VehicleList({ customerId, vehicles: initialVehicles }: VehicleLi
         .eq("customer_id", customerId);
 
       if (error) throw error;
-      return data as Vehicle[];
+      
+      // Ensure is_primary is set for all vehicles
+      const processedData = data.map(vehicle => ({
+        ...vehicle,
+        is_primary: vehicle.is_primary === null ? false : vehicle.is_primary
+      })) as Vehicle[];
+      
+      return processedData;
     },
     enabled: !initialVehicles,
-    initialData: initialVehicles,
+    initialData: initialVehicles ? initialVehicles.map(v => ({
+      ...v,
+      is_primary: v.is_primary === null ? false : !!v.is_primary
+    })) as Vehicle[] : undefined,
   });
 
   if (isLoading) {

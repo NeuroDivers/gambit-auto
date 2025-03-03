@@ -46,7 +46,7 @@ export function CustomerList() {
             .maybeSingle()
           
           if (profileData) {
-            // Create a profile property rather than overriding customer fields
+            // Create a profile property
             customer.profile = profileData
             
             // Use profile data if customer fields are empty

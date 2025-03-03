@@ -834,6 +834,7 @@ export type Database = {
           updated_at: string
           vehicle_body_class: string | null
           vehicle_doors: number | null
+          vehicle_id: string | null
           vehicle_make: string | null
           vehicle_model: string | null
           vehicle_trim: string | null
@@ -864,6 +865,7 @@ export type Database = {
           updated_at?: string
           vehicle_body_class?: string | null
           vehicle_doors?: number | null
+          vehicle_id?: string | null
           vehicle_make?: string | null
           vehicle_model?: string | null
           vehicle_trim?: string | null
@@ -894,6 +896,7 @@ export type Database = {
           updated_at?: string
           vehicle_body_class?: string | null
           vehicle_doors?: number | null
+          vehicle_id?: string | null
           vehicle_make?: string | null
           vehicle_model?: string | null
           vehicle_trim?: string | null
@@ -901,6 +904,13 @@ export type Database = {
           vehicle_year?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "estimates_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "quotes_client_email_fkey"
             columns: ["customer_email"]
@@ -1082,6 +1092,7 @@ export type Database = {
           id: string
           invoice_number: string
           is_archived: boolean | null
+          is_finalized: boolean | null
           notes: string | null
           payment_status: string
           qst_amount: number
@@ -1093,6 +1104,7 @@ export type Database = {
           updated_at: string
           vehicle_body_class: string | null
           vehicle_doors: number | null
+          vehicle_id: string | null
           vehicle_make: string | null
           vehicle_model: string | null
           vehicle_trim: string | null
@@ -1118,6 +1130,7 @@ export type Database = {
           id?: string
           invoice_number: string
           is_archived?: boolean | null
+          is_finalized?: boolean | null
           notes?: string | null
           payment_status?: string
           qst_amount?: number
@@ -1129,6 +1142,7 @@ export type Database = {
           updated_at?: string
           vehicle_body_class?: string | null
           vehicle_doors?: number | null
+          vehicle_id?: string | null
           vehicle_make?: string | null
           vehicle_model?: string | null
           vehicle_trim?: string | null
@@ -1154,6 +1168,7 @@ export type Database = {
           id?: string
           invoice_number?: string
           is_archived?: boolean | null
+          is_finalized?: boolean | null
           notes?: string | null
           payment_status?: string
           qst_amount?: number
@@ -1165,6 +1180,7 @@ export type Database = {
           updated_at?: string
           vehicle_body_class?: string | null
           vehicle_doors?: number | null
+          vehicle_id?: string | null
           vehicle_make?: string | null
           vehicle_model?: string | null
           vehicle_trim?: string | null
@@ -1192,6 +1208,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
             referencedColumns: ["id"]
           },
           {
