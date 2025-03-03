@@ -14,6 +14,9 @@ export type User = {
   email: string;
   first_name?: string;
   last_name?: string;
+  phone_number?: string;
+  address?: string;
+  bio?: string;
   role?: UserRole;
 };
 
@@ -22,6 +25,9 @@ type ProfileResponse = {
   email: string;
   first_name: string | null;
   last_name: string | null;
+  phone_number: string | null;
+  address: string | null;
+  bio: string | null;
   role: UserRole;
 };
 
@@ -49,6 +55,9 @@ export const useUserData = () => {
           email,
           first_name,
           last_name,
+          phone_number,
+          address,
+          bio,
           role:role_id (
             id,
             name,
@@ -71,6 +80,9 @@ export const useUserData = () => {
         email: profile.email,
         first_name: profile.first_name || undefined,
         last_name: profile.last_name || undefined,
+        phone_number: profile.phone_number || undefined,
+        address: profile.address || undefined,
+        bio: profile.bio || undefined,
         role: profile.role
       }));
 
@@ -97,6 +109,8 @@ export const useUserData = () => {
                   email: client.email || allUsers[userIndex].email,
                   first_name: client.first_name || allUsers[userIndex].first_name,
                   last_name: client.last_name || allUsers[userIndex].last_name,
+                  phone_number: client.phone_number || allUsers[userIndex].phone_number,
+                  address: client.address || allUsers[userIndex].address,
                 };
               }
             });
