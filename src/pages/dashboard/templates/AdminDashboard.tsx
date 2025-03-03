@@ -145,7 +145,7 @@ export function AdminDashboard({ profile }: { profile: any }) {
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <Link to="/quotes">
+            <Link to="/estimates">
               <Button className="w-full" variant="outline">Manage Estimates</Button>
             </Link>
           </CardContent>

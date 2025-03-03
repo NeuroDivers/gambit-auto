@@ -16,7 +16,7 @@ export function ClientQuotes({ client }: ClientQuotesProps) {
             <CardContent className="p-4">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="font-medium">Quote #{quote.quote_number}</p>
+                  <p className="font-medium">Estimate #{quote.quote_number}</p>
                   <p className="text-sm text-muted-foreground">
                     {new Date(quote.created_at).toLocaleDateString()}
                   </p>
