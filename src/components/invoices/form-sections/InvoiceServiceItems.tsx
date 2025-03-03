@@ -4,6 +4,7 @@ import { InvoiceItemsFields } from "../form-sections/InvoiceItemsFields"
 import { UseFormReturn } from "react-hook-form"
 import { InvoiceFormValues, InvoiceItem } from "../types"
 import { InvoiceTaxSummary } from "../form-sections/InvoiceTaxSummary"
+import { ServiceItemType } from "@/types/service-item"
 
 type InvoiceServiceItemsProps = {
   form: UseFormReturn<InvoiceFormValues>
@@ -17,9 +18,20 @@ export function InvoiceServiceItems({ form }: InvoiceServiceItemsProps) {
     form.setValue('total', total)
   }
 
-  const handleItemsChange = (items: InvoiceItem[] | any[]) => {
+  const handleItemsChange = (items: InvoiceItem[] | ServiceItemType[]) => {
     // Ensure we're setting the correct type (InvoiceItem[])
-    form.setValue('invoice_items', items as InvoiceItem[]);
+    const invoiceItems = items.map(item => ({
+      service_id: item.service_id,
+      service_name: item.service_name,
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      description: item.description || "",
+      commission_rate: (item as any).commission_rate,
+      commission_type: (item as any).commission_type,
+      package_id: (item as any).package_id
+    }));
+    
+    form.setValue('invoice_items', invoiceItems as InvoiceItem[]);
   };
 
   return (

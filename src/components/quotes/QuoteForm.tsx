@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { ServiceItemType } from "@/types/service-item"
 import { useMutation } from "@tanstack/react-query"
@@ -7,6 +8,7 @@ import { InvoiceItemsFields } from "@/components/invoices/form-sections/InvoiceI
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
+import { Estimate } from "./types"
 
 interface QuoteFormProps {
   quoteId?: string
@@ -14,58 +16,132 @@ interface QuoteFormProps {
   defaultNote?: string
   onQuoteCreated?: () => void
   onCancel?: () => void
+  // Add missing props that are being passed from dialogs
+  onSuccess?: () => void
+  quote?: Estimate
 }
 
-export function QuoteForm({ quoteId, requestId, defaultNote, onQuoteCreated, onCancel }: QuoteFormProps) {
-  const [services, setServices] = useState<ServiceItemType[]>([])
-  const [note, setNote] = useState(defaultNote || "")
+export function QuoteForm({ 
+  quoteId, 
+  requestId, 
+  defaultNote, 
+  onQuoteCreated, 
+  onCancel,
+  onSuccess,
+  quote 
+}: QuoteFormProps) {
+  const [services, setServices] = useState<ServiceItemType[]>(
+    // If quote exists, initialize with its items
+    quote?.quote_items?.map(item => ({
+      service_id: item.service_id,
+      service_name: item.service_name,
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      description: item.description || "",
+      commission_rate: null,
+      commission_type: null,
+      package_id: undefined
+    })) || []
+  )
+  const [note, setNote] = useState(defaultNote || quote?.notes || "")
   const [saving, setSaving] = useState(false)
 
   const { mutate: handleSubmitQuote } = useMutation({
     mutationFn: async () => {
-      if (!requestId) throw new Error("Request ID is required")
+      if (quote) {
+        // Update existing quote
+        const { data: updatedQuote, error } = await supabase
+          .from('quotes')
+          .update({
+            notes: note
+          })
+          .eq('id', quote.id)
+          .select()
+          .single()
 
-      const { data: quote, error } = await supabase
-        .from('quotes')
-        .insert({
-          quote_request_id: requestId,
-          notes: note
-        })
-        .select()
-        .single()
+        if (error) throw error
 
-      if (error) throw error
+        // Delete existing items and add new ones
+        if (updatedQuote) {
+          // First delete existing items
+          const { error: deleteError } = await supabase
+            .from('quote_items')
+            .delete()
+            .eq('quote_id', updatedQuote.id)
 
-      if (quote && services.length > 0) {
-        const { error: itemsError } = await supabase
-          .from('quote_items')
-          .insert(
-            services.map(item => ({
-              quote_id: quote.id,
-              service_id: item.service_id,
-              service_name: item.service_name,
-              quantity: item.quantity,
-              unit_price: item.unit_price,
-              description: item.description,
-              commission_rate: item.commission_rate,
-              commission_type: item.commission_type
-            }))
-          )
+          if (deleteError) throw deleteError
 
-        if (itemsError) throw itemsError
+          // Then add new items
+          if (services.length > 0) {
+            const { error: itemsError } = await supabase
+              .from('quote_items')
+              .insert(
+                services.map(item => ({
+                  quote_id: updatedQuote.id,
+                  service_id: item.service_id,
+                  service_name: item.service_name,
+                  quantity: item.quantity,
+                  unit_price: item.unit_price,
+                  description: item.description,
+                  commission_rate: item.commission_rate,
+                  commission_type: item.commission_type
+                }))
+              )
+
+            if (itemsError) throw itemsError
+          }
+        }
+
+        return updatedQuote
+      } else if (requestId) {
+        // Create new quote
+        const { data: newQuote, error } = await supabase
+          .from('quotes')
+          .insert({
+            quote_request_id: requestId,
+            notes: note
+          })
+          .select()
+          .single()
+
+        if (error) throw error
+
+        if (newQuote && services.length > 0) {
+          const { error: itemsError } = await supabase
+            .from('quote_items')
+            .insert(
+              services.map(item => ({
+                quote_id: newQuote.id,
+                service_id: item.service_id,
+                service_name: item.service_name,
+                quantity: item.quantity,
+                unit_price: item.unit_price,
+                description: item.description,
+                commission_rate: item.commission_rate,
+                commission_type: item.commission_type
+              }))
+            )
+
+          if (itemsError) throw itemsError
+        }
+
+        return newQuote
+      } else {
+        throw new Error("Either quote or requestId is required")
       }
-
-      return quote
     },
     onSuccess: (data) => {
-      toast.success("Quote created successfully")
+      toast.success(quote ? "Quote updated successfully" : "Quote created successfully")
       if (onQuoteCreated) {
         onQuoteCreated()
       }
+      if (onSuccess) {
+        onSuccess()
+      }
     },
     onError: (error) => {
-      console.error('Error creating quote:', error)
-      toast.error("Failed to create quote")
+      console.error('Error handling quote:', error)
+      toast.error(quote ? "Failed to update quote" : "Failed to create quote")
     },
     onSettled: () => {
       setSaving(false)
@@ -102,7 +178,7 @@ export function QuoteForm({ quoteId, requestId, defaultNote, onQuoteCreated, onC
           setSaving(true)
           handleSubmitQuote()
         }} disabled={saving}>
-          {saving ? 'Creating...' : 'Create Quote'}
+          {saving ? (quote ? 'Updating...' : 'Creating...') : (quote ? 'Update Quote' : 'Create Quote')}
         </Button>
       </div>
     </div>
