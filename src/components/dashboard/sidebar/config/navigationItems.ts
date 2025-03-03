@@ -81,10 +81,10 @@ export const navigationItems: NavSection[] = [
     section: "Business",
     items: [
       {
-        title: "Clients",
-        href: "/clients",
+        title: "Customers",
+        href: "/customers",
         icon: Users,
-        permission: { resource: "clients", type: "page_access" }
+        permission: { resource: "customers", type: "page_access" }
       },
       {
         title: "Service Types",

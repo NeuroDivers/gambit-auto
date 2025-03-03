@@ -310,63 +310,6 @@ export type Database = {
           },
         ]
       }
-      clients: {
-        Row: {
-          access_token: string | null
-          address: string | null
-          city: string | null
-          country: string | null
-          created_at: string
-          email: string
-          first_name: string
-          id: string
-          last_name: string
-          phone_number: string | null
-          postal_code: string | null
-          state_province: string | null
-          street_address: string | null
-          unit_number: string | null
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          access_token?: string | null
-          address?: string | null
-          city?: string | null
-          country?: string | null
-          created_at?: string
-          email: string
-          first_name: string
-          id?: string
-          last_name: string
-          phone_number?: string | null
-          postal_code?: string | null
-          state_province?: string | null
-          street_address?: string | null
-          unit_number?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          access_token?: string | null
-          address?: string | null
-          city?: string | null
-          country?: string | null
-          created_at?: string
-          email?: string
-          first_name?: string
-          id?: string
-          last_name?: string
-          phone_number?: string | null
-          postal_code?: string | null
-          state_province?: string | null
-          street_address?: string | null
-          unit_number?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       commission_transactions: {
         Row: {
           amount: number
@@ -514,6 +457,317 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          access_token: string | null
+          address: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          phone_number: string | null
+          postal_code: string | null
+          state_province: string | null
+          street_address: string | null
+          unit_number: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          phone_number?: string | null
+          postal_code?: string | null
+          state_province?: string | null
+          street_address?: string | null
+          unit_number?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          phone_number?: string | null
+          postal_code?: string | null
+          state_province?: string | null
+          street_address?: string | null
+          unit_number?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      estimate_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          details: Json | null
+          estimate_id: string | null
+          estimate_request_id: string
+          id: string
+          quantity: number
+          service_id: string | null
+          service_name: string
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          details?: Json | null
+          estimate_id?: string | null
+          estimate_request_id: string
+          id?: string
+          quantity?: number
+          service_id?: string | null
+          service_name: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          details?: Json | null
+          estimate_id?: string | null
+          estimate_request_id?: string
+          id?: string
+          quantity?: number
+          service_id?: string | null
+          service_name?: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["estimate_id"]
+            isOneToOne: false
+            referencedRelation: "estimates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_items_quote_request_id_fkey"
+            columns: ["estimate_request_id"]
+            isOneToOne: false
+            referencedRelation: "estimate_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estimate_requests: {
+        Row: {
+          client_response: string | null
+          created_at: string
+          customer_id: string
+          description: string | null
+          estimated_amount: number | null
+          id: string
+          is_archived: boolean | null
+          media_urls: string[] | null
+          service_details: Json | null
+          service_estimates: Json | null
+          service_ids: string[]
+          status: string
+          updated_at: string
+          vehicle_make: string | null
+          vehicle_model: string | null
+          vehicle_vin: string | null
+          vehicle_year: number | null
+        }
+        Insert: {
+          client_response?: string | null
+          created_at?: string
+          customer_id: string
+          description?: string | null
+          estimated_amount?: number | null
+          id?: string
+          is_archived?: boolean | null
+          media_urls?: string[] | null
+          service_details?: Json | null
+          service_estimates?: Json | null
+          service_ids?: string[]
+          status?: string
+          updated_at?: string
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_vin?: string | null
+          vehicle_year?: number | null
+        }
+        Update: {
+          client_response?: string | null
+          created_at?: string
+          customer_id?: string
+          description?: string | null
+          estimated_amount?: number | null
+          id?: string
+          is_archived?: boolean | null
+          media_urls?: string[] | null
+          service_details?: Json | null
+          service_estimates?: Json | null
+          service_ids?: string[]
+          status?: string
+          updated_at?: string
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_vin?: string | null
+          vehicle_year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_requests_client_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "client_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_requests_client_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estimates: {
+        Row: {
+          created_at: string
+          customer_address: string | null
+          customer_city: string | null
+          customer_country: string | null
+          customer_email: string | null
+          customer_first_name: string | null
+          customer_id: string | null
+          customer_last_name: string | null
+          customer_phone: string | null
+          customer_postal_code: string | null
+          customer_state_province: string | null
+          customer_street_address: string | null
+          customer_unit_number: string | null
+          estimate_number: string
+          id: string
+          notes: string | null
+          status: string
+          subtotal: number
+          tax_amount: number
+          total: number
+          updated_at: string
+          vehicle_body_class: string | null
+          vehicle_doors: number | null
+          vehicle_make: string | null
+          vehicle_model: string | null
+          vehicle_trim: string | null
+          vehicle_vin: string | null
+          vehicle_year: number | null
+        }
+        Insert: {
+          created_at?: string
+          customer_address?: string | null
+          customer_city?: string | null
+          customer_country?: string | null
+          customer_email?: string | null
+          customer_first_name?: string | null
+          customer_id?: string | null
+          customer_last_name?: string | null
+          customer_phone?: string | null
+          customer_postal_code?: string | null
+          customer_state_province?: string | null
+          customer_street_address?: string | null
+          customer_unit_number?: string | null
+          estimate_number: string
+          id?: string
+          notes?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          total?: number
+          updated_at?: string
+          vehicle_body_class?: string | null
+          vehicle_doors?: number | null
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_trim?: string | null
+          vehicle_vin?: string | null
+          vehicle_year?: number | null
+        }
+        Update: {
+          created_at?: string
+          customer_address?: string | null
+          customer_city?: string | null
+          customer_country?: string | null
+          customer_email?: string | null
+          customer_first_name?: string | null
+          customer_id?: string | null
+          customer_last_name?: string | null
+          customer_phone?: string | null
+          customer_postal_code?: string | null
+          customer_state_province?: string | null
+          customer_street_address?: string | null
+          customer_unit_number?: string | null
+          estimate_number?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          total?: number
+          updated_at?: string
+          vehicle_body_class?: string | null
+          vehicle_doors?: number | null
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_trim?: string | null
+          vehicle_vin?: string | null
+          vehicle_year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_client_email_fkey"
+            columns: ["customer_email"]
+            isOneToOne: false
+            referencedRelation: "client_statistics"
+            referencedColumns: ["email"]
+          },
+          {
+            foreignKeyName: "quotes_client_email_fkey"
+            columns: ["customer_email"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["email"]
+          },
+          {
+            foreignKeyName: "quotes_client_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "client_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_client_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_items: {
         Row: {
           assigned_profile_id: string | null
@@ -641,7 +895,6 @@ export type Database = {
       }
       invoices: {
         Row: {
-          client_id: string | null
           company_address: string | null
           company_email: string | null
           company_name: string | null
@@ -650,6 +903,7 @@ export type Database = {
           customer_address: string | null
           customer_email: string | null
           customer_first_name: string | null
+          customer_id: string | null
           customer_last_name: string | null
           customer_phone: string | null
           due_date: string | null
@@ -677,7 +931,6 @@ export type Database = {
           work_order_id: string | null
         }
         Insert: {
-          client_id?: string | null
           company_address?: string | null
           company_email?: string | null
           company_name?: string | null
@@ -686,6 +939,7 @@ export type Database = {
           customer_address?: string | null
           customer_email?: string | null
           customer_first_name?: string | null
+          customer_id?: string | null
           customer_last_name?: string | null
           customer_phone?: string | null
           due_date?: string | null
@@ -713,7 +967,6 @@ export type Database = {
           work_order_id?: string | null
         }
         Update: {
-          client_id?: string | null
           company_address?: string | null
           company_email?: string | null
           company_name?: string | null
@@ -722,6 +975,7 @@ export type Database = {
           customer_address?: string | null
           customer_email?: string | null
           customer_first_name?: string | null
+          customer_id?: string | null
           customer_last_name?: string | null
           customer_phone?: string | null
           due_date?: string | null
@@ -751,16 +1005,16 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "invoices_client_id_fkey"
-            columns: ["client_id"]
+            columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "client_statistics"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invoices_client_id_fkey"
-            columns: ["client_id"]
+            columns: ["customer_id"]
             isOneToOne: false
-            referencedRelation: "clients"
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
@@ -974,260 +1228,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff_view"
             referencedColumns: ["role_id"]
-          },
-        ]
-      }
-      quote_items: {
-        Row: {
-          created_at: string
-          description: string | null
-          details: Json | null
-          id: string
-          quantity: number
-          quote_id: string | null
-          quote_request_id: string
-          service_id: string | null
-          service_name: string
-          unit_price: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          details?: Json | null
-          id?: string
-          quantity?: number
-          quote_id?: string | null
-          quote_request_id: string
-          service_id?: string | null
-          service_name: string
-          unit_price?: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          details?: Json | null
-          id?: string
-          quantity?: number
-          quote_id?: string | null
-          quote_request_id?: string
-          service_id?: string | null
-          service_name?: string
-          unit_price?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "quote_items_quote_id_fkey"
-            columns: ["quote_id"]
-            isOneToOne: false
-            referencedRelation: "quotes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quote_items_quote_request_id_fkey"
-            columns: ["quote_request_id"]
-            isOneToOne: false
-            referencedRelation: "quote_requests"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      quote_requests: {
-        Row: {
-          client_id: string
-          client_response: string | null
-          created_at: string
-          description: string | null
-          estimated_amount: number | null
-          id: string
-          is_archived: boolean | null
-          media_urls: string[] | null
-          service_details: Json | null
-          service_estimates: Json | null
-          service_ids: string[]
-          status: string
-          updated_at: string
-          vehicle_make: string | null
-          vehicle_model: string | null
-          vehicle_vin: string | null
-          vehicle_year: number | null
-        }
-        Insert: {
-          client_id: string
-          client_response?: string | null
-          created_at?: string
-          description?: string | null
-          estimated_amount?: number | null
-          id?: string
-          is_archived?: boolean | null
-          media_urls?: string[] | null
-          service_details?: Json | null
-          service_estimates?: Json | null
-          service_ids?: string[]
-          status?: string
-          updated_at?: string
-          vehicle_make?: string | null
-          vehicle_model?: string | null
-          vehicle_vin?: string | null
-          vehicle_year?: number | null
-        }
-        Update: {
-          client_id?: string
-          client_response?: string | null
-          created_at?: string
-          description?: string | null
-          estimated_amount?: number | null
-          id?: string
-          is_archived?: boolean | null
-          media_urls?: string[] | null
-          service_details?: Json | null
-          service_estimates?: Json | null
-          service_ids?: string[]
-          status?: string
-          updated_at?: string
-          vehicle_make?: string | null
-          vehicle_model?: string | null
-          vehicle_vin?: string | null
-          vehicle_year?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "quote_requests_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "client_statistics"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quote_requests_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      quotes: {
-        Row: {
-          client_id: string | null
-          created_at: string
-          customer_address: string | null
-          customer_city: string | null
-          customer_country: string | null
-          customer_email: string | null
-          customer_first_name: string | null
-          customer_last_name: string | null
-          customer_phone: string | null
-          customer_postal_code: string | null
-          customer_state_province: string | null
-          customer_street_address: string | null
-          customer_unit_number: string | null
-          id: string
-          notes: string | null
-          quote_number: string
-          status: string
-          subtotal: number
-          tax_amount: number
-          total: number
-          updated_at: string
-          vehicle_body_class: string | null
-          vehicle_doors: number | null
-          vehicle_make: string | null
-          vehicle_model: string | null
-          vehicle_trim: string | null
-          vehicle_vin: string | null
-          vehicle_year: number | null
-        }
-        Insert: {
-          client_id?: string | null
-          created_at?: string
-          customer_address?: string | null
-          customer_city?: string | null
-          customer_country?: string | null
-          customer_email?: string | null
-          customer_first_name?: string | null
-          customer_last_name?: string | null
-          customer_phone?: string | null
-          customer_postal_code?: string | null
-          customer_state_province?: string | null
-          customer_street_address?: string | null
-          customer_unit_number?: string | null
-          id?: string
-          notes?: string | null
-          quote_number: string
-          status?: string
-          subtotal?: number
-          tax_amount?: number
-          total?: number
-          updated_at?: string
-          vehicle_body_class?: string | null
-          vehicle_doors?: number | null
-          vehicle_make?: string | null
-          vehicle_model?: string | null
-          vehicle_trim?: string | null
-          vehicle_vin?: string | null
-          vehicle_year?: number | null
-        }
-        Update: {
-          client_id?: string | null
-          created_at?: string
-          customer_address?: string | null
-          customer_city?: string | null
-          customer_country?: string | null
-          customer_email?: string | null
-          customer_first_name?: string | null
-          customer_last_name?: string | null
-          customer_phone?: string | null
-          customer_postal_code?: string | null
-          customer_state_province?: string | null
-          customer_street_address?: string | null
-          customer_unit_number?: string | null
-          id?: string
-          notes?: string | null
-          quote_number?: string
-          status?: string
-          subtotal?: number
-          tax_amount?: number
-          total?: number
-          updated_at?: string
-          vehicle_body_class?: string | null
-          vehicle_doors?: number | null
-          vehicle_make?: string | null
-          vehicle_model?: string | null
-          vehicle_trim?: string | null
-          vehicle_vin?: string | null
-          vehicle_year?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "quotes_client_email_fkey"
-            columns: ["customer_email"]
-            isOneToOne: false
-            referencedRelation: "client_statistics"
-            referencedColumns: ["email"]
-          },
-          {
-            foreignKeyName: "quotes_client_email_fkey"
-            columns: ["customer_email"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["email"]
-          },
-          {
-            foreignKeyName: "quotes_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "client_statistics"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quotes_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
           },
         ]
       }
@@ -1562,7 +1562,7 @@ export type Database = {
             foreignKeyName: "service_ratings_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
-            referencedRelation: "clients"
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
@@ -1832,9 +1832,9 @@ export type Database = {
       vehicles: {
         Row: {
           body_class: string | null
-          client_id: string | null
           color: string | null
           created_at: string
+          customer_id: string | null
           doors: number | null
           id: string
           is_primary: boolean | null
@@ -1849,9 +1849,9 @@ export type Database = {
         }
         Insert: {
           body_class?: string | null
-          client_id?: string | null
           color?: string | null
           created_at?: string
+          customer_id?: string | null
           doors?: number | null
           id?: string
           is_primary?: boolean | null
@@ -1866,9 +1866,9 @@ export type Database = {
         }
         Update: {
           body_class?: string | null
-          client_id?: string | null
           color?: string | null
           created_at?: string
+          customer_id?: string | null
           doors?: number | null
           id?: string
           is_primary?: boolean | null
@@ -1884,16 +1884,16 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "vehicles_client_id_fkey"
-            columns: ["client_id"]
+            columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "client_statistics"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "vehicles_client_id_fkey"
-            columns: ["client_id"]
+            columns: ["customer_id"]
             isOneToOne: false
-            referencedRelation: "clients"
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
         ]
@@ -2274,7 +2274,7 @@ export type Database = {
             foreignKeyName: "work_orders_client_email_fkey"
             columns: ["email"]
             isOneToOne: false
-            referencedRelation: "clients"
+            referencedRelation: "customers"
             referencedColumns: ["email"]
           },
           {
@@ -2288,7 +2288,7 @@ export type Database = {
             foreignKeyName: "work_orders_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
-            referencedRelation: "clients"
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
         ]
@@ -2309,6 +2309,18 @@ export type Database = {
         }
         Relationships: []
       }
+      estimate_statistics: {
+        Row: {
+          accepted_quotes: number | null
+          draft_quotes: number | null
+          pending_requests: number | null
+          rejected_quotes: number | null
+          sent_quotes: number | null
+          total_quote_value: number | null
+          total_quotes: number | null
+        }
+        Relationships: []
+      }
       invoice_statistics: {
         Row: {
           collected_revenue: number | null
@@ -2318,18 +2330,6 @@ export type Database = {
           pending_revenue: number | null
           total_invoices: number | null
           total_revenue: number | null
-        }
-        Relationships: []
-      }
-      quote_statistics: {
-        Row: {
-          accepted_quotes: number | null
-          draft_quotes: number | null
-          pending_requests: number | null
-          rejected_quotes: number | null
-          sent_quotes: number | null
-          total_quote_value: number | null
-          total_quotes: number | null
         }
         Relationships: []
       }
@@ -2440,6 +2440,10 @@ export type Database = {
           p_status?: string
           p_business_profile_id?: string
         }
+        Returns: string
+      }
+      generate_estimate_number: {
+        Args: Record<PropertyKey, never>
         Returns: string
       }
       generate_invoice_number: {

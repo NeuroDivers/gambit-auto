@@ -9,10 +9,10 @@ import { useForm } from "react-hook-form"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { InvoiceFormValues } from "@/components/invoices/types"
-import { Client } from "@/components/clients/types"
+import { Customer } from "@/components/customers/types"
 
 interface LocationState {
-  preselectedCustomer?: Client;
+  preselectedCustomer?: Customer;
 }
 
 export default function CreateInvoice() {
@@ -67,7 +67,7 @@ export default function CreateInvoice() {
           subtotal,
           total: subtotal, // Add tax calculation if needed
           status: 'draft',
-          client_id: preselectedCustomer?.id // Add customer reference
+          customer_id: preselectedCustomer?.id // Updated from client_id to customer_id
         })
         .select()
         .single()
@@ -107,7 +107,7 @@ export default function CreateInvoice() {
         const { data: vehicles, error } = await supabase
           .from('vehicles')
           .select('*')
-          .eq('client_id', preselectedCustomer.id)
+          .eq('customer_id', preselectedCustomer.id) // Updated from client_id to customer_id
           .eq('is_primary', true)
           .maybeSingle()
 

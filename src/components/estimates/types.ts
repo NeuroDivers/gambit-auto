@@ -1,20 +1,16 @@
 
-export type InvoiceItem = {
+export type EstimateItem = {
   service_id: string
-  package_id?: string | null
   service_name: string
   description: string
   quantity: number
   unit_price: number
-  commission_rate?: number | null
-  commission_type?: 'percentage' | 'flat' | null
 }
 
-export type InvoiceFormValues = {
+export type EstimateFormValues = {
   notes: string
   status: string
-  due_date: string | null
-  invoice_items: InvoiceItem[]
+  service_items: EstimateItem[]
   customer_first_name: string
   customer_last_name: string
   customer_email: string
@@ -24,29 +20,20 @@ export type InvoiceFormValues = {
   vehicle_model: string
   vehicle_year: number
   vehicle_vin: string
-  subtotal: number
-  gst_amount: number
-  qst_amount: number
-  total: number
+  vehicle_body_class?: string
+  vehicle_doors?: number
+  vehicle_trim?: string
 }
 
-export type Invoice = {
+export type Estimate = {
   id: string
-  invoice_number: string
+  estimate_number: string
   created_at: string
   status: string
   notes: string | null
   subtotal: number
-  gst_amount: number
-  qst_amount: number
+  tax_amount: number
   total: number
-  due_date: string | null
-  company_name: string | null
-  company_phone: string | null
-  company_email: string | null
-  company_address: string | null
-  gst_number: string | null
-  qst_number: string | null
   customer_first_name: string | null
   customer_last_name: string | null
   customer_email: string | null
@@ -56,7 +43,12 @@ export type Invoice = {
   vehicle_model: string | null
   vehicle_year: number | null
   vehicle_vin: string | null
-  invoice_items: InvoiceItem[]
-  payment_status?: string
-  stripe_customer_id?: string | null
+  vehicle_body_class?: string | null
+  vehicle_doors?: number | null
+  vehicle_trim?: string | null
+  estimate_items: EstimateItem[]
 }
+
+// Maintain backward compatibility
+export type Quote = Estimate
+export type QuoteFormValues = EstimateFormValues

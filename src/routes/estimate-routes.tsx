@@ -1,41 +1,41 @@
 
 import { RouteObject } from "react-router-dom"
 import { PermissionGuard } from "@/components/auth/PermissionGuard"
-import Quotes from "@/pages/admin/Quotes"
-import CreateQuote from "@/pages/admin/CreateQuote"
-import QuoteDetails from "@/pages/admin/QuoteDetails"
-import QuoteRequestDetails from "@/pages/admin/QuoteRequestDetails"
+import Estimates from "@/pages/admin/Estimates"
+import CreateEstimate from "@/pages/admin/CreateEstimate"
+import EstimateDetails from "@/pages/admin/EstimateDetails"
+import EstimateRequestDetails from "@/pages/admin/EstimateRequestDetails"
 
 export const estimateRoutes: RouteObject[] = [
   {
     path: "estimates/create",
     element: (
-      <PermissionGuard resource="quotes" type="page_access">
-        <CreateQuote />
+      <PermissionGuard resource="estimates" type="page_access">
+        <CreateEstimate />
       </PermissionGuard>
     ),
   },
   {
     path: "estimates",
     element: (
-      <PermissionGuard resource="quotes" type="page_access">
-        <Quotes />
+      <PermissionGuard resource="estimates" type="page_access">
+        <Estimates />
       </PermissionGuard>
     ),
   },
   {
     path: "estimates/requests/:id",
     element: (
-      <PermissionGuard resource="quotes" type="page_access">
-        <QuoteRequestDetails />
+      <PermissionGuard resource="estimates" type="page_access">
+        <EstimateRequestDetails />
       </PermissionGuard>
     ),
   },
   {
     path: "estimates/:id",
     element: (
-      <PermissionGuard resource="quotes" type="page_access">
-        <QuoteDetails />
+      <PermissionGuard resource="estimates" type="page_access">
+        <EstimateDetails />
       </PermissionGuard>
     ),
   },
