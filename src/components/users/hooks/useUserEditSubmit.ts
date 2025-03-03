@@ -2,40 +2,89 @@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { z } from "zod";
 import { formSchema } from "../UserEditFormFields";
 
 interface UseUserEditSubmitProps {
   userId: string;
   currentRole?: string;
+  staffData?: any;
   onSuccess: () => void;
 }
 
-export const useUserEditSubmit = ({ userId, currentRole, onSuccess }: UseUserEditSubmitProps) => {
+export const useUserEditSubmit = ({ userId, currentRole, staffData, onSuccess }: UseUserEditSubmitProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      setIsSubmitting(true);
       console.log("Updating profile for user:", userId, "with values:", values);
       
+      // Update the profile information
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
           first_name: values.first_name,
           last_name: values.last_name,
-          role_id: values.role
+          role_id: values.role,
+          email: values.email,
+          phone_number: values.phone_number,
+          address: values.address,
+          bio: values.bio
         })
         .eq("id", userId);
 
       if (profileError) throw profileError;
+
+      // Check if this user has staff data
+      if (staffData) {
+        // Update staff info if it exists
+        const { error: staffError } = await supabase
+          .from("staff")
+          .update({
+            employee_id: values.employee_id,
+            position: values.position,
+            department: values.department,
+            status: values.status,
+            employment_date: values.employment_date,
+            is_full_time: values.is_full_time,
+            emergency_contact_name: values.emergency_contact_name,
+            emergency_contact_phone: values.emergency_contact_phone,
+          })
+          .eq("profile_id", userId);
+
+        if (staffError) throw staffError;
+      } else if (values.employee_id || values.position || values.department) {
+        // Create staff info if it doesn't exist but staff fields are provided
+        const { error: newStaffError } = await supabase
+          .from("staff")
+          .insert({
+            profile_id: userId,
+            employee_id: values.employee_id,
+            position: values.position,
+            department: values.department,
+            status: values.status || 'active',
+            employment_date: values.employment_date,
+            is_full_time: values.is_full_time !== undefined ? values.is_full_time : true,
+            emergency_contact_name: values.emergency_contact_name,
+            emergency_contact_phone: values.emergency_contact_phone,
+          });
+
+        if (newStaffError) throw newStaffError;
+      }
 
       toast({
         title: "Success",
         description: "User updated successfully",
       });
 
+      // Invalidate relevant queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["user", userId] });
+      queryClient.invalidateQueries({ queryKey: ["staff-details", userId] });
       onSuccess();
     } catch (error: any) {
       console.error("Error updating user:", error);
@@ -44,8 +93,10 @@ export const useUserEditSubmit = ({ userId, currentRole, onSuccess }: UseUserEdi
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  return { handleSubmit };
+  return { handleSubmit, isSubmitting };
 };
