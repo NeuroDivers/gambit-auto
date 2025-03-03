@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
@@ -21,9 +22,9 @@ type EditInvoiceFormProps = {
   onSubmit: (values: InvoiceFormValues) => void
   isPending: boolean
   invoiceId: string | undefined
-  clients?: any[]
-  isLoadingClients?: boolean
-  onClientSelect?: (clientId: string) => void
+  customers?: any[]
+  isLoadingCustomers?: boolean
+  onCustomerSelect?: (customerId: string) => void
 }
 
 export function EditInvoiceForm({ 
@@ -31,9 +32,9 @@ export function EditInvoiceForm({
   onSubmit, 
   isPending, 
   invoiceId,
-  clients = [],
-  isLoadingClients = false,
-  onClientSelect
+  customers = [],
+  isLoadingCustomers = false,
+  onCustomerSelect
 }: EditInvoiceFormProps) {
   const [vehicleBodyClass, setVehicleBodyClass] = useState("")
   const [vehicleDoors, setVehicleDoors] = useState(0)
@@ -107,9 +108,9 @@ export function EditInvoiceForm({
                 setCustomerPhone={(value) => form.setValue('customer_phone', value)}
                 customerAddress={form.watch('customer_address')}
                 setCustomerAddress={(value) => form.setValue('customer_address', value)}
-                clients={clients}
-                isLoadingClients={isLoadingClients}
-                onClientSelect={onClientSelect}
+                customers={customers}
+                isLoadingCustomers={isLoadingCustomers}
+                onCustomerSelect={onCustomerSelect}
               />
             </CardContent>
           </Card>
