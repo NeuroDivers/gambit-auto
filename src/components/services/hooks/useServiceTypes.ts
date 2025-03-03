@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ServiceStatusFilter, ServiceTypeFilter } from "@/types/service-types";
@@ -50,7 +51,7 @@ export const useServiceTypes = (
       const { data: parentServices, error: parentsError } = await supabase
         .from("service_types")
         .select('id, name, status')
-        .in('id', parentServiceIds);
+        .in('id', parentServiceIds.length > 0 ? parentServiceIds : ['00000000-0000-0000-0000-000000000000']);
 
       if (parentsError) throw parentsError;
 
@@ -92,15 +93,18 @@ export const useServiceTypes = (
   });
 
   const filteredServices = serviceTypes?.filter(service => {
-    const matchesSearch = 
+    // First check search query
+    const matchesSearch = !searchQuery || 
       service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      (service.description && service.description.toLowerCase().includes(searchQuery.toLowerCase()));
     
+    // Then check status filter
     const matchesStatus = 
-      statusFilter === 'all' ? true : service.status === statusFilter;
+      statusFilter === 'all' || service.status === statusFilter;
 
+    // Finally check type filter
     const matchesType = 
-      typeFilter === 'all' ? true : service.service_type === typeFilter;
+      typeFilter === 'all' || service.service_type === typeFilter;
 
     return matchesSearch && matchesStatus && matchesType;
   });

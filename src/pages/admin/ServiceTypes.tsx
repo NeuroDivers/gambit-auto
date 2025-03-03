@@ -6,12 +6,13 @@ import { ServiceTypesList } from "@/components/services/ServiceTypesList"
 import { toast } from "sonner"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ServiceStatusFilter, ServiceTypeFilter } from "@/types/service-types"
 
 export default function ServiceTypes() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("")
-  const [typeFilter, setTypeFilter] = useState<string>("")
+  const [statusFilter, setStatusFilter] = useState<ServiceStatusFilter>("all")
+  const [typeFilter, setTypeFilter] = useState<ServiceTypeFilter>("all")
   const { checkPermission } = usePermissions()
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
 
@@ -60,6 +61,9 @@ export default function ServiceTypes() {
       </div>
 
       <ServiceTypesList 
+        searchQuery={searchQuery}
+        statusFilter={statusFilter}
+        typeFilter={typeFilter}
         onSearch={setSearchQuery}
         onStatusFilter={setStatusFilter}
         onTypeFilter={setTypeFilter}

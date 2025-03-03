@@ -52,19 +52,27 @@ export const ServiceTypesList = ({
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {serviceTypes?.map(service => (
-          <ServiceTypeCard
-            key={service.id}
-            service={service}
-            onEdit={() => {
-              setEditingService(service);
-              setIsDialogOpen(true);
-            }}
-            onRefetch={refetch}
-          />
-        ))}
-      </div>
+      {serviceTypes && serviceTypes.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {serviceTypes.map(service => (
+            <ServiceTypeCard
+              key={service.id}
+              service={service}
+              onEdit={() => {
+                setEditingService(service);
+                setIsDialogOpen(true);
+              }}
+              onRefetch={refetch}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-8 text-muted-foreground">
+          {searchQuery || statusFilter !== 'all' || typeFilter !== 'all' ? 
+            "No services found matching your filters." : 
+            "No service types available. Add your first service type to get started."}
+        </div>
+      )}
 
       <ServiceTypeDialog
         open={isDialogOpen}
