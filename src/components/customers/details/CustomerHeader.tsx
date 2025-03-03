@@ -1,14 +1,18 @@
 
+import { useState } from "react"
 import { Customer } from "../types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Mail, Phone, MapPin, Calendar, Edit } from "lucide-react"
+import { EditCustomerDialog } from "./EditCustomerDialog"
 
 interface CustomerHeaderProps {
   customer: Customer
 }
 
 export function CustomerHeader({ customer }: CustomerHeaderProps) {
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+
   return (
     <Card>
       <CardContent className="p-6">
@@ -28,7 +32,7 @@ export function CustomerHeader({ customer }: CustomerHeaderProps) {
               </div>
             </div>
           </div>
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => setIsEditDialogOpen(true)}>
             <Edit className="mr-2 h-4 w-4" />
             Edit Customer
           </Button>
@@ -69,6 +73,12 @@ export function CustomerHeader({ customer }: CustomerHeaderProps) {
             </div>
           )}
         </div>
+
+        <EditCustomerDialog 
+          customer={customer} 
+          open={isEditDialogOpen} 
+          onOpenChange={setIsEditDialogOpen} 
+        />
       </CardContent>
     </Card>
   )
