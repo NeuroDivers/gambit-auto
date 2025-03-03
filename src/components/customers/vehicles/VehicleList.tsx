@@ -7,6 +7,7 @@ import { VehicleCard } from "./VehicleCard";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
+import { VehicleFormDialog } from "./VehicleFormDialog";
 
 interface VehicleListProps {
   customerId: string;
@@ -15,6 +16,7 @@ interface VehicleListProps {
 
 export function VehicleList({ customerId, vehicles: initialVehicles }: VehicleListProps) {
   const [showAddVehicle, setShowAddVehicle] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState<Vehicle | undefined>(undefined);
   
   // Only fetch vehicles if they weren't passed as props
   const { data: vehicles, isLoading, error } = useQuery({
@@ -66,7 +68,12 @@ export function VehicleList({ customerId, vehicles: initialVehicles }: VehicleLi
           <Plus className="h-4 w-4" />
           Add Vehicle
         </Button>
-        {/* VehicleFormDialog component will be added here in a future step */}
+        
+        <VehicleFormDialog
+          open={showAddVehicle}
+          onOpenChange={setShowAddVehicle}
+          customerId={customerId}
+        />
       </div>
     );
   }
@@ -87,11 +94,28 @@ export function VehicleList({ customerId, vehicles: initialVehicles }: VehicleLi
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {vehicles.map((vehicle) => (
-          <VehicleCard key={vehicle.id} vehicle={vehicle} />
+          <VehicleCard 
+            key={vehicle.id} 
+            vehicle={vehicle} 
+            onEdit={setEditingVehicle}
+          />
         ))}
       </div>
       
-      {/* VehicleFormDialog component will be added here in a future step */}
+      <VehicleFormDialog
+        open={showAddVehicle}
+        onOpenChange={setShowAddVehicle}
+        customerId={customerId}
+      />
+      
+      {editingVehicle && (
+        <VehicleFormDialog
+          open={!!editingVehicle}
+          onOpenChange={(open) => !open && setEditingVehicle(undefined)}
+          customerId={customerId}
+          vehicle={editingVehicle}
+        />
+      )}
     </div>
   );
 }
