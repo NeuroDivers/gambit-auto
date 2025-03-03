@@ -24,6 +24,7 @@ export type Customer = {
     email: string | null
     phone_number: string | null
   } | null
+  notes?: string | null
   total_spent?: number
   total_invoices?: number
   total_work_orders?: number
