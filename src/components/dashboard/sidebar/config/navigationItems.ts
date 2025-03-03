@@ -116,8 +116,8 @@ export const navigationItems: NavSection[] = [
     section: "Administration",
     items: [
       {
-        title: "Users",
-        href: "/user-management",
+        title: "Staff Management",
+        href: "/staff-management",
         icon: Users,
         permission: { resource: "users", type: "page_access" }
       },
