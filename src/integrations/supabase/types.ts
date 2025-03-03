@@ -457,6 +457,123 @@ export type Database = {
           },
         ]
       }
+      customer_history: {
+        Row: {
+          amount: number | null
+          created_by: string | null
+          customer_id: string
+          description: string | null
+          event_date: string
+          event_type: string
+          id: string
+          related_entity_id: string | null
+          related_entity_type: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_by?: string | null
+          customer_id: string
+          description?: string | null
+          event_date?: string
+          event_type: string
+          id?: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_by?: string | null
+          customer_id?: string
+          description?: string | null
+          event_date?: string
+          event_type?: string
+          id?: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_history_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_history_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff_commission_analytics"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "customer_history_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff_view"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "customer_history_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "client_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_history_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_monthly_spending: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_id: string
+          id: string
+          month: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          customer_id: string
+          id?: string
+          month: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_id?: string
+          id?: string
+          month?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_monthly_spending_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "client_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_monthly_spending_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           access_token: string | null

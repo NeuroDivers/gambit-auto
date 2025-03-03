@@ -53,37 +53,15 @@ export default function CustomerDetails() {
       
       if (customerError) throw customerError
       
-      const sixMonthsAgo = new Date()
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+      // We don't need to fetch the spending data here anymore
+      // as we're using a separate hook for this in the SpendingChart component
       
-      const { data: invoiceData, error: invoiceError } = await supabase
-        .from('invoices')
-        .select('total, created_at')
-        .eq('customer_id', id)
-        .gte('created_at', sixMonthsAgo.toISOString())
-        .order('created_at', { ascending: true })
-      
-      if (invoiceError) throw invoiceError
-
-      const monthlySpending = invoiceData?.reduce((acc: Array<{month: string, amount: number}>, invoice) => {
-        const month = new Date(invoice.created_at).toLocaleString('default', { month: 'short' })
-        const existingMonth = acc.find(item => item.month === month)
-        
-        if (existingMonth) {
-          existingMonth.amount += invoice.total
-        } else {
-          acc.push({ month, amount: invoice.total })
-        }
-        return acc
-      }, []) || []
-
-      const total_spent = invoiceData?.reduce((sum, invoice) => sum + (invoice.total || 0), 0) || 0
+      const total_spent = 0 // This will be calculated in the CustomerStats component
       const total_invoices = customerData?.invoices?.length || 0
       const total_work_orders = 0
 
       return {
         ...customerData,
-        monthlySpending,
         total_spent,
         total_invoices,
         total_work_orders
@@ -98,7 +76,7 @@ export default function CustomerDetails() {
     <div className="p-6 space-y-6">
       <CustomerHeader customer={customer} />
       <CustomerStats customer={customer} />
-      <SpendingChart data={customer.monthlySpending || []} />
+      <SpendingChart customer={customer} />
 
       <Tabs defaultValue="vehicles" className="w-full">
         <TabsList>
