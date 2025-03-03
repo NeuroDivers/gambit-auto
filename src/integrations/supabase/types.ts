@@ -52,6 +52,13 @@ export type Database = {
             referencedRelation: "staff_commission_analytics"
             referencedColumns: ["profile_id"]
           },
+          {
+            foreignKeyName: "audit_logs_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "staff_view"
+            referencedColumns: ["profile_id"]
+          },
         ]
       }
       bay_services: {
@@ -274,6 +281,13 @@ export type Database = {
             referencedColumns: ["profile_id"]
           },
           {
+            foreignKeyName: "chat_messages_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "staff_view"
+            referencedColumns: ["profile_id"]
+          },
+          {
             foreignKeyName: "chat_messages_sender_id_fkey"
             columns: ["sender_id"]
             isOneToOne: false
@@ -285,6 +299,13 @@ export type Database = {
             columns: ["sender_id"]
             isOneToOne: false
             referencedRelation: "staff_commission_analytics"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "chat_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "staff_view"
             referencedColumns: ["profile_id"]
           },
         ]
@@ -403,6 +424,13 @@ export type Database = {
             referencedColumns: ["profile_id"]
           },
           {
+            foreignKeyName: "commission_transactions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "staff_view"
+            referencedColumns: ["profile_id"]
+          },
+          {
             foreignKeyName: "commission_transactions_service_id_fkey"
             columns: ["service_id"]
             isOneToOne: false
@@ -468,6 +496,13 @@ export type Database = {
             columns: ["staff_id"]
             isOneToOne: false
             referencedRelation: "staff_commission_analytics"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "commissions_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_view"
             referencedColumns: ["profile_id"]
           },
           {
@@ -588,6 +623,13 @@ export type Database = {
             columns: ["assigned_profile_id"]
             isOneToOne: false
             referencedRelation: "staff_commission_analytics"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "invoice_items_assigned_profile_id_fkey"
+            columns: ["assigned_profile_id"]
+            isOneToOne: false
+            referencedRelation: "staff_view"
             referencedColumns: ["profile_id"]
           },
           {
@@ -809,6 +851,13 @@ export type Database = {
             referencedRelation: "staff_commission_analytics"
             referencedColumns: ["profile_id"]
           },
+          {
+            foreignKeyName: "notifications_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "staff_view"
+            referencedColumns: ["profile_id"]
+          },
         ]
       }
       payment_methods: {
@@ -969,6 +1018,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "roles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "staff_view"
+            referencedColumns: ["role_id"]
           },
         ]
       }
@@ -1265,6 +1321,13 @@ export type Database = {
             referencedRelation: "roles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "staff_view"
+            referencedColumns: ["role_id"]
+          },
         ]
       }
       roles: {
@@ -1355,6 +1418,13 @@ export type Database = {
             referencedRelation: "staff_commission_analytics"
             referencedColumns: ["profile_id"]
           },
+          {
+            foreignKeyName: "fk_service_bays_assigned_profile"
+            columns: ["assigned_profile_id"]
+            isOneToOne: false
+            referencedRelation: "staff_view"
+            referencedColumns: ["profile_id"]
+          },
         ]
       }
       service_commissions: {
@@ -1398,6 +1468,13 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "staff_commission_analytics"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "service_commissions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "staff_view"
             referencedColumns: ["profile_id"]
           },
           {
@@ -1516,6 +1593,13 @@ export type Database = {
             columns: ["assigned_profile_id"]
             isOneToOne: false
             referencedRelation: "staff_commission_analytics"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "service_ratings_assigned_profile_id_fkey"
+            columns: ["assigned_profile_id"]
+            isOneToOne: false
+            referencedRelation: "staff_view"
             referencedColumns: ["profile_id"]
           },
           {
@@ -1676,6 +1760,73 @@ export type Database = {
         }
         Relationships: []
       }
+      staff: {
+        Row: {
+          created_at: string
+          department: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          employee_id: string | null
+          employment_date: string | null
+          id: string
+          is_full_time: boolean | null
+          position: string | null
+          profile_id: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_id?: string | null
+          employment_date?: string | null
+          id?: string
+          is_full_time?: boolean | null
+          position?: string | null
+          profile_id: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_id?: string | null
+          employment_date?: string | null
+          id?: string
+          is_full_time?: boolean | null
+          position?: string | null
+          profile_id?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "staff_commission_analytics"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "staff_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "staff_view"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
       staff_service_skills: {
         Row: {
           created_at: string | null
@@ -1714,6 +1865,13 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "staff_commission_analytics"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "staff_service_skills_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "staff_view"
             referencedColumns: ["profile_id"]
           },
           {
@@ -1880,6 +2038,13 @@ export type Database = {
             referencedColumns: ["profile_id"]
           },
           {
+            foreignKeyName: "work_order_requests_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "staff_view"
+            referencedColumns: ["profile_id"]
+          },
+          {
             foreignKeyName: "work_order_requests_work_order_id_fkey"
             columns: ["work_order_id"]
             isOneToOne: false
@@ -1935,6 +2100,13 @@ export type Database = {
             columns: ["assigned_profile_id"]
             isOneToOne: false
             referencedRelation: "staff_commission_analytics"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "work_order_service_status_assigned_profile_id_fkey"
+            columns: ["assigned_profile_id"]
+            isOneToOne: false
+            referencedRelation: "staff_view"
             referencedColumns: ["profile_id"]
           },
           {
@@ -2132,6 +2304,13 @@ export type Database = {
             referencedColumns: ["profile_id"]
           },
           {
+            foreignKeyName: "fk_work_orders_assigned_profile"
+            columns: ["assigned_profile_id"]
+            isOneToOne: false
+            referencedRelation: "staff_view"
+            referencedColumns: ["profile_id"]
+          },
+          {
             foreignKeyName: "quote_requests_assigned_bay_id_fkey"
             columns: ["assigned_bay_id"]
             isOneToOne: false
@@ -2228,6 +2407,26 @@ export type Database = {
           monthly_amount: number | null
           profile_id: string | null
           weekly_amount: number | null
+        }
+        Relationships: []
+      }
+      staff_view: {
+        Row: {
+          department: string | null
+          email: string | null
+          employee_id: string | null
+          employment_date: string | null
+          first_name: string | null
+          is_full_time: boolean | null
+          last_name: string | null
+          phone_number: string | null
+          position: string | null
+          profile_id: string | null
+          role_id: string | null
+          role_name: string | null
+          role_nicename: string | null
+          staff_id: string | null
+          status: string | null
         }
         Relationships: []
       }
