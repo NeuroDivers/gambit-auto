@@ -36,19 +36,7 @@ export function DeleteInvoiceDialog({
     try {
       setIsDeleting(true)
       
-      // First, try to delete any existing audit logs for this invoice to avoid constraint issues
-      try {
-        await supabase
-          .from("audit_logs")
-          .delete()
-          .eq("entity_id", invoiceId)
-          .eq("entity_type", "invoices")
-      } catch (error) {
-        console.log("Error cleaning up audit logs:", error)
-        // Continue even if this fails
-      }
-      
-      // Delete all invoice items first (cascade doesn't work with foreign keys in Supabase)
+      // Delete invoice items first
       const { error: itemsError } = await supabase
         .from("invoice_items")
         .delete()
@@ -60,39 +48,7 @@ export function DeleteInvoiceDialog({
         return
       }
       
-      // Delete any payments associated with this invoice
-      try {
-        const { error: paymentsError } = await supabase
-          .from("payments")
-          .delete()
-          .eq("invoice_id", invoiceId)
-        
-        if (paymentsError) {
-          console.log("Error deleting payments:", paymentsError)
-          // Continue with invoice deletion even if payment deletion fails
-        }
-      } catch (error) {
-        console.log("Error in payment deletion:", error)
-        // Continue with invoice deletion
-      }
-      
-      // Delete any commission transactions
-      try {
-        const { error: commissionError } = await supabase
-          .from("commission_transactions")
-          .delete()
-          .eq("invoice_id", invoiceId)
-        
-        if (commissionError) {
-          console.log("Error deleting commission transactions:", commissionError)
-          // Continue with invoice deletion
-        }
-      } catch (error) {
-        console.log("Error in commission deletion:", error)
-        // Continue with invoice deletion
-      }
-      
-      // Then delete the invoice
+      // Delete the invoice
       const { error } = await supabase
         .from("invoices")
         .delete()
