@@ -5,12 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageTitle } from "@/components/shared/PageTitle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
-import { ArrowLeft, Calendar, Check, ChevronLeft, Loader2, Mail, Phone, Shield, UserRound, Briefcase } from "lucide-react";
+import { ArrowLeft, Calendar, Check, ChevronLeft, Loader2, Mail, Phone, Shield, UserRound, Briefcase, Building, IdCard, Calendar as CalendarIcon, ClockIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { ServiceSkillsManager } from "@/components/staff/skills/ServiceSkillsManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
+import { UserEditDialog } from "@/components/users/UserEditDialog";
 
 function LoadingState() {
   return (
@@ -43,6 +45,7 @@ function LoadingState() {
 export default function UserDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['user', id],
@@ -63,6 +66,24 @@ export default function UserDetails() {
       if (error) throw error;
       return data;
     }
+  });
+
+  const { data: staffData, isLoading: staffLoading } = useQuery({
+    queryKey: ['staff-details', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('staff')
+        .select('*')
+        .eq('profile_id', id)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching staff data:", error);
+        return null; // Return null if no staff record exists
+      }
+      return data;
+    },
+    enabled: !!id
   });
 
   const { data: lastLogin } = useQuery({
@@ -128,7 +149,7 @@ export default function UserDetails() {
     }
   });
 
-  if (userLoading || workOrdersLoading || commissionsLoading) {
+  if (userLoading || workOrdersLoading || commissionsLoading || staffLoading) {
     return <LoadingState />;
   }
 
@@ -148,10 +169,15 @@ export default function UserDetails() {
             description={`${user?.role?.nicename || 'User'}`}
           />
         </div>
-        <Badge variant="outline" className="flex items-center gap-2">
-          <Calendar className="h-4 w-4" />
-          Last login: {lastLogin ? format(new Date(lastLogin), 'PPp') : 'Never'}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Last login: {lastLogin ? format(new Date(lastLogin), 'PPp') : 'Never'}
+          </Badge>
+          <Button onClick={() => setEditDialogOpen(true)}>
+            Edit User
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="info" className="w-full">
@@ -196,6 +222,57 @@ export default function UserDetails() {
                 </dl>
               </CardContent>
             </Card>
+
+            {staffData && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Briefcase className="h-5 w-5" />
+                    Staff Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <dl className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <dt className="text-sm text-muted-foreground">
+                        <IdCard className="h-4 w-4" />
+                      </dt>
+                      <dd>Employee ID: {staffData?.employee_id || 'Not assigned'}</dd>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <dt className="text-sm text-muted-foreground">
+                        <Briefcase className="h-4 w-4" />
+                      </dt>
+                      <dd>Position: {staffData?.position || 'Not specified'}</dd>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <dt className="text-sm text-muted-foreground">
+                        <Building className="h-4 w-4" />
+                      </dt>
+                      <dd>Department: {staffData?.department || 'Not specified'}</dd>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <dt className="text-sm text-muted-foreground">
+                        <CalendarIcon className="h-4 w-4" />
+                      </dt>
+                      <dd>Hired: {staffData?.employment_date ? format(new Date(staffData.employment_date), 'PPP') : 'Not specified'}</dd>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <dt className="text-sm text-muted-foreground">
+                        <ClockIcon className="h-4 w-4" />
+                      </dt>
+                      <dd>Status: {staffData?.status || 'Active'}</dd>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <dt className="text-sm text-muted-foreground">
+                        Employment:
+                      </dt>
+                      <dd>{staffData?.is_full_time ? 'Full-time' : 'Part-time'}</dd>
+                    </div>
+                  </dl>
+                </CardContent>
+              </Card>
+            )}
 
             <Card>
               <CardHeader>
@@ -284,6 +361,14 @@ export default function UserDetails() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {user && (
+        <UserEditDialog 
+          user={user} 
+          open={editDialogOpen} 
+          onOpenChange={setEditDialogOpen} 
+        />
+      )}
     </div>
   );
 }
