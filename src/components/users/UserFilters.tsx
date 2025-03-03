@@ -180,7 +180,7 @@ export const UserFilters = ({
             if (!role) return null;
             return (
               <Badge key={roleId} variant="secondary" className="flex items-center gap-1">
-                Excluding {role.nicename}
+                Excluding: {role.nicename}
                 <X 
                   className="h-3 w-3 cursor-pointer hover:text-destructive" 
                   onClick={() => onRemoveExcludedRole?.(roleId)}
