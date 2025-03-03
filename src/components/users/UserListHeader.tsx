@@ -9,6 +9,7 @@ interface UserListHeaderProps {
   excludedRoles: string[];
   onExcludeRole: (roleName: string) => void;
   onRemoveExcludedRole: (roleName: string) => void;
+  showStaffFilters?: boolean;
 }
 
 export const UserListHeader = ({
@@ -19,6 +20,7 @@ export const UserListHeader = ({
   excludedRoles,
   onExcludeRole,
   onRemoveExcludedRole,
+  showStaffFilters = false,
 }: UserListHeaderProps) => {
   return (
     <div className="space-y-4 mb-8">
@@ -31,6 +33,7 @@ export const UserListHeader = ({
           excludedRoles={excludedRoles}
           onExcludeRole={onExcludeRole}
           onRemoveExcludedRole={onRemoveExcludedRole}
+          showStaffFilters={showStaffFilters}
         />
       </div>
     </div>

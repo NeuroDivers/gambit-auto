@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
+import { useState } from "react";
 
 type UserFiltersProps = {
   searchQuery: string;
@@ -14,6 +15,7 @@ type UserFiltersProps = {
   excludedRoles?: string[];
   onExcludeRole?: (roleName: string) => void;
   onRemoveExcludedRole?: (roleName: string) => void;
+  showStaffFilters?: boolean;
 };
 
 export const UserFilters = ({
@@ -24,7 +26,12 @@ export const UserFilters = ({
   excludedRoles = [],
   onExcludeRole,
   onRemoveExcludedRole,
+  showStaffFilters = false,
 }: UserFiltersProps) => {
+  const [departmentFilter, setDepartmentFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  // Fetch roles
   const { data: roles } = useQuery({
     queryKey: ["roles"],
     queryFn: async () => {
@@ -37,6 +44,25 @@ export const UserFilters = ({
     },
   });
 
+  // Fetch departments if showing staff filters
+  const { data: departments } = useQuery({
+    queryKey: ["staff_departments"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("staff")
+        .select("department")
+        .not("department", "is", null)
+        .order("department");
+      
+      if (error) throw error;
+
+      // Get unique departments
+      const uniqueDepartments = [...new Set(data.map(item => item.department))];
+      return uniqueDepartments.filter(Boolean) as string[];
+    },
+    enabled: showStaffFilters,
+  });
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-4">
@@ -44,7 +70,9 @@ export const UserFilters = ({
           <Input
             id="user-search"
             name="user-search"
-            placeholder="Search by name or email..."
+            placeholder={showStaffFilters 
+              ? "Search by name, email, department or position..." 
+              : "Search by name or email..."}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="w-full bg-background text-foreground border-input min-w-[300px]"
@@ -65,6 +93,41 @@ export const UserFilters = ({
             </SelectContent>
           </Select>
         </div>
+        
+        {showStaffFilters && departments && departments.length > 0 && (
+          <div className="sm:w-[220px]">
+            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+              <SelectTrigger id="department-filter" name="department-filter" className="w-full bg-background text-foreground border-input">
+                <SelectValue placeholder="Filter by department" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Departments</SelectItem>
+                {departments.map((department) => (
+                  <SelectItem key={department} value={department}>
+                    {department}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        
+        {showStaffFilters && (
+          <div className="sm:w-[220px]">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger id="status-filter" name="status-filter" className="w-full bg-background text-foreground border-input">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="on_leave">On Leave</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        
         <div className="sm:w-[220px]">
           <Select 
             value="" 
@@ -85,7 +148,7 @@ export const UserFilters = ({
       </div>
       
       {/* Active Filters */}
-      {(excludedRoles.length > 0 || roleFilter !== 'all') && (
+      {(excludedRoles.length > 0 || roleFilter !== 'all' || (showStaffFilters && (departmentFilter !== 'all' || statusFilter !== 'all'))) && (
         <div className="flex flex-wrap gap-2">
           {roleFilter !== 'all' && roles && (
             <Badge variant="secondary" className="flex items-center gap-1">
@@ -96,6 +159,27 @@ export const UserFilters = ({
               />
             </Badge>
           )}
+          
+          {showStaffFilters && departmentFilter !== 'all' && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              Department: {departmentFilter}
+              <X 
+                className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                onClick={() => setDepartmentFilter('all')}
+              />
+            </Badge>
+          )}
+          
+          {showStaffFilters && statusFilter !== 'all' && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              Status: {statusFilter}
+              <X 
+                className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                onClick={() => setStatusFilter('all')}
+              />
+            </Badge>
+          )}
+          
           {excludedRoles.map((roleId) => {
             const role = roles?.find(r => r.id === roleId);
             if (!role) return null;

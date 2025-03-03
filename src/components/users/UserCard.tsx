@@ -7,13 +7,15 @@ import { useQueryClient } from "@tanstack/react-query";
 import { UserAvatar } from "./card/UserAvatar";
 import { UserActions } from "./card/UserActions";
 import { User } from "./hooks/useUserData";
+import { StaffUser } from "./hooks/useStaffUserData";
 import { useNavigate } from "react-router-dom";
 
 type UserCardProps = {
-  user: User;
+  user: User | StaffUser;
+  isStaffView?: boolean;
 };
 
-export const UserCard = ({ user }: UserCardProps) => {
+export const UserCard = ({ user, isStaffView = false }: UserCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -29,6 +31,7 @@ export const UserCard = ({ user }: UserCardProps) => {
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["users"] }),
+        queryClient.invalidateQueries({ queryKey: ["staff_users"] }),
         queryClient.invalidateQueries({ queryKey: ["roleStats"] })
       ]);
 
@@ -54,6 +57,9 @@ export const UserCard = ({ user }: UserCardProps) => {
     navigate(`/users/${user.id}`);
   };
 
+  // Staff-specific properties
+  const staffUser = user as StaffUser;
+
   return (
     <>
       <div 
@@ -66,6 +72,10 @@ export const UserCard = ({ user }: UserCardProps) => {
             email={user.email}
             showEmail={!!(user.first_name && user.last_name)}
             role={user.role}
+            isStaffView={isStaffView}
+            position={isStaffView ? staffUser.position : undefined}
+            department={isStaffView ? staffUser.department : undefined}
+            status={isStaffView ? staffUser.status : undefined}
           />
           <UserActions
             onEdit={() => setIsEditing(true)}
