@@ -1,13 +1,13 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { PlusCircle } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { supabase } from "@/integrations/supabase/client"
 import { useEffect } from "react"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
+import { PlusCircle } from "lucide-react"
 
 export function EstimatesList() {
   const navigate = useNavigate()
@@ -44,7 +44,7 @@ export function EstimatesList() {
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case "draft":
-        return "bg-gray-200 text-gray-800"
+        return "bg-gray-100 text-gray-800"
       case "sent":
         return "bg-blue-100 text-blue-800"
       case "approved":
@@ -58,16 +58,16 @@ export function EstimatesList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between">
+      <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Estimates</h2>
           <p className="text-muted-foreground">
-            View and manage customer estimates
+            Create and manage customer estimates
           </p>
         </div>
         <Button onClick={() => navigate("/estimates/create")}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Create Estimate
+          <PlusCircle className="h-4 w-4 mr-2" />
+          New Estimate
         </Button>
       </div>
 
@@ -75,9 +75,10 @@ export function EstimatesList() {
         <div className="text-center py-12">
           <h3 className="text-lg font-medium">No estimates yet</h3>
           <p className="text-muted-foreground mt-1">
-            Create an estimate to get started
+            Create your first estimate to get started
           </p>
           <Button onClick={() => navigate("/estimates/create")} className="mt-4">
+            <PlusCircle className="h-4 w-4 mr-2" />
             Create Estimate
           </Button>
         </div>
@@ -89,7 +90,7 @@ export function EstimatesList() {
                 <TableHead>Estimate #</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead>Amount</TableHead>
+                <TableHead>Total</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
