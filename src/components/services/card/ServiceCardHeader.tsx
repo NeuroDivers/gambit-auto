@@ -31,9 +31,11 @@ export const ServiceCardHeader = ({
               </Button>}
           </div>
           <div className="flex flex-wrap gap-2 mt-2">
-            <Badge variant={service.status === 'active' ? 'default' : 'secondary'}>
-              {service.status}
-            </Badge>
+            {service.status === 'inactive' && (
+              <Badge variant="destructive">
+                inactive
+              </Badge>
+            )}
             <ServiceTypeBadge type={service.service_type} />
             {isSubService && <Badge variant="secondary" className="flex items-center gap-1">
                 <span>Parent: </span>
