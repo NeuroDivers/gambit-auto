@@ -57,6 +57,7 @@ export function ServiceTypeDialog({ open, onOpenChange, serviceType, onSuccess }
 
       let result
       if (serviceType?.id) {
+        console.log('Updating service type with ID:', serviceType.id, 'and data:', serviceData)
         // Update existing service
         result = await supabase
           .from('service_types')
