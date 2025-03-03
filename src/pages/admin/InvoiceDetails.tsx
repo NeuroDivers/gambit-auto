@@ -85,6 +85,7 @@ export default function InvoiceDetails() {
         </div>
         <InvoiceActions 
           invoiceId={id} 
+          invoiceNumber={invoice.invoice_number}
           onPrint={handlePrint}
         />
       </div>

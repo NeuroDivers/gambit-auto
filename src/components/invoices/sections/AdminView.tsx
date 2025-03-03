@@ -11,6 +11,7 @@ type AdminViewProps = {
 }
 
 export function AdminView({ 
+  invoice,
   invoiceId,
   onPrint 
 }: AdminViewProps) {
@@ -18,6 +19,7 @@ export function AdminView({
     <div className="space-y-6">
       <InvoiceActions
         invoiceId={invoiceId}
+        invoiceNumber={invoice?.invoice_number}
         onPrint={onPrint}
       />
     </div>
