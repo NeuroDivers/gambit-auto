@@ -36,9 +36,9 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
         return;
       }
 
-      // If user is administrator or technician, grant immediate access
-      if (roleName === 'administrator') {
-        console.log('User is admin, granting access');
+      // If user is administrator or king, grant immediate access
+      if (roleName === 'administrator' || roleName === 'king') {
+        console.log('User is admin or king, granting access');
         setHasPermission(true);
         return;
       }
