@@ -9,7 +9,7 @@ import { serviceRoutes } from "./service-routes"
 import { userRoutes } from "./user-routes"
 import { estimateRoutes } from "./estimate-routes"
 import { invoiceRoutes } from "./invoice-routes"
-import { clientRoutes } from "./client-routes"
+import { customerRoutes } from "./customer-routes"
 import { settingsRoutes } from "./settings-routes"
 import { vehicleRoutes } from "./vehicle-routes"
 import { bookingRoutes } from "./booking-routes"
@@ -92,7 +92,7 @@ export const protectedRoutes: RouteObject = {
     ...userRoutes,
     ...estimateRoutes,
     ...invoiceRoutes,
-    ...clientRoutes,
+    ...customerRoutes,
     ...settingsRoutes,
     ...vehicleRoutes,
     ...bookingRoutes,
