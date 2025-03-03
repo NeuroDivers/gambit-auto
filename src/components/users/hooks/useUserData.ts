@@ -15,7 +15,14 @@ export type User = {
   first_name?: string;
   last_name?: string;
   phone_number?: string;
-  address?: string;
+  // Detailed address fields
+  street_address?: string;
+  unit_number?: string;
+  city?: string;
+  state_province?: string;
+  postal_code?: string;
+  country?: string;
+  address?: string; // Keep for backward compatibility
   bio?: string;
   role?: UserRole;
 };
@@ -27,6 +34,12 @@ type ProfileResponse = {
   last_name: string | null;
   phone_number: string | null;
   address: string | null;
+  street_address: string | null;
+  unit_number: string | null;
+  city: string | null;
+  state_province: string | null;
+  postal_code: string | null;
+  country: string | null;
   bio: string | null;
   role: UserRole;
 };
@@ -39,6 +52,12 @@ type ClientResponse = {
   user_id: string;
   phone_number?: string;
   address?: string;
+  street_address?: string;
+  unit_number?: string;
+  city?: string;
+  state_province?: string;
+  postal_code?: string;
+  country?: string;
 };
 
 export const CLIENT_ROLE_ID = "73a06339-6dd6-4da7-ac27-db9e160c2ff6";
@@ -57,6 +76,12 @@ export const useUserData = () => {
           last_name,
           phone_number,
           address,
+          street_address,
+          unit_number,
+          city,
+          state_province,
+          postal_code,
+          country,
           bio,
           role:role_id (
             id,
@@ -82,6 +107,12 @@ export const useUserData = () => {
         last_name: profile.last_name || undefined,
         phone_number: profile.phone_number || undefined,
         address: profile.address || undefined,
+        street_address: profile.street_address || undefined,
+        unit_number: profile.unit_number || undefined,
+        city: profile.city || undefined,
+        state_province: profile.state_province || undefined,
+        postal_code: profile.postal_code || undefined,
+        country: profile.country || undefined,
         bio: profile.bio || undefined,
         role: profile.role
       }));
@@ -111,6 +142,12 @@ export const useUserData = () => {
                   last_name: client.last_name || allUsers[userIndex].last_name,
                   phone_number: client.phone_number || allUsers[userIndex].phone_number,
                   address: client.address || allUsers[userIndex].address,
+                  street_address: client.street_address || allUsers[userIndex].street_address,
+                  unit_number: client.unit_number || allUsers[userIndex].unit_number,
+                  city: client.city || allUsers[userIndex].city,
+                  state_province: client.state_province || allUsers[userIndex].state_province,
+                  postal_code: client.postal_code || allUsers[userIndex].postal_code,
+                  country: client.country || allUsers[userIndex].country,
                 };
               }
             });

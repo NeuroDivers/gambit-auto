@@ -32,7 +32,13 @@ export const useUserEditSubmit = ({ userId, currentRole, staffData, onSuccess }:
           role_id: values.role,
           email: values.email,
           phone_number: values.phone_number,
-          address: values.address,
+          // Detailed address fields
+          street_address: values.street_address,
+          unit_number: values.unit_number,
+          city: values.city,
+          state_province: values.state_province,
+          postal_code: values.postal_code,
+          country: values.country,
           bio: values.bio
         })
         .eq("id", userId);

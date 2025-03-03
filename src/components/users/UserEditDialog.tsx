@@ -27,7 +27,12 @@ export const UserEditDialog = ({ user, staffData, open, onOpenChange }: UserEdit
       last_name: user.last_name || "",
       email: user.email || "",
       phone_number: user.phone_number || "",
-      address: user.address || "",
+      street_address: user.street_address || "",
+      unit_number: user.unit_number || "",
+      city: user.city || "",
+      state_province: user.state_province || "",
+      postal_code: user.postal_code || "",
+      country: user.country || "",
       bio: user.bio || "",
       role: user.role?.id || "",
       // Staff specific fields
@@ -76,7 +81,7 @@ export const UserEditDialog = ({ user, staffData, open, onOpenChange }: UserEdit
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] bg-card text-card-foreground max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[700px] bg-card text-card-foreground max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
         </DialogHeader>

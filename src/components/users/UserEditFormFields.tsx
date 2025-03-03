@@ -17,6 +17,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { UseFormReturn } from "react-hook-form"
+import { AddressFields } from "@/components/shared/form-sections/AddressFields"
 import * as z from "zod"
 
 export const formSchema = z.object({
@@ -24,7 +25,13 @@ export const formSchema = z.object({
   last_name: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email address").optional(),
   phone_number: z.string().optional(),
-  address: z.string().optional(),
+  // Detailed address fields
+  street_address: z.string().optional(),
+  unit_number: z.string().optional(),
+  city: z.string().optional(),
+  state_province: z.string().optional(),
+  postal_code: z.string().optional(),
+  country: z.string().optional(),
   role: z.string().min(1, "Role is required"),
   bio: z.string().optional(),
   // Staff specific fields
@@ -109,19 +116,10 @@ export function UserEditFormFields({ form, roles, showStaffFields = false }: Pro
         />
       </div>
 
-      <FormField
-        control={form.control}
-        name="address"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Address</FormLabel>
-            <FormControl>
-              <Input placeholder="123 Main St, City, State, ZIP" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="border-t pt-4 mt-2">
+        <h3 className="font-medium text-base mb-3">Address Information</h3>
+        <AddressFields form={form} />
+      </div>
 
       <FormField
         control={form.control}
