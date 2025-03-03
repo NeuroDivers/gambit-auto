@@ -140,12 +140,50 @@ export function useVehicles(customerId: string) {
     }
   })
 
+  const setPrimaryVehicle = useMutation({
+    mutationFn: async (vehicleId: string) => {
+      console.log("Setting primary vehicle:", vehicleId)
+      
+      // First, unset all existing primary vehicles for this customer
+      const { error: unsettingError } = await supabase
+        .from('vehicles')
+        .update({ is_primary: false })
+        .eq('customer_id', customerId)
+      
+      if (unsettingError) {
+        console.error("Error unsetting primary vehicles:", unsettingError)
+        throw unsettingError
+      }
+      
+      // Then set the selected vehicle as primary
+      const { error: settingError } = await supabase
+        .from('vehicles')
+        .update({ is_primary: true })
+        .eq('id', vehicleId)
+      
+      if (settingError) {
+        console.error("Error setting primary vehicle:", settingError)
+        throw settingError
+      }
+      
+      return Promise.resolve()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customer_vehicles', customerId] })
+    },
+    onError: (error) => {
+      console.error("Error setting primary vehicle:", error)
+      toast.error("Failed to set primary vehicle")
+    }
+  })
+
   return {
     vehicles,
     isLoading,
     error,
     addVehicle,
     updateVehicle,
-    deleteVehicle
+    deleteVehicle,
+    setPrimaryVehicle
   }
 }

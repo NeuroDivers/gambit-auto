@@ -15,23 +15,41 @@ import {
   AlertDialogTitle
 } from "@/components/ui/alert-dialog"
 import { useVehicles } from "./hooks/useVehicles"
+import { toast } from "sonner"
 
 interface VehicleCardProps {
   vehicle: Vehicle
   onEdit: (vehicle: Vehicle) => void
+  isPrimary?: boolean
+  onSetPrimary?: (vehicleId: string) => void
 }
 
-export function VehicleCard({ vehicle, onEdit }: VehicleCardProps) {
+export function VehicleCard({ vehicle, onEdit, isPrimary = false, onSetPrimary }: VehicleCardProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const { deleteVehicle } = useVehicles(vehicle.customer_id)
-
+  const { deleteVehicle, setPrimaryVehicle } = useVehicles(vehicle.customer_id)
+  
   const handleDelete = async () => {
     await deleteVehicle.mutateAsync(vehicle.id)
     setShowDeleteConfirm(false)
   }
 
+  const handleSetPrimary = async () => {
+    if (isPrimary) return // Already primary
+    
+    try {
+      await setPrimaryVehicle.mutateAsync(vehicle.id)
+      if (onSetPrimary) {
+        onSetPrimary(vehicle.id)
+      }
+      toast.success("Primary vehicle updated")
+    } catch (error) {
+      console.error("Error setting primary vehicle:", error)
+      toast.error("Failed to update primary vehicle")
+    }
+  }
+
   return (
-    <Card>
+    <Card className={isPrimary ? "border-primary" : ""}>
       <CardHeader className="pb-2">
         <div className="flex justify-between">
           <div>
@@ -39,7 +57,7 @@ export function VehicleCard({ vehicle, onEdit }: VehicleCardProps) {
               <h3 className="font-medium">
                 {vehicle.year} {vehicle.make} {vehicle.model}
               </h3>
-              {vehicle.is_primary && (
+              {isPrimary && (
                 <Star className="h-4 w-4 fill-primary text-primary" />
               )}
             </div>
@@ -90,6 +108,18 @@ export function VehicleCard({ vehicle, onEdit }: VehicleCardProps) {
             <div className="text-muted-foreground mb-1">Notes:</div>
             <div>{vehicle.notes}</div>
           </div>
+        )}
+        
+        {!isPrimary && onSetPrimary && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mt-4 w-full"
+            onClick={handleSetPrimary}
+          >
+            <Star className="h-4 w-4 mr-2" />
+            Set as Primary Vehicle
+          </Button>
         )}
       </CardContent>
 

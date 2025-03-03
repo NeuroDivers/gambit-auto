@@ -1,48 +1,62 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { z } from "zod"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Switch } from "@/components/ui/switch"
-import { Vehicle, VehicleFormValues } from "./types"
-import { useState } from "react"
-import { useVehicles } from "./hooks/useVehicles"
-import { toast } from "sonner"
-
-interface VehicleFormDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  customerId: string
-  vehicle?: Vehicle
-}
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Vehicle, VehicleFormValues } from "./types";
+import { useVehicles } from "./hooks/useVehicles";
+import { useVinLookup } from "@/hooks/useVinLookup";
+import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
 
 const vehicleFormSchema = z.object({
   make: z.string().min(1, "Make is required"),
   model: z.string().min(1, "Model is required"),
-  year: z.number().min(1900, "Invalid year").max(new Date().getFullYear() + 1, "Invalid year"),
-  vin: z.string().optional().nullable(),
-  color: z.string().optional().nullable(),
-  license_plate: z.string().optional().nullable(),
-  notes: z.string().optional().nullable(),
+  year: z.coerce.number().min(1900, "Year must be 1900 or later").max(new Date().getFullYear() + 1, "Year can't be in the future"),
+  vin: z.string().optional(),
+  color: z.string().optional(),
+  license_plate: z.string().optional(),
+  notes: z.string().optional(),
   is_primary: z.boolean().default(false),
-  body_class: z.string().optional().nullable(),
-  doors: z.number().optional().nullable(),
-  trim: z.string().optional().nullable(),
-})
+  body_class: z.string().optional(),
+  doors: z.coerce.number().optional(),
+  trim: z.string().optional(),
+});
 
-export function VehicleFormDialog({ 
-  open, 
-  onOpenChange, 
-  customerId, 
-  vehicle 
+interface VehicleFormDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  customerId: string;
+  vehicle?: Vehicle;
+}
+
+export function VehicleFormDialog({
+  open,
+  onOpenChange,
+  customerId,
+  vehicle,
 }: VehicleFormDialogProps) {
-  const [isPending, setIsPending] = useState(false)
-  const { addVehicle, updateVehicle } = useVehicles(customerId)
-  const isEditing = !!vehicle
+  const { addVehicle, updateVehicle } = useVehicles(customerId);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<VehicleFormValues>({
     resolver: zodResolver(vehicleFormSchema),
@@ -56,71 +70,78 @@ export function VehicleFormDialog({
       notes: vehicle?.notes || "",
       is_primary: vehicle?.is_primary || false,
       body_class: vehicle?.body_class || "",
-      doors: vehicle?.doors || null,
+      doors: vehicle?.doors || undefined,
       trim: vehicle?.trim || "",
     },
-  })
+  });
+
+  // VIN lookup integration
+  const vin = form.watch("vin");
+  const { data: vinData, isLoading: isLoadingVin } = useVinLookup(vin);
+
+  // Autofill VIN data when available
+  useEffect(() => {
+    if (vinData && !vinData.error) {
+      if (vinData.make) form.setValue("make", vinData.make);
+      if (vinData.model) form.setValue("model", vinData.model);
+      if (vinData.year) form.setValue("year", vinData.year);
+      if (vinData.bodyClass) form.setValue("body_class", vinData.bodyClass);
+      if (vinData.doors) form.setValue("doors", vinData.doors);
+      if (vinData.trim) form.setValue("trim", vinData.trim);
+    }
+  }, [vinData, form]);
 
   const onSubmit = async (values: VehicleFormValues) => {
-    setIsPending(true)
-    
+    setIsSubmitting(true);
     try {
-      if (isEditing && vehicle) {
-        await updateVehicle.mutateAsync({ id: vehicle.id, values })
+      if (vehicle) {
+        await updateVehicle.mutateAsync({ id: vehicle.id, values });
       } else {
-        await addVehicle.mutateAsync(values)
+        await addVehicle.mutateAsync(values);
       }
-      
-      form.reset()
-      onOpenChange(false)
+      onOpenChange(false);
+      form.reset();
     } catch (error) {
-      console.error("Error saving vehicle:", error)
-      toast.error("Failed to save vehicle")
+      console.error("Error saving vehicle:", error);
     } finally {
-      setIsPending(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Vehicle" : "Add Vehicle"}</DialogTitle>
+          <DialogTitle>{vehicle ? "Edit Vehicle" : "Add Vehicle"}</DialogTitle>
+          <DialogDescription>
+            {vehicle
+              ? "Update this vehicle's information."
+              : "Enter details about the customer's vehicle."}
+          </DialogDescription>
         </DialogHeader>
-        
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="make"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Make</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Vehicle make" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="model"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Model</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Vehicle model" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="vin"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>VIN</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input placeholder="Enter VIN for auto-fill" {...field} />
+                      {isLoadingVin && (
+                        <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="year"
@@ -128,18 +149,13 @@ export function VehicleFormDialog({
                   <FormItem>
                     <FormLabel>Year</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="Vehicle year" 
-                        {...field} 
-                        onChange={(e) => field.onChange(parseInt(e.target.value))}
-                      />
+                      <Input type="number" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="color"
@@ -147,7 +163,7 @@ export function VehicleFormDialog({
                   <FormItem>
                     <FormLabel>Color</FormLabel>
                     <FormControl>
-                      <Input placeholder="Vehicle color" {...field} value={field.value || ""} />
+                      <Input placeholder="Color" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -155,29 +171,29 @@ export function VehicleFormDialog({
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="vin"
+                name="make"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>VIN</FormLabel>
+                    <FormLabel>Make</FormLabel>
                     <FormControl>
-                      <Input placeholder="Vehicle VIN" {...field} value={field.value || ""} />
+                      <Input placeholder="e.g. Toyota" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
-                name="license_plate"
+                name="model"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>License Plate</FormLabel>
+                    <FormLabel>Model</FormLabel>
                     <FormControl>
-                      <Input placeholder="License plate" {...field} value={field.value || ""} />
+                      <Input placeholder="e.g. Camry" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -185,21 +201,21 @@ export function VehicleFormDialog({
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="body_class"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Body Type</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Body type" {...field} value={field.value || ""} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
+            <FormField
+              control={form.control}
+              name="license_plate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>License Plate</FormLabel>
+                  <FormControl>
+                    <Input placeholder="License plate number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="trim"
@@ -207,7 +223,26 @@ export function VehicleFormDialog({
                   <FormItem>
                     <FormLabel>Trim</FormLabel>
                     <FormControl>
-                      <Input placeholder="Vehicle trim" {...field} value={field.value || ""} />
+                      <Input placeholder="e.g. LE, XLE" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="doors"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Doors</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="Number of doors" 
+                        {...field}
+                        value={field.value || ""} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -217,24 +252,18 @@ export function VehicleFormDialog({
 
             <FormField
               control={form.control}
-              name="doors"
+              name="body_class"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Number of Doors</FormLabel>
+                  <FormLabel>Body Type</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="number" 
-                      placeholder="Number of doors" 
-                      {...field} 
-                      value={field.value || ""}
-                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
-                    />
+                    <Input placeholder="e.g. Sedan, SUV" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="notes"
@@ -242,7 +271,10 @@ export function VehicleFormDialog({
                 <FormItem>
                   <FormLabel>Notes</FormLabel>
                   <FormControl>
-                    <Input placeholder="Additional notes" {...field} value={field.value || ""} />
+                    <Textarea
+                      placeholder="Additional notes about the vehicle"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -253,34 +285,47 @@ export function VehicleFormDialog({
               control={form.control}
               name="is_primary"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                  <div className="space-y-0.5">
-                    <FormLabel>Primary Vehicle</FormLabel>
-                    <div className="text-sm text-muted-foreground">
-                      Make this the primary vehicle for the customer
-                    </div>
-                  </div>
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
                   <FormControl>
-                    <Switch
+                    <Checkbox
                       checked={field.value}
                       onCheckedChange={field.onChange}
                     />
                   </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Primary Vehicle</FormLabel>
+                    <p className="text-sm text-muted-foreground">
+                      Set as the customer's main vehicle
+                    </p>
+                  </div>
                 </FormItem>
               )}
             />
 
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? (isEditing ? "Updating..." : "Adding...") : (isEditing ? "Update" : "Add")}
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : vehicle ? (
+                  "Update Vehicle"
+                ) : (
+                  "Add Vehicle"
+                )}
               </Button>
             </div>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

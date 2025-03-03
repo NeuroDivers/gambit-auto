@@ -17,6 +17,7 @@ interface VehicleListProps {
 export function VehicleList({ customerId, vehicles: initialVehicles }: VehicleListProps) {
   const [showAddVehicle, setShowAddVehicle] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | undefined>(undefined);
+  const [primaryVehicleId, setPrimaryVehicleId] = useState<string | null>(null);
   
   // Only fetch vehicles if they weren't passed as props
   const { data: vehicles, isLoading, error } = useQuery({
@@ -34,6 +35,12 @@ export function VehicleList({ customerId, vehicles: initialVehicles }: VehicleLi
         ...vehicle,
         is_primary: vehicle.is_primary === null ? false : vehicle.is_primary
       })) as Vehicle[];
+      
+      // Set the primary vehicle ID if one exists
+      const primaryVehicle = processedData.find(v => v.is_primary);
+      if (primaryVehicle) {
+        setPrimaryVehicleId(primaryVehicle.id);
+      }
       
       return processedData;
     },
@@ -98,6 +105,8 @@ export function VehicleList({ customerId, vehicles: initialVehicles }: VehicleLi
             key={vehicle.id} 
             vehicle={vehicle} 
             onEdit={setEditingVehicle}
+            isPrimary={vehicle.is_primary}
+            onSetPrimary={setPrimaryVehicleId}
           />
         ))}
       </div>
