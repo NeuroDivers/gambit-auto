@@ -36,22 +36,6 @@ export function DeleteInvoiceDialog({
     try {
       setIsDeleting(true)
       
-      // First, add a record to audit_logs to avoid constraint violation
-      const { error: auditError } = await supabase
-        .from("audit_logs")
-        .insert({
-          entity_id: invoiceId,
-          entity_type: "invoice",
-          action_type: "delete",
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          details: { invoice_number: invoiceNumber }
-        })
-      
-      if (auditError) {
-        console.log("Audit log creation error, continuing with deletion:", auditError)
-        // Continue with deletion even if audit logging fails
-      }
-      
       // Delete all invoice items first (cascade doesn't work with foreign keys in Supabase)
       const { error: itemsError } = await supabase
         .from("invoice_items")
