@@ -17,6 +17,13 @@ export type Customer = {
   user_id?: string | null
   access_token?: string | null
   profile_id?: string | null
+  profile?: {
+    id: string
+    first_name: string | null
+    last_name: string | null
+    email: string | null
+    phone_number: string | null
+  } | null
   total_spent?: number
   total_invoices?: number
   total_work_orders?: number
@@ -43,13 +50,6 @@ export type Customer = {
     created_at: string
     vehicle_id?: string
   }>
-  profile?: {
-    id: string
-    first_name: string | null
-    last_name: string | null
-    email: string | null
-    phone_number: string | null
-  }
 }
 
 export type CustomerFormValues = {
@@ -58,7 +58,6 @@ export type CustomerFormValues = {
   email: string
   phone_number?: string
   address?: string
-  // Add new address fields
   street_address?: string
   unit_number?: string
   city?: string

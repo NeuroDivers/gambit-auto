@@ -74,23 +74,33 @@ export default function CustomerDetails() {
       // Get quotes/estimates
       const { data: quotes } = await supabase
         .from('estimates')
-        .select('id, estimate_number as quote_number, total, status, created_at, vehicle_id')
+        .select('id, estimate_number, total, status, created_at, vehicle_id')
         .eq('customer_id', id);
+      
+      // Transform quote data to match expected format
+      const formattedQuotes = quotes?.map(quote => ({
+        id: quote.id,
+        quote_number: quote.estimate_number,
+        total: quote.total,
+        status: quote.status,
+        created_at: quote.created_at,
+        vehicle_id: quote.vehicle_id
+      }));
             
       // Calculate summary statistics
       const total_spent = invoices?.reduce((sum, invoice) => sum + (invoice.total || 0), 0) || 0;
       const total_invoices = invoices?.length || 0;
       const total_work_orders = 0; // This will be calculated separately
 
-      const customerResult = {
+      const customerResult: Customer = {
         ...customerData,
         profile: profileData,
         invoices: invoices || [],
-        quotes: quotes || [],
+        quotes: formattedQuotes || [],
         total_spent,
         total_invoices,
         total_work_orders
-      } as Customer;
+      };
       
       return customerResult;
     }

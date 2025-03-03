@@ -66,7 +66,7 @@ export function VehicleList({ customerId, vehicles: initialVehicles }: VehicleLi
           <Plus className="h-4 w-4" />
           Add Vehicle
         </Button>
-        {/* We would add VehicleFormDialog component here */}
+        {/* VehicleFormDialog component will be added here in a future step */}
       </div>
     );
   }
@@ -91,7 +91,7 @@ export function VehicleList({ customerId, vehicles: initialVehicles }: VehicleLi
         ))}
       </div>
       
-      {/* We would add VehicleFormDialog component here */}
+      {/* VehicleFormDialog component will be added here in a future step */}
     </div>
   );
 }

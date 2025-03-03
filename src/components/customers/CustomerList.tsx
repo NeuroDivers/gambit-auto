@@ -37,7 +37,9 @@ export function CustomerList() {
       if (error) throw error
       
       // For customers with profile_id, fetch profile data
-      const customersWithProfiles = await Promise.all(customersData.map(async (customer) => {
+      const customersWithProfiles = await Promise.all((customersData || []).map(async (customer) => {
+        const customerWithProfile: Partial<Customer> = { ...customer };
+        
         if (customer.profile_id) {
           const { data: profileData } = await supabase
             .from('profiles')
@@ -47,13 +49,13 @@ export function CustomerList() {
           
           if (profileData) {
             // Create a profile property
-            customer.profile = profileData
+            customerWithProfile.profile = profileData
             
             // Use profile data if customer fields are empty
-            if (!customer.first_name) customer.first_name = profileData.first_name || ''
-            if (!customer.last_name) customer.last_name = profileData.last_name || ''
-            if (!customer.email) customer.email = profileData.email || ''
-            if (!customer.phone_number) customer.phone_number = profileData.phone_number
+            if (!customer.first_name) customerWithProfile.first_name = profileData.first_name || ''
+            if (!customer.last_name) customerWithProfile.last_name = profileData.last_name || ''
+            if (!customer.email) customerWithProfile.email = profileData.email || ''
+            if (!customer.phone_number) customerWithProfile.phone_number = profileData.phone_number
           }
         }
         
@@ -76,14 +78,14 @@ export function CustomerList() {
         }
         
         return {
-          ...customer,
+          ...customerWithProfile,
           total_spent: totalSpent,
           total_invoices: totalInvoices,
           last_invoice_date: lastInvoiceDate
-        }
+        } as Customer
       }))
       
-      return customersWithProfiles as Customer[]
+      return customersWithProfiles
     }
   })
 
