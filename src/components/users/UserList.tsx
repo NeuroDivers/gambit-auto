@@ -33,9 +33,9 @@ export const UserList = ({
   const isLoading = useStaffView ? isLoadingStaffUsers : isLoadingUsers;
   
   console.log("UserList - useStaffView:", useStaffView);
-  console.log("UserList - regularUsers:", regularUsers);
-  console.log("UserList - staffUsers:", staffUsers);
-  console.log("UserList - selectedUsers:", users);
+  console.log("UserList - regularUsers count:", regularUsers?.length || 0);
+  console.log("UserList - staffUsers count:", staffUsers?.length || 0);
+  console.log("UserList - selectedUsers count:", users?.length || 0);
   
   // Update roleFilter when initialRoleFilter changes
   useEffect(() => {
@@ -48,18 +48,20 @@ export const UserList = ({
   useUserSubscription();
 
   const filterUserBySearch = (user: User | StaffUser, query: string) => {
-    if (query.toLowerCase() === "") return true;
+    if (!query || query.trim() === "") return true;
+    
+    const lowercaseQuery = query.toLowerCase();
     
     // Check email
-    if (user.email?.toLowerCase().includes(query.toLowerCase())) return true;
+    if (user.email?.toLowerCase().includes(lowercaseQuery)) return true;
     
     // Check name
     const fullName = `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase();
-    if (fullName.includes(query.toLowerCase())) return true;
+    if (fullName.includes(lowercaseQuery)) return true;
     
     // If this is a staff user, also check department and position
-    if ('department' in user && user.department?.toLowerCase().includes(query.toLowerCase())) return true;
-    if ('position' in user && user.position?.toLowerCase().includes(query.toLowerCase())) return true;
+    if ('department' in user && user.department?.toLowerCase().includes(lowercaseQuery)) return true;
+    if ('position' in user && user.position?.toLowerCase().includes(lowercaseQuery)) return true;
     
     return false;
   };
@@ -108,10 +110,11 @@ export const UserList = ({
         showStaffFilters={useStaffView}
       />
       <div className="grid gap-4">
-        {filteredUsers?.map((user) => (
-          <UserCard key={user.id} user={user} isStaffView={useStaffView} />
-        ))}
-        {(!filteredUsers || filteredUsers.length === 0) && (
+        {filteredUsers && filteredUsers.length > 0 ? (
+          filteredUsers.map((user) => (
+            <UserCard key={user.id} user={user} isStaffView={useStaffView} />
+          ))
+        ) : (
           <div className="text-center py-8 text-muted-foreground">
             No users found matching your filters.
           </div>
