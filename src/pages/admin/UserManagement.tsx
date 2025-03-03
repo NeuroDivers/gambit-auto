@@ -9,12 +9,10 @@ import { CreateUserDialog } from "@/components/users/CreateUserDialog"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { useAdminStatus } from "@/hooks/useAdminStatus"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function UserManagement() {
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState("all");
-  const [activeTab, setActiveTab] = useState("staff");
   const { isAdmin } = useAdminStatus();
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
   const { checkPermission } = usePermissions()
@@ -59,9 +57,9 @@ export default function UserManagement() {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold">User Management</h1>
+            <h1 className="text-3xl font-bold">Staff Management</h1>
             <p className="text-muted-foreground">
-              Manage staff and all user accounts
+              Manage staff accounts including departments, positions and permissions
             </p>
           </div>
           {isAdmin && (
@@ -72,40 +70,15 @@ export default function UserManagement() {
           )}
         </div>
         
-        <Tabs defaultValue="staff" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="staff" className="flex items-center gap-2">
-              <Briefcase className="h-4 w-4" />
-              Staff Management
-            </TabsTrigger>
-            <TabsTrigger value="all" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              All Users
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="staff">
-            <Alert>
-              <Briefcase className="h-4 w-4" />
-              <AlertTitle>Staff Management</AlertTitle>
-              <AlertDescription>
-                Manage staff accounts including departments, positions and permissions.
-              </AlertDescription>
-            </Alert>
-            <UserList initialRoleFilter={selectedRole} useStaffView={true} excludeClients={true} />
-          </TabsContent>
-          
-          <TabsContent value="all">
-            <Alert>
-              <Users className="h-4 w-4" />
-              <AlertTitle>All Users</AlertTitle>
-              <AlertDescription>
-                View and manage all user accounts in the system.
-              </AlertDescription>
-            </Alert>
-            <UserList initialRoleFilter={selectedRole} useStaffView={false} />
-          </TabsContent>
-        </Tabs>
+        <Alert>
+          <Briefcase className="h-4 w-4" />
+          <AlertTitle>Staff Management</AlertTitle>
+          <AlertDescription>
+            Manage staff accounts including departments, positions and permissions.
+          </AlertDescription>
+        </Alert>
+        
+        <UserList initialRoleFilter={selectedRole} useStaffView={true} excludeClients={true} />
       </div>
       
       <CreateUserDialog 

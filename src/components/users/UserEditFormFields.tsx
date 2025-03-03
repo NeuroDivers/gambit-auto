@@ -21,7 +21,6 @@ export const formSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().min(1, "Last name is required"),
   role: z.string().min(1, "Role is required"),
-  default_dashboard: z.enum(["admin", "staff", "client"]).default("client")
 })
 
 interface Props {
@@ -83,31 +82,6 @@ export function UserEditFormFields({ form, roles }: Props) {
                     {role.nicename}
                   </SelectItem>
                 ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="default_dashboard"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Default Dashboard</FormLabel>
-            <Select
-              value={field.value}
-              onValueChange={field.onChange}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select default dashboard" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="admin">Admin Dashboard</SelectItem>
-                <SelectItem value="staff">Staff Dashboard</SelectItem>
-                <SelectItem value="client">Client Dashboard</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />
