@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
@@ -22,18 +22,50 @@ export function ServiceTypeDialog({ open, onOpenChange, serviceType, onSuccess }
   const form = useForm<ServiceTypeFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: serviceType?.name || "",
-      description: serviceType?.description || "",
-      base_price: serviceType?.base_price ? serviceType.base_price.toString() : "",
-      estimated_time: serviceType?.duration ? serviceType.duration.toString() : "",
-      status: serviceType?.status || "active",
-      service_type: serviceType?.service_type || "standalone",
-      parent_service_id: serviceType?.parent_service_id || "",
-      pricing_model: serviceType?.pricing_model || "flat_rate",
+      name: "",
+      description: "",
+      base_price: "",
+      estimated_time: "",
+      status: "active",
+      service_type: "standalone",
+      parent_service_id: "",
+      pricing_model: "flat_rate",
       commission_rate: null,
       commission_type: null,
     }
   })
+
+  // Update form values when serviceType changes or dialog opens
+  useEffect(() => {
+    if (serviceType && open) {
+      form.reset({
+        name: serviceType.name || "",
+        description: serviceType.description || "",
+        base_price: serviceType.base_price ? serviceType.base_price.toString() : "",
+        estimated_time: serviceType.duration ? serviceType.duration.toString() : "",
+        status: serviceType.status || "active",
+        service_type: serviceType.service_type || "standalone",
+        parent_service_id: serviceType.parent_service_id || "",
+        pricing_model: serviceType.pricing_model || "flat_rate",
+        commission_rate: null,
+        commission_type: null,
+      });
+    } else if (!serviceType && open) {
+      // Reset form to default values when creating a new service type
+      form.reset({
+        name: "",
+        description: "",
+        base_price: "",
+        estimated_time: "",
+        status: "active",
+        service_type: "standalone",
+        parent_service_id: "",
+        pricing_model: "flat_rate",
+        commission_rate: null,
+        commission_type: null,
+      });
+    }
+  }, [serviceType, form, open]);
 
   async function onSubmit(data: ServiceTypeFormValues) {
     setIsSubmitting(true)
