@@ -61,7 +61,7 @@ export default function UserManagement() {
           <div className="space-y-1">
             <h1 className="text-3xl font-bold">User Management</h1>
             <p className="text-muted-foreground">
-              Manage staff and employee accounts
+              Manage staff and all user accounts
             </p>
           </div>
           {isAdmin && (

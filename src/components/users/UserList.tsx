@@ -10,7 +10,7 @@ import { UserListHeader } from "./UserListHeader";
 interface UserListProps {
   initialRoleFilter?: string;
   excludeClients?: boolean;
-  useStaffView?: boolean; // New prop to determine data source
+  useStaffView?: boolean; // Prop to determine data source
 }
 
 export const UserList = ({ 
@@ -24,13 +24,18 @@ export const UserList = ({
     excludeClients ? [CLIENT_ROLE_ID] : []
   );
   
-  // Fetch data from appropriate source based on useStaffView prop
+  // Always fetch both data sources - this ensures we have data for both tabs
   const { data: regularUsers, isLoading: isLoadingUsers } = useUserData();
   const { data: staffUsers, isLoading: isLoadingStaffUsers } = useStaffUserData();
   
   // Determine which data source to use
   const users = useStaffView ? staffUsers : regularUsers;
   const isLoading = useStaffView ? isLoadingStaffUsers : isLoadingUsers;
+  
+  console.log("UserList - useStaffView:", useStaffView);
+  console.log("UserList - regularUsers:", regularUsers);
+  console.log("UserList - staffUsers:", staffUsers);
+  console.log("UserList - selectedUsers:", users);
   
   // Update roleFilter when initialRoleFilter changes
   useEffect(() => {
@@ -106,7 +111,7 @@ export const UserList = ({
         {filteredUsers?.map((user) => (
           <UserCard key={user.id} user={user} isStaffView={useStaffView} />
         ))}
-        {filteredUsers?.length === 0 && (
+        {(!filteredUsers || filteredUsers.length === 0) && (
           <div className="text-center py-8 text-muted-foreground">
             No users found matching your filters.
           </div>

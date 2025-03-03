@@ -16,7 +16,16 @@ export const useStaffUserData = () => {
     queryFn: async () => {
       console.log("Fetching staff users...");
       
-      // Fetch staff data from staff_view
+      // Get the client role ID to filter it out
+      const { data: clientRole } = await supabase
+        .from("roles")
+        .select("id")
+        .eq("name", "client")
+        .single();
+      
+      const clientRoleId = clientRole?.id;
+      
+      // Fetch staff data from staff_view, excluding client roles
       const { data: staffData, error: staffError } = await supabase
         .from("staff_view")
         .select(`
@@ -31,7 +40,8 @@ export const useStaffUserData = () => {
           department,
           employee_id,
           status
-        `);
+        `)
+        .neq("role_id", clientRoleId);
 
       if (staffError) {
         console.error("Error fetching staff data:", staffError);
