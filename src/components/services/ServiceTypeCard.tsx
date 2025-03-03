@@ -4,10 +4,9 @@ import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFoo
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Pencil, Trash } from "lucide-react";
+import { Pencil, Trash, Loader2 } from "lucide-react";
 import { ServiceCardHeader } from "./card/ServiceCardHeader";
 import { ServiceCardContent } from "./card/ServiceCardContent";
-import { ServiceCardActions } from "./card/ServiceCardActions";
 import { ServiceTypeBadge } from "./card/ServiceTypeBadge";
 import { ServiceType } from "./hooks/useServiceTypes";
 import { toast } from "sonner";
@@ -22,6 +21,13 @@ interface ServiceTypeCardProps {
 export const ServiceTypeCard = ({ service, onEdit, onRefetch }: ServiceTypeCardProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  const hasSubServices = service.sub_services && service.sub_services.length > 0;
+
+  const handleToggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -93,8 +99,16 @@ export const ServiceTypeCard = ({ service, onEdit, onRefetch }: ServiceTypeCardP
   return (
     <>
       <Card className="h-full flex flex-col">
-        <ServiceCardHeader service={service} />
-        <ServiceCardContent service={service} />
+        <ServiceCardHeader 
+          service={service} 
+          hasSubServices={hasSubServices}
+          isExpanded={isExpanded}
+          onToggleExpand={handleToggleExpand}
+        />
+        <ServiceCardContent 
+          service={service} 
+          isExpanded={isExpanded} 
+        />
         <CardContent className="flex justify-end mt-auto pt-0">
           <div className="flex gap-2">
             <Button
@@ -138,7 +152,14 @@ export const ServiceTypeCard = ({ service, onEdit, onRefetch }: ServiceTypeCardP
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
