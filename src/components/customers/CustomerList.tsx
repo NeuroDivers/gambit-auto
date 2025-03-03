@@ -1,24 +1,63 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Customer } from "./types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, ChevronRight } from "lucide-react"
+import { Search, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { useNavigate } from "react-router-dom"
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationItem, 
+  PaginationNext, 
+  PaginationPrevious,
+  PaginationLink,
+  PaginationEllipsis
+} from "@/components/ui/pagination"
 
 export function CustomerList() {
   const navigate = useNavigate()
   const [search, setSearch] = useState<string>("")
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalCustomers, setTotalCustomers] = useState(0)
+  const PAGE_SIZE = 10
+  
+  // Fetch total count for pagination
+  useEffect(() => {
+    const fetchTotalCount = async () => {
+      const { count, error } = await supabase
+        .from('customers')
+        .select('id', { count: 'exact', head: true })
+      
+      if (error) {
+        console.error('Error fetching customer count:', error)
+        return
+      }
+      
+      if (count !== null) {
+        setTotalCustomers(count)
+        setTotalPages(Math.ceil(count / PAGE_SIZE))
+      }
+    }
+    
+    fetchTotalCount()
+  }, [])
   
   const { data: customers, isLoading, error } = useQuery({
-    queryKey: ['customers'],
+    queryKey: ['customers', page, PAGE_SIZE],
     queryFn: async () => {
-      // Fetch customers with their stats
+      console.log(`Fetching customers for page ${page}`)
+      // Calculate offset
+      const from = (page - 1) * PAGE_SIZE
+      const to = from + PAGE_SIZE - 1
+      
+      // Fetch customers with pagination
       const { data: customersData, error } = await supabase
         .from('customers')
         .select(`
@@ -33,6 +72,7 @@ export function CustomerList() {
           phone_number
         `)
         .order('created_at', { ascending: false })
+        .range(from, to)
       
       if (error) throw error
       
@@ -102,6 +142,55 @@ export function CustomerList() {
     )
   })
 
+  // Handle page changes
+  const goToPage = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage)
+      window.scrollTo(0, 0)
+    }
+  }
+
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const pageNumbers = []
+    const maxPagesToShow = 5
+    
+    if (totalPages <= maxPagesToShow) {
+      // Show all pages if total pages are less than max
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i)
+      }
+    } else {
+      // Always include first page, last page, and pages around current page
+      if (page <= 3) {
+        // Near the start
+        for (let i = 1; i <= 4; i++) {
+          pageNumbers.push(i)
+        }
+        pageNumbers.push('ellipsis')
+        pageNumbers.push(totalPages)
+      } else if (page >= totalPages - 2) {
+        // Near the end
+        pageNumbers.push(1)
+        pageNumbers.push('ellipsis')
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pageNumbers.push(i)
+        }
+      } else {
+        // Middle
+        pageNumbers.push(1)
+        pageNumbers.push('ellipsis')
+        pageNumbers.push(page - 1)
+        pageNumbers.push(page)
+        pageNumbers.push(page + 1)
+        pageNumbers.push('ellipsis')
+        pageNumbers.push(totalPages)
+      }
+    }
+    
+    return pageNumbers
+  }
+
   if (error) {
     console.error("Error loading customers:", error)
     return <div>Error loading customers. Please try again.</div>
@@ -131,68 +220,112 @@ export function CustomerList() {
             <p className="text-muted-foreground">No customers found.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 font-medium">Customer</th>
-                  <th className="text-left py-3 font-medium">Contact</th>
-                  <th className="text-left py-3 font-medium">Total Spent</th>
-                  <th className="text-left py-3 font-medium">Status</th>
-                  <th className="text-right py-3 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredCustomers?.map((customer) => (
-                  <tr key={customer.id} className="border-b hover:bg-muted/40">
-                    <td className="py-3">
-                      <div className="font-medium">
-                        {customer.first_name} {customer.last_name}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {customer.city && customer.state_province ? 
-                          `${customer.city}, ${customer.state_province}` : 
-                          "No location data"}
-                      </div>
-                    </td>
-                    <td className="py-3">
-                      <div>{customer.email}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {customer.phone_number || "No phone"}
-                      </div>
-                    </td>
-                    <td className="py-3">
-                      <div>{formatCurrency(customer.total_spent || 0)}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {customer.total_invoices || 0} invoice{customer.total_invoices !== 1 ? 's' : ''}
-                      </div>
-                    </td>
-                    <td className="py-3">
-                      {customer.last_invoice_date ? (
-                        <Badge variant="outline" className="bg-green-100 text-green-800">
-                          Active
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-gray-100 text-gray-800">
-                          Inactive
-                        </Badge>
-                      )}
-                    </td>
-                    <td className="py-3 text-right">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => navigate(`/customers/${customer.id}`)}
-                      >
-                        View
-                        <ChevronRight className="h-4 w-4 ml-1" />
-                      </Button>
-                    </td>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 font-medium">Customer</th>
+                    <th className="text-left py-3 font-medium">Contact</th>
+                    <th className="text-left py-3 font-medium">Total Spent</th>
+                    <th className="text-left py-3 font-medium">Status</th>
+                    <th className="text-right py-3 font-medium">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredCustomers?.map((customer) => (
+                    <tr key={customer.id} className="border-b hover:bg-muted/40">
+                      <td className="py-3">
+                        <div className="font-medium">
+                          {customer.first_name} {customer.last_name}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {customer.city && customer.state_province ? 
+                            `${customer.city}, ${customer.state_province}` : 
+                            "No location data"}
+                        </div>
+                      </td>
+                      <td className="py-3">
+                        <div>{customer.email}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {customer.phone_number || "No phone"}
+                        </div>
+                      </td>
+                      <td className="py-3">
+                        <div>{formatCurrency(customer.total_spent || 0)}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {customer.total_invoices || 0} invoice{customer.total_invoices !== 1 ? 's' : ''}
+                        </div>
+                      </td>
+                      <td className="py-3">
+                        {customer.last_invoice_date ? (
+                          <Badge variant="outline" className="bg-green-100 text-green-800">
+                            Active
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-gray-100 text-gray-800">
+                            Inactive
+                          </Badge>
+                        )}
+                      </td>
+                      <td className="py-3 text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => navigate(`/customers/${customer.id}`)}
+                        >
+                          View
+                          <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Pagination */}
+            <div className="mt-6 flex justify-between items-center">
+              <div className="text-sm text-muted-foreground">
+                Showing {customers.length} of {totalCustomers} customers
+              </div>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => goToPage(page - 1)}
+                      className={page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  
+                  {getPageNumbers().map((pageNum, i) => (
+                    pageNum === 'ellipsis' ? (
+                      <PaginationItem key={`ellipsis-${i}`}>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    ) : (
+                      <PaginationItem key={pageNum}>
+                        <PaginationLink
+                          onClick={() => goToPage(pageNum as number)}
+                          isActive={pageNum === page}
+                          className="cursor-pointer"
+                        >
+                          {pageNum}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )
+                  ))}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => goToPage(page + 1)}
+                      className={page >= totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

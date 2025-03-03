@@ -598,6 +598,7 @@ export type Database = {
           email: string
           first_name: string
           id: string
+          is_archived: boolean | null
           last_name: string
           phone_number: string | null
           postal_code: string | null
@@ -617,6 +618,7 @@ export type Database = {
           email: string
           first_name: string
           id?: string
+          is_archived?: boolean | null
           last_name: string
           phone_number?: string | null
           postal_code?: string | null
@@ -636,6 +638,7 @@ export type Database = {
           email?: string
           first_name?: string
           id?: string
+          is_archived?: boolean | null
           last_name?: string
           phone_number?: string | null
           postal_code?: string | null
@@ -1069,6 +1072,41 @@ export type Database = {
             columns: ["sub_service_id"]
             isOneToOne: false
             referencedRelation: "service_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_snapshots: {
+        Row: {
+          business_data: Json
+          created_at: string
+          customer_data: Json
+          id: string
+          invoice_id: string
+          vehicle_data: Json
+        }
+        Insert: {
+          business_data: Json
+          created_at?: string
+          customer_data: Json
+          id?: string
+          invoice_id: string
+          vehicle_data: Json
+        }
+        Update: {
+          business_data?: Json
+          created_at?: string
+          customer_data?: Json
+          id?: string
+          invoice_id?: string
+          vehicle_data?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_snapshots_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
         ]
