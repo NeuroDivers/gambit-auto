@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { ServiceItemType } from "@/types/service-item"
 import { useMutation } from "@tanstack/react-query"
@@ -39,8 +40,8 @@ export function QuoteForm({ quote, onSuccess, defaultServices = [] }: QuoteFormP
   return (
     <div className="space-y-4">
       <InvoiceItemsFields
-        services={services}
-        setServices={setServices}
+        items={services}
+        setItems={(items) => setServices(items as ServiceItemType[])}
       />
 
       <Button

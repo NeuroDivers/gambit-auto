@@ -1,10 +1,11 @@
 
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 import { ServiceItemType } from "@/types/service-item"
+import { InvoiceItem } from "@/components/invoices/types"
 
 interface InvoiceItemsFieldsProps {
-  items: ServiceItemType[];
-  setItems: (items: ServiceItemType[]) => void;
+  items: InvoiceItem[] | ServiceItemType[];
+  setItems: (items: InvoiceItem[] | ServiceItemType[]) => void;
   allowPriceEdit?: boolean;
   showCommission?: boolean;
 }
@@ -15,10 +16,53 @@ export function InvoiceItemsFields({
   allowPriceEdit = true,
   showCommission = true 
 }: InvoiceItemsFieldsProps) {
+  // Map InvoiceItem[] to ServiceItemType[] if needed
+  const mappedItems = items.map(item => {
+    const serviceItem: ServiceItemType = {
+      service_id: item.service_id,
+      service_name: item.service_name,
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      description: item.description || "",
+      commission_rate: (item as any).commission_rate ?? null,
+      commission_type: (item as any).commission_type ?? null,
+      package_id: (item as any).package_id || undefined
+    };
+    return serviceItem;
+  });
+
+  // Handle the conversion back
+  const handleItemsChange = (updatedItems: ServiceItemType[]) => {
+    const convertedItems = updatedItems.map(item => {
+      const invoiceItem: any = {
+        service_id: item.service_id,
+        service_name: item.service_name,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        description: item.description || "",
+      };
+      
+      // Add commission fields if they exist
+      if (item.commission_rate !== undefined) {
+        invoiceItem.commission_rate = item.commission_rate;
+      }
+      if (item.commission_type !== undefined) {
+        invoiceItem.commission_type = item.commission_type;
+      }
+      if (item.package_id) {
+        invoiceItem.package_id = item.package_id;
+      }
+      
+      return invoiceItem;
+    });
+    
+    setItems(convertedItems);
+  };
+
   return (
     <ServiceSelectionField
-      services={items}
-      onChange={setItems}
+      services={mappedItems}
+      onChange={handleItemsChange}
       allowPriceEdit={allowPriceEdit}
       showCommission={showCommission}
     />
