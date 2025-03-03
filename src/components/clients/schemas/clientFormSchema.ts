@@ -12,6 +12,7 @@ export const clientFormSchema = z.object({
   state_province: z.string().optional(),
   postal_code: z.string().optional(),
   country: z.string().optional(),
+  notes: z.string().optional(),
 })
 
 export type ClientFormValues = z.infer<typeof clientFormSchema>
