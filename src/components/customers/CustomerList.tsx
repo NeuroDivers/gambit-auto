@@ -21,7 +21,8 @@ export function CustomerList() {
       const { data, error } = await supabase
         .from('client_statistics')
         .select('*')
-        .order('last_invoice_date', { ascending: false, nullsLast: true })
+        .order('last_invoice_date', { ascending: false })
+        .is('last_invoice_date', null)
       
       if (error) throw error
       return data as Customer[]

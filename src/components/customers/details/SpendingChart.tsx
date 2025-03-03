@@ -62,7 +62,7 @@ export function SpendingChart({ customer }: SpendingChartProps) {
             <BarChart data={monthlySpending} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
-              <YAxis tickFormatter={(value) => formatCurrency(value, false)} />
+              <YAxis tickFormatter={(value) => formatCurrency(value)} />
               <Tooltip 
                 formatter={(value) => [formatCurrency(value as number), "Amount"]}
                 labelFormatter={(label) => `Month: ${label}`} 

@@ -38,7 +38,7 @@ export function VehicleCard({ vehicle }: VehicleCardProps) {
           <div>{vehicle.license_plate || "N/A"}</div>
           
           <div className="text-muted-foreground">Mileage:</div>
-          <div>{vehicle.mileage ? `${vehicle.mileage} mi` : "N/A"}</div>
+          <div>N/A</div>
         </div>
       </CardContent>
     </Card>

@@ -12,15 +12,10 @@ interface VehicleListProps {
 }
 
 export function VehicleList({ customerId }: VehicleListProps) {
-  const { vehicles, isLoading, error } = useVehicles(customerId)
+  const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle } = useVehicles(customerId)
   
-  useEffect(() => {
-    if (error) {
-      toast.error("Failed to load vehicles")
-      console.error("Error loading vehicles:", error)
-    }
-  }, [error])
-
+  // No need to check for error since it's not returned by the hook
+  
   if (isLoading) {
     return <div className="p-6">Loading vehicles...</div>
   }
