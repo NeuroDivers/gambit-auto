@@ -6,11 +6,11 @@ import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 
-interface CustomerInfoFieldsProps {
+interface ClientInfoFieldsProps {
   control: Control<WorkOrderFormValues>
 }
 
-export function CustomerInfoFields({ control }: CustomerInfoFieldsProps) {
+export function ClientInfoFields({ control }: ClientInfoFieldsProps) {
   return (
     <div className="grid gap-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

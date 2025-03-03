@@ -21,6 +21,7 @@ export interface CommissionRateFieldsProps {
   form?: UseFormReturn<any>
   namePrefix?: string
   label?: string
+  hidden?: boolean
 }
 
 export function CommissionRateFields({
@@ -30,8 +31,11 @@ export function CommissionRateFields({
   disabled,
   form,
   namePrefix,
-  label = "Commission"
+  label = "Commission",
+  hidden = false
 }: CommissionRateFieldsProps) {
+  if (hidden) return null;
+  
   return (
     <div className="space-y-2">
       <Label>Commission</Label>

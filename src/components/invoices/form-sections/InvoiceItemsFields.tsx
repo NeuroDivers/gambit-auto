@@ -1,3 +1,4 @@
+
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 import { ServiceItemType } from "@/types/service-item"
 import { InvoiceItem } from "@/components/invoices/types"
@@ -13,7 +14,7 @@ export function InvoiceItemsFields({
   items, 
   setItems, 
   allowPriceEdit = true,
-  showCommission = true 
+  showCommission = false 
 }: InvoiceItemsFieldsProps) {
   // Map items to ServiceItemType[] for ServiceSelectionField
   const mappedItems = items.map(item => {
@@ -61,7 +62,7 @@ export function InvoiceItemsFields({
       services={mappedItems}
       onChange={handleItemsChange}
       allowPriceEdit={allowPriceEdit}
-      showCommission={showCommission}
+      showCommission={false}
     />
   )
 }

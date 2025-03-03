@@ -23,13 +23,13 @@ type EstimateFormProps = {
 }
 
 export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps) {
-  const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null)
+  const [selectedClient, setSelectedClient] = useState<string | null>(null)
   
-  const { data: customers, isLoading: customersLoading } = useQuery({
-    queryKey: ["customers"],
+  const { data: clients, isLoading: clientsLoading } = useQuery({
+    queryKey: ["clients"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("customers")
+        .from("clients")
         .select("id, first_name, last_name, email")
         .order("last_name", { ascending: true })
       
@@ -39,13 +39,13 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
   })
   
   const { data: vehicles, isLoading: vehiclesLoading } = useQuery({
-    queryKey: ["vehicles", selectedCustomer],
-    enabled: !!selectedCustomer,
+    queryKey: ["vehicles", selectedClient],
+    enabled: !!selectedClient,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("vehicles")
         .select("id, make, model, year, vin")
-        .eq("customer_id", selectedCustomer)
+        .eq("client_id", selectedClient)
         .order("created_at", { ascending: false })
       
       if (error) throw error
@@ -67,9 +67,9 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
     }
   })
   
-  const handleCustomerChange = (customerId: string) => {
-    setSelectedCustomer(customerId)
-    form.setValue("customer_id", customerId)
+  const handleClientChange = (clientId: string) => {
+    setSelectedClient(clientId)
+    form.setValue("client_id", clientId)
   }
 
   return (
@@ -79,20 +79,20 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
       </CardHeader>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <CardContent className="space-y-6">
-          {/* Customer Selection */}
+          {/* Client Selection */}
           <div className="space-y-2">
-            <Label htmlFor="customer_id">Customer</Label>
+            <Label htmlFor="client_id">Client</Label>
             <Select 
-              onValueChange={handleCustomerChange}
-              defaultValue={form.watch("customer_id")}
+              onValueChange={handleClientChange}
+              defaultValue={form.watch("client_id")}
             >
-              <SelectTrigger id="customer_id">
-                <SelectValue placeholder="Select a customer" />
+              <SelectTrigger id="client_id">
+                <SelectValue placeholder="Select a client" />
               </SelectTrigger>
               <SelectContent>
-                {customers?.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id}>
-                    {customer.first_name} {customer.last_name}
+                {clients?.map((client) => (
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.first_name} {client.last_name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -105,7 +105,7 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
             <Select 
               onValueChange={(value) => form.setValue("vehicle_id", value)}
               defaultValue={form.watch("vehicle_id")}
-              disabled={!selectedCustomer || vehiclesLoading}
+              disabled={!selectedClient || vehiclesLoading}
             >
               <SelectTrigger id="vehicle_id">
                 <SelectValue placeholder="Select a vehicle" />

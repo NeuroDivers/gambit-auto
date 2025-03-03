@@ -8,7 +8,7 @@ interface PersonalInfoFieldsProps {
   fieldPrefix?: string
 }
 
-export function PersonalInfoFields({ form, fieldPrefix = "customer_" }: PersonalInfoFieldsProps) {
+export function PersonalInfoFields({ form, fieldPrefix = "client_" }: PersonalInfoFieldsProps) {
   return (
     <div className="flex flex-col space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

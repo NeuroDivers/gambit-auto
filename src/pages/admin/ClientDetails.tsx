@@ -105,7 +105,7 @@ export default function ClientDetails() {
           <TabsTrigger value="vehicles">Vehicles</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
           <TabsTrigger value="invoices">Invoices</TabsTrigger>
-          <TabsTrigger value="quotes">Quotes</TabsTrigger>
+          <TabsTrigger value="quotes">Estimates</TabsTrigger>
         </TabsList>
         
         <TabsContent value="vehicles" className="border rounded-lg mt-6">
