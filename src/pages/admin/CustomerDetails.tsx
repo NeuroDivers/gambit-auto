@@ -2,8 +2,7 @@
 import { useParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { Customer } from "@/components/customers/types"
-import { Card } from "@/components/ui/card"
+import { Customer, Vehicle } from "@/components/customers/types"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { VehicleList } from "@/components/customers/vehicles/VehicleList"
 import { CustomerHeader } from "@/components/customers/details/CustomerHeader"
@@ -36,22 +35,9 @@ export default function CustomerDetails() {
           user_id,
           access_token,
           email,
+          phone_number,
           first_name,
-          last_name,
-          invoices (
-            id,
-            invoice_number,
-            total,
-            status,
-            created_at
-          ),
-          quotes:quotes_client_id_fkey (
-            id,
-            quote_number,
-            total,
-            status,
-            created_at
-          )
+          last_name
         `)
         .eq('id', id)
         .single()
@@ -63,35 +49,65 @@ export default function CustomerDetails() {
       if (customerData.profile_id) {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('first_name, last_name, email, phone_number')
+          .select('id, first_name, last_name, email, phone_number')
           .eq('id', customerData.profile_id)
           .single();
           
         if (!profileError && profile) {
-          // Merge profile data over customer data (profile takes precedence)
-          profileData = {
-            first_name: profile.first_name || customerData.first_name,
-            last_name: profile.last_name || customerData.last_name,
-            email: profile.email || customerData.email,
-            phone_number: profile.phone_number
-          };
+          // Store profile info
+          profileData = profile;
+          
+          // Use profile data if customer fields are empty
+          if (!customerData.first_name) customerData.first_name = profile.first_name || '';
+          if (!customerData.last_name) customerData.last_name = profile.last_name || '';
+          if (!customerData.email) customerData.email = profile.email || '';
+          if (!customerData.phone_number) customerData.phone_number = profile.phone_number;
         }
       }
+      
+      // Get invoices
+      const { data: invoices } = await supabase
+        .from('invoices')
+        .select('id, invoice_number, total, status, created_at, vehicle_id')
+        .eq('customer_id', id);
+      
+      // Get quotes
+      const { data: quotes } = await supabase
+        .from('estimates')
+        .select('id, estimate_number as quote_number, total, status, created_at, vehicle_id')
+        .eq('customer_id', id);
             
       // Calculate summary statistics
-      const total_spent = 0 // This will be calculated in the CustomerStats component
-      const total_invoices = customerData?.invoices?.length || 0
-      const total_work_orders = 0
+      const total_spent = invoices?.reduce((sum, invoice) => sum + (invoice.total || 0), 0) || 0;
+      const total_invoices = invoices?.length || 0;
+      const total_work_orders = 0; // This will be calculated separately
 
       return {
         ...customerData,
-        ...(profileData || {}), // Overlay profile data if available
+        profile: profileData,
+        invoices: invoices || [],
+        quotes: quotes || [],
         total_spent,
         total_invoices,
         total_work_orders
       } as Customer
     }
   })
+
+  // Fetch customer vehicles
+  const { data: vehicles } = useQuery({
+    queryKey: ['customer_vehicles', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vehicles')
+        .select('*')
+        .eq('customer_id', id);
+        
+      if (error) throw error;
+      return data as Vehicle[];
+    },
+    enabled: !!id
+  });
 
   if (isLoading) return <div>Loading...</div>
   if (!customer) return <div>Customer not found</div>
@@ -111,7 +127,7 @@ export default function CustomerDetails() {
         </TabsList>
         
         <TabsContent value="vehicles" className="border rounded-lg mt-6">
-          <VehicleList customerId={customer.id} />
+          <VehicleList customerId={customer.id} vehicles={vehicles} />
         </TabsContent>
 
         <TabsContent value="history" className="border rounded-lg mt-6">

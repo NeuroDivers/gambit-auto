@@ -3,7 +3,6 @@ import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -23,9 +22,11 @@ const customerFormSchema = z.object({
   email: z.string().email("Invalid email address"),
   phone_number: z.string().optional(),
   street_address: z.string().optional(),
+  unit_number: z.string().optional(),
   city: z.string().optional(),
   state_province: z.string().optional(),
   postal_code: z.string().optional(),
+  country: z.string().optional(),
 })
 
 type CustomerFormValues = z.infer<typeof customerFormSchema>
@@ -42,9 +43,11 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
       email: "",
       phone_number: "",
       street_address: "",
+      unit_number: "",
       city: "",
       state_province: "",
       postal_code: "",
+      country: "",
     },
   })
 
@@ -64,35 +67,41 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
       
       let profileId = existingProfiles?.id;
       
-      // If no existing profile, create one
-      if (!profileId) {
-        const { data: newProfile, error: profileError } = await supabase
-          .from("profiles")
-          .insert([{
-            first_name: data.first_name,
-            last_name: data.last_name,
-            email: data.email,
-            phone_number: data.phone_number,
-          }])
-          .select('id')
-          .single()
-
-        if (profileError) throw profileError
-        profileId = newProfile.id
+      // If no existing profile, we'll create a customer without a profile_id
+      // (they'll get linked later if they create an account)
+      
+      // Check if customer with this email already exists
+      const { data: existingCustomer, error: customerQueryError } = await supabase
+        .from("customers")
+        .select("id")
+        .eq("email", data.email)
+        .maybeSingle();
+        
+      if (customerQueryError) {
+        console.error("Error checking for existing customer:", customerQueryError);
       }
       
-      // Now create or update customer linked to profile
+      if (existingCustomer) {
+        toast.error("A customer with this email already exists");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Create new customer linked to profile if one exists
       const { data: newCustomer, error: customerError } = await supabase
         .from("customers")
         .insert([{
-          profile_id: profileId,
+          profile_id: profileId, // Will be null if no matching profile
           first_name: data.first_name,
           last_name: data.last_name,
           email: data.email,
+          phone_number: data.phone_number,
           street_address: data.street_address,
+          unit_number: data.unit_number,
           city: data.city,
           state_province: data.state_province,
           postal_code: data.postal_code,
+          country: data.country,
         }])
         .select()
         .single()
@@ -201,7 +210,21 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
               )}
             />
             
-            <div className="grid grid-cols-3 gap-4">
+            <FormField
+              control={form.control}
+              name="unit_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Unit/Apt Number</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="city"
@@ -221,7 +244,23 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
                 name="state_province"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>State</FormLabel>
+                    <FormLabel>State/Province</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="postal_code"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Postal Code</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -232,10 +271,10 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
               
               <FormField
                 control={form.control}
-                name="postal_code"
+                name="country"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Postal Code</FormLabel>
+                    <FormLabel>Country</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>

@@ -16,6 +16,7 @@ export type Customer = {
   updated_at: string
   user_id?: string | null
   access_token?: string | null
+  profile_id?: string | null
   total_spent?: number
   total_invoices?: number
   total_work_orders?: number
@@ -32,6 +33,7 @@ export type Customer = {
     total: number
     status: string
     created_at: string
+    vehicle_id?: string
   }>
   quotes?: Array<{
     id: string
@@ -39,7 +41,15 @@ export type Customer = {
     total: number
     status: string
     created_at: string
+    vehicle_id?: string
   }>
+  profile?: {
+    id: string
+    first_name: string | null
+    last_name: string | null
+    email: string | null
+    phone_number: string | null
+  }
 }
 
 export type CustomerFormValues = {
@@ -48,4 +58,30 @@ export type CustomerFormValues = {
   email: string
   phone_number?: string
   address?: string
+  // Add new address fields
+  street_address?: string
+  unit_number?: string
+  city?: string
+  state_province?: string
+  postal_code?: string
+  country?: string
+}
+
+// Vehicle type
+export type Vehicle = {
+  id: string
+  customer_id: string
+  make: string
+  model: string
+  year: number
+  vin?: string
+  color?: string
+  license_plate?: string
+  notes?: string
+  is_primary?: boolean
+  body_class?: string
+  doors?: number
+  trim?: string
+  created_at: string
+  updated_at: string
 }

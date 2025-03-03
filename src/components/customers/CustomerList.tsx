@@ -19,7 +19,7 @@ export function CustomerList() {
     queryKey: ['customers'],
     queryFn: async () => {
       // Fetch customers with their stats
-      const { data, error } = await supabase
+      const { data: customersData, error } = await supabase
         .from('customers')
         .select(`
           id, 
@@ -29,27 +29,31 @@ export function CustomerList() {
           city, 
           state_province,
           profile_id,
-          created_at
+          created_at,
+          phone_number
         `)
         .order('created_at', { ascending: false })
       
       if (error) throw error
       
-      // For customers with profile_id, fetch most recent profile data
-      const customersWithProfiles = await Promise.all(data.map(async (customer) => {
+      // For customers with profile_id, fetch profile data
+      const customersWithProfiles = await Promise.all(customersData.map(async (customer) => {
         if (customer.profile_id) {
-          const { data: profile } = await supabase
+          const { data: profileData } = await supabase
             .from('profiles')
-            .select('first_name, last_name, email, phone_number')
+            .select('id, first_name, last_name, email, phone_number')
             .eq('id', customer.profile_id)
             .maybeSingle()
           
-          if (profile) {
-            // Overlay profile data (profile data takes precedence)
-            customer.first_name = profile.first_name || customer.first_name
-            customer.last_name = profile.last_name || customer.last_name
-            customer.email = profile.email || customer.email
-            customer.phone_number = profile.phone_number
+          if (profileData) {
+            // Create a profile property rather than overriding customer fields
+            customer.profile = profileData
+            
+            // Use profile data if customer fields are empty
+            if (!customer.first_name) customer.first_name = profileData.first_name || ''
+            if (!customer.last_name) customer.last_name = profileData.last_name || ''
+            if (!customer.email) customer.email = profileData.email || ''
+            if (!customer.phone_number) customer.phone_number = profileData.phone_number
           }
         }
         
@@ -60,7 +64,7 @@ export function CustomerList() {
         
         const { data: invoices } = await supabase
           .from('invoices')
-          .select('id, total, created_at')
+          .select('id, total, created_at, vehicle_id')
           .eq('customer_id', customer.id)
         
         if (invoices && invoices.length > 0) {
