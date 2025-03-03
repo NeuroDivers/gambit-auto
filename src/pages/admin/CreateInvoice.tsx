@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useForm } from "react-hook-form"
@@ -121,7 +120,6 @@ export default function CreateInvoice() {
     }
   }
 
-  // Fetch default vehicle if customer is preselected
   useEffect(() => {
     if (preselectedCustomer?.id) {
       const fetchDefaultVehicle = async () => {
@@ -157,7 +155,6 @@ export default function CreateInvoice() {
   }
 
   const onCustomerSelect = (customerId: string) => {
-    // This function would be implemented if needed for customer selection
     console.log("Customer selected:", customerId)
   }
 
@@ -180,9 +177,7 @@ export default function CreateInvoice() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col">
           <div className="flex-1 p-4 grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-min">
-            {/* Left Column */}
             <div className="space-y-6">
-              {/* Invoice Status */}
               <Card>
                 <CardContent className="pt-6 space-y-4">
                   <InvoiceStatusField form={form} defaultValue={form.watch('status')} />
@@ -228,7 +223,6 @@ export default function CreateInvoice() {
                 </CardContent>
               </Card>
 
-              {/* Customer Information */}
               <Card>
                 <CardContent className="pt-6">
                   <CustomerInfoFields 
@@ -249,7 +243,6 @@ export default function CreateInvoice() {
                 </CardContent>
               </Card>
 
-              {/* Vehicle Information */}
               <Card>
                 <CardContent className="pt-6">
                   <VehicleInfoFields
@@ -272,9 +265,7 @@ export default function CreateInvoice() {
               </Card>
             </div>
 
-            {/* Right Column */}
             <div className="space-y-6">
-              {/* Services */}
               <Card>
                 <CardContent className="pt-6">
                   <h3 className="text-lg font-semibold mb-4">Service Items</h3>
@@ -286,7 +277,6 @@ export default function CreateInvoice() {
                 </CardContent>
               </Card>
 
-              {/* Summary */}
               <Card>
                 <CardContent className="pt-6">
                   <InvoiceTaxSummary 
@@ -296,7 +286,6 @@ export default function CreateInvoice() {
                 </CardContent>
               </Card>
 
-              {/* Notes */}
               <Card>
                 <CardContent className="pt-6">
                   <InvoiceNotesField form={form} />

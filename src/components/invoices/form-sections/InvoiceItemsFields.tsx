@@ -2,14 +2,25 @@
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 import { ServiceItemType } from "@/types/service-item"
 
-export function InvoiceItemsFields({ services, setServices }: any) {
+interface InvoiceItemsFieldsProps {
+  items: ServiceItemType[];
+  setItems: (items: ServiceItemType[]) => void;
+  allowPriceEdit?: boolean;
+  showCommission?: boolean;
+}
+
+export function InvoiceItemsFields({ 
+  items, 
+  setItems, 
+  allowPriceEdit = true,
+  showCommission = true 
+}: InvoiceItemsFieldsProps) {
   return (
     <ServiceSelectionField
-      services={services}
-      onChange={setServices}
-      onServicesChange={setServices}
-      allowPriceEdit={true}
-      showCommission={true}
+      services={items}
+      onChange={setItems}
+      allowPriceEdit={allowPriceEdit}
+      showCommission={showCommission}
     />
   )
 }
