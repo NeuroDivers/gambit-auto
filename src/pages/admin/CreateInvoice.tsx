@@ -12,22 +12,22 @@ import { InvoiceFormValues } from "@/components/invoices/types"
 import { Client } from "@/components/clients/types"
 
 interface LocationState {
-  preselectedClient?: Client;
+  preselectedCustomer?: Client;
 }
 
 export default function CreateInvoice() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { preselectedClient } = location.state as LocationState || {}
+  const { preselectedCustomer } = location.state as LocationState || {}
 
   const form = useForm<InvoiceFormValues>({
     defaultValues: {
       status: 'draft',
-      customer_first_name: preselectedClient?.first_name || '',
-      customer_last_name: preselectedClient?.last_name || '',
-      customer_email: preselectedClient?.email || '',
-      customer_phone: preselectedClient?.phone_number || '',
-      customer_address: preselectedClient?.address || '',
+      customer_first_name: preselectedCustomer?.first_name || '',
+      customer_last_name: preselectedCustomer?.last_name || '',
+      customer_email: preselectedCustomer?.email || '',
+      customer_phone: preselectedCustomer?.phone_number || '',
+      customer_address: preselectedCustomer?.address || '',
       vehicle_make: '',
       vehicle_model: '',
       vehicle_year: new Date().getFullYear(),
@@ -67,7 +67,7 @@ export default function CreateInvoice() {
           subtotal,
           total: subtotal, // Add tax calculation if needed
           status: 'draft',
-          client_id: preselectedClient?.id // Add client reference
+          client_id: preselectedCustomer?.id // Add customer reference
         })
         .select()
         .single()
@@ -100,14 +100,14 @@ export default function CreateInvoice() {
     }
   }
 
-  // Fetch default vehicle if client is preselected
+  // Fetch default vehicle if customer is preselected
   useEffect(() => {
-    if (preselectedClient?.id) {
+    if (preselectedCustomer?.id) {
       const fetchDefaultVehicle = async () => {
         const { data: vehicles, error } = await supabase
           .from('vehicles')
           .select('*')
-          .eq('client_id', preselectedClient.id)
+          .eq('client_id', preselectedCustomer.id)
           .eq('is_primary', true)
           .maybeSingle()
 
@@ -126,7 +126,7 @@ export default function CreateInvoice() {
 
       fetchDefaultVehicle()
     }
-  }, [preselectedClient?.id, form])
+  }, [preselectedCustomer?.id, form])
 
   return (
     <div className="container mx-auto">

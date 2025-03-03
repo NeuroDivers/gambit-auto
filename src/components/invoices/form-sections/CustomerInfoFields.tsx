@@ -14,9 +14,9 @@ type CustomerInfoFieldsProps = {
   setCustomerPhone: (value: string) => void
   customerAddress: string
   setCustomerAddress: (value: string) => void
-  clients?: any[]
-  isLoadingClients?: boolean
-  onClientSelect?: (clientId: string) => void
+  customers?: any[]
+  isLoadingCustomers?: boolean
+  onCustomerSelect?: (customerId: string) => void
 }
 
 export function CustomerInfoFields({
@@ -30,23 +30,23 @@ export function CustomerInfoFields({
   setCustomerPhone,
   customerAddress,
   setCustomerAddress,
-  clients = [],
-  isLoadingClients = false,
-  onClientSelect
+  customers = [],
+  isLoadingCustomers = false,
+  onCustomerSelect
 }: CustomerInfoFieldsProps) {
   return (
     <div className="space-y-4">
-      {clients.length > 0 && onClientSelect && (
+      {customers.length > 0 && onCustomerSelect && (
         <div>
-          <Label>Select Existing Client</Label>
-          <Select onValueChange={onClientSelect}>
+          <Label>Select Existing Customer</Label>
+          <Select onValueChange={onCustomerSelect}>
             <SelectTrigger>
-              <SelectValue placeholder="Select a client..." />
+              <SelectValue placeholder="Select a customer..." />
             </SelectTrigger>
             <SelectContent>
-              {clients.map((client) => (
-                <SelectItem key={client.id} value={client.id}>
-                  {client.first_name} {client.last_name} - {client.email}
+              {customers.map((customer) => (
+                <SelectItem key={customer.id} value={customer.id}>
+                  {customer.first_name} {customer.last_name} - {customer.email}
                 </SelectItem>
               ))}
             </SelectContent>
