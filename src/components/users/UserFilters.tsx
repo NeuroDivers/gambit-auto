@@ -1,3 +1,4 @@
+
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
@@ -5,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { useState } from "react";
+import { CLIENT_ROLE_ID } from "./hooks/useUserData";
 
 type UserFiltersProps = {
   searchQuery: string;
@@ -35,7 +37,8 @@ export const UserFilters = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("roles")
-        .select("id, name, nicename");
+        .select("id, name, nicename")
+        .not("id", "eq", CLIENT_ROLE_ID); // Exclude client role
       
       if (error) throw error;
       return data;
