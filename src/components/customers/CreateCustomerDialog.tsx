@@ -51,14 +51,34 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
   const handleSubmit = async (data: CustomerFormValues) => {
     setIsSubmitting(true)
     try {
-      // Insert new customer
-      const { data: newCustomer, error } = await supabase
-        .from("customers")
-        .insert([data])
+      // First create profile
+      const { data: newProfile, error: profileError } = await supabase
+        .from("profiles")
+        .insert([{
+          first_name: data.first_name,
+          last_name: data.last_name,
+          email: data.email,
+          phone_number: data.phone_number,
+        }])
         .select()
         .single()
 
-      if (error) throw error
+      if (profileError) throw profileError
+      
+      // Now create customer linked to profile
+      const { data: newCustomer, error: customerError } = await supabase
+        .from("customers")
+        .insert([{
+          profile_id: newProfile.id,
+          street_address: data.street_address,
+          city: data.city,
+          state_province: data.state_province,
+          postal_code: data.postal_code,
+        }])
+        .select()
+        .single()
+
+      if (customerError) throw customerError
 
       // Show success message
       toast.success("Customer created successfully")

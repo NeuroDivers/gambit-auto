@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Customer } from "./types"
@@ -18,7 +17,7 @@ export function CustomerList() {
   const { data: customers, isLoading, error } = useQuery({
     queryKey: ['customers'],
     queryFn: async () => {
-      // Now using the customer_profiles view that joins customer and profile data
+      // Using the client_statistics view that joins customer info with statistics
       const { data, error } = await supabase
         .from('client_statistics')
         .select('*')
