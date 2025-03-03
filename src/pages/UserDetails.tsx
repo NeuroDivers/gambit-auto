@@ -1,16 +1,14 @@
 
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageTitle } from "@/components/shared/PageTitle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { ArrowLeft, Calendar, Check, ChevronLeft, Loader2, Mail, Phone, Shield, UserRound, Briefcase } from "lucide-react";
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
 import { ServiceSkillsManager } from "@/components/staff/skills/ServiceSkillsManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -45,51 +43,6 @@ function LoadingState() {
 export default function UserDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      queryClient.removeQueries();
-      navigate("/auth", { replace: true });
-      toast({
-        title: "Logged out successfully",
-        description: "You have been logged out of your account.",
-      });
-    } catch (error: any) {
-      console.error("Logout error:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to log out",
-      });
-    }
-  };
-
-  const { data: currentUserProfile } = useQuery({
-    queryKey: ['current-user-profile'],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user found');
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          role:role_id (
-            id,
-            name,
-            nicename
-          )
-        `)
-        .eq('id', user.id)
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-  });
 
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['user', id],
@@ -176,175 +129,161 @@ export default function UserDetails() {
   });
 
   if (userLoading || workOrdersLoading || commissionsLoading) {
-    return (
-      <DashboardLayout 
-        firstName={currentUserProfile?.first_name}
-        role={currentUserProfile?.role}
-        onLogout={handleLogout}
-      >
-        <LoadingState />
-      </DashboardLayout>
-    );
+    return <LoadingState />;
   }
 
   return (
-    <DashboardLayout
-      firstName={currentUserProfile?.first_name}
-      role={currentUserProfile?.role}
-      onLogout={handleLogout}
-    >
-      <div className="container py-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/user-management')}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <PageTitle
-              title={`${user?.first_name} ${user?.last_name}`}
-              description={`${user?.role?.nicename || 'User'}`}
-            />
-          </div>
-          <Badge variant="outline" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Last login: {lastLogin ? format(new Date(lastLogin), 'PPp') : 'Never'}
-          </Badge>
+    <div className="container py-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/staff-management')}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <PageTitle
+            title={`${user?.first_name} ${user?.last_name}`}
+            description={`${user?.role?.nicename || 'User'}`}
+          />
         </div>
+        <Badge variant="outline" className="flex items-center gap-2">
+          <Calendar className="h-4 w-4" />
+          Last login: {lastLogin ? format(new Date(lastLogin), 'PPp') : 'Never'}
+        </Badge>
+      </div>
 
-        <Tabs defaultValue="info" className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="info">User Information</TabsTrigger>
-            <TabsTrigger value="skills">Service Skills</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="info">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <UserRound className="h-5 w-5" />
-                    User Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <dl className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <dt className="text-sm text-muted-foreground">
-                        <Mail className="h-4 w-4" />
-                      </dt>
-                      <dd>{user?.email}</dd>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <dt className="text-sm text-muted-foreground">
-                        <Phone className="h-4 w-4" />
-                      </dt>
-                      <dd>{user?.phone_number || 'Not provided'}</dd>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <dt className="text-sm text-muted-foreground">
-                        <Shield className="h-4 w-4" />
-                      </dt>
-                      <dd>{user?.role?.nicename || 'No role assigned'}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm text-muted-foreground">Address</dt>
-                      <dd>{user?.address || 'Not provided'}</dd>
-                    </div>
-                  </dl>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Active Work Orders</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {workOrders?.active && workOrders.active.length > 0 ? (
-                    <ul className="space-y-2">
-                      {workOrders.active.map((order) => (
-                        <li key={order.id} className="text-sm">
-                          <time className="text-muted-foreground">
-                            {format(new Date(order.start_time), 'MMM dd, yyyy')}
-                          </time>
-                          <div className="font-medium">{order.vehicle_make} {order.vehicle_model}</div>
-                          <div className="text-xs text-muted-foreground">Status: {order.status}</div>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No active work orders</p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Commissions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {commissions && commissions.length > 0 ? (
-                    <ul className="space-y-2">
-                      {commissions.map((commission) => (
-                        <li key={commission.id} className="text-sm">
-                          <time className="text-muted-foreground">
-                            {format(new Date(commission.created_at), 'MMM dd, yyyy')}
-                          </time>
-                          <div className="font-medium">${commission.amount}</div>
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Check className="h-3 w-3" />
-                            {commission.status}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No recent commissions</p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>User Activity</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Account Created</span>
-                      <span>{format(new Date(user?.created_at), 'PPp')}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Last Updated</span>
-                      <span>{format(new Date(user?.updated_at), 'PPp')}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Last Login</span>
-                      <span>{lastLogin ? format(new Date(lastLogin), 'PPp') : 'Never'}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="skills">
+      <Tabs defaultValue="info" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="info">User Information</TabsTrigger>
+          <TabsTrigger value="skills">Service Skills</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="info">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Briefcase className="h-5 w-5" />
-                  Service Skills Management
+                  <UserRound className="h-5 w-5" />
+                  User Information
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ServiceSkillsManager profileId={id} />
+                <dl className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <dt className="text-sm text-muted-foreground">
+                      <Mail className="h-4 w-4" />
+                    </dt>
+                    <dd>{user?.email}</dd>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <dt className="text-sm text-muted-foreground">
+                      <Phone className="h-4 w-4" />
+                    </dt>
+                    <dd>{user?.phone_number || 'Not provided'}</dd>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <dt className="text-sm text-muted-foreground">
+                      <Shield className="h-4 w-4" />
+                    </dt>
+                    <dd>{user?.role?.nicename || 'No role assigned'}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-sm text-muted-foreground">Address</dt>
+                    <dd>{user?.address || 'Not provided'}</dd>
+                  </div>
+                </dl>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </DashboardLayout>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Active Work Orders</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {workOrders?.active && workOrders.active.length > 0 ? (
+                  <ul className="space-y-2">
+                    {workOrders.active.map((order) => (
+                      <li key={order.id} className="text-sm">
+                        <time className="text-muted-foreground">
+                          {format(new Date(order.start_time), 'MMM dd, yyyy')}
+                        </time>
+                        <div className="font-medium">{order.vehicle_make} {order.vehicle_model}</div>
+                        <div className="text-xs text-muted-foreground">Status: {order.status}</div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No active work orders</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Commissions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {commissions && commissions.length > 0 ? (
+                  <ul className="space-y-2">
+                    {commissions.map((commission) => (
+                      <li key={commission.id} className="text-sm">
+                        <time className="text-muted-foreground">
+                          {format(new Date(commission.created_at), 'MMM dd, yyyy')}
+                        </time>
+                        <div className="font-medium">${commission.amount}</div>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Check className="h-3 w-3" />
+                          {commission.status}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No recent commissions</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>User Activity</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Account Created</span>
+                    <span>{format(new Date(user?.created_at), 'PPp')}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Last Updated</span>
+                    <span>{format(new Date(user?.updated_at), 'PPp')}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Last Login</span>
+                    <span>{lastLogin ? format(new Date(lastLogin), 'PPp') : 'Never'}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="skills">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Briefcase className="h-5 w-5" />
+                Service Skills Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ServiceSkillsManager profileId={id} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
