@@ -1,4 +1,3 @@
-
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -87,6 +86,7 @@ export function ServiceTypeFormFields({ form }: { form: UseFormReturn<ServiceTyp
           </FormItem>
         )}
       />
+      
       <FormField
         control={form.control}
         name="status"
@@ -107,6 +107,9 @@ export function ServiceTypeFormFields({ form }: { form: UseFormReturn<ServiceTyp
           </FormItem>
         )}
       />
+      
+      {/* The commission rate fields should be removed from here if the service_types table doesn't have commission_rate */}
+      {/* We'll leave it in the form schema for now to avoid breaking existing code, but we won't save it to the database */}
       <CommissionRateFields
         form={form}
         label="Service Commission"

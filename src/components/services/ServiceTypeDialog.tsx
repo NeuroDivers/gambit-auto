@@ -1,159 +1,118 @@
 
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Form } from "@/components/ui/form"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { useToast } from "@/hooks/use-toast"
-import { zodResolver } from "@hookform/resolvers/zod"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Button } from "@/components/ui/button"
+import { DialogContent, DialogHeader, DialogTitle, Dialog } from "@/components/ui/dialog"
+import { Form } from "@/components/ui/form"
+import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
-import { ServiceTypeFormFields, formSchema, ServiceTypeFormValues } from "./ServiceTypeFormFields"
-import { useEffect } from "react"
+import { ServiceTypeFormFields, formSchema, type ServiceTypeFormValues } from "./ServiceTypeFormFields"
 
 interface ServiceTypeDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  serviceType?: {
-    id: string
-    name: string
-    status: 'active' | 'inactive'
-    description: string | null
-    price: number | null
-    duration: number | null
-    pricing_model?: 'flat_rate' | 'hourly' | 'variable'
-    base_price?: number | null
-    discount_price?: number | null
-    service_type?: 'standalone' | 'sub_service' | 'bundle'
-    parent_service_id?: string | null
-  } | null
-  onSuccess: () => void
+  serviceType?: any
+  onSuccess?: () => void
 }
 
-export const ServiceTypeDialog = ({
-  open,
-  onOpenChange,
-  serviceType,
-  onSuccess
-}: ServiceTypeDialogProps) => {
-  const { toast } = useToast()
-  const isEditing = !!serviceType
-
-  const defaultValues: Partial<ServiceTypeFormValues> = {
-    name: "",
-    status: "active",
-    description: "",
-    pricing_model: "flat_rate",
-    base_price: "",
-    discount_price: "",
-    estimated_time: "",
-    service_type: "standalone",
-    commission_rate: null,
-    commission_type: null
-  }
-
+export function ServiceTypeDialog({ open, onOpenChange, serviceType, onSuccess }: ServiceTypeDialogProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  
   const form = useForm<ServiceTypeFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues
+    defaultValues: {
+      name: serviceType?.name || "",
+      description: serviceType?.description || "",
+      base_price: serviceType?.base_price ? serviceType.base_price.toString() : "",
+      estimated_time: serviceType?.duration ? serviceType.duration.toString() : "",
+      status: serviceType?.status || "active",
+      service_type: serviceType?.service_type || "standalone",
+      parent_service_id: serviceType?.parent_service_id || "",
+      pricing_model: serviceType?.pricing_model || "flat_rate",
+      commission_rate: null,
+      commission_type: null,
+    }
   })
 
-  useEffect(() => {
-    if (serviceType) {
-      form.reset({
-        name: serviceType.name,
-        status: serviceType.status,
-        description: serviceType.description || "",
-        pricing_model: serviceType.pricing_model || "flat_rate",
-        base_price: serviceType.base_price?.toString() || "",
-        discount_price: serviceType.discount_price?.toString() || "",
-        estimated_time: serviceType.duration?.toString() || "",
-        service_type: serviceType.service_type || "standalone",
-        parent_service_id: serviceType.parent_service_id || undefined,
-        commission_rate: null,
-        commission_type: null
-      })
-    } else {
-      form.reset(defaultValues)
-    }
-  }, [serviceType, form])
-
-  const onSubmit = async (values: ServiceTypeFormValues) => {
+  async function onSubmit(data: ServiceTypeFormValues) {
+    setIsSubmitting(true)
     try {
-      const data = {
-        name: values.name,
-        status: values.status,
-        description: values.description || null,
-        pricing_model: values.pricing_model,
-        base_price: values.base_price ? parseFloat(values.base_price) : null,
-        discount_price: values.discount_price ? parseFloat(values.discount_price) : null,
-        duration: values.estimated_time ? parseInt(values.estimated_time) : null,
-        service_type: values.service_type,
-        hierarchy_type: values.service_type === 'sub_service' ? 'sub' : 'main',
-        requires_main_service: values.service_type === 'sub_service',
-        can_be_standalone: values.service_type !== 'sub_service',
-        parent_service_id: values.parent_service_id || null,
-        commission_rate: values.commission_rate,
-        commission_type: values.commission_type
+      // Convert string fields to appropriate types
+      const basePrice = data.base_price ? parseFloat(data.base_price) : null
+      const duration = data.estimated_time ? parseInt(data.estimated_time, 10) : null
+      
+      // Prepare data for Supabase
+      const serviceData = {
+        name: data.name,
+        description: data.description,
+        base_price: basePrice,
+        duration: duration,
+        status: data.status,
+        service_type: data.service_type,
+        pricing_model: data.pricing_model,
+        parent_service_id: data.parent_service_id && data.parent_service_id !== "" ? data.parent_service_id : null,
+        // Exclude commission_rate and commission_type as they don't exist in the service_types table
       }
 
-      if (isEditing && serviceType) {
-        const { error } = await supabase
-          .from("service_types")
-          .update(data)
-          .eq("id", serviceType.id)
-        if (error) throw error
+      let result
+      if (serviceType?.id) {
+        // Update existing service
+        result = await supabase
+          .from('service_types')
+          .update(serviceData)
+          .eq('id', serviceType.id)
       } else {
-        const { error } = await supabase
-          .from("service_types")
-          .insert([data])
-        if (error) throw error
+        // Insert new service
+        result = await supabase
+          .from('service_types')
+          .insert(serviceData)
       }
 
-      toast({
-        title: `Service type ${isEditing ? "updated" : "created"}`,
-        description: `Successfully ${isEditing ? "updated" : "created"} service type "${values.name}"`
-      })
-
-      if (!isEditing) {
-        form.reset(defaultValues)
+      if (result.error) {
+        console.error('Error saving service type:', result.error)
+        toast.error("Failed to save service type")
+        return
       }
-      onSuccess()
-      onOpenChange(false)
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message
-      })
+
+      toast.success(`Service type ${serviceType?.id ? 'updated' : 'created'} successfully`)
+      onSuccess?.()
+    } catch (error) {
+      console.error('Error in save:', error)
+      toast.error("An unexpected error occurred")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-background border-border sm:max-w-3xl">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Edit Service Type" : "Create Service Type"}
-          </DialogTitle>
+          <DialogTitle>{serviceType?.id ? 'Edit' : 'Create'} Service Type</DialogTitle>
         </DialogHeader>
-
-        <ScrollArea className="max-h-[80vh]">
-          <div className="p-1">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <ServiceTypeFormFields form={form} />
-                
-                <div className="flex justify-end space-x-2">
-                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                    {isEditing ? "Update" : "Create"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </div>
-        </ScrollArea>
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <ServiceTypeFormFields form={form} />
+            
+            <div className="flex justify-end gap-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   )
