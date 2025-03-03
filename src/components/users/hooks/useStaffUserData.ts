@@ -17,16 +17,22 @@ export const useStaffUserData = () => {
       console.log("Fetching staff users...");
       
       // Get the client role ID to filter it out
-      const { data: clientRole } = await supabase
+      const { data: clientRole, error: roleError } = await supabase
         .from("roles")
         .select("id")
         .eq("name", "client")
         .single();
       
+      if (roleError) {
+        console.error("Error fetching client role:", roleError);
+        // Continue without filtering if we can't get the client role
+      }
+      
       const clientRoleId = clientRole?.id;
+      console.log("Client role ID:", clientRoleId);
       
       // Fetch staff data from staff_view, excluding client roles
-      const { data: staffData, error: staffError } = await supabase
+      let query = supabase
         .from("staff_view")
         .select(`
           profile_id,
@@ -40,8 +46,14 @@ export const useStaffUserData = () => {
           department,
           employee_id,
           status
-        `)
-        .neq("role_id", clientRoleId);
+        `);
+        
+      // Only apply the filter if we found the client role ID
+      if (clientRoleId) {
+        query = query.neq("role_id", clientRoleId);
+      }
+
+      const { data: staffData, error: staffError } = await query;
 
       if (staffError) {
         console.error("Error fetching staff data:", staffError);

@@ -65,39 +65,47 @@ export const useUserData = () => {
 
       console.log("Fetched profiles:", profiles);
 
-      // Separate client profiles - we'll get their data from clients table
-      const clientProfiles = profiles.filter(profile => profile.role?.id === CLIENT_ROLE_ID);
-      const nonClientProfiles = profiles.filter(profile => profile.role?.id !== CLIENT_ROLE_ID);
+      // Create user objects directly from profiles
+      const allUsers: User[] = profiles.map(profile => ({
+        id: profile.id,
+        email: profile.email,
+        first_name: profile.first_name || undefined,
+        last_name: profile.last_name || undefined,
+        role: profile.role
+      }));
 
-      // Get client data for client profiles
-      const { data: clients, error: clientsError } = await supabase
-        .from("clients")
-        .select("*")
-        .in('user_id', clientProfiles.map(p => p.id))
-        .returns<ClientResponse[]>();
+      // Try to get additional client data if available
+      try {
+        // Check if client profiles exist
+        const clientProfiles = profiles.filter(profile => profile.role?.id === CLIENT_ROLE_ID);
+        
+        if (clientProfiles.length > 0) {
+          // Try to get client data
+          const { data: clients, error: clientsError } = await supabase
+            .from("clients")
+            .select("*")
+            .in('user_id', clientProfiles.map(p => p.id))
+            .returns<ClientResponse[]>();
 
-      if (clientsError) {
-        console.error("Error fetching clients:", clientsError);
-        throw clientsError;
+          // If client data exists, update the corresponding user objects
+          if (!clientsError && clients && clients.length > 0) {
+            clients.forEach(client => {
+              const userIndex = allUsers.findIndex(u => u.id === client.user_id);
+              if (userIndex >= 0) {
+                allUsers[userIndex] = {
+                  ...allUsers[userIndex],
+                  email: client.email || allUsers[userIndex].email,
+                  first_name: client.first_name || allUsers[userIndex].first_name,
+                  last_name: client.last_name || allUsers[userIndex].last_name,
+                };
+              }
+            });
+          }
+        }
+      } catch (error) {
+        // Just log the error but continue with basic user data
+        console.error("Error fetching clients:", error);
       }
-
-      // Map client profiles to include client data
-      const clientUsers = clientProfiles.map(profile => {
-        const clientData = clients.find(c => c.user_id === profile.id);
-        return {
-          id: profile.id,
-          email: clientData?.email || profile.email,
-          first_name: clientData?.first_name || profile.first_name,
-          last_name: clientData?.last_name || profile.last_name,
-          role: profile.role
-        } satisfies User;
-      });
-
-      // Combine non-client profiles with client users
-      const allUsers: User[] = [
-        ...nonClientProfiles,
-        ...clientUsers
-      ];
 
       return allUsers;
     },
