@@ -22,7 +22,7 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
   return (
     <div className="space-y-8">
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5 text-muted-foreground" />
             Customer Information
@@ -34,7 +34,7 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
             <Car className="h-5 w-5 text-muted-foreground" />
             Vehicle Information
@@ -46,7 +46,7 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
       </Card>
       
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
             <Wrench className="h-5 w-5 text-muted-foreground" />
             Service Details
@@ -58,7 +58,7 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-muted-foreground" />
             Scheduling
@@ -70,7 +70,7 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
             <Warehouse className="h-5 w-5 text-muted-foreground" />
             Service Bay Assignment
@@ -82,7 +82,7 @@ export function FormSections({ form, isSubmitting, isEditing }: FormSectionsProp
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-muted-foreground" />
             Additional Notes

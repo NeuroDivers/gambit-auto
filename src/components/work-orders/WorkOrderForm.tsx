@@ -6,6 +6,7 @@ import { FormSections } from "./form-sections/FormSections"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useEffect, useRef } from "react"
+import { CustomerSearch } from "./form-sections/CustomerSearch"
 
 export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmitting }: WorkOrderFormProps) {
   const mounted = useRef(true);
@@ -55,6 +56,8 @@ export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmit
   return (
     <Form {...form}>
       <form onSubmit={handleSubmit} className="space-y-6">
+        {!workOrder && <CustomerSearch form={form} />}
+        
         <FormSections 
           form={form}
           isSubmitting={form.formState.isSubmitting}
