@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import { PageTitle } from "@/components/shared/PageTitle"
 import { toast } from "sonner"
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 
 export default function EditWorkOrder() {
   const { id } = useParams()
@@ -89,20 +89,15 @@ export default function EditWorkOrder() {
         />
       </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Work Order #{workOrder.id.substring(0, 8)}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <WorkOrderForm
-            workOrder={workOrder}
-            onSuccess={() => {
-              toast.success("Work order updated successfully")
-              navigate('/work-orders')
-            }}
-          />
-        </CardContent>
-      </Card>
+      <CardContent className="p-0">
+        <WorkOrderForm
+          workOrder={workOrder}
+          onSuccess={() => {
+            toast.success("Work order updated successfully")
+            navigate('/work-orders')
+          }}
+        />
+      </CardContent>
     </div>
   )
 }
