@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function RolePermissions() {
   const navigate = useNavigate()
@@ -143,25 +144,47 @@ export default function RolePermissions() {
           </div>
         </div>
 
-        {/* Page Access Permissions */}
-        {groupedPermissions['page_access'] && (
-          <PermissionSection
-            sectionName="Page Access"
-            permissions={groupedPermissions['page_access']}
-            onToggle={handlePermissionToggle}
-            isDisabled={isUpdating}
-          />
-        )}
-
-        {/* Feature Access Permissions */}
-        {groupedPermissions['feature_access'] && (
-          <PermissionSection
-            sectionName="Feature Access"
-            permissions={groupedPermissions['feature_access']}
-            onToggle={handlePermissionToggle}
-            isDisabled={isUpdating}
-          />
-        )}
+        {/* Permission Tabs */}
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold text-primary">
+            Permissions
+          </h3>
+          
+          <Tabs defaultValue="page_access" className="w-full">
+            <TabsList className="grid grid-cols-2 w-[400px]">
+              <TabsTrigger value="page_access">Page Access</TabsTrigger>
+              <TabsTrigger value="feature_access">Feature Access</TabsTrigger>
+            </TabsList>
+            
+            {/* Page Access Tab */}
+            <TabsContent value="page_access" className="mt-6">
+              {groupedPermissions['page_access'] ? (
+                <PermissionSection
+                  sectionName="Page Access"
+                  permissions={groupedPermissions['page_access']}
+                  onToggle={handlePermissionToggle}
+                  isDisabled={isUpdating}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">No page access permissions found.</p>
+              )}
+            </TabsContent>
+            
+            {/* Feature Access Tab */}
+            <TabsContent value="feature_access" className="mt-6">
+              {groupedPermissions['feature_access'] ? (
+                <PermissionSection
+                  sectionName="Feature Access"
+                  permissions={groupedPermissions['feature_access']}
+                  onToggle={handlePermissionToggle}
+                  isDisabled={isUpdating}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">No feature access permissions found.</p>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   )
