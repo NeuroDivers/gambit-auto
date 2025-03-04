@@ -1,4 +1,3 @@
-
 import { 
   Settings, 
   Users, 
@@ -120,12 +119,6 @@ export const navigationItems: NavSection[] = [
         href: "/staff-management",
         icon: Users,
         permission: { resource: "users", type: "page_access" }
-      },
-      {
-        title: "Staff Skills Management",
-        href: "/admin/staff-skills",
-        icon: Briefcase,
-        permission: { resource: "staff_skills", type: "page_access" }
       },
       {
         title: "System Roles",

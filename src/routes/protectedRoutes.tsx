@@ -1,4 +1,3 @@
-
 import { DashboardLayoutWrapper } from "@/components/dashboard/DashboardLayoutWrapper"
 import { StaffLayoutWrapper } from "@/components/staff/StaffLayoutWrapper"
 import { ClientLayoutWrapper } from "@/components/client/ClientLayoutWrapper"
@@ -19,7 +18,6 @@ import Chat from "@/pages/admin/Chat"
 import Notifications from "@/pages/admin/Notifications"
 import CommissionsPage from "@/components/commissions/CommissionsPage"
 import ServiceSkills from "@/pages/staff/ServiceSkills"
-import StaffSkillsManagement from "@/pages/admin/StaffSkillsManagement"
 import { Suspense } from "react"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
 
@@ -70,10 +68,6 @@ export const protectedRoutes: RouteObject = {
     {
       path: "staff/service-skills",
       element: <ServiceSkills />,
-    },
-    {
-      path: "admin/staff-skills",
-      element: <StaffSkillsManagement />,
     },
     {
       path: "chat",
