@@ -23,11 +23,9 @@ export default function CreateWorkOrder() {
           description="Create a new work order by filling out the form below."
         />
       </div>
-      <div className="rounded-lg border bg-card p-6">
-        <WorkOrderForm 
-          onSuccess={() => navigate("/work-orders")}
-        />
-      </div>
+      <WorkOrderForm 
+        onSuccess={() => navigate("/work-orders")}
+      />
     </div>
   )
 }
