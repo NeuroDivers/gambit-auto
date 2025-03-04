@@ -20,12 +20,16 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   
+  // Query for customers and their primary vehicle
   const { data: customers, isLoading } = useQuery({
     queryKey: ['customers', searchQuery],
     queryFn: async () => {
       let query = supabase
         .from('customers')
-        .select('*')
+        .select(`
+          *,
+          vehicles(*)
+        `)
         .order('created_at', { ascending: false })
         .limit(10)
       
@@ -33,24 +37,39 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
         query = query.or(`first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`)
       }
       
-      const { data, error } = await query
+      const { data: customersData, error } = await query
       
       if (error) {
         console.error('Error fetching customers:', error)
         throw error
       }
       
-      return data as Customer[]
+      return customersData as (Customer & { vehicles: any[] })[]
     },
     enabled: true,
   })
 
-  const applyCustomerData = (customer: Customer) => {
+  const applyCustomerData = (customer: Customer & { vehicles: any[] }) => {
+    // Set customer information
     form.setValue('first_name', customer.first_name)
     form.setValue('last_name', customer.last_name)
     form.setValue('email', customer.email)
     form.setValue('phone_number', customer.phone_number || '')
     form.setValue('address', customer.address || '')
+    
+    // Find primary vehicle or first vehicle
+    const primaryVehicle = customer.vehicles?.find(v => v.is_primary) || customer.vehicles?.[0]
+    
+    // If a vehicle exists, set vehicle information
+    if (primaryVehicle) {
+      form.setValue('vehicle_make', primaryVehicle.make)
+      form.setValue('vehicle_model', primaryVehicle.model)
+      form.setValue('vehicle_year', primaryVehicle.year)
+      form.setValue('vehicle_serial', primaryVehicle.vin || '')
+      form.setValue('vehicle_body_class', primaryVehicle.body_class || '')
+      form.setValue('vehicle_doors', primaryVehicle.doors || null)
+      form.setValue('vehicle_trim', primaryVehicle.trim || '')
+    }
     
     setOpen(false)
     toast.success(`Customer ${customer.first_name} ${customer.last_name} selected`)
@@ -89,7 +108,7 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
               <>
                 <CommandEmpty>No customers found.</CommandEmpty>
                 <CommandGroup>
-                  {customers?.map((customer) => (
+                  {(customers || [])?.map((customer) => (
                     <CommandItem
                       key={customer.id}
                       value={`${customer.first_name} ${customer.last_name}`}
