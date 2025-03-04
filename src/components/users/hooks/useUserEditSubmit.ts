@@ -23,6 +23,12 @@ export const useUserEditSubmit = ({ userId, currentRole, staffData, onSuccess }:
       setIsSubmitting(true);
       console.log("Updating profile for user:", userId, "with values:", values);
       
+      // Get the current user's session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("You must be logged in to update user information");
+      }
+      
       // Update the profile information - WITHOUT any address fields
       const { error: profileError } = await supabase
         .from("profiles")
@@ -76,7 +82,8 @@ export const useUserEditSubmit = ({ userId, currentRole, staffData, onSuccess }:
             postal_code: values.postal_code,
             country: values.country
           })
-          .eq("profile_id", userId);
+          .eq("profile_id", userId)
+          .eq("id", staffData.id); // Important: Also filter by the staff ID to ensure proper row targeting
 
         if (staffError) {
           console.error("Error updating staff data:", staffError);
@@ -93,6 +100,8 @@ export const useUserEditSubmit = ({ userId, currentRole, staffData, onSuccess }:
         });
         
         // Create staff info if it doesn't exist but staff fields are provided
+        const { data: userData } = await supabase.auth.getUser();
+        
         const { error: newStaffError } = await supabase
           .from("staff")
           .insert({

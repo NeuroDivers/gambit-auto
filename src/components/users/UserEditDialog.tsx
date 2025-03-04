@@ -20,6 +20,8 @@ type UserEditDialogProps = {
 };
 
 export const UserEditDialog = ({ user, staffData, open, onOpenChange }: UserEditDialogProps) => {
+  console.log("Staff data in edit dialog:", staffData); // Add debug logging
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {

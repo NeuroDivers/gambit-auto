@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,6 +80,7 @@ export default function UserDetails() {
         console.error("Error fetching staff data:", error);
         return null; // Return null if no staff record exists
       }
+      console.log("Fetched staff data:", data); // Add debug logging
       return data;
     },
     enabled: !!id
@@ -421,6 +421,7 @@ export default function UserDetails() {
           user={user} 
           open={editDialogOpen} 
           onOpenChange={setEditDialogOpen} 
+          staffData={staffData}
         />
       )}
     </div>
