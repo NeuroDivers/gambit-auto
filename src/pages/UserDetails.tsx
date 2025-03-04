@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -173,7 +174,7 @@ export default function UserDetails() {
             )}
             <PageTitle
               title={`${user?.first_name} ${user?.last_name}`}
-              description={lastLogin ? `Last login: ${format(new Date(lastLogin), 'PPp')}` : 'Never logged in'}
+              description=""
             />
           </div>
         </div>
@@ -270,6 +271,20 @@ export default function UserDetails() {
                         </dt>
                         <dd>{staffData?.is_full_time ? 'Full-time' : 'Part-time'}</dd>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <dt className="text-sm text-muted-foreground">
+                          Emergency Contact:
+                        </dt>
+                        <dd>{staffData?.emergency_contact_name || 'Not provided'}</dd>
+                      </div>
+                      {staffData?.emergency_contact_phone && (
+                        <div className="flex items-center gap-2">
+                          <dt className="text-sm text-muted-foreground">
+                            Emergency Phone:
+                          </dt>
+                          <dd>{staffData.emergency_contact_phone}</dd>
+                        </div>
+                      )}
                     </dl>
                   </CardContent>
                 </Card>
