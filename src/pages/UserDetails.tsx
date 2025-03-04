@@ -166,7 +166,7 @@ export default function UserDetails() {
           </Button>
           <div className="space-y-2">
             {user?.role && (
-              <Badge variant="outline" className="flex items-center gap-2">
+              <Badge variant="outline" className="inline-flex items-center gap-2 w-auto px-2">
                 <Shield className="h-3 w-3" />
                 {user.role.nicename || 'User'}
               </Badge>
