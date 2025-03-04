@@ -38,6 +38,13 @@ export const useUserEditSubmit = ({ userId, currentRole, staffData, onSuccess }:
 
       if (profileError) throw profileError;
 
+      // Format employment_date to handle empty strings
+      const formattedEmploymentDate = values.employment_date 
+        ? values.employment_date.trim() === "" 
+          ? null 
+          : values.employment_date
+        : null;
+
       // Check if this user has staff data
       if (staffData) {
         console.log("Updating staff data with address fields:", {
@@ -57,7 +64,7 @@ export const useUserEditSubmit = ({ userId, currentRole, staffData, onSuccess }:
             position: values.position,
             department: values.department,
             status: values.status,
-            employment_date: values.employment_date,
+            employment_date: formattedEmploymentDate,
             is_full_time: values.is_full_time,
             emergency_contact_name: values.emergency_contact_name,
             emergency_contact_phone: values.emergency_contact_phone,
@@ -94,7 +101,7 @@ export const useUserEditSubmit = ({ userId, currentRole, staffData, onSuccess }:
             position: values.position,
             department: values.department,
             status: values.status || 'active',
-            employment_date: values.employment_date,
+            employment_date: formattedEmploymentDate,
             is_full_time: values.is_full_time !== undefined ? values.is_full_time : true,
             emergency_contact_name: values.emergency_contact_name,
             emergency_contact_phone: values.emergency_contact_phone,

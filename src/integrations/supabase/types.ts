@@ -591,7 +591,6 @@ export type Database = {
       customers: {
         Row: {
           access_token: string | null
-          address: string | null
           city: string | null
           country: string | null
           created_at: string
@@ -611,7 +610,6 @@ export type Database = {
         }
         Insert: {
           access_token?: string | null
-          address?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
@@ -631,7 +629,6 @@ export type Database = {
         }
         Update: {
           access_token?: string | null
-          address?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
