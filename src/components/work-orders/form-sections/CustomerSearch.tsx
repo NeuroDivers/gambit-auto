@@ -110,10 +110,9 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
                 Loading customers...
               </div>
             ) : (
-              <>
-                <CommandEmpty>No customers found.</CommandEmpty>
-                <CommandGroup>
-                  {customers.map((customer) => (
+              <CommandGroup>
+                {customers && customers.length > 0 ? (
+                  customers.map((customer) => (
                     <CommandItem
                       key={customer.id}
                       value={`${customer.first_name} ${customer.last_name}`}
@@ -131,9 +130,11 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
                       {customer.first_name} {customer.last_name}
                       <span className="ml-2 text-muted-foreground">{customer.email}</span>
                     </CommandItem>
-                  ))}
-                </CommandGroup>
-              </>
+                  ))
+                ) : (
+                  <CommandEmpty>No customers found.</CommandEmpty>
+                )}
+              </CommandGroup>
             )}
           </Command>
         </PopoverContent>
