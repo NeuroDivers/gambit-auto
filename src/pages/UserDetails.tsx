@@ -164,16 +164,20 @@ export default function UserDetails() {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <PageTitle
-            title={`${user?.first_name} ${user?.last_name}`}
-            description={`${user?.role?.nicename || 'User'}`}
-          />
+          <div className="space-y-2">
+            {user?.role && (
+              <Badge variant="outline" className="flex items-center gap-2">
+                <Shield className="h-3 w-3" />
+                {user.role.nicename || 'User'}
+              </Badge>
+            )}
+            <PageTitle
+              title={`${user?.first_name} ${user?.last_name}`}
+              description={lastLogin ? `Last login: ${format(new Date(lastLogin), 'PPp')}` : 'Never logged in'}
+            />
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Last login: {lastLogin ? format(new Date(lastLogin), 'PPp') : 'Never'}
-          </Badge>
           <Button onClick={() => setEditDialogOpen(true)}>
             Edit User
           </Button>
