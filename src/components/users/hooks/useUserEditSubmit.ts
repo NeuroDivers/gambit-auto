@@ -40,6 +40,15 @@ export const useUserEditSubmit = ({ userId, currentRole, staffData, onSuccess }:
 
       // Check if this user has staff data
       if (staffData) {
+        console.log("Updating staff data with address fields:", {
+          street_address: values.street_address,
+          unit_number: values.unit_number,
+          city: values.city,
+          state_province: values.state_province,
+          postal_code: values.postal_code,
+          country: values.country
+        });
+        
         // Update staff info if it exists, including address fields
         const { error: staffError } = await supabase
           .from("staff")
@@ -62,8 +71,20 @@ export const useUserEditSubmit = ({ userId, currentRole, staffData, onSuccess }:
           })
           .eq("profile_id", userId);
 
-        if (staffError) throw staffError;
-      } else if (values.employee_id || values.position || values.department) {
+        if (staffError) {
+          console.error("Error updating staff data:", staffError);
+          throw staffError;
+        }
+      } else if (values.employee_id || values.position || values.department || values.street_address) {
+        console.log("Creating new staff record with address fields:", {
+          street_address: values.street_address,
+          unit_number: values.unit_number,
+          city: values.city,
+          state_province: values.state_province,
+          postal_code: values.postal_code,
+          country: values.country
+        });
+        
         // Create staff info if it doesn't exist but staff fields are provided
         const { error: newStaffError } = await supabase
           .from("staff")
@@ -86,7 +107,10 @@ export const useUserEditSubmit = ({ userId, currentRole, staffData, onSuccess }:
             country: values.country
           });
 
-        if (newStaffError) throw newStaffError;
+        if (newStaffError) {
+          console.error("Error creating staff record:", newStaffError);
+          throw newStaffError;
+        }
       }
 
       toast({

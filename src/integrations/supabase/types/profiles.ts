@@ -18,6 +18,7 @@ export interface ProfilesTable {
     state_province: string | null
     postal_code: string | null
     country: string | null
+    role_id: string
   }
   Insert: {
     created_at?: string
@@ -35,6 +36,7 @@ export interface ProfilesTable {
     state_province?: string | null
     postal_code?: string | null
     country?: string | null
+    role_id: string
   }
   Update: {
     created_at?: string
@@ -52,6 +54,14 @@ export interface ProfilesTable {
     state_province?: string | null
     postal_code?: string | null
     country?: string | null
+    role_id?: string
   }
-  Relationships: []
+  Relationships: [
+    {
+      foreignKeyName: "profiles_role_id_fkey"
+      columns: ["role_id"]
+      referencedRelation: "roles"
+      referencedColumns: ["id"]
+    }
+  ]
 }

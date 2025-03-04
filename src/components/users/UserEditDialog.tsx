@@ -27,7 +27,7 @@ export const UserEditDialog = ({ user, staffData, open, onOpenChange }: UserEdit
       last_name: user.last_name || "",
       email: user.email || "",
       phone_number: user.phone_number || "",
-      // Only get address fields from staffData, not from user/profile
+      // Address fields from staffData
       street_address: staffData?.street_address || "",
       unit_number: staffData?.unit_number || "",
       city: staffData?.city || "",
