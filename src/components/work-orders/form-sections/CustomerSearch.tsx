@@ -21,7 +21,7 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
   const [searchQuery, setSearchQuery] = useState("")
   
   // Query for customers and their primary vehicle
-  const { data: customers = [], isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['customers', searchQuery],
     queryFn: async () => {
       try {
@@ -40,9 +40,12 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
         query = query.limit(10)
         const { data: customersData, error } = await query
         
-        if (error) throw error
+        if (error) {
+          console.error('Error fetching customers:', error)
+          return []
+        }
         
-        return (customersData || []) as (Customer & { vehicles: any[] })[]
+        return customersData || []
       } catch (error) {
         console.error('Error in customer search query:', error)
         return []
@@ -50,6 +53,9 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     },
     enabled: open, // Only fetch when popover is open
   })
+
+  // Ensure we always have an array, even if data is undefined
+  const customers = Array.isArray(data) ? data : []
 
   const applyCustomerData = (customer: Customer & { vehicles: any[] }) => {
     // Set customer information
@@ -81,6 +87,11 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     ? `${form.getValues("first_name")} ${form.getValues("last_name")}`
     : "Search for customer..."
 
+  // If there's an error, log it
+  if (error) {
+    console.error('Customer search error:', error)
+  }
+
   return (
     <div className="mb-6">
       <div className="flex items-center gap-2 mb-1">
@@ -107,34 +118,36 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
               onValueChange={setSearchQuery}
             />
             <CommandGroup>
-              {isLoading ? (
+              {isLoading && (
                 <div className="py-6 text-center text-sm text-muted-foreground">
                   Loading customers...
                 </div>
-              ) : customers.length > 0 ? (
-                customers.map((customer) => (
-                  <CommandItem
-                    key={customer.id}
-                    value={`${customer.first_name} ${customer.last_name}`}
-                    onSelect={() => applyCustomerData(customer)}
-                    className="flex items-center"
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        form.getValues("first_name") === customer.first_name &&
-                        form.getValues("last_name") === customer.last_name
-                          ? "opacity-100"
-                          : "opacity-0"
-                      )}
-                    />
-                    <span>{customer.first_name} {customer.last_name}</span>
-                    <span className="ml-2 text-muted-foreground">{customer.email}</span>
-                  </CommandItem>
-                ))
-              ) : (
+              )}
+              
+              {!isLoading && customers.length === 0 && (
                 <CommandEmpty>No customers found.</CommandEmpty>
               )}
+              
+              {!isLoading && customers.length > 0 && customers.map((customer) => (
+                <CommandItem
+                  key={customer.id}
+                  value={`${customer.first_name} ${customer.last_name}`}
+                  onSelect={() => applyCustomerData(customer)}
+                  className="flex items-center"
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      form.getValues("first_name") === customer.first_name &&
+                      form.getValues("last_name") === customer.last_name
+                        ? "opacity-100"
+                        : "opacity-0"
+                    )}
+                  />
+                  <span>{customer.first_name} {customer.last_name}</span>
+                  <span className="ml-2 text-muted-foreground">{customer.email}</span>
+                </CommandItem>
+              ))}
             </CommandGroup>
           </Command>
         </PopoverContent>
