@@ -6,6 +6,7 @@ import { FormSections } from "./form-sections/FormSections"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useEffect, useRef } from "react"
+import { Card, CardFooter } from "@/components/ui/card"
 
 export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmitting }: WorkOrderFormProps) {
   const mounted = useRef(true);
@@ -60,17 +61,20 @@ export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmit
           isSubmitting={form.formState.isSubmitting}
           isEditing={!!workOrder}
         />
-        <div className="flex justify-end">
-          <Button 
-            type="submit" 
-            disabled={form.formState.isSubmitting}
-          >
-            {form.formState.isSubmitting ? 
-              (workOrder ? "Updating..." : "Creating...") : 
-              (workOrder ? "Update Work Order" : "Create Work Order")
-            }
-          </Button>
-        </div>
+        
+        <Card>
+          <CardFooter className="flex justify-end pt-6">
+            <Button 
+              type="submit" 
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting ? 
+                (workOrder ? "Updating..." : "Creating...") : 
+                (workOrder ? "Update Work Order" : "Create Work Order")
+              }
+            </Button>
+          </CardFooter>
+        </Card>
       </form>
     </Form>
   );

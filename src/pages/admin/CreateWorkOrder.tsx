@@ -25,7 +25,7 @@ export default function CreateWorkOrder() {
       </div>
       <div className="rounded-lg border bg-card p-6">
         <WorkOrderForm 
-          onSuccess={() => navigate("/admin/work-orders")}
+          onSuccess={() => navigate("/work-orders")}
         />
       </div>
     </div>

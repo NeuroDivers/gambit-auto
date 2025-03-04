@@ -55,7 +55,7 @@ export default function WorkOrders() {
                 </ToggleGroupItem>
               </ToggleGroup>
               {isAdmin && <BlockedDatesDialog />}
-              <Link to="/admin/work-orders/create" className="w-full sm:w-auto">
+              <Link to="/work-orders/create" className="w-full sm:w-auto">
                 <Button className="w-full sm:w-auto">
                   <Plus className="mr-2 h-4 w-4" />
                   New Work Order
