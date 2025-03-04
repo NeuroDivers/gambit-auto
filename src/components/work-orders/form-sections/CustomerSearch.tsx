@@ -16,27 +16,29 @@ interface CustomerSearchProps {
   form: UseFormReturn<WorkOrderFormValues>
 }
 
+type CustomerVehicle = {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  vin?: string | null;
+  body_class?: string | null;
+  doors?: number | null;
+  trim?: string | null;
+  is_primary?: boolean | null;
+};
+
 type CustomerWithVehicles = Customer & { 
-  vehicles: Array<{
-    id: string;
-    make: string;
-    model: string;
-    year: number;
-    vin?: string;
-    body_class?: string;
-    doors?: number;
-    trim?: string;
-    is_primary?: boolean;
-  }>
+  vehicles: CustomerVehicle[]
 };
 
 export function CustomerSearch({ form }: CustomerSearchProps) {
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [customerList, setCustomerList] = useState<CustomerWithVehicles[]>([])
+  const [customers, setCustomers] = useState<CustomerWithVehicles[]>([])
   
-  // Query for customers and their primary vehicle
-  const { data, isLoading, error, refetch } = useQuery({
+  // Fetch customers with their vehicles
+  const { isLoading, error, refetch } = useQuery({
     queryKey: ['customers', searchQuery],
     queryFn: async () => {
       try {
@@ -54,42 +56,51 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
         }
         
         query = query.limit(10)
-        const { data: customersData, error } = await query
+        const { data, error } = await query
         
         if (error) {
           console.error('Error fetching customers:', error)
-          return { customers: [], error }
+          throw error
         }
         
-        console.log('Fetched customers data:', customersData);
-        return { customers: customersData || [], error: null }
+        console.log('Fetched customers data:', data?.length || 0, 'customers');
+        return { customers: data || [] }
       } catch (error) {
         console.error('Error in customer search query:', error)
-        return { customers: [], error }
+        throw error
       }
     },
     enabled: false, // Don't run on mount - we'll use refetch when the popover opens
   })
 
-  // Update customers state whenever data changes
+  // Update customers state whenever query executes
   useEffect(() => {
-    if (data && data.customers && Array.isArray(data.customers)) {
-      console.log('Setting customer list with data:', data.customers.length, 'customers');
-      setCustomerList(data.customers as CustomerWithVehicles[]);
-    } else {
-      console.log('Data or data.customers is not valid, setting empty array', data);
-      setCustomerList([]);
-    }
-  }, [data]);
-
-  // Refetch when popover opens or search query changes
-  useEffect(() => {
-    if (open) {
-      console.log('Popover opened or search query changed, refetching');
-      refetch();
-    }
+    const fetchData = async () => {
+      if (open) {
+        try {
+          console.log('Refetching customers data');
+          const result = await refetch();
+          
+          if (result.isSuccess && result.data?.customers) {
+            // Ensure we always set an array, even if empty
+            const customersData = Array.isArray(result.data.customers) ? result.data.customers : [];
+            console.log('Setting customers state with:', customersData.length, 'customers');
+            setCustomers(customersData);
+          } else {
+            console.log('Query succeeded but no valid data, setting empty array');
+            setCustomers([]);
+          }
+        } catch (err) {
+          console.error('Error during refetch:', err);
+          setCustomers([]);
+        }
+      }
+    };
+    
+    fetchData();
   }, [open, searchQuery, refetch]);
  
+  // Apply selected customer data to the form
   const applyCustomerData = useCallback((customer: CustomerWithVehicles) => {
     if (!customer) {
       console.log('Customer is null, not applying data');
@@ -97,7 +108,7 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     }
     
     try {
-      console.log('Applying customer data:', customer);
+      console.log('Applying customer data:', customer.first_name, customer.last_name);
       
       // Set customer information
       form.setValue('first_name', customer.first_name || '');
@@ -106,23 +117,37 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
       form.setValue('phone_number', customer.phone_number || '');
       form.setValue('address', customer.address || '');
       
-      // Find primary vehicle or first vehicle
-      const primaryVehicle = customer.vehicles && Array.isArray(customer.vehicles) 
-        ? (customer.vehicles.find(v => v.is_primary) || customer.vehicles[0])
-        : null;
+      // Check if vehicles array exists and is not empty
+      const hasVehicles = customer.vehicles && 
+                         Array.isArray(customer.vehicles) && 
+                         customer.vehicles.length > 0;
       
-      // If a vehicle exists, set vehicle information
-      if (primaryVehicle) {
+      // Find primary vehicle or first vehicle if available
+      if (hasVehicles) {
+        // Safely access vehicles array
+        const vehicles = customer.vehicles || [];
+        const primaryVehicle = vehicles.find(v => v.is_primary) || vehicles[0];
+        
         console.log('Found vehicle:', primaryVehicle);
         form.setValue('vehicle_make', primaryVehicle.make || '');
         form.setValue('vehicle_model', primaryVehicle.model || '');
         form.setValue('vehicle_year', primaryVehicle.year || new Date().getFullYear());
         form.setValue('vehicle_serial', primaryVehicle.vin || '');
-        form.setValue('vehicle_body_class', primaryVehicle.body_class || '');
-        form.setValue('vehicle_doors', primaryVehicle.doors || null);
-        form.setValue('vehicle_trim', primaryVehicle.trim || '');
+        
+        // Optional fields that might be null
+        if (primaryVehicle.body_class) {
+          form.setValue('vehicle_body_class', primaryVehicle.body_class);
+        }
+        
+        if (primaryVehicle.doors !== null && primaryVehicle.doors !== undefined) {
+          form.setValue('vehicle_doors', primaryVehicle.doors);
+        }
+        
+        if (primaryVehicle.trim) {
+          form.setValue('vehicle_trim', primaryVehicle.trim);
+        }
       } else {
-        console.log('No vehicle found for customer');
+        console.log('No vehicles found for customer');
       }
       
       setOpen(false);
@@ -133,13 +158,18 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     }
   }, [form]);
 
+  // Get display value for the customer selection button
   const displayValue = form.getValues("first_name") && form.getValues("last_name") 
     ? `${form.getValues("first_name")} ${form.getValues("last_name")}`
     : "Search for customer...";
 
+  // Log any errors for debugging
   if (error) {
     console.error('Customer search error:', error);
   }
+  
+  // Always ensure customers is a valid array
+  const safeCustomers = Array.isArray(customers) ? customers : [];
 
   return (
     <div className="mb-6">
@@ -147,6 +177,7 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
         <User className="h-4 w-4 text-muted-foreground" />
         <h3 className="text-sm font-medium">Select Existing Customer</h3>
       </div>
+      
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -159,6 +190,7 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
+        
         <PopoverContent className="p-0 w-full" align="start">
           <Command>
             <CommandInput 
@@ -166,36 +198,35 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
               value={searchQuery}
               onValueChange={setSearchQuery}
             />
+            
             {isLoading ? (
               <div className="py-6 text-center text-sm text-muted-foreground">
                 Loading customers...
               </div>
+            ) : safeCustomers.length === 0 ? (
+              <CommandEmpty>No customers found.</CommandEmpty>
             ) : (
               <CommandGroup>
-                {customerList.length === 0 ? (
-                  <CommandEmpty>No customers found.</CommandEmpty>
-                ) : (
-                  customerList.map((customer) => (
-                    <CommandItem
-                      key={customer.id}
-                      value={`${customer.first_name || ''} ${customer.last_name || ''}`}
-                      onSelect={() => applyCustomerData(customer)}
-                      className="flex items-center"
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          form.getValues("first_name") === customer.first_name &&
-                          form.getValues("last_name") === customer.last_name
-                            ? "opacity-100"
-                            : "opacity-0"
-                        )}
-                      />
-                      <span>{customer.first_name || ''} {customer.last_name || ''}</span>
-                      <span className="ml-2 text-sm text-muted-foreground">{customer.email || ''}</span>
-                    </CommandItem>
-                  ))
-                )}
+                {safeCustomers.map((customer) => (
+                  <CommandItem
+                    key={customer.id}
+                    value={`${customer.first_name || ''} ${customer.last_name || ''}`}
+                    onSelect={() => applyCustomerData(customer)}
+                    className="flex items-center"
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        form.getValues("first_name") === customer.first_name &&
+                        form.getValues("last_name") === customer.last_name
+                          ? "opacity-100"
+                          : "opacity-0"
+                      )}
+                    />
+                    <span>{customer.first_name || ''} {customer.last_name || ''}</span>
+                    <span className="ml-2 text-sm text-muted-foreground">{customer.email || ''}</span>
+                  </CommandItem>
+                ))}
               </CommandGroup>
             )}
           </Command>
@@ -204,4 +235,3 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     </div>
   );
 }
-
