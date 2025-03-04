@@ -43,11 +43,12 @@ export const useAdminStatus = () => {
           return;
         }
 
-        const userRole = (profileData as unknown as ProfileResponse)?.role?.name?.toLowerCase();
+        const userRole = (profileData as unknown as ProfileResponse)?.role?.name || '';
         console.log("Checking admin status, user role:", userRole);
         
-        // Consider both administrator and king as admin roles
-        setIsAdmin(userRole === 'administrator' || userRole === 'king');
+        // Case insensitive role check for admin roles
+        const adminRoles = ['administrator', 'admin', 'king', 'owner'];
+        setIsAdmin(adminRoles.some(role => userRole.toLowerCase() === role.toLowerCase()));
       } catch (error) {
         console.error('Error checking admin status:', error)
         setIsAdmin(false)

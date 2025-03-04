@@ -44,6 +44,13 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
     currentUser.id === profileId // Managing own skills with profileId specified
   )
 
+  console.log("Permission check:", { 
+    isAdmin, 
+    currentUserId: currentUser?.id, 
+    profileId, 
+    hasPermission 
+  });
+
   // Use mutation instead of direct function call for better error handling
   const updateSkillMutation = useMutation({
     mutationFn: async ({ 
@@ -86,6 +93,13 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
       // Set permission error state if it's an RLS policy violation
       if (error.message?.includes('row-level security')) {
         setPermissionError(true)
+        toast.error("Permission error", {
+          description: "You don't have permission to manage these service skills."
+        });
+      } else {
+        toast.error("Error updating skill", {
+          description: error.message || "There was an error updating the service skill."
+        });
       }
     }
   })
@@ -96,59 +110,65 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
       const targetId = profileId || currentUser?.id
       if (!targetId) return []
 
-      // First get all services
-      const { data: services, error: servicesError } = await supabase
-        .from('service_types')
-        .select('id, name, description')
-        .eq('status', 'active')
+      try {
+        // First get all services
+        const { data: services, error: servicesError } = await supabase
+          .from('service_types')
+          .select('id, name, description')
+          .eq('status', 'active')
 
-      if (servicesError) throw servicesError
+        if (servicesError) throw servicesError
 
-      // Then get user's active skills
-      const { data: userSkills, error: skillsError } = await supabase
-        .from('staff_service_skills')
-        .select(`
-          id,
-          service_id,
-          is_active,
-          service_types (
-            name,
-            description
-          )
-        `)
-        .eq('profile_id', targetId)
+        // Then get user's active skills
+        const { data: userSkills, error: skillsError } = await supabase
+          .from('staff_service_skills')
+          .select(`
+            id,
+            service_id,
+            is_active,
+            service_types (
+              name,
+              description
+            )
+          `)
+          .eq('profile_id', targetId)
 
-      if (skillsError) {
-        console.error('Skills fetch error:', skillsError)
-        // Check if this is a permissions error
-        if (skillsError.message?.includes('row-level security')) {
-          setPermissionError(true)
-        }
-        // Still continue with available services but mark as not active
-        return services.map(service => ({
-          id: '',
-          service_id: service.id,
-          is_active: false,
-          service_types: {
-            name: service.name,
-            description: service.description
+        if (skillsError) {
+          console.error('Skills fetch error:', skillsError)
+          // Check if this is a permissions error
+          if (skillsError.message?.includes('row-level security')) {
+            setPermissionError(true)
           }
-        }))
+          // Still continue with available services but mark as not active
+          return services.map(service => ({
+            id: '',
+            service_id: service.id,
+            is_active: false,
+            service_types: {
+              name: service.name,
+              description: service.description
+            }
+          }))
+        }
+
+        // Map services to include skill status
+        return services.map(service => {
+          const existingSkill = userSkills?.find(skill => skill.service_id === service.id)
+          return {
+            id: existingSkill?.id || '',
+            service_id: service.id,
+            is_active: existingSkill?.is_active || false,
+            service_types: {
+              name: service.name,
+              description: service.description
+            }
+          }
+        })
+      } catch (error) {
+        console.error('Error in skill query:', error)
+        setPermissionError(true)
+        return []
       }
-
-      // Map services to include skill status
-      return services.map(service => {
-        const existingSkill = userSkills?.find(skill => skill.service_id === service.id)
-        return {
-          id: existingSkill?.id || '',
-          service_id: service.id,
-          is_active: existingSkill?.is_active || false,
-          service_types: {
-            name: service.name,
-            description: service.description
-          }
-        }
-      })
     },
     enabled: !!currentUser || !!profileId
   })
