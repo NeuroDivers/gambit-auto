@@ -27,13 +27,13 @@ export const UserEditDialog = ({ user, staffData, open, onOpenChange }: UserEdit
       last_name: user.last_name || "",
       email: user.email || "",
       phone_number: user.phone_number || "",
-      // Prefer staff address fields over profile address fields if available
-      street_address: staffData?.street_address || user.street_address || "",
-      unit_number: staffData?.unit_number || user.unit_number || "",
-      city: staffData?.city || user.city || "",
-      state_province: staffData?.state_province || user.state_province || "",
-      postal_code: staffData?.postal_code || user.postal_code || "",
-      country: staffData?.country || user.country || "",
+      // Only get address fields from staffData, not from user/profile
+      street_address: staffData?.street_address || "",
+      unit_number: staffData?.unit_number || "",
+      city: staffData?.city || "",
+      state_province: staffData?.state_province || "",
+      postal_code: staffData?.postal_code || "",
+      country: staffData?.country || "",
       bio: user.bio || "",
       role: user.role?.id || "",
       // Staff specific fields
