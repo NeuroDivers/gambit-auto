@@ -33,7 +33,7 @@ type CustomerWithVehicles = Customer & {
 export function CustomerSearch({ form }: CustomerSearchProps) {
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [customers, setCustomers] = useState<CustomerWithVehicles[]>([])
+  const [customerList, setCustomerList] = useState<CustomerWithVehicles[]>([])
   
   // Query for customers and their primary vehicle
   const { data, isLoading, error, refetch } = useQuery({
@@ -73,22 +73,32 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
 
   // Update customers state whenever data changes
   useEffect(() => {
-    if (data && Array.isArray(data.customers)) {
-      setCustomers(data.customers as CustomerWithVehicles[]);
+    if (data && data.customers && Array.isArray(data.customers)) {
+      console.log('Setting customer list with data:', data.customers.length, 'customers');
+      setCustomerList(data.customers as CustomerWithVehicles[]);
+    } else {
+      console.log('Data or data.customers is not valid, setting empty array', data);
+      setCustomerList([]);
     }
   }, [data]);
 
   // Refetch when popover opens or search query changes
   useEffect(() => {
     if (open) {
+      console.log('Popover opened or search query changed, refetching');
       refetch();
     }
   }, [open, searchQuery, refetch]);
  
   const applyCustomerData = useCallback((customer: CustomerWithVehicles) => {
-    if (!customer) return;
+    if (!customer) {
+      console.log('Customer is null, not applying data');
+      return;
+    }
     
     try {
+      console.log('Applying customer data:', customer);
+      
       // Set customer information
       form.setValue('first_name', customer.first_name || '');
       form.setValue('last_name', customer.last_name || '');
@@ -97,10 +107,13 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
       form.setValue('address', customer.address || '');
       
       // Find primary vehicle or first vehicle
-      const primaryVehicle = customer.vehicles?.find(v => v.is_primary) || customer.vehicles?.[0];
+      const primaryVehicle = customer.vehicles && Array.isArray(customer.vehicles) 
+        ? (customer.vehicles.find(v => v.is_primary) || customer.vehicles[0])
+        : null;
       
       // If a vehicle exists, set vehicle information
       if (primaryVehicle) {
+        console.log('Found vehicle:', primaryVehicle);
         form.setValue('vehicle_make', primaryVehicle.make || '');
         form.setValue('vehicle_model', primaryVehicle.model || '');
         form.setValue('vehicle_year', primaryVehicle.year || new Date().getFullYear());
@@ -108,6 +121,8 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
         form.setValue('vehicle_body_class', primaryVehicle.body_class || '');
         form.setValue('vehicle_doors', primaryVehicle.doors || null);
         form.setValue('vehicle_trim', primaryVehicle.trim || '');
+      } else {
+        console.log('No vehicle found for customer');
       }
       
       setOpen(false);
@@ -157,31 +172,29 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
               </div>
             ) : (
               <CommandGroup>
-                {customers.length === 0 ? (
+                {customerList.length === 0 ? (
                   <CommandEmpty>No customers found.</CommandEmpty>
                 ) : (
-                  <>
-                    {customers.map((customer) => (
-                      <CommandItem
-                        key={customer.id}
-                        value={`${customer.first_name || ''} ${customer.last_name || ''}`}
-                        onSelect={() => applyCustomerData(customer)}
-                        className="flex items-center"
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            form.getValues("first_name") === customer.first_name &&
-                            form.getValues("last_name") === customer.last_name
-                              ? "opacity-100"
-                              : "opacity-0"
-                          )}
-                        />
-                        <span>{customer.first_name || ''} {customer.last_name || ''}</span>
-                        <span className="ml-2 text-muted-foreground">{customer.email || ''}</span>
-                      </CommandItem>
-                    ))}
-                  </>
+                  customerList.map((customer) => (
+                    <CommandItem
+                      key={customer.id}
+                      value={`${customer.first_name || ''} ${customer.last_name || ''}`}
+                      onSelect={() => applyCustomerData(customer)}
+                      className="flex items-center"
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          form.getValues("first_name") === customer.first_name &&
+                          form.getValues("last_name") === customer.last_name
+                            ? "opacity-100"
+                            : "opacity-0"
+                        )}
+                      />
+                      <span>{customer.first_name || ''} {customer.last_name || ''}</span>
+                      <span className="ml-2 text-sm text-muted-foreground">{customer.email || ''}</span>
+                    </CommandItem>
+                  ))
                 )}
               </CommandGroup>
             )}
@@ -191,3 +204,4 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     </div>
   );
 }
+
