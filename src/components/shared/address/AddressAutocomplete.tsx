@@ -73,21 +73,56 @@ export function AddressAutocomplete({ form, fieldPrefix = "" }: AddressAutocompl
           background: hsl(var(--secondary)) !important;
         }
 
+        /* Improved styling for suggestions */
         .mapboxgl-ctrl-geocoder--suggestion {
           color: hsl(var(--foreground)) !important;
           background: hsl(var(--background)) !important;
+          padding: 8px 12px !important;
+          border-radius: 4px !important;
+          margin: 4px 0 !important;
         }
 
         .mapboxgl-ctrl-geocoder--suggestion-title {
           color: hsl(var(--foreground)) !important;
+          font-weight: 500 !important;
         }
 
         .mapboxgl-ctrl-geocoder--suggestion-address {
           color: hsl(var(--muted-foreground)) !important;
         }
 
+        /* Improved hover state - white text on purple background */
         .mapboxgl-ctrl-geocoder--suggestion:hover {
-          background-color: hsl(var(--accent)) !important;
+          background-color: hsl(var(--primary)) !important;
+          color: hsl(var(--primary-foreground)) !important;
+        }
+        
+        /* Make sure both title and address text turn white on hover */
+        .mapboxgl-ctrl-geocoder--suggestion:hover .mapboxgl-ctrl-geocoder--suggestion-title,
+        .mapboxgl-ctrl-geocoder--suggestion:hover .mapboxgl-ctrl-geocoder--suggestion-address {
+          color: hsl(var(--primary-foreground)) !important;
+        }
+
+        /* Better styling for the suggestion list */
+        .suggestions {
+          background-color: hsl(var(--background)) !important;
+          border: 1px solid hsl(var(--border)) !important;
+          border-radius: 0.5rem !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+          margin-top: 4px !important;
+          overflow: hidden !important;
+          z-index: 100 !important;
+        }
+
+        /* Ensure suggestions are properly styled in dark mode */
+        .dark .suggestions {
+          background-color: hsl(var(--background)) !important;
+          border-color: hsl(var(--border)) !important;
+        }
+        
+        /* Make sure the suggestion list has a high z-index */
+        .mapboxgl-ctrl-geocoder .suggestions {
+          z-index: 9999 !important;
         }
       `
       document.head.appendChild(style)
