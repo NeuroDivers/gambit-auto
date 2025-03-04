@@ -21,30 +21,35 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
   const [searchQuery, setSearchQuery] = useState("")
   
   // Query for customers and their primary vehicle
-  const { data: customers, isLoading } = useQuery({
+  const { data: customers = [], isLoading } = useQuery({
     queryKey: ['customers', searchQuery],
     queryFn: async () => {
-      let query = supabase
-        .from('customers')
-        .select(`
-          *,
-          vehicles(*)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(10)
-      
-      if (searchQuery) {
-        query = query.or(`first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`)
+      try {
+        let query = supabase
+          .from('customers')
+          .select(`
+            *,
+            vehicles(*)
+          `)
+          .order('created_at', { ascending: false })
+          .limit(10)
+        
+        if (searchQuery) {
+          query = query.or(`first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`)
+        }
+        
+        const { data: customersData, error } = await query
+        
+        if (error) {
+          console.error('Error fetching customers:', error)
+          throw error
+        }
+        
+        return (customersData || []) as (Customer & { vehicles: any[] })[]
+      } catch (error) {
+        console.error('Error in customer search query:', error)
+        return []
       }
-      
-      const { data: customersData, error } = await query
-      
-      if (error) {
-        console.error('Error fetching customers:', error)
-        throw error
-      }
-      
-      return customersData as (Customer & { vehicles: any[] })[]
     },
     enabled: true,
   })
@@ -108,7 +113,7 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
               <>
                 <CommandEmpty>No customers found.</CommandEmpty>
                 <CommandGroup>
-                  {(customers || [])?.map((customer) => (
+                  {customers.map((customer) => (
                     <CommandItem
                       key={customer.id}
                       value={`${customer.first_name} ${customer.last_name}`}
