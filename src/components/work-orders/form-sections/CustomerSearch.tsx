@@ -32,18 +32,15 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
             vehicles(*)
           `)
           .order('created_at', { ascending: false })
-          .limit(10)
         
         if (searchQuery) {
           query = query.or(`first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`)
         }
         
+        query = query.limit(10)
         const { data: customersData, error } = await query
         
-        if (error) {
-          console.error('Error fetching customers:', error)
-          throw error
-        }
+        if (error) throw error
         
         return (customersData || []) as (Customer & { vehicles: any[] })[]
       } catch (error) {
@@ -51,7 +48,7 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
         return []
       }
     },
-    enabled: true,
+    enabled: open, // Only fetch when popover is open
   })
 
   const applyCustomerData = (customer: Customer & { vehicles: any[] }) => {
@@ -80,6 +77,10 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     toast.success(`Customer ${customer.first_name} ${customer.last_name} selected`)
   }
 
+  const displayValue = form.getValues("first_name") && form.getValues("last_name") 
+    ? `${form.getValues("first_name")} ${form.getValues("last_name")}`
+    : "Search for customer..."
+
   return (
     <div className="mb-6">
       <div className="flex items-center gap-2 mb-1">
@@ -94,7 +95,7 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
             aria-expanded={open}
             className="w-full justify-between"
           >
-            {searchQuery || "Search for customer..."}
+            {displayValue}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -105,37 +106,36 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
               value={searchQuery}
               onValueChange={setSearchQuery}
             />
-            {isLoading ? (
-              <div className="py-6 text-center text-sm text-muted-foreground">
-                Loading customers...
-              </div>
-            ) : (
-              <CommandGroup>
-                {customers && customers.length > 0 ? (
-                  customers.map((customer) => (
-                    <CommandItem
-                      key={customer.id}
-                      value={`${customer.first_name} ${customer.last_name}`}
-                      onSelect={() => applyCustomerData(customer)}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          form.getValues("first_name") === customer.first_name &&
-                          form.getValues("last_name") === customer.last_name
-                            ? "opacity-100"
-                            : "opacity-0"
-                        )}
-                      />
-                      {customer.first_name} {customer.last_name}
-                      <span className="ml-2 text-muted-foreground">{customer.email}</span>
-                    </CommandItem>
-                  ))
-                ) : (
-                  <CommandEmpty>No customers found.</CommandEmpty>
-                )}
-              </CommandGroup>
-            )}
+            <CommandGroup>
+              {isLoading ? (
+                <div className="py-6 text-center text-sm text-muted-foreground">
+                  Loading customers...
+                </div>
+              ) : customers.length > 0 ? (
+                customers.map((customer) => (
+                  <CommandItem
+                    key={customer.id}
+                    value={`${customer.first_name} ${customer.last_name}`}
+                    onSelect={() => applyCustomerData(customer)}
+                    className="flex items-center"
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        form.getValues("first_name") === customer.first_name &&
+                        form.getValues("last_name") === customer.last_name
+                          ? "opacity-100"
+                          : "opacity-0"
+                      )}
+                    />
+                    <span>{customer.first_name} {customer.last_name}</span>
+                    <span className="ml-2 text-muted-foreground">{customer.email}</span>
+                  </CommandItem>
+                ))
+              ) : (
+                <CommandEmpty>No customers found.</CommandEmpty>
+              )}
+            </CommandGroup>
           </Command>
         </PopoverContent>
       </Popover>
