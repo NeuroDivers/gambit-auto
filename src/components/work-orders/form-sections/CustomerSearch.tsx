@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Customer } from "@/components/customers/types"
@@ -16,15 +16,31 @@ interface CustomerSearchProps {
   form: UseFormReturn<WorkOrderFormValues>
 }
 
+type CustomerWithVehicles = Customer & { 
+  vehicles: Array<{
+    id: string;
+    make: string;
+    model: string;
+    year: number;
+    vin?: string;
+    body_class?: string;
+    doors?: number;
+    trim?: string;
+    is_primary?: boolean;
+  }>
+};
+
 export function CustomerSearch({ form }: CustomerSearchProps) {
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [customers, setCustomers] = useState<CustomerWithVehicles[]>([])
   
   // Query for customers and their primary vehicle
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['customers', searchQuery],
     queryFn: async () => {
       try {
+        console.log('Fetching customers with query:', searchQuery);
         let query = supabase
           .from('customers')
           .select(`
@@ -33,7 +49,7 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
           `)
           .order('created_at', { ascending: false })
         
-        if (searchQuery) {
+        if (searchQuery && searchQuery.trim() !== '') {
           query = query.or(`first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`)
         }
         
@@ -42,54 +58,72 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
         
         if (error) {
           console.error('Error fetching customers:', error)
-          return []
+          return { customers: [], error }
         }
         
-        return customersData || []
+        console.log('Fetched customers data:', customersData);
+        return { customers: customersData || [], error: null }
       } catch (error) {
         console.error('Error in customer search query:', error)
-        return []
+        return { customers: [], error }
       }
     },
-    enabled: open, // Only fetch when popover is open
+    enabled: false, // Don't run on mount - we'll use refetch when the popover opens
   })
 
-  // Ensure we always have an array, even if data is undefined
-  const customers = Array.isArray(data) ? data : []
-
-  const applyCustomerData = (customer: Customer & { vehicles: any[] }) => {
-    // Set customer information
-    form.setValue('first_name', customer.first_name)
-    form.setValue('last_name', customer.last_name)
-    form.setValue('email', customer.email)
-    form.setValue('phone_number', customer.phone_number || '')
-    form.setValue('address', customer.address || '')
-    
-    // Find primary vehicle or first vehicle
-    const primaryVehicle = customer.vehicles?.find(v => v.is_primary) || customer.vehicles?.[0]
-    
-    // If a vehicle exists, set vehicle information
-    if (primaryVehicle) {
-      form.setValue('vehicle_make', primaryVehicle.make)
-      form.setValue('vehicle_model', primaryVehicle.model)
-      form.setValue('vehicle_year', primaryVehicle.year)
-      form.setValue('vehicle_serial', primaryVehicle.vin || '')
-      form.setValue('vehicle_body_class', primaryVehicle.body_class || '')
-      form.setValue('vehicle_doors', primaryVehicle.doors || null)
-      form.setValue('vehicle_trim', primaryVehicle.trim || '')
+  // Update customers state whenever data changes
+  useEffect(() => {
+    if (data && Array.isArray(data.customers)) {
+      setCustomers(data.customers as CustomerWithVehicles[]);
     }
+  }, [data]);
+
+  // Refetch when popover opens or search query changes
+  useEffect(() => {
+    if (open) {
+      refetch();
+    }
+  }, [open, searchQuery, refetch]);
+ 
+  const applyCustomerData = useCallback((customer: CustomerWithVehicles) => {
+    if (!customer) return;
     
-    setOpen(false)
-    toast.success(`Customer ${customer.first_name} ${customer.last_name} selected`)
-  }
+    try {
+      // Set customer information
+      form.setValue('first_name', customer.first_name || '');
+      form.setValue('last_name', customer.last_name || '');
+      form.setValue('email', customer.email || '');
+      form.setValue('phone_number', customer.phone_number || '');
+      form.setValue('address', customer.address || '');
+      
+      // Find primary vehicle or first vehicle
+      const primaryVehicle = customer.vehicles?.find(v => v.is_primary) || customer.vehicles?.[0];
+      
+      // If a vehicle exists, set vehicle information
+      if (primaryVehicle) {
+        form.setValue('vehicle_make', primaryVehicle.make || '');
+        form.setValue('vehicle_model', primaryVehicle.model || '');
+        form.setValue('vehicle_year', primaryVehicle.year || new Date().getFullYear());
+        form.setValue('vehicle_serial', primaryVehicle.vin || '');
+        form.setValue('vehicle_body_class', primaryVehicle.body_class || '');
+        form.setValue('vehicle_doors', primaryVehicle.doors || null);
+        form.setValue('vehicle_trim', primaryVehicle.trim || '');
+      }
+      
+      setOpen(false);
+      toast.success(`Customer ${customer.first_name} ${customer.last_name} selected`);
+    } catch (err) {
+      console.error("Error applying customer data:", err);
+      toast.error("Failed to select customer");
+    }
+  }, [form]);
 
   const displayValue = form.getValues("first_name") && form.getValues("last_name") 
     ? `${form.getValues("first_name")} ${form.getValues("last_name")}`
-    : "Search for customer..."
+    : "Search for customer...";
 
-  // If there's an error, log it
   if (error) {
-    console.error('Customer search error:', error)
+    console.error('Customer search error:', error);
   }
 
   return (
@@ -117,41 +151,43 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
               value={searchQuery}
               onValueChange={setSearchQuery}
             />
-            <CommandGroup>
-              {isLoading && (
-                <div className="py-6 text-center text-sm text-muted-foreground">
-                  Loading customers...
-                </div>
-              )}
-              
-              {!isLoading && customers.length === 0 && (
-                <CommandEmpty>No customers found.</CommandEmpty>
-              )}
-              
-              {!isLoading && customers.length > 0 && customers.map((customer) => (
-                <CommandItem
-                  key={customer.id}
-                  value={`${customer.first_name} ${customer.last_name}`}
-                  onSelect={() => applyCustomerData(customer)}
-                  className="flex items-center"
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      form.getValues("first_name") === customer.first_name &&
-                      form.getValues("last_name") === customer.last_name
-                        ? "opacity-100"
-                        : "opacity-0"
-                    )}
-                  />
-                  <span>{customer.first_name} {customer.last_name}</span>
-                  <span className="ml-2 text-muted-foreground">{customer.email}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            {isLoading ? (
+              <div className="py-6 text-center text-sm text-muted-foreground">
+                Loading customers...
+              </div>
+            ) : (
+              <CommandGroup>
+                {customers.length === 0 ? (
+                  <CommandEmpty>No customers found.</CommandEmpty>
+                ) : (
+                  <>
+                    {customers.map((customer) => (
+                      <CommandItem
+                        key={customer.id}
+                        value={`${customer.first_name || ''} ${customer.last_name || ''}`}
+                        onSelect={() => applyCustomerData(customer)}
+                        className="flex items-center"
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            form.getValues("first_name") === customer.first_name &&
+                            form.getValues("last_name") === customer.last_name
+                              ? "opacity-100"
+                              : "opacity-0"
+                          )}
+                        />
+                        <span>{customer.first_name || ''} {customer.last_name || ''}</span>
+                        <span className="ml-2 text-muted-foreground">{customer.email || ''}</span>
+                      </CommandItem>
+                    ))}
+                  </>
+                )}
+              </CommandGroup>
+            )}
           </Command>
         </PopoverContent>
       </Popover>
     </div>
-  )
+  );
 }
