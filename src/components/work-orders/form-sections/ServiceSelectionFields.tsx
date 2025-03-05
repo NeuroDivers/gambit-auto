@@ -1,23 +1,32 @@
 
-import { UseFormReturn } from "react-hook-form";
-import { WorkOrderFormValues } from "../types";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { ServiceItemType } from "@/types/service-item";
-import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField";
+import ServiceSelectionField from "@/components/shared/form-fields/ServiceSelectionField";
 
-interface ServiceSelectionFieldsProps {
-  form: UseFormReturn<WorkOrderFormValues>;
-}
+type ServiceSelectionFieldsProps = {
+  services: ServiceItemType[];
+  onChange: (newServices: ServiceItemType[]) => void;
+  disabled?: boolean;
+  showCommission?: boolean;
+};
 
-export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
-  const { control, watch } = form;
-  const services = watch("service_items") || [];
-  
+export function ServiceSelectionFields({
+  services,
+  onChange,
+  disabled = false,
+  showCommission = false,
+}: ServiceSelectionFieldsProps) {
   return (
-    <ServiceSelectionField
-      services={services as ServiceItemType[]}
-      onChange={(newServices) => form.setValue("service_items", newServices)}
-      disabled={false}
-      showCommission
-    />
+    <Card>
+      <CardHeader>
+        <CardTitle>Service Selection</CardTitle>
+      </CardHeader>
+      <ServiceSelectionField
+        services={services}
+        onChange={onChange}
+        disabled={disabled}
+        showCommission={showCommission}
+      />
+    </Card>
   );
 }
