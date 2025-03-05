@@ -26,10 +26,10 @@ export default function EstimateRequestDetails() {
     
     const fetchEstimateRequest = async () => {
       try {
-        console.log("Attempting to fetch quote request with ID:", id)
+        console.log("Attempting to fetch estimate request with ID:", id)
         
         const { data, error } = await supabase
-          .from("quote_requests")
+          .from("estimate_requests")
           .select(`
             *,
             clients(*)
@@ -38,12 +38,12 @@ export default function EstimateRequestDetails() {
           .single()
           
         if (error) {
-          console.error("Error fetching quote request:", error)
+          console.error("Error fetching estimate request:", error)
           toast.error("Could not load estimate request data")
           throw error
         }
         
-        console.log("Successfully retrieved quote request data:", data)
+        console.log("Successfully retrieved estimate request data:", data)
         setEstimateRequest(data)
       } catch (error) {
         console.error("Error fetching estimate request:", error)
@@ -68,7 +68,7 @@ export default function EstimateRequestDetails() {
     navigate("/estimates/create", { 
       state: { 
         estimateRequestId: estimateRequest.id,
-        clientId: estimateRequest.client_id
+        clientId: estimateRequest.customer_id
       } 
     })
   }

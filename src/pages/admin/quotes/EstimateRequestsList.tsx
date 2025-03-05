@@ -16,30 +16,30 @@ export function EstimateRequestsList() {
   useEffect(() => {
     const fetchEstimateRequests = async () => {
       try {
-        console.log("Attempting to fetch quote_requests")
-        const { data: quoteRequests, error } = await supabase
-          .from("quote_requests")
+        console.log("Attempting to fetch estimate_requests")
+        const { data: estimateRequests, error } = await supabase
+          .from("estimate_requests")
           .select(`
             id, 
             created_at, 
             status, 
             description,
-            client_id,
+            customer_id,
             clients(first_name, last_name, email)
           `)
           .order("created_at", { ascending: false })
           .limit(30)
         
         if (error) {
-          console.error("Error fetching quote requests:", error)
+          console.error("Error fetching estimate requests:", error)
           toast.error("Failed to load estimate requests. Please try again.")
           setEstimateRequests([])
         } else {
-          console.log("Successfully fetched quote requests:", quoteRequests)
-          setEstimateRequests(quoteRequests || [])
+          console.log("Successfully fetched estimate requests:", estimateRequests)
+          setEstimateRequests(estimateRequests || [])
         }
       } catch (error) {
-        console.error("Error in quote requests fetch flow:", error)
+        console.error("Error in estimate requests fetch flow:", error)
         toast.error("Failed to load estimate requests. Please try again.")
         setEstimateRequests([])
       } finally {

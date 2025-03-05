@@ -10,7 +10,7 @@ export function useQuoteRequestActions() {
   const handleResponseMutation = useMutation({
     mutationFn: async ({ id, response }: { id: string; response: QuoteRequest['client_response'] }) => {
       const { error } = await supabase
-        .from("quote_requests")
+        .from("estimate_requests")
         .update({ client_response: response })
         .eq("id", id)
 

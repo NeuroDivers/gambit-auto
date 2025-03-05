@@ -1,3 +1,4 @@
+
 -- Create roles first
 INSERT INTO roles (name, nicename, description) 
 VALUES 
@@ -73,9 +74,9 @@ SELECT
   'email'
 FROM generate_series(1, 50) i;
 
--- Create 30 quote requests
-INSERT INTO quote_requests (
-  client_id,
+-- Create 30 estimate requests
+INSERT INTO estimate_requests (
+  customer_id,
   vehicle_make,
   vehicle_model,
   vehicle_year,

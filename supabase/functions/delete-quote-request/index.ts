@@ -15,11 +15,11 @@ serve(async (req) => {
 
   try {
     const { id } = await req.json()
-    console.log('Attempting to delete quote request:', id)
+    console.log('Attempting to delete estimate request:', id)
 
     if (!id) {
-      console.error('No quote request ID provided')
-      throw new Error('Quote request ID is required')
+      console.error('No estimate request ID provided')
+      throw new Error('Estimate request ID is required')
     }
 
     // Initialize Supabase client with service role key
@@ -34,54 +34,54 @@ serve(async (req) => {
       }
     )
 
-    // First, get the quote request to check if it exists and get media URLs
-    const { data: quoteRequest, error: fetchError } = await supabaseAdmin
-      .from('quote_requests')
+    // First, get the estimate request to check if it exists and get media URLs
+    const { data: estimateRequest, error: fetchError } = await supabaseAdmin
+      .from('estimate_requests')
       .select('*')
       .eq('id', id)
       .single()
 
     if (fetchError) {
-      console.error('Error fetching quote request:', fetchError)
-      throw new Error('Failed to fetch quote request')
+      console.error('Error fetching estimate request:', fetchError)
+      throw new Error('Failed to fetch estimate request')
     }
 
-    if (!quoteRequest) {
-      console.error('Quote request not found:', id)
-      throw new Error('Quote request not found')
+    if (!estimateRequest) {
+      console.error('Estimate request not found:', id)
+      throw new Error('Estimate request not found')
     }
 
     // Delete media files if they exist
-    if (quoteRequest.media_urls && quoteRequest.media_urls.length > 0) {
-      console.log('Deleting media files:', quoteRequest.media_urls)
+    if (estimateRequest.media_urls && estimateRequest.media_urls.length > 0) {
+      console.log('Deleting media files:', estimateRequest.media_urls)
       const { error: deleteStorageError } = await supabaseAdmin
         .storage
         .from('quote-request-media')
-        .remove(quoteRequest.media_urls)
+        .remove(estimateRequest.media_urls)
 
       if (deleteStorageError) {
         console.error('Error deleting media files:', deleteStorageError)
-        // Continue with quote deletion even if media deletion fails
+        // Continue with estimate deletion even if media deletion fails
       }
     }
 
-    // Delete the quote request
+    // Delete the estimate request
     const { error: deleteError } = await supabaseAdmin
-      .from('quote_requests')
+      .from('estimate_requests')
       .delete()
       .match({ id })
 
     if (deleteError) {
-      console.error('Error deleting quote request:', deleteError)
-      throw new Error('Failed to delete quote request')
+      console.error('Error deleting estimate request:', deleteError)
+      throw new Error('Failed to delete estimate request')
     }
 
-    console.log('Successfully deleted quote request:', id)
+    console.log('Successfully deleted estimate request:', id)
     
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Quote request deleted successfully' 
+        message: 'Estimate request deleted successfully' 
       }),
       { 
         headers: { 
@@ -97,7 +97,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: error.message || 'An error occurred while deleting the quote request' 
+        error: error.message || 'An error occurred while deleting the estimate request' 
       }),
       { 
         headers: { 
