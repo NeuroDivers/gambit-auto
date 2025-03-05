@@ -1,3 +1,4 @@
+
 import { lazy, Suspense } from "react";
 import { Navigate, RouteObject } from "react-router-dom";
 import { AuthGuard } from "@/components/auth/AuthGuard";
@@ -37,6 +38,7 @@ const Client = lazy(() => Promise.resolve({ default: () => <MockComponent /> }))
 const ClientEdit = lazy(() => Promise.resolve({ default: () => <MockComponent /> }));
 const Vehicles = lazy(() => Promise.resolve({ default: () => <MockComponent /> }));
 const VehicleEdit = lazy(() => Promise.resolve({ default: () => <MockComponent /> }));
+const Auth = lazy(() => import("@/pages/Auth"));
 
 // Work Order Routes
 import { workOrderRoutes } from "./work-order-routes";
@@ -48,7 +50,7 @@ export const protectedRoutes: RouteObject[] = [
       <AuthGuard isPublic>
         <AuthLayout>
           <Suspense fallback={<Loading />}>
-            <lazy(() => import("@/pages/Auth")) />
+            <Auth />
           </Suspense>
         </AuthLayout>
       </AuthGuard>
