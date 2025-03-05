@@ -7,8 +7,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Clipboard, Pencil, X, Check } from "lucide-react"
+import { Clipboard, Pencil, X, Check, User } from "lucide-react"
 import { useState } from "react"
+import { useAssignableProfiles } from "../hooks/useAssignableProfiles"
 
 type BayCardContentProps = {
   bayId: string
@@ -42,18 +43,48 @@ export function BayCardContent({
   onToggleService,
 }: BayCardContentProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const { profiles } = useAssignableProfiles();
   
   const activeServices = services.filter(s => s.is_active);
+  const assignedProfile = profiles?.find(p => p.id === assignedProfileId);
+
+  const getStatusBadge = () => {
+    switch (status) {
+      case 'available':
+        return <Badge variant="success" className="font-medium">Available</Badge>
+      case 'in_use':
+        return <Badge variant="secondary" className="font-medium">In Use</Badge>
+      case 'maintenance':
+        return <Badge variant="pending" className="font-medium">Maintenance</Badge>
+      default:
+        return null
+    }
+  }
 
   return (
     <CardContent className="p-6 pt-4 flex-grow flex flex-col">
       {/* Preview mode */}
       {!isEditing ? (
         <div className="space-y-5 flex-grow flex flex-col">
+          {/* Status and Assignment */}
+          <div className="flex items-center justify-between">
+            <div>
+              {getStatusBadge()}
+            </div>
+            {assignedProfileId && assignedProfile && (
+              <div className="flex items-center gap-2 text-sm">
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 flex items-center gap-1.5">
+                  <User className="h-3 w-3" />
+                  <span>{assignedProfile.first_name} {assignedProfile.last_name}</span>
+                </Badge>
+              </div>
+            )}
+          </div>
+          
           {/* Notes preview */}
           <div className="text-sm text-muted-foreground flex-grow">
             {notes ? (
-              <div className="bg-muted/20 p-3 rounded-lg border border-border/40">
+              <div className="bg-card p-3 rounded-lg border border-border/40 shadow-sm">
                 <p className="line-clamp-3">{notes}</p>
               </div>
             ) : (
@@ -70,7 +101,7 @@ export function BayCardContent({
               <h4 className="font-semibold text-sm mb-2">Active Services</h4>
               <div className="flex flex-wrap gap-2">
                 {activeServices.map(service => (
-                  <Badge key={service.service_id} variant="outline" className="bg-primary/5 text-primary-foreground border-primary/20">
+                  <Badge key={service.service_id} variant="outline" className="bg-primary/10 text-primary border-primary/20">
                     {service.name}
                   </Badge>
                 ))}
@@ -80,7 +111,7 @@ export function BayCardContent({
           
           {/* Edit button */}
           <Button 
-            className="w-full mt-4 gap-2 bg-primary hover:bg-primary/90"
+            className="w-full mt-4 gap-2"
             onClick={() => setIsEditing(true)}
           >
             <Pencil className="h-4 w-4" />
@@ -111,7 +142,7 @@ export function BayCardContent({
             />
           </div>
           
-          <div className="border rounded-lg p-4 bg-background/50">
+          <div className="border rounded-lg p-4 bg-card shadow-sm">
             <Label className="mb-3 block">Available Services</Label>
             <BayServiceToggles
               availableServices={availableServices}
