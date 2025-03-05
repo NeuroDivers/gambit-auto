@@ -59,15 +59,17 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
       // Get the file extension
       const fileExt = file.name.split('.').pop()
       
-      // Use standardized file names based on logo type
+      // Generate a unique filename to avoid collisions
+      const timestamp = new Date().getTime()
+      const randomString = Math.random().toString(36).substring(2, 10)
       const fileName = type === 'light' 
-        ? `gambit-logo-light.${fileExt}`
-        : `gambit-logo-dark.${fileExt}`
+        ? `gambit-logo-light-${timestamp}-${randomString}.${fileExt}`
+        : `gambit-logo-dark-${timestamp}-${randomString}.${fileExt}`
 
       // Upload the file to Supabase Storage
       const { data, error: uploadError } = await supabase.storage
         .from('business-logos')
-        .upload(fileName, file, { upsert: true }) // Use upsert to replace existing files with same name
+        .upload(fileName, file, { upsert: true })
 
       if (uploadError) throw uploadError
 
@@ -103,15 +105,31 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
 
   async function onSubmit(values: BusinessFormValues) {
     try {
-      // No need to handle file deletion, we're using upsert: true for uploads
+      console.log("Submitting business profile form with values:", values);
       const { error } = businessProfile 
         ? await supabase
             .from("business_profile")
-            .update(values)
+            .update({
+              company_name: values.company_name,
+              email: values.email,
+              phone_number: values.phone_number,
+              address: values.address,
+              light_logo_url: values.light_logo_url,
+              dark_logo_url: values.dark_logo_url,
+              logo_url: values.logo_url
+            })
             .eq("id", businessProfile.id)
         : await supabase
             .from("business_profile")
-            .insert([values])
+            .insert([{
+              company_name: values.company_name,
+              email: values.email,
+              phone_number: values.phone_number,
+              address: values.address,
+              light_logo_url: values.light_logo_url,
+              dark_logo_url: values.dark_logo_url,
+              logo_url: values.logo_url
+            }])
 
       if (error) throw error
 
