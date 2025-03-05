@@ -75,7 +75,7 @@ export default function CustomerDetails() {
       
       const formattedQuotes = quotes?.map(quote => ({
         id: quote.id,
-        quote_number: quote.estimate_number,
+        estimate_number: quote.estimate_number,
         total: quote.total,
         status: quote.status,
         created_at: quote.created_at,
