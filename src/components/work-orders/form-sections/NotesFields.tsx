@@ -7,9 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 
 interface NotesFieldsProps {
   form: UseFormReturn<WorkOrderFormValues>;
+  disabled?: boolean;
 }
 
-export function NotesFields({ form }: NotesFieldsProps) {
+export function NotesFields({ form, disabled }: NotesFieldsProps) {
   return (
     <FormField
       control={form.control}
@@ -18,7 +19,7 @@ export function NotesFields({ form }: NotesFieldsProps) {
         <FormItem>
           <FormLabel>Additional Notes</FormLabel>
           <FormControl>
-            <Textarea {...field} placeholder="Enter any additional notes here..." />
+            <Textarea {...field} placeholder="Enter any additional notes here..." disabled={disabled} />
           </FormControl>
         </FormItem>
       )}

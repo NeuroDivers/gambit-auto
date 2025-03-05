@@ -35,7 +35,6 @@ export function FormSections({ form, isSubmitting, isEditing, customerId }: Form
         <CardContent>
           <CustomerInfoFields 
             form={form}
-            disabled={isSubmitting}
             isEditing={isEditing}
             customerId={customerId}
           />
@@ -49,7 +48,6 @@ export function FormSections({ form, isSubmitting, isEditing, customerId }: Form
         <CardContent>
           <VehicleInfoFields 
             form={form}
-            disabled={isSubmitting}
           />
         </CardContent>
       </Card>

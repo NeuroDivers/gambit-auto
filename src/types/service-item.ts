@@ -11,4 +11,19 @@ export type ServiceItemType = {
   sub_services?: ServiceItemType[]
   parent_id?: string
   assigned_profile_id?: string | null
+  package_id?: string | null
+}
+
+// Add the ServiceFormData type that was missing but referenced in other files
+export type ServiceFormData = {
+  vehicleInfo: {
+    make: string
+    model: string
+    year: number
+    vin: string
+    saveToAccount: boolean
+  }
+  service_items: ServiceItemType[]
+  description: string
+  service_details: Record<string, any>
 }

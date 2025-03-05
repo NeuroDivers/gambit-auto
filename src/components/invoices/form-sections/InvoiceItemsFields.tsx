@@ -24,9 +24,9 @@ export function InvoiceItemsFields({
       quantity: item.quantity,
       unit_price: item.unit_price,
       description: item.description || "",
-      commission_rate: (item as any).commission_rate ?? null,
+      commission_rate: (item as any).commission_rate ?? 0,
       commission_type: (item as any).commission_type ?? null,
-      package_id: (item as any).package_id || undefined
+      package_id: (item as any).package_id || null
     };
     return serviceItem;
   });
@@ -62,7 +62,7 @@ export function InvoiceItemsFields({
       services={mappedItems}
       onChange={handleItemsChange}
       allowPriceEdit={allowPriceEdit}
-      showCommission={false}
+      showCommission={showCommission}
     />
   )
 }

@@ -9,9 +9,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface BayAssignmentFieldProps {
   form: UseFormReturn<WorkOrderFormValues>;
+  disabled?: boolean;
 }
 
-export function BayAssignmentField({ form }: BayAssignmentFieldProps) {
+export function BayAssignmentField({ form, disabled }: BayAssignmentFieldProps) {
   const { data: serviceBays } = useQuery({
     queryKey: ["service-bays"],
     queryFn: async () => {
@@ -32,7 +33,7 @@ export function BayAssignmentField({ form }: BayAssignmentFieldProps) {
       render={({ field }) => (
         <FormItem>
           <FormLabel>Assign Service Bay</FormLabel>
-          <Select onValueChange={field.onChange} value={field.value || undefined}>
+          <Select onValueChange={field.onChange} value={field.value || undefined} disabled={disabled}>
             <FormControl>
               <SelectTrigger>
                 <SelectValue placeholder="Select a service bay" />

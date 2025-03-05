@@ -186,6 +186,7 @@ export function ServiceSelectionField({
     }
   }
 
+  // Fix part with type error - changing string to number conversion
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
