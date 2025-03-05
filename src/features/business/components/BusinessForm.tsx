@@ -103,8 +103,7 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
     try {
       console.log("Submitting business profile form with values:", values);
       
-      // Work around the storage_domain issue by directly updating only 
-      // the fields that don't trigger the problematic function
+      // Create a simplified update object that avoids triggering the problematic DB function
       let updateData: any = {
         company_name: values.company_name,
         email: values.email,
@@ -112,7 +111,8 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
         address: values.address,
       };
       
-      // Only include logo URLs if they've actually changed
+      // Only include logo URLs in update if they are actually different from what's
+      // already in the database - this avoids triggering the problematic delete function
       if (businessProfile?.light_logo_url !== values.light_logo_url) {
         updateData.light_logo_url = values.light_logo_url;
       }
