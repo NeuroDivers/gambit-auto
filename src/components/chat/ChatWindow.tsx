@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react"
 import { ChatMessage, ChatUser } from "@/types/chat"
 import { Card } from "@/components/ui/card"
@@ -10,6 +9,7 @@ import { Send, Check, Circle, Loader2, Pencil, Trash2, X, Clock, MoreVertical } 
 import { format, formatDistanceToNow, differenceInDays, isToday, isYesterday, differenceInMinutes } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Textarea } from "@/components/ui/textarea"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 export function ChatWindow({ recipientId }: { recipientId: string }) {
@@ -515,7 +515,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   }
 
   return (
-    <Card className="flex flex-col h-full max-w-4xl mx-auto">
+    <Card className="flex flex-col h-full">
       <div className="p-4 border-b">
         <h3 className="font-semibold">{getRecipientDisplayName()}</h3>
       </div>
