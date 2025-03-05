@@ -40,7 +40,8 @@ export function BayAssignmentField({ form, disabled }: BayAssignmentFieldProps) 
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              <SelectItem value="none">Unassigned</SelectItem>
+              {/* Changed "none" to "unassigned" to avoid empty string value */}
+              <SelectItem value="unassigned">Unassigned</SelectItem>
               {serviceBays?.map((bay) => (
                 <SelectItem key={bay.id} value={bay.id}>
                   {bay.name}

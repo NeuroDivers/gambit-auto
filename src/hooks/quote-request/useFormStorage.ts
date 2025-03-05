@@ -1,57 +1,52 @@
 
-import { useEffect, useState } from "react";
-import { useLocalStorage } from "usehooks-ts";
-import { ServiceFormData } from "@/types/service-item";
+import { ServiceFormData } from "@/types/service-item"
+import { useState, useEffect } from "react"
+import { useLocalStorage } from "usehooks-ts"
 
-export function useFormStorage(formKey: string) {
-  const [storedFormData, setStoredFormData] = useLocalStorage<ServiceFormData | null>(formKey, null);
-  const [formData, setFormData] = useState<ServiceFormData | null>(null);
+const STORAGE_KEY = "quote_request_form_data"
 
-  // Initialize with default values to match the ServiceFormData type
-  const getInitialFormData = (): ServiceFormData => ({
-    vehicleInfo: {
-      make: "",
-      model: "",
-      year: new Date().getFullYear(),
-      vin: "",
-      saveToAccount: false // Add the missing required property
-    },
-    service_items: [],
-    description: "",
-    service_details: {}
-  });
-
-  useEffect(() => {
-    if (storedFormData) {
-      // Ensure all required fields exist when loading from storage
-      const completeData = {
-        ...getInitialFormData(),
-        ...storedFormData,
-        vehicleInfo: {
-          ...getInitialFormData().vehicleInfo,
-          ...storedFormData.vehicleInfo
-        }
-      };
-      setFormData(completeData);
-    } else {
-      setFormData(getInitialFormData());
+export function useFormStorage() {
+  const [storedFormData, setStoredFormData] = useLocalStorage<ServiceFormData>(
+    STORAGE_KEY,
+    {
+      vehicleInfo: {
+        make: "",
+        model: "",
+        year: new Date().getFullYear(),
+        vin: "",
+        saveToAccount: false
+      },
+      service_items: [],
+      description: "",
+      service_details: {}
     }
-  }, [storedFormData]);
+  )
 
   const updateFormData = (newData: Partial<ServiceFormData>) => {
-    const updated = { ...formData, ...newData } as ServiceFormData;
-    setFormData(updated);
-    setStoredFormData(updated);
-  };
+    setStoredFormData(prev => ({
+      ...prev,
+      ...newData
+    }))
+  }
 
   const clearStoredFormData = () => {
-    setStoredFormData(null);
-    setFormData(getInitialFormData());
-  };
+    setStoredFormData({
+      vehicleInfo: {
+        make: "",
+        model: "",
+        year: new Date().getFullYear(),
+        vin: "",
+        saveToAccount: false
+      },
+      service_items: [],
+      description: "",
+      service_details: {}
+    })
+  }
 
   return {
-    formData,
+    formData: storedFormData,
     updateFormData,
     clearStoredFormData
-  };
+  }
 }
