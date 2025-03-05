@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react"
 import { ChatMessage, ChatUser } from "@/types/chat"
 import { Card } from "@/components/ui/card"
@@ -212,13 +213,19 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
               console.error("Error marking message as read:", updateError)
             }
 
-            // Only show toast if this is NOT the active conversation window
-            if (!isActiveConversation.current) {
+            // Check if this is the active conversation - using document visibility
+            const isDocumentVisible = document.visibilityState === "visible";
+            
+            // Only show toast if this is NOT the active conversation window or document is not visible
+            if (!isActiveConversation.current || !isDocumentVisible) {
+              console.log(`Showing toast: Active=${isActiveConversation.current}, Visible=${isDocumentVisible}`)
               toast({
                 title: `${recipient?.first_name || 'New Message'}`,
                 description: newMessage.message.substring(0, 50) + (newMessage.message.length > 50 ? '...' : ''),
                 duration: 5000,
               })
+            } else {
+              console.log("Not showing toast for active conversation:", recipientId)
             }
             
             scrollToBottom()
@@ -253,6 +260,14 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         console.log("Typing indicator subscription status:", status)
       })
 
+    // Add document visibility change handler
+    const handleVisibilityChange = () => {
+      console.log("Document visibility changed:", document.visibilityState)
+      isActiveConversation.current = document.visibilityState === "visible"
+    }
+    
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+
     return () => {
       if (channelRef.current) {
         console.log("Cleaning up chat subscription")
@@ -262,6 +277,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         console.log("Cleaning up typing indicator subscription")
         supabase.removeChannel(typingChannelRef.current)
       }
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
     }
   }, [recipientId, currentUserId, recipient?.first_name, toast])
 
