@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { LayoutDashboard } from "lucide-react"
 import { useTheme } from "next-themes"
+import { useEffect, useState } from "react"
 
 interface AuthLayoutProps {
   children: React.ReactNode
@@ -24,7 +25,14 @@ export function AuthLayout({
   footerText,
   footerAction,
 }: AuthLayoutProps) {
-  const { theme, systemTheme } = useTheme()
+  const { theme, resolvedTheme } = useTheme()
+  const [currentTheme, setCurrentTheme] = useState<string | undefined>(undefined)
+
+  // Update currentTheme whenever theme or resolvedTheme changes
+  useEffect(() => {
+    setCurrentTheme(theme === 'system' ? resolvedTheme : theme)
+  }, [theme, resolvedTheme])
+
   const { data: businessProfile } = useQuery({
     queryKey: ['business-profile'],
     queryFn: async () => {
@@ -38,11 +46,10 @@ export function AuthLayout({
     }
   })
 
-  // For system theme, use systemTheme to determine dark/light
-  const currentTheme = theme === 'system' ? systemTheme : theme
+  // Get the appropriate logo URL based on current theme
   const logoUrl = currentTheme === 'dark' 
-    ? businessProfile?.dark_logo_url 
-    : businessProfile?.light_logo_url
+    ? businessProfile?.dark_logo_url || businessProfile?.logo_url
+    : businessProfile?.light_logo_url || businessProfile?.logo_url
 
   return (
     <div className="container relative min-h-screen flex items-center justify-center">

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSidebar } from "@/components/ui/sidebar";
@@ -19,7 +19,9 @@ interface DashboardSidebarHeaderProps {
 
 export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardSidebarHeaderProps) {
   const { state } = useSidebar();
-  const { resolvedTheme } = useTheme();
+  const { theme, resolvedTheme } = useTheme();
+  const [currentTheme, setCurrentTheme] = useState<string | undefined>(undefined);
+
   const { data: businessProfile } = useQuery({
     queryKey: ["business-profile"],
     queryFn: async () => {
@@ -33,10 +35,15 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
     }
   });
 
-  // For system theme, use resolvedTheme to determine dark/light
-  const logoUrl = resolvedTheme === 'dark' 
-    ? businessProfile?.dark_logo_url 
-    : businessProfile?.light_logo_url;
+  // Update currentTheme whenever theme or resolvedTheme changes
+  useEffect(() => {
+    setCurrentTheme(theme === 'system' ? resolvedTheme : theme);
+  }, [theme, resolvedTheme]);
+
+  // Get the appropriate logo URL based on current theme
+  const logoUrl = currentTheme === 'dark' 
+    ? businessProfile?.dark_logo_url || businessProfile?.logo_url
+    : businessProfile?.light_logo_url || businessProfile?.logo_url;
 
   return (
     <div className="relative py-4">

@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Copy } from "lucide-react"
 import { toast } from "sonner"
+import { ThemeColorManager } from "@/components/developer/ThemeColorManager"
 
 export default function DeveloperSettings() {
   const [scannedVin, setScannedVin] = useState<string>("")
@@ -61,6 +62,7 @@ export default function DeveloperSettings() {
       <Tabs defaultValue="themes" className="w-full">
         <TabsList>
           <TabsTrigger value="themes">Themes</TabsTrigger>
+          <TabsTrigger value="theme-editor">Theme Editor</TabsTrigger>
           <TabsTrigger value="vin-scanner">VIN Scanner</TabsTrigger>
         </TabsList>
         
@@ -171,6 +173,10 @@ export default function DeveloperSettings() {
               </div>
             </div>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="theme-editor">
+          <ThemeColorManager />
         </TabsContent>
         
         <TabsContent value="vin-scanner">

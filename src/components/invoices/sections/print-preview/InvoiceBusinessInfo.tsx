@@ -1,5 +1,7 @@
 
 import { Tables } from "@/integrations/supabase/types"
+import { useTheme } from "next-themes"
+import { useEffect, useState } from "react"
 
 type InvoiceBusinessInfoProps = {
   businessProfile: Tables<'business_profile'> | null
@@ -7,13 +9,28 @@ type InvoiceBusinessInfoProps = {
 }
 
 export function InvoiceBusinessInfo({ businessProfile, logo_url }: InvoiceBusinessInfoProps) {
+  const { theme, resolvedTheme } = useTheme()
+  const [currentTheme, setCurrentTheme] = useState<string | undefined>(undefined)
+
+  useEffect(() => {
+    setCurrentTheme(theme === 'system' ? resolvedTheme : theme)
+  }, [theme, resolvedTheme])
+
   if (!businessProfile) return null
+
+  // Use the appropriate logo based on theme
+  const themeAwareLogo = currentTheme === 'dark'
+    ? businessProfile.dark_logo_url || businessProfile.logo_url
+    : businessProfile.light_logo_url || businessProfile.logo_url
+
+  // Use the provided logo_url as a fallback if available
+  const displayLogo = logo_url || themeAwareLogo
 
   return (
     <div className="flex items-start gap-4 w-full md:w-auto">
-      {businessProfile.logo_url && (
+      {displayLogo && (
         <img 
-          src={businessProfile.logo_url} 
+          src={displayLogo} 
           alt="Business Logo" 
           className="h-16 w-16 object-contain"
           onError={(e) => {
