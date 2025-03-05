@@ -17,7 +17,7 @@ interface ClientSidebarHeaderProps {
 
 export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebarHeaderProps) {
   const { theme, resolvedTheme } = useTheme();
-  const [currentTheme, setCurrentTheme] = useState<string | undefined>(undefined);
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
 
   const { data: businessProfile } = useQuery({
     queryKey: ["business-profile"],
@@ -32,14 +32,29 @@ export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebar
     }
   });
 
-  // Update currentTheme whenever theme or resolvedTheme changes
+  // Simplified dark mode detection that prioritizes explicit settings
+  const checkIsDarkMode = () => {
+    // First check resolvedTheme which already handles system preference
+    if (resolvedTheme) {
+      return resolvedTheme === 'dark';
+    }
+    
+    // Fallback to document class if resolvedTheme isn't available
+    if (typeof document !== 'undefined') {
+      return document.documentElement.classList.contains('dark');
+    }
+    
+    // Last resort fallback
+    return false;
+  };
+
+  // Update theme state whenever related variables change
   useEffect(() => {
-    const effectiveTheme = theme === 'system' ? resolvedTheme : theme;
-    setCurrentTheme(effectiveTheme);
+    setIsDarkTheme(checkIsDarkMode());
   }, [theme, resolvedTheme]);
 
   // Get the appropriate logo URL based on current theme
-  const logoUrl = currentTheme === 'dark' 
+  const logoUrl = isDarkTheme 
     ? businessProfile?.dark_logo_url || businessProfile?.logo_url
     : businessProfile?.light_logo_url || businessProfile?.logo_url;
 

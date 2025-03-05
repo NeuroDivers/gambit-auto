@@ -19,7 +19,7 @@ interface DashboardSidebarHeaderProps {
 
 export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardSidebarHeaderProps) {
   const { state } = useSidebar();
-  const { theme, resolvedTheme, setTheme } = useTheme();
+  const { theme, resolvedTheme } = useTheme();
   const [isDarkTheme, setIsDarkTheme] = useState(false);
 
   // Query to fetch business profile data including logo URLs
@@ -37,33 +37,20 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
     }
   });
   
-  // Check if we're in dark mode by examining various sources
+  // Simplified dark mode detection that prioritizes explicit settings
   const checkIsDarkMode = () => {
-    // Check multiple sources for dark mode
-    const hasDarkClass = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
-    const isDarkResolved = resolvedTheme === 'dark';
-    const isDarkThemeValue = theme === 'dark';
-    const isSystemDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // First check resolvedTheme which already handles system preference
+    if (resolvedTheme) {
+      return resolvedTheme === 'dark';
+    }
     
-    // Only consider system preference if theme is set to 'system'
-    const systemPreferenceApplies = theme === 'system';
+    // Fallback to document class if resolvedTheme isn't available
+    if (typeof document !== 'undefined') {
+      return document.documentElement.classList.contains('dark');
+    }
     
-    // Put it all together
-    const isDark = hasDarkClass || 
-                  isDarkResolved || 
-                  isDarkThemeValue || 
-                  (systemPreferenceApplies && isSystemDark);
-    
-    console.log("Dark mode detection:", {
-      hasDarkClass, 
-      isDarkResolved, 
-      isDarkThemeValue, 
-      isSystemDark,
-      systemPreferenceApplies,
-      result: isDark
-    });
-    
-    return isDark;
+    // Last resort fallback
+    return false;
   };
 
   // Update theme state whenever theme-related variables change
@@ -87,14 +74,10 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
     
     if (isDarkTheme) {
       // For dark theme: Use dark_logo_url, fall back to logo_url
-      const darkLogo = businessProfile.dark_logo_url || businessProfile.logo_url;
-      console.log("Using dark logo:", darkLogo);
-      return darkLogo;
+      return businessProfile.dark_logo_url || businessProfile.logo_url;
     } else {
       // For light theme: Use light_logo_url, fall back to logo_url
-      const lightLogo = businessProfile.light_logo_url || businessProfile.logo_url;
-      console.log("Using light logo:", lightLogo);
-      return lightLogo;
+      return businessProfile.light_logo_url || businessProfile.logo_url;
     }
   }, [businessProfile, isDarkTheme]);
 

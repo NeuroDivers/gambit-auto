@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -12,42 +12,58 @@ import {
   Sun, 
   RotateCcw,
   Copy,
-  Paintbrush
+  Paintbrush,
+  Save,
+  Code,
+  RefreshCw,
+  ExternalLink
 } from "lucide-react"
 import { toast } from "sonner"
 import { applyThemeClass } from "@/lib/utils"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { HexColorPicker } from "react-colorful"
+import { Badge } from "@/components/ui/badge"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface ColorVariable {
   name: string;
   description: string;
   defaultLight: string;
   defaultDark: string;
+  category: "base" | "components" | "states" | "text";
 }
 
+// Group colors into categories for better organization
 const themeColorVariables: ColorVariable[] = [
-  { name: "background", description: "Main background color", defaultLight: "0 0% 100%", defaultDark: "260 15% 8%" },
-  { name: "foreground", description: "Main text color", defaultLight: "240 10% 3.9%", defaultDark: "210 40% 98%" },
-  { name: "card", description: "Card background color", defaultLight: "0 0% 100%", defaultDark: "260 15% 11%" },
-  { name: "card-foreground", description: "Card text color", defaultLight: "240 10% 3.9%", defaultDark: "210 40% 98%" },
-  { name: "primary", description: "Primary action color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 75%" },
-  { name: "primary-foreground", description: "Text on primary color", defaultLight: "0 0% 100%", defaultDark: "0 0% 100%" },
-  { name: "secondary", description: "Secondary color", defaultLight: "240 4.8% 95.9%", defaultDark: "260 15% 18%" },
-  { name: "secondary-foreground", description: "Text on secondary color", defaultLight: "240 5.9% 10%", defaultDark: "210 40% 98%" },
-  { name: "muted", description: "Muted background color", defaultLight: "240 4.8% 95.9%", defaultDark: "260 15% 18%" },
-  { name: "muted-foreground", description: "Muted text color", defaultLight: "240 3.8% 46.1%", defaultDark: "217 10% 70%" },
-  { name: "accent", description: "Accent color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 30%" },
-  { name: "accent-foreground", description: "Text on accent color", defaultLight: "0 0% 100%", defaultDark: "210 40% 98%" },
-  { name: "destructive", description: "Destructive action color", defaultLight: "0 84.2% 60.2%", defaultDark: "0 62.8% 40.6%" },
-  { name: "destructive-foreground", description: "Text on destructive color", defaultLight: "0 0% 98%", defaultDark: "210 40% 98%" },
-  { name: "border", description: "Border color", defaultLight: "240 5.9% 90%", defaultDark: "260 15% 22%" },
-  { name: "input", description: "Input border color", defaultLight: "240 5.9% 90%", defaultDark: "260 15% 22%" },
-  { name: "ring", description: "Focus ring color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 75%" }
+  // Base colors
+  { name: "background", description: "Main background color", defaultLight: "0 0% 100%", defaultDark: "260 15% 8%", category: "base" },
+  { name: "foreground", description: "Main text color", defaultLight: "240 10% 3.9%", defaultDark: "210 40% 98%", category: "base" },
+  { name: "primary", description: "Primary action color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 75%", category: "base" },
+  { name: "primary-foreground", description: "Text on primary color", defaultLight: "0 0% 100%", defaultDark: "0 0% 100%", category: "base" },
+  { name: "secondary", description: "Secondary color", defaultLight: "240 4.8% 95.9%", defaultDark: "260 15% 18%", category: "base" },
+  { name: "secondary-foreground", description: "Text on secondary color", defaultLight: "240 5.9% 10%", defaultDark: "210 40% 98%", category: "base" },
+  { name: "accent", description: "Accent color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 30%", category: "base" },
+  { name: "accent-foreground", description: "Text on accent color", defaultLight: "0 0% 100%", defaultDark: "210 40% 98%", category: "base" },
+  
+  // Component colors
+  { name: "card", description: "Card background color", defaultLight: "0 0% 100%", defaultDark: "260 15% 11%", category: "components" },
+  { name: "card-foreground", description: "Card text color", defaultLight: "240 10% 3.9%", defaultDark: "210 40% 98%", category: "components" },
+  { name: "popover", description: "Popover background", defaultLight: "0 0% 100%", defaultDark: "260 15% 11%", category: "components" },
+  { name: "popover-foreground", description: "Popover text", defaultLight: "240 10% 3.9%", defaultDark: "210 40% 98%", category: "components" },
+  { name: "input", description: "Input border color", defaultLight: "240 5.9% 90%", defaultDark: "260 15% 22%", category: "components" },
+  { name: "border", description: "Border color", defaultLight: "240 5.9% 90%", defaultDark: "260 15% 22%", category: "components" },
+  { name: "ring", description: "Focus ring color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 75%", category: "components" },
+  
+  // States
+  { name: "muted", description: "Muted background color", defaultLight: "240 4.8% 95.9%", defaultDark: "260 15% 18%", category: "states" },
+  { name: "muted-foreground", description: "Muted text color", defaultLight: "240 3.8% 46.1%", defaultDark: "217 10% 70%", category: "states" },
+  { name: "destructive", description: "Destructive action color", defaultLight: "0 84.2% 60.2%", defaultDark: "0 62.8% 40.6%", category: "states" },
+  { name: "destructive-foreground", description: "Text on destructive color", defaultLight: "0 0% 98%", defaultDark: "210 40% 98%", category: "states" },
 ];
 
 const LOCAL_STORAGE_KEY = "custom-theme-colors";
 
+// Convert HSL to Hex color
 function hslToHex(hslString: string): string {
   const [h, s, l] = hslString.split(' ').map(val => parseFloat(val.replace('%', '')));
   
@@ -79,7 +95,9 @@ function hslToHex(hslString: string): string {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
+// Convert Hex to HSL color
 function hexToHsl(hex: string): string {
+  // Remove hash if present
   hex = hex.replace('#', '');
   
   const r = parseInt(hex.substring(0, 2), 16) / 255;
@@ -115,14 +133,42 @@ function hexToHsl(hex: string): string {
   return `${h} ${s}% ${l}%`;
 }
 
+function applyCustomThemeColors(lightColors: Record<string, string>, darkColors: Record<string, string>) {
+  const style = document.createElement('style');
+  
+  let cssText = `:root {\n`;
+  themeColorVariables.forEach(variable => {
+    cssText += `  --${variable.name}: ${lightColors[variable.name] || variable.defaultLight};\n`;
+  });
+  cssText += `}\n\n`;
+  
+  cssText += `.dark {\n`;
+  themeColorVariables.forEach(variable => {
+    cssText += `  --${variable.name}: ${darkColors[variable.name] || variable.defaultDark};\n`;
+  });
+  cssText += `}\n`;
+  
+  style.textContent = cssText;
+  
+  const existingStyle = document.getElementById('theme-colors-style');
+  if (existingStyle) {
+    existingStyle.remove();
+  }
+  
+  style.id = 'theme-colors-style';
+  document.head.appendChild(style);
+}
+
 export function ThemeColorManager() {
-  const { theme, setTheme, resolvedTheme } = useTheme()
-  const [lightColors, setLightColors] = useState<Record<string, string>>({})
-  const [darkColors, setDarkColors] = useState<Record<string, string>>({})
-  const [activeTab, setActiveTab] = useState<string>("light")
-  const [activeColorName, setActiveColorName] = useState<string | null>(null)
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [lightColors, setLightColors] = useState<Record<string, string>>({});
+  const [darkColors, setDarkColors] = useState<Record<string, string>>({});
+  const [activeTab, setActiveTab] = useState<string>("light");
+  const [activeColorName, setActiveColorName] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   
   useEffect(() => {
+    // Load saved theme colors from localStorage
     const savedThemeColors = localStorage.getItem(LOCAL_STORAGE_KEY);
     
     if (savedThemeColors) {
@@ -139,45 +185,44 @@ export function ThemeColorManager() {
     } else {
       loadCurrentThemeColors();
     }
-  }, [])
+  }, []);
   
   const loadCurrentThemeColors = () => {
-    const root = document.documentElement
-    const computedStyle = getComputedStyle(root)
+    const root = document.documentElement;
+    const computedStyle = getComputedStyle(root);
     
-    const lightThemeColors: Record<string, string> = {}
-    const darkThemeColors: Record<string, string> = {}
+    const lightThemeColors: Record<string, string> = {};
+    const darkThemeColors: Record<string, string> = {};
     
     themeColorVariables.forEach(variable => {
       lightThemeColors[variable.name] = variable.defaultLight;
       darkThemeColors[variable.name] = variable.defaultDark;
-    })
+    });
     
-    setLightColors(lightThemeColors)
-    setDarkColors(darkThemeColors)
+    setLightColors(lightThemeColors);
+    setDarkColors(darkThemeColors);
     
-    applyThemeClass(theme, resolvedTheme)
-  }
+    applyThemeClass(theme, resolvedTheme);
+  };
   
   const handleColorChange = (theme: 'light' | 'dark', name: string, value: string) => {
     if (theme === 'light') {
-      setLightColors(prev => ({ ...prev, [name]: value }))
+      setLightColors(prev => ({ ...prev, [name]: value }));
     } else {
-      setDarkColors(prev => ({ ...prev, [name]: value }))
+      setDarkColors(prev => ({ ...prev, [name]: value }));
     }
-  }
+  };
 
   const handleColorPickerChange = (theme: 'light' | 'dark', name: string, hex: string) => {
     const hslValue = hexToHsl(hex);
     handleColorChange(theme, name, hslValue);
-  }
+  };
 
   const handleHexInputChange = (theme: 'light' | 'dark', name: string, hex: string) => {
-    // Basic validation for hex color
     if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
       handleColorPickerChange(theme, name, hex);
     }
-  }
+  };
   
   const applyThemeColors = () => {
     applyCustomThemeColors(lightColors, darkColors);
@@ -187,85 +232,70 @@ export function ThemeColorManager() {
       dark: darkColors
     }));
     
-    toast.success("Theme colors applied and saved successfully")
-  }
-  
-  const applyCustomThemeColors = (lightColors: Record<string, string>, darkColors: Record<string, string>) => {
-    const style = document.createElement('style')
-    
-    let cssText = `:root {\n`
-    themeColorVariables.forEach(variable => {
-      cssText += `  --${variable.name}: ${lightColors[variable.name] || variable.defaultLight};\n`
-    })
-    cssText += `}\n\n`
-    
-    cssText += `.dark {\n`
-    themeColorVariables.forEach(variable => {
-      cssText += `  --${variable.name}: ${darkColors[variable.name] || variable.defaultDark};\n`
-    })
-    cssText += `}\n`
-    
-    style.textContent = cssText
-    
-    const existingStyle = document.getElementById('theme-colors-style')
-    if (existingStyle) {
-      existingStyle.remove()
-    }
-    
-    style.id = 'theme-colors-style'
-    document.head.appendChild(style)
-    
-    applyThemeClass(theme, resolvedTheme)
-  }
+    toast.success("Theme colors applied and saved successfully");
+  };
   
   const resetToDefaults = (themeMode: 'light' | 'dark') => {
     if (themeMode === 'light') {
       const defaultLight = themeColorVariables.reduce((acc, variable) => {
-        acc[variable.name] = variable.defaultLight
-        return acc
-      }, {} as Record<string, string>)
+        acc[variable.name] = variable.defaultLight;
+        return acc;
+      }, {} as Record<string, string>);
       
-      setLightColors(defaultLight)
+      setLightColors(defaultLight);
     } else {
       const defaultDark = themeColorVariables.reduce((acc, variable) => {
-        acc[variable.name] = variable.defaultDark
-        return acc
-      }, {} as Record<string, string>)
+        acc[variable.name] = variable.defaultDark;
+        return acc;
+      }, {} as Record<string, string>);
       
-      setDarkColors(defaultDark)
+      setDarkColors(defaultDark);
     }
     
-    toast.success(`${themeMode.charAt(0).toUpperCase() + themeMode.slice(1)} theme reset to defaults`)
-  }
+    toast.success(`${themeMode.charAt(0).toUpperCase() + themeMode.slice(1)} theme reset to defaults`);
+  };
   
   const exportThemeColors = () => {
     const themeColors = {
       light: lightColors,
       dark: darkColors
-    }
+    };
     
-    const jsonString = JSON.stringify(themeColors, null, 2)
-    navigator.clipboard.writeText(jsonString)
-    toast.success("Theme colors exported to clipboard as JSON")
-  }
+    const jsonString = JSON.stringify(themeColors, null, 2);
+    navigator.clipboard.writeText(jsonString);
+    toast.success("Theme colors exported to clipboard as JSON");
+  };
   
   const generateCSS = () => {
-    let cssText = `:root {\n`
+    let cssText = `:root {\n`;
     themeColorVariables.forEach(variable => {
-      cssText += `  --${variable.name}: ${lightColors[variable.name] || variable.defaultLight};\n`
-    })
-    cssText += `}\n\n`
+      cssText += `  --${variable.name}: ${lightColors[variable.name] || variable.defaultLight};\n`;
+    });
+    cssText += `}\n\n`;
     
-    cssText += `.dark {\n`
+    cssText += `.dark {\n`;
     themeColorVariables.forEach(variable => {
-      cssText += `  --${variable.name}: ${darkColors[variable.name] || variable.defaultDark};\n`
-    })
-    cssText += `}\n`
+      cssText += `  --${variable.name}: ${darkColors[variable.name] || variable.defaultDark};\n`;
+    });
+    cssText += `}\n`;
     
-    navigator.clipboard.writeText(cssText)
-    toast.success("CSS variables copied to clipboard")
-  }
+    navigator.clipboard.writeText(cssText);
+    toast.success("CSS variables copied to clipboard");
+  };
 
+  const previewTheme = (mode: 'light' | 'dark') => {
+    setTheme(mode);
+    setActiveTab(mode);
+    toast.success(`Previewing ${mode} theme`);
+  };
+
+  const getFilteredVariables = () => {
+    return themeColorVariables.filter(variable => 
+      selectedCategory === "all" || variable.category === selectedCategory
+    );
+  };
+
+  // Color picker component
   const ColorPicker = ({ 
     name,
     value, 
@@ -311,14 +341,12 @@ export function ThemeColorManager() {
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
           >
-            <div className="mb-3">
-              <HexColorPicker 
-                color={hexColor} 
-                onChange={onChange}
-                onMouseDown={(e) => e.stopPropagation()}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
+            <HexColorPicker 
+              color={hexColor} 
+              onChange={onChange}
+              onMouseDown={(e) => e.stopPropagation()}
+            />
+            <div className="flex flex-col gap-2 mt-3">
               <div className="flex justify-between items-center">
                 <Label>Hex</Label>
                 <Input
@@ -340,10 +368,86 @@ export function ThemeColorManager() {
       </Popover>
     );
   };
+
+  // Color card component
+  const ColorCard = ({
+    variable,
+    themeMode
+  }: {
+    variable: ColorVariable,
+    themeMode: 'light' | 'dark'
+  }) => {
+    const colors = themeMode === 'light' ? lightColors : darkColors;
+    const hslValue = colors[variable.name] || (themeMode === 'light' ? variable.defaultLight : variable.defaultDark);
+    const hexValue = hslToHex(hslValue);
+    
+    return (
+      <div className="bg-card rounded-lg border p-4 space-y-3 transition-all hover:shadow-md">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-medium">{variable.name}</h3>
+            <p className="text-xs text-muted-foreground">{variable.description}</p>
+          </div>
+          <div 
+            className="h-6 w-6 rounded-full border"
+            style={{ 
+              background: `hsl(${hslValue})` 
+            }}
+          />
+        </div>
+        
+        <div className="grid gap-2">
+          <div className="flex gap-2 items-center">
+            <Input
+              id={`${themeMode}-${variable.name}`}
+              value={hslValue}
+              onChange={(e) => handleColorChange(themeMode, variable.name, e.target.value)}
+              placeholder={themeMode === 'light' ? variable.defaultLight : variable.defaultDark}
+              className="flex-1 h-8 text-xs"
+            />
+            <ColorPicker
+              name={variable.name}
+              value={hslValue}
+              onChange={(hex) => handleColorPickerChange(themeMode, variable.name, hex)}
+              theme={themeMode}
+            />
+          </div>
+          
+          <div className="flex items-center">
+            <Input
+              value={hexValue}
+              onChange={(e) => handleHexInputChange(themeMode, variable.name, e.target.value)}
+              className="h-7 text-xs font-mono w-full"
+              placeholder="Hex color"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
   
   return (
-    <Card>
-      <CardContent className="p-6">
+    <Card className="border shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <Paintbrush className="h-5 w-5" />
+            Theme Color Editor
+          </span>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => previewTheme('light')} className="h-7">
+              <Sun className="h-3.5 w-3.5 mr-1" />
+              Light
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => previewTheme('dark')} className="h-7">
+              <Moon className="h-3.5 w-3.5 mr-1" />
+              Dark
+            </Button>
+          </div>
+        </CardTitle>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
         <Tabs 
           defaultValue="light" 
           value={activeTab} 
@@ -351,12 +455,12 @@ export function ThemeColorManager() {
           className="w-full"
         >
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-            <TabsList>
-              <TabsTrigger value="light" className="flex items-center gap-2">
+            <TabsList className="bg-muted/60">
+              <TabsTrigger value="light" className="flex items-center gap-2 data-[state=active]:bg-background">
                 <Sun className="h-4 w-4" />
                 Light Theme
               </TabsTrigger>
-              <TabsTrigger value="dark" className="flex items-center gap-2">
+              <TabsTrigger value="dark" className="flex items-center gap-2 data-[state=active]:bg-background">
                 <Moon className="h-4 w-4" />
                 Dark Theme
               </TabsTrigger>
@@ -367,117 +471,85 @@ export function ThemeColorManager() {
                 variant="outline" 
                 size="sm" 
                 onClick={() => resetToDefaults(activeTab as 'light' | 'dark')}
-                className="gap-2"
+                className="h-8"
               >
-                <RotateCcw className="h-4 w-4" />
-                Reset {activeTab === 'light' ? 'Light' : 'Dark'} Theme
+                <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+                Reset
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={generateCSS}
-                className="gap-2"
+                className="h-8"
               >
-                <Copy className="h-4 w-4" />
+                <Code className="h-3.5 w-3.5 mr-1.5" />
                 Copy CSS
               </Button>
             </div>
           </div>
+         
+          {/* Category filter buttons */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            <Badge 
+              variant={selectedCategory === "all" ? "default" : "outline"}
+              className="cursor-pointer"
+              onClick={() => setSelectedCategory("all")}
+            >
+              All
+            </Badge>
+            <Badge 
+              variant={selectedCategory === "base" ? "default" : "outline"}
+              className="cursor-pointer"
+              onClick={() => setSelectedCategory("base")}
+            >
+              Base Colors
+            </Badge>
+            <Badge 
+              variant={selectedCategory === "components" ? "default" : "outline"}
+              className="cursor-pointer"
+              onClick={() => setSelectedCategory("components")}
+            >
+              Components
+            </Badge>
+            <Badge 
+              variant={selectedCategory === "states" ? "default" : "outline"}
+              className="cursor-pointer"
+              onClick={() => setSelectedCategory("states")}
+            >
+              States
+            </Badge>
+          </div>
           
           <TabsContent value="light" className="mt-0">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              {themeColorVariables.map((variable) => {
-                const hslValue = lightColors[variable.name] || variable.defaultLight;
-                const hexValue = hslToHex(hslValue);
-                return (
-                  <div key={`light-${variable.name}`} className="space-y-2">
-                    <Label htmlFor={`light-${variable.name}`} className="flex items-center justify-between">
-                      <span>{variable.name}</span>
-                      <div 
-                        className="h-4 w-4 rounded-full border"
-                        style={{ 
-                          background: `hsl(${hslValue})` 
-                        }}
-                      />
-                    </Label>
-                    <div className="flex gap-2 items-center">
-                      <Input
-                        id={`light-${variable.name}`}
-                        value={hslValue}
-                        onChange={(e) => handleColorChange('light', variable.name, e.target.value)}
-                        placeholder={variable.defaultLight}
-                        className="flex-1"
-                      />
-                      <ColorPicker
-                        name={variable.name}
-                        value={hslValue}
-                        onChange={(hex) => handleColorPickerChange('light', variable.name, hex)}
-                        theme="light"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Label className="text-xs">Hex:</Label>
-                      <Input
-                        value={hexValue}
-                        onChange={(e) => handleHexInputChange('light', variable.name, e.target.value)}
-                        className="h-6 text-xs font-mono"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">{variable.description}</p>
-                  </div>
-                )
-              })}
-            </div>
+            <ScrollArea className="h-[500px] pr-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {getFilteredVariables().map((variable) => (
+                  <ColorCard 
+                    key={`light-${variable.name}`}
+                    variable={variable}
+                    themeMode="light"
+                  />
+                ))}
+              </div>
+            </ScrollArea>
           </TabsContent>
           
           <TabsContent value="dark" className="mt-0">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              {themeColorVariables.map((variable) => {
-                const hslValue = darkColors[variable.name] || variable.defaultDark;
-                const hexValue = hslToHex(hslValue);
-                return (
-                  <div key={`dark-${variable.name}`} className="space-y-2">
-                    <Label htmlFor={`dark-${variable.name}`} className="flex items-center justify-between">
-                      <span>{variable.name}</span>
-                      <div 
-                        className="h-4 w-4 rounded-full border dark:border-gray-600"
-                        style={{ 
-                          background: `hsl(${hslValue})` 
-                        }}
-                      />
-                    </Label>
-                    <div className="flex gap-2 items-center">
-                      <Input
-                        id={`dark-${variable.name}`}
-                        value={hslValue}
-                        onChange={(e) => handleColorChange('dark', variable.name, e.target.value)}
-                        placeholder={variable.defaultDark}
-                        className="flex-1"
-                      />
-                      <ColorPicker
-                        name={variable.name}
-                        value={hslValue}
-                        onChange={(hex) => handleColorPickerChange('dark', variable.name, hex)}
-                        theme="dark"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Label className="text-xs">Hex:</Label>
-                      <Input
-                        value={hexValue}
-                        onChange={(e) => handleHexInputChange('dark', variable.name, e.target.value)}
-                        className="h-6 text-xs font-mono"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">{variable.description}</p>
-                  </div>
-                )
-              })}
-            </div>
+            <ScrollArea className="h-[500px] pr-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {getFilteredVariables().map((variable) => (
+                  <ColorCard 
+                    key={`dark-${variable.name}`}
+                    variable={variable}
+                    themeMode="dark"
+                  />
+                ))}
+              </div>
+            </ScrollArea>
           </TabsContent>
         </Tabs>
         
-        <Separator className="my-6" />
+        <Separator className="my-4" />
         
         <div className="flex flex-col sm:flex-row gap-4 justify-end">
           <Button 
@@ -492,11 +564,11 @@ export function ThemeColorManager() {
             onClick={applyThemeColors}
             className="gap-2"
           >
-            <Paintbrush className="h-4 w-4" />
+            <Save className="h-4 w-4" />
             Apply Theme Colors
           </Button>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
