@@ -23,6 +23,42 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
   const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
+    const fetchUnreadCount = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { count } = await supabase
+        .from('chat_messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('recipient_id', user.id)
+        .eq('read', false)
+
+      setUnreadCount(count || 0)
+    }
+
+    fetchUnreadCount()
+
+    const channel = supabase
+      .channel('chat_messages_count')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'chat_messages'
+        },
+        () => {
+          fetchUnreadCount()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
+  useEffect(() => {
     const filterItems = async () => {
       console.log("Filtering navigation items for role:", currentUserRole)
 
@@ -66,42 +102,6 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
     filterItems()
   }, [checkPermission, currentUserRole])
 
-  useEffect(() => {
-    const fetchUnreadCount = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      const { count } = await supabase
-        .from('chat_messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('recipient_id', user.id)
-        .is('read_at', null)
-
-      setUnreadCount(count || 0)
-    }
-
-    fetchUnreadCount()
-
-    const channel = supabase
-      .channel('chat_messages_count')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'chat_messages'
-        },
-        () => {
-          fetchUnreadCount()
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [])
-
   return (
     <ScrollArea className="flex-1">
       <nav className="flex flex-col gap-4 py-4">
@@ -119,7 +119,7 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
                   item={item}
                   isCollapsed={isCollapsed}
                   isMobile={isMobile}
-                  unreadCount={unreadCount}
+                  unreadCount={item.href === '/chat' ? unreadCount : 0}
                   onNavigate={onNavigate}
                   active={location.pathname === item.href}
                 />
