@@ -97,8 +97,9 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
       
       // Process chat messages with correct typing for profiles
       const typedChatMessages = (chatMessagesResponse.data || []).map(msg => {
-        // Safely extract profile data
-        const profileData = msg.profiles as SenderProfile;
+        // The profiles property is an object, not an array
+        // Only extract if it's not null or undefined
+        const profileData = typeof msg.profiles === 'object' ? msg.profiles as unknown as SenderProfile : null;
         
         return {
           id: msg.id,

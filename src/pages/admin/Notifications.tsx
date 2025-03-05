@@ -92,8 +92,9 @@ const Notifications = () => {
 
     // Transform chat messages to the correct type structure with proper typing
     const typedChatMessages = (chatMessagesResponse.data || []).map(msg => {
-      // Safely extract profile data
-      const profileData = msg.profiles as SenderProfile;
+      // The profiles property is an object, not an array
+      // Convert to unknown first to satisfy TypeScript
+      const profileData = typeof msg.profiles === 'object' ? msg.profiles as unknown as SenderProfile : null;
       
       return {
         id: msg.id,
