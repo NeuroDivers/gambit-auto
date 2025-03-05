@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react"
 import { ChatMessage, ChatUser } from "@/types/chat"
 import { supabase } from "@/integrations/supabase/client"
@@ -8,7 +7,9 @@ export function useChatMessages(recipientId: string) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [recipient, setRecipient] = useState<ChatUser | null>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [recipientIsTyping, setRecipientIsTyping] = useState(false)
   const channelRef = useRef<any>(null)
+  const presenceChannelRef = useRef<any>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const firstUnreadRef = useRef<HTMLDivElement>(null)
   const { toast } = useToast()
@@ -61,6 +62,21 @@ export function useChatMessages(recipientId: string) {
       return
     }
   }
+
+  const updateTypingStatus = async (isTyping: boolean) => {
+    if (!currentUserId || !presenceChannelRef.current) return;
+    
+    try {
+      await presenceChannelRef.current.track({
+        user_id: currentUserId,
+        typing: isTyping,
+        typing_to: recipientId,
+        last_typing_update: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error updating typing status:", error);
+    }
+  };
 
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -157,6 +173,10 @@ export function useChatMessages(recipientId: string) {
       supabase.removeChannel(channelRef.current)
     }
 
+    if (presenceChannelRef.current) {
+      supabase.removeChannel(presenceChannelRef.current)
+    }
+
     channelRef.current = supabase
       .channel(`chat_messages_${currentUserId}_${recipientId}`)
       .on(
@@ -185,7 +205,6 @@ export function useChatMessages(recipientId: string) {
               console.error("Error marking message as read:", updateError)
             }
 
-            // Show toast notification with the message content
             toast({
               title: `${recipient?.first_name || 'New Message'}`,
               description: newMessage.message.substring(0, 50) + (newMessage.message.length > 50 ? '...' : ''),
@@ -198,10 +217,60 @@ export function useChatMessages(recipientId: string) {
         console.log("Chat subscription status:", status)
       })
 
+    presenceChannelRef.current = supabase
+      .channel(`typing_status_${currentUserId}_${recipientId}`)
+      .on('presence', { event: 'sync' }, () => {
+        const state = presenceChannelRef.current.presenceState();
+        console.log('Presence sync state:', state);
+        
+        const typingUsers = Object.values(state).flat() as any[];
+        const isRecipientTyping = typingUsers.some(
+          user => user.user_id === recipientId && 
+                 user.typing === true && 
+                 user.typing_to === currentUserId
+        );
+        
+        setRecipientIsTyping(isRecipientTyping);
+      })
+      .on('presence', { event: 'join' }, ({ newPresences }) => {
+        console.log('Presence join:', newPresences);
+        
+        const isRecipientTyping = newPresences.some(
+          (user: any) => user.user_id === recipientId && 
+                         user.typing === true && 
+                         user.typing_to === currentUserId
+        );
+        
+        if (isRecipientTyping) {
+          setRecipientIsTyping(true);
+        }
+      })
+      .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+        console.log('Presence leave:', leftPresences);
+        
+        const wasRecipientTyping = leftPresences.some(
+          (user: any) => user.user_id === recipientId && 
+                         user.typing === true && 
+                         user.typing_to === currentUserId
+        );
+        
+        if (wasRecipientTyping) {
+          setRecipientIsTyping(false);
+        }
+      })
+      .subscribe((status) => {
+        console.log("Typing status subscription:", status);
+      });
+
     return () => {
       if (channelRef.current) {
         console.log("Cleaning up chat subscription")
         supabase.removeChannel(channelRef.current)
+      }
+      
+      if (presenceChannelRef.current) {
+        console.log("Cleaning up typing status subscription")
+        supabase.removeChannel(presenceChannelRef.current)
       }
     }
   }, [recipientId, currentUserId, recipient?.first_name, toast])
@@ -210,8 +279,10 @@ export function useChatMessages(recipientId: string) {
     messages,
     recipient,
     currentUserId,
+    recipientIsTyping,
     scrollAreaRef,
     firstUnreadRef,
-    sendMessage
+    sendMessage,
+    updateTypingStatus
   }
 }
