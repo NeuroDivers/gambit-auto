@@ -7,8 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface VehicleInfoFieldsProps {
   form: UseFormReturn<WorkOrderFormValues>
-  isEditing: boolean
-  customerId: string | null
+  isEditing?: boolean
+  customerId?: string | null
 }
 
 export function VehicleInfoFields({ form, isEditing, customerId }: VehicleInfoFieldsProps) {

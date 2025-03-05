@@ -48,6 +48,8 @@ export function FormSections({ form, isSubmitting, isEditing, customerId }: Form
         <CardContent>
           <VehicleInfoFields 
             form={form}
+            isEditing={isEditing}
+            customerId={customerId}
           />
         </CardContent>
       </Card>
