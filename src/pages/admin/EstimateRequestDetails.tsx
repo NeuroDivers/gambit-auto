@@ -61,12 +61,12 @@ export default function EstimateRequestDetails() {
           setDebug(basicData)
         }
         
-        // Now try with the customer relation
+        // Now try with the customer relation using explicit foreign key
         const { data, error } = await supabase
           .from("estimate_requests")
           .select(`
             *,
-            customers(*)
+            customers!estimate_requests_customer_id_fkey(*)
           `)
           .eq("id", id)
           .single()

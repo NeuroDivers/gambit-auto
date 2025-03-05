@@ -69,7 +69,7 @@ export function EstimateRequestsList() {
           }
         }
         
-        // Now fetch the actual data with relations - using a simplified query first to confirm we can get data
+        // Now fetch the actual data - use a simpler query first without joins
         const { data: basicEstimateRequests, error: basicError } = await supabase
           .from("estimate_requests")
           .select("*")
@@ -80,10 +80,12 @@ export function EstimateRequestsList() {
           console.error("Error fetching basic estimate requests:", basicError)
         } else {
           console.log("Basic estimate requests data:", basicEstimateRequests)
+          // Set the data from the simple query as a fallback
+          setEstimateRequests(basicEstimateRequests || [])
         }
         
-        // Try the query with relations
-        const { data: estimateRequests, error } = await supabase
+        // Try the query with explicit foreign key relation
+        const { data: relationalRequests, error: relationalError } = await supabase
           .from("estimate_requests")
           .select(`
             id, 
@@ -94,25 +96,17 @@ export function EstimateRequestsList() {
             vehicle_make,
             vehicle_model,
             vehicle_year,
-            customers(first_name, last_name, email)
+            customers!estimate_requests_customer_id_fkey(first_name, last_name, email)
           `)
           .order("created_at", { ascending: false })
           .limit(30)
         
-        if (error) {
-          console.error("Error fetching estimate requests with relations:", error)
-          
-          // Fallback to basic data without relations if that's the issue
-          if (basicEstimateRequests) {
-            console.log("Using basic estimate requests data as fallback")
-            setEstimateRequests(basicEstimateRequests)
-          } else {
-            toast.error("Failed to load estimate requests. Please try again.")
-            setEstimateRequests([])
-          }
+        if (relationalError) {
+          console.error("Error fetching estimate requests with relations:", relationalError)
+          // We already set the data from the simple query
         } else {
-          console.log("Successfully fetched estimate requests with relations:", estimateRequests)
-          setEstimateRequests(estimateRequests || [])
+          console.log("Successfully fetched estimate requests with relations:", relationalRequests)
+          setEstimateRequests(relationalRequests || [])
         }
       } catch (error) {
         console.error("Error in estimate requests fetch flow:", error)
