@@ -69,19 +69,22 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
       form.setValue("country", selectedCustomer.country || "")
       setCreateNewCustomer(false)
       
-      // Set vehicle info if primary vehicle exists
+      // Set vehicle info if vehicles exist
       if (vehicles && vehicles.length > 0) {
-        // Find primary vehicle or use the first one
+        // Find primary vehicle or use the first one if no primary exists
         const primaryVehicle = vehicles.find(v => v.is_primary) || vehicles[0]
         
         if (primaryVehicle) {
+          console.log("Setting vehicle info from:", primaryVehicle)
           form.setValue("vehicle_make", primaryVehicle.make)
           form.setValue("vehicle_model", primaryVehicle.model)
           form.setValue("vehicle_year", primaryVehicle.year)
           form.setValue("vehicle_serial", primaryVehicle.vin || "")
-          form.setValue("vehicle_trim", primaryVehicle.trim || "")
-          form.setValue("vehicle_body_class", primaryVehicle.body_class || "")
-          form.setValue("vehicle_doors", primaryVehicle.doors || null)
+          
+          // Set additional vehicle fields if they exist
+          if (primaryVehicle.trim) form.setValue("vehicle_trim", primaryVehicle.trim)
+          if (primaryVehicle.body_class) form.setValue("vehicle_body_class", primaryVehicle.body_class)
+          if (primaryVehicle.doors) form.setValue("vehicle_doors", primaryVehicle.doors)
         }
       }
     }
