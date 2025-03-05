@@ -2,10 +2,9 @@
 import { useEffect, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 export function useNotificationSubscription() {
-  const { toast } = useToast()
   const queryClient = useQueryClient()
   const [userId, setUserId] = useState<string | null>(null)
 
@@ -37,8 +36,8 @@ export function useNotificationSubscription() {
             queryClient.invalidateQueries({ queryKey: ['notifications'] })
             
             const notification = payload.new
-            toast({
-              title: notification.title,
+            // Use sonner toast
+            toast(notification.title, {
               description: notification.message,
             })
           }
@@ -75,8 +74,8 @@ export function useNotificationSubscription() {
               
               const senderName = data?.first_name || data?.email || 'Someone'
               
-              toast({
-                title: "New Message",
+              // Use sonner toast
+              toast("New Message", {
                 description: `${senderName}: ${payload.new.message.substring(0, 50)}${payload.new.message.length > 50 ? '...' : ''}`,
               })
             }
@@ -104,7 +103,7 @@ export function useNotificationSubscription() {
         })
       }
     }
-  }, [queryClient, toast])
+  }, [queryClient])
 
   return { userId }
 }

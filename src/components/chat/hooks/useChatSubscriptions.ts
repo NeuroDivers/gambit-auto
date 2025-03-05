@@ -2,7 +2,7 @@
 import { useEffect, useRef } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { ChatMessage } from "@/types/chat"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { markSingleMessageAsRead } from "./chat-utils/messageUtils"
 
 export function useChatSubscriptions(
@@ -15,7 +15,6 @@ export function useChatSubscriptions(
 ) {
   const channelRef = useRef<any>(null)
   const presenceChannelRef = useRef<any>(null)
-  const { toast } = useToast()
 
   useEffect(() => {
     if (!currentUserId || !recipientId) return
@@ -49,8 +48,8 @@ export function useChatSubscriptions(
 
             await markSingleMessageAsRead(newMessage.id)
 
-            toast({
-              title: `${recipient?.first_name || 'New Message'}`,
+            // Use sonner toast instead of shadcn/ui toast
+            toast(recipient?.first_name || 'New Message', {
               description: newMessage.message.substring(0, 50) + (newMessage.message.length > 50 ? '...' : ''),
               duration: 5000,
             })
@@ -117,7 +116,7 @@ export function useChatSubscriptions(
         supabase.removeChannel(presenceChannelRef.current)
       }
     }
-  }, [recipientId, currentUserId, recipient?.first_name, addMessage, scrollToBottom, setRecipientIsTyping, toast])
+  }, [recipientId, currentUserId, recipient?.first_name, addMessage, scrollToBottom, setRecipientIsTyping])
 
   return { channelRef, presenceChannelRef }
 }
