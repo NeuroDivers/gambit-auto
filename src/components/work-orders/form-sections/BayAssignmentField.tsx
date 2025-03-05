@@ -1,4 +1,3 @@
-
 import { UseFormReturn } from "react-hook-form";
 import { WorkOrderFormValues } from "../types";
 import { FormField } from "@/components/ui/form";
@@ -22,7 +21,30 @@ export function BayAssignmentField({ form, disabled }: BayAssignmentFieldProps) 
         .eq("status", "available");
       
       if (error) throw error;
-      return data;
+      
+      // Sort the bays:
+      // 1. Extract numeric prefix if it exists
+      // 2. Sort numerically first, then alphabetically
+      return data.sort((a, b) => {
+        const aMatch = a.name.match(/^(\d+)/);
+        const bMatch = b.name.match(/^(\d+)/);
+        
+        // If both have numeric prefixes, sort by number
+        if (aMatch && bMatch) {
+          const aNum = parseInt(aMatch[1], 10);
+          const bNum = parseInt(bMatch[1], 10);
+          if (aNum !== bNum) {
+            return aNum - bNum;
+          }
+        }
+        
+        // If only one has a numeric prefix, put it first
+        if (aMatch && !bMatch) return -1;
+        if (!aMatch && bMatch) return 1;
+        
+        // Otherwise sort alphabetically
+        return a.name.localeCompare(b.name);
+      });
     },
   });
 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -112,14 +111,29 @@ export function useWorkOrderListData() {
           .from("service_bays")
           .select("*")
           .eq("status", "available")
-          .order('name')
       
         if (error) {
           console.error('Service bays fetch error:', error)
           throw new Error(`Failed to fetch service bays: ${error.message}`)
         }
 
-        return data || []
+        return data.sort((a, b) => {
+          const aMatch = a.name.match(/^(\d+)/);
+          const bMatch = b.name.match(/^(\d+)/);
+          
+          if (aMatch && bMatch) {
+            const aNum = parseInt(aMatch[1], 10);
+            const bNum = parseInt(bMatch[1], 10);
+            if (aNum !== bNum) {
+              return aNum - bNum;
+            }
+          }
+          
+          if (aMatch && !bMatch) return -1;
+          if (!aMatch && bMatch) return 1;
+          
+          return a.name.localeCompare(b.name);
+        });
       } catch (err) {
         console.error('Service bays fetch error:', err)
         toast.error('Failed to load service bays')
@@ -132,19 +146,17 @@ export function useWorkOrderListData() {
     try {
       console.log('Assigning bay:', { workOrderId, bayId })
       
-      // First get the current user
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         throw new Error('No authenticated user found')
       }
 
-      // Update the work order
       const { error: updateError } = await supabase
         .from('work_orders')
         .update({ 
           assigned_bay_id: bayId === "unassigned" ? null : bayId,
           updated_at: new Date().toISOString(),
-          assigned_profile_id: user.id // Add the current user as the one making the change
+          assigned_profile_id: user.id
         })
         .eq("id", workOrderId)
 
@@ -153,7 +165,6 @@ export function useWorkOrderListData() {
         throw updateError
       }
 
-      // Fetch the updated work order to get the latest state
       const { data: updatedWorkOrder, error: fetchError } = await supabase
         .from('work_orders')
         .select(`
@@ -173,13 +184,11 @@ export function useWorkOrderListData() {
 
       console.log('Updated work order:', updatedWorkOrder)
       
-      // Invalidate the queries to refetch the latest data
       await queryClient.invalidateQueries({ queryKey: ["workOrders"] })
       await queryClient.invalidateQueries({ queryKey: ["service-bays"] })
       
       toast.success('Bay assigned successfully')
       
-      // Clear the assignment modal state
       setAssignBayWorkOrder(null)
     } catch (err) {
       console.error('Bay assignment error:', err)

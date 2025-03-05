@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
@@ -38,21 +37,42 @@ export function useServiceBays() {
             )
           )
         `)
-        .order('name', { ascending: true })
 
       if (error) {
         console.error("Error fetching service bays:", error)
         throw error
       }
       
-      return data?.map(bay => ({
+      const formattedBays = data?.map(bay => ({
         ...bay,
         bay_services: bay.bay_services?.map(service => ({
           service_id: service.service_id,
           name: service.service_types.name,
           is_active: service.is_active
         })) || []
-      })) || []
+      })) || [];
+
+      // Sort bays numerically then alphabetically
+      return formattedBays.sort((a, b) => {
+        const aMatch = a.name.match(/^(\d+)/);
+        const bMatch = b.name.match(/^(\d+)/);
+        
+        // If both have numeric prefixes, sort by number
+        if (aMatch && bMatch) {
+          const aNum = parseInt(aMatch[1], 10);
+          const bNum = parseInt(bMatch[1], 10);
+          if (aNum !== bNum) {
+            return aNum - bNum;
+          }
+        }
+        
+        // If only one has a numeric prefix, put it first
+        if (aMatch && !bMatch) return -1;
+        if (!aMatch && bMatch) return 1;
+        
+        // Otherwise sort alphabetically
+        return a.name.localeCompare(b.name);
+      });
     },
   })
 
