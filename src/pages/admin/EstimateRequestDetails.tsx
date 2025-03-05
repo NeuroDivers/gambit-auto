@@ -26,70 +26,25 @@ export default function EstimateRequestDetails() {
     
     const fetchEstimateRequest = async () => {
       try {
-        console.log("Attempting to fetch estimate request with ID:", id)
+        console.log("Attempting to fetch quote request with ID:", id)
         
-        // Try directly with the table name first
-        const { data: directData, error: directError } = await supabase
-          .from("estimate_requests")
-          .select("*")
+        const { data, error } = await supabase
+          .from("quote_requests")
+          .select(`
+            *,
+            clients(*)
+          `)
           .eq("id", id)
           .single()
           
-        if (directError) {
-          console.error("Error with direct estimate request query:", directError)
-          
-          // Try alternative table name
-          console.log("Trying with alternative table name 'quote_requests'")
-          const { data: altData, error: altError } = await supabase
-            .from("quote_requests")
-            .select("*")
-            .eq("id", id)
-            .single()
-            
-          if (altError) {
-            console.error("Alternative query also failed:", altError)
-            toast.error("Could not load estimate request data")
-            throw altError
-          }
-          
-          console.log("Found data with alternative table name:", altData)
-          setEstimateRequest(altData)
-          setLoading(false)
-          return
+        if (error) {
+          console.error("Error fetching quote request:", error)
+          toast.error("Could not load estimate request data")
+          throw error
         }
         
-        console.log("Successfully retrieved basic estimate request data:", directData)
-        
-        // If we got the basic data, try to fetch related info
-        if (directData) {
-          // Now try to get the full data with relations
-          try {
-            const { data: fullData, error: fullError } = await supabase
-              .from("estimate_requests")
-              .select(`
-                *,
-                customer:customers(*),
-                vehicle_info:vehicles(*)
-              `)
-              .eq("id", id)
-              .single()
-              
-            if (fullError) {
-              console.log("Error fetching full data with relations:", fullError)
-              console.log("Using basic data instead")
-              setEstimateRequest(directData)
-            } else {
-              console.log("Successfully fetched full data with relations:", fullData)
-              setEstimateRequest(fullData)
-            }
-          } catch (relationError) {
-            console.error("Error in relation fetch:", relationError)
-            setEstimateRequest(directData)
-          }
-        } else {
-          console.log("No data found for this ID")
-          setEstimateRequest(null)
-        }
+        console.log("Successfully retrieved quote request data:", data)
+        setEstimateRequest(data)
       } catch (error) {
         console.error("Error fetching estimate request:", error)
         toast.error("Failed to load estimate request")
@@ -113,8 +68,7 @@ export default function EstimateRequestDetails() {
     navigate("/estimates/create", { 
       state: { 
         estimateRequestId: estimateRequest.id,
-        customerId: estimateRequest.customer_id,
-        vehicleId: estimateRequest.vehicle_id
+        clientId: estimateRequest.client_id
       } 
     })
   }
@@ -164,8 +118,32 @@ export default function EstimateRequestDetails() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <CustomerInfo customer={estimateRequest.customer} />
-        <VehicleInfo vehicle={estimateRequest.vehicle_info} />
+        <CustomerInfo customer={estimateRequest.clients} />
+        <Card>
+          <CardHeader>
+            <CardTitle>Vehicle Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div>
+              <p className="font-medium">Make:</p>
+              <p>{estimateRequest.vehicle_make || "Not provided"}</p>
+            </div>
+            <div>
+              <p className="font-medium">Model:</p>
+              <p>{estimateRequest.vehicle_model || "Not provided"}</p>
+            </div>
+            <div>
+              <p className="font-medium">Year:</p>
+              <p>{estimateRequest.vehicle_year || "Not provided"}</p>
+            </div>
+            {estimateRequest.vehicle_vin && (
+              <div>
+                <p className="font-medium">VIN:</p>
+                <p>{estimateRequest.vehicle_vin}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -173,20 +151,29 @@ export default function EstimateRequestDetails() {
           <CardTitle>Service Request</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <div>
-            <p className="font-medium">Service Type:</p>
-            <p>{estimateRequest.service_type || "General Service"}</p>
-          </div>
-          {estimateRequest.requested_date && (
+          {estimateRequest.description && (
             <div>
-              <p className="font-medium">Requested Date:</p>
-              <p>{new Date(estimateRequest.requested_date).toLocaleDateString()}</p>
+              <p className="font-medium">Description:</p>
+              <p>{estimateRequest.description}</p>
             </div>
           )}
         </CardContent>
       </Card>
 
-      <EstimateNotes notes={estimateRequest.notes} />
+      {estimateRequest.media_urls && estimateRequest.media_urls.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Uploaded Media</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {estimateRequest.media_urls.map((url, index) => (
+              <a href={url} target="_blank" rel="noopener noreferrer" key={index}>
+                <img src={url} alt={`Uploaded media ${index + 1}`} className="w-full h-auto rounded-md" />
+              </a>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

@@ -16,62 +16,32 @@ export function EstimateRequestsList() {
   useEffect(() => {
     const fetchEstimateRequests = async () => {
       try {
-        // Try a direct table select first without any filters
-        console.log("Attempting to fetch estimate_requests directly")
-        const { data: rawData, error: rawError } = await supabase
-          .from("estimate_requests")
-          .select("id, created_at, status, service_type, customer_id, name")
+        console.log("Attempting to fetch quote_requests")
+        const { data: quoteRequests, error } = await supabase
+          .from("quote_requests")
+          .select(`
+            id, 
+            created_at, 
+            status, 
+            description,
+            client_id,
+            clients(first_name, last_name, email)
+          `)
+          .order("created_at", { ascending: false })
           .limit(30)
         
-        if (rawError) {
-          console.error("Error fetching raw estimate requests:", rawError)
-          throw rawError
-        }
-        
-        console.log("Raw estimate requests data:", rawData)
-        
-        if (rawData && rawData.length > 0) {
-          // If we got raw data, try to enhance it with customer information
-          const { data, error } = await supabase
-            .from("estimate_requests")
-            .select(`
-              *,
-              customer:customers(first_name, last_name, email)
-            `)
-            .order("created_at", { ascending: false })
-
-          if (error) {
-            console.error("Error fetching estimate requests with customer join:", error)
-            console.log("Using raw data as fallback")
-            setEstimateRequests(rawData)
-          } else {
-            console.log("Fetched estimate requests with customer join:", data)
-            setEstimateRequests(data || [])
-          }
+        if (error) {
+          console.error("Error fetching quote requests:", error)
+          toast.error("Failed to load estimate requests. Please try again.")
+          setEstimateRequests([])
         } else {
-          // If no results from the first query, try an alternative approach
-          console.log("No results found, trying an alternative query")
-          
-          // Try querying with a different table name in case there's a view or naming difference
-          const { data: altData, error: altError } = await supabase
-            .from("quote_requests")
-            .select("*")
-            .limit(30)
-          
-          if (altError) {
-            console.error("Alternative query also failed:", altError)
-          } else {
-            console.log("Alternative query results:", altData)
-            if (altData && altData.length > 0) {
-              setEstimateRequests(altData)
-            } else {
-              setEstimateRequests([])
-            }
-          }
+          console.log("Successfully fetched quote requests:", quoteRequests)
+          setEstimateRequests(quoteRequests || [])
         }
       } catch (error) {
-        console.error("Error in estimate requests fetch flow:", error)
+        console.error("Error in quote requests fetch flow:", error)
         toast.error("Failed to load estimate requests. Please try again.")
+        setEstimateRequests([])
       } finally {
         setLoading(false)
       }
@@ -88,10 +58,13 @@ export function EstimateRequestsList() {
     switch (status?.toLowerCase()) {
       case "pending":
         return "bg-yellow-100 text-yellow-800"
+      case "estimated":
       case "in_progress":
         return "bg-blue-100 text-blue-800"
+      case "accepted":
       case "completed":
         return "bg-green-100 text-green-800"
+      case "rejected":
       case "cancelled":
         return "bg-red-100 text-red-800"
       default:
@@ -135,15 +108,15 @@ export function EstimateRequestsList() {
                     {`REQ-${request.id.substring(0, 8)}`}
                   </TableCell>
                   <TableCell>
-                    {request.customer 
-                      ? `${request.customer.first_name} ${request.customer.last_name}`
-                      : request.name || "Unknown Customer"}
+                    {request.clients 
+                      ? `${request.clients.first_name} ${request.clients.last_name}`
+                      : "Unknown Customer"}
                   </TableCell>
                   <TableCell>
                     {new Date(request.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    {request.service_type || "General"}
+                    {request.description ? "Custom Request" : "General"}
                   </TableCell>
                   <TableCell>
                     <Badge 
