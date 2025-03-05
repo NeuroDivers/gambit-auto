@@ -18,7 +18,7 @@ export function ServiceTypeCard({ service, onEdit, onRefetch }: ServiceTypeCardP
   const hasSubServices = service.sub_services && service.sub_services.length > 0;
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden flex flex-col h-full">
       <ServiceCardHeader 
         service={service} 
         hasSubServices={hasSubServices}
@@ -54,11 +54,15 @@ export function ServiceTypeCard({ service, onEdit, onRefetch }: ServiceTypeCardP
         )}
       </div>
       
-      <ServiceCardActions 
-        serviceId={service.id}
-        onEdit={onEdit}
-        onRefetch={onRefetch}
-      />
+      {/* Adding mt-auto to push actions to the bottom */}
+      <div className="mt-auto">
+        <ServiceCardActions 
+          serviceId={service.id}
+          onEdit={onEdit}
+          onRefetch={onRefetch}
+        />
+      </div>
     </Card>
   );
 }
+
