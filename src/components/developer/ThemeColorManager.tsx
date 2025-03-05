@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
 import { Card, CardContent } from "@/components/ui/card"
@@ -12,7 +11,7 @@ import {
   Sun, 
   RotateCcw,
   Copy,
-  EyeDropper
+  Paintbrush
 } from "lucide-react"
 import { toast } from "sonner"
 import { applyThemeClass } from "@/lib/utils"
@@ -45,12 +44,9 @@ const themeColorVariables: ColorVariable[] = [
   { name: "ring", description: "Focus ring color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 70%" },
 ];
 
-// Convert HSL (in format "H S% L%") to hex color
 function hslToHex(hslString: string): string {
-  // Parse HSL values
   const [h, s, l] = hslString.split(' ').map(val => parseFloat(val.replace('%', '')));
   
-  // Convert HSL to RGB
   const c = (1 - Math.abs(2 * l / 100 - 1)) * s / 100;
   const x = c * (1 - Math.abs((h / 60) % 2 - 1));
   const m = l / 100 - c / 2;
@@ -71,7 +67,6 @@ function hslToHex(hslString: string): string {
     [r, g, b] = [c, 0, x];
   }
   
-  // Convert to hex
   const toHex = (n: number): string => {
     const hex = Math.round((n + m) * 255).toString(16);
     return hex.length === 1 ? '0' + hex : hex;
@@ -80,12 +75,9 @@ function hslToHex(hslString: string): string {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
-// Convert hex color to HSL (in format "H S% L%")
 function hexToHsl(hex: string): string {
-  // Remove the # if present
   hex = hex.replace('#', '');
   
-  // Parse the hex values
   const r = parseInt(hex.substring(0, 2), 16) / 255;
   const g = parseInt(hex.substring(2, 4), 16) / 255;
   const b = parseInt(hex.substring(4, 6), 16) / 255;
@@ -126,11 +118,9 @@ export function ThemeColorManager() {
   const [activeTab, setActiveTab] = useState<string>("light")
   
   useEffect(() => {
-    // Load current CSS variables
     loadCurrentThemeColors()
   }, [])
   
-  // Load current theme colors from CSS variables
   const loadCurrentThemeColors = () => {
     const root = document.documentElement
     const computedStyle = getComputedStyle(root)
@@ -139,11 +129,9 @@ export function ThemeColorManager() {
     const darkThemeColors: Record<string, string> = {}
     
     themeColorVariables.forEach(variable => {
-      // Extract light theme colors
       const lightValue = computedStyle.getPropertyValue(`--${variable.name}`).trim()
       lightThemeColors[variable.name] = lightValue || variable.defaultLight
       
-      // For dark theme, we need to temporarily add the dark class to get values
       root.classList.add('dark')
       const darkValue = computedStyle.getPropertyValue(`--${variable.name}`).trim()
       darkThemeColors[variable.name] = darkValue || variable.defaultDark
@@ -153,7 +141,6 @@ export function ThemeColorManager() {
     setLightColors(lightThemeColors)
     setDarkColors(darkThemeColors)
     
-    // Re-apply the current theme
     applyThemeClass(theme, resolvedTheme)
   }
   
@@ -165,7 +152,6 @@ export function ThemeColorManager() {
     }
   }
 
-  // Handle color picker change
   const handleColorPickerChange = (theme: 'light' | 'dark', name: string, hex: string) => {
     const hslValue = hexToHsl(hex);
     handleColorChange(theme, name, hslValue);
@@ -189,17 +175,14 @@ export function ThemeColorManager() {
     
     style.textContent = cssText
     
-    // Remove existing style element if it exists
     const existingStyle = document.getElementById('theme-colors-style')
     if (existingStyle) {
       existingStyle.remove()
     }
     
-    // Add the new style element
     style.id = 'theme-colors-style'
     document.head.appendChild(style)
     
-    // Apply current theme
     applyThemeClass(theme, resolvedTheme)
     
     toast.success("Theme colors applied successfully")
