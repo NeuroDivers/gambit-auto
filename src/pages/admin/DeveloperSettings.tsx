@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
 import { PageTitle } from "@/components/shared/PageTitle"
@@ -8,6 +7,7 @@ import { ThemeColorManager } from "@/components/developer/ThemeColorManager"
 import { useTheme } from "next-themes"
 import { applyThemeClass, applyCustomThemeColors } from "@/lib/utils"
 import { Toaster } from "@/components/ui/toaster"
+import { applyThemeClass } from "@/utils/themeUtils";
 
 export default function DeveloperSettings() {
   const [scannedVin, setScannedVin] = useState<string>("")
@@ -16,7 +16,7 @@ export default function DeveloperSettings() {
   // Ensure theme is applied on component mount
   useEffect(() => {
     // Apply theme class based on current theme or system preference
-    applyThemeClass(theme, resolvedTheme)
+    applyThemeClass(theme)
     
     // Check for and apply any custom theme colors from localStorage
     applyCustomThemeColors()

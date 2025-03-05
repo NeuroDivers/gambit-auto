@@ -1,4 +1,3 @@
-
 import { WorkOrderFormValues } from "../types"
 import { supabase } from "@/integrations/supabase/client"
 import { useQueryClient } from "@tanstack/react-query"
@@ -57,7 +56,12 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
       vehicle_year: values.vehicle_year,
       vehicle_serial: values.vehicle_serial,
       additional_notes: values.additional_notes,
-      address: values.address,
+      street_address: values.street_address,
+      unit_number: values.unit_number,
+      city: values.city,
+      state_province: values.state_province,
+      postal_code: values.postal_code,
+      country: values.country,
       start_time: values.start_time?.toISOString(),
       estimated_duration: values.estimated_duration ? `${values.estimated_duration} hours` : null,
       end_time: values.end_time?.toISOString(),
@@ -117,7 +121,12 @@ async function createWorkOrder(values: WorkOrderFormValues) {
       vehicle_year: values.vehicle_year,
       vehicle_serial: values.vehicle_serial,
       additional_notes: values.additional_notes,
-      address: values.address,
+      street_address: values.street_address,
+      unit_number: values.unit_number,
+      city: values.city,
+      state_province: values.state_province,
+      postal_code: values.postal_code,
+      country: values.country,
       start_time: values.start_time?.toISOString(),
       estimated_duration: values.estimated_duration ? `${values.estimated_duration} hours` : null,
       end_time: values.end_time?.toISOString(),

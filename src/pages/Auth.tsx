@@ -1,4 +1,3 @@
-
 import { useAuthForm } from "@/hooks/useAuthForm"
 import { AuthLayout } from "@/components/auth/AuthLayout"
 import { AuthContent } from "@/components/auth/AuthContent"
@@ -8,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
 import { useEffect } from "react"
 import { toast } from "sonner"
-import { applyThemeClass } from "@/lib/utils" 
+import { applyThemeClass } from "@/utils/themeUtils"
 
 export default function Auth() {
   const navigate = useNavigate()
@@ -18,7 +17,7 @@ export default function Auth() {
     // Load theme from localStorage
     const savedTheme = localStorage.getItem('theme') || 'light'
     // Apply theme class directly
-    applyThemeClass(savedTheme, null)
+    applyThemeClass("dark")
     console.log("Auth page: Applied theme from localStorage:", savedTheme)
   }, [])
 

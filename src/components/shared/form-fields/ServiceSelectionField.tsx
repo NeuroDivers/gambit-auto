@@ -101,6 +101,7 @@ export default function ServiceSelectionField({
                 onRemove={handleRemove}
                 isExpanded={expandedServiceId === service.service_id}
                 onToggleExpand={() => handleToggleExpand(service.service_id)}
+                onUpdate={handleUpdate}
               />
             )}
           </div>

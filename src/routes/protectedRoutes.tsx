@@ -1,122 +1,292 @@
+import { lazy, Suspense } from "react";
+import { Navigate, RouteObject } from "react-router-dom";
+import { AuthGuard } from "@/components/auth/AuthGuard";
+import { AuthLayout } from "@/components/auth/AuthLayout";
+import { DashboardLayout } from "@/components/layouts/DashboardLayout";
+import { Loading } from "@/components/ui/loading";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { applyThemeClass } from "@/utils/themeUtils";
 
-import { DashboardLayoutWrapper } from "@/components/dashboard/DashboardLayoutWrapper"
-import { StaffLayoutWrapper } from "@/components/staff/StaffLayoutWrapper"
-import { ClientLayoutWrapper } from "@/components/client/ClientLayoutWrapper"
-import Dashboard from "@/pages/dashboard/Dashboard"
-import { RouteObject } from "react-router-dom"
-import { workOrderRoutes } from "./work-order-routes"
-import { serviceRoutes } from "./service-routes"
-import { userRoutes } from "./user-routes"
-import { estimateRoutes } from "./estimate-routes"
-import { invoiceRoutes } from "./invoice-routes"
-import { customerRoutes } from "./customer-routes"
-import { settingsRoutes } from "./settings-routes"
-import { vehicleRoutes } from "./vehicle-routes"
-import { bookingRoutes } from "./booking-routes"
-import { usePermissions } from "@/hooks/usePermissions"
-import { Navigate } from "react-router-dom"
-import Chat from "@/pages/admin/Chat"
-import Notifications from "@/pages/admin/Notifications"
-import CommissionsPage from "@/components/commissions/CommissionsPage"
-import ServiceSkills from "@/pages/staff/ServiceSkills"
-import { Suspense, useEffect } from "react"
-import { LoadingScreen } from "@/components/shared/LoadingScreen"
-import { applyThemeClass } from "@/lib/utils"
+const Home = lazy(() => import("@/pages/Home"));
+const Auth = lazy(() => import("@/pages/Auth"));
+const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
+const StaffDashboard = lazy(() => import("@/pages/staff/StaffDashboard"));
+const ClientDashboard = lazy(() => import("@/pages/client/ClientDashboard"));
+const Users = lazy(() => import("@/pages/admin/Users"));
+const UserEdit = lazy(() => import("@/pages/admin/UserEdit"));
+const ProfileSettings = lazy(() => import("@/pages/admin/ProfileSettings"));
+const DeveloperSettings = lazy(() => import("@/pages/admin/DeveloperSettings"));
+const BusinessProfile = lazy(() => import("@/pages/admin/BusinessProfile"));
+const Customers = lazy(() => import("@/pages/admin/Customers"));
+const CustomerEdit = lazy(() => import("@/pages/admin/CustomerEdit"));
+const Estimates = lazy(() => import("@/pages/admin/Estimates"));
+const EstimateEdit = lazy(() => import("@/pages/admin/EstimateEdit"));
+const Invoices = lazy(() => import("@/pages/admin/Invoices"));
+const InvoiceEdit = lazy(() => import("@/pages/admin/InvoiceEdit"));
+const ServiceBays = lazy(() => import("@/pages/admin/ServiceBays"));
+const Services = lazy(() => import("@/pages/admin/Services"));
+const ServiceEdit = lazy(() => import("@/pages/admin/ServiceEdit"));
+const Roles = lazy(() => import("@/pages/admin/Roles"));
+const RoleEdit = lazy(() => import("@/pages/admin/RoleEdit"));
+const Staff = lazy(() => import("@/pages/admin/Staff"));
+const StaffEdit = lazy(() => import("@/pages/admin/StaffEdit"));
+const Client = lazy(() => import("@/pages/admin/Client"));
+const ClientEdit = lazy(() => import("@/pages/admin/ClientEdit"));
+const Vehicles = lazy(() => import("@/pages/admin/Vehicles"));
+const VehicleEdit = lazy(() => import("@/pages/admin/VehicleEdit"));
 
-const RoleBasedLayout = () => {
-  const { currentUserRole, isLoading, error } = usePermissions();
-  
-  // Apply saved theme when dashboard is loaded
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme')
-    if (savedTheme) {
-      console.log("Dashboard: Loading saved theme:", savedTheme)
-      applyThemeClass(savedTheme, null)
-    }
-  }, [])
-  
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
-  
-  // If there's an error or no role found, show a more informative message in console
-  if (error || !currentUserRole) {
-    console.error('Role determination error:', error || 'No role found for user');
-    console.log('Current user role state:', { currentUserRole, error });
-    return <Navigate to="/auth" replace />;
-  }
+// Work Order Routes
+import { workOrderRoutes } from "./work-order-routes";
 
-  console.log('Current role for layout determination:', currentUserRole);
-  
-  // Determine which layout to show based on the default_dashboard property
-  if (currentUserRole?.default_dashboard) {
-    switch (currentUserRole.default_dashboard) {
-      case 'admin':
-        return <DashboardLayoutWrapper />;
-      case 'staff':
-        return <StaffLayoutWrapper />;
-      case 'client':
-        return <ClientLayoutWrapper />;
-      default:
-        console.log('Unrecognized default_dashboard value:', currentUserRole.default_dashboard);
-        // Fall through to default case
-    }
-  } else {
-    // If no default_dashboard is set, try to determine from role name
-    const roleName = currentUserRole.name.toLowerCase();
-    if (roleName === 'administrator' || roleName === 'admin' || roleName === 'king') {
-      return <DashboardLayoutWrapper />;
-    } else if (roleName === 'staff' || roleName === 'knight' || roleName === 'rook' || roleName === 'trainee') {
-      return <StaffLayoutWrapper />;
-    }
-  }
-
-  // Default to client layout if we couldn't determine anything else
-  console.log('No specific layout determined, using client dashboard');
-  return <ClientLayoutWrapper />;
-};
-
-export const protectedRoutes: RouteObject = {
-  path: "/",
-  element: (
-    <Suspense fallback={<LoadingScreen />}>
-      <RoleBasedLayout />
-    </Suspense>
-  ),
-  children: [
-    {
-      path: "",
-      element: <Navigate to="/dashboard" replace />,
-      index: true
-    },
-    {
-      path: "dashboard",
-      element: <Dashboard />,
-    },
-    {
-      path: "staff/service-skills",
-      element: <ServiceSkills />,
-    },
-    {
-      path: "chat",
-      element: <Chat />,
-    },
-    {
-      path: "notifications",
-      element: <Notifications />,
-    },
-    {
-      path: "commissions",
-      element: <CommissionsPage />,
-    },
-    ...workOrderRoutes,
-    ...serviceRoutes,
-    ...userRoutes,
-    ...estimateRoutes,
-    ...invoiceRoutes,
-    ...customerRoutes,
-    ...settingsRoutes,
-    ...vehicleRoutes,
-    ...bookingRoutes,
-  ],
-};
+export const protectedRoutes: RouteObject[] = [
+  {
+    path: "/auth",
+    element: (
+      <AuthGuard isPublic>
+        <AuthLayout>
+          <Suspense fallback={<Loading />}>
+            <Auth />
+          </Suspense>
+        </AuthLayout>
+      </AuthGuard>
+    ),
+  },
+  {
+    path: "/",
+    element: (
+      <AuthGuard>
+        {
+          applyThemeClass("dark"),
+          <DashboardLayout />
+        }
+      </AuthGuard>
+    ),
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<Loading />}>
+            <Home />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin",
+        element: <Navigate to="/admin/dashboard" replace />,
+      },
+      {
+        path: "/admin/dashboard",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <AdminDashboard />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/staff",
+        element: <Navigate to="/staff/dashboard" replace />,
+      },
+      {
+        path: "/staff/dashboard",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <StaffDashboard />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/client",
+        element: <Navigate to="/client/dashboard" replace />,
+      },
+      {
+        path: "/client/dashboard",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <ClientDashboard />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/users",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <Users />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/users/:id/edit",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <UserEdit />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/profile-settings",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <ProfileSettings />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/developer-settings",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <DeveloperSettings />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/business-profile",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <BusinessProfile />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/customers",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <Customers />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/customers/:id/edit",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <CustomerEdit />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/estimates",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <Estimates />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/estimates/:id/edit",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <EstimateEdit />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/invoices",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <Invoices />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/invoices/:id/edit",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <InvoiceEdit />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/service-bays",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <ServiceBays />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/services",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <Services />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/services/:id/edit",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <ServiceEdit />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/roles",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <Roles />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/roles/:id/edit",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <RoleEdit />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/staff",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <Staff />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/staff/:id/edit",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <StaffEdit />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/client",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <Client />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/client/:id/edit",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <ClientEdit />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/vehicles",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <Vehicles />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin/vehicles/:id/edit",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <VehicleEdit />
+          </Suspense>
+        ),
+      },
+      ...workOrderRoutes,
+    ],
+  },
+  {
+    path: "*",
+    element: <ErrorBoundary />,
+  },
+];

@@ -1,142 +1,59 @@
-
+import { ReactNode } from "react"
+import { useSearchParams } from "react-router-dom"
+import { Logo } from "@/components/shared/Logo"
+import { ThemeToggle } from "@/components/shared/ThemeToggle"
+import { Button } from "@/components/ui/button"
 import { Link } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
-import { LayoutDashboard } from "lucide-react"
-import { useTheme } from "next-themes"
-import { useEffect, useState } from "react"
-import { applyThemeClass } from "@/lib/utils"
+import { useAuth } from "@/hooks/useAuth"
+import { useToast } from "@/hooks/use-toast"
+import { useEffect } from "react"
+import { applyThemeClass } from "@/utils/themeUtils";
 
 interface AuthLayoutProps {
-  children: React.ReactNode
-  title: string
-  subtitle: string | React.ReactNode
-  footerText?: string
-  footerAction?: {
-    text: string
-    href: string
-    onClick?: () => void
-  }
+  children: ReactNode
 }
 
-export function AuthLayout({
-  children,
-  title,
-  subtitle,
-  footerText,
-  footerAction,
-}: AuthLayoutProps) {
-  const { theme, resolvedTheme, setTheme } = useTheme()
-  const [isDarkTheme, setIsDarkTheme] = useState(false)
-  const [mounted, setMounted] = useState(false)
+export function AuthLayout({ children }: AuthLayoutProps) {
+  const [searchParams] = useSearchParams()
+  const callbackUrl = searchParams.get("callbackUrl") || "/"
+  const { toast } = useToast()
+  const { session } = useAuth()
 
-  // Load saved theme on initial mount
   useEffect(() => {
-    setMounted(true)
-    // Try to load theme from localStorage
-    const savedTheme = localStorage.getItem('theme')
-    if (savedTheme) {
-      console.log("Auth layout: Loading saved theme:", savedTheme)
-      setTheme(savedTheme)
-    }
-  }, [setTheme])
-
-  // Determine if dark mode is active and apply theme class
-  useEffect(() => {
-    if (!mounted) return
-    
-    // Apply theme class for immediate effect
-    applyThemeClass(theme, resolvedTheme)
-    
-    // Check if the HTML element has the dark class
-    const isDark = document.documentElement.classList.contains('dark')
-    setIsDarkTheme(isDark)
-    
-    console.log("Auth layout: Dark mode detection:", { 
-      htmlHasDarkClass: isDark, 
-      theme, 
-      resolvedTheme 
-    })
-  }, [theme, resolvedTheme, mounted])
-
-  // Add a theme change observer to react immediately to theme changes
-  useEffect(() => {
-    // Create a mutation observer to watch for class changes on the HTML element
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'class') {
-          const isDark = document.documentElement.classList.contains('dark')
-          setIsDarkTheme(isDark)
-        }
+    if (session) {
+      toast({
+        title: "You are already logged in",
+        description: (
+          <>
+            You are already logged in. Go to{" "}
+            <Link to={callbackUrl} className="underline underline-offset-4">
+              your dashboard
+            </Link>
+            .
+          </>
+        ),
       })
-    })
-
-    // Start observing the document with the configured parameters
-    observer.observe(document.documentElement, { attributes: true })
-
-    // Cleanup
-    return () => {
-      observer.disconnect()
     }
+  }, [session, toast, callbackUrl])
+
+  useEffect(() => {
+    applyThemeClass("dark");
   }, [])
 
-  const { data: businessProfile } = useQuery({
-    queryKey: ['business-profile'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('business_profile')
-        .select('*')
-        .single()
-      
-      if (error) throw error
-      return data
-    }
-  })
-
-  // Get the appropriate logo URL based on current theme
-  const logoUrl = isDarkTheme 
-    ? businessProfile?.dark_logo_url
-    : businessProfile?.light_logo_url;
-
-  // Don't render anything until after mounting to prevent hydration mismatch
-  if (!mounted) {
-    return null;
+  if (session) {
+    return null
   }
 
   return (
-    <div className="container relative min-h-screen flex items-center justify-center">
-      <div className="mx-auto w-full max-w-[350px] space-y-6">
-        <div className="flex flex-col items-center space-y-2 text-center">
-          {logoUrl && (
-            <img 
-              src={logoUrl}
-              alt={businessProfile?.company_name || "Business Logo"} 
-              className="h-16 w-16 object-contain"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-              }}
-            />
-          )}
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {title}
-          </h1>
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
+    <div className="relative flex min-h-screen items-center justify-center bg-background">
+      <div className="container relative flex flex-col items-center justify-center">
+        <div className="absolute left-0 top-0 flex w-full justify-between p-6">
+          <Logo />
+          <ThemeToggle />
         </div>
-
-        {children}
-
-        {footerText && footerAction && (
-          <p className="px-8 text-center text-sm text-muted-foreground">
-            {footerText}{" "}
-            <button
-              onClick={footerAction.onClick}
-              className="underline underline-offset-4 hover:text-primary"
-            >
-              {footerAction.text}
-            </button>
-          </p>
-        )}
+        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+          {children}
+        </div>
       </div>
     </div>
   )

@@ -45,6 +45,10 @@ export interface WorkOrderFormValues {
   timeframe?: "flexible" | "asap" | "within_week" | "within_month";
   save_vehicle?: boolean;
   vehicle_id?: string;
+  // Vehicle additional fields
+  vehicle_trim?: string;
+  vehicle_body_class?: string;
+  vehicle_doors?: number;
 }
 
 export interface WorkOrderFormProps {

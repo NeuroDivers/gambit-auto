@@ -1,151 +1,148 @@
-
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ProfileForm } from "@/components/profile/ProfileForm";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useTheme } from "next-themes";
-import { toast } from "@/hooks/use-toast";
-import { Sun, Moon, Laptop } from "lucide-react";
-import { applyThemeClass } from "@/lib/utils";
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/hooks/use-toast"
+import { supabase } from "@/integrations/supabase/client"
+import { useEffect, useState } from "react"
+import { useForm } from "react-hook-form"
+import { applyThemeClass } from "@/utils/themeUtils";
 
 export default function ProfileSettings() {
-  const { theme, setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
+  const [profile, setProfile] = useState<{
+    id: string
+    email: string
+    first_name: string
+    last_name: string
+  } | null>(null)
 
-  // Wait for component to mount to avoid hydration mismatch
+  const form = useForm({
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+    },
+  })
+
   useEffect(() => {
-    setMounted(true);
-    
-    // Set initial theme to system if not set
-    if (!theme) {
-      setTheme('system');
+    const getProfile = async () => {
+      setLoading(true)
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (user) {
+        const { data: profileData, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single()
+
+        if (error) {
+          toast({
+            title: "Error",
+            description: "Failed to load profile",
+            variant: "destructive",
+          })
+        } else {
+          setProfile({
+            id: user.id,
+            email: user.email || "",
+            first_name: profileData?.first_name || "",
+            last_name: profileData?.last_name || "",
+          })
+          form.reset({
+            firstName: profileData?.first_name || "",
+            lastName: profileData?.last_name || "",
+            email: user.email || "",
+          })
+        }
+      }
+      setLoading(false)
     }
-  }, [theme, setTheme]);
 
-  // Force theme application immediately
-  useEffect(() => {
-    if (!mounted) return;
-    
-    // Apply theme class for immediate effect
-    applyThemeClass(theme, resolvedTheme);
-    
-    // Log theme state for debugging
-    console.log({
-      selectedTheme: theme,
-      resolvedTheme,
-      currentSystemTheme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
-      documentClassList: document.documentElement.classList.contains('dark') ? 'has dark class' : 'no dark class'
-    });
-    
-  }, [theme, resolvedTheme, mounted]);
+    getProfile()
+  }, [form, toast])
 
-  // Use a separate function to handle theme changes to ensure immediate application
-  const handleThemeChange = (value: string) => {
-    // Apply dark class immediately to avoid flicker
-    if (value === 'dark' || (value === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark');
+  const onSubmit = async (values: any) => {
+    setLoading(true)
+    const { error } = await supabase.from("profiles").update({
+      first_name: values.firstName,
+      last_name: values.lastName,
+    }).eq("id", profile?.id)
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update profile",
+        variant: "destructive",
+      })
     } else {
-      document.documentElement.classList.remove('dark');
+      toast({
+        title: "Success",
+        description: "Profile updated successfully",
+      })
     }
-    
-    // Update theme in next-themes
-    setTheme(value);
-    
-    // Store in localStorage for persistence
-    localStorage.setItem('theme', value);
-    
-    toast({
-      title: "Theme Updated",
-      description: `Theme changed to ${value === 'system' ? 'system default' : value} mode`
-    });
-  };
+    setLoading(false)
+  }
 
-  // Don't render anything until after mounting to prevent hydration mismatch
-  if (!mounted) {
-    return null;
+  if (!profile) {
+    return <div>Loading...</div>
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Profile Settings</h1>
-      </div>
-
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Theme Preferences</CardTitle>
-            <CardDescription>
-              Choose your preferred theme for the application
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <RadioGroup 
-              value={theme} 
-              onValueChange={handleThemeChange}
-              className="grid grid-cols-3 gap-4"
-            >
-              <div>
-                <RadioGroupItem 
-                  value="light" 
-                  id="theme-light"
-                  className="peer sr-only"
-                />
-                <Label
-                  htmlFor="theme-light"
-                  className={`flex flex-col items-center justify-between rounded-md border-2 ${
-                    theme === 'light' 
-                      ? 'border-primary bg-primary/5 ring-2 ring-primary/30' 
-                      : 'border-muted bg-popover'
-                  } p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all`}
-                >
-                  <Sun className={`h-6 w-6 mb-2 ${theme === 'light' ? 'text-primary' : ''}`} />
-                  Light
-                </Label>
-              </div>
-              <div>
-                <RadioGroupItem 
-                  value="dark" 
-                  id="theme-dark"
-                  className="peer sr-only"
-                />
-                <Label
-                  htmlFor="theme-dark"
-                  className={`flex flex-col items-center justify-between rounded-md border-2 ${
-                    theme === 'dark' 
-                      ? 'border-primary bg-primary/5 ring-2 ring-primary/30' 
-                      : 'border-muted bg-popover'
-                  } p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all`}
-                >
-                  <Moon className={`h-6 w-6 mb-2 ${theme === 'dark' ? 'text-primary' : ''}`} />
-                  Dark
-                </Label>
-              </div>
-              <div>
-                <RadioGroupItem 
-                  value="system" 
-                  id="theme-system"
-                  className="peer sr-only"
-                />
-                <Label
-                  htmlFor="theme-system"
-                  className={`flex flex-col items-center justify-between rounded-md border-2 ${
-                    theme === 'system' 
-                      ? 'border-primary bg-primary/5 ring-2 ring-primary/30' 
-                      : 'border-muted bg-popover'
-                  } p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all`}
-                >
-                  <Laptop className={`h-6 w-6 mb-2 ${theme === 'system' ? 'text-primary' : ''}`} />
-                  System
-                </Label>
-              </div>
-            </RadioGroup>
-          </CardContent>
-        </Card>
-
-        <ProfileForm />
-      </div>
+    <div className="container mx-auto py-10">
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile Settings</CardTitle>
+          <CardDescription>
+            Manage your profile information and settings.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="firstName">First Name</Label>
+              <Input
+                id="firstName"
+                type="text"
+                placeholder="First Name"
+                {...form.register("firstName")}
+              />
+            </div>
+            <div>
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input
+                id="lastName"
+                type="text"
+                placeholder="Last Name"
+                {...form.register("lastName")}
+              />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="Email"
+              {...form.register("email")}
+              disabled
+            />
+          </div>
+          <Button onClick={form.handleSubmit(onSubmit)} loading={loading}>
+            Update Profile
+          </Button>
+        </CardContent>
+      </Card>
     </div>
-  );
+  )
 }
