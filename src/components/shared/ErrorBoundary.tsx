@@ -19,7 +19,13 @@ export function ErrorBoundary() {
   useEffect(() => {
     console.error("Application error:", error)
     
-    if (isRouteErrorResponse(error)) {
+    if (error === null) {
+      // Handle null errors specifically
+      setErrorDetails({
+        title: "Application Error",
+        message: "The application encountered an unexpected null value. This might be due to missing data or a network issue."
+      })
+    } else if (isRouteErrorResponse(error)) {
       // Handle route errors (404, etc)
       setErrorDetails({
         title: `${error.status} - ${error.statusText}`,
@@ -36,12 +42,6 @@ export function ErrorBoundary() {
       if (error.stack) {
         console.error("Error stack:", error.stack)
       }
-    } else if (error === null) {
-      // Handle null errors specifically
-      setErrorDetails({
-        title: "Application Error",
-        message: "The application encountered an unexpected null value. This might be due to missing data or a network issue."
-      })
     } else if (typeof error === 'string') {
       setErrorDetails({
         title: "Error",
