@@ -88,6 +88,7 @@ export function VehicleFormDialog({
       if (vinData.bodyClass) form.setValue("body_class", vinData.bodyClass);
       if (vinData.doors) form.setValue("doors", vinData.doors);
       if (vinData.trim) form.setValue("trim", vinData.trim);
+      if (vinData.color) form.setValue("color", vinData.color);
     }
   }, [vinData, form]);
 

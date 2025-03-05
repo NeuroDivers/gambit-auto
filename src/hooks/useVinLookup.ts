@@ -12,6 +12,7 @@ interface VinData {
   bodyClass: string
   doors: number
   trim: string
+  color: string
   error?: string
 }
 
@@ -38,7 +39,7 @@ export function useVinLookup(vin: string | undefined | null) {
     queryKey: ['vin', validVin],
     queryFn: async (): Promise<VinData> => {
       if (!validVin) {
-        return { make: '', model: '', year: 0, bodyClass: '', doors: 0, trim: '', error: 'Invalid VIN' }
+        return { make: '', model: '', year: 0, bodyClass: '', doors: 0, trim: '', color: '', error: 'Invalid VIN' }
       }
 
       try {
@@ -62,6 +63,7 @@ export function useVinLookup(vin: string | undefined | null) {
           const bodyClass = existingData.body_class || '';
           const doors = existingData.doors || 0;
           const trim = existingData.trim || '';
+          const color = existingData.color || '';
           
           // Log complete data retrieval for debugging
           console.log('Extracted from cache:', {
@@ -70,7 +72,8 @@ export function useVinLookup(vin: string | undefined | null) {
             year: existingData.year,
             bodyClass,
             doors,
-            trim
+            trim,
+            color
           });
           
           return {
@@ -80,6 +83,7 @@ export function useVinLookup(vin: string | undefined | null) {
             bodyClass,
             doors,
             trim,
+            color,
           }
         }
 
@@ -110,6 +114,7 @@ export function useVinLookup(vin: string | undefined | null) {
             bodyClass: '', 
             doors: 0, 
             trim: '', 
+            color: '',
             error: 'API response error' 
           }
         }
@@ -125,6 +130,10 @@ export function useVinLookup(vin: string | undefined | null) {
         const bodyClass = getValueByVariable(results, 'Body Class')
         const doorsStr = getValueByVariable(results, 'Doors')
         const doors = doorsStr ? parseInt(doorsStr, 10) : 0
+        
+        // Get color information
+        const exteriorColor = getValueByVariable(results, 'Exterior Color')
+        const color = exteriorColor || ''
         
         // Get trim information from multiple fields and merge them
         const trim1 = getValueByVariable(results, 'Trim')
@@ -142,7 +151,8 @@ export function useVinLookup(vin: string | undefined | null) {
           year,
           bodyClass,
           doors,
-          trim
+          trim,
+          color
         });
 
         // Store in cache - using upsert to handle cases where the VIN exists but success was false
@@ -156,6 +166,7 @@ export function useVinLookup(vin: string | undefined | null) {
             body_class: bodyClass,
             doors,
             trim,
+            color,
             success: true,
             raw_data: data,
             created_at: new Date().toISOString(),
@@ -170,6 +181,7 @@ export function useVinLookup(vin: string | undefined | null) {
           bodyClass: bodyClass || '',
           doors: doors || 0,
           trim: trim || '',
+          color: color || '',
         }
       } catch (error) {
         console.error('Error in VIN lookup:', error)
@@ -197,6 +209,7 @@ export function useVinLookup(vin: string | undefined | null) {
           bodyClass: '', 
           doors: 0, 
           trim: '', 
+          color: '',
           error: 'Lookup failed' 
         }
       }

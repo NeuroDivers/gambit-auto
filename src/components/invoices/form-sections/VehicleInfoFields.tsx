@@ -50,6 +50,7 @@ export function VehicleInfoFields({
       if (vinData.bodyClass) setVehicleBodyClass(vinData.bodyClass)
       if (vinData.doors) setVehicleDoors(vinData.doors)
       if (vinData.trim) setVehicleTrim(vinData.trim)
+      // Color is handled elsewhere as it's not in the props for this component
     }
   }, [vinData, setVehicleMake, setVehicleModel, setVehicleYear, setVehicleBodyClass, setVehicleDoors, setVehicleTrim])
 

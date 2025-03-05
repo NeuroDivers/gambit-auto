@@ -62,6 +62,7 @@ export function VehicleForm({ vehicle, clientId, onSubmit }: VehicleFormProps) {
       if (vinData.make) form.setValue('make', vinData.make)
       if (vinData.model) form.setValue('model', vinData.model)
       if (vinData.year) form.setValue('year', vinData.year)
+      if (vinData.color) form.setValue('color', vinData.color)
     }
   }, [vinData, form])
 
@@ -158,7 +159,12 @@ export function VehicleForm({ vehicle, clientId, onSubmit }: VehicleFormProps) {
               <FormItem>
                 <FormLabel>Color</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <div className="relative">
+                    <Input {...field} placeholder="e.g. Blue" disabled={isLoadingVin} />
+                    {isLoadingVin && (
+                      <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
