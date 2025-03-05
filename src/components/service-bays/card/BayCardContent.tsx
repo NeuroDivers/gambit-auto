@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Clipboard, Pencil, X, Check, User } from "lucide-react"
+import { Clipboard, Pencil, X, Check, User, CheckCircle, Clock, AlertTriangle } from "lucide-react"
 import { useState } from "react"
 import { useAssignableProfiles } from "../hooks/useAssignableProfiles"
 
@@ -51,11 +51,26 @@ export function BayCardContent({
   const getStatusBadge = () => {
     switch (status) {
       case 'available':
-        return <Badge variant="success" className="font-medium">Available</Badge>
+        return (
+          <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 font-medium flex items-center gap-1.5">
+            <CheckCircle className="h-3 w-3" />
+            <span>Available</span>
+          </Badge>
+        )
       case 'in_use':
-        return <Badge variant="secondary" className="font-medium">In Use</Badge>
+        return (
+          <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200 font-medium flex items-center gap-1.5">
+            <Clock className="h-3 w-3" />
+            <span>In Use</span>
+          </Badge>
+        )
       case 'maintenance':
-        return <Badge variant="pending" className="font-medium">Maintenance</Badge>
+        return (
+          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200 font-medium flex items-center gap-1.5">
+            <AlertTriangle className="h-3 w-3" />
+            <span>Maintenance</span>
+          </Badge>
+        )
       default:
         return null
     }
@@ -111,7 +126,7 @@ export function BayCardContent({
           
           {/* Edit button */}
           <Button 
-            className="w-full mt-4 gap-2"
+            className="w-full mt-4 gap-2 bg-background hover:bg-muted/50 text-foreground border border-border"
             onClick={() => setIsEditing(true)}
           >
             <Pencil className="h-4 w-4" />
@@ -138,7 +153,7 @@ export function BayCardContent({
               placeholder="Add notes about this bay..."
               value={notes || ''}
               onChange={(e) => onNotesChange(e.target.value)}
-              className="min-h-[100px] resize-none"
+              className="min-h-[100px] resize-none border-border/60 focus-visible:ring-primary/30"
             />
           </div>
           

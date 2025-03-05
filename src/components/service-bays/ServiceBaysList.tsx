@@ -12,14 +12,18 @@ export function ServiceBaysList() {
   const { data: availableServices } = useServiceTypes()
 
   if (isLoading) {
-    return <div className="animate-pulse text-primary/60 text-lg">Loading...</div>
+    return (
+      <div className="animate-pulse flex items-center justify-center h-40 text-primary/60 text-lg">
+        Loading service bays...
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
       <BayHeader onAddBay={() => setIsDialogOpen(true)} />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {serviceBays?.map((bay) => (
           <ServiceBayCard
             key={bay.id}
