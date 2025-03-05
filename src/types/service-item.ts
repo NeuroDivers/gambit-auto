@@ -37,7 +37,7 @@ export interface PackageSelectProps {
   onCancel?: () => void;
 }
 
-// Add ServiceFormData interface required by quote request components
+// Expand the ServiceFormData interface to include all fields needed by quote request components
 export interface ServiceFormData {
   serviceType: string;
   details: {
@@ -45,4 +45,23 @@ export interface ServiceFormData {
   };
   images: File[];
   description: string;
+  // Additional fields needed by the quote request form
+  vehicleInfo?: {
+    make: string;
+    model: string;
+    year: number;
+    vin: string;
+    saveToAccount?: boolean;
+  };
+  service_items?: ServiceItemType[];
+  service_details?: {
+    [serviceId: string]: {
+      description?: string;
+      images?: string[];
+      detail_type?: string;
+      package_type?: string;
+      tint_type?: string;
+      [key: string]: any;
+    };
+  };
 }

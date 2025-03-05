@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -28,6 +27,11 @@ export function useWorkOrderSubmission({ workOrderId, onSuccess }: UseWorkOrderS
     }
   };
 
+  const toISOStringOrNull = (dateValue: Date | string | null): string | null => {
+    if (!dateValue) return null;
+    return dateValue instanceof Date ? dateValue.toISOString() : dateValue;
+  };
+
   const submitWorkOrder = async (data: WorkOrderFormValues) => {
     try {
       setIsSubmitting(true);
@@ -54,9 +58,9 @@ export function useWorkOrderSubmission({ workOrderId, onSuccess }: UseWorkOrderS
         vehicleId = vehicleData.id;
       }
 
-      // Format dates for database
-      const startTime = formatDateToISOString(data.start_time);
-      const endTime = formatDateToISOString(data.end_time);
+      // Format dates for submission
+      const start_time = toISOStringOrNull(data.start_time);
+      const end_time = toISOStringOrNull(data.end_time);
 
       // Create work order payload
       const workOrderPayload = {
@@ -78,9 +82,9 @@ export function useWorkOrderSubmission({ workOrderId, onSuccess }: UseWorkOrderS
         state_province: data.state_province,
         postal_code: data.postal_code,
         country: data.country,
-        start_time: startTime,
+        start_time: start_time,
         estimated_duration: data.estimated_duration ? Number(data.estimated_duration) : null,
-        end_time: endTime,
+        end_time: end_time,
         assigned_bay_id: data.assigned_bay_id || data.bay_id || null,
         status: data.status || "scheduled",
         // Set or update timestamps

@@ -27,7 +27,8 @@ export function ServiceSelectionField({
   };
 
   const handleRemove = (serviceId: string) => {
-    const updatedServices = serviceItems.filter(s => s.service_id !== serviceId);
+    // Create a new array using slice to ensure it's not readonly
+    const updatedServices = serviceItems.slice().filter(s => s.service_id !== serviceId);
     onChange(updatedServices);
     if (onServicesChange) {
       onServicesChange(updatedServices);
@@ -35,7 +36,8 @@ export function ServiceSelectionField({
   };
 
   const handleUpdate = (updatedService: ServiceItemType) => {
-    const updatedServices = serviceItems.map(s => 
+    // Create a new array using slice to ensure it's not readonly
+    const updatedServices = serviceItems.slice().map(s => 
       s.service_id === updatedService.service_id ? updatedService : s
     );
     onChange(updatedServices);
@@ -46,7 +48,9 @@ export function ServiceSelectionField({
   };
 
   const handleAddNew = (newService: ServiceItemType) => {
-    const updatedServices = [...serviceItems, newService];
+    // Create a new array using slice to ensure it's not readonly
+    const updatedServices = serviceItems.slice();
+    updatedServices.push(newService);
     onChange(updatedServices);
     if (onServicesChange) {
       onServicesChange(updatedServices);

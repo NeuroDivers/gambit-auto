@@ -1,125 +1,127 @@
-
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ServiceItemType } from "@/types/service-item";
 
+interface Package {
+  id: string;
+  name: string;
+  description: string;
+  services: ServiceItemType[];
+}
+
 interface PackageSelectProps {
-  onSelect: (packageServices: ServiceItemType[]) => void;
+  onSelect: (services: ServiceItemType[]) => void;
   onCancel: () => void;
 }
 
 export function PackageSelect({ onSelect, onCancel }: PackageSelectProps) {
-  const { data: packages, isLoading } = useQuery({
-    queryKey: ["servicePackages"],
+  const [open, setOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
+
+  const { data: packages, isLoading, error } = useQuery({
+    queryKey: ["packages"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("service_packages")
-        .select(`
-          id,
-          name,
-          description,
-          price,
-          sale_price,
-          status,
-          service_package_items:service_package_items (
-            id,
-            service_id,
-            service_type:service_types (
-              id, 
-              name,
-              price,
-              description
-            ),
-            quantity,
-            price
-          )
-        `)
-        .eq("status", "active");
-        
-      if (error) throw error;
-      return data || [];
-    }
+        .from("packages")
+        .select("*");
+
+      if (error) {
+        throw error;
+      }
+
+      return data as Package[];
+    },
   });
 
-  const handleSelectPackage = (pkg: any) => {
-    if (!pkg.service_package_items || pkg.service_package_items.length === 0) {
-      return;
+  if (isLoading) {
+    return <div>Loading packages...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  const handlePackageSelect = (packageId: string) => {
+    const selected = packages?.find((pkg) => pkg.id === packageId) || null;
+    setSelectedPackage(selected);
+  };
+
+  const handleConfirm = () => {
+    if (selectedPackage) {
+      onSelect(selectedPackage.services);
+      setOpen(false);
     }
-    
-    // Map package items to service items
-    const services = pkg.service_package_items.map((item: any) => {
-      const serviceType = item.service_type;
-      return {
-        service_id: serviceType.id,
-        service_name: serviceType.name,
-        description: serviceType.description || "",
-        quantity: item.quantity || 1,
-        unit_price: item.price || serviceType.price || 0,
-        commission_rate: 0,
-        commission_type: "percentage",
-        assigned_profile_id: null,
-        assigned_profiles: [],
-      } as ServiceItemType;
-    });
-    
-    onSelect(services);
   };
 
   return (
-    <Dialog open onOpenChange={() => onCancel()}>
-      <DialogContent className="sm:max-w-lg">
+    <Dialog open={open} onOpenChange={setOpen}>
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        Select Package
+      </Button>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Select a Service Package</DialogTitle>
+          <DialogTitle>Select a Package</DialogTitle>
+          <DialogDescription>
+            Choose a pre-defined package of services.
+          </DialogDescription>
         </DialogHeader>
-        
-        <ScrollArea className="h-[60vh] pr-4 -mr-4">
-          {isLoading ? (
-            <div className="flex justify-center items-center h-40">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <div className="space-y-4 py-4">
-              {packages && packages.length > 0 ? (
-                packages.map((pkg: any) => (
-                  <Card key={pkg.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                    <CardHeader>
-                      <CardTitle>{pkg.name}</CardTitle>
-                      <CardDescription>{pkg.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm">
-                        {pkg.service_package_items?.length || 0} services included
-                      </p>
-                    </CardContent>
-                    <CardFooter className="flex justify-between">
-                      <div>
-                        <p className="font-medium">${pkg.price.toFixed(2)}</p>
-                        {pkg.sale_price && (
-                          <p className="text-sm text-muted-foreground line-through">
-                            ${pkg.sale_price.toFixed(2)}
-                          </p>
-                        )}
-                      </div>
-                      <Button onClick={() => handleSelectPackage(pkg)}>Select</Button>
-                    </CardFooter>
-                  </Card>
-                ))
-              ) : (
-                <p className="text-center text-muted-foreground py-8">
-                  No service packages available
-                </p>
-              )}
-            </div>
+        <div className="grid gap-4 py-4">
+          <FormField
+            control={{}}
+            name="package"
+            render={() => (
+              <FormItem>
+                <FormLabel>Package</FormLabel>
+                <Select onValueChange={handlePackageSelect}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a package" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <ScrollArea className="h-72 w-full">
+                      {packages?.map((pkg) => (
+                        <SelectItem key={pkg.id} value={pkg.id}>
+                          {pkg.name}
+                        </SelectItem>
+                      ))}
+                    </ScrollArea>
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Select a package from the list.
+                </FormDescription>
+              </FormItem>
+            )}
+          />
+          {selectedPackage && (
+            <Card>
+              <CardHeader>
+                <CardTitle>{selectedPackage.name}</CardTitle>
+                <CardDescription>{selectedPackage.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul>
+                  {selectedPackage.services.map((service) => (
+                    <li key={service.service_id}>{service.service_name}</li>
+                  ))}
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={handleConfirm}>Confirm Package</Button>
+              </CardFooter>
+            </Card>
           )}
-        </ScrollArea>
-        
+        </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>
+          <Button type="button" variant="secondary" onClick={onCancel}>
             Cancel
           </Button>
         </DialogFooter>

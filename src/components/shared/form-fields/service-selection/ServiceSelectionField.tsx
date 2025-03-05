@@ -24,7 +24,15 @@ export function ServiceSelectionField({
   const { data, isLoading } = useServiceData();
   
   // Safely extract service types from the query result
-  const serviceTypes = data || [];
+  const allServiceTypes = data || [];
+  
+  // Transform data into servicesByType format
+  const servicesByType = allServiceTypes.reduce((acc, service) => {
+    const type = service.hierarchy_type || 'Other';
+    if (!acc[type]) acc[type] = [];
+    acc[type].push(service);
+    return acc;
+  }, {} as Record<string, any[]>);
 
   const handleAddService = (selectedService: any) => {
     if (!selectedService) return;
@@ -62,12 +70,7 @@ export function ServiceSelectionField({
           service={{} as ServiceItemType} 
           onEdit={() => {}}
           onRemove={() => {}}
-          servicesByType={serviceTypes.reduce((acc, service) => {
-            const type = service.hierarchy_type || 'Other';
-            if (!acc[type]) acc[type] = [];
-            acc[type].push(service);
-            return acc;
-          }, {} as Record<string, any[]>)}
+          servicesByType={servicesByType}
           handleServiceSelect={handleAddService}
           isLoading={isLoading}
         />
@@ -93,8 +96,8 @@ export function ServiceSelectionField({
               key={index}
               service={service}
               onEdit={() => {}}
-              onUpdate={(updatedService) => handleUpdateService(index, updatedService)}
               onRemove={() => handleRemoveService(index)}
+              onUpdate={(updatedService) => handleUpdateService(index, updatedService)}
             />
           ))}
         </div>

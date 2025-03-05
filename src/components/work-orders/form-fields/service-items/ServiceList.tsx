@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,9 +12,10 @@ interface ServiceListProps {
   services: ServiceItemType[];
   onChange: (services: ServiceItemType[]) => void;
   showCommission?: boolean;
+  showAssignedStaff?: boolean;
 }
 
-export function ServiceList({ services = [], onChange, showCommission = false }: ServiceListProps) {
+export function ServiceList({ services = [], onChange, showCommission = false, showAssignedStaff = false }: ServiceListProps) {
   const [showPackageSelect, setShowPackageSelect] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   
@@ -97,13 +97,13 @@ export function ServiceList({ services = [], onChange, showCommission = false }:
               <ServiceItem
                 key={index}
                 service={service}
-                serviceTypes={serviceTypes}
                 isEditing={editingIndex === index}
                 onEdit={() => setEditingIndex(index)}
                 onUpdate={(updatedService) => handleServiceUpdate(index, updatedService)}
                 onRemove={() => handleServiceRemove(index)}
-                onCancelEdit={() => setEditingIndex(null)}
+                onCancelEdit={() => setEditingIndex(-1)}
                 showCommission={showCommission}
+                showAssignedStaff={showAssignedStaff}
               />
             ))}
           </div>

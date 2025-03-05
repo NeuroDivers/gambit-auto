@@ -1,4 +1,3 @@
-
 export interface ServiceItemType {
   service_id: string;
   service_name: string;
@@ -46,6 +45,7 @@ export interface ServiceItemProps {
   disabled?: boolean;
   showCommission?: boolean;
   showAssignedStaff?: boolean;
+  serviceTypes?: any[];
 }
 
 export interface ServiceItemFormProps {
