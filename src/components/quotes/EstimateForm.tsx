@@ -26,10 +26,10 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
   const [selectedClient, setSelectedClient] = useState<string | null>(null)
   
   const { data: clients, isLoading: clientsLoading } = useQuery({
-    queryKey: ["clients"],
+    queryKey: ["customers"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("clients")
+        .from("customers")
         .select("id, first_name, last_name, email")
         .order("last_name", { ascending: true })
       
@@ -45,7 +45,7 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
       const { data, error } = await supabase
         .from("vehicles")
         .select("id, make, model, year, vin")
-        .eq("client_id", selectedClient)
+        .eq("customer_id", selectedClient)
         .order("created_at", { ascending: false })
       
       if (error) throw error
@@ -58,7 +58,7 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_types")
-        .select("id, name, description, price")
+        .select("id, name, description, base_price as price")
         .eq("status", "active")
         .order("name", { ascending: true })
       

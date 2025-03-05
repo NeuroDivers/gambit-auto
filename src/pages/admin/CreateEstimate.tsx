@@ -26,7 +26,7 @@ export default function CreateEstimate() {
       const { data: estimate, error } = await supabase
         .from("estimates")
         .insert({
-          customer_id: data.customer_id,
+          customer_id: data.client_id, // Map client_id to customer_id
           vehicle_id: data.vehicle_id,
           status: "draft",
           total: data.total || 0,
