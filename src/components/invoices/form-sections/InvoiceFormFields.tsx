@@ -53,6 +53,12 @@ export function InvoiceFormFields({
         setVehicleYear={(value) => form.setValue('vehicle_year', value)}
         vehicleVin={form.watch('vehicle_vin')}
         setVehicleVin={(value) => form.setValue('vehicle_vin', value)}
+        vehicleBodyClass=""
+        setVehicleBodyClass={() => {}}
+        vehicleDoors={0}
+        setVehicleDoors={() => {}}
+        vehicleTrim=""
+        setVehicleTrim={() => {}}
       />
 
       <InvoiceItemsFields

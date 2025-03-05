@@ -6,7 +6,7 @@ import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { VinScanner } from "@/components/shared/VinScanner"
 
-type VehicleInfoFieldsProps = {
+export type VehicleInfoFieldsProps = {
   vehicleMake: string
   setVehicleMake: (value: string) => void
   vehicleModel: string
