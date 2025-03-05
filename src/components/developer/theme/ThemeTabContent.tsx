@@ -1,3 +1,4 @@
+
 import React from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -27,16 +28,13 @@ export function ThemeTabContent({
   activeColorName,
   setActiveColorName
 }: ThemeTabContentProps) {
-  // Make sure ALL color variables are shown when "all" is selected
-  const getFilteredVariables = () => {
-    if (selectedCategory === "all") {
-      // When "all" is selected, return all variables without filtering
-      return themeColorVariables;
-    } else {
-      // Otherwise filter by the selected category
-      return themeColorVariables.filter(variable => variable.category === selectedCategory);
-    }
-  };
+  // Get filtered variables based on selected category
+  const filteredVariables = 
+    selectedCategory === "all" 
+      ? themeColorVariables // Show all variables when "all" is selected
+      : themeColorVariables.filter(variable => variable.category === selectedCategory);
+
+  console.log(`Showing ${filteredVariables.length} color variables in ${selectedCategory} tab`);
 
   return (
     <TabsContent value={themeMode} className="mt-0">
@@ -48,7 +46,7 @@ export function ThemeTabContent({
         )}
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {getFilteredVariables().map(variable => (
+          {filteredVariables.map(variable => (
             <ColorCard
               key={`${themeMode}-${variable.name}`}
               variable={variable}
