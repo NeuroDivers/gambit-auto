@@ -39,32 +39,31 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
 
   // Update currentTheme whenever theme or resolvedTheme changes
   useEffect(() => {
-    // Use resolvedTheme which gives the actual applied theme
     setCurrentTheme(resolvedTheme);
     console.log("Current theme updated:", resolvedTheme);
-  }, [theme, resolvedTheme]);
+  }, [resolvedTheme]);
 
-  // Get the appropriate logo URL based on current theme
+  // Determine which logo to display based on current theme
   const logoUrl = React.useMemo(() => {
     if (!businessProfile) return null;
     
-    console.log("Determining logo for theme:", currentTheme);
+    console.log("Determining logo for theme:", currentTheme, "Current resolved theme:", resolvedTheme);
+    console.log("Available logos - Dark:", businessProfile.dark_logo_url, "Light:", businessProfile.light_logo_url);
     
-    if (currentTheme === 'dark') {
+    if (currentTheme === 'dark' || resolvedTheme === 'dark') {
       // For dark theme: Use dark_logo_url, fall back to logo_url
       const darkLogo = businessProfile.dark_logo_url || businessProfile.logo_url;
-      console.log("Selected dark logo:", darkLogo);
+      console.log("Using dark logo:", darkLogo);
       return darkLogo;
     } else {
       // For light theme: Use light_logo_url, fall back to logo_url
       const lightLogo = businessProfile.light_logo_url || businessProfile.logo_url;
-      console.log("Selected light logo:", lightLogo);
+      console.log("Using light logo:", lightLogo);
       return lightLogo;
     }
-  }, [businessProfile, currentTheme]);
+  }, [businessProfile, currentTheme, resolvedTheme]);
 
-  console.log("Active theme:", currentTheme);
-  console.log("Using logo URL:", logoUrl);
+  console.log("Final logo URL being used:", logoUrl);
 
   return (
     <div className="relative py-4">
