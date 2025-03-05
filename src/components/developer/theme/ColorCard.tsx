@@ -67,6 +67,10 @@ export function ColorCard({
             onChange={e => handleHexInputChange(themeMode, variable.name, e.target.value)} 
             className="h-7 text-xs font-mono w-full" 
             placeholder="Hex color" 
+            type="text"
+            onMouseDown={e => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
+            onKeyDown={e => e.stopPropagation()}
           />
         </div>
       </div>
