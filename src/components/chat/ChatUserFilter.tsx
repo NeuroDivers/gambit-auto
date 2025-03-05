@@ -1,7 +1,7 @@
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-type UserFilterOption = "all" | "staff" | "clients";
+type UserFilterOption = "all" | "staff" | "customers";
 
 interface ChatUserFilterProps {
   currentFilter: UserFilterOption;
@@ -18,7 +18,7 @@ export function ChatUserFilter({ currentFilter, onFilterChange }: ChatUserFilter
         <SelectContent>
           <SelectItem value="all">All Conversations</SelectItem>
           <SelectItem value="staff">Staff Only</SelectItem>
-          <SelectItem value="clients">Clients Only</SelectItem>
+          <SelectItem value="customers">Customers Only</SelectItem>
         </SelectContent>
       </Select>
     </div>

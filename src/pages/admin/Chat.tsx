@@ -15,7 +15,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { ChatUserFilter } from "@/components/chat/ChatUserFilter"
 
-type UserFilterOption = "all" | "staff" | "clients";
+type UserFilterOption = "all" | "staff" | "customers";
 
 export default function Chat() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null)
@@ -33,11 +33,10 @@ export default function Chat() {
       
       console.log("Fetching chat users for:", user.id)
       
-      // First get all profiles except current user
       const { data: profiles, error } = await supabase
         .from("profiles")
         .select("id, first_name, last_name, email, role:role_id(name, nicename), avatar_url, last_seen_at")
-        .neq('id', user.id) // Exclude current user
+        .neq('id', user.id)
         .order("role_id")
       
       if (error) {
@@ -47,7 +46,6 @@ export default function Chat() {
       
       console.log("Fetched profiles for chat:", profiles?.length || 0)
 
-      // Get unread message counts for each user
       const unreadCounts = await Promise.all(
         (profiles || []).map(async (profile) => {
           const { count } = await supabase
@@ -64,16 +62,13 @@ export default function Chat() {
         })
       )
 
-      // Function to determine if a user is online based on last_seen_at
       const isUserOnline = (lastSeenAt: string | null): boolean => {
         if (!lastSeenAt) return false;
         
-        // Consider users online if they've been active in the last 5 minutes
         const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
         return new Date(lastSeenAt) > fiveMinutesAgo;
       };
 
-      // Combine profiles with unread counts and set online status based on last_seen_at
       const usersWithCounts = (profiles || []).map(profile => ({
         ...profile,
         role: Array.isArray(profile.role) ? profile.role[0] : profile.role,
@@ -85,28 +80,23 @@ export default function Chat() {
     },
   })
 
-  // Update current user's last_seen_at periodically
   useEffect(() => {
     const updateLastSeen = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Update the user's last_seen_at timestamp
       await supabase.from('profiles')
         .update({ last_seen_at: new Date().toISOString() })
         .eq('id', user.id)
     }
 
-    // Update last_seen_at when the component mounts
     updateLastSeen()
 
-    // Set up a timer to update last_seen_at every minute
     const interval = setInterval(updateLastSeen, 60000)
 
     return () => clearInterval(interval)
   }, [])
 
-  // Log error if any
   useEffect(() => {
     if (isError && error) {
       console.error("Error fetching chat users:", error)
@@ -121,7 +111,6 @@ export default function Chat() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Clean up previous subscriptions if they exist
       if (messageChannelRef.current) {
         supabase.removeChannel(messageChannelRef.current)
       }
@@ -129,7 +118,6 @@ export default function Chat() {
         supabase.removeChannel(readStatusChannelRef.current)
       }
 
-      // Create a channel for message updates
       const messageChannel = supabase.channel('chat-message-updates')
       
       messageChannel.on('broadcast', { event: 'new-chat-message' }, () => {
@@ -139,7 +127,6 @@ export default function Chat() {
       
       messageChannelRef.current = messageChannel
 
-      // Create a channel for read status updates
       const readStatusChannel = supabase.channel('chat-read-status-updates')
       
       readStatusChannel.on('broadcast', { event: 'chat-read-status' }, () => {
@@ -178,11 +165,9 @@ export default function Chat() {
     return user.email || "Unknown User"
   }
 
-  // Filter users by search term and user type
   const getFilteredUsers = () => {
     if (!users) return { unreadUsers: [], otherUsers: [] };
     
-    // First filter by search term
     const searchFiltered = users.filter(user => {
       const displayName = getUserDisplayName(user).toLowerCase();
       const email = (user.email || "").toLowerCase();
@@ -191,17 +176,15 @@ export default function Chat() {
       return displayName.includes(searchLower) || email.includes(searchLower);
     });
     
-    // Then apply role filter
     const roleFiltered = searchFiltered.filter(user => {
       if (userFilter === "all") return true;
       
-      const isClient = user.role?.name === "client" || 
+      const isCustomer = user.role?.name === "client" || 
                       user.role?.nicename?.toLowerCase() === "client";
       
-      return userFilter === "clients" ? isClient : !isClient;
+      return userFilter === "customers" ? isCustomer : !isCustomer;
     });
     
-    // Separate users with unread messages
     const unreadUsers = roleFiltered.filter(user => user.unread_count > 0) || [];
     const otherUsers = roleFiltered.filter(user => !user.unread_count) || [];
     
@@ -210,7 +193,6 @@ export default function Chat() {
 
   const { unreadUsers, otherUsers } = getFilteredUsers();
 
-  // Then group remaining users by role
   const groupedUsers = otherUsers.reduce((acc, user) => {
     const roleName = user.role?.nicename || "Other";
     if (!acc[roleName]) {
@@ -270,7 +252,6 @@ export default function Chat() {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Unread Messages Section */}
                 {unreadUsers.length > 0 && (
                   <div className="space-y-1 pt-2">
                     <div className="px-3 pb-1">
@@ -315,7 +296,6 @@ export default function Chat() {
                   </div>
                 )}
 
-                {/* Other Users Grouped by Role */}
                 {Object.entries(groupedUsers).map(([role, users]) => (
                   <div key={role} className="space-y-1 pt-2">
                     <div className="px-3 pb-1">
@@ -364,7 +344,7 @@ export default function Chat() {
                         : isError 
                           ? "There was an error loading the user list"
                           : userFilter !== "all"
-                            ? `No ${userFilter === "clients" ? "clients" : "staff members"} found`
+                            ? `No ${userFilter === "customers" ? "customers" : "staff members"} found`
                             : users && users.length === 0 
                               ? "No other users exist yet in the system" 
                               : "Try refreshing the user list"}
