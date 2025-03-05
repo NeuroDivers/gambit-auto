@@ -20,7 +20,7 @@ interface DashboardSidebarHeaderProps {
 export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardSidebarHeaderProps) {
   const { state } = useSidebar();
   const { theme, resolvedTheme, setTheme } = useTheme();
-  const [currentTheme, setCurrentTheme] = useState<string | undefined>(undefined);
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
 
   // Query to fetch business profile data including logo URLs
   const { data: businessProfile } = useQuery({
@@ -38,62 +38,50 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
   });
   
   // Check if we're in dark mode by examining document classes
-  const isDarkMode = () => {
-    // Check if document exists (for SSR compatibility)
-    if (typeof document !== 'undefined') {
-      return document.documentElement.classList.contains('dark');
-    }
-    return false;
-  };
-
-  // Get the current system theme
-  const getSystemTheme = () => {
-    if (typeof window !== 'undefined') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    return 'light';
-  };
-
-  // Update currentTheme whenever theme-related variables change
-  useEffect(() => {
-    // Try to determine the theme from various sources
-    const documentHasDarkClass = isDarkMode();
-    const systemTheme = getSystemTheme();
+  const checkIsDarkMode = () => {
+    // Check multiple sources for dark mode
+    const hasDarkClass = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+    const isDarkResolved = resolvedTheme === 'dark';
+    const isDarkTheme = theme === 'dark';
+    const isSystemDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
     
-    // Debug information
-    console.log({
-      selectedTheme: theme,
-      resolvedTheme: resolvedTheme,
-      currentSystemTheme: systemTheme,
-      documentClassList: documentHasDarkClass ? "has dark class" : "no dark class"
+    // If theme is 'system', use the system preference
+    const isDark = hasDarkClass || 
+                  isDarkResolved || 
+                  (theme === 'system' && isSystemDark) ||
+                  isDarkTheme;
+    
+    console.log("Dark mode detection:", {
+      hasDarkClass, 
+      isDarkResolved, 
+      isDarkTheme, 
+      isSystemDark,
+      result: isDark
     });
     
-    // Set the current theme based on the most reliable information
-    if (documentHasDarkClass) {
-      setCurrentTheme('dark');
-    } else if (resolvedTheme) {
-      setCurrentTheme(resolvedTheme);
-    } else if (theme) {
-      setCurrentTheme(theme);
-    } else {
-      setCurrentTheme(systemTheme);
-    }
+    return isDark;
+  };
+
+  // Update theme state whenever theme-related variables change
+  useEffect(() => {
+    const darkModeActive = checkIsDarkMode();
+    setIsDarkTheme(darkModeActive);
+    
+    console.log("Theme state updated:", {
+      theme, 
+      resolvedTheme, 
+      isDarkTheme: darkModeActive
+    });
   }, [theme, resolvedTheme]);
 
   // Determine which logo to display based on current theme
   const logoUrl = React.useMemo(() => {
     if (!businessProfile) return null;
     
-    // Check multiple sources to determine if dark mode is active
-    const isDark = 
-      currentTheme === 'dark' || 
-      resolvedTheme === 'dark' || 
-      isDarkMode();
-    
-    console.log("Determining logo for theme:", currentTheme);
+    console.log("Logo selection - Dark mode:", isDarkTheme);
     console.log("Available logos - Dark:", businessProfile.dark_logo_url, "Light:", businessProfile.light_logo_url);
     
-    if (isDark) {
+    if (isDarkTheme) {
       // For dark theme: Use dark_logo_url, fall back to logo_url
       const darkLogo = businessProfile.dark_logo_url || businessProfile.logo_url;
       console.log("Using dark logo:", darkLogo);
@@ -104,7 +92,7 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
       console.log("Using light logo:", lightLogo);
       return lightLogo;
     }
-  }, [businessProfile, currentTheme, resolvedTheme]);
+  }, [businessProfile, isDarkTheme]);
 
   console.log("Final logo URL being used:", logoUrl);
 
