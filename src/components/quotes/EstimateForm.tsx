@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -15,6 +16,8 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
+import { Checkbox } from "@/components/ui/checkbox"
+import { ServiceType } from "@/integrations/supabase/types/service-types"
 
 type EstimateFormProps = {
   form: UseFormReturn<any>
@@ -26,6 +29,9 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
   const [selectedClient, setSelectedClient] = useState<string | null>(null)
   const [subtotal, setSubtotal] = useState<number>(0)
   const [selectedServices, setSelectedServices] = useState<any[]>([])
+  const [createNewCustomer, setCreateNewCustomer] = useState<boolean>(true)
+  const [standaloneServices, setStandaloneServices] = useState<ServiceType[]>([])
+  const [subServices, setSubServices] = useState<{[key: string]: ServiceType[]}>({})
   
   const { data: clients, isLoading: clientsLoading } = useQuery({
     queryKey: ["customers"],
@@ -60,11 +66,29 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_types")
-        .select("id, name, description, base_price")
+        .select("id, name, description, base_price, pricing_model, parent_service_id, service_type")
         .eq("status", "active")
         .order("name", { ascending: true })
       
       if (error) throw error
+      
+      // Process services to categorize them
+      const standaloneServices = data.filter(service => 
+        service.service_type === 'standalone' || !service.parent_service_id
+      );
+      
+      // Group sub-services by parent ID
+      const subServicesByParent: {[key: string]: ServiceType[]} = {};
+      data.filter(service => service.parent_service_id).forEach(subService => {
+        if (!subServicesByParent[subService.parent_service_id!]) {
+          subServicesByParent[subService.parent_service_id!] = [];
+        }
+        subServicesByParent[subService.parent_service_id!].push(subService);
+      });
+      
+      setStandaloneServices(standaloneServices);
+      setSubServices(subServicesByParent);
+      
       return data.map(service => ({
         ...service,
         price: service.base_price
@@ -83,6 +107,7 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
       form.setValue("customer_last_name", selectedClient.last_name)
       form.setValue("customer_email", selectedClient.email)
       form.setValue("customer_phone", selectedClient.phone_number)
+      setCreateNewCustomer(false)
     }
   }
   
@@ -98,7 +123,9 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
           name: service.name,
           description: service.description,
           price: service.price,
-          quantity: 1
+          quantity: 1,
+          is_parent: true,
+          sub_services: []
         }
       ]
       setSelectedServices(updatedServices)
@@ -112,20 +139,89 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
     // Recalculate subtotal
     setTimeout(() => calculateSubtotal(), 0)
   }
+
+  const updateSubServiceSelection = (parentServiceId: string, subServiceId: string, isChecked: boolean) => {
+    const subService = services?.find(s => s.id === subServiceId)
+    if (!subService) return
+
+    const updatedServices = [...selectedServices]
+    const parentIndex = updatedServices.findIndex(s => s.id === parentServiceId)
+    
+    if (parentIndex === -1) return
+    
+    if (isChecked) {
+      // Add the sub-service to the parent
+      updatedServices[parentIndex].sub_services = [
+        ...(updatedServices[parentIndex].sub_services || []),
+        {
+          id: subService.id,
+          name: subService.name,
+          description: subService.description,
+          price: subService.price,
+          quantity: 1,
+          parent_id: parentServiceId
+        }
+      ]
+    } else {
+      // Remove the sub-service from the parent
+      updatedServices[parentIndex].sub_services = 
+        updatedServices[parentIndex].sub_services.filter(s => s.id !== subServiceId)
+    }
+    
+    setSelectedServices(updatedServices)
+    form.setValue("services", updatedServices)
+    
+    // Recalculate subtotal
+    setTimeout(() => calculateSubtotal(), 0)
+  }
   
-  const updateServiceQuantity = (serviceId: string, quantity: number) => {
-    const updatedServices = selectedServices.map(service => 
-      service.id === serviceId ? { ...service, quantity } : service
-    )
+  const updateServiceQuantity = (serviceId: string, quantity: number, isSubService = false, parentId?: string) => {
+    let updatedServices = [...selectedServices]
+    
+    if (isSubService && parentId) {
+      // Update sub-service quantity
+      const parentIndex = updatedServices.findIndex(service => service.id === parentId)
+      if (parentIndex !== -1) {
+        const subServiceIndex = updatedServices[parentIndex].sub_services.findIndex(
+          (s: any) => s.id === serviceId
+        )
+        if (subServiceIndex !== -1) {
+          updatedServices[parentIndex].sub_services[subServiceIndex].quantity = quantity
+        }
+      }
+    } else {
+      // Update main service quantity
+      updatedServices = updatedServices.map(service => 
+        service.id === serviceId ? { ...service, quantity } : service
+      )
+    }
+    
     setSelectedServices(updatedServices)
     form.setValue("services", updatedServices)
     calculateSubtotal()
   }
   
-  const updateServicePrice = (serviceId: string, price: number) => {
-    const updatedServices = selectedServices.map(service => 
-      service.id === serviceId ? { ...service, price } : service
-    )
+  const updateServicePrice = (serviceId: string, price: number, isSubService = false, parentId?: string) => {
+    let updatedServices = [...selectedServices]
+    
+    if (isSubService && parentId) {
+      // Update sub-service price
+      const parentIndex = updatedServices.findIndex(service => service.id === parentId)
+      if (parentIndex !== -1) {
+        const subServiceIndex = updatedServices[parentIndex].sub_services.findIndex(
+          (s: any) => s.id === serviceId
+        )
+        if (subServiceIndex !== -1) {
+          updatedServices[parentIndex].sub_services[subServiceIndex].price = price
+        }
+      }
+    } else {
+      // Update main service price
+      updatedServices = updatedServices.map(service => 
+        service.id === serviceId ? { ...service, price } : service
+      )
+    }
+    
     setSelectedServices(updatedServices)
     form.setValue("services", updatedServices)
     calculateSubtotal()
@@ -133,8 +229,18 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
   
   const calculateSubtotal = () => {
     const total = selectedServices.reduce((sum, service) => {
-      return sum + (service.quantity * service.price)
+      // Calculate main service total
+      const mainServiceTotal = service.quantity * service.price
+      
+      // Calculate sub-services total if any
+      const subServicesTotal = service.sub_services ? 
+        service.sub_services.reduce((subSum: number, subService: any) => {
+          return subSum + (subService.quantity * subService.price)
+        }, 0) : 0
+      
+      return sum + mainServiceTotal + subServicesTotal
     }, 0)
+    
     setSubtotal(total)
     form.setValue("total", total)
   }
@@ -144,12 +250,54 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
     calculateSubtotal()
   }, [selectedServices])
 
+  const handleFormSubmit = (data: any) => {
+    if (createNewCustomer) {
+      // If creating new customer, make sure all required fields are filled
+      if (!data.customer_first_name || !data.customer_last_name || !data.customer_email) {
+        toast.error("Please fill in all required customer information")
+        return
+      }
+    }
+    
+    // Flatten the services array to include both parent and sub-services
+    const flattenedServices = selectedServices.flatMap(service => {
+      const mainService = {
+        id: service.id,
+        service_id: service.id,
+        service_name: service.name,
+        description: service.description,
+        quantity: service.quantity,
+        unit_price: service.price
+      }
+      
+      const subServices = service.sub_services?.map((subService: any) => ({
+        id: subService.id,
+        service_id: subService.id,
+        service_name: subService.name,
+        description: subService.description,
+        quantity: subService.quantity,
+        unit_price: subService.price,
+        parent_service_id: service.id
+      })) || []
+      
+      return [mainService, ...subServices]
+    })
+    
+    // Update the services in the form data
+    data.services = flattenedServices
+    
+    // Add createNewCustomer flag to the data
+    data.createNewCustomer = createNewCustomer
+    
+    onSubmit(data)
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Estimate Information</CardTitle>
       </CardHeader>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form onSubmit={form.handleSubmit(handleFormSubmit)}>
         <CardContent className="space-y-6">
           {/* Client Selection */}
           <div className="space-y-2">
@@ -169,6 +317,19 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
                 ))}
               </SelectContent>
             </Select>
+            <div className="flex items-center space-x-2 mt-2">
+              <Checkbox
+                id="createNewCustomer" 
+                checked={createNewCustomer}
+                onCheckedChange={(checked) => setCreateNewCustomer(checked as boolean)}
+              />
+              <label
+                htmlFor="createNewCustomer"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Create new customer
+              </label>
+            </div>
           </div>
           
           {/* Customer Information - Always visible now */}
@@ -273,7 +434,8 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
               <div>Loading services...</div>
             ) : (
               <div className="space-y-4">
-                {services?.map((service) => (
+                {/* Display only standalone services first */}
+                {standaloneServices.map((service) => (
                   <div key={service.id} className="flex flex-col p-3 border rounded-md">
                     <div className="flex items-start space-x-3">
                       <input
@@ -288,7 +450,7 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
                             {service.name}
                           </label>
                           <div className="text-muted-foreground">
-                            ${service.price}
+                            Base price: ${service.base_price}
                           </div>
                         </div>
                         <p className="text-sm text-muted-foreground">
@@ -299,28 +461,103 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
                     
                     {/* Service quantity and price input fields (visible when service is selected) */}
                     {selectedServices.some(s => s.id === service.id) && (
-                      <div className="mt-3 grid grid-cols-2 gap-3">
-                        <div>
-                          <Label htmlFor={`quantity-${service.id}`}>Quantity</Label>
-                          <Input
-                            id={`quantity-${service.id}`}
-                            type="number"
-                            min="1"
-                            defaultValue="1"
-                            onChange={(e) => updateServiceQuantity(service.id, parseInt(e.target.value) || 1)}
-                          />
+                      <div className="mt-3 space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label htmlFor={`quantity-${service.id}`}>Quantity</Label>
+                            <Input
+                              id={`quantity-${service.id}`}
+                              type="number"
+                              min="1"
+                              defaultValue="1"
+                              onChange={(e) => updateServiceQuantity(service.id, parseInt(e.target.value) || 1)}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`price-${service.id}`}>Price</Label>
+                            <Input
+                              id={`price-${service.id}`}
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              defaultValue={service.base_price}
+                              onChange={(e) => updateServicePrice(service.id, parseFloat(e.target.value) || 0)}
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <Label htmlFor={`price-${service.id}`}>Price</Label>
-                          <Input
-                            id={`price-${service.id}`}
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            defaultValue={service.price}
-                            onChange={(e) => updateServicePrice(service.id, parseFloat(e.target.value) || 0)}
-                          />
-                        </div>
+                        
+                        {/* Sub-services selection (if available) */}
+                        {subServices[service.id] && subServices[service.id].length > 0 && (
+                          <div className="pl-6 mt-2 border-l-2 border-gray-200">
+                            <h4 className="font-medium mb-2">Additional Options</h4>
+                            {subServices[service.id].map(subService => (
+                              <div key={subService.id} className="flex flex-col p-2 mb-2 border rounded-md">
+                                <div className="flex items-start space-x-3">
+                                  <input
+                                    type="checkbox"
+                                    id={`sub-service-${subService.id}`}
+                                    className="mt-1"
+                                    onChange={(e) => updateSubServiceSelection(service.id, subService.id, e.target.checked)}
+                                  />
+                                  <div className="flex-1">
+                                    <div className="flex justify-between">
+                                      <label htmlFor={`sub-service-${subService.id}`} className="font-medium">
+                                        {subService.name}
+                                      </label>
+                                      <div className="text-muted-foreground">
+                                        Base price: ${subService.base_price}
+                                      </div>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                      {subService.description}
+                                    </p>
+                                  </div>
+                                </div>
+                                
+                                {/* Sub-service quantity and price (visible when selected) */}
+                                {selectedServices.some(s => 
+                                  s.id === service.id && 
+                                  s.sub_services && 
+                                  s.sub_services.some((sub: any) => sub.id === subService.id)
+                                ) && (
+                                  <div className="mt-3 grid grid-cols-2 gap-3">
+                                    <div>
+                                      <Label htmlFor={`sub-quantity-${subService.id}`}>Quantity</Label>
+                                      <Input
+                                        id={`sub-quantity-${subService.id}`}
+                                        type="number"
+                                        min="1"
+                                        defaultValue="1"
+                                        onChange={(e) => updateServiceQuantity(
+                                          subService.id, 
+                                          parseInt(e.target.value) || 1,
+                                          true,
+                                          service.id
+                                        )}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor={`sub-price-${subService.id}`}>Price</Label>
+                                      <Input
+                                        id={`sub-price-${subService.id}`}
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        defaultValue={subService.base_price}
+                                        onChange={(e) => updateServicePrice(
+                                          subService.id, 
+                                          parseFloat(e.target.value) || 0,
+                                          true,
+                                          service.id
+                                        )}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

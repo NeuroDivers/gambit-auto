@@ -38,11 +38,30 @@ export default function CreateEstimate() {
   const onSubmit = async (data) => {
     setIsSubmitting(true)
     try {
+      let customerId = data.client_id
+
+      // If createNewCustomer is true, create a new customer entry
+      if (data.createNewCustomer) {
+        const { data: newCustomer, error: customerError } = await supabase
+          .from("customers")
+          .insert({
+            first_name: data.customer_first_name,
+            last_name: data.customer_last_name,
+            email: data.customer_email,
+            phone_number: data.customer_phone
+          })
+          .select()
+          .single()
+
+        if (customerError) throw customerError
+        customerId = newCustomer.id
+      }
+
       // Create the estimate in the database
       const { data: estimate, error } = await supabase
         .from("estimates")
         .insert({
-          customer_id: data.client_id, // Map client_id to customer_id
+          customer_id: customerId,
           vehicle_id: data.vehicle_id,
           status: "draft",
           total: data.total || 0,
@@ -69,10 +88,10 @@ export default function CreateEstimate() {
           .insert(
             data.services.map((service) => ({
               estimate_id: estimate.id,
-              service_id: service.id,
+              service_id: service.service_id,
               quantity: service.quantity,
-              unit_price: service.price,
-              service_name: service.name,
+              unit_price: service.unit_price,
+              service_name: service.service_name,
               description: service.description || "",
             }))
           )
