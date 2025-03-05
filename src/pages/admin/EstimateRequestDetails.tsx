@@ -12,11 +12,12 @@ import { VehicleInfo } from "@/components/estimates/sections/VehicleInfo"
 import { EstimateNotes } from "@/components/estimates/sections/EstimateNotes"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { EstimateStatus } from "@/components/estimates/sections/EstimateStatus"
+import { toast } from "sonner"
 
 export default function EstimateRequestDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { toast } = useToast()
+  const { toast: useToastApi } = useToast()
   const [estimateRequest, setEstimateRequest] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -25,6 +26,19 @@ export default function EstimateRequestDetails() {
     
     const fetchEstimateRequest = async () => {
       try {
+        // First check if the estimate request exists
+        const { data: checkData, error: checkError } = await supabase
+          .from("estimate_requests")
+          .select("id")
+          .eq("id", id)
+          .single()
+          
+        if (checkError) {
+          console.error("Error checking estimate request:", checkError)
+          throw checkError
+        }
+        
+        // Now fetch the full data with relations
         const { data, error } = await supabase
           .from("estimate_requests")
           .select(`
@@ -40,7 +54,8 @@ export default function EstimateRequestDetails() {
         setEstimateRequest(data)
       } catch (error) {
         console.error("Error fetching estimate request:", error)
-        toast({
+        toast.error("Failed to load estimate request")
+        useToastApi({
           variant: "destructive",
           title: "Failed to load estimate request",
           description: error.message,
@@ -53,7 +68,7 @@ export default function EstimateRequestDetails() {
     if (id) {
       fetchEstimateRequest()
     }
-  }, [id, toast])
+  }, [id, useToastApi])
 
   const handleCreateEstimate = () => {
     // Navigate to create estimate page with pre-filled data

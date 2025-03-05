@@ -1,11 +1,10 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "react-router-dom"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { supabase } from "@/integrations/supabase/client"
-import { useEffect } from "react"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
 import { toast } from "sonner"
 
@@ -17,6 +16,21 @@ export function EstimateRequestsList() {
   useEffect(() => {
     const fetchEstimateRequests = async () => {
       try {
+        // Simpler query without any joins first to check if data exists
+        const { data: checkData, error: checkError } = await supabase
+          .from("estimate_requests")
+          .select("id")
+          .limit(1)
+        
+        if (checkError) {
+          console.error("Error checking estimate requests:", checkError)
+          toast.error("Error checking estimate requests")
+          throw checkError
+        }
+        
+        console.log("Estimate requests check:", checkData)
+        
+        // Now fetch the full data
         const { data, error } = await supabase
           .from("estimate_requests")
           .select(`
@@ -35,6 +49,7 @@ export function EstimateRequestsList() {
         setEstimateRequests(data || [])
       } catch (error) {
         console.error("Error fetching estimate requests:", error)
+        toast.error("Failed to load estimate requests. Please try again.")
       } finally {
         setLoading(false)
       }
