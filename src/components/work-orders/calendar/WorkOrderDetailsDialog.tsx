@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { WorkOrder } from "../types"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -71,10 +72,11 @@ export function WorkOrderDetailsDialog({
         const aNumMatch = a.name.match(/^(\d+)/);
         const bNumMatch = b.name.match(/^(\d+)/);
         
-        // If both have numeric prefixes, sort numerically
+        // If both have numeric prefixes, convert to numbers and compare
         if (aNumMatch && bNumMatch) {
-          const aNum = parseInt(aNumMatch[1], 10);
-          const bNum = parseInt(bNumMatch[1], 10);
+          // Convert to numbers for proper numerical comparison
+          const aNum = parseInt(aNumMatch[0], 10);
+          const bNum = parseInt(bNumMatch[0], 10);
           return aNum - bNum;
         }
         

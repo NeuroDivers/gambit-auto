@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -15,7 +14,6 @@ export function useWorkOrderListData() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
-  // Set up real-time subscription
   useEffect(() => {
     const channel = supabase
       .channel('work-orders-changes')
@@ -30,7 +28,6 @@ export function useWorkOrderListData() {
           console.log('Work order change detected:', payload)
           queryClient.invalidateQueries({ queryKey: ["workOrders"] })
           
-          // Show toast notification based on the type of change
           switch (payload.eventType) {
             case "UPDATE":
               toast.success('Work order updated')
@@ -119,14 +116,12 @@ export function useWorkOrderListData() {
         }
 
         return data.sort((a, b) => {
-          // Extract numeric prefixes if they exist
           const aNumMatch = a.name.match(/^(\d+)/);
           const bNumMatch = b.name.match(/^(\d+)/);
           
-          // If both have numeric prefixes, sort numerically
           if (aNumMatch && bNumMatch) {
-            const aNum = parseInt(aNumMatch[1], 10);
-            const bNum = parseInt(bNumMatch[1], 10);
+            const aNum = parseInt(aNumMatch[0], 10);
+            const bNum = parseInt(bNumMatch[0], 10);
             return aNum - bNum;
           }
           
