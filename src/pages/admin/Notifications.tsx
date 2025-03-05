@@ -1,11 +1,10 @@
-
 import { useEffect, useState } from "react";
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNotificationSubscription } from "@/hooks/useNotificationSubscription";
 
-// Add interface for notifications
+// Properly define interfaces for notifications and chat messages
 interface Notification {
   id: string;
   title: string;
@@ -16,7 +15,7 @@ interface Notification {
   sender_id?: string;
 }
 
-// Interface for chat messages
+// Interface for chat messages with properly defined profiles
 interface ChatMessage {
   id: string;
   message: string;
@@ -87,7 +86,7 @@ const Notifications = () => {
       return;
     }
 
-    // Transform chat messages to the correct type structure, fixing the profiles access
+    // Transform chat messages to the correct type structure with proper typing
     const typedChatMessages = (chatMessagesResponse.data || []).map(msg => {
       return {
         id: msg.id,
@@ -96,9 +95,10 @@ const Notifications = () => {
         sender_id: msg.sender_id,
         read: msg.read,
         profiles: {
-          first_name: msg.profiles ? msg.profiles.first_name : null,
-          last_name: msg.profiles ? msg.profiles.last_name : null,
-          email: msg.profiles ? msg.profiles.email : null
+          // Explicitly check if profiles is an object before accessing properties
+          first_name: typeof msg.profiles === 'object' && msg.profiles ? msg.profiles.first_name : null,
+          last_name: typeof msg.profiles === 'object' && msg.profiles ? msg.profiles.last_name : null,
+          email: typeof msg.profiles === 'object' && msg.profiles ? msg.profiles.email : null
         }
       } as ChatMessage;
     });

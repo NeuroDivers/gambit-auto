@@ -29,6 +29,7 @@ interface HeaderProps {
   children?: React.ReactNode;
 }
 
+// Update ChatMessage interface to correctly define profiles as an object, not an array
 interface ChatMessage {
   id: string;
   message: string;
@@ -92,7 +93,7 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
 
       const notifications = (notificationsResponse.data || []) as Notification[]
       
-      // Process chat messages, ensuring we properly type the profiles object
+      // Process chat messages with correct typing for profiles
       const typedChatMessages = (chatMessagesResponse.data || []).map(msg => {
         return {
           id: msg.id,
@@ -101,9 +102,10 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
           sender_id: msg.sender_id,
           read: msg.read,
           profiles: {
-            first_name: msg.profiles ? msg.profiles.first_name : null,
-            last_name: msg.profiles ? msg.profiles.last_name : null,
-            email: msg.profiles ? msg.profiles.email : null
+            // Explicitly type and access profiles as an object
+            first_name: typeof msg.profiles === 'object' && msg.profiles ? msg.profiles.first_name : null,
+            last_name: typeof msg.profiles === 'object' && msg.profiles ? msg.profiles.last_name : null,
+            email: typeof msg.profiles === 'object' && msg.profiles ? msg.profiles.email : null
           }
         } as ChatMessage;
       });
