@@ -8,7 +8,7 @@ import { WorkOrderFormValues } from "../types"
 import { Button } from "@/components/ui/button"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Check, ChevronsUpDown, User } from "lucide-react"
+import { Check, ChevronsUpDown, Loader2, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -73,12 +73,27 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     enabled: false, // Don't run on mount - we'll use refetch when the popover opens
   })
 
-  // Update customers state whenever query executes
+  // Fetch data when popover opens or search changes
+  useEffect(() => {
+    if (open) {
+      const fetchData = async () => {
+        try {
+          await refetch();
+        } catch (err) {
+          console.error('Failed to fetch customers:', err);
+          setCustomers([]);
+        }
+      };
+      
+      fetchData();
+    }
+  }, [open, searchQuery, refetch]);
+
+  // Update customers state whenever query data is available
   useEffect(() => {
     const fetchData = async () => {
       if (open) {
         try {
-          console.log('Refetching customers data');
           const result = await refetch();
           
           if (result.isSuccess && result.data?.customers) {
@@ -163,11 +178,6 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     ? `${form.getValues("first_name")} ${form.getValues("last_name")}`
     : "Search for customer...";
 
-  // Log any errors for debugging
-  if (error) {
-    console.error('Customer search error:', error);
-  }
-  
   // Always ensure customers is a valid array
   const safeCustomers = Array.isArray(customers) ? customers : [];
 
@@ -199,13 +209,18 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
               onValueChange={setSearchQuery}
             />
             
-            {isLoading ? (
-              <div className="py-6 text-center text-sm text-muted-foreground">
+            {isLoading && (
+              <div className="py-6 text-center text-sm text-muted-foreground flex items-center justify-center">
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 Loading customers...
               </div>
-            ) : safeCustomers.length === 0 ? (
+            )}
+            
+            {!isLoading && safeCustomers.length === 0 && (
               <CommandEmpty>No customers found.</CommandEmpty>
-            ) : (
+            )}
+            
+            {!isLoading && safeCustomers.length > 0 && (
               <CommandGroup>
                 {safeCustomers.map((customer) => (
                   <CommandItem
