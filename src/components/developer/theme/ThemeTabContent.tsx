@@ -36,9 +36,15 @@ export function ThemeTabContent({
 
   console.log(`Showing ${filteredVariables.length} color variables in ${selectedCategory} tab`);
 
+  // Determine if we should use a fixed height or auto height
+  // Only use fixed height for categories with fewer items
+  const scrollAreaClassName = selectedCategory === "all" 
+    ? "max-h-full" // Allow the ScrollArea to expand as needed for "all" category
+    : "h-[500px]"; // Use fixed height for other categories
+
   return (
     <TabsContent value={themeMode} className="mt-0">
-      <ScrollArea className="h-[500px] pr-4">
+      <ScrollArea className={`${scrollAreaClassName} pr-4`}>
         {selectedCategory === "toast" && (
           <div className="mb-6">
             <ToastPreview />
