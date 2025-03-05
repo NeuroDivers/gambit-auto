@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Vehicle, VehicleFormValues } from "../types"
@@ -10,14 +9,26 @@ export function useVehicles(clientId: string) {
   const { data: vehicles, isLoading } = useQuery({
     queryKey: ['vehicles', clientId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Try to fetch using client_id first (legacy)
+      const { data: clientVehicles, error: clientError } = await supabase
         .from('vehicles')
         .select('*')
         .eq('client_id', clientId)
         .order('is_primary', { ascending: false })
 
-      if (error) throw error
-      return data as Vehicle[]
+      if (clientVehicles && clientVehicles.length > 0) {
+        return clientVehicles as Vehicle[]
+      }
+
+      // If no vehicles found with client_id, try customer_id
+      const { data: customerVehicles, error: customerError } = await supabase
+        .from('vehicles')
+        .select('*')
+        .eq('customer_id', clientId)
+        .order('is_primary', { ascending: false })
+
+      if (customerError) throw customerError
+      return customerVehicles as Vehicle[]
     }
   })
 
@@ -27,16 +38,16 @@ export function useVehicles(clientId: string) {
 
       // First, if this vehicle should be primary, unset any existing primary vehicles
       if (values.is_primary) {
-        console.log("Unsetting existing primary vehicles")
-        const { error: updateError } = await supabase
+        // Try to update using both client_id and customer_id
+        await supabase
           .from('vehicles')
           .update({ is_primary: false })
           .eq('client_id', clientId)
 
-        if (updateError) {
-          console.error("Error unsetting primary vehicles:", updateError)
-          throw updateError
-        }
+        await supabase
+          .from('vehicles')
+          .update({ is_primary: false })
+          .eq('customer_id', clientId)
       }
 
       // Then insert the new vehicle
@@ -45,6 +56,7 @@ export function useVehicles(clientId: string) {
         .insert([{ 
           ...values, 
           client_id: clientId,
+          customer_id: clientId, // Add both for compatibility
           is_primary: values.is_primary // Explicitly set is_primary
         }])
         .select()
@@ -78,17 +90,18 @@ export function useVehicles(clientId: string) {
       console.log("Updating vehicle:", id, "with values:", values)
 
       if (values.is_primary) {
-        console.log("Unsetting other primary vehicles")
-        const { error: updateError } = await supabase
+        // Try to update using both client_id and customer_id
+        await supabase
           .from('vehicles')
           .update({ is_primary: false })
           .eq('client_id', clientId)
           .neq('id', id)
 
-        if (updateError) {
-          console.error("Error unsetting other primary vehicles:", updateError)
-          throw updateError
-        }
+        await supabase
+          .from('vehicles')
+          .update({ is_primary: false })
+          .eq('customer_id', clientId)
+          .neq('id', id)
       }
 
       const { error } = await supabase

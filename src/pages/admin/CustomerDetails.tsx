@@ -1,5 +1,4 @@
-
-import { useParams } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Customer, Vehicle } from "@/components/customers/types"
@@ -11,14 +10,16 @@ import { SpendingChart } from "@/components/customers/details/SpendingChart"
 import { CustomerHistory } from "@/components/customers/details/CustomerHistory"
 import { CustomerInvoices } from "@/components/customers/details/CustomerInvoices"
 import { CustomerQuotes } from "@/components/customers/details/CustomerQuotes"
+import { Button } from "@/components/ui/button"
+import { Car } from "lucide-react"
 
 export default function CustomerDetails() {
   const { id } = useParams()
+  const navigate = useNavigate()
 
   const { data: customer, isLoading } = useQuery({
     queryKey: ['customer', id],
     queryFn: async () => {
-      // Get customer data and join with profile data if available
       const { data: customerData, error: customerError } = await supabase
         .from('customers')
         .select(`
@@ -44,7 +45,6 @@ export default function CustomerDetails() {
       
       if (customerError) throw customerError
       
-      // If there's a profile_id, get the profile data to get the most up-to-date info
       let profileData = null;
       if (customerData.profile_id) {
         const { data: profile, error: profileError } = await supabase
@@ -54,10 +54,8 @@ export default function CustomerDetails() {
           .single();
           
         if (!profileError && profile) {
-          // Store profile info
           profileData = profile;
           
-          // Use profile data if customer fields are empty
           if (!customerData.first_name) customerData.first_name = profile.first_name || '';
           if (!customerData.last_name) customerData.last_name = profile.last_name || '';
           if (!customerData.email) customerData.email = profile.email || '';
@@ -65,19 +63,16 @@ export default function CustomerDetails() {
         }
       }
       
-      // Get invoices
       const { data: invoices } = await supabase
         .from('invoices')
         .select('id, invoice_number, total, status, created_at, vehicle_id')
         .eq('customer_id', id);
       
-      // Get quotes/estimates
       const { data: quotes } = await supabase
         .from('estimates')
         .select('id, estimate_number, total, status, created_at, vehicle_id')
         .eq('customer_id', id);
       
-      // Transform quote data to match expected format
       const formattedQuotes = quotes?.map(quote => ({
         id: quote.id,
         quote_number: quote.estimate_number,
@@ -87,10 +82,9 @@ export default function CustomerDetails() {
         vehicle_id: quote.vehicle_id
       }));
             
-      // Calculate summary statistics
       const total_spent = invoices?.reduce((sum, invoice) => sum + (invoice.total || 0), 0) || 0;
       const total_invoices = invoices?.length || 0;
-      const total_work_orders = 0; // This will be calculated separately
+      const total_work_orders = 0;
 
       const customerResult: Customer = {
         ...customerData,
@@ -106,7 +100,6 @@ export default function CustomerDetails() {
     }
   })
 
-  // Fetch customer vehicles
   const { data: vehicles } = useQuery({
     queryKey: ['customer_vehicles', id],
     queryFn: async () => {
@@ -129,6 +122,17 @@ export default function CustomerDetails() {
       <CustomerHeader customer={customer} />
       <CustomerStats customer={customer} />
       <SpendingChart customer={customer} />
+
+      <div className="flex justify-end">
+        <Button 
+          variant="outline" 
+          className="gap-2"
+          onClick={() => navigate(`/customers/${customer.id}/vehicles`)}
+        >
+          <Car className="h-4 w-4" />
+          View All Vehicles
+        </Button>
+      </div>
 
       <Tabs defaultValue="vehicles" className="w-full">
         <TabsList>
