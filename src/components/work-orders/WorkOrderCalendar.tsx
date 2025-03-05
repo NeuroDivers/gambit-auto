@@ -9,6 +9,10 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { CalendarClock, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "react-router-dom"
+import { Card, CardContent } from "@/components/ui/card"
+import { HorizontalWorkOrderQueue } from "./calendar/HorizontalWorkOrderQueue"
+import { WorkOrder } from "./types"
+import { WorkOrderDetailsDialog } from "./calendar/WorkOrderDetailsDialog"
 
 interface WorkOrderCalendarProps {
   clientView?: boolean;
@@ -18,6 +22,7 @@ export const WorkOrderCalendar = ({ clientView = false }: WorkOrderCalendarProps
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [currentDate] = useState(new Date())
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
 
   const { data: workOrders = [] } = useQuery({
     queryKey: ["workOrders"],
@@ -29,6 +34,24 @@ export const WorkOrderCalendar = ({ clientView = false }: WorkOrderCalendarProps
 
       if (error) throw error
       return data
+    }
+  })
+
+  const { data: approvedUnscheduledWorkOrders = [] } = useQuery({
+    queryKey: ["approvedUnscheduledWorkOrders"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("work_orders")
+        .select("*")
+        .is("start_time", null)
+        .eq("status", "approved")
+        .order("created_at", { ascending: false })
+
+      if (error) {
+        toast.error("Failed to load approved work orders")
+        throw error
+      }
+      return data as WorkOrder[]
     }
   })
 
@@ -56,10 +79,12 @@ export const WorkOrderCalendar = ({ clientView = false }: WorkOrderCalendarProps
             case "INSERT":
               toast.success("New work order created")
               queryClient.invalidateQueries({ queryKey: ["workOrders"] })
+              queryClient.invalidateQueries({ queryKey: ["approvedUnscheduledWorkOrders"] })
               break
             case "UPDATE":
               toast.success("Work order updated")
               queryClient.invalidateQueries({ queryKey: ["workOrders"] })
+              queryClient.invalidateQueries({ queryKey: ["approvedUnscheduledWorkOrders"] })
               break
           }
         }
@@ -74,35 +99,61 @@ export const WorkOrderCalendar = ({ clientView = false }: WorkOrderCalendarProps
     }
   }, [queryClient])
 
+  const handleWorkOrderSelect = (workOrder: WorkOrder) => {
+    setSelectedWorkOrder(workOrder)
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {!clientView && (
-        <div className="flex justify-end px-6">
-          <Button onClick={() => navigate("/work-orders/create")}>
+        <div className="flex justify-end">
+          <Button onClick={() => navigate("/work-orders/create")} className="bg-primary hover:bg-primary/90">
             <Plus className="h-4 w-4 mr-2" />
             New Work Order
           </Button>
         </div>
       )}
-      <div className="space-y-20">
+      
+      <div className="space-y-8">
         <MobileCalendarView
           currentDate={currentDate}
           workOrders={workOrders}
           onDateChange={(date) => console.log("Date changed:", date)}
         />
+        
         {!clientView && (
           <>
-            <Alert>
-              <CalendarClock className="h-4 w-4" />
+            <div className="mt-10">
+              <HorizontalWorkOrderQueue 
+                workOrders={approvedUnscheduledWorkOrders} 
+                onSelectWorkOrder={handleWorkOrderSelect}
+              />
+            </div>
+            
+            <Alert className="border-l-4 border-l-amber-500">
+              <CalendarClock className="h-4 w-4 text-amber-500" />
               <AlertTitle>Unscheduled Work Orders</AlertTitle>
               <AlertDescription>
                 Work orders without a start time won't appear on the calendar. They will be listed in the section below.
               </AlertDescription>
             </Alert>
-            <WorkOrdersSection />
+            
+            <Card>
+              <CardContent className="p-0">
+                <WorkOrdersSection />
+              </CardContent>
+            </Card>
           </>
         )}
       </div>
+      
+      {selectedWorkOrder && (
+        <WorkOrderDetailsDialog
+          workOrder={selectedWorkOrder}
+          open={!!selectedWorkOrder}
+          onOpenChange={(open) => !open && setSelectedWorkOrder(null)}
+        />
+      )}
     </div>
   )
 }
