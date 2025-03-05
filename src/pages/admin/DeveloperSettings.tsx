@@ -7,6 +7,7 @@ import { useState, useEffect } from "react"
 import { ThemeColorManager } from "@/components/developer/ThemeColorManager"
 import { useTheme } from "next-themes"
 import { applyThemeClass, applyCustomThemeColors } from "@/lib/utils"
+import { Toaster } from "@/components/ui/toaster"
 
 export default function DeveloperSettings() {
   const [scannedVin, setScannedVin] = useState<string>("")
@@ -58,6 +59,9 @@ export default function DeveloperSettings() {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Add the Toaster component here */}
+      <Toaster />
     </div>
   )
 }

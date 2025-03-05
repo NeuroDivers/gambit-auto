@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Moon, Sun, RotateCcw, Copy, Paintbrush, Save, Code } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { applyThemeClass } from "@/lib/utils";
 
 import { ThemeMode, LOCAL_STORAGE_KEY } from "./theme/types";
@@ -74,7 +74,10 @@ export function ThemeColorManager() {
       light: lightColors,
       dark: darkColors
     }));
-    toast.success("Theme colors applied and saved successfully");
+    toast({
+      title: "Success",
+      description: "Theme colors applied and saved successfully",
+    });
   };
 
   const resetToDefaults = (themeMode: ThemeMode) => {
@@ -83,14 +86,20 @@ export function ThemeColorManager() {
     } else {
       setDarkColors(getDefaultColors('dark'));
     }
-    toast.success(`${themeMode.charAt(0).toUpperCase() + themeMode.slice(1)} theme reset to defaults`);
+    toast({
+      title: "Success",
+      description: `${themeMode.charAt(0).toUpperCase() + themeMode.slice(1)} theme reset to defaults`,
+    });
   };
 
   const exportThemeColors = () => {
     const themeColors = { light: lightColors, dark: darkColors };
     const jsonString = JSON.stringify(themeColors, null, 2);
     navigator.clipboard.writeText(jsonString);
-    toast.success("Theme colors exported to clipboard as JSON");
+    toast({
+      title: "Success",
+      description: "Theme colors exported to clipboard as JSON",
+    });
   };
 
   const generateCSS = () => {
@@ -105,13 +114,19 @@ export function ThemeColorManager() {
     });
     cssText += `}\n`;
     navigator.clipboard.writeText(cssText);
-    toast.success("CSS variables copied to clipboard");
+    toast({
+      title: "Success",
+      description: "CSS variables copied to clipboard",
+    });
   };
 
   const previewTheme = (mode: ThemeMode) => {
     setTheme(mode);
     setActiveTab(mode);
-    toast.success(`Previewing ${mode} theme`);
+    toast({
+      title: "Theme Preview",
+      description: `Previewing ${mode} theme`,
+    });
   };
 
   return (
