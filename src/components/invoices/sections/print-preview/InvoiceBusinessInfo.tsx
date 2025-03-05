@@ -27,7 +27,7 @@ export function InvoiceBusinessInfo({ businessProfile, logo_url }: InvoiceBusine
   if (!businessProfile) return null
 
   // Use the appropriate logo based on theme
-  let displayLogo = logo_url || businessProfile.logo_url;
+  let displayLogo = logo_url || businessProfile.light_logo_url;
   
   // If we have theme-specific logos, use them based on the current theme
   if (isDarkTheme && businessProfile.dark_logo_url) {
