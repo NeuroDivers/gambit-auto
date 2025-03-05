@@ -2,22 +2,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { ServiceItemType } from "@/types/service-item";
+import { ServiceItemType, ServiceSelectionFieldProps } from "@/types/service-item";
 import { Card } from "@/components/ui/card";
 import { ServiceItem, ServiceItemForm } from "./service-selection";
 
-export interface ServiceSelectionFieldProps {
-  services?: ServiceItemType[];
-  onChange: (services: ServiceItemType[]) => void;
-  showCommission?: boolean;
-  showAssignedStaff?: boolean;
-  disabled?: boolean;
-  allowPriceEdit?: boolean;
-  onServicesChange?: (services: ServiceItemType[]) => void;
-}
-
 export function ServiceSelectionField({
   services = [],
+  value,
   onChange,
   showCommission = false,
   showAssignedStaff = false,
@@ -25,6 +16,8 @@ export function ServiceSelectionField({
   allowPriceEdit = true,
   onServicesChange
 }: ServiceSelectionFieldProps) {
+  // Handle both services and value props for backward compatibility
+  const serviceItems = value || services || [];
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [addingNewService, setAddingNewService] = useState(false);
   const [expandedServiceId, setExpandedServiceId] = useState<string | null>(null);
@@ -34,7 +27,7 @@ export function ServiceSelectionField({
   };
 
   const handleRemove = (serviceId: string) => {
-    const updatedServices = services.filter(s => s.service_id !== serviceId);
+    const updatedServices = serviceItems.filter(s => s.service_id !== serviceId);
     onChange(updatedServices);
     if (onServicesChange) {
       onServicesChange(updatedServices);
@@ -42,7 +35,7 @@ export function ServiceSelectionField({
   };
 
   const handleUpdate = (updatedService: ServiceItemType) => {
-    const updatedServices = services.map(s => 
+    const updatedServices = serviceItems.map(s => 
       s.service_id === updatedService.service_id ? updatedService : s
     );
     onChange(updatedServices);
@@ -53,7 +46,7 @@ export function ServiceSelectionField({
   };
 
   const handleAddNew = (newService: ServiceItemType) => {
-    const updatedServices = [...services, newService];
+    const updatedServices = [...serviceItems, newService];
     onChange(updatedServices);
     if (onServicesChange) {
       onServicesChange(updatedServices);
@@ -77,7 +70,7 @@ export function ServiceSelectionField({
 
   return (
     <div className="space-y-4">
-      {services.length === 0 && !addingNewService && (
+      {serviceItems.length === 0 && !addingNewService && (
         <Card className="p-8 flex flex-col items-center justify-center text-center border-dashed border-2 border-muted-foreground/30 bg-muted/10">
           <p className="text-muted-foreground mb-4">No services added yet</p>
           <Button
@@ -93,7 +86,7 @@ export function ServiceSelectionField({
       )}
 
       <div className="space-y-3">
-        {services.map((service) => (
+        {serviceItems.map((service) => (
           <div key={service.service_id}>
             {editingServiceId === service.service_id ? (
               <ServiceItemForm
@@ -127,7 +120,7 @@ export function ServiceSelectionField({
         )}
       </div>
 
-      {!addingNewService && services.length > 0 && (
+      {!addingNewService && serviceItems.length > 0 && (
         <Button
           onClick={() => setAddingNewService(true)}
           variant="outline"
@@ -141,3 +134,6 @@ export function ServiceSelectionField({
     </div>
   );
 }
+
+// Also export a default version for backward compatibility
+export default ServiceSelectionField;

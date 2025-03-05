@@ -1,166 +1,180 @@
-import { WorkOrderFormValues } from "../types"
-import { supabase } from "@/integrations/supabase/client"
-import { useQueryClient } from "@tanstack/react-query"
-import { useToast } from "@/hooks/use-toast"
-import { useNavigate } from "react-router-dom"
 
-export function useWorkOrderSubmission() {
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
-  const navigate = useNavigate()
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { WorkOrderFormValues } from "../types";
 
-  const submitWorkOrder = async (values: WorkOrderFormValues, workOrderId?: string) => {
+interface UseWorkOrderSubmissionProps {
+  workOrderId?: string;
+  onSuccess?: () => void;
+}
+
+export function useWorkOrderSubmission({ workOrderId, onSuccess }: UseWorkOrderSubmissionProps = {}) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const formatDateToISOString = (dateValue: string | Date | null | undefined) => {
+    if (!dateValue) return null;
+    if (dateValue instanceof Date) return dateValue.toISOString();
     try {
-      if (workOrderId) {
-        await updateWorkOrder(workOrderId, values)
-      } else {
-        await createWorkOrder(values)
+      // Try to convert string to Date
+      return new Date(dateValue).toISOString();
+    } catch (e) {
+      console.error("Invalid date value:", dateValue);
+      return null;
+    }
+  };
+
+  const submitWorkOrder = async (data: WorkOrderFormValues) => {
+    try {
+      setIsSubmitting(true);
+
+      // Check if vehicle exists or needs to be created
+      let vehicleId = data.vehicle_id;
+      
+      if (!vehicleId && data.vehicle_make && data.vehicle_model) {
+        // Create vehicle if it doesn't exist
+        const { data: vehicleData, error: vehicleError } = await supabase
+          .from("vehicles")
+          .insert({
+            customer_id: data.customer_id,
+            make: data.vehicle_make,
+            model: data.vehicle_model,
+            year: data.vehicle_year,
+            vin: data.vehicle_serial,
+            // Additional fields as needed
+          })
+          .select("id")
+          .single();
+
+        if (vehicleError) throw vehicleError;
+        vehicleId = vehicleData.id;
       }
 
-      await queryClient.invalidateQueries({ queryKey: ["workOrder", workOrderId] })
-      await queryClient.invalidateQueries({ queryKey: ["workOrders"] })
+      // Format dates for database
+      const startTime = formatDateToISOString(data.start_time);
+      const endTime = formatDateToISOString(data.end_time);
+
+      // Create work order payload
+      const workOrderPayload = {
+        customer_id: data.customer_id,
+        vehicle_id: vehicleId,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email,
+        phone_number: data.phone_number,
+        contact_preference: data.contact_preference,
+        vehicle_make: data.vehicle_make,
+        vehicle_model: data.vehicle_model,
+        vehicle_year: data.vehicle_year,
+        vehicle_serial: data.vehicle_serial,
+        additional_notes: data.additional_notes,
+        street_address: data.street_address,
+        unit_number: data.unit_number,
+        city: data.city,
+        state_province: data.state_province,
+        postal_code: data.postal_code,
+        country: data.country,
+        start_time: startTime,
+        estimated_duration: data.estimated_duration ? Number(data.estimated_duration) : null,
+        end_time: endTime,
+        assigned_bay_id: data.assigned_bay_id || data.bay_id || null,
+        status: data.status || "scheduled",
+        // Set or update timestamps
+        updated_at: new Date().toISOString(),
+      };
+
+      if (workOrderId) {
+        // Update existing work order
+        const { error } = await supabase
+          .from("work_orders")
+          .update(workOrderPayload)
+          .eq("id", workOrderId);
+
+        if (error) throw error;
+
+        // Update service items
+        if (data.service_items && data.service_items.length > 0) {
+          // Delete existing service items
+          const { error: deleteError } = await supabase
+            .from("work_order_services")
+            .delete()
+            .eq("work_order_id", workOrderId);
+
+          if (deleteError) throw deleteError;
+
+          // Insert updated service items
+          await insertServiceItems(workOrderId, data.service_items);
+        }
+
+        toast.success("Work order updated successfully");
+      } else {
+        // Create new work order
+        const { data: newWorkOrder, error } = await supabase
+          .from("work_orders")
+          .insert({
+            ...workOrderPayload,
+            created_at: new Date().toISOString(),
+          })
+          .select("id")
+          .single();
+
+        if (error) throw error;
+
+        // Insert service items for new work order
+        if (data.service_items && data.service_items.length > 0 && newWorkOrder) {
+          await insertServiceItems(newWorkOrder.id, data.service_items);
+        }
+
+        toast.success("Work order created successfully");
+      }
+
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["workOrders"] });
       
-      toast({
-        title: "Success",
-        description: workOrderId ? "Work order updated successfully" : "Work order created successfully",
-      })
-
-      navigate("/work-orders")
-      return true
-    } catch (error: any) {
-      console.error("Error saving work order:", error)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to save work order",
-      })
-      return false
+      // Call onSuccess callback or redirect
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate("/work-orders");
+      }
+    } catch (error) {
+      console.error("Error submitting work order:", error);
+      toast.error("Failed to save work order");
+    } finally {
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  return { submitWorkOrder }
-}
+  // Helper function to insert service items
+  const insertServiceItems = async (workOrderId: string, serviceItems: any[]) => {
+    const { error } = await supabase
+      .from("work_order_services")
+      .insert(
+        serviceItems.map(item => ({
+          work_order_id: workOrderId,
+          service_id: item.service_id,
+          service_name: item.service_name,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          description: item.description,
+          commission_rate: item.commission_rate,
+          commission_type: item.commission_type,
+          assigned_profile_id: item.assigned_profile_id,
+          // Handle nested fields
+          main_service_id: item.parent_id || null,
+          sub_service_id: item.is_sub_service ? item.service_id : null,
+        }))
+      );
 
-async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues) {
-  // Update work order
-  const { error: workOrderError } = await supabase
-    .from("work_orders")
-    .update({
-      first_name: values.first_name,
-      last_name: values.last_name,
-      email: values.email,
-      phone_number: values.phone_number,
-      contact_preference: values.contact_preference,
-      vehicle_make: values.vehicle_make,
-      vehicle_model: values.vehicle_model,
-      vehicle_year: values.vehicle_year,
-      vehicle_serial: values.vehicle_serial,
-      additional_notes: values.additional_notes,
-      street_address: values.street_address,
-      unit_number: values.unit_number,
-      city: values.city,
-      state_province: values.state_province,
-      postal_code: values.postal_code,
-      country: values.country,
-      start_time: values.start_time?.toISOString(),
-      estimated_duration: values.estimated_duration ? `${values.estimated_duration} hours` : null,
-      end_time: values.end_time?.toISOString(),
-      assigned_bay_id: values.assigned_bay_id === "unassigned" ? null : values.assigned_bay_id,
-      updated_at: new Date().toISOString()
-    })
-    .eq("id", workOrderId)
+    if (error) throw error;
+  };
 
-  if (workOrderError) throw workOrderError
-
-  // Handle services update
-  const { error: deleteError } = await supabase
-    .from('work_order_services')
-    .delete()
-    .eq('work_order_id', workOrderId)
-
-  if (deleteError) throw deleteError
-
-  const validServices = values.service_items.filter(item => 
-    item.service_id && 
-    item.service_id.trim() !== "" && 
-    item.service_name && 
-    item.service_name.trim() !== ""
-  );
-  
-  if (validServices.length > 0) {
-    const servicesToInsert = validServices.map(item => ({
-      work_order_id: workOrderId,
-      service_id: item.service_id,
-      quantity: item.quantity || 1,
-      unit_price: item.unit_price || 0,
-      commission_rate: item.commission_rate,
-      commission_type: item.commission_type,
-      assigned_profile_id: item.assigned_profile_id
-    }))
-
-    const { error: servicesError } = await supabase
-      .from('work_order_services')
-      .insert(servicesToInsert)
-
-    if (servicesError) throw servicesError
-  }
-}
-
-async function createWorkOrder(values: WorkOrderFormValues) {
-  // Create work order
-  const { data: workOrder, error: workOrderError } = await supabase
-    .from("work_orders")
-    .insert({
-      first_name: values.first_name,
-      last_name: values.last_name,
-      email: values.email,
-      phone_number: values.phone_number,
-      contact_preference: values.contact_preference,
-      vehicle_make: values.vehicle_make,
-      vehicle_model: values.vehicle_model,
-      vehicle_year: values.vehicle_year,
-      vehicle_serial: values.vehicle_serial,
-      additional_notes: values.additional_notes,
-      street_address: values.street_address,
-      unit_number: values.unit_number,
-      city: values.city,
-      state_province: values.state_province,
-      postal_code: values.postal_code,
-      country: values.country,
-      start_time: values.start_time?.toISOString(),
-      estimated_duration: values.estimated_duration ? `${values.estimated_duration} hours` : null,
-      end_time: values.end_time?.toISOString(),
-      assigned_bay_id: values.assigned_bay_id === "unassigned" ? null : values.assigned_bay_id,
-      status: "pending"
-    })
-    .select()
-    .single()
-
-  if (workOrderError || !workOrder) throw workOrderError
-
-  // Insert services
-  const validServices = values.service_items.filter(item => 
-    item.service_id && 
-    item.service_id.trim() !== "" && 
-    item.service_name && 
-    item.service_name.trim() !== ""
-  );
-  
-  if (validServices.length > 0) {
-    const servicesToInsert = validServices.map(item => ({
-      work_order_id: workOrder.id,
-      service_id: item.service_id,
-      quantity: item.quantity || 1,
-      unit_price: item.unit_price || 0,
-      commission_rate: item.commission_rate,
-      commission_type: item.commission_type,
-      assigned_profile_id: item.assigned_profile_id
-    }))
-
-    const { error: servicesError } = await supabase
-      .from('work_order_services')
-      .insert(servicesToInsert)
-
-    if (servicesError) throw servicesError
-  }
+  return {
+    submitWorkOrder,
+    isSubmitting,
+  };
 }

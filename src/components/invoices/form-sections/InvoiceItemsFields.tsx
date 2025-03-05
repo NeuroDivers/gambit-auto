@@ -1,5 +1,5 @@
 
-import ServiceSelectionField from "@/components/shared/form-fields/ServiceSelectionField"
+import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 import { ServiceItemType } from "@/types/service-item"
 import { InvoiceItem } from "@/components/invoices/types"
 import { 
@@ -45,7 +45,7 @@ export function InvoiceItemsFields({
 
   return (
     <ServiceSelectionField
-      services={mappedItems}
+      value={mappedItems}
       onChange={handleItemsChange}
       allowPriceEdit={allowPriceEdit}
       showCommission={showCommission}

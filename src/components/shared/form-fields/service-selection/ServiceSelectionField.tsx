@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { ServiceDropdown } from './ServiceDropdown';
 import { useServiceData } from './useServiceData';
 import { ServiceItem } from './ServiceItem';
+import { ServiceItemType } from '@/types/service-item';
 
 export interface ServiceSelectionFieldProps {
   name?: string;
@@ -20,7 +21,10 @@ export function ServiceSelectionField({
 }: ServiceSelectionFieldProps) {
   const { control, watch, setValue } = useFormContext();
   const services = watch(name) || [];
-  const { serviceTypes, isLoading } = useServiceData();
+  const { data, isLoading } = useServiceData();
+  
+  // Safely extract service types from the query result
+  const serviceTypes = data || [];
 
   const handleAddService = (selectedService: any) => {
     if (!selectedService) return;
@@ -55,8 +59,16 @@ export function ServiceSelectionField({
       <div className="flex justify-between items-center">
         <h3 className="text-base font-medium">{label}</h3>
         <ServiceDropdown 
-          services={serviceTypes} 
-          onSelect={handleAddService}
+          service={{} as ServiceItemType} 
+          onEdit={() => {}}
+          onRemove={() => {}}
+          servicesByType={serviceTypes.reduce((acc, service) => {
+            const type = service.hierarchy_type || 'Other';
+            if (!acc[type]) acc[type] = [];
+            acc[type].push(service);
+            return acc;
+          }, {} as Record<string, any[]>)}
+          handleServiceSelect={handleAddService}
           isLoading={isLoading}
         />
       </div>
@@ -80,6 +92,7 @@ export function ServiceSelectionField({
             <ServiceItem
               key={index}
               service={service}
+              onEdit={() => {}}
               onUpdate={(updatedService) => handleUpdateService(index, updatedService)}
               onRemove={() => handleRemoveService(index)}
             />

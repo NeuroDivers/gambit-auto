@@ -1,211 +1,129 @@
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import { ServiceItemType } from "@/types/index";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
+import { ServiceItemType } from "@/types/service-item";
 
 interface PackageSelectProps {
-  packages: any[];
-  onPackageSelect: (selectedServices: ServiceItemType[]) => void;
-  selectedPackage?: string;
+  onSelect: (packageServices: ServiceItemType[]) => void;
+  onCancel: () => void;
 }
 
-export function PackageSelect({ packages, onPackageSelect, selectedPackage }: PackageSelectProps) {
-  const [expandedPackage, setExpandedPackage] = useState<string | null>(selectedPackage || null);
-  const [selectedItems, setSelectedItems] = useState<Record<string, boolean>>({});
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
-  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(selectedPackage || null);
-
-  useEffect(() => {
-    if (selectedPackage) {
-      setExpandedPackage(selectedPackage);
-      setSelectedPackageId(selectedPackage);
+export function PackageSelect({ onSelect, onCancel }: PackageSelectProps) {
+  const { data: packages, isLoading } = useQuery({
+    queryKey: ["servicePackages"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_packages")
+        .select(`
+          id,
+          name,
+          description,
+          price,
+          sale_price,
+          status,
+          service_package_items:service_package_items (
+            id,
+            service_id,
+            service_type:service_types (
+              id, 
+              name,
+              price,
+              description
+            ),
+            quantity,
+            price
+          )
+        `)
+        .eq("status", "active");
+        
+      if (error) throw error;
+      return data || [];
     }
-  }, [selectedPackage]);
+  });
 
-  const handlePackageSelect = (packageId: string) => {
-    if (selectedPackageId === packageId) {
-      // Deselect the package
-      setSelectedPackageId(null);
-      setSelectedItems({});
-      setQuantities({});
-      onPackageSelect([]);
-    } else {
-      // Select the package and all its services by default
-      setSelectedPackageId(packageId);
-      const selectedPkg = packages.find(pkg => pkg.id === packageId);
-      
-      if (selectedPkg && selectedPkg.services) {
-        const newSelectedItems: Record<string, boolean> = {};
-        const newQuantities: Record<string, number> = {};
-        
-        selectedPkg.services.forEach((service: any) => {
-          newSelectedItems[service.id] = true;
-          newQuantities[service.id] = 1;
-        });
-        
-        setSelectedItems(newSelectedItems);
-        setQuantities(newQuantities);
-        
-        // Convert to ServiceItemType array and pass to parent
-        const serviceItems = selectedPkg.services
-          .filter((service: any) => newSelectedItems[service.id])
-          .map((service: any) => ({
-            service_id: service.id,
-            service_name: service.name,
-            description: service.description || "",
-            quantity: newQuantities[service.id] || 1,
-            unit_price: service.price || 0,
-            commission_rate: service.commission_rate || 0,
-            commission_type: service.commission_type as "percentage" | "flat" || "percentage",
-            assigned_profile_id: null,
-            assigned_profiles: [],
-          }));
-        
-        onPackageSelect(serviceItems);
-      }
+  const handleSelectPackage = (pkg: any) => {
+    if (!pkg.service_package_items || pkg.service_package_items.length === 0) {
+      return;
     }
-  };
-
-  const handleServiceToggle = (serviceId: string, checked: boolean) => {
-    setSelectedItems(prev => ({
-      ...prev,
-      [serviceId]: checked
-    }));
     
-    // Update selected services
-    if (selectedPackageId) {
-      const selectedPkg = packages.find(pkg => pkg.id === selectedPackageId);
-      
-      if (selectedPkg && selectedPkg.services) {
-        const newSelectedItems = {
-          ...selectedItems,
-          [serviceId]: checked
-        };
-        
-        updateSelectedServices(selectedPkg, newSelectedItems, quantities);
-      }
-    }
-  };
-
-  const handleQuantityChange = (serviceId: string, quantity: number) => {
-    setQuantities(prev => ({
-      ...prev,
-      [serviceId]: quantity
-    }));
-    
-    // Update selected services
-    if (selectedPackageId) {
-      const selectedPkg = packages.find(pkg => pkg.id === selectedPackageId);
-      
-      if (selectedPkg && selectedPkg.services) {
-        const newQuantities = {
-          ...quantities,
-          [serviceId]: quantity
-        };
-        
-        updateSelectedServices(selectedPkg, selectedItems, newQuantities);
-      }
-    }
-  };
-
-  const updateSelectedServices = (
-    selectedPkg: any, 
-    selectedItemsState: Record<string, boolean>,
-    quantitiesState: Record<string, number>
-  ) => {
-    const serviceItems = selectedPkg.services
-      .filter((service: any) => selectedItemsState[service.id])
-      .map((service: any) => ({
-        service_id: service.id,
-        service_name: service.name,
-        description: service.description || "",
-        quantity: quantitiesState[service.id] || 1,
-        unit_price: service.price || 0,
-        commission_rate: service.commission_rate || 0,
-        commission_type: (service.commission_type as "percentage" | "flat") || "percentage",
+    // Map package items to service items
+    const services = pkg.service_package_items.map((item: any) => {
+      const serviceType = item.service_type;
+      return {
+        service_id: serviceType.id,
+        service_name: serviceType.name,
+        description: serviceType.description || "",
+        quantity: item.quantity || 1,
+        unit_price: item.price || serviceType.price || 0,
+        commission_rate: 0,
+        commission_type: "percentage",
         assigned_profile_id: null,
         assigned_profiles: [],
-      }));
+      } as ServiceItemType;
+    });
     
-    onPackageSelect(serviceItems);
+    onSelect(services);
   };
 
-  if (!packages || packages.length === 0) {
-    return (
-      <div className="text-center py-4">
-        <p className="text-muted-foreground">No service packages available</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col space-y-4">
-        <RadioGroup value={selectedPackageId || undefined} onValueChange={handlePackageSelect}>
-          {packages.map(pkg => (
-            <div key={pkg.id} className="flex items-start space-x-3 p-3 rounded-md border">
-              <RadioGroupItem value={pkg.id} id={`package-${pkg.id}`} />
-              <div className="grid gap-1.5 leading-none w-full">
-                <div className="flex justify-between w-full">
-                  <Label htmlFor={`package-${pkg.id}`}>{pkg.name}</Label>
-                  <span className="text-sm font-medium">
-                    ${pkg.price ? pkg.price.toFixed(2) : "0.00"}
-                  </span>
-                </div>
-                <p className="text-sm text-muted-foreground">{pkg.description}</p>
-                
-                {selectedPackageId === pkg.id && pkg.services && pkg.services.length > 0 && (
-                  <div className="mt-3 border-t pt-3">
-                    <p className="text-xs mb-2 font-medium">Included Services:</p>
-                    <div className="space-y-2">
-                      {pkg.services.map((service: any) => (
-                        <div key={service.id} className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <Checkbox 
-                              id={`service-${service.id}`}
-                              checked={selectedItems[service.id] || false}
-                              onCheckedChange={(checked) => 
-                                handleServiceToggle(service.id, checked === true)
-                              }
-                            />
-                            <Label 
-                              htmlFor={`service-${service.id}`}
-                              className="text-sm cursor-pointer"
-                            >
-                              {service.name}
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              type="number"
-                              min="1"
-                              value={quantities[service.id] || 1}
-                              onChange={(e) => 
-                                handleQuantityChange(service.id, parseInt(e.target.value) || 1)
-                              }
-                              className="w-16 h-8 text-sm"
-                              disabled={!selectedItems[service.id]}
-                            />
-                            <span className="text-sm w-20 text-right">
-                              ${service.price ? service.price.toFixed(2) : "0.00"}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+    <Dialog open onOpenChange={() => onCancel()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Select a Service Package</DialogTitle>
+        </DialogHeader>
+        
+        <ScrollArea className="h-[60vh] pr-4 -mr-4">
+          {isLoading ? (
+            <div className="flex justify-center items-center h-40">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ))}
-        </RadioGroup>
-      </div>
-    </div>
+          ) : (
+            <div className="space-y-4 py-4">
+              {packages && packages.length > 0 ? (
+                packages.map((pkg: any) => (
+                  <Card key={pkg.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <CardTitle>{pkg.name}</CardTitle>
+                      <CardDescription>{pkg.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm">
+                        {pkg.service_package_items?.length || 0} services included
+                      </p>
+                    </CardContent>
+                    <CardFooter className="flex justify-between">
+                      <div>
+                        <p className="font-medium">${pkg.price.toFixed(2)}</p>
+                        {pkg.sale_price && (
+                          <p className="text-sm text-muted-foreground line-through">
+                            ${pkg.sale_price.toFixed(2)}
+                          </p>
+                        )}
+                      </div>
+                      <Button onClick={() => handleSelectPackage(pkg)}>Select</Button>
+                    </CardFooter>
+                  </Card>
+                ))
+              ) : (
+                <p className="text-center text-muted-foreground py-8">
+                  No service packages available
+                </p>
+              )}
+            </div>
+          )}
+        </ScrollArea>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

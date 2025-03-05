@@ -28,9 +28,21 @@ export interface ServiceSelectionFieldProps {
   disabled?: boolean;
   allowPriceEdit?: boolean;
   onServicesChange?: (services: ServiceItemType[]) => void;
+  // Add this for compatibility with existing code
+  services?: ServiceItemType[];
 }
 
 export interface PackageSelectProps {
   onSelect?: (packageServices: ServiceItemType[]) => void;
   onCancel?: () => void;
+}
+
+// Add ServiceFormData interface required by quote request components
+export interface ServiceFormData {
+  serviceType: string;
+  details: {
+    [key: string]: any;
+  };
+  images: File[];
+  description: string;
 }

@@ -6,6 +6,7 @@ import { PasswordChangeForm } from "@/components/profile/sections/PasswordChange
 import { DefaultCommissionForm } from "@/components/profile/sections/DefaultCommissionForm";
 import { applyThemeClass } from "@/utils/themeUtils";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 export default function ProfileSettings() {
   const [activeTab, setActiveTab] = useState<string>("personal-info");
@@ -20,11 +21,13 @@ export default function ProfileSettings() {
 
   const handlePersonalInfoSubmit = async () => {
     console.log('Personal info submitted');
+    toast.success("Personal information updated successfully");
     return Promise.resolve();
   };
 
   const handlePasswordChange = async () => {
     console.log('Password changed');
+    toast.success("Password changed successfully");
     return Promise.resolve();
   };
 

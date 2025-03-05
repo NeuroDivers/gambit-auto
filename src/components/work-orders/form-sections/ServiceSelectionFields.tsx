@@ -1,32 +1,35 @@
 
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { ServiceItemType } from "@/types/service-item";
-import ServiceSelectionField from "@/components/shared/form-fields/ServiceSelectionField";
+import { useFormContext } from "react-hook-form"
+import { FormField, FormItem } from "@/components/ui/form"
+import { Label } from "@/components/ui/label"
+import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 
-type ServiceSelectionFieldsProps = {
-  services: ServiceItemType[];
-  onChange: (newServices: ServiceItemType[]) => void;
-  disabled?: boolean;
-  showCommission?: boolean;
-};
+export function ServiceSelectionFields() {
+  const { control } = useFormContext()
 
-export function ServiceSelectionFields({
-  services,
-  onChange,
-  disabled = false,
-  showCommission = false,
-}: ServiceSelectionFieldsProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Service Selection</CardTitle>
-      </CardHeader>
-      <ServiceSelectionField
-        services={services}
-        onChange={onChange}
-        disabled={disabled}
-        showCommission={showCommission}
-      />
-    </Card>
-  );
+    <div className="space-y-6 py-2">
+      <div>
+        <h3 className="text-lg font-medium mb-4">Services</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Add the services that will be performed for this work order.
+        </p>
+        
+        <FormField
+          control={control}
+          name="service_items"
+          render={({ field }) => (
+            <FormItem>
+              <ServiceSelectionField 
+                value={field.value} 
+                onChange={field.onChange}
+                showAssignedStaff={true}
+                showCommission={true}
+              />
+            </FormItem>
+          )}
+        />
+      </div>
+    </div>
+  )
 }
