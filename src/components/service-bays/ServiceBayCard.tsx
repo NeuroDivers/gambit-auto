@@ -28,7 +28,7 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
   const { updateBayStatus, updateBayNotes, toggleService } = useBayActions(bay.id)
 
   return (
-    <Card className="overflow-hidden border border-border/50 hover:border-border/80 transition-colors">
+    <Card className="overflow-hidden border border-border/40 hover:border-border/60 transition-all shadow-sm hover:shadow-md rounded-xl h-full flex flex-col">
       <BayCardHeader 
         name={bay.name} 
         bayId={bay.id}

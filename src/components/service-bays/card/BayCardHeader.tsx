@@ -44,34 +44,32 @@ export function BayCardHeader({ name, bayId, status }: BayCardHeaderProps) {
   const getStatusBadge = () => {
     switch (status) {
       case 'available':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Available</Badge>
+        return <Badge variant="success" className="font-medium">Available</Badge>
       case 'in_use':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">In Use</Badge>
+        return <Badge variant="secondary" className="font-medium">In Use</Badge>
       case 'maintenance':
-        return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Maintenance</Badge>
+        return <Badge variant="pending" className="font-medium">Maintenance</Badge>
       default:
         return null
     }
   }
 
   return (
-    <CardHeader className="p-4 pb-2">
-      <div className="flex flex-col space-y-2">
-        <CardTitle className="text-xl font-semibold">{name}</CardTitle>
+    <CardHeader className="p-6 pb-4 bg-gradient-to-br from-background to-muted/30 border-b flex flex-row items-start justify-between gap-4">
+      <div className="space-y-2">
+        <CardTitle className="text-2xl font-bold text-foreground">{name}</CardTitle>
         <div className="flex items-center gap-2">
           {getStatusBadge()}
         </div>
       </div>
-      <div className="absolute top-4 right-4 flex gap-2">
-        <Button 
-          variant="outline" 
-          size="sm"
-          className="h-8 w-8 p-0"
-          onClick={handleDelete}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
+      <Button 
+        variant="outline" 
+        size="icon"
+        className="rounded-full h-9 w-9 border-none bg-background/90 shadow-sm hover:bg-destructive hover:text-white transition-colors"
+        onClick={handleDelete}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
     </CardHeader>
   )
 }

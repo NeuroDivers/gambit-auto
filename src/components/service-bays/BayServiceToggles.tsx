@@ -4,7 +4,7 @@ import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
+import { Search, Check } from "lucide-react"
 
 type BayServiceTogglesProps = {
   availableServices: {
@@ -39,42 +39,59 @@ export function BayServiceToggles({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="relative">
-        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Search services..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-8"
+          className="pl-9 bg-background"
         />
       </div>
       
-      <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+      <div className="space-y-1 max-h-[240px] overflow-y-auto pr-1">
         {filteredServices.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">
+          <p className="text-sm text-muted-foreground text-center py-6 bg-muted/20 rounded-lg">
             No services match your search
           </p>
         ) : (
-          filteredServices.map(service => (
-            <div 
-              key={service.id} 
-              className="flex items-center justify-between p-2 rounded-md hover:bg-accent/10"
-            >
-              <div className="flex flex-col">
-                <span className="font-medium">{service.name}</span>
-                {service.status && (
-                  <Badge variant={service.status === 'active' ? 'success' : 'outline'} className="w-fit mt-1">
-                    {service.status}
-                  </Badge>
-                )}
+          filteredServices.map(service => {
+            const isActive = isServiceActive(service.id);
+            
+            return (
+              <div 
+                key={service.id} 
+                className={`flex items-center justify-between p-2.5 rounded-md transition-colors ${
+                  isActive 
+                    ? 'bg-primary/10 hover:bg-primary/15' 
+                    : 'hover:bg-muted/30'
+                }`}
+              >
+                <div className="flex flex-col">
+                  <span className={`font-medium ${isActive ? 'text-primary' : ''}`}>{service.name}</span>
+                  {service.status && (
+                    <Badge 
+                      variant={service.status === 'active' ? 'success' : 'outline'} 
+                      className="w-fit mt-1 text-xs px-1.5 py-0"
+                    >
+                      {service.status}
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  {isActive && (
+                    <Check className="h-3.5 w-3.5 text-green-600 mr-1" />
+                  )}
+                  <Switch 
+                    checked={isActive}
+                    onCheckedChange={(checked) => onToggleService(service.id, checked)}
+                    className={isActive ? 'bg-primary' : ''}
+                  />
+                </div>
               </div>
-              <Switch 
-                checked={isServiceActive(service.id)}
-                onCheckedChange={(checked) => onToggleService(service.id, checked)}
-              />
-            </div>
-          ))
+            )
+          })
         )}
       </div>
     </div>
