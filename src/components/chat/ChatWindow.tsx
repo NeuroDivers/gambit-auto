@@ -1,4 +1,3 @@
-
 import React from "react"
 import { Card } from "@/components/ui/card"
 import { useChatMessages } from "./hooks/useChatMessages"
@@ -6,6 +5,7 @@ import { ChatHeader } from "./ChatHeader"
 import { MessageList } from "./MessageList"
 import { MessageInput } from "./MessageInput"
 import { TypingIndicator } from "./TypingIndicator"
+import { Toaster } from 'sonner';
 
 export function ChatWindow({ recipientId }: { recipientId: string }) {
   const {
@@ -39,6 +39,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         onSendMessage={sendMessage} 
         onTypingStatusChange={updateTypingStatus}
       />
+      <Toaster position="top-right" richColors />
     </Card>
   )
 }

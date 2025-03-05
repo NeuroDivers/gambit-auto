@@ -1,5 +1,6 @@
+
 import * as React from "react"
-import { toast as sonnerToast } from "sonner"
+import { toast as sonnerToast, Toast as SonnerToast } from "sonner"
 
 import type {
   ToastActionElement,
@@ -140,19 +141,20 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
-// Modified toast function that wraps the sonner toast
+// Enhanced toast function that better wraps sonner toast
 function toast({ ...props }: Toast) {
   const id = genId()
 
   // Call sonner toast with adapted props
   if (props.variant === "destructive") {
-    sonnerToast(props.title as string, {
+    sonnerToast.error(props.title as string, {
       description: props.description,
-      style: { backgroundColor: 'red', color: 'white' }
+      duration: 4000,
     });
   } else {
-    sonnerToast(props.title as string, {
-      description: props.description
+    sonnerToast.success(props.title as string, {
+      description: props.description,
+      duration: 3000,
     });
   }
 
@@ -203,4 +205,5 @@ function useToast() {
   }
 }
 
-export { useToast, toast }
+// Export both the original sonner toast and our wrapped version
+export { useToast, toast, sonnerToast as sonnerToast }

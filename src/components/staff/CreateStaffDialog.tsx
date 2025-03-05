@@ -1,4 +1,3 @@
-
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -20,7 +19,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { toast } from "sonner"
+import { showSuccessToast, showErrorToast } from "@/utils/toastUtils"
 import { supabase } from "@/integrations/supabase/client"
 import { Loader2 } from "lucide-react"
 import { useRoleData } from "@/hooks/useRoleData"
@@ -58,17 +57,17 @@ export function CreateStaffDialog({ open, onOpenChange }: CreateStaffDialogProps
     },
   })
 
-  const onSubmit = async (data: CreateStaffValues) => {
+  const onSubmit = async (values: CreateStaffValues) => {
     try {
       // First create the profile
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .insert({
-          first_name: data.first_name,
-          last_name: data.last_name,
-          email: data.email,
-          phone_number: data.phone_number,
-          role_id: data.role_id,
+          first_name: values.first_name,
+          last_name: values.last_name,
+          email: values.email,
+          phone_number: values.phone_number,
+          role_id: values.role_id,
         })
         .select()
 
@@ -83,26 +82,24 @@ export function CreateStaffDialog({ open, onOpenChange }: CreateStaffDialogProps
         .from("staff")
         .insert({
           profile_id: profileData[0].id,
-          position: data.position,
-          department: data.department,
+          position: values.position,
+          department: values.department,
           status: "active",
           is_full_time: true,
         })
 
       if (staffError) throw staffError
 
-      toast("Staff member created", {
-        description: "New staff member has been added successfully"
-      })
+      // New toast call
+      showSuccessToast("Staff member created", "New staff member has been added successfully");
       
       form.reset()
       onOpenChange(false)
     } catch (error: any) {
       console.error("Error creating staff:", error)
-      toast("Error", {
-        description: error.message || "Failed to create staff member",
-        style: { backgroundColor: 'red', color: 'white' }
-      })
+      
+      // New toast call for errors
+      showErrorToast("Error", error.message || "Failed to create staff member");
     }
   }
 
