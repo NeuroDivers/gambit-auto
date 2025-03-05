@@ -9,6 +9,7 @@ interface ServiceSelectionFieldsProps {
 }
 
 export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
+  // Get services from form with a fallback to empty array to prevent undefined
   const services = form.watch("service_items") || [];
   
   const handleServicesChange = (newServices: ServiceItemType[]) => {
@@ -16,11 +17,14 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
   };
   
   return (
-    <ServiceSelectionField
-      services={services as ServiceItemType[]}
-      onChange={handleServicesChange}
-      disabled={false}
-      showCommission
-    />
+    <div className="space-y-4">
+      <h3 className="text-lg font-medium">Services</h3>
+      <ServiceSelectionField
+        services={services}
+        onChange={handleServicesChange}
+        disabled={false}
+        showCommission
+      />
+    </div>
   );
 }

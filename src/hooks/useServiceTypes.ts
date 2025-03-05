@@ -7,6 +7,8 @@ export function useServiceTypes() {
   return useQuery({
     queryKey: ["service-types"],
     queryFn: async () => {
+      console.log("Fetching service types...")
+      
       const { data, error } = await supabase
         .from("service_types")
         .select("*")
@@ -17,7 +19,10 @@ export function useServiceTypes() {
         throw error
       }
       
-      return data as ServiceType[] || []
+      // Ensure we always return an array
+      const services = data || []
+      console.log(`Retrieved ${services.length} service types`)
+      return services as ServiceType[]
     },
   })
 }

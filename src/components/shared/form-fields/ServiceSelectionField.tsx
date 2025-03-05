@@ -6,12 +6,13 @@ import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ServiceItemType } from "@/types/service-item"
 import { useServiceTypes } from "@/hooks/useServiceTypes"
 import { ServiceType } from "@/integrations/supabase/types/service-types"
+import { toast } from "sonner"
 
 interface ServiceSelectionFieldProps {
   services: ServiceItemType[];
@@ -30,7 +31,7 @@ export function ServiceSelectionField({
 }: ServiceSelectionFieldProps) {
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [serviceList, setServiceList] = useState<ServiceItemType[]>([]);
+  const [serviceList, setServiceList] = useState<ServiceItemType[]>(services || []);
   
   // Use our custom hook to fetch service types
   const { data: availableServices = [], isLoading, error } = useServiceTypes();
@@ -39,10 +40,13 @@ export function ServiceSelectionField({
   useEffect(() => {
     if (Array.isArray(services)) {
       setServiceList(services);
+      console.log("Service list updated:", services.length, "services");
     }
   }, [services]);
   
   const updateServiceQuantity = (serviceId: string, quantity: number) => {
+    if (!serviceId || quantity < 1) return;
+    
     const updatedServices = serviceList.map(service => 
       service.service_id === serviceId 
         ? { ...service, quantity } 
@@ -54,6 +58,8 @@ export function ServiceSelectionField({
   };
   
   const updateServicePrice = (serviceId: string, priceValue: string) => {
+    if (!serviceId) return;
+    
     const updatedServices = serviceList.map(service => 
       service.service_id === serviceId 
         ? { ...service, unit_price: parseFloat(priceValue) || 0 } 
@@ -65,12 +71,20 @@ export function ServiceSelectionField({
   };
   
   const removeService = (serviceId: string) => {
+    if (!serviceId) return;
+    
     const updatedServices = serviceList.filter(service => service.service_id !== serviceId);
     setServiceList(updatedServices);
     onChange(updatedServices);
+    toast.success("Service removed");
   };
 
   const addService = (serviceType: ServiceType) => {
+    if (!serviceType || !serviceType.id) {
+      console.error("Invalid service type:", serviceType);
+      return;
+    }
+    
     // Check if service already exists in the list
     const exists = serviceList.some(service => service.service_id === serviceType.id);
     
@@ -83,6 +97,7 @@ export function ServiceSelectionField({
       );
       setServiceList(updatedServices);
       onChange(updatedServices);
+      toast.success(`Increased quantity for ${serviceType.name}`);
     } else {
       // Add new service
       const newService: ServiceItemType = {
@@ -98,6 +113,7 @@ export function ServiceSelectionField({
       const updatedServices = [...serviceList, newService];
       setServiceList(updatedServices);
       onChange(updatedServices);
+      toast.success(`Added ${serviceType.name}`);
     }
     
     setOpen(false);
@@ -128,9 +144,14 @@ export function ServiceSelectionField({
             />
             
             {isLoading ? (
-              <div className="py-6 text-center text-sm">Loading services...</div>
+              <div className="py-6 text-center text-sm flex items-center justify-center">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Loading services...
+              </div>
             ) : error ? (
-              <div className="py-6 text-center text-sm text-destructive">Error loading services</div>
+              <div className="py-6 text-center text-sm text-destructive">
+                Error loading services
+              </div>
             ) : !Array.isArray(availableServices) || availableServices.length === 0 ? (
               <div className="py-6 text-center text-sm">No services available</div>
             ) : (
