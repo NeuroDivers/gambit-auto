@@ -30,7 +30,13 @@ export interface WorkOrder {
     first_name: string;
     last_name: string;
   } | null;
-  address: string;
+  address?: string;
+  street_address?: string;
+  unit_number?: string;
+  city?: string;
+  state_province?: string;
+  postal_code?: string;
+  country?: string;
   timeframe: "flexible" | "asap" | "within_week" | "within_month";
 }
 
@@ -48,7 +54,13 @@ export interface WorkOrderFormValues {
   vehicle_doors?: number;
   vehicle_trim?: string;
   additional_notes?: string;
-  address: string;
+  address?: string;
+  street_address?: string;
+  unit_number?: string;
+  city?: string;
+  state_province?: string;
+  postal_code?: string;
+  country?: string;
   start_time: Date | null;
   estimated_duration: number | null;
   end_time: Date | null;

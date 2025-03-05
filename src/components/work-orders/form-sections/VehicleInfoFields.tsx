@@ -1,4 +1,3 @@
-
 import { Control, UseFormWatch, UseFormSetValue } from "react-hook-form"
 import { WorkOrderFormValues } from "../types"
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
@@ -46,7 +45,7 @@ export function VehicleInfoFields({ control, watch, setValue }: VehicleInfoField
                 )}
               </div>
             </FormControl>
-            <FormMessage />
+            {/* FormMessage removed to not show validation errors since the field is now optional */}
           </FormItem>
         )}
       />

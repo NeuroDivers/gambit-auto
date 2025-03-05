@@ -3,6 +3,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input"
 import { Control } from "react-hook-form"
 import { WorkOrderFormValues } from "../types"
+import { AddressFields } from "@/components/shared/form-sections/AddressFields"
 
 interface CustomerInfoFieldsProps {
   control: Control<WorkOrderFormValues>
@@ -10,7 +11,7 @@ interface CustomerInfoFieldsProps {
 
 export function CustomerInfoFields({ control }: CustomerInfoFieldsProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={control}
@@ -67,19 +68,9 @@ export function CustomerInfoFields({ control }: CustomerInfoFieldsProps) {
           )}
         />
       </div>
-      <FormField
-        control={control}
-        name="address"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Address</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      
+      {/* Address Fields Section - Using the shared component */}
+      <AddressFields form={{ control }} fieldPrefix="" />
     </div>
   )
 }
