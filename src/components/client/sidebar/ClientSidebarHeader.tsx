@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useTheme } from "next-themes";
 
 interface ClientSidebarHeaderProps {
   firstName?: string | null;
@@ -15,6 +16,9 @@ interface ClientSidebarHeaderProps {
 }
 
 export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebarHeaderProps) {
+  const { theme, resolvedTheme } = useTheme();
+  const [currentTheme, setCurrentTheme] = useState<string | undefined>(undefined);
+
   const { data: businessProfile } = useQuery({
     queryKey: ["business-profile"],
     queryFn: async () => {
@@ -28,13 +32,24 @@ export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebar
     }
   });
 
+  // Update currentTheme whenever theme or resolvedTheme changes
+  useEffect(() => {
+    const effectiveTheme = theme === 'system' ? resolvedTheme : theme;
+    setCurrentTheme(effectiveTheme);
+  }, [theme, resolvedTheme]);
+
+  // Get the appropriate logo URL based on current theme
+  const logoUrl = currentTheme === 'dark' 
+    ? businessProfile?.dark_logo_url || businessProfile?.logo_url
+    : businessProfile?.light_logo_url || businessProfile?.logo_url;
+
   const initials = firstName ? firstName.charAt(0).toUpperCase() : '?';
 
   return (
     <div className="flex flex-col items-center py-4">
-      {businessProfile?.light_logo_url ? (
+      {logoUrl ? (
         <img 
-          src={businessProfile.light_logo_url}
+          src={logoUrl}
           alt="Business Logo"
           className="h-16 w-auto object-contain"
           onError={(e) => {

@@ -13,15 +13,16 @@ export function InvoiceBusinessInfo({ businessProfile, logo_url }: InvoiceBusine
   const [currentTheme, setCurrentTheme] = useState<string | undefined>(undefined)
 
   useEffect(() => {
-    setCurrentTheme(theme === 'system' ? resolvedTheme : theme)
+    const effectiveTheme = theme === 'system' ? resolvedTheme : theme;
+    setCurrentTheme(effectiveTheme);
   }, [theme, resolvedTheme])
 
   if (!businessProfile) return null
 
   // Use the appropriate logo based on theme
   const themeAwareLogo = currentTheme === 'dark'
-    ? businessProfile.dark_logo_url
-    : businessProfile.light_logo_url
+    ? businessProfile.dark_logo_url || businessProfile.logo_url
+    : businessProfile.light_logo_url || businessProfile.logo_url
 
   // Use the provided logo_url as a fallback if available
   const displayLogo = logo_url || themeAwareLogo

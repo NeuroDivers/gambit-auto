@@ -71,7 +71,7 @@ export const applyThemeClass = (theme: string | undefined, resolvedTheme: string
 export const applyCustomThemeColors = (): void => {
   const customThemeColors = localStorage.getItem("custom-theme-colors");
   if (customThemeColors) {
-    // Don't recreate the style element if it already exists
+    // Only apply theme colors if they don't already exist
     if (!document.getElementById('theme-colors-style')) {
       try {
         const { light, dark } = JSON.parse(customThemeColors);

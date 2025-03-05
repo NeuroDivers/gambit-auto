@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
 import { Card, CardContent } from "@/components/ui/card"
@@ -16,6 +17,7 @@ import {
 import { toast } from "sonner"
 import { applyThemeClass } from "@/lib/utils"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { HexColorPicker } from "react-colorful"
 
 interface ColorVariable {
   name: string;
@@ -24,25 +26,28 @@ interface ColorVariable {
   defaultDark: string;
 }
 
+// Theme colors inspired by the Realtime Colors image
 const themeColorVariables: ColorVariable[] = [
-  { name: "background", description: "Main background color", defaultLight: "0 0% 100%", defaultDark: "222 47% 11%" },
+  { name: "background", description: "Main background color", defaultLight: "0 0% 100%", defaultDark: "260 25% 11%" }, // Darker purple-black
   { name: "foreground", description: "Main text color", defaultLight: "240 10% 3.9%", defaultDark: "210 40% 98%" },
-  { name: "card", description: "Card background color", defaultLight: "0 0% 100%", defaultDark: "222 47% 14%" },
+  { name: "card", description: "Card background color", defaultLight: "0 0% 100%", defaultDark: "260 25% 14%" }, // Slightly lighter than background
   { name: "card-foreground", description: "Card text color", defaultLight: "240 10% 3.9%", defaultDark: "210 40% 98%" },
-  { name: "primary", description: "Primary action color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 70%" },
+  { name: "primary", description: "Primary action color", defaultLight: "262 83.3% 57.8%", defaultDark: "267 85% 72%" }, // Bright purple
   { name: "primary-foreground", description: "Text on primary color", defaultLight: "0 0% 100%", defaultDark: "0 0% 100%" },
-  { name: "secondary", description: "Secondary color", defaultLight: "240 4.8% 95.9%", defaultDark: "217 32% 20%" },
+  { name: "secondary", description: "Secondary color", defaultLight: "240 4.8% 95.9%", defaultDark: "260 25% 18%" }, // Dark purple
   { name: "secondary-foreground", description: "Text on secondary color", defaultLight: "240 5.9% 10%", defaultDark: "210 40% 98%" },
-  { name: "muted", description: "Muted background color", defaultLight: "240 4.8% 95.9%", defaultDark: "217 32% 20%" },
+  { name: "muted", description: "Muted background color", defaultLight: "240 4.8% 95.9%", defaultDark: "260 25% 18%" },
   { name: "muted-foreground", description: "Muted text color", defaultLight: "240 3.8% 46.1%", defaultDark: "215 20% 65%" },
-  { name: "accent", description: "Accent color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 25%" },
+  { name: "accent", description: "Accent color", defaultLight: "262 83.3% 57.8%", defaultDark: "267 85% 40%" }, // Purple accent
   { name: "accent-foreground", description: "Text on accent color", defaultLight: "0 0% 100%", defaultDark: "210 40% 98%" },
   { name: "destructive", description: "Destructive action color", defaultLight: "0 84.2% 60.2%", defaultDark: "0 62.8% 30.6%" },
   { name: "destructive-foreground", description: "Text on destructive color", defaultLight: "0 0% 98%", defaultDark: "210 40% 98%" },
-  { name: "border", description: "Border color", defaultLight: "240 5.9% 90%", defaultDark: "217 32% 25%" },
-  { name: "input", description: "Input border color", defaultLight: "240 5.9% 90%", defaultDark: "217 32% 25%" },
-  { name: "ring", description: "Focus ring color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 70%" },
+  { name: "border", description: "Border color", defaultLight: "240 5.9% 90%", defaultDark: "260 25% 25%" }, // Dark border
+  { name: "input", description: "Input border color", defaultLight: "240 5.9% 90%", defaultDark: "260 25% 25%" },
+  { name: "ring", description: "Focus ring color", defaultLight: "262 83.3% 57.8%", defaultDark: "267 85% 72%" }, // Purple ring
 ];
+
+const LOCAL_STORAGE_KEY = "custom-theme-colors";
 
 function hslToHex(hslString: string): string {
   const [h, s, l] = hslString.split(' ').map(val => parseFloat(val.replace('%', '')));
@@ -111,14 +116,12 @@ function hexToHsl(hex: string): string {
   return `${h} ${s}% ${l}%`;
 }
 
-const LOCAL_STORAGE_KEY = "custom-theme-colors";
-
 export function ThemeColorManager() {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [lightColors, setLightColors] = useState<Record<string, string>>({})
   const [darkColors, setDarkColors] = useState<Record<string, string>>({})
   const [activeTab, setActiveTab] = useState<string>("light")
-  const [openColorPicker, setOpenColorPicker] = useState<string | null>(null)
+  const [activeColorName, setActiveColorName] = useState<string | null>(null)
   
   useEffect(() => {
     const savedThemeColors = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -147,13 +150,8 @@ export function ThemeColorManager() {
     const darkThemeColors: Record<string, string> = {}
     
     themeColorVariables.forEach(variable => {
-      const lightValue = computedStyle.getPropertyValue(`--${variable.name}`).trim()
-      lightThemeColors[variable.name] = lightValue || variable.defaultLight
-      
-      root.classList.add('dark')
-      const darkValue = computedStyle.getPropertyValue(`--${variable.name}`).trim()
-      darkThemeColors[variable.name] = darkValue || variable.defaultDark
-      root.classList.remove('dark')
+      lightThemeColors[variable.name] = variable.defaultLight;
+      darkThemeColors[variable.name] = variable.defaultDark;
     })
     
     setLightColors(lightThemeColors)
@@ -187,7 +185,6 @@ export function ThemeColorManager() {
   }
   
   const applyCustomThemeColors = (lightColors: Record<string, string>, darkColors: Record<string, string>) => {
-    const root = document.documentElement
     const style = document.createElement('style')
     
     let cssText = `:root {\n`
@@ -275,16 +272,16 @@ export function ThemeColorManager() {
     theme: 'light' | 'dark'
   }) => {
     const hexColor = hslToHex(value);
-    const isOpen = openColorPicker === `${theme}-${name}`;
+    const isOpen = activeColorName === `${theme}-${name}`;
     
     return (
       <Popover 
         open={isOpen} 
         onOpenChange={(open) => {
           if (open) {
-            setOpenColorPicker(`${theme}-${name}`);
+            setActiveColorName(`${theme}-${name}`);
           } else {
-            setOpenColorPicker(null);
+            setActiveColorName(null);
           }
         }}
       >
@@ -297,41 +294,32 @@ export function ThemeColorManager() {
             <span className="sr-only">Pick a color</span>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80" onClick={(e) => e.stopPropagation()}>
-          <div className="grid gap-4">
-            <div className="space-y-2">
-              <h4 className="font-medium">Pick a color</h4>
-              <div
-                className="relative w-full h-32 overflow-hidden rounded-md border"
-                style={{
-                  background: `linear-gradient(to bottom, #fff 0%, ${hexColor} 100%)`
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                }}
+        <PopoverContent 
+          className="w-auto p-0" 
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.preventDefault()}
+          sideOffset={5}
+        >
+          <div className="p-3">
+            <div className="mb-3">
+              <HexColorPicker 
+                color={hexColor} 
+                onChange={onChange} 
               />
-              <input
-                type="color"
-                value={hexColor}
-                onChange={(e) => onChange(e.target.value)}
-                className="w-full h-10"
-                onClick={(e) => e.stopPropagation()}
-              />
-              <div className="flex justify-between">
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-between items-center">
                 <Label>Hex</Label>
-                <span className="font-mono">{hexColor}</span>
+                <Input
+                  value={hexColor}
+                  onChange={(e) => onChange(e.target.value)}
+                  className="w-24 font-mono"
+                />
               </div>
               <div className="flex justify-between">
                 <Label>HSL</Label>
-                <span className="font-mono">{value}</span>
+                <span className="font-mono text-xs">{value}</span>
               </div>
-              <Button 
-                className="w-full mt-2" 
-                onClick={() => setOpenColorPicker(null)}
-              >
-                Apply Color
-              </Button>
             </div>
           </div>
         </PopoverContent>

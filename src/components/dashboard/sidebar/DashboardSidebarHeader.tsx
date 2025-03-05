@@ -22,6 +22,7 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
   const { theme, resolvedTheme } = useTheme();
   const [currentTheme, setCurrentTheme] = useState<string | undefined>(undefined);
 
+  // Query to fetch business profile data including logo URLs
   const { data: businessProfile } = useQuery({
     queryKey: ["business-profile"],
     queryFn: async () => {
@@ -31,19 +32,24 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
         .single();
       
       if (error) throw error;
+      console.log("Fetched business profile:", data);
       return data;
     }
   });
 
   // Update currentTheme whenever theme or resolvedTheme changes
   useEffect(() => {
-    setCurrentTheme(theme === 'system' ? resolvedTheme : theme);
+    const effectiveTheme = theme === 'system' ? resolvedTheme : theme;
+    setCurrentTheme(effectiveTheme);
+    console.log("Current theme updated:", effectiveTheme);
   }, [theme, resolvedTheme]);
 
   // Get the appropriate logo URL based on current theme
   const logoUrl = currentTheme === 'dark' 
     ? businessProfile?.dark_logo_url || businessProfile?.logo_url
     : businessProfile?.light_logo_url || businessProfile?.logo_url;
+
+  console.log("Using logo URL:", logoUrl, "for theme:", currentTheme);
 
   return (
     <div className="relative py-4">

@@ -30,7 +30,8 @@ export function AuthLayout({
 
   // Update currentTheme whenever theme or resolvedTheme changes
   useEffect(() => {
-    setCurrentTheme(theme === 'system' ? resolvedTheme : theme)
+    const effectiveTheme = theme === 'system' ? resolvedTheme : theme;
+    setCurrentTheme(effectiveTheme);
   }, [theme, resolvedTheme])
 
   const { data: businessProfile } = useQuery({

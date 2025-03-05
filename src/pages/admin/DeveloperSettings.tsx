@@ -6,7 +6,7 @@ import { VinScanner } from "@/components/shared/VinScanner"
 import { useState, useEffect } from "react"
 import { ThemeColorManager } from "@/components/developer/ThemeColorManager"
 import { useTheme } from "next-themes"
-import { applyThemeClass } from "@/lib/utils"
+import { applyThemeClass, applyCustomThemeColors } from "@/lib/utils"
 
 export default function DeveloperSettings() {
   const [scannedVin, setScannedVin] = useState<string>("")
@@ -14,38 +14,11 @@ export default function DeveloperSettings() {
   
   // Ensure theme is applied on component mount
   useEffect(() => {
+    // Apply theme class based on current theme or system preference
     applyThemeClass(theme, resolvedTheme)
     
-    // Check for custom theme stored in localStorage
-    const customThemeColors = localStorage.getItem("custom-theme-colors")
-    if (customThemeColors) {
-      // Apply custom theme colors
-      const existingStyle = document.getElementById('theme-colors-style')
-      if (!existingStyle) {
-        try {
-          const { light, dark } = JSON.parse(customThemeColors)
-          
-          const style = document.createElement('style')
-          let cssText = `:root {\n`
-          Object.entries(light).forEach(([name, value]) => {
-            cssText += `  --${name}: ${value};\n`
-          })
-          cssText += `}\n\n`
-          
-          cssText += `.dark {\n`
-          Object.entries(dark).forEach(([name, value]) => {
-            cssText += `  --${name}: ${value};\n`
-          })
-          cssText += `}\n`
-          
-          style.textContent = cssText
-          style.id = 'theme-colors-style'
-          document.head.appendChild(style)
-        } catch (error) {
-          console.error("Error applying saved theme colors:", error)
-        }
-      }
-    }
+    // Check for and apply any custom theme colors from localStorage
+    applyCustomThemeColors()
   }, [theme, resolvedTheme])
 
   return (
