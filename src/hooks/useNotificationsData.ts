@@ -2,7 +2,14 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Notification, SenderProfile } from "@/hooks/useHeaderNotifications";
+import { Notification } from "@/hooks/useHeaderNotifications";
+import { 
+  fetchRegularNotifications, 
+  fetchChatNotifications, 
+  transformChatToNotifications,
+  markNotificationAsRead,
+  setupNotificationSubscriptions 
+} from "@/utils/notificationUtils";
 
 export function useNotificationsData() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -19,83 +26,17 @@ export function useNotificationsData() {
       }
       
       // Fetch both regular notifications and chat message notifications
-      const [notificationsResponse, chatMessagesResponse] = await Promise.all([
-        supabase
-          .from("notifications")
-          .select("*")
-          .eq("profile_id", user.id)
-          .order("created_at", { ascending: false }),
-          
-        supabase
-          .from("chat_messages")
-          .select(`
-            id,
-            message,
-            created_at,
-            sender_id,
-            read,
-            profiles:sender_id (
-              first_name,
-              last_name,
-              email
-            )
-          `)
-          .eq("recipient_id", user.id)
-          .is("read_at", null)  // Only get unread messages
-          .order('created_at', { ascending: false })
-          .limit(20)
+      const [regularNotifications, chatMessages] = await Promise.all([
+        fetchRegularNotifications(user.id),
+        fetchChatNotifications(user.id)
       ]);
 
-      if (notificationsResponse.error) {
-        console.error("Error fetching notifications:", notificationsResponse.error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch notifications",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
+      // Transform chat messages into notification format
+      const chatNotifications = transformChatToNotifications(chatMessages);
 
-      if (chatMessagesResponse.error) {
-        console.error("Error fetching chat messages:", chatMessagesResponse.error);
-        setIsLoading(false);
-        return;
-      }
-
-      // Transform chat messages to the correct type structure with proper typing
-      const typedChatMessages = (chatMessagesResponse.data || []).map(msg => {
-        // Convert to unknown first to satisfy TypeScript
-        const profileData = typeof msg.profiles === 'object' ? msg.profiles as unknown as SenderProfile : null;
-        
-        return {
-          id: msg.id,
-          message: msg.message,
-          created_at: msg.created_at,
-          sender_id: msg.sender_id,
-          read: msg.read,
-          profiles: {
-            first_name: profileData?.first_name || null,
-            last_name: profileData?.last_name || null,
-            email: profileData?.email || null
-          }
-        };
-      });
-
-      // Format chat messages as notifications
-      const chatNotifications = typedChatMessages.map(msg => ({
-        id: msg.id,
-        title: "New Message",
-        message: `${msg.profiles.first_name || msg.profiles.email || 'Someone'}: ${msg.message}`,
-        created_at: msg.created_at,
-        read: false,  // These are unread because we filtered by read_at IS NULL
-        type: 'chat_message',
-        sender_id: msg.sender_id
-      }));
-
-      // Combine regular notifications with chat notifications
+      // Combine and sort all notifications by date
       const allNotifications = [
-        ...(notificationsResponse.data || []),
+        ...regularNotifications,
         ...chatNotifications
       ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
@@ -112,55 +53,18 @@ export function useNotificationsData() {
     }
   };
 
-  const markAsRead = async (notification: Notification) => {
-    try {
-      if (notification.type === 'chat_message') {
-        // Mark chat message as read
-        const { error } = await supabase
-          .from("chat_messages")
-          .update({ read: true })
-          .eq("id", notification.id);
-
-        if (error) {
-          console.error("Error marking chat message as read:", error);
-          toast({
-            title: "Error",
-            description: "Failed to mark message as read",
-            variant: "destructive",
-          });
-          return;
-        }
-      } else {
-        // Mark regular notification as read
-        const { error } = await supabase
-          .from("notifications")
-          .update({ read: true })
-          .eq("id", notification.id);
-
-        if (error) {
-          console.error("Error marking notification as read:", error);
-          toast({
-            title: "Error",
-            description: "Failed to mark notification as read",
-            variant: "destructive",
-          });
-          return;
-        }
-      }
-
-      // Update the UI immediately without waiting for subscription
-      setNotifications(prevNotifications => 
-        prevNotifications.map(n => 
-          n.id === notification.id ? { ...n, read: true } : n
-        )
-      );
-    } catch (error) {
-      console.error("Error in markAsRead:", error);
-    }
-  };
-
   const handleNotificationClick = (notification: Notification) => {
-    markAsRead(notification);
+    markNotificationAsRead(notification)
+      .then(success => {
+        if (success) {
+          // Update the UI immediately without waiting for subscription
+          setNotifications(prevNotifications => 
+            prevNotifications.map(n => 
+              n.id === notification.id ? { ...n, read: true } : n
+            )
+          );
+        }
+      });
     
     // Navigate to chat if it's a chat message
     if (notification.type === 'chat_message' && notification.sender_id) {
@@ -172,40 +76,9 @@ export function useNotificationsData() {
     fetchNotifications();
     
     // Set up realtime subscriptions for both notifications and chat messages
-    const notificationsChannel = supabase
-      .channel("notifications-page")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "notifications",
-        },
-        () => {
-          fetchNotifications();
-        }
-      )
-      .subscribe();
+    const cleanupSubscriptions = setupNotificationSubscriptions(fetchNotifications);
 
-    const chatChannel = supabase
-      .channel("chat-notifications-page")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "chat_messages",
-        },
-        () => {
-          fetchNotifications();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(notificationsChannel);
-      supabase.removeChannel(chatChannel);
-    };
+    return cleanupSubscriptions;
   }, []);
 
   return {
