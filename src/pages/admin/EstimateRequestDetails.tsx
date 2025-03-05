@@ -29,7 +29,7 @@ export default function EstimateRequestDetails() {
           .from("estimate_requests")
           .select(`
             *,
-            customer:customers(*),
+            customer:customers!estimate_requests_customer_id_fkey(*),
             vehicle_info:vehicles(*)
           `)
           .eq("id", id)

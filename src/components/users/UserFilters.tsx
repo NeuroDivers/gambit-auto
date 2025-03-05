@@ -64,8 +64,8 @@ export const UserFilters = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1">
+      <div className="flex flex-col space-y-2 md:space-y-0 md:flex-row md:flex-wrap gap-2">
+        <div className="flex-1 min-w-0">
           <Input
             id="user-search"
             name="user-search"
@@ -74,10 +74,10 @@ export const UserFilters = ({
               : "Search by name or email..."}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full bg-background text-foreground border-input min-w-[300px]"
+            className="w-full bg-background text-foreground border-input"
           />
         </div>
-        <div className="sm:w-[220px]">
+        <div className="w-full md:w-auto">
           <Select value={roleFilter} onValueChange={onRoleFilterChange}>
             <SelectTrigger id="role-filter" name="role-filter" className="w-full bg-background text-foreground border-input">
               <SelectValue placeholder="Filter by role" />
@@ -94,7 +94,7 @@ export const UserFilters = ({
         </div>
         
         {showStaffFilters && departments && departments.length > 0 && (
-          <div className="sm:w-[220px]">
+          <div className="w-full md:w-auto">
             <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
               <SelectTrigger id="department-filter" name="department-filter" className="w-full bg-background text-foreground border-input">
                 <SelectValue placeholder="Filter by department" />
@@ -112,7 +112,7 @@ export const UserFilters = ({
         )}
         
         {showStaffFilters && (
-          <div className="sm:w-[220px]">
+          <div className="w-full md:w-auto">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger id="status-filter" name="status-filter" className="w-full bg-background text-foreground border-input">
                 <SelectValue placeholder="Filter by status" />
@@ -127,7 +127,7 @@ export const UserFilters = ({
           </div>
         )}
         
-        <div className="sm:w-[220px]">
+        <div className="w-full md:w-auto">
           <Select 
             value="" 
             onValueChange={(value) => onExcludeRole?.(value)}
