@@ -56,6 +56,19 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				// Add tab-specific colors
+				'tabs-list': {
+					DEFAULT: 'hsl(var(--tabs-list))',
+					foreground: 'hsl(var(--tabs-list-foreground))'
+				},
+				'tabs-trigger-hover': {
+					DEFAULT: 'hsl(var(--tabs-trigger-hover))',
+					foreground: 'hsl(var(--tabs-trigger-hover-foreground))'
+				},
+				'tabs-trigger-active': {
+					DEFAULT: 'hsl(var(--tabs-trigger-active))',
+					foreground: 'hsl(var(--tabs-trigger-active-foreground))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background, var(--card)))',
 					foreground: 'hsl(var(--sidebar-foreground, var(--card-foreground)))',

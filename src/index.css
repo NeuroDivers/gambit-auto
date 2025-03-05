@@ -33,6 +33,14 @@
     --input: 240 5.9% 90%;
     --ring: 262 83.3% 57.8%;
 
+    /* Tab specific colors */
+    --tabs-list: var(--muted);
+    --tabs-list-foreground: var(--muted-foreground);
+    --tabs-trigger-hover: var(--secondary);
+    --tabs-trigger-hover-foreground: var(--secondary-foreground);
+    --tabs-trigger-active: var(--primary);
+    --tabs-trigger-active-foreground: var(--primary-foreground);
+
     --radius: 0.5rem;
   }
 
@@ -73,6 +81,14 @@
     --border: 260 15% 22%;
     --input: 260 15% 22%;
     --ring: 262 83.3% 75%;
+
+    /* Tab specific colors - dark mode */
+    --tabs-list: var(--muted);
+    --tabs-list-foreground: var(--muted-foreground);
+    --tabs-trigger-hover: var(--secondary);
+    --tabs-trigger-hover-foreground: var(--secondary-foreground);
+    --tabs-trigger-active: var(--primary);
+    --tabs-trigger-active-foreground: var(--primary-foreground);
   }
 }
 
