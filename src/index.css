@@ -37,13 +37,13 @@
   }
 
   .dark {
-    --background: 240 10% 7%;
+    --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
 
-    --card: 240 10% 12%;
+    --card: 240 10% 8%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 240 10% 14%;
+    --popover: 240 10% 8%;
     --popover-foreground: 0 0% 98%;
 
     --primary: 262 83.3% 70%;
@@ -72,8 +72,12 @@
     @apply border-border;
   }
 
+  html {
+    @apply overflow-x-hidden;
+  }
+
   body {
-    @apply bg-background text-foreground transition-colors duration-200;
+    @apply bg-background text-foreground transition-colors duration-300;
   }
 
   /* Custom Scrollbar Styling */

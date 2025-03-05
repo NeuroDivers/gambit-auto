@@ -22,6 +22,19 @@ export default function ProfileSettings() {
     }
   }, [theme, setTheme]);
 
+  // Force theme application using document.documentElement.classList
+  useEffect(() => {
+    if (!mounted) return;
+    
+    // Force the document to apply the dark class
+    if (theme === 'dark' || (theme === 'system' && resolvedTheme === 'dark')) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    
+  }, [theme, resolvedTheme, mounted]);
+
   // Handle theme change
   const handleThemeChange = (value: string) => {
     setTheme(value);
@@ -31,7 +44,8 @@ export default function ProfileSettings() {
     console.log({
       selectedTheme: value,
       resolvedTheme,
-      currentSystemTheme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+      currentSystemTheme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+      documentClassList: document.documentElement.classList.contains('dark') ? 'has dark class' : 'no dark class'
     });
   };
 

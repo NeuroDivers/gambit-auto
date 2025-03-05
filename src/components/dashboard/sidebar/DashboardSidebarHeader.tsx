@@ -19,7 +19,7 @@ interface DashboardSidebarHeaderProps {
 
 export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardSidebarHeaderProps) {
   const { state } = useSidebar();
-  const { theme, systemTheme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const { data: businessProfile } = useQuery({
     queryKey: ["business-profile"],
     queryFn: async () => {
@@ -33,9 +33,8 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
     }
   });
 
-  // For system theme, use systemTheme to determine dark/light
-  const currentTheme = theme === 'system' ? systemTheme : theme;
-  const logoUrl = currentTheme === 'dark' 
+  // For system theme, use resolvedTheme to determine dark/light
+  const logoUrl = resolvedTheme === 'dark' 
     ? businessProfile?.dark_logo_url 
     : businessProfile?.light_logo_url;
 
