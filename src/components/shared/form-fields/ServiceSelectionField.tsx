@@ -254,7 +254,7 @@ export function ServiceSelectionField({
                         type="number"
                         min="0"
                         step="0.01"
-                        value={service.unit_price}
+                        value={Number(service.unit_price)}
                         onChange={(e) => updateService(index, { unit_price: parseFloat(e.target.value) || 0 })}
                         className="w-full"
                         disabled={disabled}
@@ -377,7 +377,7 @@ export function ServiceSelectionField({
                                     type="number"
                                     min="0"
                                     step="0.01"
-                                    value={subService.unit_price}
+                                    value={Number(subService.unit_price)}
                                     onChange={(e) => updateSubService(index, subIndex, { 
                                       unit_price: parseFloat(e.target.value) || 0 
                                     })}
