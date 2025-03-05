@@ -12,7 +12,23 @@ import { EstimateForm } from "@/components/quotes/EstimateForm"
 export default function CreateEstimate() {
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const form = useForm()
+  const form = useForm({
+    defaultValues: {
+      client_id: '',
+      vehicle_id: '',
+      services: [],
+      total: 0,
+      notes: '',
+      customer_first_name: '',
+      customer_last_name: '',
+      customer_email: '',
+      customer_phone: '',
+      vehicle_make: '',
+      vehicle_model: '',
+      vehicle_year: '',
+      vehicle_vin: ''
+    }
+  })
 
   // Update the document title when the component mounts
   useEffect(() => {
@@ -31,6 +47,15 @@ export default function CreateEstimate() {
           status: "draft",
           total: data.total || 0,
           notes: data.notes || "",
+          customer_first_name: data.customer_first_name,
+          customer_last_name: data.customer_last_name,
+          customer_email: data.customer_email,
+          customer_phone: data.customer_phone,
+          vehicle_make: data.vehicle_make,
+          vehicle_model: data.vehicle_model,
+          vehicle_year: data.vehicle_year,
+          vehicle_vin: data.vehicle_vin,
+          estimate_number: `EST-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`
         })
         .select()
         .single()
@@ -47,6 +72,7 @@ export default function CreateEstimate() {
               service_id: service.id,
               quantity: service.quantity,
               unit_price: service.price,
+              service_name: service.name,
               description: service.description || "",
             }))
           )
