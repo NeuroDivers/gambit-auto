@@ -33,13 +33,17 @@ export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebar
     }
   });
 
-  // Determine if dark mode is active
+  // Determine if dark mode is active - simplified and more reliable approach
   useEffect(() => {
-    if (resolvedTheme) {
-      setIsDarkTheme(resolvedTheme === 'dark');
-      console.log("Theme updated in client sidebar:", { resolvedTheme, isDark: resolvedTheme === 'dark' });
-    }
-  }, [resolvedTheme]);
+    // Check if the HTML element has the dark class - this is the most reliable approach
+    const isDark = document.documentElement.classList.contains('dark');
+    setIsDarkTheme(isDark);
+    console.log("Dark mode detection in client sidebar:", { 
+      htmlHasDarkClass: isDark, 
+      resolvedTheme,
+      theme
+    });
+  }, [resolvedTheme, theme]);
 
   // Get the appropriate logo URL based on current theme
   const logoUrl = React.useMemo(() => {

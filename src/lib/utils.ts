@@ -1,4 +1,3 @@
-
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -37,49 +36,19 @@ export const applyThemeClass = (theme: string | undefined, resolvedTheme: string
     console.log("Using theme from localStorage:", themeToApply);
   }
   
-  // Apply theme based on our determined value
-  if (themeToApply === 'dark') {
+  // Force immediate application of dark/light class on the HTML element
+  if (themeToApply === 'dark' || (themeToApply === 'system' && getSystemTheme() === 'dark') || (!themeToApply && resolvedTheme === 'dark')) {
     document.documentElement.classList.add('dark');
-    localStorage.setItem('theme', 'dark');
-    console.log("Applied dark theme");
-    return;
-  } else if (themeToApply === 'light') {
+    console.log("Applied dark theme to HTML element");
+  } else {
     document.documentElement.classList.remove('dark');
-    localStorage.setItem('theme', 'light');
-    console.log("Applied light theme");
-    return;
-  } else if (themeToApply === 'system') {
-    localStorage.setItem('theme', 'system');
-    console.log("Set theme to system preference");
+    console.log("Applied light theme to HTML element");
   }
   
-  // If theme is system or undefined, use the resolved theme
-  if (resolvedTheme === 'dark') {
-    document.documentElement.classList.add('dark');
-    console.log("Applied dark theme from resolved theme");
-  } else if (resolvedTheme === 'light') {
-    document.documentElement.classList.remove('dark');
-    console.log("Applied light theme from resolved theme");
-  }
-  
-  // If no theme info is available, check localStorage directly as a fallback
-  if (!themeToApply && !resolvedTheme) {
-    if (savedTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-      console.log("Applied dark theme from localStorage fallback");
-    } else if (savedTheme === 'light') {
-      document.documentElement.classList.remove('dark');
-      console.log("Applied light theme from localStorage fallback");
-    } else {
-      // Fall back to system preference
-      if (getSystemTheme() === 'dark') {
-        document.documentElement.classList.add('dark');
-        console.log("Applied dark theme from system preference");
-      } else {
-        document.documentElement.classList.remove('dark');
-        console.log("Applied light theme from system preference");
-      }
-    }
+  // Store the theme preference
+  if (themeToApply) {
+    localStorage.setItem('theme', themeToApply);
+    console.log("Saved theme preference to localStorage:", themeToApply);
   }
   
   // Apply any custom theme colors

@@ -37,13 +37,17 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
     }
   });
   
-  // Determine if dark mode is active
+  // Determine if dark mode is active - simplified and more reliable approach
   useEffect(() => {
-    if (resolvedTheme) {
-      setIsDarkTheme(resolvedTheme === 'dark');
-      console.log("Theme updated in dashboard sidebar:", { resolvedTheme, isDark: resolvedTheme === 'dark' });
-    }
-  }, [resolvedTheme]);
+    // Check if the HTML element has the dark class - this is the most reliable approach
+    const isDark = document.documentElement.classList.contains('dark');
+    setIsDarkTheme(isDark);
+    console.log("Dark mode detection in dashboard sidebar:", { 
+      htmlHasDarkClass: isDark, 
+      resolvedTheme,
+      theme
+    });
+  }, [resolvedTheme, theme]);
 
   // Determine which logo to display based on current theme
   const logoUrl = React.useMemo(() => {
