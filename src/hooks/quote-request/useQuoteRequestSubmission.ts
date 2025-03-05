@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { ServiceFormData } from "@/types/service-item"
@@ -17,7 +16,7 @@ export function useQuoteRequestSubmission() {
   const { toast } = useToast()
   const navigate = useNavigate()
   const { formData, updateFormData, clearStoredFormData } = useFormStorage()
-  const { uploadImages, removeImage, uploading, uploadedImages } = useMediaHandling()
+  const { uploading, uploadedUrls, handleImageUpload, handleImageRemove } = useMediaHandling()
 
   const form = useForm<ServiceFormData>({
     resolver: zodResolver(formSchema),
@@ -91,7 +90,7 @@ export function useQuoteRequestSubmission() {
       if (error) throw error
       
       // Upload any images if there are any
-      if (uploadedImages.length > 0) {
+      if (uploadedUrls.length > 0) {
         // Logic to associate images with the quote request
         console.log("Uploading images for quote request")
       }
@@ -166,8 +165,8 @@ export function useQuoteRequestSubmission() {
     }
   }
 
-  const handleImageUpload = async (files: File[]) => {
-    const uploadedUrls = await uploadImages(files)
+  const handleImageUploadWrapper = async (files: File[]) => {
+    const urls = await handleImageUpload(new DataTransfer().files);
     
     if (selectedServiceId) {
       const serviceDetails = form.getValues().service_details || {}
@@ -176,16 +175,18 @@ export function useQuoteRequestSubmission() {
       // Update form with new images
       form.setValue(`service_details.${selectedServiceId}.images`, [
         ...currentImages,
-        ...uploadedUrls
+        ...urls
       ])
       
       // Save to storage
       updateFormData(form.getValues())
     }
+    
+    return urls;
   }
 
-  const handleImageRemove = (imageUrl: string) => {
-    removeImage(imageUrl)
+  const handleImageRemoveWrapper = async (imageUrl: string) => {
+    await handleImageRemove(imageUrl)
     
     if (selectedServiceId) {
       const serviceDetails = form.getValues().service_details || {}
@@ -202,12 +203,13 @@ export function useQuoteRequestSubmission() {
     }
   }
 
-  const onVehicleSave = (vehicleInfo: any) => {
+  const onVehicleSave = async (vehicleInfo: any) => {
     form.setValue('vehicleInfo', {
       ...form.getValues().vehicleInfo,
       ...vehicleInfo
     })
     updateFormData(form.getValues())
+    return Promise.resolve();
   }
 
   const submitQuoteRequest = async (mediaFiles?: File[]) => {
@@ -215,7 +217,7 @@ export function useQuoteRequestSubmission() {
       setIsSubmitting(true)
       
       if (mediaFiles && mediaFiles.length > 0) {
-        await handleImageUpload(mediaFiles)
+        await handleImageUploadWrapper(mediaFiles)
       }
       
       await handleSubmit()
@@ -238,8 +240,8 @@ export function useQuoteRequestSubmission() {
     handleSubmit,
     nextStep,
     prevStep,
-    handleImageUpload,
-    handleImageRemove,
+    handleImageUpload: handleImageUploadWrapper,
+    handleImageRemove: handleImageRemoveWrapper,
     onVehicleSave,
     selectedServiceId,
     submitQuoteRequest
