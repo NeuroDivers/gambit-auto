@@ -49,20 +49,6 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
     }
   }, [businessProfile, form])
 
-  const extractFilePathFromUrl = (url: string | null): string | null => {
-    if (!url) return null;
-    
-    // Parse the URL to extract just the filename
-    try {
-      const urlObj = new URL(url);
-      const pathParts = urlObj.pathname.split('/');
-      return pathParts[pathParts.length - 1]; // Get the last part which should be the filename
-    } catch (e) {
-      console.error("Error parsing URL:", e);
-      return null;
-    }
-  }
-
   const handleFileUpload = (type: 'light' | 'dark') => async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -117,7 +103,7 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
 
   async function onSubmit(values: BusinessFormValues) {
     try {
-      // Using upsert in the file upload logic, so we don't need to manually delete old files here
+      // No need to handle file deletion, we're using upsert: true for uploads
       const { error } = businessProfile 
         ? await supabase
             .from("business_profile")
