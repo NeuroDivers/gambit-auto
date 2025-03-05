@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react"
 import { ChatUser } from "@/types/chat"
 import { ChatWindow } from "@/components/chat/ChatWindow"
@@ -14,10 +13,14 @@ import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { ChatUserFilter } from "@/components/chat/ChatUserFilter"
+
+type UserFilterOption = "all" | "staff" | "clients";
 
 export default function Chat() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [userFilter, setUserFilter] = useState<UserFilterOption>("all")
   const queryClient = useQueryClient()
   const messageChannelRef = useRef<any>(null)
   const readStatusChannelRef = useRef<any>(null)
@@ -175,17 +178,37 @@ export default function Chat() {
     return user.email || "Unknown User"
   }
 
-  const filteredUsers = users?.filter(user => {
-    const displayName = getUserDisplayName(user).toLowerCase();
-    const email = (user.email || "").toLowerCase();
-    const searchLower = searchTerm.toLowerCase();
+  // Filter users by search term and user type
+  const getFilteredUsers = () => {
+    if (!users) return { unreadUsers: [], otherUsers: [] };
     
-    return displayName.includes(searchLower) || email.includes(searchLower);
-  }) || [];
+    // First filter by search term
+    const searchFiltered = users.filter(user => {
+      const displayName = getUserDisplayName(user).toLowerCase();
+      const email = (user.email || "").toLowerCase();
+      const searchLower = searchTerm.toLowerCase();
+      
+      return displayName.includes(searchLower) || email.includes(searchLower);
+    });
+    
+    // Then apply role filter
+    const roleFiltered = searchFiltered.filter(user => {
+      if (userFilter === "all") return true;
+      
+      const isClient = user.role?.name === "client" || 
+                      user.role?.nicename?.toLowerCase() === "client";
+      
+      return userFilter === "clients" ? isClient : !isClient;
+    });
+    
+    // Separate users with unread messages
+    const unreadUsers = roleFiltered.filter(user => user.unread_count > 0) || [];
+    const otherUsers = roleFiltered.filter(user => !user.unread_count) || [];
+    
+    return { unreadUsers, otherUsers };
+  }
 
-  // First, separate users with unread messages
-  const unreadUsers = filteredUsers.filter(user => user.unread_count > 0) || [];
-  const otherUsers = filteredUsers.filter(user => !user.unread_count) || [];
+  const { unreadUsers, otherUsers } = getFilteredUsers();
 
   // Then group remaining users by role
   const groupedUsers = otherUsers.reduce((acc, user) => {
@@ -205,7 +228,7 @@ export default function Chat() {
   return (
     <div className="flex h-[calc(100vh-4rem)] gap-4 p-4">
       <Card className="w-72 flex flex-col">
-        <div className="p-3 border-b">
+        <div className="p-3 border-b space-y-2">
           <div className="relative mb-2">
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -215,6 +238,12 @@ export default function Chat() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          
+          <ChatUserFilter 
+            currentFilter={userFilter}
+            onFilterChange={setUserFilter}
+          />
+          
           <Button 
             variant="outline" 
             size="sm" 
@@ -323,7 +352,7 @@ export default function Chat() {
                   </div>
                 ))}
 
-                {filteredUsers.length === 0 && (
+                {unreadUsers.length === 0 && Object.keys(groupedUsers).length === 0 && (
                   <div className="flex flex-col items-center justify-center p-6 text-center">
                     <AlertCircle className="h-10 w-10 mb-2 text-muted-foreground" />
                     <h3 className="font-medium">
@@ -334,9 +363,11 @@ export default function Chat() {
                         ? "Try a different search term" 
                         : isError 
                           ? "There was an error loading the user list"
-                          : users && users.length === 0 
-                            ? "No other users exist yet in the system" 
-                            : "Try refreshing the user list"}
+                          : userFilter !== "all"
+                            ? `No ${userFilter === "clients" ? "clients" : "staff members"} found`
+                            : users && users.length === 0 
+                              ? "No other users exist yet in the system" 
+                              : "Try refreshing the user list"}
                     </p>
                     {(isError || users?.length === 0) && (
                       <Button 
