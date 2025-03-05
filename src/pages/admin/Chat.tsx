@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react"
 import { ChatUser } from "@/types/chat"
 import { ChatWindow } from "@/components/chat/ChatWindow"
@@ -16,6 +17,9 @@ import { Button } from "@/components/ui/button"
 import { ChatUserFilter } from "@/components/chat/ChatUserFilter"
 
 type UserFilterOption = "all" | "staff" | "customers";
+
+// The specific customer role ID
+const CUSTOMER_ROLE_ID = "73a06339-6dd6-4da7-ac27-db9e160c2ff6";
 
 export default function Chat() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null)
@@ -179,8 +183,7 @@ export default function Chat() {
     const roleFiltered = searchFiltered.filter(user => {
       if (userFilter === "all") return true;
       
-      const isCustomer = user.role?.name === "client" || 
-                      user.role?.nicename?.toLowerCase() === "client";
+      const isCustomer = user.role?.id === CUSTOMER_ROLE_ID;
       
       return userFilter === "customers" ? isCustomer : !isCustomer;
     });
