@@ -15,6 +15,29 @@ type CalendarContentProps = {
   onWorkOrderSelect: (workOrder: WorkOrder) => void
 }
 
+// Sort function for service bays
+const sortServiceBays = (bays: ServiceBay[]): ServiceBay[] => {
+  return [...bays].sort((a, b) => {
+    // Extract numbers from bay names if they exist
+    const aMatch = a.name.match(/(\d+)/)
+    const bMatch = b.name.match(/(\d+)/)
+    
+    // If both have numbers, sort numerically
+    if (aMatch && bMatch) {
+      return parseInt(aMatch[1], 10) - parseInt(bMatch[1], 10)
+    }
+    
+    // If only a has a number, it comes first
+    if (aMatch) return -1
+    
+    // If only b has a number, it comes first
+    if (bMatch) return 1
+    
+    // Neither has a number, sort alphabetically
+    return a.name.localeCompare(b.name)
+  })
+}
+
 export function CalendarContent({ 
   days, 
   serviceBays, 
@@ -23,9 +46,12 @@ export function CalendarContent({
   onDateSelect,
   onWorkOrderSelect
 }: CalendarContentProps) {
+  // Sort the service bays before rendering
+  const sortedBays = serviceBays ? sortServiceBays(serviceBays) : []
+  
   return (
     <>
-      {serviceBays?.map((bay) => (
+      {sortedBays.map((bay) => (
         <div 
           key={bay.id}
           className="grid"

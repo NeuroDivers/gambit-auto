@@ -27,7 +27,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
   const { serviceBays } = useServiceBays()
   const { blockedDates } = useBlockedDates()
-  const DAYS_TO_LOAD = 14
+  const DAYS_TO_LOAD = 7 // Changed from 14 to 7
   const CELL_WIDTH = 60
   const BAY_COLUMN_WIDTH = 80
 
