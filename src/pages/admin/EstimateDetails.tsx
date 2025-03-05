@@ -7,6 +7,11 @@ import { ArrowLeft, Printer, Send, Trash } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/components/ui/use-toast"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
+import { CustomerInfo } from "@/components/estimates/sections/CustomerInfo"
+import { VehicleInfo } from "@/components/estimates/sections/VehicleInfo"
+import { EstimateServices } from "@/components/estimates/sections/EstimateServices"
+import { EstimateNotes } from "@/components/estimates/sections/EstimateNotes"
+import { EstimateStatus } from "@/components/estimates/sections/EstimateStatus"
 
 export default function EstimateDetails() {
   const { id } = useParams()
@@ -66,6 +71,37 @@ export default function EstimateDetails() {
     )
   }
 
+  const handleDeleteEstimate = async () => {
+    try {
+      const { error } = await supabase
+        .from("estimates")
+        .delete()
+        .eq("id", id)
+
+      if (error) throw error
+
+      toast({
+        title: "Estimate deleted successfully",
+      })
+      navigate("/estimates")
+    } catch (error) {
+      console.error("Error deleting estimate:", error)
+      toast({
+        variant: "destructive",
+        title: "Failed to delete estimate",
+        description: error.message,
+      })
+    }
+  }
+
+  const handleSendEstimate = () => {
+    // Implementation for sending email would go here
+    toast({
+      title: "Email feature coming soon",
+      description: "The ability to email estimates will be available in a future update."
+    })
+  }
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -77,31 +113,40 @@ export default function EstimateDetails() {
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <PageTitle
-            title={`Estimate #${estimate.estimate_number || estimate.id}`}
-            description={`Created on ${new Date(estimate.created_at).toLocaleDateString()}`}
-          />
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <PageTitle
+              title={`Estimate #${estimate.estimate_number || estimate.id.substring(0, 8)}`}
+              description={`Created on ${new Date(estimate.created_at).toLocaleDateString()}`}
+            />
+            <EstimateStatus status={estimate.status} />
+          </div>
         </div>
         
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => window.print()}>
             <Printer className="h-4 w-4 mr-2" />
             Print
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleSendEstimate}>
             <Send className="h-4 w-4 mr-2" />
             Email
           </Button>
-          <Button variant="destructive" size="sm">
+          <Button variant="destructive" size="sm" onClick={handleDeleteEstimate}>
             <Trash className="h-4 w-4 mr-2" />
             Delete
           </Button>
         </div>
       </div>
       
-      {/* Estimate content would go here */}
-      <div className="border rounded-lg p-6">
-        <p>Estimate details implementation needed</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 space-y-6">
+          <EstimateServices items={estimate.items} />
+          <EstimateNotes notes={estimate.notes} />
+        </div>
+        <div className="space-y-6">
+          <CustomerInfo customer={estimate.customer} />
+          <VehicleInfo vehicle={estimate.vehicle} />
+        </div>
       </div>
     </div>
   )
