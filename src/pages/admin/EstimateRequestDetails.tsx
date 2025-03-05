@@ -26,45 +26,69 @@ export default function EstimateRequestDetails() {
     
     const fetchEstimateRequest = async () => {
       try {
-        // First try a simple query without joins
-        const { data: basicData, error: basicError } = await supabase
+        console.log("Attempting to fetch estimate request with ID:", id)
+        
+        // Try directly with the table name first
+        const { data: directData, error: directError } = await supabase
           .from("estimate_requests")
           .select("*")
           .eq("id", id)
           .single()
           
-        if (basicError) {
-          console.error("Error checking basic estimate request:", basicError)
-          throw basicError
+        if (directError) {
+          console.error("Error with direct estimate request query:", directError)
+          
+          // Try alternative table name
+          console.log("Trying with alternative table name 'quote_requests'")
+          const { data: altData, error: altError } = await supabase
+            .from("quote_requests")
+            .select("*")
+            .eq("id", id)
+            .single()
+            
+          if (altError) {
+            console.error("Alternative query also failed:", altError)
+            toast.error("Could not load estimate request data")
+            throw altError
+          }
+          
+          console.log("Found data with alternative table name:", altData)
+          setEstimateRequest(altData)
+          setLoading(false)
+          return
         }
         
-        console.log("Basic estimate request data:", basicData)
+        console.log("Successfully retrieved basic estimate request data:", directData)
         
-        // Now try to fetch with customer data
-        const { data, error } = await supabase
-          .from("estimate_requests")
-          .select(`
-            *,
-            customer:customers(*),
-            vehicle_info:vehicles(*)
-          `)
-          .eq("id", id)
-          .single()
-
-        if (error) {
-          console.error("Error fetching full estimate request:", error)
-          
-          // Fall back to the basic data if join fails
-          if (basicData) {
-            console.log("Using basic data as fallback since join failed")
-            setEstimateRequest(basicData)
-          } else {
-            toast.error("Failed to load estimate request")
-            throw error
+        // If we got the basic data, try to fetch related info
+        if (directData) {
+          // Now try to get the full data with relations
+          try {
+            const { data: fullData, error: fullError } = await supabase
+              .from("estimate_requests")
+              .select(`
+                *,
+                customer:customers(*),
+                vehicle_info:vehicles(*)
+              `)
+              .eq("id", id)
+              .single()
+              
+            if (fullError) {
+              console.log("Error fetching full data with relations:", fullError)
+              console.log("Using basic data instead")
+              setEstimateRequest(directData)
+            } else {
+              console.log("Successfully fetched full data with relations:", fullData)
+              setEstimateRequest(fullData)
+            }
+          } catch (relationError) {
+            console.error("Error in relation fetch:", relationError)
+            setEstimateRequest(directData)
           }
         } else {
-          console.log("Fetched estimate request with joins:", data)
-          setEstimateRequest(data)
+          console.log("No data found for this ID")
+          setEstimateRequest(null)
         }
       } catch (error) {
         console.error("Error fetching estimate request:", error)

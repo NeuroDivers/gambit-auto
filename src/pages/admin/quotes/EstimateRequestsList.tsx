@@ -16,49 +16,58 @@ export function EstimateRequestsList() {
   useEffect(() => {
     const fetchEstimateRequests = async () => {
       try {
-        // Use a simpler query first to check if we can access the table
-        const { data: basicData, error: basicError } = await supabase
+        // Try a direct table select first without any filters
+        console.log("Attempting to fetch estimate_requests directly")
+        const { data: rawData, error: rawError } = await supabase
           .from("estimate_requests")
-          .select("*")
+          .select("id, created_at, status, service_type, customer_id, name")
+          .limit(30)
         
-        if (basicError) {
-          console.error("Error fetching basic estimate requests:", basicError)
-          toast.error("Error accessing estimate requests data")
-          throw basicError
+        if (rawError) {
+          console.error("Error fetching raw estimate requests:", rawError)
+          throw rawError
         }
         
-        console.log("Basic estimate requests data:", basicData)
+        console.log("Raw estimate requests data:", rawData)
         
-        if (basicData && basicData.length === 0) {
-          console.log("No estimate requests found in the database query")
-          setEstimateRequests([])
-          setLoading(false)
-          return
-        }
-        
-        // Since we have records in the basic query, try fetching with customer relationship
-        const { data, error } = await supabase
-          .from("estimate_requests")
-          .select(`
-            *,
-            customer:customers(first_name, last_name, email)
-          `)
-          .order("created_at", { ascending: false })
+        if (rawData && rawData.length > 0) {
+          // If we got raw data, try to enhance it with customer information
+          const { data, error } = await supabase
+            .from("estimate_requests")
+            .select(`
+              *,
+              customer:customers(first_name, last_name, email)
+            `)
+            .order("created_at", { ascending: false })
 
-        if (error) {
-          console.error("Error fetching estimate requests with customer join:", error)
-          
-          // Fall back to the basic data if the join fails
-          if (basicData) {
-            console.log("Using basic data as fallback since join failed")
-            setEstimateRequests(basicData)
+          if (error) {
+            console.error("Error fetching estimate requests with customer join:", error)
+            console.log("Using raw data as fallback")
+            setEstimateRequests(rawData)
           } else {
-            toast.error("Error loading estimate requests")
-            throw error
+            console.log("Fetched estimate requests with customer join:", data)
+            setEstimateRequests(data || [])
           }
         } else {
-          console.log("Fetched estimate requests with customer join:", data)
-          setEstimateRequests(data || [])
+          // If no results from the first query, try an alternative approach
+          console.log("No results found, trying an alternative query")
+          
+          // Try querying with a different table name in case there's a view or naming difference
+          const { data: altData, error: altError } = await supabase
+            .from("quote_requests")
+            .select("*")
+            .limit(30)
+          
+          if (altError) {
+            console.error("Alternative query also failed:", altError)
+          } else {
+            console.log("Alternative query results:", altData)
+            if (altData && altData.length > 0) {
+              setEstimateRequests(altData)
+            } else {
+              setEstimateRequests([])
+            }
+          }
         }
       } catch (error) {
         console.error("Error in estimate requests fetch flow:", error)
