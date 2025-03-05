@@ -1,7 +1,7 @@
 
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Control } from "react-hook-form"
+import { Control, useFormContext } from "react-hook-form"
 import { WorkOrderFormValues } from "../types"
 import { AddressFields } from "@/components/shared/form-sections/AddressFields"
 
@@ -10,6 +10,9 @@ interface CustomerInfoFieldsProps {
 }
 
 export function CustomerInfoFields({ control }: CustomerInfoFieldsProps) {
+  // Get the full form context to pass to AddressFields
+  const form = useFormContext<WorkOrderFormValues>()
+  
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -69,8 +72,8 @@ export function CustomerInfoFields({ control }: CustomerInfoFieldsProps) {
         />
       </div>
       
-      {/* Address Fields Section - Using the shared component */}
-      <AddressFields form={{ control }} fieldPrefix="" />
+      {/* Address Fields Section - Pass the full form object */}
+      <AddressFields form={form} fieldPrefix="" />
     </div>
   )
 }

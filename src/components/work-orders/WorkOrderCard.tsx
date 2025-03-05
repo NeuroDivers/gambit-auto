@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { WorkOrder } from "./types"
+import { WorkOrder } from "./types"  // Use our local WorkOrder type
 import { WorkOrderCardHeader } from "./card/WorkOrderCardHeader"
 import { WorkOrderCardDetails } from "./card/WorkOrderCardDetails"
 import { WorkOrderCardActions } from "./card/WorkOrderCardActions"

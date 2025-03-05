@@ -15,7 +15,13 @@ export type WorkOrder = {
   status: string
   created_at: string
   price?: number | null
-  address: string | null
+  address?: string | null // Made optional to match the other WorkOrder type
+  street_address?: string
+  unit_number?: string
+  city?: string
+  state_province?: string
+  postal_code?: string
+  country?: string
   timeframe: "flexible" | "asap" | "within_week" | "within_month"
   start_time?: string | null
   estimated_duration?: string | null
