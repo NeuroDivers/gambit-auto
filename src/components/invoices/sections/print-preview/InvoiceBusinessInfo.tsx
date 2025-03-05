@@ -21,8 +21,8 @@ export function InvoiceBusinessInfo({ businessProfile, logo_url }: InvoiceBusine
 
   // Use the appropriate logo based on theme
   const themeAwareLogo = currentTheme === 'dark'
-    ? businessProfile.dark_logo_url || businessProfile.logo_url
-    : businessProfile.light_logo_url || businessProfile.logo_url
+    ? businessProfile.dark_logo_url || logo_url
+    : businessProfile.light_logo_url || logo_url
 
   // Use the provided logo_url as a fallback if available
   const displayLogo = logo_url || themeAwareLogo
