@@ -34,9 +34,7 @@ export default function ProfileSettings() {
     });
   };
 
-  // Check the actual theme being applied
-  const currentTheme = resolvedTheme || theme;
-
+  // Don't render anything until after mounting to prevent hydration mismatch
   if (!mounted) {
     return null;
   }
@@ -52,24 +50,24 @@ export default function ProfileSettings() {
           <CardHeader>
             <CardTitle>Theme Preferences</CardTitle>
             <CardDescription>
-              Current theme: {theme === 'system' ? `System (${currentTheme})` : theme}
+              Choose your preferred theme for the application
             </CardDescription>
           </CardHeader>
           <CardContent>
             <RadioGroup 
-              value={theme} 
+              defaultValue={theme || 'system'} 
               onValueChange={handleThemeChange}
               className="grid grid-cols-3 gap-4"
             >
               <div>
                 <RadioGroupItem 
                   value="light" 
-                  id="light"
+                  id="theme-light"
                   className="peer sr-only"
                 />
                 <Label
-                  htmlFor="light"
-                  className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary ${currentTheme === 'light' ? 'border-primary' : ''}`}
+                  htmlFor="theme-light"
+                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                 >
                   Light
                 </Label>
@@ -77,12 +75,12 @@ export default function ProfileSettings() {
               <div>
                 <RadioGroupItem 
                   value="dark" 
-                  id="dark"
+                  id="theme-dark"
                   className="peer sr-only"
                 />
                 <Label
-                  htmlFor="dark"
-                  className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary ${currentTheme === 'dark' ? 'border-primary' : ''}`}
+                  htmlFor="theme-dark"
+                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                 >
                   Dark
                 </Label>
@@ -90,12 +88,12 @@ export default function ProfileSettings() {
               <div>
                 <RadioGroupItem 
                   value="system" 
-                  id="system"
+                  id="theme-system"
                   className="peer sr-only"
                 />
                 <Label
-                  htmlFor="system"
-                  className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary ${theme === 'system' ? 'border-primary' : ''}`}
+                  htmlFor="theme-system"
+                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                 >
                   System
                 </Label>
