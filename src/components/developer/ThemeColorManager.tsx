@@ -427,7 +427,7 @@ export function ThemeColorManager() {
   };
   
   return (
-    <Card className="border shadow-sm">
+    <Card className="bg-transparent border-none shadow-none">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2">

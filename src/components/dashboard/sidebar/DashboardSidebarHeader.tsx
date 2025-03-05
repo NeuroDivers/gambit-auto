@@ -37,33 +37,13 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
     }
   });
   
-  // Simplified dark mode detection that prioritizes explicit settings
-  const checkIsDarkMode = () => {
-    // First check resolvedTheme which already handles system preference
-    if (resolvedTheme) {
-      return resolvedTheme === 'dark';
-    }
-    
-    // Fallback to document class if resolvedTheme isn't available
-    if (typeof document !== 'undefined') {
-      return document.documentElement.classList.contains('dark');
-    }
-    
-    // Last resort fallback
-    return false;
-  };
-
-  // Update theme state whenever theme-related variables change
+  // Determine if dark mode is active
   useEffect(() => {
-    const darkModeActive = checkIsDarkMode();
-    setIsDarkTheme(darkModeActive);
-    
-    console.log("Theme state updated:", {
-      theme, 
-      resolvedTheme, 
-      isDarkTheme: darkModeActive
-    });
-  }, [theme, resolvedTheme]);
+    // Simple check - if resolvedTheme is available, use it directly
+    if (resolvedTheme) {
+      setIsDarkTheme(resolvedTheme === 'dark');
+    }
+  }, [resolvedTheme]);
 
   // Determine which logo to display based on current theme
   const logoUrl = React.useMemo(() => {
