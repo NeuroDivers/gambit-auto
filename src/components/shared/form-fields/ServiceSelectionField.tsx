@@ -1,3 +1,4 @@
+
 import { ServiceItemType } from "@/types/service-item"
 import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
@@ -274,7 +275,7 @@ export function ServiceSelectionField({
                           <SelectValue placeholder="Select staff member" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="none">None</SelectItem>
                           {staffProfiles.map((staff) => (
                             <SelectItem key={staff.profile_id} value={staff.profile_id}>
                               {staff.first_name} {staff.last_name}
@@ -399,7 +400,7 @@ export function ServiceSelectionField({
                                       <SelectValue placeholder="Select staff member" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="">None</SelectItem>
+                                      <SelectItem value="none">None</SelectItem>
                                       {staffProfiles.map((staff) => (
                                         <SelectItem key={staff.profile_id} value={staff.profile_id}>
                                           {staff.first_name} {staff.last_name}
