@@ -2768,6 +2768,17 @@ export type Database = {
         }
         Returns: string
       }
+      create_estimate_request: {
+        Args: {
+          p_customer_id: string
+          p_vehicle_make: string
+          p_vehicle_model: string
+          p_vehicle_year: number
+          p_description: string
+          p_service_details?: Json
+        }
+        Returns: string
+      }
       create_invoice_from_work_order: {
         Args: {
           work_order_id: string
@@ -2807,16 +2818,23 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
-      get_table_info: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          table_name: string
-          column_name: string
-          data_type: string
-          table_exists: boolean
-          row_count: number
-        }[]
-      }
+      get_table_info:
+        | {
+            Args: Record<PropertyKey, never>
+            Returns: {
+              table_name: string
+              column_name: string
+              data_type: string
+              table_exists: boolean
+              row_count: number
+            }[]
+          }
+        | {
+            Args: {
+              table_name: string
+            }
+            Returns: Json
+          }
       has_permission: {
         Args: {
           user_id: string

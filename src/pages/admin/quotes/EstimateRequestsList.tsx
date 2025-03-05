@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { useEstimateRequestsData } from "@/hooks/useEstimateRequestsData"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertTriangle } from "lucide-react"
+import { supabase } from "@/integrations/supabase/client"
 
 export function EstimateRequestsList() {
   const navigate = useNavigate()
@@ -46,16 +47,17 @@ export function EstimateRequestsList() {
         if (data && data.length > 0) {
           setEstimateRequests(data);
           
-          // Fetch customers separately if needed
-          const customerIds = [...new Set(data
-            .filter(req => req.customer_id)
-            .map(req => req.customer_id))];
+          // Customer data should already be joined in the query, but if it's missing
+          // for some records, we can fetch it separately
+          const missingCustomerIds = data
+            .filter(req => req.customer_id && !req.customers)
+            .map(req => req.customer_id);
           
-          if (customerIds.length > 0) {
+          if (missingCustomerIds.length > 0) {
             const { data: customers, error: customerError } = await supabase
               .from("customers")
               .select("id, first_name, last_name, email")
-              .in("id", customerIds);
+              .in("id", missingCustomerIds);
             
             if (customerError) {
               console.error("Error fetching customer data:", customerError);
@@ -70,7 +72,7 @@ export function EstimateRequestsList() {
               // Enhance the estimate requests with customer data
               const enhancedRequests = data.map(request => ({
                 ...request,
-                customers: customerMap[request.customer_id] || null
+                customers: request.customers || customerMap[request.customer_id] || null
               }));
               
               setEstimateRequests(enhancedRequests);

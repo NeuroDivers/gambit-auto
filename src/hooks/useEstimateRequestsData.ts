@@ -10,35 +10,50 @@ export const useEstimateRequestsData = () => {
   const fetchEstimateRequests = async () => {
     setLoading(true);
     try {
-      console.log("Checking if estimate_requests table exists and contains data");
+      console.log("Fetching estimate requests data");
       
-      // First try to get metadata about the table
-      const { data: tableInfo, error: tableError } = await supabase
+      // First check table info using our new security definer function
+      const { data: tableInfo, error: tableInfoError } = await supabase
         .rpc('get_table_info', { table_name: 'estimate_requests' });
       
-      if (tableError) {
-        console.error("Error checking table info:", tableError);
-        setDebugInfo({
-          error: tableError,
-          message: "Failed to get table information",
-          timestamp: new Date().toISOString()
-        });
-        throw new Error("Failed to verify estimate_requests table");
+      if (tableInfoError) {
+        console.error("Error checking table info:", tableInfoError);
+        throw tableInfoError;
       }
       
       console.log("Table info:", tableInfo);
-      setDebugInfo({ tableInfo, timestamp: new Date().toISOString() });
       
-      // Fetch all estimate requests with RLS bypass
+      // Fetch all estimate requests with RLS now allowing access
       const { data, error, count } = await supabase
         .from("estimate_requests")
-        .select("*", { count: 'exact' })
+        .select("*, customers(*)", { count: 'exact' })
         .order("created_at", { ascending: false });
       
       if (error) {
         console.error("Error fetching estimate requests:", error);
+        setDebugInfo({
+          error: error,
+          message: "Failed to fetch estimate requests",
+          tableInfo,
+          timestamp: new Date().toISOString()
+        });
         throw error;
       }
+      
+      console.log("Fetched estimate requests:", data?.length || 0, "records");
+      
+      // Prepare debug info to help troubleshoot
+      setDebugInfo({
+        recordCount: data?.length || 0,
+        tableInfo,
+        recordStats: data?.map(req => ({
+          id: req.id,
+          customerIdPresent: Boolean(req.customer_id),
+          createdAt: req.created_at,
+          status: req.status
+        })) || [],
+        timestamp: new Date().toISOString()
+      });
       
       return {
         data,
@@ -47,11 +62,12 @@ export const useEstimateRequestsData = () => {
       };
     } catch (error) {
       console.error("Error in fetchEstimateRequests:", error);
-      toast.error("Failed to fetch estimate requests. RLS policy may be blocking access.");
+      toast.error("Failed to fetch estimate requests");
       return {
         data: [],
         count: 0,
-        error
+        error,
+        tableInfo: null
       };
     } finally {
       setLoading(false);
@@ -96,7 +112,7 @@ export const useEstimateRequestsData = () => {
         customerId = newCustomer.id;
       }
 
-      // Now create a test estimate request with the service_rls policy enabled
+      // Now create a test estimate request with our new RPC function to bypass RLS
       const { data, error } = await supabase.rpc('create_estimate_request', {
         p_customer_id: customerId,
         p_vehicle_make: "Test",
