@@ -25,9 +25,10 @@ export const useEstimateRequestsData = () => {
       console.log("Table info:", tableInfo);
       
       // Fetch all estimate requests with RLS now allowing access
+      // Specify the exact relationship to use with the customers table
       const { data, error, count } = await supabase
         .from("estimate_requests")
-        .select("*, customers(*)", { count: 'exact' })
+        .select("*, customers!estimate_requests_customer_id_fkey(*)", { count: 'exact' })
         .order("created_at", { ascending: false });
       
       if (error) {
