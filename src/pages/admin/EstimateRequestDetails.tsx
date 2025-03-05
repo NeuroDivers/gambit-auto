@@ -19,7 +19,6 @@ export default function EstimateRequestDetails() {
   const [estimateRequest, setEstimateRequest] = useState(null)
   const [customerData, setCustomerData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [debug, setDebug] = useState(null)
 
   useEffect(() => {
     document.title = "Estimate Request | Auto Detailing CRM"
@@ -44,7 +43,6 @@ export default function EstimateRequestDetails() {
         
         console.log("Retrieved estimate request data:", requestData)
         setEstimateRequest(requestData)
-        setDebug(requestData)
         
         // If there's a customer ID, fetch the customer data separately
         if (requestData.customer_id) {
@@ -136,17 +134,6 @@ export default function EstimateRequestDetails() {
           Create Estimate
         </Button>
       </div>
-      
-      {debug && (
-        <Card className="bg-yellow-50 border-yellow-200">
-          <CardHeader>
-            <CardTitle className="text-yellow-800">Debug Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre className="text-xs overflow-auto max-h-60">{JSON.stringify(debug, null, 2)}</pre>
-          </CardContent>
-        </Card>
-      )}
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {estimateRequest.customers ? (
