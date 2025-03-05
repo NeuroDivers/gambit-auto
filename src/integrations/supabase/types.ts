@@ -599,6 +599,7 @@ export type Database = {
           id: string
           is_archived: boolean | null
           last_name: string
+          notes: string | null
           phone_number: string | null
           postal_code: string | null
           profile_id: string | null
@@ -618,6 +619,7 @@ export type Database = {
           id?: string
           is_archived?: boolean | null
           last_name: string
+          notes?: string | null
           phone_number?: string | null
           postal_code?: string | null
           profile_id?: string | null
@@ -637,6 +639,7 @@ export type Database = {
           id?: string
           is_archived?: boolean | null
           last_name?: string
+          notes?: string | null
           phone_number?: string | null
           postal_code?: string | null
           profile_id?: string | null

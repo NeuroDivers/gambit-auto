@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { supabase } from "@/integrations/supabase/client"
-import { Send, Check, Circle } from "lucide-react"
+import { Send, Check, Circle, Loader2 } from "lucide-react"
 import { format, formatDistanceToNow, differenceInDays, isToday, isYesterday } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -16,7 +16,10 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   const [newMessage, setNewMessage] = useState("")
   const [recipient, setRecipient] = useState<ChatUser | null>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [isTyping, setIsTyping] = useState(false)
+  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null)
   const channelRef = useRef<any>(null)
+  const typingChannelRef = useRef<any>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const firstUnreadRef = useRef<HTMLDivElement>(null)
   const { toast } = useToast()
@@ -155,7 +158,12 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current)
     }
+    
+    if (typingChannelRef.current) {
+      supabase.removeChannel(typingChannelRef.current)
+    }
 
+    // Set up channel for new messages
     channelRef.current = supabase
       .channel(`chat_messages_${currentUserId}_${recipientId}`)
       .on(
@@ -197,10 +205,30 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         console.log("Chat subscription status:", status)
       })
 
+    // Set up channel for typing indicators
+    typingChannelRef.current = supabase
+      .channel(`typing_indicator_${currentUserId}_${recipientId}`)
+      .on('broadcast', { event: 'typing' }, payload => {
+        if (payload.typing && payload.sender_id === recipientId) {
+          setIsTyping(true)
+          // Auto-clear typing status after 3 seconds of inactivity
+          setTimeout(() => {
+            setIsTyping(false)
+          }, 3000)
+        }
+      })
+      .subscribe((status) => {
+        console.log("Typing indicator subscription status:", status)
+      })
+
     return () => {
       if (channelRef.current) {
         console.log("Cleaning up chat subscription")
         supabase.removeChannel(channelRef.current)
+      }
+      if (typingChannelRef.current) {
+        console.log("Cleaning up typing indicator subscription")
+        supabase.removeChannel(typingChannelRef.current)
       }
     }
   }, [recipientId, currentUserId, recipient?.first_name, toast])
@@ -236,6 +264,34 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       setMessages(curr => curr.filter(msg => msg.id !== newMsg.id))
       return
     }
+  }
+
+  const handleTyping = () => {
+    if (!currentUserId || !recipientId) return
+
+    // Clear any existing timeout
+    if (typingTimeout) {
+      clearTimeout(typingTimeout)
+    }
+
+    // Send typing indicator through the channel
+    if (typingChannelRef.current) {
+      typingChannelRef.current.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: {
+          typing: true,
+          sender_id: currentUserId
+        }
+      })
+    }
+
+    // Set a new timeout to prevent sending too many events
+    const timeout = setTimeout(() => {
+      setTypingTimeout(null)
+    }, 1000)
+
+    setTypingTimeout(timeout)
   }
 
   const getRecipientDisplayName = () => {
@@ -301,14 +357,23 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
               </div>
             )
           })}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="bg-muted rounded-lg px-4 py-2 flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Typing...</span>
+              </div>
+            </div>
+          )}
         </div>
       </ScrollArea>
       <div className="p-4 border-t flex gap-2">
         <Input
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Type a message..."
           onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+          onKeyUp={handleTyping}
+          placeholder="Type a message..."
         />
         <Button 
           onClick={sendMessage}
@@ -321,3 +386,4 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     </Card>
   )
 }
+
