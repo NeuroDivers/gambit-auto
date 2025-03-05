@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react"
 import { ChatMessage, ChatUser } from "@/types/chat"
 import { Card } from "@/components/ui/card"
@@ -213,6 +212,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       recipient_id: recipientId,
       message: newMessage.trim(),
       read_at: null,
+      read: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }
