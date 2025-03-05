@@ -87,7 +87,7 @@ const Notifications = () => {
       return;
     }
 
-    // Transform chat messages to the correct type structure
+    // Transform chat messages to the correct type structure, fixing the profiles access
     const typedChatMessages = (chatMessagesResponse.data || []).map(msg => {
       return {
         id: msg.id,
@@ -96,12 +96,12 @@ const Notifications = () => {
         sender_id: msg.sender_id,
         read: msg.read,
         profiles: {
-          first_name: msg.profiles?.first_name || null,
-          last_name: msg.profiles?.last_name || null,
-          email: msg.profiles?.email || null
+          first_name: msg.profiles ? msg.profiles.first_name : null,
+          last_name: msg.profiles ? msg.profiles.last_name : null,
+          email: msg.profiles ? msg.profiles.email : null
         }
-      }
-    }) as ChatMessage[];
+      } as ChatMessage;
+    });
 
     // Format chat messages as notifications
     const chatNotifications = typedChatMessages.map(msg => ({

@@ -92,8 +92,8 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
 
       const notifications = (notificationsResponse.data || []) as Notification[]
       
+      // Process chat messages, ensuring we properly type the profiles object
       const typedChatMessages = (chatMessagesResponse.data || []).map(msg => {
-        // Make sure we're accessing the profiles property correctly
         return {
           id: msg.id,
           message: msg.message,
@@ -101,12 +101,12 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
           sender_id: msg.sender_id,
           read: msg.read,
           profiles: {
-            first_name: msg.profiles?.first_name || null,
-            last_name: msg.profiles?.last_name || null,
-            email: msg.profiles?.email || null
+            first_name: msg.profiles ? msg.profiles.first_name : null,
+            last_name: msg.profiles ? msg.profiles.last_name : null,
+            email: msg.profiles ? msg.profiles.email : null
           }
-        }
-      }) as ChatMessage[]
+        } as ChatMessage;
+      });
 
       const chatNotifications: Notification[] = typedChatMessages.map(msg => ({
         id: msg.id,
