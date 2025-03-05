@@ -38,17 +38,23 @@ export const ServiceCardActions = ({ serviceId, onEdit, onRefetch }: ServiceCard
   };
 
   return (
-    <div className="flex gap-1 shrink-0">
-      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
-        <Pencil className="h-4 w-4" />
-      </Button>
+    <div className="p-4 pt-0 flex justify-end gap-2 shrink-0">
       <Button 
-        variant="ghost" 
-        size="icon" 
-        className="h-8 w-8 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+        variant="outline" 
+        size="sm" 
+        className="flex items-center gap-2"
         onClick={handleDelete}
       >
         <Trash className="h-4 w-4" />
+        Delete
+      </Button>
+      <Button 
+        size="sm" 
+        className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
+        onClick={onEdit}
+      >
+        <Pencil className="h-4 w-4" />
+        Edit
       </Button>
     </div>
   );
