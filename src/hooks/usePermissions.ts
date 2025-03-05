@@ -29,47 +29,124 @@ interface UserRole {
 
 export const usePermissions = () => {
   // Get current user's role and cache it
-  const { data: currentUserRole, isLoading: isRoleLoading } = useQuery({
+  const { data: currentUserRole, isLoading: isRoleLoading, error: roleError } = useQuery({
     queryKey: ["current-user-role"],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log('No user found in usePermissions');
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          console.log('No user found in usePermissions');
+          return null;
+        }
+
+        const { data, error } = await supabase
+          .from('profiles')
+          .select(`
+            role:role_id (
+              id,
+              name,
+              nicename,
+              default_dashboard
+            )
+          `)
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching role:', error);
+          
+          // Check if this is a "not found" error, which means the profile exists but role may be null
+          if (error.code === 'PGRST116') {
+            // If profile exists but role is null, we'll try to assign a default client role
+            await assignDefaultRoleIfNeeded(user.id);
+            
+            // Retry the query after attempting to assign a default role
+            const { data: retryData, error: retryError } = await supabase
+              .from('profiles')
+              .select(`
+                role:role_id (
+                  id,
+                  name,
+                  nicename,
+                  default_dashboard
+                )
+              `)
+              .eq('id', user.id)
+              .single();
+              
+            if (retryError) {
+              console.error('Error on retry after assigning role:', retryError);
+              return null;
+            }
+            
+            if (retryData?.role) {
+              const roleData = Array.isArray(retryData.role) ? retryData.role[0] : retryData.role;
+              const userRole: UserRole = {
+                id: String(roleData.id),
+                name: String(roleData.name),
+                nicename: String(roleData.nicename),
+                default_dashboard: roleData.default_dashboard
+              };
+              return userRole;
+            }
+          }
+          
+          throw error;
+        }
+
+        if (data?.role) {
+          const roleData = Array.isArray(data.role) ? data.role[0] : data.role;
+          const userRole: UserRole = {
+            id: String(roleData.id),
+            name: String(roleData.name),
+            nicename: String(roleData.nicename),
+            default_dashboard: roleData.default_dashboard
+          };
+          return userRole;
+        }
+        
+        // If we get here, it means the profile exists but has no role assigned
+        console.log('Profile found but no role assigned, attempting to assign default role');
+        await assignDefaultRoleIfNeeded(user.id);
+        
+        // Retry the query after attempting to assign a default role
+        const { data: retryData, error: retryError } = await supabase
+          .from('profiles')
+          .select(`
+            role:role_id (
+              id,
+              name,
+              nicename,
+              default_dashboard
+            )
+          `)
+          .eq('id', user.id)
+          .single();
+          
+        if (retryError) {
+          console.error('Error on retry after assigning role:', retryError);
+          return null;
+        }
+        
+        if (retryData?.role) {
+          const roleData = Array.isArray(retryData.role) ? retryData.role[0] : retryData.role;
+          const userRole: UserRole = {
+            id: String(roleData.id),
+            name: String(roleData.name),
+            nicename: String(roleData.nicename),
+            default_dashboard: roleData.default_dashboard
+          };
+          return userRole;
+        }
+        
+        return null;
+      } catch (error) {
+        console.error('Fatal error in usePermissions:', error);
         return null;
       }
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          role:role_id (
-            id,
-            name,
-            nicename,
-            default_dashboard
-          )
-        `)
-        .eq('id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching role:', error);
-        throw error;
-      }
-
-      if (data?.role) {
-        const roleData = Array.isArray(data.role) ? data.role[0] : data.role;
-        const userRole: UserRole = {
-          id: String(roleData.id),
-          name: String(roleData.name),
-          nicename: String(roleData.nicename),
-          default_dashboard: roleData.default_dashboard
-        };
-        return userRole;
-      }
-      
-      return null;
     },
     staleTime: 300000, // Cache for 5 minutes
+    retry: 1
   });
 
   // Get all permissions and cache them
@@ -138,10 +215,49 @@ export const usePermissions = () => {
     }
   }, [permissions, currentUserRole]);
 
+  // Helper function to assign a default client role if needed
+  const assignDefaultRoleIfNeeded = async (userId: string) => {
+    try {
+      // First, check if the client role exists
+      const { data: clientRole, error: roleError } = await supabase
+        .from('roles')
+        .select('id')
+        .eq('name', 'client')
+        .single();
+        
+      if (roleError) {
+        console.error('Error fetching client role:', roleError);
+        return;
+      }
+      
+      if (!clientRole) {
+        console.error('Client role not found, cannot assign default role');
+        return;
+      }
+      
+      // Update the profile with the client role
+      console.log('Assigning default client role to user:', userId);
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ role_id: clientRole.id })
+        .eq('id', userId);
+        
+      if (updateError) {
+        console.error('Error assigning default role:', updateError);
+        return;
+      }
+      
+      console.log('Successfully assigned default client role');
+    } catch (error) {
+      console.error('Error in assignDefaultRoleIfNeeded:', error);
+    }
+  };
+
   return {
     permissions,
     checkPermission,
     currentUserRole,
-    isLoading: isRoleLoading
+    isLoading: isRoleLoading,
+    error: roleError
   };
 };

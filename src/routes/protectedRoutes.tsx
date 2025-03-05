@@ -1,3 +1,4 @@
+
 import { DashboardLayoutWrapper } from "@/components/dashboard/DashboardLayoutWrapper"
 import { StaffLayoutWrapper } from "@/components/staff/StaffLayoutWrapper"
 import { ClientLayoutWrapper } from "@/components/client/ClientLayoutWrapper"
@@ -22,15 +23,23 @@ import { Suspense } from "react"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
 
 const RoleBasedLayout = () => {
-  const { currentUserRole, isLoading } = usePermissions();
+  const { currentUserRole, isLoading, error } = usePermissions();
   
   if (isLoading) {
     return <LoadingScreen />;
   }
+  
+  // If there's an error or no role found, show a more informative message in console
+  if (error || !currentUserRole) {
+    console.error('Role determination error:', error || 'No role found for user');
+    console.log('Current user role state:', { currentUserRole, error });
+    return <Navigate to="/auth" replace />;
+  }
 
-  if (currentUserRole?.name) {
-    console.log('Current role:', currentUserRole);
-    
+  console.log('Current role for layout determination:', currentUserRole);
+  
+  // Determine which layout to show based on the default_dashboard property
+  if (currentUserRole?.default_dashboard) {
     switch (currentUserRole.default_dashboard) {
       case 'admin':
         return <DashboardLayoutWrapper />;
@@ -39,13 +48,22 @@ const RoleBasedLayout = () => {
       case 'client':
         return <ClientLayoutWrapper />;
       default:
-        console.log('No default dashboard set, using client dashboard');
-        return <ClientLayoutWrapper />;
+        console.log('Unrecognized default_dashboard value:', currentUserRole.default_dashboard);
+        // Fall through to default case
+    }
+  } else {
+    // If no default_dashboard is set, try to determine from role name
+    const roleName = currentUserRole.name.toLowerCase();
+    if (roleName === 'administrator' || roleName === 'admin' || roleName === 'king') {
+      return <DashboardLayoutWrapper />;
+    } else if (roleName === 'staff' || roleName === 'knight' || roleName === 'rook' || roleName === 'trainee') {
+      return <StaffLayoutWrapper />;
     }
   }
 
-  console.log('No role found, redirecting to auth');
-  return <Navigate to="/auth" replace />;
+  // Default to client layout if we couldn't determine anything else
+  console.log('No specific layout determined, using client dashboard');
+  return <ClientLayoutWrapper />;
 };
 
 export const protectedRoutes: RouteObject = {

@@ -6,12 +6,14 @@ import { useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
+import { useEffect } from "react"
+import { toast } from "sonner"
 
 export default function Auth() {
   const navigate = useNavigate()
 
   // Query to check authentication status
-  const { isLoading } = useQuery({
+  const { isLoading, isError, error } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -21,8 +23,19 @@ export default function Auth() {
         navigate('/dashboard', { replace: true })
       }
       return session
-    }
+    },
+    retry: false
   })
+
+  // Handle any errors from the session check
+  useEffect(() => {
+    if (isError && error) {
+      console.error('Auth session error:', error)
+      toast.error('Authentication error', {
+        description: 'There was a problem with your session. Please try again.'
+      })
+    }
+  }, [isError, error])
 
   const {
     isLogin,
