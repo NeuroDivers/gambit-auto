@@ -16,39 +16,58 @@ export function EstimateRequestsList() {
   useEffect(() => {
     const fetchEstimateRequests = async () => {
       try {
-        // Simpler query without any joins first to check if data exists
-        const { data: checkData, error: checkError } = await supabase
+        // First, let's do a raw count to check if data exists
+        const { count, error: countError } = await supabase
           .from("estimate_requests")
-          .select("id")
-          .limit(1)
+          .select("*", { count: "exact", head: true })
         
-        if (checkError) {
-          console.error("Error checking estimate requests:", checkError)
+        if (countError) {
+          console.error("Error counting estimate requests:", countError)
           toast.error("Error checking estimate requests")
-          throw checkError
+          throw countError
         }
         
-        console.log("Estimate requests check:", checkData)
+        console.log("Estimate requests count:", count)
         
-        // Now fetch the full data
+        if (count === 0) {
+          console.log("No estimate requests found in the database")
+          setEstimateRequests([])
+          setLoading(false)
+          return
+        }
+        
+        // Now fetch the actual data without joins first to verify basic access
+        const { data: basicData, error: basicError } = await supabase
+          .from("estimate_requests")
+          .select("*")
+        
+        if (basicError) {
+          console.error("Error fetching basic estimate requests:", basicError)
+          toast.error("Error accessing estimate requests data")
+          throw basicError
+        }
+        
+        console.log("Basic estimate requests data:", basicData)
+        
+        // Now fetch with the join to customers
         const { data, error } = await supabase
           .from("estimate_requests")
           .select(`
             *,
-            customer:customers!estimate_requests_customer_id_fkey(first_name, last_name, email)
+            customer:customers(first_name, last_name, email)
           `)
           .order("created_at", { ascending: false })
 
         if (error) {
-          console.error("Error fetching estimate requests:", error)
-          toast.error("Error loading estimate requests")
+          console.error("Error fetching estimate requests with customer join:", error)
+          toast.error("Error loading complete estimate requests")
           throw error
         }
         
-        console.log("Fetched estimate requests:", data)
+        console.log("Fetched estimate requests with customer join:", data)
         setEstimateRequests(data || [])
       } catch (error) {
-        console.error("Error fetching estimate requests:", error)
+        console.error("Error in estimate requests fetch flow:", error)
         toast.error("Failed to load estimate requests. Please try again.")
       } finally {
         setLoading(false)
