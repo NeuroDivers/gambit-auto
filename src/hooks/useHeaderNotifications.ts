@@ -2,6 +2,13 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./use-toast";
+import {
+  fetchHeaderNotifications,
+  fetchHeaderChatMessages,
+  transformChatMessagesToNotifications,
+  markNotificationAsRead,
+  setupHeaderNotificationSubscriptions
+} from "@/utils/headerNotificationUtils";
 
 // Define interfaces for our data types
 export interface SenderProfile {
@@ -43,66 +50,20 @@ export function useHeaderNotifications() {
         return;
       }
 
+      // Fetch both notifications and chat messages in parallel
       const [notificationsResponse, chatMessagesResponse] = await Promise.all([
-        supabase
-          .from("notifications")
-          .select("*")
-          .eq("profile_id", user.id)
-          .order('created_at', { ascending: false })
-          .limit(5),
-        
-        supabase
-          .from("chat_messages")
-          .select(`
-            id,
-            message,
-            created_at,
-            sender_id,
-            read,
-            profiles:sender_id (
-              first_name,
-              last_name,
-              email
-            )
-          `)
-          .eq("recipient_id", user.id)
-          .eq("read", false)
-          .order('created_at', { ascending: false })
+        fetchHeaderNotifications(user.id),
+        fetchHeaderChatMessages(user.id)
       ]);
 
-      const notifications = (notificationsResponse.data || []) as Notification[];
+      // Process regular notifications
+      const regularNotifications = (notificationsResponse.data || []) as Notification[];
       
-      // Process chat messages with correct typing for profiles
-      const typedChatMessages = (chatMessagesResponse.data || []).map(msg => {
-        // The profiles property is an object, not an array
-        // Only extract if it's not null or undefined
-        const profileData = typeof msg.profiles === 'object' ? msg.profiles as unknown as SenderProfile : null;
-        
-        return {
-          id: msg.id,
-          message: msg.message,
-          created_at: msg.created_at,
-          sender_id: msg.sender_id,
-          read: msg.read,
-          profiles: {
-            first_name: profileData?.first_name || null,
-            last_name: profileData?.last_name || null,
-            email: profileData?.email || null
-          }
-        } as ChatMessage;
-      });
+      // Process chat messages
+      const chatNotifications = transformChatMessagesToNotifications(chatMessagesResponse.data || []);
 
-      const chatNotifications: Notification[] = typedChatMessages.map(msg => ({
-        id: msg.id,
-        title: "New Message",
-        message: `${msg.profiles.first_name || msg.profiles.email || 'Someone'}: ${msg.message.substring(0, 50)}${msg.message.length > 50 ? '...' : ''}`,
-        created_at: msg.created_at,
-        type: 'chat_message',
-        read: false,
-        sender_id: msg.sender_id
-      }));
-
-      const allNotifications = [...notifications, ...chatNotifications]
+      // Combine and sort all notifications by date
+      const allNotifications = [...regularNotifications, ...chatNotifications]
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 5);
 
@@ -115,23 +76,19 @@ export function useHeaderNotifications() {
     }
   };
 
+  const handleNotificationClick = (notification: Notification) => {
+    markAsRead(notification);
+    
+    if (notification.type === 'chat_message' && notification.sender_id) {
+      window.location.href = `/chat?user=${notification.sender_id}`;
+    }
+  };
+
   const markAsRead = async (notification: Notification) => {
     try {
-      if (notification.type === 'chat_message') {
-        const { error } = await supabase
-          .from("chat_messages")
-          .update({ read: true })
-          .eq("id", notification.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("notifications")
-          .update({ read: true })
-          .eq("id", notification.id);
-
-        if (error) throw error;
-      }
+      const { error } = await markNotificationAsRead(notification);
+      
+      if (error) throw error;
 
       setNotifications(prevNotifications => 
         prevNotifications.map(n => 
@@ -145,53 +102,13 @@ export function useHeaderNotifications() {
     }
   };
 
-  const handleNotificationClick = (notification: Notification) => {
-    markAsRead(notification);
-    
-    if (notification.type === 'chat_message' && notification.sender_id) {
-      window.location.href = `/chat?user=${notification.sender_id}`;
-    }
-  };
-
   useEffect(() => {
     fetchNotifications();
-  }, []);
-
-  useEffect(() => {
-    const notificationsChannel = supabase
-      .channel("notifications-header")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "notifications",
-        },
-        () => {
-          fetchNotifications();
-        }
-      )
-      .subscribe();
-
-    const chatChannel = supabase
-      .channel("chat-messages-header")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "chat_messages",
-        },
-        () => {
-          fetchNotifications();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(notificationsChannel);
-      supabase.removeChannel(chatChannel);
-    };
+    
+    // Set up subscriptions for real-time updates
+    const cleanup = setupHeaderNotificationSubscriptions(fetchNotifications);
+    
+    return cleanup;
   }, []);
 
   return {
