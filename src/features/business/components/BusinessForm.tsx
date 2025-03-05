@@ -56,12 +56,18 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
     try {
       setIsUploading(true)
 
-      // Upload the file to Supabase Storage
+      // Get the file extension
       const fileExt = file.name.split('.').pop()
-      const fileName = `${crypto.randomUUID()}.${fileExt}`
+      
+      // Use standardized file names based on logo type
+      const fileName = type === 'light' 
+        ? `gambit-logo-light.${fileExt}`
+        : `gambit-logo-dark.${fileExt}`
+
+      // Upload the file to Supabase Storage
       const { data, error: uploadError } = await supabase.storage
         .from('business-logos')
-        .upload(fileName, file)
+        .upload(fileName, file, { upsert: true }) // Use upsert to replace existing files with same name
 
       if (uploadError) throw uploadError
 
