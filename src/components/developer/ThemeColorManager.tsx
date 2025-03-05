@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
 import { Card, CardContent } from "@/components/ui/card"
@@ -26,25 +25,24 @@ interface ColorVariable {
   defaultDark: string;
 }
 
-// Updated theme colors based on Material Design dark theme guidelines
 const themeColorVariables: ColorVariable[] = [
-  { name: "background", description: "Main background color", defaultLight: "0 0% 100%", defaultDark: "260 15% 8%" }, // Material dark background
+  { name: "background", description: "Main background color", defaultLight: "0 0% 100%", defaultDark: "260 15% 8%" },
   { name: "foreground", description: "Main text color", defaultLight: "240 10% 3.9%", defaultDark: "210 40% 98%" },
-  { name: "card", description: "Card background color", defaultLight: "0 0% 100%", defaultDark: "260 15% 11%" }, // Slightly elevated surface
+  { name: "card", description: "Card background color", defaultLight: "0 0% 100%", defaultDark: "260 15% 11%" },
   { name: "card-foreground", description: "Card text color", defaultLight: "240 10% 3.9%", defaultDark: "210 40% 98%" },
-  { name: "primary", description: "Primary action color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 75%" }, // Brighter in dark mode
+  { name: "primary", description: "Primary action color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 75%" },
   { name: "primary-foreground", description: "Text on primary color", defaultLight: "0 0% 100%", defaultDark: "0 0% 100%" },
-  { name: "secondary", description: "Secondary color", defaultLight: "240 4.8% 95.9%", defaultDark: "260 15% 18%" }, // Dark purple-gray
+  { name: "secondary", description: "Secondary color", defaultLight: "240 4.8% 95.9%", defaultDark: "260 15% 18%" },
   { name: "secondary-foreground", description: "Text on secondary color", defaultLight: "240 5.9% 10%", defaultDark: "210 40% 98%" },
   { name: "muted", description: "Muted background color", defaultLight: "240 4.8% 95.9%", defaultDark: "260 15% 18%" },
   { name: "muted-foreground", description: "Muted text color", defaultLight: "240 3.8% 46.1%", defaultDark: "217 10% 70%" },
-  { name: "accent", description: "Accent color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 30%" }, // Deeper accent for dark mode
+  { name: "accent", description: "Accent color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 30%" },
   { name: "accent-foreground", description: "Text on accent color", defaultLight: "0 0% 100%", defaultDark: "210 40% 98%" },
-  { name: "destructive", description: "Destructive action color", defaultLight: "0 84.2% 60.2%", defaultDark: "0 62.8% 40.6%" }, // Adjusted red for dark theme
+  { name: "destructive", description: "Destructive action color", defaultLight: "0 84.2% 60.2%", defaultDark: "0 62.8% 40.6%" },
   { name: "destructive-foreground", description: "Text on destructive color", defaultLight: "0 0% 98%", defaultDark: "210 40% 98%" },
-  { name: "border", description: "Border color", defaultLight: "240 5.9% 90%", defaultDark: "260 15% 22%" }, // Slightly lighter than background
+  { name: "border", description: "Border color", defaultLight: "240 5.9% 90%", defaultDark: "260 15% 22%" },
   { name: "input", description: "Input border color", defaultLight: "240 5.9% 90%", defaultDark: "260 15% 22%" },
-  { name: "ring", description: "Focus ring color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 75%" }, // Brighter in dark mode for visibility
+  { name: "ring", description: "Focus ring color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 75%" }
 ];
 
 const LOCAL_STORAGE_KEY = "custom-theme-colors";
@@ -300,10 +298,15 @@ export function ThemeColorManager() {
           side="right"
           sideOffset={10}
           onClick={(e) => e.stopPropagation()}
-          onMouseDown={(e) => e.preventDefault()}
         >
-          <div className="p-3">
-            <div className="mb-3">
+          <div 
+            className="p-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div 
+              className="mb-3"
+              onMouseDown={(e) => e.preventDefault()}
+            >
               <HexColorPicker 
                 color={hexColor} 
                 onChange={onChange} 
@@ -317,6 +320,8 @@ export function ThemeColorManager() {
                   onChange={(e) => onChange(e.target.value)}
                   className="w-24 font-mono"
                   onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
                 />
               </div>
               <div className="flex justify-between">
