@@ -56,6 +56,13 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				// Avatar specific colors
+				avatar: {
+					DEFAULT: 'hsl(var(--avatar-background, var(--muted)))',
+					foreground: 'hsl(var(--avatar-foreground, var(--muted-foreground)))',
+					active: 'hsl(var(--avatar-active-background, var(--primary)))',
+					'active-foreground': 'hsl(var(--avatar-active-foreground, var(--primary-foreground)))'
+				},
 				// Toast specific colors
 				'toast': {
 					background: 'hsl(var(--toast-background))',

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react"
 import { ChatUser } from "@/types/chat"
 import { ChatWindow } from "@/components/chat/ChatWindow"
@@ -18,7 +17,6 @@ import { ChatUserFilter } from "@/components/chat/ChatUserFilter"
 
 type UserFilterOption = "all" | "staff" | "customers";
 
-// The specific customer role ID
 const CUSTOMER_ROLE_ID = "73a06339-6dd6-4da7-ac27-db9e160c2ff6";
 
 export default function Chat() {
@@ -273,7 +271,9 @@ export default function Chat() {
                         <div className="relative">
                           <Avatar className="h-9 w-9">
                             <AvatarImage src={user.avatar_url || undefined} />
-                            <AvatarFallback>{getUserDisplayName(user).substring(0, 2).toUpperCase()}</AvatarFallback>
+                            <AvatarFallback className={selectedUser === user.id ? "bg-avatar-active text-avatar-active-foreground" : ""}>
+                              {getUserDisplayName(user).substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
                           </Avatar>
                           {user.is_online && (
                             <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 ring-1 ring-background"></span>
@@ -281,7 +281,9 @@ export default function Chat() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
-                            <p className={`truncate font-medium ${selectedUser === user.id ? "text-primary-foreground" : ""}`}>{getUserDisplayName(user)}</p>
+                            <p className={`truncate font-medium ${selectedUser === user.id ? "text-primary-foreground" : ""}`}>
+                              {getUserDisplayName(user)}
+                            </p>
                             <Badge 
                               variant="destructive" 
                               className="ml-2 text-xs"
@@ -317,14 +319,18 @@ export default function Chat() {
                         <div className="relative">
                           <Avatar className="h-9 w-9">
                             <AvatarImage src={user.avatar_url || undefined} />
-                            <AvatarFallback>{getUserDisplayName(user).substring(0, 2).toUpperCase()}</AvatarFallback>
+                            <AvatarFallback className={selectedUser === user.id ? "bg-avatar-active text-avatar-active-foreground" : ""}>
+                              {getUserDisplayName(user).substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
                           </Avatar>
                           {user.is_online && (
                             <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 ring-1 ring-background"></span>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className={`truncate font-medium ${selectedUser === user.id ? "text-primary-foreground" : ""}`}>{getUserDisplayName(user)}</p>
+                          <p className={`truncate font-medium ${selectedUser === user.id ? "text-primary-foreground" : ""}`}>
+                            {getUserDisplayName(user)}
+                          </p>
                           <p className={`text-xs truncate ${selectedUser === user.id ? "text-primary-foreground" : "text-muted-foreground"}`}>
                             {user.role?.nicename || "User"}
                           </p>

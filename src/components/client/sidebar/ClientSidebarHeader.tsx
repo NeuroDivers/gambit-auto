@@ -32,9 +32,7 @@ export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebar
     }
   });
 
-  // Determine if dark mode is active - simplified and more reliable approach
   useEffect(() => {
-    // Check if the HTML element has the dark class - this is the most reliable approach
     const isDark = document.documentElement.classList.contains('dark');
     setIsDarkTheme(isDark);
     console.log("Dark mode detection in client sidebar:", { 
@@ -44,9 +42,7 @@ export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebar
     });
   }, [resolvedTheme, theme]);
 
-  // Add a theme change observer to react immediately to theme changes
   useEffect(() => {
-    // Create a mutation observer to watch for class changes on the HTML element
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (mutation.attributeName === 'class') {
@@ -56,23 +52,19 @@ export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebar
       })
     })
 
-    // Start observing the document with the configured parameters
     observer.observe(document.documentElement, { attributes: true })
 
-    // Cleanup
     return () => {
       observer.disconnect()
     }
   }, []);
 
-  // Get the appropriate logo URL based on current theme
   const logoUrl = React.useMemo(() => {
     if (!businessProfile) return null;
     
     console.log("Logo selection in client sidebar - Dark mode:", isDarkTheme);
     console.log("Available logos - Dark:", businessProfile.dark_logo_url, "Light:", businessProfile.light_logo_url);
     
-    // Use the appropriate logo based on current theme
     return isDarkTheme 
       ? businessProfile.dark_logo_url 
       : businessProfile.light_logo_url;
@@ -97,7 +89,7 @@ export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebar
         />
       ) : (
         <Avatar className="h-16 w-16">
-          <AvatarFallback className="bg-primary/10 text-primary text-xl">
+          <AvatarFallback>
             {initials}
           </AvatarFallback>
         </Avatar>

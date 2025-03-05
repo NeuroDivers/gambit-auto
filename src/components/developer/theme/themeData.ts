@@ -96,6 +96,32 @@ export const themeColorVariables: ColorVariable[] = [
   defaultDark: "262 83.3% 75%",
   category: "components"
 },
+// Avatar colors
+{
+  name: "avatar-background",
+  description: "Avatar background color",
+  defaultLight: "280 60% 95%",
+  defaultDark: "280 40% 35%",
+  category: "components"
+}, {
+  name: "avatar-foreground",
+  description: "Avatar text color",
+  defaultLight: "280 30% 40%",
+  defaultDark: "280 30% 90%",
+  category: "components"
+}, {
+  name: "avatar-active-background",
+  description: "Active avatar background",
+  defaultLight: "262 83.3% 57.8%",
+  defaultDark: "262 83.3% 75%",
+  category: "components"
+}, {
+  name: "avatar-active-foreground",
+  description: "Active avatar text color",
+  defaultLight: "0 0% 100%",
+  defaultDark: "0 0% 100%",
+  category: "components"
+},
 // States
 {
   name: "muted",

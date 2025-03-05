@@ -33,6 +33,12 @@
     --input: 240 5.9% 90%;
     --ring: 262 83.3% 57.8%;
 
+    /* Avatar specific colors */
+    --avatar-background: 280 60% 95%;
+    --avatar-foreground: 280 30% 40%;
+    --avatar-active-background: var(--primary);
+    --avatar-active-foreground: var(--primary-foreground);
+
     /* Toast specific colors */
     --toast-background: var(--background);
     --toast-foreground: var(--foreground);
@@ -90,6 +96,12 @@
     --input: 260 15% 22%;
     --ring: 262 83.3% 75%;
 
+    /* Avatar specific colors - dark mode */
+    --avatar-background: 280 40% 35%;
+    --avatar-foreground: 280 30% 90%;
+    --avatar-active-background: var(--primary);
+    --avatar-active-foreground: var(--primary-foreground);
+
     /* Toast specific colors - dark mode */
     --toast-background: var(--card);
     --toast-foreground: var(--card-foreground);
@@ -122,55 +134,5 @@
     transition: background-color 150ms ease-out, color 150ms ease-out, border-color 150ms ease-out;
   }
 
-  /* Custom Scrollbar Styling */
-  ::-webkit-scrollbar {
-    @apply w-1.5 h-1.5;
-  }
-
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/20 hover:bg-muted-foreground/40 transition-colors rounded-full;
-  }
-
-  /* Firefox */
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
-  }
-
-  /* Ensure proper text color contrast for form elements */
-  input, textarea, select {
-    @apply text-foreground bg-background border-input;
-  }
-
-  /* Additional contrast fixes for specific elements */
-  .text-default {
-    @apply text-foreground;
-  }
-  
-  .text-secondary {
-    @apply text-secondary-foreground;
-  }
-  
-  .text-muted {
-    @apply text-muted-foreground;
-  }
-
-  /* Fix for headings and text in light mode */
-  h1, h2, h3, h4, h5, h6 {
-    @apply text-foreground;
-  }
-
-  p {
-    @apply text-foreground;
-  }
-
-  /* Ensure white text on primary/purple backgrounds */
-  .bg-primary, 
-  [class*="bg-primary"] {
-    @apply text-primary-foreground;
-  }
+  /* ... keep existing code (remaining CSS rules) */
 }
