@@ -12,13 +12,26 @@ export function EstimateRequestsList() {
   const navigate = useNavigate()
   const [estimateRequests, setEstimateRequests] = useState([])
   const [loading, setLoading] = useState(true)
+  const [debugInfo, setDebugInfo] = useState(null)
 
   useEffect(() => {
     const fetchEstimateRequests = async () => {
       try {
         console.log("Attempting to fetch estimate_requests")
         
-        // First, check that the table exists and has data
+        // First, check database tables and columns
+        const { data: tableInfo, error: tableError } = await supabase
+          .rpc('get_table_info')
+          .eq('table_name', 'estimate_requests')
+        
+        if (tableError) {
+          console.error("Error checking table info:", tableError)
+        } else {
+          console.log("Table info:", tableInfo)
+          setDebugInfo(tableInfo)
+        }
+        
+        // Check if the table exists and has data
         const { count, error: countError } = await supabase
           .from("estimate_requests")
           .select("*", { count: "exact", head: true })
@@ -31,6 +44,31 @@ export function EstimateRequestsList() {
         }
         
         console.log(`Found ${count} estimate requests in the database`)
+        
+        if (count === 0) {
+          // Try to insert a test record to see if we can write to the table
+          const testData = {
+            customer_id: '00000000-0000-0000-0000-000000000000', // Placeholder UUID
+            vehicle_make: 'Test Make',
+            vehicle_model: 'Test Model',
+            vehicle_year: 2023,
+            status: 'pending',
+            description: 'Test estimate request created from the UI to debug data fetching'
+          }
+          
+          const { data: insertResult, error: insertError } = await supabase
+            .from('estimate_requests')
+            .insert(testData)
+            .select()
+          
+          if (insertError) {
+            console.error("Error inserting test record:", insertError)
+            toast.error("Failed to create test record. Please check table permissions.")
+          } else {
+            console.log("Successfully inserted test record:", insertResult)
+            toast.success("Created a test estimate request")
+          }
+        }
         
         // Now fetch the actual data with relations
         const { data: estimateRequests, error } = await supabase
@@ -95,14 +133,26 @@ export function EstimateRequestsList() {
         <p className="text-muted-foreground">
           Review and respond to customer estimate requests
         </p>
+        {debugInfo && (
+          <div className="bg-yellow-50 p-4 mt-4 rounded border border-yellow-200">
+            <h3 className="text-sm font-medium text-yellow-800">Debug Information</h3>
+            <pre className="text-xs mt-2 overflow-auto max-h-40">{JSON.stringify(debugInfo, null, 2)}</pre>
+          </div>
+        )}
       </div>
 
       {estimateRequests.length === 0 ? (
-        <div className="text-center py-12">
+        <div className="text-center py-12 border rounded-md">
           <h3 className="text-lg font-medium">No estimate requests yet</h3>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 mb-6">
             Customers can submit estimate requests through your website
           </p>
+          <Button 
+            onClick={() => navigate('/estimates/create')}
+            variant="outline"
+          >
+            Create Test Estimate Request
+          </Button>
         </div>
       ) : (
         <div className="rounded-md border">
