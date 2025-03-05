@@ -98,5 +98,4 @@ export interface QuoteRequestSubmissionHook {
     vin: string; 
     saveToAccount?: boolean; 
   }) => Promise<void>;
-  form?: any; // Add the form property that was missing
 }
