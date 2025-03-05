@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react"
 import { ChatMessage, ChatUser } from "@/types/chat"
 import { Card } from "@/components/ui/card"
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { supabase } from "@/integrations/supabase/client"
-import { Send, Check, Circle, Loader2, Pencil, Trash2, X, Clock } from "lucide-react"
+import { Send, Check, Circle, Loader2, Pencil, Trash2, X, Clock, MoreVertical } from "lucide-react"
 import { format, formatDistanceToNow, differenceInDays, isToday, isYesterday, differenceInMinutes } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -29,22 +28,18 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   const { toast } = useToast()
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
-  // Track if this component is currently mounted/visible
   const isActiveConversation = useRef<boolean>(true)
 
   useEffect(() => {
-    // Set the active status when the component mounts
     isActiveConversation.current = true
     console.log("Chat window mounted, setting active conversation to true")
     
-    // Clean up when component unmounts
     return () => {
       isActiveConversation.current = false
       console.log("Chat window unmounted, setting active conversation to false")
     }
   }, [])
 
-  // Make sure to update active status when recipient changes
   useEffect(() => {
     isActiveConversation.current = true
     console.log("Recipient changed, setting active conversation to true for:", recipientId)
@@ -91,7 +86,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     return format(date, 'MMM d, yyyy')
   }
 
-  // Check if message is within edit window (5 minutes)
   const isWithinEditWindow = (message: ChatMessage) => {
     const messageDate = new Date(message.created_at)
     const now = new Date()
@@ -114,10 +108,8 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     const messageToUpdate = messages.find(m => m.id === messageId)
     if (!messageToUpdate) return
 
-    // Store original message if this is the first edit
     const originalMessage = messageToUpdate.original_message || messageToUpdate.message
 
-    // Update message locally
     setMessages(prevMessages => 
       prevMessages.map(msg => 
         msg.id === messageId 
@@ -126,7 +118,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       )
     )
 
-    // Update message in database
     const { error } = await supabase
       .from("chat_messages")
       .update({
@@ -144,14 +135,12 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         description: "Please try again",
         variant: "destructive"
       })
-      // Revert to original message if update fails
       setMessages(prevMessages => 
         prevMessages.map(msg => 
           msg.id === messageId ? messageToUpdate : msg
         )
       )
     } else {
-      // Broadcast update to other users
       if (channelRef.current) {
         channelRef.current.send({
           type: 'broadcast',
@@ -161,15 +150,12 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       }
     }
 
-    // Reset editing state
     cancelEditing()
   }
 
   const unsendMessage = async (messageId: string) => {
-    // Delete message locally
     setMessages(prevMessages => prevMessages.filter(msg => msg.id !== messageId))
 
-    // Delete message from database
     const { error } = await supabase
       .from("chat_messages")
       .delete()
@@ -182,7 +168,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         description: "Please try again",
         variant: "destructive"
       })
-      // Refetch messages if delete fails
       fetchMessages()
     } else {
       toast({
@@ -320,12 +305,8 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
               console.error("Error marking message as read:", updateError)
             }
 
-            // Check document visibility
             const isDocumentVisible = document.visibilityState === "visible";
             
-            // Only show toast if:
-            // 1. This is NOT the currently active conversation, OR
-            // 2. The document is not visible (user is on another tab/app)
             if (!isActiveConversation.current || !isDocumentVisible) {
               console.log(`Showing toast notification - Active conversation: ${isActiveConversation.current}, Document visible: ${isDocumentVisible}`)
               toast({
@@ -352,7 +333,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
           console.log("Message updated:", payload)
           const updatedMessage = payload.new as ChatMessage
           
-          // Update local messages state
           setMessages(prev => 
             prev.map(msg => 
               msg.id === updatedMessage.id ? updatedMessage : msg
@@ -371,7 +351,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
           console.log("Message deleted:", payload)
           const deletedMessageId = payload.old.id
           
-          // Remove deleted message from local state
           setMessages(prev => 
             prev.filter(msg => msg.id !== deletedMessageId)
           )
@@ -381,8 +360,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         console.log("Chat subscription status:", status)
       })
 
-    // Setup typing indicator channel
-    // Use a standardized channel name format that's the same for both participants
     const channelName = `typing_indicator_${[currentUserId, recipientId].sort().join('_')}`
     console.log(`Setting up typing indicator channel: ${channelName}`)
     
@@ -394,7 +371,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
           console.log("Setting typing indicator to true")
           setIsTyping(true)
           
-          // Auto-clear typing indicator after 3 seconds if no new typing events
           setTimeout(() => {
             console.log("Auto-clearing typing indicator")
             setIsTyping(false)
@@ -405,12 +381,9 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         console.log("Typing indicator subscription status:", status)
       })
 
-    // Document visibility change handler - BUT don't change the active conversation status
-    // We only use this to determine if toasts should be shown
     const handleVisibilityChange = () => {
       console.log("Document visibility changed:", document.visibilityState)
-      // We do NOT update isActiveConversation here, it should only be updated based on component mounting/unmounting
-      // or recipient changes
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
     }
     
     document.addEventListener("visibilitychange", handleVisibilityChange)
@@ -428,7 +401,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     }
   }, [recipientId, currentUserId, recipient?.first_name, toast])
 
-  // Ensure scrolling to bottom when new messages come in
   useEffect(() => {
     if (messages.length > 0) {
       scrollToBottom()
@@ -477,7 +449,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       clearTimeout(typingTimeout)
     }
 
-    // Send typing indicator using broadcast
     typingChannelRef.current.broadcast({
       event: 'typing',
       payload: {
@@ -561,9 +532,9 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
                     </div>
                   </div>
                 ) : (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <div className="group relative">
+                  <div className="group relative flex items-start">
+                    <TooltipProvider>
+                      <Tooltip>
                         <TooltipTrigger asChild>
                           <div
                             className={`rounded-lg px-4 py-2 max-w-[75%] ${
@@ -595,44 +566,44 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
                             "Not read yet"
                           )}
                         </TooltipContent>
-                      </div>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-                
-                {isOwnMessage && !isEditing && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity ml-1"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {canEdit && (
-                        <DropdownMenuItem onClick={() => startEditing(message)}>
-                          <Pencil className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                      )}
-                      {!canEdit && (
-                        <DropdownMenuItem disabled>
-                          <Clock className="h-4 w-4 mr-2" />
-                          Can't edit (over 5 min)
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem 
-                        onClick={() => unsendMessage(message.id)}
-                        className="text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Unsend
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      </Tooltip>
+                    </TooltipProvider>
+                    
+                    {isOwnMessage && !isEditing && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity ml-1 bg-background"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40 bg-popover">
+                          {canEdit && (
+                            <DropdownMenuItem onClick={() => startEditing(message)} className="cursor-pointer">
+                              <Pencil className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                          )}
+                          {!canEdit && (
+                            <DropdownMenuItem disabled className="cursor-not-allowed">
+                              <Clock className="h-4 w-4 mr-2" />
+                              Can't edit (over 5 min)
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem 
+                            onClick={() => unsendMessage(message.id)}
+                            className="text-destructive cursor-pointer"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Unsend
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
                 )}
               </div>
             )
