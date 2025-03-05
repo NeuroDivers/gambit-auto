@@ -32,7 +32,7 @@ export default function EstimateRequestDetails() {
           .from("estimate_requests")
           .select(`
             *,
-            customers(*)
+            customers!estimate_requests_customer_id_fkey(*)
           `)
           .eq("id", id)
           .single()

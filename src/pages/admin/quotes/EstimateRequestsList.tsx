@@ -25,7 +25,7 @@ export function EstimateRequestsList() {
             status, 
             description,
             customer_id,
-            customers(first_name, last_name, email)
+            customers!estimate_requests_customer_id_fkey(first_name, last_name, email)
           `)
           .order("created_at", { ascending: false })
           .limit(30)
