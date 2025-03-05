@@ -6,6 +6,7 @@ import { ColorCard } from "./ColorCard";
 import { ColorVariable, ThemeMode } from "./types";
 import { themeColorVariables } from "./themeData";
 import { ToastPreview } from "./ToastPreview";
+import { Separator } from "@/components/ui/separator";
 
 interface ThemeTabContentProps {
   themeMode: ThemeMode;
@@ -36,11 +37,47 @@ export function ThemeTabContent({
 
   console.log(`Showing ${filteredVariables.length} color variables in ${selectedCategory} tab`);
 
-  // Determine if we should use a fixed height or auto height
-  // Only use fixed height for categories with fewer items
+  // Group variables by category for the "all" tab
+  const groupedVariables = React.useMemo(() => {
+    if (selectedCategory !== "all") return null;
+    
+    return Object.entries(
+      filteredVariables.reduce((acc, variable) => {
+        if (!acc[variable.category]) {
+          acc[variable.category] = [];
+        }
+        acc[variable.category].push(variable);
+        return acc;
+      }, {} as Record<string, ColorVariable[]>)
+    ).sort(([a], [b]) => {
+      // Custom sort order for categories
+      const order = ["base", "components", "states", "avatar", "toast", "tabs"];
+      return order.indexOf(a) - order.indexOf(b);
+    });
+  }, [filteredVariables, selectedCategory]);
+
+  // Use auto height for "all" tab with grouped sections
   const scrollAreaClassName = selectedCategory === "all" 
     ? "max-h-full" // Allow the ScrollArea to expand as needed for "all" category
     : "h-[500px]"; // Use fixed height for other categories
+
+  const renderColorCards = (variables: ColorVariable[]) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {variables.map(variable => (
+        <ColorCard
+          key={`${themeMode}-${variable.name}`}
+          variable={variable}
+          themeMode={themeMode}
+          colors={colors}
+          handleColorChange={handleColorChange}
+          handleColorPickerChange={handleColorPickerChange}
+          handleHexInputChange={handleHexInputChange}
+          activeColorName={activeColorName}
+          setActiveColorName={setActiveColorName}
+        />
+      ))}
+    </div>
+  );
 
   return (
     <TabsContent value={themeMode} className="mt-0">
@@ -51,21 +88,26 @@ export function ThemeTabContent({
           </div>
         )}
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredVariables.map(variable => (
-            <ColorCard
-              key={`${themeMode}-${variable.name}`}
-              variable={variable}
-              themeMode={themeMode}
-              colors={colors}
-              handleColorChange={handleColorChange}
-              handleColorPickerChange={handleColorPickerChange}
-              handleHexInputChange={handleHexInputChange}
-              activeColorName={activeColorName}
-              setActiveColorName={setActiveColorName}
-            />
-          ))}
-        </div>
+        {selectedCategory === "all" && groupedVariables ? (
+          <div className="space-y-8">
+            {groupedVariables.map(([category, variables]) => (
+              <div key={category} className="rounded-lg border p-4 bg-background/50">
+                <h3 className="text-lg font-semibold capitalize mb-4">
+                  {category === "base" ? "Base Colors" : 
+                   category === "components" ? "Components" : 
+                   category === "states" ? "States" : 
+                   category === "avatar" ? "Avatar" : 
+                   category === "toast" ? "Toast" : 
+                   category === "tabs" ? "Tabs" : category}
+                </h3>
+                <Separator className="mb-4" />
+                {renderColorCards(variables)}
+              </div>
+            ))}
+          </div>
+        ) : (
+          renderColorCards(filteredVariables)
+        )}
       </ScrollArea>
     </TabsContent>
   );

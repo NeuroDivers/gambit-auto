@@ -1,4 +1,3 @@
-
 import { ColorVariable, LOCAL_STORAGE_KEY } from "./types";
 
 export const themeColorVariables: ColorVariable[] = [
@@ -96,31 +95,31 @@ export const themeColorVariables: ColorVariable[] = [
   defaultDark: "262 83.3% 75%",
   category: "components"
 },
-// Avatar colors
+// Avatar colors - changed category to "avatar"
 {
   name: "avatar-background",
   description: "Avatar background color",
   defaultLight: "280 60% 95%",
   defaultDark: "280 40% 35%",
-  category: "components"
+  category: "avatar"
 }, {
   name: "avatar-foreground",
   description: "Avatar text color",
   defaultLight: "280 30% 40%",
   defaultDark: "280 30% 90%",
-  category: "components"
+  category: "avatar"
 }, {
   name: "avatar-active-background",
   description: "Active avatar background",
   defaultLight: "262 83.3% 57.8%",
   defaultDark: "262 83.3% 75%",
-  category: "components"
+  category: "avatar"
 }, {
   name: "avatar-active-foreground",
   description: "Active avatar text color",
   defaultLight: "0 0% 100%",
   defaultDark: "0 0% 100%",
-  category: "components"
+  category: "avatar"
 },
 // States
 {
