@@ -11,10 +11,12 @@ import {
   Moon, 
   Sun, 
   RotateCcw,
-  Copy
+  Copy,
+  EyeDropper
 } from "lucide-react"
 import { toast } from "sonner"
 import { applyThemeClass } from "@/lib/utils"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 interface ColorVariable {
   name: string;
@@ -42,6 +44,80 @@ const themeColorVariables: ColorVariable[] = [
   { name: "input", description: "Input border color", defaultLight: "240 5.9% 90%", defaultDark: "217 32% 25%" },
   { name: "ring", description: "Focus ring color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 70%" },
 ];
+
+// Convert HSL (in format "H S% L%") to hex color
+function hslToHex(hslString: string): string {
+  // Parse HSL values
+  const [h, s, l] = hslString.split(' ').map(val => parseFloat(val.replace('%', '')));
+  
+  // Convert HSL to RGB
+  const c = (1 - Math.abs(2 * l / 100 - 1)) * s / 100;
+  const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+  const m = l / 100 - c / 2;
+  
+  let r, g, b;
+  
+  if (h >= 0 && h < 60) {
+    [r, g, b] = [c, x, 0];
+  } else if (h >= 60 && h < 120) {
+    [r, g, b] = [x, c, 0];
+  } else if (h >= 120 && h < 180) {
+    [r, g, b] = [0, c, x];
+  } else if (h >= 180 && h < 240) {
+    [r, g, b] = [0, x, c];
+  } else if (h >= 240 && h < 300) {
+    [r, g, b] = [x, 0, c];
+  } else {
+    [r, g, b] = [c, 0, x];
+  }
+  
+  // Convert to hex
+  const toHex = (n: number): string => {
+    const hex = Math.round((n + m) * 255).toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  };
+  
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+// Convert hex color to HSL (in format "H S% L%")
+function hexToHsl(hex: string): string {
+  // Remove the # if present
+  hex = hex.replace('#', '');
+  
+  // Parse the hex values
+  const r = parseInt(hex.substring(0, 2), 16) / 255;
+  const g = parseInt(hex.substring(2, 4), 16) / 255;
+  const b = parseInt(hex.substring(4, 6), 16) / 255;
+  
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+  
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      case b:
+        h = (r - g) / d + 4;
+        break;
+    }
+    
+    h = Math.round(h * 60);
+  }
+  
+  s = Math.round(s * 100);
+  l = Math.round(l * 100);
+  
+  return `${h} ${s}% ${l}%`;
+}
 
 export function ThemeColorManager() {
   const { theme, setTheme, resolvedTheme } = useTheme()
@@ -87,6 +163,12 @@ export function ThemeColorManager() {
     } else {
       setDarkColors(prev => ({ ...prev, [name]: value }))
     }
+  }
+
+  // Handle color picker change
+  const handleColorPickerChange = (theme: 'light' | 'dark', name: string, hex: string) => {
+    const hslValue = hexToHsl(hex);
+    handleColorChange(theme, name, hslValue);
   }
   
   const applyThemeColors = () => {
@@ -170,6 +252,43 @@ export function ThemeColorManager() {
     navigator.clipboard.writeText(cssText)
     toast.success("CSS variables copied to clipboard")
   }
+
+  const ColorPicker = ({ 
+    value, 
+    onChange 
+  }: { 
+    value: string, 
+    onChange: (hex: string) => void 
+  }) => {
+    const hexColor = hslToHex(value);
+    
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button 
+            variant="outline" 
+            className="w-10 h-10 p-0 border-2"
+            style={{ backgroundColor: hexColor }}
+          >
+            <span className="sr-only">Pick a color</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-80">
+          <div className="grid gap-4">
+            <div className="space-y-2">
+              <h4 className="font-medium">Pick a color</h4>
+              <input
+                type="color"
+                value={hexColor}
+                onChange={(e) => onChange(e.target.value)}
+                className="w-full h-10"
+              />
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+    );
+  };
   
   return (
     <Card>
@@ -227,12 +346,19 @@ export function ThemeColorManager() {
                       }}
                     />
                   </Label>
-                  <Input
-                    id={`light-${variable.name}`}
-                    value={lightColors[variable.name] || variable.defaultLight}
-                    onChange={(e) => handleColorChange('light', variable.name, e.target.value)}
-                    placeholder={variable.defaultLight}
-                  />
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      id={`light-${variable.name}`}
+                      value={lightColors[variable.name] || variable.defaultLight}
+                      onChange={(e) => handleColorChange('light', variable.name, e.target.value)}
+                      placeholder={variable.defaultLight}
+                      className="flex-1"
+                    />
+                    <ColorPicker
+                      value={lightColors[variable.name] || variable.defaultLight}
+                      onChange={(hex) => handleColorPickerChange('light', variable.name, hex)}
+                    />
+                  </div>
                   <p className="text-xs text-muted-foreground">{variable.description}</p>
                 </div>
               ))}
@@ -252,12 +378,19 @@ export function ThemeColorManager() {
                       }}
                     />
                   </Label>
-                  <Input
-                    id={`dark-${variable.name}`}
-                    value={darkColors[variable.name] || variable.defaultDark}
-                    onChange={(e) => handleColorChange('dark', variable.name, e.target.value)}
-                    placeholder={variable.defaultDark}
-                  />
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      id={`dark-${variable.name}`}
+                      value={darkColors[variable.name] || variable.defaultDark}
+                      onChange={(e) => handleColorChange('dark', variable.name, e.target.value)}
+                      placeholder={variable.defaultDark}
+                      className="flex-1"
+                    />
+                    <ColorPicker
+                      value={darkColors[variable.name] || variable.defaultDark}
+                      onChange={(hex) => handleColorPickerChange('dark', variable.name, hex)}
+                    />
+                  </div>
                   <p className="text-xs text-muted-foreground">{variable.description}</p>
                 </div>
               ))}

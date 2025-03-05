@@ -97,6 +97,38 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
 
   async function onSubmit(values: BusinessFormValues) {
     try {
+      // If there are existing old logos, we'll handle deletion manually here
+      // instead of relying on the database trigger
+      if (businessProfile) {
+        // For light logo
+        if (businessProfile.light_logo_url && 
+            values.light_logo_url !== businessProfile.light_logo_url) {
+          try {
+            const oldPath = businessProfile.light_logo_url.split('/').pop();
+            if (oldPath) {
+              await supabase.storage.from('business-logos').remove([oldPath]);
+            }
+          } catch (deleteError) {
+            console.error("Error deleting old light logo:", deleteError);
+            // Continue with update even if delete fails
+          }
+        }
+        
+        // For dark logo
+        if (businessProfile.dark_logo_url && 
+            values.dark_logo_url !== businessProfile.dark_logo_url) {
+          try {
+            const oldPath = businessProfile.dark_logo_url.split('/').pop();
+            if (oldPath) {
+              await supabase.storage.from('business-logos').remove([oldPath]);
+            }
+          } catch (deleteError) {
+            console.error("Error deleting old dark logo:", deleteError);
+            // Continue with update even if delete fails
+          }
+        }
+      }
+
       const { error } = businessProfile 
         ? await supabase
             .from("business_profile")
