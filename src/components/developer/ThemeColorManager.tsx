@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
 import { Card, CardContent } from "@/components/ui/card"
@@ -256,8 +257,12 @@ export function ThemeColorManager() {
             <span className="sr-only">Pick a color</span>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80">
-          <div className="grid gap-4">
+        <PopoverContent className="w-80" onPointerDownOutside={(e) => e.preventDefault()}>
+          <div 
+            className="grid gap-4"
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
             <div className="space-y-2">
               <h4 className="font-medium">Pick a color</h4>
               <input
