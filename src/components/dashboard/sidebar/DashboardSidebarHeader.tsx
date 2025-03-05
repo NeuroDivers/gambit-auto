@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,6 +47,27 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
       theme
     });
   }, [resolvedTheme, theme]);
+
+  // Add a theme change observer to react immediately to theme changes
+  useEffect(() => {
+    // Create a mutation observer to watch for class changes on the HTML element
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          const isDark = document.documentElement.classList.contains('dark')
+          setIsDarkTheme(isDark)
+        }
+      })
+    })
+
+    // Start observing the document with the configured parameters
+    observer.observe(document.documentElement, { attributes: true })
+
+    // Cleanup
+    return () => {
+      observer.disconnect()
+    }
+  }, []);
 
   // Determine which logo to display based on current theme
   const logoUrl = React.useMemo(() => {

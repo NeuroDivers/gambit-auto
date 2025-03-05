@@ -24,6 +24,27 @@ export function InvoiceBusinessInfo({ businessProfile, logo_url }: InvoiceBusine
     });
   }, [theme, resolvedTheme])
 
+  // Add a theme change observer to react immediately to theme changes
+  useEffect(() => {
+    // Create a mutation observer to watch for class changes on the HTML element
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          const isDark = document.documentElement.classList.contains('dark')
+          setIsDarkTheme(isDark)
+        }
+      })
+    })
+
+    // Start observing the document with the configured parameters
+    observer.observe(document.documentElement, { attributes: true })
+
+    // Cleanup
+    return () => {
+      observer.disconnect()
+    }
+  }, [])
+
   if (!businessProfile) return null
 
   // Use the appropriate logo based on theme

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react"
 import { ChatUser } from "@/types/chat"
 import { ChatWindow } from "@/components/chat/ChatWindow"
@@ -33,7 +32,7 @@ export default function Chat() {
       // First get all profiles except current user
       const { data: profiles, error } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name, email, role:role_id(name, nicename), avatar_url, last_seen_at")
+        .select("id, first_name, last_name, email, role:role_id(name, nicename), avatar_url")
         .neq('id', user.id) // Exclude current user
         .order("role_id")
       
@@ -61,16 +60,12 @@ export default function Chat() {
         })
       )
 
-      // Determine online status based on last_seen_at
-      const now = new Date();
-      const onlineThreshold = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutes ago
-
-      // Combine profiles with unread counts
+      // Combine profiles with unread counts and set default online status
       const usersWithCounts = (profiles || []).map(profile => ({
         ...profile,
         role: Array.isArray(profile.role) ? profile.role[0] : profile.role,
         unread_count: unreadCounts.find(c => c.userId === profile.id)?.count || 0,
-        is_online: profile.last_seen_at ? new Date(profile.last_seen_at) > onlineThreshold : false
+        is_online: false // Default online status since we don't have last_seen_at
       })) as (ChatUser & { unread_count: number, is_online: boolean })[]
 
       return usersWithCounts

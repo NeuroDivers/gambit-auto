@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
@@ -44,6 +43,27 @@ export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebar
       theme
     });
   }, [resolvedTheme, theme]);
+
+  // Add a theme change observer to react immediately to theme changes
+  useEffect(() => {
+    // Create a mutation observer to watch for class changes on the HTML element
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          const isDark = document.documentElement.classList.contains('dark')
+          setIsDarkTheme(isDark)
+        }
+      })
+    })
+
+    // Start observing the document with the configured parameters
+    observer.observe(document.documentElement, { attributes: true })
+
+    // Cleanup
+    return () => {
+      observer.disconnect()
+    }
+  }, []);
 
   // Get the appropriate logo URL based on current theme
   const logoUrl = React.useMemo(() => {
