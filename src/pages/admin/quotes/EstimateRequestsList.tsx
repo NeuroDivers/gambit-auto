@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { supabase } from "@/integrations/supabase/client"
 import { useEffect } from "react"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
+import { toast } from "sonner"
 
 export function EstimateRequestsList() {
   const navigate = useNavigate()
@@ -20,12 +21,13 @@ export function EstimateRequestsList() {
           .from("estimate_requests")
           .select(`
             *,
-            customer:customers!estimate_requests_customer_id_fkey(first_name, last_name, email)
+            customer:customers(first_name, last_name, email)
           `)
           .order("created_at", { ascending: false })
 
         if (error) {
           console.error("Error fetching estimate requests:", error)
+          toast.error("Error loading estimate requests")
           throw error
         }
         
