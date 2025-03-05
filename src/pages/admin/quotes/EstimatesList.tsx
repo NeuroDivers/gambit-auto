@@ -21,7 +21,7 @@ export function EstimatesList() {
           .from("estimates")
           .select(`
             *,
-            customer:customers(first_name, last_name, email)
+            customer:customers!quotes_client_id_fkey(first_name, last_name, email)
           `)
           .order("created_at", { ascending: false })
 
