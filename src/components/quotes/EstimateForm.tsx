@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -335,13 +334,13 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
     onSubmit(data)
   }
 
-  // Filter customers based on search query
-  const filteredCustomers = customerSearchQuery 
-    ? clients?.filter(client => 
+  // Filter customers based on search query - Ensure we always have an array for filteredCustomers
+  const filteredCustomers = customerSearchQuery && clients 
+    ? clients.filter(client => 
         `${client.first_name} ${client.last_name}`.toLowerCase().includes(customerSearchQuery.toLowerCase()) ||
         client.email?.toLowerCase().includes(customerSearchQuery.toLowerCase())
       )
-    : clients
+    : clients || [] // Ensure we always have an array, even if clients is undefined
 
   return (
     <Card>
@@ -376,30 +375,38 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
                     value={customerSearchQuery}
                     onValueChange={setCustomerSearchQuery}
                   />
-                  <CommandEmpty>No customers found.</CommandEmpty>
-                  <CommandGroup className="max-h-[300px] overflow-y-auto">
-                    {filteredCustomers?.map((client) => (
-                      <CommandItem
-                        key={client.id}
-                        value={client.id}
-                        onSelect={() => {
-                          handleCustomerChange(client.id)
-                          setOpenCustomerSelect(false)
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            selectedCustomer === client.id ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {client.first_name} {client.last_name}
-                        <span className="ml-2 text-sm text-muted-foreground">
-                          {client.email}
-                        </span>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
+                  {clientsLoading ? (
+                    <div className="py-6 text-center text-sm text-muted-foreground">
+                      Loading customers...
+                    </div>
+                  ) : (
+                    <>
+                      <CommandEmpty>No customers found.</CommandEmpty>
+                      <CommandGroup className="max-h-[300px] overflow-y-auto">
+                        {filteredCustomers.map((client) => (
+                          <CommandItem
+                            key={client.id}
+                            value={client.id}
+                            onSelect={() => {
+                              handleCustomerChange(client.id)
+                              setOpenCustomerSelect(false)
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedCustomer === client.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {client.first_name} {client.last_name}
+                            <span className="ml-2 text-sm text-muted-foreground">
+                              {client.email}
+                            </span>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </>
+                  )}
                 </Command>
               </PopoverContent>
             </Popover>
