@@ -1,13 +1,13 @@
 
 import { useState } from 'react';
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { X } from "lucide-react"
-import { ServiceItemFormProps, ServiceItemType, ServicesByType } from "./types"
-import { ServiceDropdown } from "./ServiceDropdown"
-import { ServiceDescription } from "./ServiceDescription"
-import { CommissionRateFields } from "../CommissionRateFields"
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { X } from "lucide-react";
+import { ServiceItemFormProps, ServiceItemType, ServicesByType } from "./types";
+import { ServiceDropdown } from "./ServiceDropdown";
+import { ServiceDescription } from "./ServiceDescription";
+import { CommissionRateFields } from "../CommissionRateFields";
 
 export function ServiceItemForm({
   service,
@@ -44,9 +44,6 @@ export function ServiceItemForm({
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <ServiceDropdown
-              service={service}
-              onEdit={() => {}}
-              onRemove={() => {}}
               selectedServiceName={service.service_name}
               servicesByType={services}
               open={isOpen}
@@ -63,6 +60,9 @@ export function ServiceItemForm({
                 }
               }}
               serviceId={service.service_id}
+              service={service}
+              onEdit={() => {}}
+              onRemove={() => {}}
             />
           </div>
           <Button
@@ -105,12 +105,12 @@ export function ServiceItemForm({
             <CommissionRateFields
               value={{
                 rate: service.commission_rate,
-                type: service.commission_type === 'fixed' ? 'flat' : service.commission_type
+                type: service.commission_type === 'flat' ? 'flat' : 'percentage'
               }}
               onChange={(value) => {
                 handleServiceChange({
                   commission_rate: value.rate ?? 0,
-                  commission_type: value.type === 'flat' ? 'fixed' : value.type
+                  commission_type: value.type === 'flat' ? 'flat' : 'percentage'
                 });
               }}
               disabled={disabled}
@@ -141,9 +141,9 @@ export function ServiceItemForm({
             open={isOpen}
             setOpen={setIsOpen}
             handleServiceSelect={(serviceId) => {
-              const selectedService = Object.values(services)
+              const selectedService = Object.values(services || {})
                 .flat()
-                .find(s => s.id === serviceId);
+                .find(s => s && s.id === serviceId);
               if (selectedService) {
                 handleServiceChange({
                   service_id: serviceId,
@@ -152,6 +152,9 @@ export function ServiceItemForm({
               }
             }}
             serviceId={service.service_id}
+            service={service}
+            onEdit={() => {}}
+            onRemove={() => {}}
           />
         </div>
         <Button
@@ -194,12 +197,12 @@ export function ServiceItemForm({
           <CommissionRateFields
             value={{
               rate: service.commission_rate,
-              type: service.commission_type
+              type: service.commission_type === 'flat' ? 'flat' : 'percentage'
             }}
             onChange={(value) => {
               handleServiceChange({
                 commission_rate: value.rate ?? 0,
-                commission_type: value.type
+                commission_type: value.type === 'flat' ? 'flat' : 'percentage'
               });
             }}
             disabled={disabled}
@@ -208,6 +211,8 @@ export function ServiceItemForm({
       )}
 
       <ServiceDescription
+        description=""
+        onChange={() => {}}
         selectedServiceId={service.service_id}
         servicesByType={services}
         expanded={isExpanded}
