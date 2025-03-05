@@ -13,15 +13,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { HexColorPicker } from "react-colorful";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
 interface ColorVariable {
   name: string;
   description: string;
   defaultLight: string;
   defaultDark: string;
-  category: "base" | "components" | "states" | "text";
+  category: "base" | "components" | "states" | "text" | "tabs";
 }
 
-// Group colors into categories for better organization
 const themeColorVariables: ColorVariable[] = [
 // Base colors
 {
@@ -142,10 +142,48 @@ const themeColorVariables: ColorVariable[] = [
   defaultLight: "0 0% 98%",
   defaultDark: "210 40% 98%",
   category: "states"
+},
+// Tab specific colors
+{
+  name: "tabs-list",
+  description: "Tab list background",
+  defaultLight: "240 4.8% 95.9%",
+  defaultDark: "260 15% 18%",
+  category: "tabs"
+}, {
+  name: "tabs-list-foreground",
+  description: "Tab list text color",
+  defaultLight: "240 3.8% 46.1%",
+  defaultDark: "217 10% 70%",
+  category: "tabs"
+}, {
+  name: "tabs-trigger-hover",
+  description: "Tab hover background",
+  defaultLight: "240 4.8% 95.9%",
+  defaultDark: "260 15% 18%",
+  category: "tabs"
+}, {
+  name: "tabs-trigger-hover-foreground",
+  description: "Tab hover text color",
+  defaultLight: "240 5.9% 10%",
+  defaultDark: "210 40% 98%",
+  category: "tabs"
+}, {
+  name: "tabs-trigger-active",
+  description: "Active tab background",
+  defaultLight: "262 83.3% 57.8%",
+  defaultDark: "262 83.3% 75%",
+  category: "tabs"
+}, {
+  name: "tabs-trigger-active-foreground",
+  description: "Active tab text color",
+  defaultLight: "0 0% 100%",
+  defaultDark: "0 0% 100%",
+  category: "tabs"
 }];
+
 const LOCAL_STORAGE_KEY = "custom-theme-colors";
 
-// Convert HSL to Hex color
 function hslToHex(hslString: string): string {
   const [h, s, l] = hslString.split(' ').map(val => parseFloat(val.replace('%', '')));
   const c = (1 - Math.abs(2 * l / 100 - 1)) * s / 100;
@@ -172,9 +210,7 @@ function hslToHex(hslString: string): string {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
-// Convert Hex to HSL color
 function hexToHsl(hex: string): string {
-  // Remove hash if present
   hex = hex.replace('#', '');
   const r = parseInt(hex.substring(0, 2), 16) / 255;
   const g = parseInt(hex.substring(2, 4), 16) / 255;
@@ -204,6 +240,7 @@ function hexToHsl(hex: string): string {
   l = Math.round(l * 100);
   return `${h} ${s}% ${l}%`;
 }
+
 function applyCustomThemeColors(lightColors: Record<string, string>, darkColors: Record<string, string>) {
   const style = document.createElement('style');
   let cssText = `:root {\n`;
@@ -224,6 +261,7 @@ function applyCustomThemeColors(lightColors: Record<string, string>, darkColors:
   style.id = 'theme-colors-style';
   document.head.appendChild(style);
 }
+
 export function ThemeColorManager() {
   const {
     theme,
@@ -235,8 +273,8 @@ export function ThemeColorManager() {
   const [activeTab, setActiveTab] = useState<string>("light");
   const [activeColorName, setActiveColorName] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
   useEffect(() => {
-    // Load saved theme colors from localStorage
     const savedThemeColors = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (savedThemeColors) {
       try {
@@ -255,6 +293,7 @@ export function ThemeColorManager() {
       loadCurrentThemeColors();
     }
   }, []);
+
   const loadCurrentThemeColors = () => {
     const root = document.documentElement;
     const computedStyle = getComputedStyle(root);
@@ -268,6 +307,7 @@ export function ThemeColorManager() {
     setDarkColors(darkThemeColors);
     applyThemeClass(theme, resolvedTheme);
   };
+
   const handleColorChange = (theme: 'light' | 'dark', name: string, value: string) => {
     if (theme === 'light') {
       setLightColors(prev => ({
@@ -281,15 +321,18 @@ export function ThemeColorManager() {
       }));
     }
   };
+
   const handleColorPickerChange = (theme: 'light' | 'dark', name: string, hex: string) => {
     const hslValue = hexToHsl(hex);
     handleColorChange(theme, name, hslValue);
   };
+
   const handleHexInputChange = (theme: 'light' | 'dark', name: string, hex: string) => {
     if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
       handleColorPickerChange(theme, name, hex);
     }
   };
+
   const applyThemeColors = () => {
     applyCustomThemeColors(lightColors, darkColors);
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
@@ -298,6 +341,7 @@ export function ThemeColorManager() {
     }));
     toast.success("Theme colors applied and saved successfully");
   };
+
   const resetToDefaults = (themeMode: 'light' | 'dark') => {
     if (themeMode === 'light') {
       const defaultLight = themeColorVariables.reduce((acc, variable) => {
@@ -314,6 +358,7 @@ export function ThemeColorManager() {
     }
     toast.success(`${themeMode.charAt(0).toUpperCase() + themeMode.slice(1)} theme reset to defaults`);
   };
+
   const exportThemeColors = () => {
     const themeColors = {
       light: lightColors,
@@ -323,6 +368,7 @@ export function ThemeColorManager() {
     navigator.clipboard.writeText(jsonString);
     toast.success("Theme colors exported to clipboard as JSON");
   };
+
   const generateCSS = () => {
     let cssText = `:root {\n`;
     themeColorVariables.forEach(variable => {
@@ -337,16 +383,17 @@ export function ThemeColorManager() {
     navigator.clipboard.writeText(cssText);
     toast.success("CSS variables copied to clipboard");
   };
+
   const previewTheme = (mode: 'light' | 'dark') => {
     setTheme(mode);
     setActiveTab(mode);
     toast.success(`Previewing ${mode} theme`);
   };
+
   const getFilteredVariables = () => {
     return themeColorVariables.filter(variable => selectedCategory === "all" || variable.category === selectedCategory);
   };
 
-  // Color picker component
   const ColorPicker = ({
     name,
     value,
@@ -392,7 +439,6 @@ export function ThemeColorManager() {
       </Popover>;
   };
 
-  // Color card component
   const ColorCard = ({
     variable,
     themeMode
@@ -426,6 +472,7 @@ export function ThemeColorManager() {
         </div>
       </div>;
   };
+
   return <Card className="bg-transparent border-none shadow-none">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between">
@@ -463,7 +510,6 @@ export function ThemeColorManager() {
             </div>
           </div>
           
-          {/* Category filter buttons */}
           <div className="flex flex-wrap gap-2 mb-4">
             <Badge variant={selectedCategory === "all" ? "default" : "outline"} className="cursor-pointer" onClick={() => setSelectedCategory("all")}>
               All
@@ -476,6 +522,9 @@ export function ThemeColorManager() {
             </Badge>
             <Badge variant={selectedCategory === "states" ? "default" : "outline"} className="cursor-pointer" onClick={() => setSelectedCategory("states")}>
               States
+            </Badge>
+            <Badge variant={selectedCategory === "tabs" ? "default" : "outline"} className="cursor-pointer" onClick={() => setSelectedCategory("tabs")}>
+              Tabs
             </Badge>
           </div>
           
