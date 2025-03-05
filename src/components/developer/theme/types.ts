@@ -4,7 +4,7 @@ export interface ColorVariable {
   description: string;
   defaultLight: string;
   defaultDark: string;
-  category: "base" | "components" | "states" | "text" | "tabs";
+  category: "base" | "components" | "states" | "text" | "tabs" | "toast";
 }
 
 export const LOCAL_STORAGE_KEY = "custom-theme-colors";

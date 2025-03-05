@@ -122,6 +122,44 @@ export const themeColorVariables: ColorVariable[] = [
   defaultDark: "210 40% 98%",
   category: "states"
 },
+// Toast colors
+{
+  name: "toast-background",
+  description: "Toast notification background",
+  defaultLight: "0 0% 100%",
+  defaultDark: "260 15% 11%",
+  category: "toast"
+}, {
+  name: "toast-foreground",
+  description: "Toast notification text",
+  defaultLight: "240 10% 3.9%",
+  defaultDark: "210 40% 98%",
+  category: "toast"
+}, {
+  name: "toast-border",
+  description: "Toast notification border",
+  defaultLight: "240 5.9% 90%",
+  defaultDark: "260 15% 22%",
+  category: "toast"
+}, {
+  name: "toast-action",
+  description: "Toast action button",
+  defaultLight: "240 4.8% 95.9%",
+  defaultDark: "260 15% 18%",
+  category: "toast"
+}, {
+  name: "toast-destructive",
+  description: "Destructive toast background",
+  defaultLight: "0 84.2% 60.2%",
+  defaultDark: "0 62.8% 40.6%",
+  category: "toast"
+}, {
+  name: "toast-destructive-foreground",
+  description: "Destructive toast text",
+  defaultLight: "0 0% 98%",
+  defaultDark: "210 40% 98%",
+  category: "toast"
+},
 // Tab specific colors
 {
   name: "tabs-list",

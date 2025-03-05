@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ColorCard } from "./ColorCard";
 import { ColorVariable, ThemeMode } from "./types";
 import { themeColorVariables } from "./themeData";
+import { ToastPreview } from "./ToastPreview";
 
 interface ThemeTabContentProps {
   themeMode: ThemeMode;
@@ -36,6 +37,12 @@ export function ThemeTabContent({
   return (
     <TabsContent value={themeMode} className="mt-0">
       <ScrollArea className="h-[500px] pr-4">
+        {selectedCategory === "toast" && (
+          <div className="mb-6">
+            <ToastPreview />
+          </div>
+        )}
+        
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {getFilteredVariables().map(variable => (
             <ColorCard

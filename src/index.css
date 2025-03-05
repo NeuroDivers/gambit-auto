@@ -33,6 +33,14 @@
     --input: 240 5.9% 90%;
     --ring: 262 83.3% 57.8%;
 
+    /* Toast specific colors */
+    --toast-background: var(--background);
+    --toast-foreground: var(--foreground);
+    --toast-border: var(--border);
+    --toast-action: var(--secondary);
+    --toast-destructive: var(--destructive);
+    --toast-destructive-foreground: var(--destructive-foreground);
+
     /* Tab specific colors */
     --tabs-list: var(--muted);
     --tabs-list-foreground: var(--muted-foreground);
@@ -81,6 +89,14 @@
     --border: 260 15% 22%;
     --input: 260 15% 22%;
     --ring: 262 83.3% 75%;
+
+    /* Toast specific colors - dark mode */
+    --toast-background: var(--card);
+    --toast-foreground: var(--card-foreground);
+    --toast-border: var(--border);
+    --toast-action: var(--secondary);
+    --toast-destructive: var(--destructive);
+    --toast-destructive-foreground: var(--destructive-foreground);
 
     /* Tab specific colors - dark mode */
     --tabs-list: var(--muted);

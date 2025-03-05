@@ -56,6 +56,15 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				// Toast specific colors
+				'toast': {
+					background: 'hsl(var(--toast-background))',
+					foreground: 'hsl(var(--toast-foreground))',
+					border: 'hsl(var(--toast-border))',
+					action: 'hsl(var(--toast-action))',
+					destructive: 'hsl(var(--toast-destructive))',
+					'destructive-foreground': 'hsl(var(--toast-destructive-foreground))'
+				},
 				// Add tab-specific colors
 				'tabs-list': {
 					DEFAULT: 'hsl(var(--tabs-list))',

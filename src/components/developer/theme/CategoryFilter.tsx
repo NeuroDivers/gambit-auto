@@ -13,6 +13,7 @@ export function CategoryFilter({ selectedCategory, setSelectedCategory }: Catego
     { id: "base", label: "Base Colors" },
     { id: "components", label: "Components" },
     { id: "states", label: "States" },
+    { id: "toast", label: "Toast" },
     { id: "tabs", label: "Tabs" }
   ];
 
