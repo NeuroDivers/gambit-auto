@@ -5,6 +5,7 @@ import { ServiceCardContent } from "./card/ServiceCardContent";
 import { ServiceCardActions } from "./card/ServiceCardActions";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { useState } from "react";
 
 interface ServiceTypeCardProps {
   service: ServiceType;
@@ -13,13 +14,21 @@ interface ServiceTypeCardProps {
 }
 
 export function ServiceTypeCard({ service, onEdit, onRefetch }: ServiceTypeCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const hasSubServices = service.sub_services && service.sub_services.length > 0;
+
   return (
     <Card className="overflow-hidden">
       <ServiceCardHeader 
         service={service} 
-        onEdit={onEdit}
+        hasSubServices={hasSubServices}
+        isExpanded={isExpanded}
+        onToggleExpand={() => setIsExpanded(!isExpanded)}
       />
-      <ServiceCardContent service={service} />
+      <ServiceCardContent 
+        service={service} 
+        isExpanded={isExpanded} 
+      />
       
       {/* Visibility badges */}
       <div className="px-6 pb-2 flex flex-wrap gap-2">
@@ -46,7 +55,8 @@ export function ServiceTypeCard({ service, onEdit, onRefetch }: ServiceTypeCardP
       </div>
       
       <ServiceCardActions 
-        service={service}
+        serviceId={service.id}
+        onEdit={onEdit}
         onRefetch={onRefetch}
       />
     </Card>
