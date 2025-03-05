@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { ColorVariable, ThemeMode } from "./types";
 import { ColorPicker } from "./ColorPicker";
@@ -28,6 +28,22 @@ export function ColorCard({
 }: ColorCardProps) {
   const hslValue = colors[variable.name] || (themeMode === 'light' ? variable.defaultLight : variable.defaultDark);
   const hexValue = hslToHex(hslValue);
+  const [localHexValue, setLocalHexValue] = useState(hexValue);
+  
+  const handleLocalHexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocalHexValue(value);
+    
+    // Only apply the change when a valid hex color is entered
+    if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+      handleHexInputChange(themeMode, variable.name, value);
+    }
+  };
+  
+  // Update local state when the hexValue from props changes
+  React.useEffect(() => {
+    setLocalHexValue(hexValue);
+  }, [hexValue]);
   
   return (
     <div className="bg-card rounded-lg border p-4 space-y-3 transition-all hover:shadow-md">
@@ -63,8 +79,8 @@ export function ColorCard({
         
         <div className="flex items-center">
           <Input 
-            value={hexValue} 
-            onChange={e => handleHexInputChange(themeMode, variable.name, e.target.value)} 
+            value={localHexValue} 
+            onChange={handleLocalHexChange} 
             className="h-7 text-xs font-mono w-full" 
             placeholder="Hex color" 
             type="text"
