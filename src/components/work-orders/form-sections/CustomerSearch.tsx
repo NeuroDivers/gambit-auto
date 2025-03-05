@@ -33,6 +33,24 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     }
   })
 
+  // Fetch vehicles for the selected customer
+  const { data: vehicles } = useQuery({
+    queryKey: ["customer_vehicles", selectedCustomer],
+    queryFn: async () => {
+      if (!selectedCustomer) return []
+      
+      const { data, error } = await supabase
+        .from("vehicles")
+        .select("*")
+        .eq("customer_id", selectedCustomer)
+        .order("is_primary", { ascending: false })
+      
+      if (error) throw error
+      return data || []
+    },
+    enabled: !!selectedCustomer,
+  })
+
   const handleCustomerChange = (customerId: string) => {
     setSelectedCustomer(customerId)
     
@@ -50,6 +68,19 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
       form.setValue("postal_code", selectedCustomer.postal_code || "")
       form.setValue("country", selectedCustomer.country || "")
       setCreateNewCustomer(false)
+      
+      // Set vehicle info if primary vehicle exists
+      if (vehicles && vehicles.length > 0) {
+        // Find primary vehicle or use the first one
+        const primaryVehicle = vehicles.find(v => v.is_primary) || vehicles[0]
+        
+        if (primaryVehicle) {
+          form.setValue("vehicle_make", primaryVehicle.make)
+          form.setValue("vehicle_model", primaryVehicle.model)
+          form.setValue("vehicle_year", primaryVehicle.year)
+          form.setValue("vehicle_serial", primaryVehicle.vin || "")
+        }
+      }
     }
   }
 
