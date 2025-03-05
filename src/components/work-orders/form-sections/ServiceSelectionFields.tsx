@@ -14,6 +14,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
   
   const handleServicesChange = (newServices: ServiceItemType[]) => {
     form.setValue("service_items", newServices, { shouldDirty: true });
+    console.log("Updated services:", newServices.length);
   };
   
   return (

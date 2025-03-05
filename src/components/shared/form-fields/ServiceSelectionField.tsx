@@ -31,7 +31,7 @@ export function ServiceSelectionField({
 }: ServiceSelectionFieldProps) {
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [serviceList, setServiceList] = useState<ServiceItemType[]>(services || []);
+  const [serviceList, setServiceList] = useState<ServiceItemType[]>([]);
   
   // Use our custom hook to fetch service types
   const { data: availableServices = [], isLoading, error } = useServiceTypes();
@@ -41,6 +41,9 @@ export function ServiceSelectionField({
     if (Array.isArray(services)) {
       setServiceList(services);
       console.log("Service list updated:", services.length, "services");
+    } else {
+      setServiceList([]);
+      console.log("Service list reset to empty array");
     }
   }, [services]);
   
@@ -136,64 +139,62 @@ export function ServiceSelectionField({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-full p-0">
-          <Command>
-            <CommandInput
-              placeholder="Search services..."
-              value={searchValue}
-              onValueChange={setSearchValue}
-            />
-            
-            {isLoading ? (
-              <div className="py-6 text-center text-sm flex items-center justify-center">
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Loading services...
-              </div>
-            ) : error ? (
-              <div className="py-6 text-center text-sm text-destructive">
-                Error loading services
-              </div>
-            ) : !Array.isArray(availableServices) || availableServices.length === 0 ? (
-              <div className="py-6 text-center text-sm">No services available</div>
-            ) : (
-              <>
-                <CommandEmpty>No services found.</CommandEmpty>
-                <CommandGroup>
-                  <ScrollArea className="h-72">
-                    {availableServices.map((service) => (
-                      <CommandItem
-                        key={service.id}
-                        value={service.name}
-                        onSelect={() => addService(service)}
-                      >
-                        <div className="flex flex-col">
-                          <div className="flex items-center">
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                serviceList.some(s => s.service_id === service.id)
-                                  ? "opacity-100"
-                                  : "opacity-0"
-                              )}
-                            />
-                            <span>{service.name}</span>
-                          </div>
-                          {service.description && (
-                            <span className="text-muted-foreground text-xs ml-6 mt-1">
-                              {service.description}
-                            </span>
-                          )}
+          {isLoading ? (
+            <div className="py-6 text-center text-sm flex items-center justify-center">
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              Loading services...
+            </div>
+          ) : error ? (
+            <div className="py-6 text-center text-sm text-destructive">
+              Error loading services
+            </div>
+          ) : !Array.isArray(availableServices) || availableServices.length === 0 ? (
+            <div className="py-6 text-center text-sm">No services available</div>
+          ) : (
+            <Command>
+              <CommandInput
+                placeholder="Search services..."
+                value={searchValue}
+                onValueChange={setSearchValue}
+              />
+              
+              <CommandEmpty>No services found.</CommandEmpty>
+              <CommandGroup>
+                <ScrollArea className="h-72">
+                  {availableServices.map((service) => (
+                    <CommandItem
+                      key={service.id}
+                      value={service.name}
+                      onSelect={() => addService(service)}
+                    >
+                      <div className="flex flex-col">
+                        <div className="flex items-center">
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              serviceList.some(s => s.service_id === service.id)
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )}
+                          />
+                          <span>{service.name}</span>
                         </div>
-                      </CommandItem>
-                    ))}
-                  </ScrollArea>
-                </CommandGroup>
-              </>
-            )}
-          </Command>
+                        {service.description && (
+                          <span className="text-muted-foreground text-xs ml-6 mt-1">
+                            {service.description}
+                          </span>
+                        )}
+                      </div>
+                    </CommandItem>
+                  ))}
+                </ScrollArea>
+              </CommandGroup>
+            </Command>
+          )}
         </PopoverContent>
       </Popover>
 
-      {serviceList && serviceList.length > 0 ? (
+      {Array.isArray(serviceList) && serviceList.length > 0 ? (
         serviceList.map((service) => (
           <Card key={service.service_id} className="border">
             <CardHeader className="py-4">
