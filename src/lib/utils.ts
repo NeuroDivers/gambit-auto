@@ -63,4 +63,38 @@ export const applyThemeClass = (theme: string | undefined, resolvedTheme: string
       }
     }
   }
+  
+  // Apply any custom theme colors
+  applyCustomThemeColors();
+}
+
+export const applyCustomThemeColors = (): void => {
+  const customThemeColors = localStorage.getItem("custom-theme-colors");
+  if (customThemeColors) {
+    // Don't recreate the style element if it already exists
+    if (!document.getElementById('theme-colors-style')) {
+      try {
+        const { light, dark } = JSON.parse(customThemeColors);
+        
+        const style = document.createElement('style');
+        let cssText = `:root {\n`;
+        Object.entries(light).forEach(([name, value]) => {
+          cssText += `  --${name}: ${value};\n`;
+        });
+        cssText += `}\n\n`;
+        
+        cssText += `.dark {\n`;
+        Object.entries(dark).forEach(([name, value]) => {
+          cssText += `  --${name}: ${value};\n`;
+        });
+        cssText += `}\n`;
+        
+        style.textContent = cssText;
+        style.id = 'theme-colors-style';
+        document.head.appendChild(style);
+      } catch (error) {
+        console.error("Error applying saved theme colors:", error);
+      }
+    }
+  }
 }

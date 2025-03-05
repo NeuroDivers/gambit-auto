@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
 import { Card, CardContent } from "@/components/ui/card"
@@ -112,14 +111,32 @@ function hexToHsl(hex: string): string {
   return `${h} ${s}% ${l}%`;
 }
 
+const LOCAL_STORAGE_KEY = "custom-theme-colors";
+
 export function ThemeColorManager() {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [lightColors, setLightColors] = useState<Record<string, string>>({})
   const [darkColors, setDarkColors] = useState<Record<string, string>>({})
   const [activeTab, setActiveTab] = useState<string>("light")
+  const [openColorPicker, setOpenColorPicker] = useState<string | null>(null)
   
   useEffect(() => {
-    loadCurrentThemeColors()
+    const savedThemeColors = localStorage.getItem(LOCAL_STORAGE_KEY);
+    
+    if (savedThemeColors) {
+      try {
+        const { light, dark } = JSON.parse(savedThemeColors);
+        setLightColors(light);
+        setDarkColors(dark);
+        
+        applyCustomThemeColors(light, dark);
+      } catch (error) {
+        console.error("Error parsing saved theme colors:", error);
+        loadCurrentThemeColors();
+      }
+    } else {
+      loadCurrentThemeColors();
+    }
   }, [])
   
   const loadCurrentThemeColors = () => {
@@ -159,6 +176,17 @@ export function ThemeColorManager() {
   }
   
   const applyThemeColors = () => {
+    applyCustomThemeColors(lightColors, darkColors);
+    
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
+      light: lightColors,
+      dark: darkColors
+    }));
+    
+    toast.success("Theme colors applied and saved successfully")
+  }
+  
+  const applyCustomThemeColors = (lightColors: Record<string, string>, darkColors: Record<string, string>) => {
     const root = document.documentElement
     const style = document.createElement('style')
     
@@ -185,8 +213,6 @@ export function ThemeColorManager() {
     document.head.appendChild(style)
     
     applyThemeClass(theme, resolvedTheme)
-    
-    toast.success("Theme colors applied successfully")
   }
   
   const resetToDefaults = (themeMode: 'light' | 'dark') => {
@@ -238,16 +264,30 @@ export function ThemeColorManager() {
   }
 
   const ColorPicker = ({ 
+    name,
     value, 
-    onChange 
+    onChange,
+    theme
   }: { 
+    name: string,
     value: string, 
-    onChange: (hex: string) => void 
+    onChange: (hex: string) => void,
+    theme: 'light' | 'dark'
   }) => {
     const hexColor = hslToHex(value);
+    const isOpen = openColorPicker === `${theme}-${name}`;
     
     return (
-      <Popover>
+      <Popover 
+        open={isOpen} 
+        onOpenChange={(open) => {
+          if (open) {
+            setOpenColorPicker(`${theme}-${name}`);
+          } else {
+            setOpenColorPicker(null);
+          }
+        }}
+      >
         <PopoverTrigger asChild>
           <Button 
             variant="outline" 
@@ -257,26 +297,41 @@ export function ThemeColorManager() {
             <span className="sr-only">Pick a color</span>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80" onPointerDownOutside={(e) => e.preventDefault()}>
-          <div 
-            className="grid gap-4"
-            onClick={(e) => e.stopPropagation()}
-            onMouseDown={(e) => e.stopPropagation()}
-          >
+        <PopoverContent className="w-80" onClick={(e) => e.stopPropagation()}>
+          <div className="grid gap-4">
             <div className="space-y-2">
               <h4 className="font-medium">Pick a color</h4>
+              <div
+                className="relative w-full h-32 overflow-hidden rounded-md border"
+                style={{
+                  background: `linear-gradient(to bottom, #fff 0%, ${hexColor} 100%)`
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+              />
               <input
                 type="color"
                 value={hexColor}
                 onChange={(e) => onChange(e.target.value)}
                 className="w-full h-10"
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                }}
+                onClick={(e) => e.stopPropagation()}
               />
+              <div className="flex justify-between">
+                <Label>Hex</Label>
+                <span className="font-mono">{hexColor}</span>
+              </div>
+              <div className="flex justify-between">
+                <Label>HSL</Label>
+                <span className="font-mono">{value}</span>
+              </div>
+              <Button 
+                className="w-full mt-2" 
+                onClick={() => setOpenColorPicker(null)}
+              >
+                Apply Color
+              </Button>
             </div>
           </div>
         </PopoverContent>
@@ -349,8 +404,10 @@ export function ThemeColorManager() {
                       className="flex-1"
                     />
                     <ColorPicker
+                      name={variable.name}
                       value={lightColors[variable.name] || variable.defaultLight}
                       onChange={(hex) => handleColorPickerChange('light', variable.name, hex)}
+                      theme="light"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">{variable.description}</p>
@@ -381,8 +438,10 @@ export function ThemeColorManager() {
                       className="flex-1"
                     />
                     <ColorPicker
+                      name={variable.name}
                       value={darkColors[variable.name] || variable.defaultDark}
                       onChange={(hex) => handleColorPickerChange('dark', variable.name, hex)}
+                      theme="dark"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">{variable.description}</p>
@@ -407,6 +466,7 @@ export function ThemeColorManager() {
             onClick={applyThemeColors}
             className="gap-2"
           >
+            <Paintbrush className="h-4 w-4" />
             Apply Theme Colors
           </Button>
         </div>

@@ -15,6 +15,37 @@ export default function DeveloperSettings() {
   // Ensure theme is applied on component mount
   useEffect(() => {
     applyThemeClass(theme, resolvedTheme)
+    
+    // Check for custom theme stored in localStorage
+    const customThemeColors = localStorage.getItem("custom-theme-colors")
+    if (customThemeColors) {
+      // Apply custom theme colors
+      const existingStyle = document.getElementById('theme-colors-style')
+      if (!existingStyle) {
+        try {
+          const { light, dark } = JSON.parse(customThemeColors)
+          
+          const style = document.createElement('style')
+          let cssText = `:root {\n`
+          Object.entries(light).forEach(([name, value]) => {
+            cssText += `  --${name}: ${value};\n`
+          })
+          cssText += `}\n\n`
+          
+          cssText += `.dark {\n`
+          Object.entries(dark).forEach(([name, value]) => {
+            cssText += `  --${name}: ${value};\n`
+          })
+          cssText += `}\n`
+          
+          style.textContent = cssText
+          style.id = 'theme-colors-style'
+          document.head.appendChild(style)
+        } catch (error) {
+          console.error("Error applying saved theme colors:", error)
+        }
+      }
+    }
   }, [theme, resolvedTheme])
 
   return (
