@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { CustomerInfoFields } from "./CustomerInfoFields"
 
-export type InvoiceFormFieldsProps = {
+type InvoiceFormFieldsProps = {
   form: UseFormReturn<InvoiceFormValues> 
   notes: string
   setNotes: (value: string) => void
@@ -53,12 +53,6 @@ export function InvoiceFormFields({
         setVehicleYear={(value) => form.setValue('vehicle_year', value)}
         vehicleVin={form.watch('vehicle_vin')}
         setVehicleVin={(value) => form.setValue('vehicle_vin', value)}
-        vehicleBodyClass=""
-        setVehicleBodyClass={() => {}}
-        vehicleDoors={0}
-        setVehicleDoors={() => {}}
-        vehicleTrim=""
-        setVehicleTrim={() => {}}
       />
 
       <InvoiceItemsFields
