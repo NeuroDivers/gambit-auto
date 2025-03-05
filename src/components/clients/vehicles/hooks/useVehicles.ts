@@ -37,6 +37,12 @@ export function useVehicles(clientId: string) {
     mutationFn: async (values: VehicleFormValues) => {
       console.log("Adding vehicle with values:", { ...values, client_id: clientId })
 
+      // First, get the auth user to check if we're performing this operation in an authenticated context
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        throw new Error("Authentication required to add vehicles")
+      }
+
       // First, if this vehicle should be primary, unset any existing primary vehicles
       if (values.is_primary) {
         // Try to update using both client_id and customer_id
