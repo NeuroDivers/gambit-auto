@@ -61,7 +61,7 @@ export function CustomerQuotes({ customer }: CustomerQuotesProps) {
             <tbody>
               {customer.quotes.map((quote) => (
                 <tr key={quote.id} className="border-b">
-                  <td className="py-3">{quote.quote_number}</td>
+                  <td className="py-3">{quote.estimate_number || quote.quote_number}</td>
                   <td className="py-3">
                     {new Date(quote.created_at).toLocaleDateString()}
                     <span className="text-xs text-muted-foreground block">
@@ -75,7 +75,7 @@ export function CustomerQuotes({ customer }: CustomerQuotesProps) {
                     </Badge>
                   </td>
                   <td className="py-3 text-right">
-                    <Button variant="ghost" size="sm" onClick={() => navigate(`/quotes/${quote.id}`)}>
+                    <Button variant="ghost" size="sm" onClick={() => navigate(`/estimates/${quote.id}`)}>
                       <Eye className="h-4 w-4 mr-1" />
                       View
                     </Button>

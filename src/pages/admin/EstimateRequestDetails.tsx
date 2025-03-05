@@ -32,7 +32,7 @@ export default function EstimateRequestDetails() {
           .from("estimate_requests")
           .select(`
             *,
-            clients(*)
+            customers(*)
           `)
           .eq("id", id)
           .single()
@@ -118,7 +118,7 @@ export default function EstimateRequestDetails() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <CustomerInfo customer={estimateRequest.clients} />
+        <CustomerInfo customer={estimateRequest.customers} />
         <Card>
           <CardHeader>
             <CardTitle>Vehicle Information</CardTitle>

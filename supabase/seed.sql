@@ -21,12 +21,12 @@ VALUES
   (gen_random_uuid(), 'trainee3@test.com', 'Gareth', 'Noble', (SELECT id FROM roles WHERE name = 'trainee')),
   (gen_random_uuid(), 'trainee4@test.com', 'Gaheris', 'Steady', (SELECT id FROM roles WHERE name = 'trainee'));
 
--- Create 30 clients
-INSERT INTO clients (first_name, last_name, email, phone_number)
+-- Create 30 customers
+INSERT INTO customers (first_name, last_name, email, phone_number)
 SELECT 
-  'Client' || i as first_name,
+  'Customer' || i as first_name,
   'Last' || i as last_name,
-  'client' || i || '@example.com' as email,
+  'customer' || i || '@example.com' as email,
   '+1555' || LPAD(i::text, 7, '0') as phone_number
 FROM generate_series(1, 30) i;
 
@@ -84,7 +84,7 @@ INSERT INTO estimate_requests (
   description
 )
 SELECT 
-  (SELECT id FROM clients ORDER BY random() LIMIT 1),
+  (SELECT id FROM customers ORDER BY random() LIMIT 1),
   CASE (i % 4) 
     WHEN 0 THEN 'Toyota'
     WHEN 1 THEN 'Honda'
@@ -107,8 +107,8 @@ SELECT
 FROM generate_series(1, 30) i;
 
 -- Create 33 quotes
-INSERT INTO quotes (
-  quote_number,
+INSERT INTO estimates (
+  estimate_number,
   customer_first_name,
   customer_last_name,
   customer_email,
@@ -120,7 +120,7 @@ INSERT INTO quotes (
   total
 )
 SELECT 
-  'QTE-2024-' || LPAD(i::text, 4, '0'),
+  'EST-2024-' || LPAD(i::text, 4, '0'),
   'QuoteCustomer' || i,
   'QuoteSurname' || i,
   'quotecustomer' || i || '@example.com',

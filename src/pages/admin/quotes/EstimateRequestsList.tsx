@@ -25,7 +25,7 @@ export function EstimateRequestsList() {
             status, 
             description,
             customer_id,
-            clients(first_name, last_name, email)
+            customers(first_name, last_name, email)
           `)
           .order("created_at", { ascending: false })
           .limit(30)
@@ -108,8 +108,8 @@ export function EstimateRequestsList() {
                     {`REQ-${request.id.substring(0, 8)}`}
                   </TableCell>
                   <TableCell>
-                    {request.clients 
-                      ? `${request.clients.first_name} ${request.clients.last_name}`
+                    {request.customers 
+                      ? `${request.customers.first_name} ${request.customers.last_name}`
                       : "Unknown Customer"}
                   </TableCell>
                   <TableCell>
