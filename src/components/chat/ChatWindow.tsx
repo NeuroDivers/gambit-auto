@@ -213,19 +213,21 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
               console.error("Error marking message as read:", updateError)
             }
 
-            // Check if this is the active conversation - using document visibility
+            // Check document visibility
             const isDocumentVisible = document.visibilityState === "visible";
             
-            // Only show toast if this is NOT the active conversation window or document is not visible
+            // Only show toast if:
+            // 1. This is NOT the currently active conversation, OR
+            // 2. The document is not visible (user is on another tab/app)
             if (!isActiveConversation.current || !isDocumentVisible) {
-              console.log(`Showing toast: Active=${isActiveConversation.current}, Visible=${isDocumentVisible}`)
+              console.log(`Showing toast notification - Active conversation: ${isActiveConversation.current}, Document visible: ${isDocumentVisible}`)
               toast({
                 title: `${recipient?.first_name || 'New Message'}`,
                 description: newMessage.message.substring(0, 50) + (newMessage.message.length > 50 ? '...' : ''),
                 duration: 5000,
               })
             } else {
-              console.log("Not showing toast for active conversation:", recipientId)
+              console.log(`Not showing toast - Active conversation: ${isActiveConversation.current}, Document visible: ${isDocumentVisible}`)
             }
             
             scrollToBottom()
@@ -260,10 +262,12 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         console.log("Typing indicator subscription status:", status)
       })
 
-    // Add document visibility change handler
+    // Document visibility change handler - BUT don't change the active conversation status
+    // We only use this to determine if toasts should be shown
     const handleVisibilityChange = () => {
       console.log("Document visibility changed:", document.visibilityState)
-      isActiveConversation.current = document.visibilityState === "visible"
+      // We do NOT update isActiveConversation here, it should only be updated based on component mounting/unmounting
+      // or recipient changes
     }
     
     document.addEventListener("visibilitychange", handleVisibilityChange)
