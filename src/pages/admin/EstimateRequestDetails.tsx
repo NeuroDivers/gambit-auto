@@ -7,6 +7,11 @@ import { ArrowLeft, ClipboardList } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/components/ui/use-toast"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
+import { CustomerInfo } from "@/components/estimates/sections/CustomerInfo"
+import { VehicleInfo } from "@/components/estimates/sections/VehicleInfo"
+import { EstimateNotes } from "@/components/estimates/sections/EstimateNotes"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { EstimateStatus } from "@/components/estimates/sections/EstimateStatus"
 
 export default function EstimateRequestDetails() {
   const { id } = useParams()
@@ -24,13 +29,14 @@ export default function EstimateRequestDetails() {
           .from("estimate_requests")
           .select(`
             *,
-            customer:customers(*),
+            customer:customers!estimate_requests_customer_id_fkey(*),
             vehicle_info:vehicles(*)
           `)
           .eq("id", id)
           .single()
 
         if (error) throw error
+        console.log("Fetched estimate request:", data)
         setEstimateRequest(data)
       } catch (error) {
         console.error("Error fetching estimate request:", error)
@@ -87,10 +93,15 @@ export default function EstimateRequestDetails() {
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <PageTitle
-            title="Estimate Request Details"
-            description={`Submitted on ${new Date(estimateRequest.created_at).toLocaleDateString()}`}
-          />
+          <div>
+            <PageTitle
+              title="Estimate Request Details"
+              description={`Submitted on ${new Date(estimateRequest.created_at).toLocaleDateString()}`}
+            />
+            <div className="mt-2">
+              <EstimateStatus status={estimateRequest.status || "Pending"} />
+            </div>
+          </div>
         </div>
         
         <Button onClick={handleCreateEstimate}>
@@ -99,10 +110,30 @@ export default function EstimateRequestDetails() {
         </Button>
       </div>
       
-      {/* Estimate request content would go here */}
-      <div className="border rounded-lg p-6">
-        <p>Estimate request details implementation needed</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <CustomerInfo customer={estimateRequest.customer} />
+        <VehicleInfo vehicle={estimateRequest.vehicle_info} />
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Service Request</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div>
+            <p className="font-medium">Service Type:</p>
+            <p>{estimateRequest.service_type || "General Service"}</p>
+          </div>
+          {estimateRequest.requested_date && (
+            <div>
+              <p className="font-medium">Requested Date:</p>
+              <p>{new Date(estimateRequest.requested_date).toLocaleDateString()}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <EstimateNotes notes={estimateRequest.notes} />
     </div>
   )
 }
