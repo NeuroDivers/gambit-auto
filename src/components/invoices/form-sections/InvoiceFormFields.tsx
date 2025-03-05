@@ -1,36 +1,15 @@
 
-import { CustomerInfoFields } from "./CustomerInfoFields"
+import { UseFormReturn } from "react-hook-form"
+import { InvoiceFormValues } from "../types"
 import { VehicleInfoFields } from "./VehicleInfoFields"
 import { WorkOrderSelect } from "./WorkOrderSelect"
 import { InvoiceItemsFields } from "./InvoiceItemsFields"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { CustomerInfoFields } from "./CustomerInfoFields"
 
 type InvoiceFormFieldsProps = {
-  customerFirstName: string
-  setCustomerFirstName: (value: string) => void
-  customerLastName: string
-  setCustomerLastName: (value: string) => void
-  customerEmail: string
-  setCustomerEmail: (value: string) => void
-  customerPhone: string
-  setCustomerPhone: (value: string) => void
-  customerAddress: string
-  setCustomerAddress: (value: string) => void
-  vehicleMake: string
-  setVehicleMake: (value: string) => void
-  vehicleModel: string
-  setVehicleModel: (value: string) => void
-  vehicleYear: number
-  setVehicleYear: (value: number) => void
-  vehicleVin: string
-  setVehicleVin: (value: string) => void
-  vehicleBodyClass: string
-  setVehicleBodyClass: (value: string) => void
-  vehicleDoors: number
-  setVehicleDoors: (value: number) => void
-  vehicleTrim: string
-  setVehicleTrim: (value: string) => void
+  form: UseFormReturn<InvoiceFormValues> 
   notes: string
   setNotes: (value: string) => void
   selectedWorkOrderId: string
@@ -38,33 +17,11 @@ type InvoiceFormFieldsProps = {
   workOrders: any[]
   invoiceItems: any[]
   setInvoiceItems: (items: any[]) => void
+  onCustomerSelect?: (customerId: string) => void
 }
 
 export function InvoiceFormFields({
-  customerFirstName,
-  setCustomerFirstName,
-  customerLastName,
-  setCustomerLastName,
-  customerEmail,
-  setCustomerEmail,
-  customerPhone,
-  setCustomerPhone,
-  customerAddress,
-  setCustomerAddress,
-  vehicleMake,
-  setVehicleMake,
-  vehicleModel,
-  setVehicleModel,
-  vehicleYear,
-  setVehicleYear,
-  vehicleVin,
-  setVehicleVin,
-  vehicleBodyClass,
-  setVehicleBodyClass,
-  vehicleDoors,
-  setVehicleDoors,
-  vehicleTrim,
-  setVehicleTrim,
+  form,
   notes,
   setNotes,
   selectedWorkOrderId,
@@ -72,6 +29,7 @@ export function InvoiceFormFields({
   workOrders,
   invoiceItems,
   setInvoiceItems,
+  onCustomerSelect
 }: InvoiceFormFieldsProps) {
   return (
     <div className="space-y-4">
@@ -82,33 +40,19 @@ export function InvoiceFormFields({
       />
 
       <CustomerInfoFields
-        customerFirstName={customerFirstName}
-        setCustomerFirstName={setCustomerFirstName}
-        customerLastName={customerLastName}
-        setCustomerLastName={setCustomerLastName}
-        customerEmail={customerEmail}
-        setCustomerEmail={setCustomerEmail}
-        customerPhone={customerPhone}
-        setCustomerPhone={setCustomerPhone}
-        customerAddress={customerAddress}
-        setCustomerAddress={setCustomerAddress}
+        form={form}
+        onCustomerSelect={onCustomerSelect}
       />
 
       <VehicleInfoFields
-        vehicleMake={vehicleMake}
-        setVehicleMake={setVehicleMake}
-        vehicleModel={vehicleModel}
-        setVehicleModel={setVehicleModel}
-        vehicleYear={vehicleYear}
-        setVehicleYear={setVehicleYear}
-        vehicleVin={vehicleVin}
-        setVehicleVin={setVehicleVin}
-        vehicleBodyClass={vehicleBodyClass}
-        setVehicleBodyClass={setVehicleBodyClass}
-        vehicleDoors={vehicleDoors}
-        setVehicleDoors={setVehicleDoors}
-        vehicleTrim={vehicleTrim}
-        setVehicleTrim={setVehicleTrim}
+        vehicleMake={form.watch('vehicle_make')}
+        setVehicleMake={(value) => form.setValue('vehicle_make', value)}
+        vehicleModel={form.watch('vehicle_model')}
+        setVehicleModel={(value) => form.setValue('vehicle_model', value)}
+        vehicleYear={form.watch('vehicle_year')}
+        setVehicleYear={(value) => form.setValue('vehicle_year', value)}
+        vehicleVin={form.watch('vehicle_vin')}
+        setVehicleVin={(value) => form.setValue('vehicle_vin', value)}
       />
 
       <InvoiceItemsFields

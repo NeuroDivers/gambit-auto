@@ -69,7 +69,11 @@ export default function CreateQuote() {
           
           <VehicleInfoSection form={form} />
           
-          <ServicesSection form={form} />
+          <ServicesSection 
+            form={form} 
+            services={form.watch('service_items')}
+            onServicesChange={(services) => form.setValue('service_items', services)}
+          />
           
           <NotesSection form={form} />
           
