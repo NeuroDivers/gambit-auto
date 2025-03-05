@@ -1,3 +1,4 @@
+
 import { ServiceItemType } from "@/types/service-item"
 import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
@@ -14,7 +15,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { CommissionRateFields } from "@/components/shared/form-fields/CommissionRateFields"
-import { UseFormReturn } from "react-hook-form"
 import { Card, CardContent } from "@/components/ui/card"
 
 type ServiceSelectionFieldProps = {
@@ -25,6 +25,7 @@ type ServiceSelectionFieldProps = {
   isClient?: boolean
   showCommission?: boolean
   allowPriceEdit?: boolean
+  showAssignedStaff?: boolean
 }
 
 export function ServiceSelectionField({
@@ -34,7 +35,8 @@ export function ServiceSelectionField({
   disabled = false,
   isClient = false,
   showCommission = false,
-  allowPriceEdit = true
+  allowPriceEdit = true,
+  showAssignedStaff = false
 }: ServiceSelectionFieldProps) {
   const [expandedServices, setExpandedServices] = useState<Record<string, boolean>>({})
 
@@ -48,6 +50,19 @@ export function ServiceSelectionField({
       if (error) throw error
       return data || []
     }
+  })
+
+  const { data: staffProfiles = [] } = useQuery({
+    queryKey: ["assignable_staff"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("staff_view")
+        .select("*")
+        .eq("status", "active")
+      if (error) throw error
+      return data || []
+    },
+    enabled: showAssignedStaff
   })
 
   const standaloneServices = allServices.filter(service => 
@@ -89,7 +104,8 @@ export function ServiceSelectionField({
       commission_type: null,
       description: service.description || "",
       is_parent: true,
-      sub_services: []
+      sub_services: [],
+      assigned_profile_id: null
     }
 
     onChange([...services, newService])
@@ -124,7 +140,8 @@ export function ServiceSelectionField({
       commission_rate: 0,
       commission_type: null,
       description: subService.description || "",
-      parent_id: parentService.service_id
+      parent_id: parentService.service_id,
+      assigned_profile_id: null
     }
     
     updatedServices[parentIndex].sub_services = [
@@ -246,6 +263,29 @@ export function ServiceSelectionField({
                     </div>
                   )}
                   
+                  {showAssignedStaff && (
+                    <div className={!isClient && allowPriceEdit ? "sm:col-span-2" : ""}>
+                      <Label htmlFor={`staff-${index}`}>Assigned Staff</Label>
+                      <Select
+                        value={service.assigned_profile_id || ""}
+                        onValueChange={(value) => updateService(index, { assigned_profile_id: value || null })}
+                        disabled={disabled}
+                      >
+                        <SelectTrigger id={`staff-${index}`}>
+                          <SelectValue placeholder="Select staff member" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">None</SelectItem>
+                          {staffProfiles.map((staff) => (
+                            <SelectItem key={staff.profile_id} value={staff.profile_id}>
+                              {staff.first_name} {staff.last_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  
                   {showCommission && (
                     <div className="col-span-2">
                       <CommissionRateFields
@@ -345,6 +385,29 @@ export function ServiceSelectionField({
                                     className="w-full h-8 text-sm"
                                     disabled={disabled}
                                   />
+                                </div>
+                              )}
+                              
+                              {showAssignedStaff && (
+                                <div className={!isClient && allowPriceEdit ? "sm:col-span-2" : ""}>
+                                  <Label htmlFor={`sub-staff-${index}-${subIndex}`} className="text-xs">Assigned Staff</Label>
+                                  <Select
+                                    value={subService.assigned_profile_id || ""}
+                                    onValueChange={(value) => updateSubService(index, subIndex, { assigned_profile_id: value || null })}
+                                    disabled={disabled}
+                                  >
+                                    <SelectTrigger id={`sub-staff-${index}-${subIndex}`} className="h-8 text-sm">
+                                      <SelectValue placeholder="Select staff member" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="">None</SelectItem>
+                                      {staffProfiles.map((staff) => (
+                                        <SelectItem key={staff.profile_id} value={staff.profile_id}>
+                                          {staff.first_name} {staff.last_name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                               )}
                               
