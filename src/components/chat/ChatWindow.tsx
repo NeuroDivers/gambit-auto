@@ -101,13 +101,13 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       const unreadMessages = messages.filter(m => 
         m.sender_id === recipientId && 
         m.recipient_id === currentUserId && 
-        !m.read_at
+        !m.read
       )
 
       if (unreadMessages.length > 0) {
         const { error: updateError } = await supabase
           .from("chat_messages")
-          .update({ read_at: new Date().toISOString() })
+          .update({ read: true, read_at: new Date().toISOString() })
           .in('id', unreadMessages.map(m => m.id))
 
         if (updateError) {
@@ -177,7 +177,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
 
             const { error: updateError } = await supabase
               .from("chat_messages")
-              .update({ read_at: new Date().toISOString() })
+              .update({ read: true, read_at: new Date().toISOString() })
               .eq('id', newMessage.id)
 
             if (updateError) {

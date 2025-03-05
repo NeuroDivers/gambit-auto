@@ -36,7 +36,7 @@ export const fetchChatNotifications = async (userId: string) => {
       )
     `)
     .eq("recipient_id", userId)
-    .is("read_at", null)
+    .eq("read", false)
     .order('created_at', { ascending: false })
     .limit(20);
 
@@ -73,7 +73,7 @@ export const markNotificationAsRead = async (notification: Notification) => {
       // Mark chat message as read
       const { error } = await supabase
         .from("chat_messages")
-        .update({ read: true })
+        .update({ read: true, read_at: new Date().toISOString() })
         .eq("id", notification.id);
 
       if (error) {
