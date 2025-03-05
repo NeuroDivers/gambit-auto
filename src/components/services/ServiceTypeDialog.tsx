@@ -32,6 +32,8 @@ export function ServiceTypeDialog({ open, onOpenChange, serviceType, onSuccess }
       pricing_model: "flat_rate",
       commission_rate: null,
       commission_type: null,
+      visible_on_app: true,
+      visible_on_website: true,
     }
   })
 
@@ -49,6 +51,8 @@ export function ServiceTypeDialog({ open, onOpenChange, serviceType, onSuccess }
         pricing_model: serviceType.pricing_model || "flat_rate",
         commission_rate: null,
         commission_type: null,
+        visible_on_app: serviceType.visible_on_app ?? true,
+        visible_on_website: serviceType.visible_on_website ?? true,
       });
     } else if (!serviceType && open) {
       // Reset form to default values when creating a new service type
@@ -63,6 +67,8 @@ export function ServiceTypeDialog({ open, onOpenChange, serviceType, onSuccess }
         pricing_model: "flat_rate",
         commission_rate: null,
         commission_type: null,
+        visible_on_app: true,
+        visible_on_website: true,
       });
     }
   }, [serviceType, form, open]);
@@ -84,6 +90,8 @@ export function ServiceTypeDialog({ open, onOpenChange, serviceType, onSuccess }
         service_type: data.service_type,
         pricing_model: data.pricing_model,
         parent_service_id: data.parent_service_id && data.parent_service_id !== "" ? data.parent_service_id : null,
+        visible_on_app: data.visible_on_app,
+        visible_on_website: data.visible_on_website,
         // Exclude commission_rate and commission_type as they don't exist in the service_types table
       }
 

@@ -24,7 +24,9 @@ export const formSchema = z.object({
   commission_type: z.enum(["percentage", "flat"]).nullable(),
   service_type: z.enum(["standalone", "sub_service", "bundle"]).default("standalone"),
   parent_service_id: z.string().optional(),
-  pricing_model: z.enum(["flat_rate", "hourly", "variable"]).default("flat_rate")
+  pricing_model: z.enum(["flat_rate", "hourly", "variable"]).default("flat_rate"),
+  visible_on_app: z.boolean().default(true),
+  visible_on_website: z.boolean().default(true)
 })
 
 export type ServiceTypeFormValues = z.infer<typeof formSchema>
@@ -88,26 +90,73 @@ export function ServiceTypeFormFields({ form }: { form: UseFormReturn<ServiceTyp
         )}
       />
       
-      <FormField
-        control={form.control}
-        name="status"
-        render={({ field }) => (
-          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <FormLabel className="text-base">Active</FormLabel>
-              <p className="text-sm text-muted-foreground">
-                Service is available for selection
-              </p>
-            </div>
-            <FormControl>
-              <Switch
-                checked={field.value === 'active'}
-                onCheckedChange={(checked) => field.onChange(checked ? 'active' : 'inactive')}
-              />
-            </FormControl>
-          </FormItem>
-        )}
-      />
+      {/* Visibility Settings Section */}
+      <div className="border-t pt-4 mt-4">
+        <h3 className="font-medium text-base mb-3">Visibility Settings</h3>
+        
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 mb-3">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">Active</FormLabel>
+                <p className="text-sm text-muted-foreground">
+                  Service is available for selection in this application
+                </p>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value === 'active'}
+                  onCheckedChange={(checked) => field.onChange(checked ? 'active' : 'inactive')}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="visible_on_app"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 mb-3">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">Visible on Mobile App</FormLabel>
+                <p className="text-sm text-muted-foreground">
+                  Service will be visible to users on the mobile application
+                </p>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="visible_on_website"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">Visible on Website</FormLabel>
+                <p className="text-sm text-muted-foreground">
+                  Service will be visible to users on the public website
+                </p>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+      </div>
       
       {/* Commission fields removed */}
       <CommissionRateFields

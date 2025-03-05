@@ -26,6 +26,8 @@ export interface ServiceType {
   base_price: number | null;
   parent_service_id?: string | null;
   service_type?: 'standalone' | 'sub_service' | 'bundle';
+  visible_on_app?: boolean;
+  visible_on_website?: boolean;
 }
 
 export interface ServiceTypesTable {
@@ -42,6 +44,8 @@ export interface ServiceTypesTable {
     base_price: number | null
     parent_service_id?: string | null
     service_type?: 'standalone' | 'sub_service' | 'bundle'
+    visible_on_app: boolean
+    visible_on_website: boolean
   }
   Insert: {
     created_at?: string
@@ -56,6 +60,8 @@ export interface ServiceTypesTable {
     base_price?: number | null
     parent_service_id?: string | null
     service_type?: 'standalone' | 'sub_service' | 'bundle'
+    visible_on_app?: boolean
+    visible_on_website?: boolean
   }
   Update: {
     created_at?: string
@@ -70,6 +76,8 @@ export interface ServiceTypesTable {
     base_price?: number | null
     parent_service_id?: string | null
     service_type?: 'standalone' | 'sub_service' | 'bundle'
+    visible_on_app?: boolean
+    visible_on_website?: boolean
   }
   Relationships: []
 }

@@ -22,6 +22,8 @@ export interface ServiceType {
   } | null;
   included_in_bundles?: ServiceType[];
   bundle_includes?: ServiceType[];
+  visible_on_app?: boolean;
+  visible_on_website?: boolean;
 }
 
 export const useServiceTypes = (

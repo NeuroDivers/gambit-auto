@@ -1830,6 +1830,8 @@ export type Database = {
           sort_order: number | null
           status: Database["public"]["Enums"]["service_status"]
           updated_at: string
+          visible_on_app: boolean
+          visible_on_website: boolean
         }
         Insert: {
           base_price?: number | null
@@ -1851,6 +1853,8 @@ export type Database = {
           sort_order?: number | null
           status?: Database["public"]["Enums"]["service_status"]
           updated_at?: string
+          visible_on_app?: boolean
+          visible_on_website?: boolean
         }
         Update: {
           base_price?: number | null
@@ -1872,6 +1876,8 @@ export type Database = {
           sort_order?: number | null
           status?: Database["public"]["Enums"]["service_status"]
           updated_at?: string
+          visible_on_app?: boolean
+          visible_on_website?: boolean
         }
         Relationships: [
           {
