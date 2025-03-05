@@ -94,17 +94,25 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
 
       const notifications = (notificationsResponse.data || []) as Notification[]
       
-      // Fix the type casting for chat messages
-      const chatMessages = (chatMessagesResponse.data || []).map(msg => ({
-        ...msg,
-        profiles: Array.isArray(msg.profiles) ? msg.profiles[0] : msg.profiles
+      // Transform chat messages to ensure they match the expected type
+      const typedChatMessages = (chatMessagesResponse.data || []).map(msg => ({
+        id: msg.id,
+        message: msg.message,
+        created_at: msg.created_at,
+        sender_id: msg.sender_id,
+        read: msg.read,
+        profiles: {
+          first_name: msg.profiles?.first_name || null,
+          last_name: msg.profiles?.last_name || null,
+          email: msg.profiles?.email || null
+        }
       })) as ChatMessage[]
 
       // Convert chat messages to notification format
-      const chatNotifications: Notification[] = chatMessages.map(msg => ({
+      const chatNotifications: Notification[] = typedChatMessages.map(msg => ({
         id: msg.id,
         title: "New Message",
-        message: `${msg.profiles?.first_name || msg.profiles?.email || 'Someone'}: ${msg.message.substring(0, 50)}${msg.message.length > 50 ? '...' : ''}`,
+        message: `${msg.profiles.first_name || msg.profiles.email || 'Someone'}: ${msg.message.substring(0, 50)}${msg.message.length > 50 ? '...' : ''}`,
         created_at: msg.created_at,
         type: 'chat_message',
         read: false,
@@ -190,8 +198,15 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
         if (error) throw error
       }
 
-      // Refresh notifications after marking as read
-      fetchNotifications()
+      // Update local state immediately
+      setNotifications(prevNotifications => 
+        prevNotifications.map(n => 
+          n.id === notification.id ? { ...n, read: true } : n
+        )
+      )
+      
+      // Update unread count
+      setUnreadCount(prev => Math.max(0, prev - 1))
 
     } catch (error) {
       console.error("Error marking as read:", error)

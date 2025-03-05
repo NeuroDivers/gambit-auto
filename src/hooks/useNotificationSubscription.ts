@@ -1,5 +1,5 @@
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast"
 export function useNotificationSubscription() {
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
     console.log("Setting up notification subscription...")
@@ -15,6 +16,8 @@ export function useNotificationSubscription() {
     const setupSubscriptions = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
+      
+      setUserId(user.id)
       
       // Set up notification subscription
       const notificationsChannel = supabase
@@ -60,6 +63,7 @@ export function useNotificationSubscription() {
             
             // Invalidate chat queries to trigger a refresh
             queryClient.invalidateQueries({ queryKey: ['chat'] })
+            queryClient.invalidateQueries({ queryKey: ['unread-count'] })
             
             // We'll need to fetch the sender details for the toast
             const fetchSenderDetails = async () => {
@@ -101,4 +105,6 @@ export function useNotificationSubscription() {
       }
     }
   }, [queryClient, toast])
+
+  return { userId }
 }

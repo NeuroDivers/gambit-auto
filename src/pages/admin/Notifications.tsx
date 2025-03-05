@@ -87,14 +87,25 @@ const Notifications = () => {
       return;
     }
 
-    // Fix: Correctly type and access the chat messages data
-    const typedChatMessages = chatMessagesResponse.data as ChatMessage[];
+    // Transform chat messages to the correct type structure
+    const typedChatMessages = (chatMessagesResponse.data || []).map(msg => ({
+      id: msg.id,
+      message: msg.message,
+      created_at: msg.created_at,
+      sender_id: msg.sender_id,
+      read: msg.read,
+      profiles: {
+        first_name: msg.profiles?.first_name || null,
+        last_name: msg.profiles?.last_name || null,
+        email: msg.profiles?.email || null
+      }
+    })) as ChatMessage[];
 
     // Format chat messages as notifications
-    const chatNotifications = (typedChatMessages || []).map(msg => ({
+    const chatNotifications = typedChatMessages.map(msg => ({
       id: msg.id,
       title: "New Message",
-      message: `${msg.profiles?.first_name || msg.profiles?.email || 'Someone'}: ${msg.message}`,
+      message: `${msg.profiles.first_name || msg.profiles.email || 'Someone'}: ${msg.message}`,
       created_at: msg.created_at,
       read: msg.read,
       type: 'chat_message',
