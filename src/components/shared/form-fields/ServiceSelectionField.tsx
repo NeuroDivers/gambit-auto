@@ -1,355 +1,394 @@
+import { ServiceItemType } from "@/types/service-item"
 import { useEffect, useState } from "react"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
+import { Plus, Loader2, ChevronDown, ChevronUp } from "lucide-react"
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { Check, ChevronsUpDown } from "lucide-react"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { Switch } from "@/components/ui/switch"
-import { Textarea } from "@/components/ui/textarea"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { CommissionRateFields } from "@/components/shared/form-fields/CommissionRateFields"
 import { UseFormReturn } from "react-hook-form"
+import { Card, CardContent } from "@/components/ui/card"
 
-interface Service {
-  id: string
-  name: string
-  description: string
-  unit_price: number
-  quantity: number
-  is_parent?: boolean
-  sub_services?: Service[]
+type ServiceSelectionFieldProps = {
+  services: ServiceItemType[]
+  onChange: (services: ServiceItemType[]) => void
+  onServicesChange?: (services: ServiceItemType[]) => void // For backward compatibility
+  disabled?: boolean
+  isClient?: boolean
+  showCommission?: boolean
+  allowPriceEdit?: boolean
 }
 
-interface ServiceType {
-  id: string
-  name: string
-  description: string
-  base_price: number
-  pricing_model: string
-  parent_service_id: string | null
-  service_type: string
-  duration: number
-  status: string
-  updated_at: string
-  created_at: string
-}
+export function ServiceSelectionField({
+  services = [],
+  onChange,
+  onServicesChange,
+  disabled = false,
+  isClient = false,
+  showCommission = false,
+  allowPriceEdit = true
+}: ServiceSelectionFieldProps) {
+  const [expandedServices, setExpandedServices] = useState<Record<string, boolean>>({})
 
-interface ServiceSelectionFieldProps {
-  form: UseFormReturn<any>
-  name: string
-  services: ServiceType[]
-}
-
-export function ServiceSelectionField({ form, name, services }: ServiceSelectionFieldProps) {
-  const [open, setOpen] = useState(false)
-  const [selectedServices, setSelectedServices] = useState<Service[]>([])
-  const [searchValue, setSearchValue] = useState("")
-  const [isMultiSelect, setIsMultiSelect] = useState(true)
-
-  useEffect(() => {
-    // Initialize selected services from form value
-    const initialServices = form.getValues(name) || []
-    setSelectedServices(initialServices)
-  }, [form, name])
-
-  const filteredServices = services.filter((service) => {
-    const searchStr = searchValue.toLowerCase()
-    return (
-      service.name.toLowerCase().includes(searchStr) ||
-      service.description.toLowerCase().includes(searchStr)
-    )
+  const { data: allServices = [], isLoading } = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_types")
+        .select("*")
+        .eq("status", "active")
+      if (error) throw error
+      return data || []
+    }
   })
 
-  const updateServiceSelection = (serviceId: string, isChecked: boolean) => {
-    const service = services.find((s) => s.id === serviceId)
+  const standaloneServices = allServices.filter(service => 
+    service.service_type === 'standalone' || 
+    service.hierarchy_type === 'main' || 
+    !service.parent_service_id
+  )
+  
+  const subServicesByParent: Record<string, typeof allServices> = {}
+  allServices.filter(service => 
+    service.parent_service_id || 
+    service.hierarchy_type === 'sub' || 
+    service.service_type === 'addon'
+  ).forEach(subService => {
+    const parentId = subService.parent_service_id || ''
+    if (!subServicesByParent[parentId]) {
+      subServicesByParent[parentId] = []
+    }
+    subServicesByParent[parentId].push(subService)
+  })
+
+  const toggleServiceExpanded = (serviceId: string) => {
+    setExpandedServices(prev => ({
+      ...prev,
+      [serviceId]: !prev[serviceId]
+    }))
+  }
+
+  const addService = (serviceId: string) => {
+    const service = standaloneServices?.find(s => s.id === serviceId)
     if (!service) return
 
-    let updatedServices = [...selectedServices]
-
-    if (isChecked) {
-      // Add the service to the selected services
-      updatedServices = [
-        ...updatedServices,
-        {
-          id: service.id,
-          name: service.name,
-          description: service.description,
-          unit_price: service.base_price,
-          quantity: 1,
-          is_parent: true,
-          sub_services: [],
-        },
-      ]
-    } else {
-      // Remove the service from the selected services
-      updatedServices = updatedServices.filter((s) => s.id !== serviceId)
+    const newService: ServiceItemType = {
+      service_id: service.id,
+      service_name: service.name,
+      quantity: 1,
+      unit_price: service.base_price || 0,
+      commission_rate: 0,
+      commission_type: null,
+      description: service.description || "",
+      is_parent: true,
+      sub_services: []
     }
 
-    setSelectedServices(updatedServices)
-
-    // Update form value
-    form.setValue(name, updatedServices)
+    onChange([...services, newService])
+    
+    if (subServicesByParent[service.id]?.length > 0) {
+      setExpandedServices(prev => ({
+        ...prev,
+        [service.id]: true
+      }))
+    }
   }
 
-  const updateSubServiceSelection = (serviceId: string, subServiceId: string, isChecked: boolean) => {
-    const subService = services.find((s) => s.id === subServiceId)
-    if (!subService) return
-
-    const updatedServices = [...selectedServices]
-    const serviceIndex = updatedServices.findIndex((s) => s.id === serviceId)
-
-    if (serviceIndex === -1) return
-
-    if (isChecked) {
-      // Add the sub-service to the parent
-      updatedServices[serviceIndex].sub_services = [
-        ...(updatedServices[serviceIndex].sub_services || []),
-        {
-          id: subService.id,
-          name: subService.name,
-          description: subService.description,
-          unit_price: subService.base_price,
-          quantity: 1,
-          parent_id: serviceId,
-        },
-      ]
-    } else {
-      // Remove the sub-service from the parent
-      updatedServices[serviceIndex].sub_services = updatedServices[serviceIndex].sub_services.filter((s) => s.id !== subServiceId)
+  const addSubService = (parentIndex: number, subServiceId: string) => {
+    const parentService = services[parentIndex]
+    const subService = allServices?.find(s => s.id === subServiceId)
+    
+    if (!parentService || !subService) return
+    
+    const updatedServices = [...services]
+    
+    const existingSubIndex = parentService.sub_services?.findIndex(
+      (s: any) => s.service_id === subServiceId
+    )
+    
+    if (existingSubIndex >= 0) return
+    
+    const newSubService = {
+      service_id: subService.id,
+      service_name: subService.name,
+      quantity: 1,
+      unit_price: subService.base_price || 0,
+      commission_rate: 0,
+      commission_type: null,
+      description: subService.description || "",
+      parent_id: parentService.service_id
     }
-
-    setSelectedServices(updatedServices)
-
-    // Update form value
-    form.setValue(name, updatedServices)
+    
+    updatedServices[parentIndex].sub_services = [
+      ...(updatedServices[parentIndex].sub_services || []),
+      newSubService
+    ]
+    
+    onChange(updatedServices)
   }
 
-  const updateServiceQuantity = (serviceId: string, quantity: number, isSubService = false, parentId?: string) => {
-    let updatedServices = [...selectedServices]
-
-    if (isSubService && parentId) {
-      // Update sub-service quantity
-      const serviceIndex = updatedServices.findIndex((service) => service.id === parentId)
-      if (serviceIndex !== -1) {
-        const subServiceIndex = updatedServices[serviceIndex].sub_services.findIndex((s: any) => s.id === serviceId)
-        if (subServiceIndex !== -1) {
-          updatedServices[serviceIndex].sub_services[subServiceIndex].quantity = quantity
-        }
-      }
-    } else {
-      // Update main service quantity
-      updatedServices = updatedServices.map((service) =>
-        service.id === serviceId ? { ...service, quantity } : service
-      )
-    }
-
-    setSelectedServices(updatedServices)
-
-    // Update form value
-    form.setValue(name, updatedServices)
+  const removeService = (index: number) => {
+    const newServices = [...services]
+    newServices.splice(index, 1)
+    onChange(newServices)
   }
 
-  const updateServicePrice = (serviceId: string, priceValue: string) => {
-    const updatedServices = selectedServices.map(service => 
-      service.id === serviceId 
-        ? { ...service, unit_price: parseFloat(priceValue) || 0 } 
-        : service
-    );
-    
-    setSelectedServices(updatedServices);
-    
-    // Update form
-    if (form) {
-      form.setValue(name, updatedServices);
-    }
-  };
+  const removeSubService = (parentIndex: number, subIndex: number) => {
+    const updatedServices = [...services]
+    updatedServices[parentIndex].sub_services.splice(subIndex, 1)
+    onChange(updatedServices)
+  }
 
-  const updateSubServicePrice = (serviceId: string, subServiceId: string, priceValue: string) => {
-    const updatedServices = [...selectedServices];
-    const serviceIndex = updatedServices.findIndex(service => service.id === serviceId);
-    
-    if (serviceIndex !== -1 && updatedServices[serviceIndex].sub_services) {
-      const subServiceIndex = updatedServices[serviceIndex].sub_services.findIndex(
-        subService => subService.id === subServiceId
-      );
-      
-      if (subServiceIndex !== -1) {
-        // Convert string price to number before assignment
-        updatedServices[serviceIndex].sub_services[subServiceIndex].unit_price = parseFloat(priceValue) || 0;
-        setSelectedServices(updatedServices);
-        
-        // Update form
-        if (form) {
-          form.setValue(name, updatedServices);
-        }
-      }
+  const updateService = (index: number, updates: Partial<ServiceItemType>) => {
+    const newServices = [...services]
+    newServices[index] = { ...newServices[index], ...updates }
+    onChange(newServices)
+  }
+
+  const updateSubService = (parentIndex: number, subIndex: number, updates: Partial<ServiceItemType>) => {
+    const updatedServices = [...services]
+    updatedServices[parentIndex].sub_services[subIndex] = {
+      ...updatedServices[parentIndex].sub_services[subIndex],
+      ...updates
     }
-  };
+    onChange(updatedServices)
+  }
+
+  const handleChange = (newServices: ServiceItemType[]) => {
+    onChange(newServices)
+    if (onServicesChange) {
+      onServicesChange(newServices)
+    }
+  }
 
   return (
-    <div className="grid gap-2">
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className={cn(
-              "w-[300px] justify-between",
-              selectedServices?.length > 0 ? "bg-muted/50" : " "
-            )}
-          >
-            {selectedServices?.length > 0 ? (
-              <>
-                {selectedServices.map((service) => service.name).join(", ")}
-              </>
-            ) : (
-              "Select service..."
-            )}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[600px] p-0">
-          <Command>
-            <CommandInput
-              placeholder="Search service..."
-              value={searchValue}
-              onValueChange={setSearchValue}
-            />
-            <CommandEmpty>No service found.</CommandEmpty>
-            <CommandGroup heading="Services">
-              {filteredServices.map((service) => {
-                const isSelected = selectedServices.some((s) => s.id === service.id)
-                return (
-                  <CommandItem
-                    key={service.id}
-                    onSelect={() => {
-                      updateServiceSelection(service.id, !isSelected)
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        isSelected ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    {service.name}
-                  </CommandItem>
-                )
-              })}
-            </CommandGroup>
-          </Command>
-        </PopoverContent>
-      </Popover>
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <Select
+          onValueChange={(value) => addService(value)}
+          disabled={disabled || isLoading}
+        >
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="Add service" />
+          </SelectTrigger>
+          <SelectContent>
+            {standaloneServices?.map((service) => (
+              <SelectItem key={service.id} value={service.id}>
+                {service.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+      </div>
 
-      {selectedServices.map((service) => (
-        <Card key={service.id} className="border-2">
-          <CardHeader>
-            <CardTitle>{service.name}</CardTitle>
-            <CardDescription>{service.description}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor={`quantity-${service.id}`}>Quantity</Label>
-                <Input
-                  id={`quantity-${service.id}`}
-                  type="number"
-                  min="1"
-                  defaultValue={1}
-                  onChange={(e) => updateServiceQuantity(service.id, parseInt(e.target.value) || 1)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor={`unit_price-${service.id}`}>Unit Price</Label>
-                <Input
-                  id={`unit_price-${service.id}`}
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  defaultValue={service.unit_price}
-                  onChange={(e) => updateServicePrice(service.id, e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Sub-services section */}
-            {services
-              .filter((s) => s.parent_service_id === service.id)
-              .map((subService) => (
-                <div key={subService.id} className="pl-4 border-l-2 border-muted">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id={`sub-service-${subService.id}`}
-                      checked={service.sub_services?.some((s) => s.id === subService.id)}
-                      onCheckedChange={(isChecked) =>
-                        updateSubServiceSelection(service.id, subService.id, isChecked)
-                      }
-                    />
-                    <Label htmlFor={`sub-service-${subService.id}`}>{subService.name}</Label>
+      {services.length > 0 && (
+        <div className="space-y-4">
+          {services.map((service, index) => (
+            <Card key={index} className="overflow-hidden">
+              <CardContent className="p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h3 className="font-medium text-lg">{service.service_name}</h3>
+                    {service.description && (
+                      <p className="text-sm text-muted-foreground">{service.description}</p>
+                    )}
                   </div>
-
-                  {/* Sub-service quantity and unit price inputs */}
-                  {service.sub_services?.some((s) => s.id === subService.id) && (
-                    <div className="mt-2 grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor={`sub-quantity-${subService.id}`}>Quantity</Label>
-                        <Input
-                          id={`sub-quantity-${subService.id}`}
-                          type="number"
-                          min="1"
-                          defaultValue={1}
-                          onChange={(e) =>
-                            updateServiceQuantity(
-                              subService.id,
-                              parseInt(e.target.value) || 1,
-                              true,
-                              service.id
-                            )
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor={`sub-unit_price-${subService.id}`}>Unit Price</Label>
-                        <Input
-                          id={`sub-unit_price-${subService.id}`}
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          defaultValue={subService.base_price}
-                          onChange={(e) => updateSubServicePrice(service.id, subService.id, e.target.value)}
-                        />
-                      </div>
+                  
+                  {subServicesByParent[service.service_id]?.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleServiceExpanded(service.service_id)}
+                      className="p-1 h-8"
+                    >
+                      {expandedServices[service.service_id] ? 
+                        <ChevronUp className="h-4 w-4" /> : 
+                        <ChevronDown className="h-4 w-4" />}
+                    </Button>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <Label htmlFor={`quantity-${index}`}>Quantity</Label>
+                    <Input
+                      id={`quantity-${index}`}
+                      type="number"
+                      min="1"
+                      value={service.quantity}
+                      onChange={(e) => updateService(index, { quantity: parseInt(e.target.value) || 1 })}
+                      className="w-full"
+                      disabled={disabled}
+                    />
+                  </div>
+                  {!isClient && allowPriceEdit && (
+                    <div>
+                      <Label htmlFor={`price-${index}`}>Price</Label>
+                      <Input
+                        id={`price-${index}`}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={service.unit_price}
+                        onChange={(e) => updateService(index, { unit_price: parseFloat(e.target.value) || 0 })}
+                        className="w-full"
+                        disabled={disabled}
+                      />
+                    </div>
+                  )}
+                  
+                  {showCommission && (
+                    <div className="col-span-2">
+                      <CommissionRateFields
+                        serviceIndex={index}
+                        value={{
+                          rate: service.commission_rate,
+                          type: service.commission_type
+                        }}
+                        onChange={(value) => updateService(index, {
+                          commission_rate: value.rate,
+                          commission_type: value.type
+                        })}
+                        disabled={disabled}
+                      />
                     </div>
                   )}
                 </div>
-              ))}
-          </CardContent>
-        </Card>
-      ))}
+                
+                {expandedServices[service.service_id] && subServicesByParent[service.service_id]?.length > 0 && (
+                  <div className="mb-4 border-t pt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-medium">Additional Options</h4>
+                      <Select
+                        onValueChange={(value) => addSubService(index, value)}
+                        disabled={disabled}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Add option" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {subServicesByParent[service.service_id]?.map((subService) => {
+                            const alreadyAdded = service.sub_services?.some(
+                              (s: any) => s.service_id === subService.id
+                            )
+                            
+                            if (alreadyAdded) return null
+                            
+                            return (
+                              <SelectItem key={subService.id} value={subService.id}>
+                                {subService.name}
+                              </SelectItem>
+                            )
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {service.sub_services && service.sub_services.length > 0 && (
+                      <div className="space-y-3 pl-3 border-l-2">
+                        {service.sub_services.map((subService: any, subIndex: number) => (
+                          <div key={subIndex} className="bg-muted/50 p-3 rounded-md">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h5 className="font-medium">{subService.service_name}</h5>
+                                {subService.description && (
+                                  <p className="text-xs text-muted-foreground">{subService.description}</p>
+                                )}
+                              </div>
+                              <Button 
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeSubService(index, subIndex)}
+                                disabled={disabled}
+                                className="h-6 p-1"
+                              >
+                                ✕
+                              </Button>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div>
+                                <Label htmlFor={`sub-quantity-${index}-${subIndex}`} className="text-xs">Quantity</Label>
+                                <Input
+                                  id={`sub-quantity-${index}-${subIndex}`}
+                                  type="number"
+                                  min="1"
+                                  value={subService.quantity}
+                                  onChange={(e) => updateSubService(index, subIndex, { 
+                                    quantity: parseInt(e.target.value) || 1 
+                                  })}
+                                  className="w-full h-8 text-sm"
+                                  disabled={disabled}
+                                />
+                              </div>
+                              {!isClient && allowPriceEdit && (
+                                <div>
+                                  <Label htmlFor={`sub-price-${index}-${subIndex}`} className="text-xs">Price</Label>
+                                  <Input
+                                    id={`sub-price-${index}-${subIndex}`}
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={subService.unit_price}
+                                    onChange={(e) => updateSubService(index, subIndex, { 
+                                      unit_price: parseFloat(e.target.value) || 0 
+                                    })}
+                                    className="w-full h-8 text-sm"
+                                    disabled={disabled}
+                                  />
+                                </div>
+                              )}
+                              
+                              {showCommission && (
+                                <div className="col-span-2">
+                                  <CommissionRateFields
+                                    serviceIndex={`${index}-${subIndex}`}
+                                    value={{
+                                      rate: subService.commission_rate,
+                                      type: subService.commission_type
+                                    }}
+                                    onChange={(value) => updateSubService(index, subIndex, {
+                                      commission_rate: value.rate,
+                                      commission_type: value.type
+                                    })}
+                                    disabled={disabled}
+                                    isCompact={true}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeService(index)}
+                    disabled={disabled}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
