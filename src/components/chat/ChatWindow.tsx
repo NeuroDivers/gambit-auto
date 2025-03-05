@@ -19,18 +19,20 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null)
   const channelRef = useRef<any>(null)
   const typingChannelRef = useRef<any>(null)
-  const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
   const firstUnreadRef = useRef<HTMLDivElement>(null)
   const { toast } = useToast()
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
 
-  const scrollToBottom = () => {
-    if (scrollAreaRef.current) {
+  const scrollToBottom = (immediate = false) => {
+    if (scrollAreaRef.current && messagesEndRef.current) {
       setTimeout(() => {
-        const scrollArea = scrollAreaRef.current
-        if (scrollArea) {
-          scrollArea.scrollTop = scrollArea.scrollHeight
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ 
+            behavior: immediate ? 'auto' : 'smooth'
+          })
         }
-      }, 100)
+      }, immediate ? 0 : 100)
     }
   }
 
@@ -127,7 +129,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
           scrollToFirstUnread()
         }, 100)
       } else {
-        scrollToBottom()
+        scrollToBottom(true)
       }
     }
 
@@ -179,8 +181,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
           if (newMessage.sender_id === recipientId) {
             console.log("Adding new message to chat")
             setMessages((current) => [...current, newMessage])
-            scrollToBottom()
-
+            
             const { error: updateError } = await supabase
               .from("chat_messages")
               .update({ read: true, read_at: new Date().toISOString() })
@@ -195,6 +196,8 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
               description: newMessage.message.substring(0, 50) + (newMessage.message.length > 50 ? '...' : ''),
               duration: 5000,
             })
+            
+            scrollToBottom()
           }
         }
       )
@@ -202,9 +205,11 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         console.log("Chat subscription status:", status)
       })
 
-    console.log(`Setting up typing indicator channel for ${currentUserId} and ${recipientId}`)
+    const channelName = `typing_indicator_${[currentUserId, recipientId].sort().join('_')}`
+    console.log(`Setting up typing indicator channel: ${channelName}`)
+    
     typingChannelRef.current = supabase
-      .channel(`typing_indicator_${currentUserId}_${recipientId}`)
+      .channel(channelName)
       .on('broadcast', { event: 'typing' }, payload => {
         console.log("Received typing indicator:", payload)
         if (payload.typing && payload.sender_id === recipientId) {
@@ -233,6 +238,12 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     }
   }, [recipientId, currentUserId, recipient?.first_name, toast])
 
+  useEffect(() => {
+    if (messages.length > 0) {
+      scrollToBottom()
+    }
+  }, [messages.length])
+
   const sendMessage = async () => {
     if (!newMessage.trim() || !currentUserId) return
 
@@ -249,7 +260,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     
     setMessages(curr => [...curr, newMsg])
     setNewMessage("")
-    scrollToBottom()
+    scrollToBottom(true)
 
     const { error } = await supabase
       .from("chat_messages")
@@ -275,8 +286,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       clearTimeout(typingTimeout)
     }
 
-    typingChannelRef.current.send({
-      type: 'broadcast',
+    typingChannelRef.current.broadcast({
       event: 'typing',
       payload: {
         typing: true,
@@ -366,6 +376,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
               </div>
             </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
       <div className="p-4 border-t flex gap-2">
