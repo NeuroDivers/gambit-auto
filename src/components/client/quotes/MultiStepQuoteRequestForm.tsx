@@ -10,8 +10,10 @@ import { useQuoteRequestSubmission } from '@/hooks/quote-request/useQuoteRequest
 import { AnimatePresence, motion } from 'framer-motion'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ServiceItemType } from '@/types/service-item'
-import { useForm } from 'react-hook-form'
+import { ServiceItemType, ServiceFormData } from '@/types/service-item'
+import { useForm, UseFormReturn } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { formSchema } from '@/hooks/quote-request/formSchema'
 
 interface Props {
   onSuccess?: () => void
@@ -42,14 +44,32 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
     selectedServiceId
   } = useQuoteRequestSubmission();
   
-  const form = useForm();
+  // Create a type-safe form
+  const form = useForm<ServiceFormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      serviceType: '',
+      details: {},
+      images: [],
+      description: '',
+      vehicleInfo: {
+        make: '',
+        model: '',
+        year: new Date().getFullYear(),
+        vin: '',
+        saveToAccount: false,
+      },
+      service_items: [],
+      service_details: {}
+    }
+  });
+  
   const progress = (step / totalSteps) * 100;
 
   // Helper function to adapt File[] to FileList for handleImageUpload
   const handleImagesAdapter = async (files: FileList): Promise<string[]> => {
     const fileArray = Array.from(files);
-    await handleImageUpload(fileArray);
-    return []; // Return empty array as we're handling the urls internally
+    return await handleImageUpload(fileArray);
   };
 
   return (

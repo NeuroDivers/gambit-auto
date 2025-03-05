@@ -68,3 +68,34 @@ export interface ServiceFormData {
     };
   };
 }
+
+// Define the hook return types needed for QuoteRequestSubmission
+export interface QuoteRequestSubmissionHook {
+  step: number;
+  totalSteps: number;
+  services: ServiceItemType[];
+  isSubmitting: boolean;
+  uploading: boolean;
+  handleSubmit: (values: ServiceFormData) => Promise<void>;
+  nextStep: () => void;
+  prevStep: () => void;
+  handleImageUpload: (files: File[]) => Promise<string[]>;
+  handleImageRemove: (url: string) => void;
+  onVehicleSave: (vehicleInfo: { 
+    make: string; 
+    model: string; 
+    year: number; 
+    vin: string; 
+    saveToAccount?: boolean; 
+  }) => Promise<void>;
+  selectedServiceId: string | null;
+  submitRequest: (values: ServiceFormData) => Promise<void>;
+  handleMediaUpload: (files: File[]) => Promise<string[]>;
+  saveVehicle: (vehicleInfo: { 
+    make: string; 
+    model: string; 
+    year: number; 
+    vin: string; 
+    saveToAccount?: boolean; 
+  }) => Promise<void>;
+}

@@ -1,53 +1,66 @@
 
-import { useState, useEffect } from "react";
-import { ServiceFormData } from "@/types/service-item";
+import { useState, useEffect } from 'react';
+import { ServiceFormData } from '@/types/service-item';
 
 export function useFormStorage() {
-  // Initialize with the default form state
-  const initialFormData: ServiceFormData = {
-    serviceType: "",
+  const [formData, setFormData] = useState<ServiceFormData>({
+    serviceType: '',
     details: {},
     images: [],
-    description: "",
+    description: '',
     vehicleInfo: {
-      make: "",
-      model: "",
+      make: '',
+      model: '',
       year: new Date().getFullYear(),
-      vin: "",
-      saveToAccount: false,
+      vin: '',
+      saveToAccount: false
     },
     service_items: [],
     service_details: {}
-  };
+  });
 
-  const [formData, setFormData] = useState<ServiceFormData>(
-    () => {
+  // Load form data from localStorage on component mount
+  useEffect(() => {
+    const storedData = localStorage.getItem('quoteRequestForm');
+    if (storedData) {
       try {
-        const saved = localStorage.getItem("quote_request_form");
-        return saved ? JSON.parse(saved) : initialFormData;
+        const parsedData = JSON.parse(storedData);
+        setFormData(parsedData);
       } catch (error) {
-        console.error("Error loading form data:", error);
-        return initialFormData;
+        console.error('Error parsing stored form data:', error);
+        // If there's an error, clear the stored data
+        localStorage.removeItem('quoteRequestForm');
       }
     }
-  );
+  }, []);
 
-  // Updates form data and stores in localStorage
-  const updateFormData = (data: Partial<ServiceFormData>) => {
-    const updatedData = { ...formData, ...data };
-    setFormData(updatedData);
-    
-    try {
-      localStorage.setItem("quote_request_form", JSON.stringify(updatedData));
-    } catch (error) {
-      console.error("Error saving form data:", error);
-    }
+  // Function to update form data and save to localStorage
+  const updateFormData = (newData: Partial<ServiceFormData>) => {
+    setFormData(prev => {
+      const updated = { ...prev, ...newData };
+      localStorage.setItem('quoteRequestForm', JSON.stringify(updated));
+      return updated;
+    });
   };
 
-  // Clears the stored form data
+  // Function to clear stored form data
   const clearStoredFormData = () => {
-    setFormData(initialFormData);
-    localStorage.removeItem("quote_request_form");
+    localStorage.removeItem('quoteRequestForm');
+    setFormData({
+      serviceType: '',
+      details: {},
+      images: [],
+      description: '',
+      vehicleInfo: {
+        make: '',
+        model: '',
+        year: new Date().getFullYear(),
+        vin: '',
+        saveToAccount: false
+      },
+      service_items: [],
+      service_details: {}
+    });
   };
 
   return { formData, updateFormData, clearStoredFormData };

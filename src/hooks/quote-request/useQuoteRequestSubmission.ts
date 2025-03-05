@@ -1,12 +1,12 @@
 
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { ServiceFormData, ServiceItemType } from "@/types/service-item";
+import { ServiceFormData, ServiceItemType, QuoteRequestSubmissionHook } from "@/types/service-item";
 import { useFormStorage } from "./useFormStorage";
 import { UseFormReturn } from "react-hook-form";
 
 // This is an expanded version of the hook to handle form submission with all the required properties
-export function useQuoteRequestSubmission() {
+export function useQuoteRequestSubmission(): QuoteRequestSubmissionHook {
   const [step, setStep] = useState(1);
   const totalSteps = 3; // Define the total number of steps
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
@@ -31,7 +31,7 @@ export function useQuoteRequestSubmission() {
     }
   };
   
-  const handleSubmit = async (values: ServiceFormData) => {
+  const handleSubmit = async (values: ServiceFormData): Promise<void> => {
     try {
       setIsSubmitting(true);
       
@@ -60,8 +60,6 @@ export function useQuoteRequestSubmission() {
         title: "Success!",
         description: "Your quote request has been submitted successfully.",
       });
-      
-      return true;
     } catch (error) {
       console.error("Error submitting quote request:", error);
       
@@ -70,15 +68,13 @@ export function useQuoteRequestSubmission() {
         title: "Error",
         description: "Failed to submit your quote request. Please try again.",
       });
-      
-      return false;
     } finally {
       setIsSubmitting(false);
     }
   };
   
   // Function to handle media upload for service details
-  const handleImageUpload = async (files: File[]) => {
+  const handleImageUpload = async (files: File[]): Promise<string[]> => {
     try {
       setUploading(true);
       console.log("Uploading images:", files);
@@ -102,15 +98,20 @@ export function useQuoteRequestSubmission() {
   };
   
   // Function to handle image removal
-  const handleImageRemove = (index: number) => {
-    console.log("Removing image at index:", index);
+  const handleImageRemove = (url: string): void => {
+    console.log("Removing image:", url);
     // Image removal logic would go here
   };
   
   // Function to save vehicle information
-  const onVehicleSave = async (vehicleData: any) => {
-    console.log("Saving vehicle data:", vehicleData);
-    return true;
+  const onVehicleSave = async (vehicleInfo: {
+    make: string;
+    model: string;
+    year: number;
+    vin: string;
+    saveToAccount?: boolean;
+  }): Promise<void> => {
+    console.log("Saving vehicle data:", vehicleInfo);
   };
   
   return {

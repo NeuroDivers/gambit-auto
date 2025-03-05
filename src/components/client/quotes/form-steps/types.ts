@@ -1,31 +1,27 @@
 
-import { ServiceFormData, ServiceItemType } from "@/types/service-item"
-import { UseFormReturn } from "react-hook-form"
+import { UseFormReturn } from "react-hook-form";
+import { ServiceFormData } from "@/types/service-item";
 
-export interface FormStepProps {
-  form: UseFormReturn<ServiceFormData>
+export interface VehicleInfoStepProps {
+  form: UseFormReturn<ServiceFormData>;
+  onVehicleSave: (vehicleInfo: { 
+    make: string; 
+    model: string; 
+    year: number; 
+    vin: string; 
+    saveToAccount?: boolean; 
+  }) => Promise<void>;
 }
 
-export interface VehicleInfoStepProps extends FormStepProps {
-  onVehicleSave?: (vehicleInfo: ServiceFormData['vehicleInfo']) => Promise<void>
+export interface ServiceDetailsStepProps {
+  form: UseFormReturn<ServiceFormData>;
+  services: { id: string; name: string; base_price: number; description?: string; hierarchy_type?: string }[];
+  serviceId: string | null;
+  onImageUpload: (files: FileList) => Promise<string[]>;
+  onImageRemove: (url: string) => void;
 }
 
-export interface ServiceDetailsStepProps extends FormStepProps {
-  services: any[]
-  serviceId: string
-  onImageUpload: (files: FileList) => Promise<string[]>
-  onImageRemove: (url: string) => void
-}
-
-export interface SummaryStepProps extends FormStepProps {
-  services: any[]
-}
-
-export interface FormNavigationProps {
-  step: number
-  totalSteps: number
-  onNext: () => void
-  onPrevious: () => void
-  isSubmitting: boolean
-  uploading: boolean
+export interface SummaryStepProps {
+  form: UseFormReturn<ServiceFormData>;
+  services: { id: string; name: string; base_price: number }[];
 }
