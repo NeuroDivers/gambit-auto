@@ -37,25 +37,29 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
     }
   });
   
-  // Check if we're in dark mode by examining document classes
+  // Check if we're in dark mode by examining various sources
   const checkIsDarkMode = () => {
     // Check multiple sources for dark mode
     const hasDarkClass = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
     const isDarkResolved = resolvedTheme === 'dark';
-    const isDarkTheme = theme === 'dark';
+    const isDarkThemeValue = theme === 'dark';
     const isSystemDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
     
-    // If theme is 'system', use the system preference
+    // Only consider system preference if theme is set to 'system'
+    const systemPreferenceApplies = theme === 'system';
+    
+    // Put it all together
     const isDark = hasDarkClass || 
                   isDarkResolved || 
-                  (theme === 'system' && isSystemDark) ||
-                  isDarkTheme;
+                  isDarkThemeValue || 
+                  (systemPreferenceApplies && isSystemDark);
     
     console.log("Dark mode detection:", {
       hasDarkClass, 
       isDarkResolved, 
-      isDarkTheme, 
+      isDarkThemeValue, 
       isSystemDark,
+      systemPreferenceApplies,
       result: isDark
     });
     
