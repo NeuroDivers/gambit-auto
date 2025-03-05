@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react"
 import { ChatMessage, ChatUser } from "@/types/chat"
 import { Card } from "@/components/ui/card"
@@ -183,9 +184,10 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
               console.error("Error marking message as read:", updateError)
             }
 
+            // Show toast notification with the message content
             toast({
-              title: "New Message",
-              description: `${recipient?.first_name || 'Someone'}: ${newMessage.message.substring(0, 50)}${newMessage.message.length > 50 ? '...' : ''}`,
+              title: `${recipient?.first_name || 'New Message'}`,
+              description: newMessage.message.substring(0, 50) + (newMessage.message.length > 50 ? '...' : ''),
               duration: 5000,
             })
           }
