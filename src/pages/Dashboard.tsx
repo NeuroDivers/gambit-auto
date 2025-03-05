@@ -9,6 +9,7 @@ import { LoadingScreen } from "@/components/shared/LoadingScreen"
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/hooks/useAuth"
+import { Loading } from "@/components/ui/loading"
 
 export default function Dashboard() {
   const { currentUserRole, isLoading: permissionsLoading } = usePermissions()
@@ -21,7 +22,7 @@ export default function Dashboard() {
     queryFn: async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error("No user found")
+        if (!user) return null // Return null instead of throwing error
         
         const { data: profileData, error } = await supabase
           .from("profiles")
@@ -29,11 +30,15 @@ export default function Dashboard() {
           .eq("id", user.id)
           .maybeSingle()
         
-        if (error) throw error
+        if (error) {
+          console.error("Profile query error:", error)
+          return null // Return null instead of throwing error
+        }
+        
         return profileData
       } catch (err) {
         console.error("Error fetching profile:", err)
-        setError(err instanceof Error ? err : new Error(String(err)))
+        // Don't set error state here, just return null and handle below
         return null
       }
     },
@@ -42,7 +47,7 @@ export default function Dashboard() {
   })
 
   useEffect(() => {
-    // If we have a role with a default dashboard, redirect to it
+    // Only redirect if we have a role with a default dashboard
     if (currentUserRole?.default_dashboard && !permissionsLoading) {
       const dashboardPath = `/${currentUserRole.default_dashboard}`
       console.log(`Redirecting to default dashboard: ${dashboardPath}`)
@@ -50,18 +55,48 @@ export default function Dashboard() {
     }
   }, [currentUserRole, permissionsLoading, navigate])
 
+  // Show loading during initial data fetch
+  if (permissionsLoading || profileLoading) {
+    return <LoadingScreen />
+  }
+
+  // Handle error cases with simple UI instead of throwing
   if (profileError) {
     console.error("Profile query error:", profileError)
-    return <div className="p-4">Error loading profile data. Please refresh the page.</div>
+    return (
+      <div className="p-6 max-w-4xl mx-auto">
+        <h2 className="text-xl font-semibold mb-3">Error loading profile data</h2>
+        <p className="mb-4">There was an issue loading your profile information. Please try refreshing the page.</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
+        >
+          Refresh Page
+        </button>
+      </div>
+    )
   }
 
   if (error) {
     console.error("Dashboard error:", error)
-    return <div className="p-4">Error loading dashboard. Please refresh the page.</div>
+    return (
+      <div className="p-6 max-w-4xl mx-auto">
+        <h2 className="text-xl font-semibold mb-3">Error loading dashboard</h2>
+        <p className="mb-4">There was an unexpected error. Please try refreshing the page.</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
+        >
+          Refresh Page
+        </button>
+      </div>
+    )
   }
 
-  if (permissionsLoading || profileLoading) {
-    return <LoadingScreen />
+  // If we don't have a profile yet but we're not in a loading state, show a simple message
+  if (!profile && !profileLoading) {
+    console.log("No profile data available, showing default dashboard")
+    return <ClientDashboard profile={null} />
   }
 
   // Determine which dashboard template to show based on user role
