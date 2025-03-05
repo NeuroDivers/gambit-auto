@@ -21,24 +21,34 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
   const { checkPermission, currentUserRole } = usePermissions()
   const [filteredItems, setFilteredItems] = useState<NavigationSection[]>(navigationItems)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [notificationCount, setNotificationCount] = useState(0)
 
   useEffect(() => {
-    const fetchUnreadCount = async () => {
+    const fetchUnreadCounts = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { count } = await supabase
+      // Get unread chat messages
+      const { count: chatCount } = await supabase
         .from('chat_messages')
         .select('*', { count: 'exact', head: true })
         .eq('recipient_id', user.id)
+        .is('read_at', null)
+
+      // Get unread notifications
+      const { count: notificationCount } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('profile_id', user.id)
         .eq('read', false)
 
-      setUnreadCount(count || 0)
+      setUnreadCount(chatCount || 0)
+      setNotificationCount(notificationCount || 0)
     }
 
-    fetchUnreadCount()
+    fetchUnreadCounts()
 
-    const channel = supabase
+    const chatChannel = supabase
       .channel('chat_messages_count')
       .on(
         'postgres_changes',
@@ -48,13 +58,29 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
           table: 'chat_messages'
         },
         () => {
-          fetchUnreadCount()
+          fetchUnreadCounts()
+        }
+      )
+      .subscribe()
+
+    const notificationChannel = supabase
+      .channel('notifications_count')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications'
+        },
+        () => {
+          fetchUnreadCounts()
         }
       )
       .subscribe()
 
     return () => {
-      supabase.removeChannel(channel)
+      supabase.removeChannel(chatChannel)
+      supabase.removeChannel(notificationChannel)
     }
   }, [])
 
@@ -119,7 +145,7 @@ export function ClientSidebarNav({ onNavigate }: ClientSidebarNavProps) {
                   item={item}
                   isCollapsed={isCollapsed}
                   isMobile={isMobile}
-                  unreadCount={item.href === '/chat' ? unreadCount : 0}
+                  unreadCount={item.href === '/chat' ? unreadCount : item.href === '/notifications' ? notificationCount : 0}
                   onNavigate={onNavigate}
                   active={location.pathname === item.href}
                 />

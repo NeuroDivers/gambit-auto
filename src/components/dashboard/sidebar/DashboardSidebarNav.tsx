@@ -34,7 +34,7 @@ export function DashboardSidebarNav({ onNavigate }: DashboardSidebarNavProps) {
         .from('chat_messages')
         .select('*', { count: 'exact', head: true })
         .eq('recipient_id', user.id)
-        .eq('read', false)
+        .is('read_at', null)
 
       // Fetch unread notifications
       const { count: notificationCount } = await supabase

@@ -41,6 +41,7 @@ export function useNotificationsData() {
             )
           `)
           .eq("recipient_id", user.id)
+          .is("read_at", null)  // Only get unread messages
           .order('created_at', { ascending: false })
           .limit(20)
       ]);
@@ -87,7 +88,7 @@ export function useNotificationsData() {
         title: "New Message",
         message: `${msg.profiles.first_name || msg.profiles.email || 'Someone'}: ${msg.message}`,
         created_at: msg.created_at,
-        read: msg.read,
+        read: false,  // These are unread because we filtered by read_at IS NULL
         type: 'chat_message',
         sender_id: msg.sender_id
       }));
