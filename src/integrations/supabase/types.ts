@@ -1413,6 +1413,7 @@ export type Database = {
           first_name: string | null
           id: string
           last_name: string | null
+          last_seen_at: string | null
           notification_preferences: Json | null
           phone_number: string | null
           role_id: string
@@ -1427,6 +1428,7 @@ export type Database = {
           first_name?: string | null
           id: string
           last_name?: string | null
+          last_seen_at?: string | null
           notification_preferences?: Json | null
           phone_number?: string | null
           role_id: string
@@ -1441,6 +1443,7 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
+          last_seen_at?: string | null
           notification_preferences?: Json | null
           phone_number?: string | null
           role_id?: string

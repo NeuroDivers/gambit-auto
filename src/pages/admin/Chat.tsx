@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react"
 import { ChatUser } from "@/types/chat"
 import { ChatWindow } from "@/components/chat/ChatWindow"
@@ -32,7 +33,7 @@ export default function Chat() {
       // First get all profiles except current user
       const { data: profiles, error } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name, email, role:role_id(name, nicename), avatar_url")
+        .select("id, first_name, last_name, email, role:role_id(name, nicename), avatar_url, last_seen_at")
         .neq('id', user.id) // Exclude current user
         .order("role_id")
       
@@ -60,17 +61,47 @@ export default function Chat() {
         })
       )
 
-      // Combine profiles with unread counts and set default online status
+      // Function to determine if a user is online based on last_seen_at
+      const isUserOnline = (lastSeenAt: string | null): boolean => {
+        if (!lastSeenAt) return false;
+        
+        // Consider users online if they've been active in the last 5 minutes
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        return new Date(lastSeenAt) > fiveMinutesAgo;
+      };
+
+      // Combine profiles with unread counts and set online status based on last_seen_at
       const usersWithCounts = (profiles || []).map(profile => ({
         ...profile,
         role: Array.isArray(profile.role) ? profile.role[0] : profile.role,
         unread_count: unreadCounts.find(c => c.userId === profile.id)?.count || 0,
-        is_online: false // Default online status since we don't have last_seen_at
+        is_online: isUserOnline(profile.last_seen_at)
       })) as (ChatUser & { unread_count: number, is_online: boolean })[]
 
       return usersWithCounts
     },
   })
+
+  // Update current user's last_seen_at periodically
+  useEffect(() => {
+    const updateLastSeen = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // Update the user's last_seen_at timestamp
+      await supabase.from('profiles')
+        .update({ last_seen_at: new Date().toISOString() })
+        .eq('id', user.id)
+    }
+
+    // Update last_seen_at when the component mounts
+    updateLastSeen()
+
+    // Set up a timer to update last_seen_at every minute
+    const interval = setInterval(updateLastSeen, 60000)
+
+    return () => clearInterval(interval)
+  }, [])
 
   // Log error if any
   useEffect(() => {
