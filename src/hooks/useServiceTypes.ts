@@ -19,10 +19,8 @@ export function useServiceTypes() {
         throw error
       }
       
-      // Ensure we always return an array
-      const services = data || []
-      console.log(`Retrieved ${services.length} service types`)
-      return services as ServiceType[]
+      // Always return an array, never undefined
+      return (data || []) as ServiceType[]
     },
   })
 }

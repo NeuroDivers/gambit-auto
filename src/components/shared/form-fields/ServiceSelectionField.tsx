@@ -193,7 +193,7 @@ export function ServiceSelectionField({
         </PopoverContent>
       </Popover>
 
-      {serviceList.length > 0 ? (
+      {serviceList && serviceList.length > 0 ? (
         serviceList.map((service) => (
           <Card key={service.service_id} className="border">
             <CardHeader className="py-4">
