@@ -10,6 +10,12 @@ export function useVehicles(clientId: string) {
   const { data: vehicles, isLoading } = useQuery({
     queryKey: ['vehicles', clientId],
     queryFn: async () => {
+      // Check for authenticated user
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        throw new Error("Authentication required to access vehicles")
+      }
+
       // Try to fetch using client_id first (legacy)
       const { data: clientVehicles, error: clientError } = await supabase
         .from('vehicles')
@@ -64,7 +70,7 @@ export function useVehicles(clientId: string) {
           ...values, 
           client_id: clientId,
           customer_id: clientId, // Add both for compatibility
-          is_primary: values.is_primary // Explicitly set is_primary
+          is_primary: values.is_primary === undefined ? false : values.is_primary // Ensure is_primary is explicitly set
         }])
         .select()
         .single()
@@ -96,6 +102,12 @@ export function useVehicles(clientId: string) {
     mutationFn: async ({ id, values }: { id: string; values: VehicleFormValues }) => {
       console.log("Updating vehicle:", id, "with values:", values)
 
+      // Check for authenticated user
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        throw new Error("Authentication required to update vehicles")
+      }
+
       if (values.is_primary) {
         // Try to update using both client_id and customer_id
         await supabase
@@ -113,7 +125,10 @@ export function useVehicles(clientId: string) {
 
       const { error } = await supabase
         .from('vehicles')
-        .update({ ...values, is_primary: values.is_primary })
+        .update({ 
+          ...values, 
+          is_primary: values.is_primary === undefined ? false : values.is_primary // Ensure is_primary is explicitly set
+        })
         .eq('id', id)
 
       if (error) {
@@ -136,6 +151,12 @@ export function useVehicles(clientId: string) {
 
   const deleteVehicle = useMutation({
     mutationFn: async (id: string) => {
+      // Check for authenticated user
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        throw new Error("Authentication required to delete vehicles")
+      }
+
       const { error } = await supabase
         .from('vehicles')
         .delete()

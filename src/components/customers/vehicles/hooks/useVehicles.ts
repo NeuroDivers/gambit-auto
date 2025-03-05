@@ -10,6 +10,11 @@ export function useVehicles(customerId: string) {
   const { data: vehicles, isLoading, error } = useQuery({
     queryKey: ['customer_vehicles', customerId],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        throw new Error("Authentication required to access vehicles")
+      }
+
       const { data, error } = await supabase
         .from('vehicles')
         .select('*')
@@ -25,7 +30,8 @@ export function useVehicles(customerId: string) {
       })) as Vehicle[]
       
       return processedData
-    }
+    },
+    enabled: !!customerId,
   })
 
   const addVehicle = useMutation({
@@ -58,7 +64,7 @@ export function useVehicles(customerId: string) {
         .insert([{ 
           ...values, 
           customer_id: customerId,
-          is_primary: values.is_primary // Explicitly set is_primary
+          is_primary: values.is_primary === undefined ? false : values.is_primary // Ensure is_primary is explicitly set
         }])
         .select()
         .single()
@@ -89,6 +95,12 @@ export function useVehicles(customerId: string) {
   const updateVehicle = useMutation({
     mutationFn: async ({ id, values }: { id: string; values: VehicleFormValues }) => {
       console.log("Updating vehicle:", id, "with values:", values)
+      
+      // Check for authenticated user
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        throw new Error("Authentication required to update vehicles")
+      }
 
       if (values.is_primary) {
         console.log("Unsetting other primary vehicles")
@@ -106,7 +118,10 @@ export function useVehicles(customerId: string) {
 
       const { error } = await supabase
         .from('vehicles')
-        .update({ ...values, is_primary: values.is_primary })
+        .update({ 
+          ...values, 
+          is_primary: values.is_primary === undefined ? false : values.is_primary // Ensure is_primary is explicitly set
+        })
         .eq('id', id)
 
       if (error) {
@@ -129,6 +144,12 @@ export function useVehicles(customerId: string) {
 
   const deleteVehicle = useMutation({
     mutationFn: async (id: string) => {
+      // Check for authenticated user
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        throw new Error("Authentication required to delete vehicles")
+      }
+
       const { error } = await supabase
         .from('vehicles')
         .delete()
@@ -149,6 +170,12 @@ export function useVehicles(customerId: string) {
   const setPrimaryVehicle = useMutation({
     mutationFn: async (vehicleId: string) => {
       console.log("Setting primary vehicle:", vehicleId)
+      
+      // Check for authenticated user
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        throw new Error("Authentication required to set primary vehicle")
+      }
       
       // First, unset all existing primary vehicles for this customer
       const { error: unsettingError } = await supabase
