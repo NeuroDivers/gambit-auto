@@ -8,14 +8,12 @@ import { LoadingScreen } from "@/components/shared/LoadingScreen"
 import { toast } from "sonner"
 import { useEstimateRequestsData } from "@/hooks/useEstimateRequestsData"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { AlertTriangle } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 
 export function EstimateRequestsList() {
   const navigate = useNavigate()
   const [estimateRequests, setEstimateRequests] = useState([])
   const [loading, setLoading] = useState(true)
-  const [debugInfo, setDebugInfo] = useState(null)
   const { fetchEstimateRequests, createTestEstimateRequest } = useEstimateRequestsData()
 
   useEffect(() => {
@@ -23,26 +21,6 @@ export function EstimateRequestsList() {
       try {
         setLoading(true)
         const { data, count, tableInfo, error } = await fetchEstimateRequests();
-        
-        // Prepare detailed debug info for troubleshooting
-        const debugData = {
-          rawData: data,
-          count: data?.length || 0,
-          tableInfo,
-          error: error ? {
-            message: error.message,
-            hint: error.hint,
-            code: error.code
-          } : null,
-          recordStats: data?.map(req => ({
-            id: req.id,
-            customerIdPresent: Boolean(req.customer_id),
-            createdAt: req.created_at,
-            status: req.status
-          })) || [],
-          timestamp: new Date().toISOString()
-        };
-        setDebugInfo(debugData);
         
         if (data && data.length > 0) {
           setEstimateRequests(data);
@@ -134,36 +112,6 @@ export function EstimateRequestsList() {
         <p className="text-muted-foreground">
           Review and respond to customer estimate requests
         </p>
-        {debugInfo && (
-          <Card className="bg-yellow-50 p-4 mt-4 rounded border border-yellow-200">
-            <CardHeader className="p-4 pb-0">
-              <CardTitle className="text-sm font-medium text-yellow-800 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" />
-                Debug Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="text-xs mt-2">
-                <p>Timestamp: {debugInfo.timestamp}</p>
-                <p>Number of Records: {debugInfo.count}</p>
-                <p>Row IDs: {debugInfo.recordStats?.map(r => r.id?.substring(0,8)).join(', ') || 'None'}</p>
-                {debugInfo.tableInfo && (
-                  <div className="mt-2">
-                    <p>Table Info: {JSON.stringify(debugInfo.tableInfo, null, 2)}</p>
-                  </div>
-                )}
-                {debugInfo.error && (
-                  <div className="mt-2 text-red-600">
-                    <p>Error: {debugInfo.error.message}</p>
-                    <p>Code: {debugInfo.error.code}</p>
-                    {debugInfo.error.hint && <p>Hint: {debugInfo.error.hint}</p>}
-                  </div>
-                )}
-              </div>
-              <pre className="text-xs mt-2 overflow-auto max-h-40 bg-white p-2 rounded">{JSON.stringify(debugInfo, null, 2)}</pre>
-            </CardContent>
-          </Card>
-        )}
       </div>
 
       {estimateRequests.length === 0 ? (
