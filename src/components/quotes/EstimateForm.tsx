@@ -16,8 +16,12 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Switch } from "@/components/ui/switch"
 import { ServiceType } from "@/integrations/supabase/types/service-types"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Check, ChevronsUpDown } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 type EstimateFormProps = {
   form: UseFormReturn<any>
@@ -32,6 +36,8 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
   const [createNewCustomer, setCreateNewCustomer] = useState<boolean>(true)
   const [standaloneServices, setStandaloneServices] = useState<ServiceType[]>([])
   const [subServices, setSubServices] = useState<{[key: string]: ServiceType[]}>({})
+  const [openCustomerSelect, setOpenCustomerSelect] = useState(false)
+  const [customerSearchQuery, setCustomerSearchQuery] = useState("")
   
   const { data: clients, isLoading: clientsLoading } = useQuery({
     queryKey: ["customers"],
@@ -66,14 +72,14 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_types")
-        .select("id, name, description, base_price, pricing_model, parent_service_id, service_type")
+        .select("id, name, description, base_price, pricing_model, parent_service_id, service_type, duration, status, updated_at, created_at")
         .eq("status", "active")
         .order("name", { ascending: true })
       
       if (error) throw error
       
       // Process services to categorize them
-      const standaloneServices = data.filter(service => 
+      const standaloneServs = data.filter(service => 
         service.service_type === 'standalone' || !service.parent_service_id
       );
       
@@ -86,13 +92,10 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
         subServicesByParent[subService.parent_service_id!].push(subService);
       });
       
-      setStandaloneServices(standaloneServices);
+      setStandaloneServices(standaloneServs);
       setSubServices(subServicesByParent);
       
-      return data.map(service => ({
-        ...service,
-        price: service.base_price
-      })) || []
+      return data || []
     }
   })
   
@@ -122,7 +125,7 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
           id: service.id,
           name: service.name,
           description: service.description,
-          price: service.price,
+          price: service.base_price,
           quantity: 1,
           is_parent: true,
           sub_services: []
@@ -157,7 +160,7 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
           id: subService.id,
           name: subService.name,
           description: subService.description,
-          price: subService.price,
+          price: subService.base_price,
           quantity: 1,
           parent_id: parentServiceId
         }
@@ -250,11 +253,46 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
     calculateSubtotal()
   }, [selectedServices])
 
-  const handleFormSubmit = (data: any) => {
+  // Check if customer email exists
+  const checkEmailExists = async (email: string) => {
+    if (!email) return false
+    
+    try {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("id, email")
+        .eq("email", email)
+        .single()
+      
+      if (error && error.code === 'PGRST116') {
+        // No record found
+        return false
+      }
+      
+      if (data) {
+        // Email exists
+        return true
+      }
+      
+      return false
+    } catch (error) {
+      console.error("Error checking email:", error)
+      return false
+    }
+  }
+
+  const handleFormSubmit = async (data: any) => {
     if (createNewCustomer) {
       // If creating new customer, make sure all required fields are filled
       if (!data.customer_first_name || !data.customer_last_name || !data.customer_email) {
         toast.error("Please fill in all required customer information")
+        return
+      }
+      
+      // Check if email already exists
+      const emailExists = await checkEmailExists(data.customer_email)
+      if (emailExists) {
+        toast.error("A customer with this email already exists. Please select from the customer list or use a different email.")
         return
       }
     }
@@ -292,6 +330,14 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
     onSubmit(data)
   }
 
+  // Filter customers based on search query
+  const filteredCustomers = customerSearchQuery 
+    ? clients?.filter(client => 
+        `${client.first_name} ${client.last_name}`.toLowerCase().includes(customerSearchQuery.toLowerCase()) ||
+        client.email?.toLowerCase().includes(customerSearchQuery.toLowerCase())
+      )
+    : clients
+
   return (
     <Card>
       <CardHeader>
@@ -299,29 +345,64 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
       </CardHeader>
       <form onSubmit={form.handleSubmit(handleFormSubmit)}>
         <CardContent className="space-y-6">
-          {/* Client Selection */}
+          {/* Customer Selection */}
           <div className="space-y-2">
-            <Label htmlFor="client_id">Client</Label>
-            <Select 
-              onValueChange={handleClientChange}
-              defaultValue={form.watch("client_id")}
-            >
-              <SelectTrigger id="client_id">
-                <SelectValue placeholder="Select a client" />
-              </SelectTrigger>
-              <SelectContent>
-                {clients?.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
-                    {client.first_name} {client.last_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="client_id">Customer</Label>
+            <Popover open={openCustomerSelect} onOpenChange={setOpenCustomerSelect}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openCustomerSelect}
+                  className="w-full justify-between"
+                >
+                  {selectedClient ? 
+                    clients?.find(client => client.id === selectedClient)
+                      ? `${clients.find(client => client.id === selectedClient)?.first_name} ${clients.find(client => client.id === selectedClient)?.last_name}`
+                      : "Select a customer" 
+                    : "Select a customer"}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0" align="start">
+                <Command>
+                  <CommandInput 
+                    placeholder="Search customers..." 
+                    value={customerSearchQuery}
+                    onValueChange={setCustomerSearchQuery}
+                  />
+                  <CommandEmpty>No customers found.</CommandEmpty>
+                  <CommandGroup className="max-h-[300px] overflow-y-auto">
+                    {filteredCustomers?.map((client) => (
+                      <CommandItem
+                        key={client.id}
+                        value={client.id}
+                        onSelect={() => {
+                          handleClientChange(client.id)
+                          setOpenCustomerSelect(false)
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            selectedClient === client.id ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        {client.first_name} {client.last_name}
+                        <span className="ml-2 text-sm text-muted-foreground">
+                          {client.email}
+                        </span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </Command>
+              </PopoverContent>
+            </Popover>
             <div className="flex items-center space-x-2 mt-2">
-              <Checkbox
+              <Switch
                 id="createNewCustomer" 
                 checked={createNewCustomer}
-                onCheckedChange={(checked) => setCreateNewCustomer(checked as boolean)}
+                onCheckedChange={setCreateNewCustomer}
               />
               <label
                 htmlFor="createNewCustomer"
@@ -332,7 +413,7 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
             </div>
           </div>
           
-          {/* Customer Information - Always visible now */}
+          {/* Customer Information - Always visible */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="customer_first_name">First Name</Label>
@@ -395,7 +476,7 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
             </Select>
           </div>
           
-          {/* Vehicle Information - Always visible now */}
+          {/* Vehicle Information - Always visible */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="vehicle_make">Make</Label>

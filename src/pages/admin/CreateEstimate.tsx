@@ -42,19 +42,36 @@ export default function CreateEstimate() {
 
       // If createNewCustomer is true, create a new customer entry
       if (data.createNewCustomer) {
-        const { data: newCustomer, error: customerError } = await supabase
+        // Check if customer with same email already exists
+        const { data: existingCustomer, error: lookupError } = await supabase
           .from("customers")
-          .insert({
-            first_name: data.customer_first_name,
-            last_name: data.customer_last_name,
-            email: data.customer_email,
-            phone_number: data.customer_phone
-          })
-          .select()
-          .single()
+          .select("id, email")
+          .eq("email", data.customer_email)
+          .maybeSingle()
+          
+        if (lookupError) throw lookupError
+        
+        if (existingCustomer) {
+          // Use existing customer ID
+          customerId = existingCustomer.id
+          toast.info(`Using existing customer with email ${data.customer_email}`)
+        } else {
+          // Create new customer
+          const { data: newCustomer, error: customerError } = await supabase
+            .from("customers")
+            .insert({
+              first_name: data.customer_first_name,
+              last_name: data.customer_last_name,
+              email: data.customer_email,
+              phone_number: data.customer_phone
+            })
+            .select()
+            .single()
 
-        if (customerError) throw customerError
-        customerId = newCustomer.id
+          if (customerError) throw customerError
+          customerId = newCustomer.id
+          toast.success("New customer created successfully")
+        }
       }
 
       // Create the estimate in the database
