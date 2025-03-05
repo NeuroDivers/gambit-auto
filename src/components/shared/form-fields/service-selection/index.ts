@@ -1,9 +1,7 @@
 
-export * from './ServiceDescription';
-export * from './ServiceDropdown';
-export * from './ServiceItem';
-export * from './ServiceItemForm';
-export * from './ServiceQuantityPrice';
-export * from './ServiceSelectionField';
 export * from './types';
-export * from './useServiceData';
+export { ServiceSelectionField } from './ServiceSelectionField';
+export { ServiceItem } from './ServiceItem';
+export { ServiceItemForm } from './ServiceItemForm';
+export { ServiceDropdown } from './ServiceDropdown';
+export { ServiceDescription } from './ServiceDescription';

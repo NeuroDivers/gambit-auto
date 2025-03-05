@@ -8,6 +8,7 @@ export interface WorkOrder {
   phone_number: string;
   contact_preference: "phone" | "email";
   client_id?: string;
+  customer_id?: string; // Alias for client_id for backward compatibility
   
   // Vehicle information
   vehicle_id?: string;
@@ -59,13 +60,6 @@ export interface WorkOrder {
   };
   bay_id?: string;
   bay_name?: string;
-  
-  // Additional properties for UI state
-  customer_id?: string;
-  customer_name?: string;
-  customer_email?: string;
-  customer_phone?: string;
-  total_amount?: number;
 }
 
 export interface WorkOrderFormProps {
@@ -76,34 +70,34 @@ export interface WorkOrderFormProps {
 }
 
 export interface WorkOrderFormValues {
-  // Customer information
-  customer_id: string;
-  customer_first_name: string;
-  customer_last_name: string;
-  customer_email: string;
-  customer_phone: string;
-  customer_address: string;
-  customer_city: string;
-  customer_state: string;
-  customer_zip: string;
-  
-  // Also need direct fields for compatibility
+  // Customer information fields
+  customer_id?: string;
+  client_id?: string; // Alias for customer_id
   first_name: string;
   last_name: string;
   email: string;
   phone_number: string;
   contact_preference: "phone" | "email";
-  client_id?: string;
+  
+  // Legacy fields for backward compatibility
+  customer_first_name?: string;
+  customer_last_name?: string;
+  customer_email?: string;
+  customer_phone?: string;
+  customer_address?: string;
+  customer_city?: string;
+  customer_state?: string;
+  customer_zip?: string;
   
   // Vehicle information
-  vehicle_id: string;
+  vehicle_id?: string;
   vehicle_make: string;
   vehicle_model: string;
   vehicle_year: string | number;
-  vehicle_color: string;
-  vehicle_vin: string;
+  vehicle_color?: string;
+  vehicle_vin?: string;
   vehicle_serial: string;
-  vehicle_license_plate: string;
+  vehicle_license_plate?: string;
   
   // Address information
   street_address?: string;
@@ -114,22 +108,22 @@ export interface WorkOrderFormValues {
   country?: string;
   
   // Scheduling
-  service_date: string;
-  service_time: string;
-  start_time: Date | string | null;
-  end_time: Date | string | null;
-  estimated_duration: number | null;
+  service_date?: string;
+  service_time?: string;
+  start_time?: Date | string | null;
+  end_time?: Date | string | null;
+  estimated_duration?: number | null;
   
   // Assignment and metadata
   status: string;
-  bay_id: string;
-  assigned_bay_id: string | null;
-  notes: string;
-  additional_notes: string;
+  bay_id?: string;
+  assigned_bay_id?: string | null;
+  notes?: string;
+  additional_notes?: string;
   
   // Services
-  services: any[];
-  service_items: any[];
+  services?: any[];
+  service_items?: any[];
 }
 
 export interface CustomerType {

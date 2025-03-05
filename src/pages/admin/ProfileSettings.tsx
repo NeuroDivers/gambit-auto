@@ -18,6 +18,16 @@ export default function ProfileSettings() {
     applyThemeClass("dark");
   }, []);
 
+  const handlePersonalInfoSubmit = async () => {
+    console.log('Personal info submitted');
+    return Promise.resolve();
+  };
+
+  const handlePasswordChange = async () => {
+    console.log('Password changed');
+    return Promise.resolve();
+  };
+
   return (
     <div className="container py-6 max-w-4xl">
       <h1 className="text-3xl font-bold tracking-tight mb-6">Profile Settings</h1>
@@ -32,14 +42,14 @@ export default function ProfileSettings() {
         <TabsContent value="personal-info" className="space-y-6">
           <PersonalInfoForm 
             form={personalInfoForm} 
-            onSubmit={() => console.log('Personal info submitted')} 
+            onSubmit={handlePersonalInfoSubmit}
           />
         </TabsContent>
         
         <TabsContent value="password" className="space-y-6">
           <PasswordChangeForm 
             form={passwordForm} 
-            onSubmit={() => console.log('Password changed')} 
+            onSubmit={handlePasswordChange} 
             isUpdating={false}
             error={null}
           />

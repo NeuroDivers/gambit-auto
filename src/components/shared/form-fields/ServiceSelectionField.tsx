@@ -2,19 +2,28 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { ServiceItemType, ServiceSelectionFieldProps } from "./service-selection/types";
-import { ServiceItem } from "./service-selection/ServiceItem";
-import { ServiceItemForm } from "./service-selection/ServiceItemForm";
+import { ServiceItemType } from "@/types/service-item";
 import { Card } from "@/components/ui/card";
+import { ServiceItem, ServiceItemForm } from "./service-selection";
 
-export default function ServiceSelectionField({
+export interface ServiceSelectionFieldProps {
+  services?: ServiceItemType[];
+  onChange: (services: ServiceItemType[]) => void;
+  showCommission?: boolean;
+  showAssignedStaff?: boolean;
+  disabled?: boolean;
+  allowPriceEdit?: boolean;
+  onServicesChange?: (services: ServiceItemType[]) => void;
+}
+
+export function ServiceSelectionField({
   services = [],
   onChange,
   showCommission = false,
   showAssignedStaff = false,
   disabled = false,
-  onServicesChange,
-  allowPriceEdit = true
+  allowPriceEdit = true,
+  onServicesChange
 }: ServiceSelectionFieldProps) {
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [addingNewService, setAddingNewService] = useState(false);
@@ -132,6 +141,3 @@ export default function ServiceSelectionField({
     </div>
   );
 }
-
-// Export both the default and named export for backward compatibility
-export { ServiceSelectionField };
