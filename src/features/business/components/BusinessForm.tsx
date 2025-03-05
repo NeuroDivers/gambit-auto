@@ -104,30 +104,37 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
   async function onSubmit(values: BusinessFormValues) {
     try {
       console.log("Submitting business profile form with values:", values);
+      
+      // Work around the storage_domain issue by directly updating only 
+      // the fields that don't trigger the problematic function
+      let updateData: any = {
+        company_name: values.company_name,
+        email: values.email,
+        phone_number: values.phone_number,
+        address: values.address,
+      };
+      
+      // Only include logo URLs if they've actually changed
+      if (businessProfile?.light_logo_url !== values.light_logo_url) {
+        updateData.light_logo_url = values.light_logo_url;
+      }
+      
+      if (businessProfile?.dark_logo_url !== values.dark_logo_url) {
+        updateData.dark_logo_url = values.dark_logo_url;
+      }
+      
+      if (businessProfile?.logo_url !== values.logo_url) {
+        updateData.logo_url = values.logo_url;
+      }
+      
       const { error } = businessProfile 
         ? await supabase
             .from("business_profile")
-            .update({
-              company_name: values.company_name,
-              email: values.email,
-              phone_number: values.phone_number,
-              address: values.address,
-              light_logo_url: values.light_logo_url,
-              dark_logo_url: values.dark_logo_url,
-              logo_url: values.logo_url
-            })
+            .update(updateData)
             .eq("id", businessProfile.id)
         : await supabase
             .from("business_profile")
-            .insert([{
-              company_name: values.company_name,
-              email: values.email,
-              phone_number: values.phone_number,
-              address: values.address,
-              light_logo_url: values.light_logo_url,
-              dark_logo_url: values.dark_logo_url,
-              logo_url: values.logo_url
-            }])
+            .insert([updateData]);
 
       if (error) throw error
 

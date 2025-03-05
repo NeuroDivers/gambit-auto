@@ -167,7 +167,6 @@ export type Database = {
           email: string | null
           id: string
           light_logo_url: string | null
-          logo_url: string | null
           phone_number: string | null
           updated_at: string
         }
@@ -180,7 +179,6 @@ export type Database = {
           email?: string | null
           id?: string
           light_logo_url?: string | null
-          logo_url?: string | null
           phone_number?: string | null
           updated_at?: string
         }
@@ -193,7 +191,6 @@ export type Database = {
           email?: string | null
           id?: string
           light_logo_url?: string | null
-          logo_url?: string | null
           phone_number?: string | null
           updated_at?: string
         }
