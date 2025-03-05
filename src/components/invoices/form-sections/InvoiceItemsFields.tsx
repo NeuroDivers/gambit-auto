@@ -62,7 +62,7 @@ export function InvoiceItemsFields({
       services={mappedItems}
       onChange={handleItemsChange}
       allowPriceEdit={allowPriceEdit}
-      showCommission={showCommission}
+      showCommission={false}
     />
   )
 }

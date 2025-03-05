@@ -98,7 +98,18 @@ export function EditInvoiceForm({
             </CardHeader>
             <CardContent>
               <CustomerInfoFields 
-                form={form}
+                customerFirstName={form.watch('customer_first_name')}
+                setCustomerFirstName={(value) => form.setValue('customer_first_name', value)}
+                customerLastName={form.watch('customer_last_name')}
+                setCustomerLastName={(value) => form.setValue('customer_last_name', value)}
+                customerEmail={form.watch('customer_email')}
+                setCustomerEmail={(value) => form.setValue('customer_email', value)}
+                customerPhone={form.watch('customer_phone')}
+                setCustomerPhone={(value) => form.setValue('customer_phone', value)}
+                customerAddress={form.watch('customer_address')}
+                setCustomerAddress={(value) => form.setValue('customer_address', value)}
+                customers={customers}
+                isLoadingCustomers={isLoadingCustomers}
                 onCustomerSelect={onCustomerSelect}
               />
             </CardContent>

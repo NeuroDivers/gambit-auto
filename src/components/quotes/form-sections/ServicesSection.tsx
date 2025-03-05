@@ -1,17 +1,11 @@
-
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
-import { ServiceItemType } from "@/types/service-item"
 
-interface ServicesSectionProps {
-  services: ServiceItemType[]
-  onServicesChange: (services: ServiceItemType[]) => void
-}
-
-export function ServicesSection({ services, onServicesChange }: ServicesSectionProps) {
+export function ServicesSection({ services, onServicesChange }: any) {
   return (
     <ServiceSelectionField
       services={services}
       onChange={onServicesChange}
+      onServicesChange={onServicesChange}
     />
   )
 }
