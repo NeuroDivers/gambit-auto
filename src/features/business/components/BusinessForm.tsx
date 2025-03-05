@@ -34,6 +34,7 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
 
   React.useEffect(() => {
     if (businessProfile) {
+      console.log("Setting form values from business profile:", businessProfile);
       form.reset({
         company_name: businessProfile.company_name || "",
         email: businessProfile.email || "",
@@ -59,8 +60,8 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
       
       // Use standardized file names based on logo type
       const fileName = type === 'light' 
-        ? `gambit-logo-light.${fileExt}`
-        : `gambit-logo-dark.${fileExt}`
+        ? `gambit-logo-light-${new Date().getTime()}.${fileExt}`
+        : `gambit-logo-dark-${new Date().getTime()}.${fileExt}`
 
       // Upload the file to Supabase Storage
       const { data, error: uploadError } = await supabase.storage
@@ -73,6 +74,8 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
       const { data: { publicUrl } } = supabase.storage
         .from('business-logos')
         .getPublicUrl(fileName)
+
+      console.log(`Uploaded ${type} logo:`, publicUrl);
 
       // Update the form based on logo type
       if (type === 'light') {

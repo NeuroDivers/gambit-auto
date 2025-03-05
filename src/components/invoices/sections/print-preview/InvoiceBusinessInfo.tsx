@@ -10,22 +10,33 @@ type InvoiceBusinessInfoProps = {
 
 export function InvoiceBusinessInfo({ businessProfile, logo_url }: InvoiceBusinessInfoProps) {
   const { theme, resolvedTheme } = useTheme()
-  const [currentTheme, setCurrentTheme] = useState<string | undefined>(undefined)
+  const [isDarkTheme, setIsDarkTheme] = useState<boolean>(false)
 
   useEffect(() => {
-    const effectiveTheme = theme === 'system' ? resolvedTheme : theme;
-    setCurrentTheme(effectiveTheme);
+    // Check if the HTML element has the dark class - this is the most reliable approach
+    const isDark = document.documentElement.classList.contains('dark');
+    setIsDarkTheme(isDark);
+    
+    console.log("Dark mode detection in invoice business info:", { 
+      htmlHasDarkClass: isDark, 
+      resolvedTheme,
+      theme
+    });
   }, [theme, resolvedTheme])
 
   if (!businessProfile) return null
 
   // Use the appropriate logo based on theme
-  const themeAwareLogo = currentTheme === 'dark'
-    ? businessProfile.dark_logo_url || logo_url
-    : businessProfile.light_logo_url || logo_url
-
-  // Use the provided logo_url as a fallback if available
-  const displayLogo = logo_url || themeAwareLogo
+  let displayLogo = logo_url || businessProfile.logo_url;
+  
+  // If we have theme-specific logos, use them based on the current theme
+  if (isDarkTheme && businessProfile.dark_logo_url) {
+    displayLogo = businessProfile.dark_logo_url;
+  } else if (!isDarkTheme && businessProfile.light_logo_url) {
+    displayLogo = businessProfile.light_logo_url;
+  }
+  
+  console.log("Logo selected for invoice:", { displayLogo, isDarkTheme });
 
   return (
     <div className="flex items-start gap-4 w-full md:w-auto">
