@@ -27,16 +27,25 @@ export const getSystemTheme = (): "dark" | "light" => {
 }
 
 export const applyThemeClass = (theme: string | undefined, resolvedTheme: string | undefined): void => {
-  // First try to use the explicitly set theme
-  if (theme === 'dark') {
+  // First try to use the explicitly set theme from localStorage
+  const savedTheme = localStorage.getItem('theme');
+  let themeToApply = theme;
+  
+  // If theme is not explicitly set in the component, check localStorage
+  if (!themeToApply && savedTheme) {
+    themeToApply = savedTheme;
+  }
+  
+  // Apply theme based on our determined value
+  if (themeToApply === 'dark') {
     document.documentElement.classList.add('dark');
     localStorage.setItem('theme', 'dark');
     return;
-  } else if (theme === 'light') {
+  } else if (themeToApply === 'light') {
     document.documentElement.classList.remove('dark');
     localStorage.setItem('theme', 'light');
     return;
-  } else if (theme === 'system') {
+  } else if (themeToApply === 'system') {
     localStorage.setItem('theme', 'system');
   }
   
@@ -47,12 +56,11 @@ export const applyThemeClass = (theme: string | undefined, resolvedTheme: string
     document.documentElement.classList.remove('dark');
   }
   
-  // If no theme info is available, check localStorage directly
-  if (!theme && !resolvedTheme) {
-    const storedTheme = localStorage.getItem('theme');
-    if (storedTheme === 'dark') {
+  // If no theme info is available, check localStorage directly as a fallback
+  if (!themeToApply && !resolvedTheme) {
+    if (savedTheme === 'dark') {
       document.documentElement.classList.add('dark');
-    } else if (storedTheme === 'light') {
+    } else if (savedTheme === 'light') {
       document.documentElement.classList.remove('dark');
     } else {
       // Fall back to system preference

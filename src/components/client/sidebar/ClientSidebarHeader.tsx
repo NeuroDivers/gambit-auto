@@ -28,22 +28,34 @@ export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebar
         .single();
       
       if (error) throw error;
+      console.log("Fetched business profile in client sidebar:", data);
       return data;
     }
   });
 
   // Determine if dark mode is active
   useEffect(() => {
-    // Simple check - if resolvedTheme is available, use it directly
     if (resolvedTheme) {
       setIsDarkTheme(resolvedTheme === 'dark');
+      console.log("Theme updated in client sidebar:", { resolvedTheme, isDark: resolvedTheme === 'dark' });
     }
   }, [resolvedTheme]);
 
   // Get the appropriate logo URL based on current theme
-  const logoUrl = isDarkTheme 
-    ? businessProfile?.dark_logo_url || businessProfile?.logo_url
-    : businessProfile?.light_logo_url || businessProfile?.logo_url;
+  const logoUrl = React.useMemo(() => {
+    if (!businessProfile) return null;
+    
+    console.log("Logo selection in client sidebar - Dark mode:", isDarkTheme);
+    console.log("Available logos - Dark:", businessProfile.dark_logo_url, "Light:", businessProfile.light_logo_url);
+    
+    if (isDarkTheme) {
+      // For dark theme: Use dark_logo_url, fall back to logo_url
+      return businessProfile.dark_logo_url || businessProfile.logo_url;
+    } else {
+      // For light theme: Use light_logo_url, fall back to logo_url
+      return businessProfile.light_logo_url || businessProfile.logo_url;
+    }
+  }, [businessProfile, isDarkTheme]);
 
   const initials = firstName ? firstName.charAt(0).toUpperCase() : '?';
 
@@ -57,6 +69,7 @@ export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebar
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.style.display = 'none';
+            console.error("Failed to load logo in client sidebar:", logoUrl);
           }}
         />
       ) : (
