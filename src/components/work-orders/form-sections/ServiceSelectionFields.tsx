@@ -9,13 +9,16 @@ interface ServiceSelectionFieldsProps {
 }
 
 export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
-  const { control, watch } = form;
-  const services = watch("service_items") || [];
+  const services = form.watch("service_items") || [];
+  
+  const handleServicesChange = (newServices: ServiceItemType[]) => {
+    form.setValue("service_items", newServices, { shouldDirty: true });
+  };
   
   return (
     <ServiceSelectionField
       services={services as ServiceItemType[]}
-      onChange={(newServices) => form.setValue("service_items", newServices)}
+      onChange={handleServicesChange}
       disabled={false}
       showCommission
     />
