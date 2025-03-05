@@ -5,8 +5,33 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNotificationSubscription } from "@/hooks/useNotificationSubscription";
 
+// Add interface for notifications
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  created_at: string;
+  read: boolean;
+  type?: string;
+  sender_id?: string;
+}
+
+// Interface for chat messages
+interface ChatMessage {
+  id: string;
+  message: string;
+  created_at: string;
+  sender_id: string;
+  read: boolean;
+  profiles: {
+    first_name: string | null;
+    last_name: string | null;
+    email: string | null;
+  };
+}
+
 const Notifications = () => {
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   
@@ -62,8 +87,11 @@ const Notifications = () => {
       return;
     }
 
+    // Fix: Correctly type and access the chat messages data
+    const typedChatMessages = chatMessagesResponse.data as ChatMessage[];
+
     // Format chat messages as notifications
-    const chatNotifications = (chatMessagesResponse.data || []).map(msg => ({
+    const chatNotifications = (typedChatMessages || []).map(msg => ({
       id: msg.id,
       title: "New Message",
       message: `${msg.profiles?.first_name || msg.profiles?.email || 'Someone'}: ${msg.message}`,
@@ -123,7 +151,7 @@ const Notifications = () => {
     };
   }, [toast]);
 
-  const markAsRead = async (notification: any) => {
+  const markAsRead = async (notification: Notification) => {
     try {
       if (notification.type === 'chat_message') {
         // Mark chat message as read
@@ -170,7 +198,7 @@ const Notifications = () => {
     }
   };
 
-  const handleNotificationClick = (notification: any) => {
+  const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification);
     
     // Navigate to chat if it's a chat message
