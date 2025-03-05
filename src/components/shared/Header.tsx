@@ -56,10 +56,11 @@ interface Notification {
 export function Header({ firstName, role, onLogout, className, children }: HeaderProps) {
   const [unreadCount, setUnreadCount] = useState(0)
   const [notifications, setNotifications] = useState<Notification[]>([])
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const { toast } = useToast()
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
+  const fetchNotifications = async () => {
+    try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
@@ -117,13 +118,21 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
 
       setNotifications(allNotifications)
       setUnreadCount(allNotifications.filter(n => !n.read).length)
+    } catch (error) {
+      console.error("Error fetching notifications:", error)
     }
+  }
 
+  // Initial fetch of notifications
+  useEffect(() => {
     fetchNotifications()
+  }, [])
 
-    // Subscribe to new notifications and chat messages
+  // Set up real-time subscriptions for both notifications and chat messages
+  useEffect(() => {
+    // Subscribe to new notifications
     const notificationsChannel = supabase
-      .channel("notifications")
+      .channel("notifications-header")
       .on(
         "postgres_changes",
         {
@@ -137,8 +146,9 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
       )
       .subscribe()
 
+    // Subscribe to chat message changes
     const chatChannel = supabase
-      .channel("chat_messages")
+      .channel("chat-messages-header")
       .on(
         "postgres_changes",
         {
@@ -158,6 +168,45 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
     }
   }, [])
 
+  const markAsRead = async (notification: Notification) => {
+    try {
+      // Check notification type
+      if (notification.type === 'chat_message') {
+        // Mark chat message as read
+        const { error } = await supabase
+          .from("chat_messages")
+          .update({ read: true })
+          .eq("id", notification.id)
+
+        if (error) throw error
+
+      } else {
+        // Mark regular notification as read
+        const { error } = await supabase
+          .from("notifications")
+          .update({ read: true })
+          .eq("id", notification.id)
+
+        if (error) throw error
+      }
+
+      // Refresh notifications after marking as read
+      fetchNotifications()
+
+    } catch (error) {
+      console.error("Error marking as read:", error)
+    }
+  }
+
+  const handleNotificationClick = (notification: Notification) => {
+    markAsRead(notification)
+    
+    if (notification.type === 'chat_message' && notification.sender_id) {
+      // Navigate to chat with the sender
+      window.location.href = `/chat?user=${notification.sender_id}`;
+    }
+  }
+
   const isAdmin = role?.name?.toLowerCase() === 'administrator';
   const initials = firstName ? firstName.charAt(0).toUpperCase() : '?';
 
@@ -175,7 +224,7 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
         )}
       </div>
       <nav className="ml-auto flex items-center gap-4">
-        <DropdownMenu>
+        <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
@@ -196,13 +245,8 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
             {notifications.map((notification) => (
               <DropdownMenuItem 
                 key={notification.id} 
-                className="flex flex-col items-start py-3 group"
-                onClick={() => {
-                  if (notification.type === 'chat_message' && notification.sender_id) {
-                    // Navigate to chat with the sender
-                    window.location.href = `/chat?user=${notification.sender_id}`;
-                  }
-                }}
+                className="flex flex-col items-start py-3 group cursor-pointer"
+                onClick={() => handleNotificationClick(notification)}
               >
                 <div className="font-medium group-hover:text-white">{notification.title}</div>
                 <div className="text-sm text-muted-foreground group-hover:text-white">{notification.message}</div>
