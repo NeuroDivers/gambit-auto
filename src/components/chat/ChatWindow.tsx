@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { supabase } from "@/integrations/supabase/client"
-import { Send, Check, Circle, Loader2 } from "lucide-react"
-import { format, formatDistanceToNow, differenceInDays, isToday, isYesterday } from "date-fns"
+import { Send, Check, Circle, Loader2, Pencil, Trash2, X, Clock } from "lucide-react"
+import { format, formatDistanceToNow, differenceInDays, isToday, isYesterday, differenceInMinutes } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Textarea } from "@/components/ui/textarea"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 export function ChatWindow({ recipientId }: { recipientId: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -18,6 +20,8 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [isTyping, setIsTyping] = useState(false)
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
+  const [editedMessageText, setEditedMessageText] = useState("")
   const channelRef = useRef<any>(null)
   const typingChannelRef = useRef<any>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -87,6 +91,163 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     return format(date, 'MMM d, yyyy')
   }
 
+  // Check if message is within edit window (5 minutes)
+  const isWithinEditWindow = (message: ChatMessage) => {
+    const messageDate = new Date(message.created_at)
+    const now = new Date()
+    return differenceInMinutes(now, messageDate) <= 5
+  }
+
+  const startEditing = (message: ChatMessage) => {
+    setEditingMessageId(message.id)
+    setEditedMessageText(message.message)
+  }
+
+  const cancelEditing = () => {
+    setEditingMessageId(null)
+    setEditedMessageText("")
+  }
+
+  const saveEdit = async (messageId: string) => {
+    if (!editedMessageText.trim() || !currentUserId) return
+
+    const messageToUpdate = messages.find(m => m.id === messageId)
+    if (!messageToUpdate) return
+
+    // Store original message if this is the first edit
+    const originalMessage = messageToUpdate.original_message || messageToUpdate.message
+
+    // Update message locally
+    setMessages(prevMessages => 
+      prevMessages.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, message: editedMessageText, is_edited: true, original_message: originalMessage, updated_at: new Date().toISOString() } 
+          : msg
+      )
+    )
+
+    // Update message in database
+    const { error } = await supabase
+      .from("chat_messages")
+      .update({
+        message: editedMessageText,
+        is_edited: true,
+        original_message: originalMessage,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', messageId)
+
+    if (error) {
+      console.error("Error updating message:", error)
+      toast({
+        title: "Failed to update message",
+        description: "Please try again",
+        variant: "destructive"
+      })
+      // Revert to original message if update fails
+      setMessages(prevMessages => 
+        prevMessages.map(msg => 
+          msg.id === messageId ? messageToUpdate : msg
+        )
+      )
+    } else {
+      // Broadcast update to other users
+      if (channelRef.current) {
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'message-edited',
+          payload: { messageId, newText: editedMessageText }
+        })
+      }
+    }
+
+    // Reset editing state
+    cancelEditing()
+  }
+
+  const unsendMessage = async (messageId: string) => {
+    // Delete message locally
+    setMessages(prevMessages => prevMessages.filter(msg => msg.id !== messageId))
+
+    // Delete message from database
+    const { error } = await supabase
+      .from("chat_messages")
+      .delete()
+      .eq('id', messageId)
+
+    if (error) {
+      console.error("Error deleting message:", error)
+      toast({
+        title: "Failed to unsend message",
+        description: "Please try again",
+        variant: "destructive"
+      })
+      // Refetch messages if delete fails
+      fetchMessages()
+    } else {
+      toast({
+        title: "Message unsent",
+        duration: 2000
+      })
+    }
+  }
+
+  const fetchMessages = async () => {
+    if (!currentUserId || !recipientId) return
+    
+    console.log("Fetching messages between current user and recipient:", currentUserId, recipientId)
+    const { data: messages, error } = await supabase
+      .from("chat_messages")
+      .select(`
+        *,
+        sender:profiles!chat_messages_sender_id_fkey (
+          first_name,
+          last_name,
+          email
+        )
+      `)
+      .or(`and(sender_id.eq.${currentUserId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${currentUserId})`)
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      console.error("Error fetching messages:", error)
+      return
+    }
+
+    console.log("Fetched messages:", messages)
+    setMessages(messages)
+
+    const unreadMessages = messages.filter(m => 
+      m.sender_id === recipientId && 
+      m.recipient_id === currentUserId && 
+      !m.read
+    )
+
+    if (unreadMessages.length > 0) {
+      const { error: updateError } = await supabase
+        .from("chat_messages")
+        .update({ read: true, read_at: new Date().toISOString() })
+        .in('id', unreadMessages.map(m => m.id))
+
+      if (updateError) {
+        console.error("Error marking messages as read:", updateError)
+      }
+
+      await supabase
+        .from("notifications")
+        .update({ read: true })
+        .eq("profile_id", currentUserId)
+        .eq("sender_id", recipientId)
+        .eq("type", 'chat_message')
+
+      setTimeout(() => {
+        scrollToFirstUnread()
+      }, 100)
+    } else {
+      scrollToBottom(true)
+    }
+  }
+
   useEffect(() => {
     const getCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -101,64 +262,10 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   useEffect(() => {
     if (!currentUserId || !recipientId) return
 
-    const fetchMessages = async () => {
-      console.log("Fetching messages between current user and recipient:", currentUserId, recipientId)
-      const { data: messages, error } = await supabase
-        .from("chat_messages")
-        .select(`
-          *,
-          sender:profiles!chat_messages_sender_id_fkey (
-            first_name,
-            last_name,
-            email
-          )
-        `)
-        .or(`and(sender_id.eq.${currentUserId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${currentUserId})`)
-        .order('created_at', { ascending: true })
-
-      if (error) {
-        console.error("Error fetching messages:", error)
-        return
-      }
-
-      console.log("Fetched messages:", messages)
-      setMessages(messages)
-
-      const unreadMessages = messages.filter(m => 
-        m.sender_id === recipientId && 
-        m.recipient_id === currentUserId && 
-        !m.read
-      )
-
-      if (unreadMessages.length > 0) {
-        const { error: updateError } = await supabase
-          .from("chat_messages")
-          .update({ read: true, read_at: new Date().toISOString() })
-          .in('id', unreadMessages.map(m => m.id))
-
-        if (updateError) {
-          console.error("Error marking messages as read:", updateError)
-        }
-
-        await supabase
-          .from("notifications")
-          .update({ read: true })
-          .eq("profile_id", currentUserId)
-          .eq("sender_id", recipientId)
-          .eq("type", 'chat_message')
-
-        setTimeout(() => {
-          scrollToFirstUnread()
-        }, 100)
-      } else {
-        scrollToBottom(true)
-      }
-    }
-
     const fetchRecipient = async () => {
       const { data: profile, error } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name, email, role:role_id(name, nicename), avatar_url")
+        .select("id, first_name, last_name, email, role:role_id(id, name, nicename), avatar_url")
         .eq("id", recipientId)
         .single()
 
@@ -232,6 +339,42 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
             
             scrollToBottom()
           }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "chat_messages"
+        },
+        (payload) => {
+          console.log("Message updated:", payload)
+          const updatedMessage = payload.new as ChatMessage
+          
+          // Update local messages state
+          setMessages(prev => 
+            prev.map(msg => 
+              msg.id === updatedMessage.id ? updatedMessage : msg
+            )
+          )
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "chat_messages"
+        },
+        (payload) => {
+          console.log("Message deleted:", payload)
+          const deletedMessageId = payload.old.id
+          
+          // Remove deleted message from local state
+          setMessages(prev => 
+            prev.filter(msg => msg.id !== deletedMessageId)
+          )
         }
       )
       .subscribe((status) => {
@@ -361,6 +504,12 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     return recipient?.email || "Unknown User"
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' && editingMessageId) {
+      cancelEditing()
+    }
+  }
+
   return (
     <Card className="flex flex-col h-full">
       <div className="p-4 border-b">
@@ -374,6 +523,10 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
               message.sender_id === recipientId && 
               messages[index - 1]?.read_at !== undefined
 
+            const isOwnMessage = message.sender_id === currentUserId
+            const canEdit = isOwnMessage && isWithinEditWindow(message)
+            const isEditing = editingMessageId === message.id
+
             return (
               <div
                 key={message.id}
@@ -382,38 +535,105 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
                   message.sender_id === recipientId ? "justify-start" : "justify-end"
                 }`}
               >
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <div
-                        className={`rounded-lg px-4 py-2 w-full ${
-                          message.sender_id === recipientId
-                            ? "bg-muted"
-                            : "bg-primary text-primary-foreground"
-                        }`}
+                {isEditing ? (
+                  <div className="w-3/4 space-y-2">
+                    <Textarea 
+                      value={editedMessageText}
+                      onChange={(e) => setEditedMessageText(e.target.value)}
+                      className="min-h-[80px]"
+                      onKeyDown={handleKeyDown}
+                      autoFocus
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={cancelEditing}
                       >
-                        <div>{message.message}</div>
-                        <div className="text-xs opacity-70 mt-1 flex items-center gap-1">
-                          {formatMessageTime(message.created_at)}
-                          {message.sender_id !== recipientId && (
-                            message.read_at ? (
-                              <Check className="h-3 w-3" />
-                            ) : (
-                              <Circle className="h-3 w-3" />
-                            )
+                        <X className="h-4 w-4 mr-1" /> Cancel
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        onClick={() => saveEdit(message.id)}
+                      >
+                        <Check className="h-4 w-4 mr-1" /> Save
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <div className="group relative">
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`rounded-lg px-4 py-2 max-w-[75%] ${
+                              message.sender_id === recipientId
+                                ? "bg-muted"
+                                : "bg-primary text-primary-foreground"
+                            }`}
+                          >
+                            <div className="whitespace-pre-wrap break-words">{message.message}</div>
+                            <div className="text-xs opacity-70 mt-1 flex items-center gap-1">
+                              {formatMessageTime(message.created_at)}
+                              {message.is_edited && (
+                                <span className="italic text-xs">(edited)</span>
+                              )}
+                              {message.sender_id !== recipientId && (
+                                message.read_at ? (
+                                  <Check className="h-3 w-3" />
+                                ) : (
+                                  <Circle className="h-3 w-3" />
+                                )
+                              )}
+                            </div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {message.read_at ? (
+                            `Read ${formatMessageTime(message.read_at)}`
+                          ) : (
+                            "Not read yet"
                           )}
-                        </div>
+                        </TooltipContent>
                       </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {message.read_at ? (
-                        `Read ${formatMessageTime(message.read_at)}`
-                      ) : (
-                        "Not read yet"
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                
+                {isOwnMessage && !isEditing && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity ml-1"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {canEdit && (
+                        <DropdownMenuItem onClick={() => startEditing(message)}>
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
                       )}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                      {!canEdit && (
+                        <DropdownMenuItem disabled>
+                          <Clock className="h-4 w-4 mr-2" />
+                          Can't edit (over 5 min)
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem 
+                        onClick={() => unsendMessage(message.id)}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Unsend
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             )
           })}
