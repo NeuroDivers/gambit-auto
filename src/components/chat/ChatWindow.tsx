@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react"
 import { ChatMessage, ChatUser } from "@/types/chat"
 import { Card } from "@/components/ui/card"
@@ -23,6 +24,24 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   const firstUnreadRef = useRef<HTMLDivElement>(null)
   const { toast } = useToast()
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+
+  // Track if this component is currently mounted/visible
+  const isActiveConversation = useRef<boolean>(true)
+
+  useEffect(() => {
+    // Set the active status when the component mounts
+    isActiveConversation.current = true
+    
+    // Clean up when component unmounts
+    return () => {
+      isActiveConversation.current = false
+    }
+  }, [])
+
+  // Make sure to update active status when recipient changes
+  useEffect(() => {
+    isActiveConversation.current = true
+  }, [recipientId])
 
   const scrollToBottom = (immediate = false) => {
     if (scrollAreaRef.current && messagesEndRef.current) {
@@ -191,11 +210,14 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
               console.error("Error marking message as read:", updateError)
             }
 
-            toast({
-              title: `${recipient?.first_name || 'New Message'}`,
-              description: newMessage.message.substring(0, 50) + (newMessage.message.length > 50 ? '...' : ''),
-              duration: 5000,
-            })
+            // Only show toast if this is NOT the active conversation window
+            if (!isActiveConversation.current) {
+              toast({
+                title: `${recipient?.first_name || 'New Message'}`,
+                description: newMessage.message.substring(0, 50) + (newMessage.message.length > 50 ? '...' : ''),
+                duration: 5000,
+              })
+            }
             
             scrollToBottom()
           }
