@@ -456,11 +456,11 @@ export function ThemeColorManager() {
         >
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
             <TabsList className="bg-muted/60">
-              <TabsTrigger value="light" className="flex items-center gap-2 data-[state=active]:bg-background">
+              <TabsTrigger value="light" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Sun className="h-4 w-4" />
                 Light Theme
               </TabsTrigger>
-              <TabsTrigger value="dark" className="flex items-center gap-2 data-[state=active]:bg-background">
+              <TabsTrigger value="dark" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Moon className="h-4 w-4" />
                 Dark Theme
               </TabsTrigger>
@@ -487,7 +487,7 @@ export function ThemeColorManager() {
               </Button>
             </div>
           </div>
-         
+          
           {/* Category filter buttons */}
           <div className="flex flex-wrap gap-2 mb-4">
             <Badge 
