@@ -1,70 +1,91 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ServiceItemType } from "@/types/service-item";
-
-interface Package {
-  id: string;
-  name: string;
-  description: string;
-  services: ServiceItemType[];
-}
-
-interface PackageSelectProps {
-  onSelect: (services: ServiceItemType[]) => void;
-  onCancel: () => void;
-}
+import React, { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { PackageSelectProps } from "@/types/service-item";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { ServiceItemType } from '@/types/service-item';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { useForm, FormProvider } from "react-hook-form";
 
 export function PackageSelect({ onSelect, onCancel }: PackageSelectProps) {
   const [open, setOpen] = useState(false);
-  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
+  const [selectedServices, setSelectedServices] = useState<ServiceItemType[]>([]);
 
   const { data: packages, isLoading, error } = useQuery({
-    queryKey: ["packages"],
+    queryKey: ['packages'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("packages")
-        .select("*");
+        .from('packages')
+        .select('*');
 
       if (error) {
-        throw error;
+        throw new Error(error.message);
       }
 
-      return data as Package[];
-    },
+      return data;
+    }
   });
 
-  if (isLoading) {
-    return <div>Loading packages...</div>;
-  }
+  useEffect(() => {
+    if (open) {
+      setSelectedServices([]); // Reset selection when dialog opens
+    }
+  }, [open]);
 
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
+  const handleSelectPackage = async (packageId: string) => {
+    const { data: packageServices, error } = await supabase
+      .from('package_services')
+      .select('service_id, service_name, quantity, unit_price')
+      .eq('package_id', packageId);
 
-  const handlePackageSelect = (packageId: string) => {
-    const selected = packages?.find((pkg) => pkg.id === packageId) || null;
-    setSelectedPackage(selected);
+    if (error) {
+      console.error("Error fetching package services:", error);
+      return;
+    }
+
+    const mappedServices = packageServices.map(ps => ({
+      service_id: ps.service_id,
+      service_name: ps.service_name,
+      quantity: ps.quantity,
+      unit_price: ps.unit_price,
+      commission_rate: 0,
+      commission_type: null,
+      description: ''
+    } as ServiceItemType));
+
+    setSelectedServices(mappedServices);
   };
 
   const handleConfirm = () => {
-    if (selectedPackage) {
-      onSelect(selectedPackage.services);
-      setOpen(false);
+    if (onSelect) {
+      onSelect(selectedServices);
     }
+    setOpen(false);
   };
+
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    }
+    setOpen(false);
+  };
+
+  const methods = useForm();
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Button variant="outline" onClick={() => setOpen(true)}>
-        Select Package
-      </Button>
+      <DialogTrigger asChild>
+        <Button variant="outline">Select Package</Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Select a Package</DialogTitle>
@@ -72,59 +93,43 @@ export function PackageSelect({ onSelect, onCancel }: PackageSelectProps) {
             Choose a pre-defined package of services.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <FormField
-            control={{}}
-            name="package"
-            render={() => (
-              <FormItem>
-                <FormLabel>Package</FormLabel>
-                <Select onValueChange={handlePackageSelect}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a package" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <ScrollArea className="h-72 w-full">
-                      {packages?.map((pkg) => (
-                        <SelectItem key={pkg.id} value={pkg.id}>
-                          {pkg.name}
-                        </SelectItem>
-                      ))}
-                    </ScrollArea>
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Select a package from the list.
-                </FormDescription>
-              </FormItem>
-            )}
-          />
-          {selectedPackage && (
-            <Card>
-              <CardHeader>
-                <CardTitle>{selectedPackage.name}</CardTitle>
-                <CardDescription>{selectedPackage.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul>
-                  {selectedPackage.services.map((service) => (
-                    <li key={service.service_id}>{service.service_name}</li>
-                  ))}
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button onClick={handleConfirm}>Confirm Package</Button>
-              </CardFooter>
-            </Card>
-          )}
-        </div>
-        <DialogFooter>
-          <Button type="button" variant="secondary" onClick={onCancel}>
+        {isLoading ? (
+          <p>Loading packages...</p>
+        ) : error ? (
+          <p>Error: {error.message}</p>
+        ) : (
+          <FormProvider {...methods}>
+            <form>
+              <div className="grid gap-4 py-4">
+                {packages && packages.map(pkg => (
+                  <div key={pkg.id} className="border rounded-md p-2">
+                    <Label htmlFor={`package-${pkg.id}`} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`package-${pkg.id}`}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            handleSelectPackage(pkg.id);
+                          } else {
+                            setSelectedServices([]);
+                          }
+                        }}
+                      />
+                      <span>{pkg.name}</span>
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </form>
+          </FormProvider>
+        )}
+        <div className="flex justify-end space-x-2">
+          <Button type="button" variant="secondary" onClick={handleCancel}>
             Cancel
           </Button>
-        </DialogFooter>
+          <Button type="button" onClick={handleConfirm}>
+            Confirm
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

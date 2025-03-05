@@ -1,53 +1,50 @@
+import { useCallback, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { ServiceFormData } from '@/types/service-item';
 
-import { useState, useEffect } from "react"
-import { ServiceFormData } from "@/types/service-item"
-import { useLocalStorage } from "usehooks-ts"
+export function useFormStorage(formKey: string) {
+  const methods = useForm<ServiceFormData>({
+    defaultValues: {
+      serviceType: '',
+      details: {},
+      images: [],
+      description: '',
+      vehicleInfo: {
+        make: '',
+        model: '',
+        year: new Date().getFullYear(),
+        vin: '',
+        saveToAccount: false
+      },
+      service_items: [],
+      service_details: {}
+    }
+  });
+  const { setValue, getValues } = methods;
 
-// Default initial form data
-const initialFormData: ServiceFormData = {
-  vehicleInfo: {
-    make: "",
-    model: "",
-    year: new Date().getFullYear(),
-    vin: "",
-    saveToAccount: false
-  },
-  service_items: [],
-  description: "",
-  service_details: {}
-}
+  const storageKey = `form-storage-${formKey}`;
 
-export function useFormStorage() {
-  // Use useLocalStorage hook for persistent storage
-  const [storedFormData, setStoredFormData] = useLocalStorage<ServiceFormData>(
-    "quote-request-form-data",
-    initialFormData
-  )
-  
-  // Local state to track data
-  const [formData, setFormData] = useState<ServiceFormData>(storedFormData)
-  
-  // Update local state when storage changes
+  const saveFormToStorage = useCallback(() => {
+    const values = getValues();
+    localStorage.setItem(storageKey, JSON.stringify(values));
+  }, [getValues, storageKey]);
+
   useEffect(() => {
-    setFormData(storedFormData)
-  }, [storedFormData])
-  
-  // Update both local state and storage
-  const updateFormData = (newData: Partial<ServiceFormData>) => {
-    const updatedData = { ...formData, ...newData }
-    setFormData(updatedData)
-    setStoredFormData(updatedData)
-  }
-  
-  // Clear form data from storage
-  const clearStoredFormData = () => {
-    setStoredFormData(initialFormData)
-    setFormData(initialFormData)
-  }
-  
-  return {
-    formData,
-    updateFormData,
-    clearStoredFormData
-  }
+    const storedData = localStorage.getItem(storageKey);
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      Object.keys(parsedData).forEach((key) => {
+        setValue(key as keyof ServiceFormData, parsedData[key]);
+      });
+    }
+  }, [setValue, storageKey]);
+
+  useEffect(() => {
+    window.addEventListener('beforeunload', saveFormToStorage);
+    return () => {
+      window.removeEventListener('beforeunload', saveFormToStorage);
+    };
+  }, [saveFormToStorage]);
+
+  return methods;
 }

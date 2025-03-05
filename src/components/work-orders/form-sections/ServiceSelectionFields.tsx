@@ -1,25 +1,28 @@
 
-import { useState } from "react";
+import { useFormContext } from "react-hook-form";
 import { FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField";
-import { useFormContext } from "react-hook-form";
+import { ServiceItemType } from "@/types/service-item";
 
 export function ServiceSelectionFields() {
   const form = useFormContext();
-  
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      <h3 className="text-lg font-medium">Services</h3>
       <FormField
         control={form.control}
         name="service_items"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Service Items</FormLabel>
             <FormControl>
               <ServiceSelectionField
-                name="service_items" 
-                label="Services"
-                description="Add the services for this work order"
+                value={field.value}
+                onChange={field.onChange}
+                showCommission={true}
+                showAssignedStaff={true}
+                label="Services" 
+                description="Select services for this work order"
               />
             </FormControl>
           </FormItem>

@@ -1,3 +1,4 @@
+
 export interface ServiceItemType {
   service_id: string;
   service_name: string;
@@ -29,6 +30,7 @@ export interface ServiceDropdownProps {
   setOpen?: (open: boolean) => void;
   handleServiceSelect?: (serviceId: string) => void;
   serviceId?: string;
+  isLoading?: boolean;
 }
 
 export interface ServiceItemProps {
@@ -75,13 +77,18 @@ export interface ServiceDescriptionProps {
 }
 
 export interface ServiceSelectionFieldProps {
-  services: ServiceItemType[];
+  value?: ServiceItemType[];
   onChange: (services: ServiceItemType[]) => void;
   showCommission?: boolean;
   showAssignedStaff?: boolean;
   disabled?: boolean;
   allowPriceEdit?: boolean;
   onServicesChange?: (services: ServiceItemType[]) => void;
+  // Add these for compatibility with existing code
+  services?: ServiceItemType[];
+  name?: string;
+  label?: string;
+  description?: string;
 }
 
 export type ServicesByType = Record<string, any[]>;
