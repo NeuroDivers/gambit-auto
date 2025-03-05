@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -91,18 +92,21 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
 
       const notifications = (notificationsResponse.data || []) as Notification[]
       
-      const typedChatMessages = (chatMessagesResponse.data || []).map(msg => ({
-        id: msg.id,
-        message: msg.message,
-        created_at: msg.created_at,
-        sender_id: msg.sender_id,
-        read: msg.read,
-        profiles: {
-          first_name: msg.profiles?.first_name || null,
-          last_name: msg.profiles?.last_name || null,
-          email: msg.profiles?.email || null
+      const typedChatMessages = (chatMessagesResponse.data || []).map(msg => {
+        // Make sure we're accessing the profiles property correctly
+        return {
+          id: msg.id,
+          message: msg.message,
+          created_at: msg.created_at,
+          sender_id: msg.sender_id,
+          read: msg.read,
+          profiles: {
+            first_name: msg.profiles?.first_name || null,
+            last_name: msg.profiles?.last_name || null,
+            email: msg.profiles?.email || null
+          }
         }
-      })) as ChatMessage[]
+      }) as ChatMessage[]
 
       const chatNotifications: Notification[] = typedChatMessages.map(msg => ({
         id: msg.id,

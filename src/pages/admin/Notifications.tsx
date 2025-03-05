@@ -88,18 +88,20 @@ const Notifications = () => {
     }
 
     // Transform chat messages to the correct type structure
-    const typedChatMessages = (chatMessagesResponse.data || []).map(msg => ({
-      id: msg.id,
-      message: msg.message,
-      created_at: msg.created_at,
-      sender_id: msg.sender_id,
-      read: msg.read,
-      profiles: {
-        first_name: msg.profiles?.first_name || null,
-        last_name: msg.profiles?.last_name || null,
-        email: msg.profiles?.email || null
+    const typedChatMessages = (chatMessagesResponse.data || []).map(msg => {
+      return {
+        id: msg.id,
+        message: msg.message,
+        created_at: msg.created_at,
+        sender_id: msg.sender_id,
+        read: msg.read,
+        profiles: {
+          first_name: msg.profiles?.first_name || null,
+          last_name: msg.profiles?.last_name || null,
+          email: msg.profiles?.email || null
+        }
       }
-    })) as ChatMessage[];
+    }) as ChatMessage[];
 
     // Format chat messages as notifications
     const chatNotifications = typedChatMessages.map(msg => ({
