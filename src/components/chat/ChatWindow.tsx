@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react"
 import { ChatMessage, ChatUser } from "@/types/chat"
 import { Card } from "@/components/ui/card"
@@ -163,7 +162,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       supabase.removeChannel(typingChannelRef.current)
     }
 
-    // Set up channel for new messages
     channelRef.current = supabase
       .channel(`chat_messages_${currentUserId}_${recipientId}`)
       .on(
@@ -192,7 +190,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
               console.error("Error marking message as read:", updateError)
             }
 
-            // Show toast notification with the message content
             toast({
               title: `${recipient?.first_name || 'New Message'}`,
               description: newMessage.message.substring(0, 50) + (newMessage.message.length > 50 ? '...' : ''),
@@ -205,14 +202,17 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         console.log("Chat subscription status:", status)
       })
 
-    // Set up channel for typing indicators
+    console.log(`Setting up typing indicator channel for ${currentUserId} and ${recipientId}`)
     typingChannelRef.current = supabase
       .channel(`typing_indicator_${currentUserId}_${recipientId}`)
       .on('broadcast', { event: 'typing' }, payload => {
+        console.log("Received typing indicator:", payload)
         if (payload.typing && payload.sender_id === recipientId) {
+          console.log("Setting typing indicator to true")
           setIsTyping(true)
-          // Auto-clear typing status after 3 seconds of inactivity
+          
           setTimeout(() => {
+            console.log("Auto-clearing typing indicator")
             setIsTyping(false)
           }, 3000)
         }
@@ -267,26 +267,27 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   }
 
   const handleTyping = () => {
-    if (!currentUserId || !recipientId) return
+    if (!currentUserId || !recipientId || !typingChannelRef.current) return
+    
+    console.log("User is typing, sending typing indicator")
 
-    // Clear any existing timeout
     if (typingTimeout) {
       clearTimeout(typingTimeout)
     }
 
-    // Send typing indicator through the channel
-    if (typingChannelRef.current) {
-      typingChannelRef.current.send({
-        type: 'broadcast',
-        event: 'typing',
-        payload: {
-          typing: true,
-          sender_id: currentUserId
-        }
-      })
-    }
+    typingChannelRef.current.send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: {
+        typing: true,
+        sender_id: currentUserId
+      }
+    }).then(() => {
+      console.log("Typing indicator sent successfully")
+    }).catch(err => {
+      console.error("Error sending typing indicator:", err)
+    })
 
-    // Set a new timeout to prevent sending too many events
     const timeout = setTimeout(() => {
       setTypingTimeout(null)
     }, 1000)
@@ -386,4 +387,3 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     </Card>
   )
 }
-
