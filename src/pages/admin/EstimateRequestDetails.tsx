@@ -17,6 +17,7 @@ export default function EstimateRequestDetails() {
   const navigate = useNavigate()
   const { toast: useToastApi } = useToast()
   const [estimateRequest, setEstimateRequest] = useState(null)
+  const [customerData, setCustomerData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [debug, setDebug] = useState(null)
 
@@ -24,67 +25,45 @@ export default function EstimateRequestDetails() {
     document.title = "Estimate Request | Auto Detailing CRM"
     
     const fetchEstimateRequest = async () => {
+      if (!id) return
+      
       try {
         console.log("Attempting to fetch estimate request with ID:", id)
         
-        // First, check if the estimate request exists
-        const { count, error: countError } = await supabase
-          .from("estimate_requests")
-          .select("*", { count: "exact", head: true })
-          .eq("id", id)
-        
-        if (countError) {
-          console.error("Error checking estimate request:", countError)
-          throw countError
-        }
-        
-        console.log(`Found ${count} matching estimate requests`)
-        
-        if (count === 0) {
-          console.error("No estimate request found with ID:", id)
-          setEstimateRequest(null)
-          setLoading(false)
-          return
-        }
-        
-        // Try a basic query first to make sure we can get the data
-        const { data: basicData, error: basicError } = await supabase
+        // Get the basic estimate request data
+        const { data: requestData, error: requestError } = await supabase
           .from("estimate_requests")
           .select("*")
           .eq("id", id)
           .single()
-          
-        if (basicError) {
-          console.error("Error fetching basic estimate request data:", basicError)
-        } else {
-          console.log("Basic estimate request data:", basicData)
-          setDebug(basicData)
+        
+        if (requestError) {
+          console.error("Error fetching estimate request:", requestError)
+          throw requestError
         }
         
-        // Now try with the customer relation using explicit foreign key
-        const { data, error } = await supabase
-          .from("estimate_requests")
-          .select(`
-            *,
-            customers!estimate_requests_customer_id_fkey(*)
-          `)
-          .eq("id", id)
-          .single()
+        setEstimateRequest(requestData)
+        setDebug(requestData)
+        
+        // If there's a customer ID, fetch the customer data separately
+        if (requestData.customer_id) {
+          const { data: customer, error: customerError } = await supabase
+            .from("customers")
+            .select("*")
+            .eq("id", requestData.customer_id)
+            .single()
           
-        if (error) {
-          console.error("Error fetching estimate request with relations:", error)
-          
-          // Fall back to basic data if relations failed
-          if (basicData) {
-            console.log("Using basic estimate request data as fallback")
-            setEstimateRequest(basicData)
+          if (customerError) {
+            console.error("Error fetching customer data:", customerError)
           } else {
-            toast.error("Could not load estimate request data")
-            throw error
+            setCustomerData(customer)
+            
+            // Update the estimate request with the customer data
+            setEstimateRequest({
+              ...requestData,
+              customers: customer
+            })
           }
-        } else {
-          console.log("Successfully retrieved estimate request data:", data)
-          setEstimateRequest(data)
         }
       } catch (error) {
         console.error("Error fetching estimate request:", error)
@@ -99,9 +78,7 @@ export default function EstimateRequestDetails() {
       }
     }
 
-    if (id) {
-      fetchEstimateRequest()
-    }
+    fetchEstimateRequest()
   }, [id, useToastApi])
 
   const handleCreateEstimate = () => {

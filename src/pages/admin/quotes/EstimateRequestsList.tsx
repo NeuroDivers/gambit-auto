@@ -19,57 +19,7 @@ export function EstimateRequestsList() {
       try {
         console.log("Attempting to fetch estimate_requests")
         
-        // First, check database tables and columns
-        const { data: tableInfo, error: tableError } = await supabase
-          .rpc('get_table_info')
-        
-        if (tableError) {
-          console.error("Error checking table info:", tableError)
-        } else {
-          console.log("Table info:", tableInfo)
-          setDebugInfo(tableInfo)
-        }
-        
-        // Check if the table exists and has data
-        const { count, error: countError } = await supabase
-          .from("estimate_requests")
-          .select("*", { count: "exact", head: true })
-        
-        if (countError) {
-          console.error("Error checking estimate requests count:", countError)
-          toast.error("Failed to check estimate requests. Please try again.")
-          setEstimateRequests([])
-          return
-        }
-        
-        console.log(`Found ${count} estimate requests in the database`)
-        
-        if (count === 0) {
-          // Try to insert a test record to see if we can write to the table
-          const testData = {
-            customer_id: '00000000-0000-0000-0000-000000000000', // Placeholder UUID
-            vehicle_make: 'Test Make',
-            vehicle_model: 'Test Model',
-            vehicle_year: 2023,
-            status: 'pending',
-            description: 'Test estimate request created from the UI to debug data fetching'
-          }
-          
-          const { data: insertResult, error: insertError } = await supabase
-            .from('estimate_requests')
-            .insert(testData)
-            .select()
-          
-          if (insertError) {
-            console.error("Error inserting test record:", insertError)
-            toast.error("Failed to create test record. Please check table permissions.")
-          } else {
-            console.log("Successfully inserted test record:", insertResult)
-            toast.success("Created a test estimate request")
-          }
-        }
-        
-        // Now fetch the actual data - use a simpler query first without joins
+        // Use a simple query without joins to get the basic data
         const { data: basicEstimateRequests, error: basicError } = await supabase
           .from("estimate_requests")
           .select("*")
@@ -78,41 +28,52 @@ export function EstimateRequestsList() {
           
         if (basicError) {
           console.error("Error fetching basic estimate requests:", basicError)
-        } else {
-          console.log("Basic estimate requests data:", basicEstimateRequests)
-          // Set the data from the simple query as a fallback
-          setEstimateRequests(basicEstimateRequests || [])
+          toast.error("Failed to load estimate requests. Please try again.")
+          setEstimateRequests([])
+          setLoading(false)
+          return
+        } 
+        
+        console.log("Basic estimate requests data:", basicEstimateRequests)
+        
+        // Use the basic data as our primary data source
+        setEstimateRequests(basicEstimateRequests || [])
+        
+        // Try to fetch additional customer data for each request
+        if (basicEstimateRequests && basicEstimateRequests.length > 0) {
+          // Get all unique customer IDs
+          const customerIds = [...new Set(basicEstimateRequests.map(req => req.customer_id))]
+          
+          // Fetch customer data separately
+          const { data: customers, error: customerError } = await supabase
+            .from("customers")
+            .select("id, first_name, last_name, email")
+            .in("id", customerIds)
+          
+          if (customerError) {
+            console.error("Error fetching customer data:", customerError)
+          } else if (customers && customers.length > 0) {
+            // Create a map of customer data by ID for quick lookup
+            const customerMap = customers.reduce((map, customer) => {
+              map[customer.id] = customer
+              return map
+            }, {})
+            
+            // Enhance the estimate requests with customer data
+            const enhancedRequests = basicEstimateRequests.map(request => ({
+              ...request,
+              customers: customerMap[request.customer_id] || null
+            }))
+            
+            setEstimateRequests(enhancedRequests)
+          }
         }
         
-        // Try the query with explicit foreign key relation
-        const { data: relationalRequests, error: relationalError } = await supabase
-          .from("estimate_requests")
-          .select(`
-            id, 
-            created_at, 
-            status, 
-            description,
-            customer_id,
-            vehicle_make,
-            vehicle_model,
-            vehicle_year,
-            customers!estimate_requests_customer_id_fkey(first_name, last_name, email)
-          `)
-          .order("created_at", { ascending: false })
-          .limit(30)
-        
-        if (relationalError) {
-          console.error("Error fetching estimate requests with relations:", relationalError)
-          // We already set the data from the simple query
-        } else {
-          console.log("Successfully fetched estimate requests with relations:", relationalRequests)
-          setEstimateRequests(relationalRequests || [])
-        }
+        setLoading(false)
       } catch (error) {
         console.error("Error in estimate requests fetch flow:", error)
         toast.error("Failed to load estimate requests. Please try again.")
         setEstimateRequests([])
-      } finally {
         setLoading(false)
       }
     }
