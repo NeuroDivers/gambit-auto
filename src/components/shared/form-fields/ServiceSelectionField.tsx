@@ -82,7 +82,7 @@ export function ServiceSelectionField({
   const [serviceList, setServiceList] = useState<ServiceItemType[]>(services || [])
   
   // Fetch available services from database
-  const { data: availableServices = [] } = useQuery({
+  const { data: availableServices = [], isLoading, error } = useQuery({
     queryKey: ['service-types'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -187,37 +187,46 @@ export function ServiceSelectionField({
               value={searchValue}
               onValueChange={setSearchValue}
             />
-            <CommandEmpty>No services found.</CommandEmpty>
-            <CommandGroup>
-              <ScrollArea className="h-72">
-                {availableServices.map((service) => (
-                  <CommandItem
-                    key={service.id}
-                    value={service.name}
-                    onSelect={() => addService(service)}
-                  >
-                    <div className="flex flex-col">
-                      <div className="flex items-center">
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            serviceList.some(s => s.service_id === service.id)
-                              ? "opacity-100"
-                              : "opacity-0"
+            
+            {isLoading ? (
+              <div className="py-6 text-center text-sm">Loading services...</div>
+            ) : error ? (
+              <div className="py-6 text-center text-sm text-destructive">Error loading services</div>
+            ) : (
+              <>
+                <CommandEmpty>No services found.</CommandEmpty>
+                <CommandGroup>
+                  <ScrollArea className="h-72">
+                    {Array.isArray(availableServices) && availableServices.map((service) => (
+                      <CommandItem
+                        key={service.id}
+                        value={service.name}
+                        onSelect={() => addService(service)}
+                      >
+                        <div className="flex flex-col">
+                          <div className="flex items-center">
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                serviceList.some(s => s.service_id === service.id)
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                            <span>{service.name}</span>
+                          </div>
+                          {service.description && (
+                            <span className="text-muted-foreground text-xs ml-6 mt-1">
+                              {service.description}
+                            </span>
                           )}
-                        />
-                        <span>{service.name}</span>
-                      </div>
-                      {service.description && (
-                        <span className="text-muted-foreground text-xs ml-6 mt-1">
-                          {service.description}
-                        </span>
-                      )}
-                    </div>
-                  </CommandItem>
-                ))}
-              </ScrollArea>
-            </CommandGroup>
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </ScrollArea>
+                </CommandGroup>
+              </>
+            )}
           </Command>
         </PopoverContent>
       </Popover>
