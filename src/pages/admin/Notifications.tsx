@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +16,13 @@ interface Notification {
   sender_id?: string;
 }
 
+// Define a proper interface for sender profiles to fix the TypeScript errors
+interface SenderProfile {
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+}
+
 // Interface for chat messages with properly defined profiles
 interface ChatMessage {
   id: string;
@@ -22,11 +30,7 @@ interface ChatMessage {
   created_at: string;
   sender_id: string;
   read: boolean;
-  profiles: {
-    first_name: string | null;
-    last_name: string | null;
-    email: string | null;
-  };
+  profiles: SenderProfile;
 }
 
 const Notifications = () => {
@@ -88,6 +92,9 @@ const Notifications = () => {
 
     // Transform chat messages to the correct type structure with proper typing
     const typedChatMessages = (chatMessagesResponse.data || []).map(msg => {
+      // Safely extract profile data
+      const profileData = msg.profiles as SenderProfile;
+      
       return {
         id: msg.id,
         message: msg.message,
@@ -95,10 +102,9 @@ const Notifications = () => {
         sender_id: msg.sender_id,
         read: msg.read,
         profiles: {
-          // Explicitly check if profiles is an object before accessing properties
-          first_name: typeof msg.profiles === 'object' && msg.profiles ? msg.profiles.first_name : null,
-          last_name: typeof msg.profiles === 'object' && msg.profiles ? msg.profiles.last_name : null,
-          email: typeof msg.profiles === 'object' && msg.profiles ? msg.profiles.email : null
+          first_name: profileData?.first_name || null,
+          last_name: profileData?.last_name || null,
+          email: profileData?.email || null
         }
       } as ChatMessage;
     });

@@ -29,18 +29,20 @@ interface HeaderProps {
   children?: React.ReactNode;
 }
 
-// Update ChatMessage interface to correctly define profiles as an object, not an array
+// Define a proper interface for sender profiles to fix the TypeScript errors
+interface SenderProfile {
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+}
+
 interface ChatMessage {
   id: string;
   message: string;
   created_at: string;
   sender_id: string;
   read: boolean;
-  profiles: {
-    first_name: string | null;
-    last_name: string | null;
-    email: string | null;
-  };
+  profiles: SenderProfile;  // Using the interface we defined
 }
 
 interface Notification {
@@ -95,6 +97,9 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
       
       // Process chat messages with correct typing for profiles
       const typedChatMessages = (chatMessagesResponse.data || []).map(msg => {
+        // Safely extract profile data
+        const profileData = msg.profiles as SenderProfile;
+        
         return {
           id: msg.id,
           message: msg.message,
@@ -102,10 +107,9 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
           sender_id: msg.sender_id,
           read: msg.read,
           profiles: {
-            // Explicitly type and access profiles as an object
-            first_name: typeof msg.profiles === 'object' && msg.profiles ? msg.profiles.first_name : null,
-            last_name: typeof msg.profiles === 'object' && msg.profiles ? msg.profiles.last_name : null,
-            email: typeof msg.profiles === 'object' && msg.profiles ? msg.profiles.email : null
+            first_name: profileData?.first_name || null,
+            last_name: profileData?.last_name || null,
+            email: profileData?.email || null
           }
         } as ChatMessage;
       });
