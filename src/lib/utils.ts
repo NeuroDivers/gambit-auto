@@ -25,3 +25,11 @@ export const getSystemTheme = (): "dark" | "light" => {
   // Default to light if we can't detect
   return "light"
 }
+
+export const applyThemeClass = (theme: string | undefined, resolvedTheme: string | undefined): void => {
+  if (theme === 'dark' || (theme === 'system' && resolvedTheme === 'dark')) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+}

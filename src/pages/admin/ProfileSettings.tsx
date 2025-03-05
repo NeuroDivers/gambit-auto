@@ -22,16 +22,24 @@ export default function ProfileSettings() {
     }
   }, [theme, setTheme]);
 
-  // Force theme application using document.documentElement.classList
+  // Force theme application immediately
   useEffect(() => {
     if (!mounted) return;
     
-    // Force the document to apply the dark class
+    // Immediately toggle the dark class on the html element
     if (theme === 'dark' || (theme === 'system' && resolvedTheme === 'dark')) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
+    
+    // Log theme state for debugging
+    console.log({
+      selectedTheme: theme,
+      resolvedTheme,
+      currentSystemTheme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+      documentClassList: document.documentElement.classList.contains('dark') ? 'has dark class' : 'no dark class'
+    });
     
   }, [theme, resolvedTheme, mounted]);
 
@@ -39,6 +47,13 @@ export default function ProfileSettings() {
   const handleThemeChange = (value: string) => {
     setTheme(value);
     toast.success(`Theme changed to ${value === 'system' ? 'system default' : value} mode`);
+
+    // Apply dark class immediately to avoid flicker
+    if (value === 'dark' || (value === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
 
     // Log theme state for debugging
     console.log({
