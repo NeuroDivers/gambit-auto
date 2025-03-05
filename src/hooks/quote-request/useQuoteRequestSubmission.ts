@@ -115,7 +115,6 @@ export function useQuoteRequestSubmission(): QuoteRequestSubmissionHook {
   };
   
   return {
-    form: formRef.current,
     step,
     totalSteps,
     services,
