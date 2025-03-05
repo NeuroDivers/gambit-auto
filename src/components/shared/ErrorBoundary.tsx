@@ -5,7 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle, Home, ArrowLeft, RefreshCw } from "lucide-react"
 import { useEffect, useState } from "react"
 
-export function ErrorBoundary() {
+export function ErrorBoundary({ children }: { children?: React.ReactNode }) {
   const error = useRouteError()
   const navigate = useNavigate()
   const [errorDetails, setErrorDetails] = useState<{
@@ -57,7 +57,9 @@ export function ErrorBoundary() {
   }, [error])
   
   // If there's no error, render the children
-  if (!error) {
+  if (!error && children) {
+    return <>{children}</>
+  } else if (!error) {
     return <Outlet />
   }
 

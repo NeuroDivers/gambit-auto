@@ -8,12 +8,14 @@ import NotFound from "./pages/NotFound"
 import Unauthorized from "./pages/Unauthorized"
 import PublicInvoiceView from "./pages/PublicInvoiceView"
 import { protectedRoutes } from "./routes/protectedRoutes"
+import { ErrorBoundary } from "./components/shared/ErrorBoundary"
 
 // Create the router
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Dashboard />
+    element: <Dashboard />,
+    errorElement: <ErrorBoundary />
   },
   {
     path: "/auth",
