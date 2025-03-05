@@ -73,31 +73,16 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     enabled: false, // Don't run on mount - we'll use refetch when the popover opens
   })
 
-  // Fetch data when popover opens or search changes
+  // Single fetch effect that runs when popover opens or search changes
   useEffect(() => {
     if (open) {
-      const fetchData = async () => {
-        try {
-          await refetch();
-        } catch (err) {
-          console.error('Failed to fetch customers:', err);
-          setCustomers([]);
-        }
-      };
-      
-      fetchData();
-    }
-  }, [open, searchQuery, refetch]);
-
-  // Update customers state whenever query data is available
-  useEffect(() => {
-    const fetchData = async () => {
-      if (open) {
+      console.log('Popover opened or search changed, fetching customers');
+      const fetchCustomers = async () => {
         try {
           const result = await refetch();
           
           if (result.isSuccess && result.data?.customers) {
-            // Ensure we always set an array, even if empty
+            // Make sure customers is always an array
             const customersData = Array.isArray(result.data.customers) ? result.data.customers : [];
             console.log('Setting customers state with:', customersData.length, 'customers');
             setCustomers(customersData);
@@ -106,13 +91,13 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
             setCustomers([]);
           }
         } catch (err) {
-          console.error('Error during refetch:', err);
+          console.error('Error during customer fetch:', err);
           setCustomers([]);
         }
-      }
-    };
-    
-    fetchData();
+      };
+      
+      fetchCustomers();
+    }
   }, [open, searchQuery, refetch]);
  
   // Apply selected customer data to the form
@@ -201,51 +186,54 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
           </Button>
         </PopoverTrigger>
         
-        <PopoverContent className="p-0 w-full" align="start">
-          <Command>
-            <CommandInput 
-              placeholder="Search customers..." 
-              value={searchQuery}
-              onValueChange={setSearchQuery}
-            />
-            
-            {isLoading && (
-              <div className="py-6 text-center text-sm text-muted-foreground flex items-center justify-center">
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Loading customers...
-              </div>
-            )}
-            
-            {!isLoading && safeCustomers.length === 0 && (
-              <CommandEmpty>No customers found.</CommandEmpty>
-            )}
-            
-            {!isLoading && safeCustomers.length > 0 && (
-              <CommandGroup>
-                {safeCustomers.map((customer) => (
-                  <CommandItem
-                    key={customer.id}
-                    value={`${customer.first_name || ''} ${customer.last_name || ''}`}
-                    onSelect={() => applyCustomerData(customer)}
-                    className="flex items-center"
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        form.getValues("first_name") === customer.first_name &&
-                        form.getValues("last_name") === customer.last_name
-                          ? "opacity-100"
-                          : "opacity-0"
-                      )}
-                    />
-                    <span>{customer.first_name || ''} {customer.last_name || ''}</span>
-                    <span className="ml-2 text-sm text-muted-foreground">{customer.email || ''}</span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
-          </Command>
-        </PopoverContent>
+        {/* Only render PopoverContent when open to avoid premature rendering and errors */}
+        {open && (
+          <PopoverContent className="p-0 w-full" align="start">
+            <Command className="w-full">
+              <CommandInput 
+                placeholder="Search customers..." 
+                value={searchQuery}
+                onValueChange={setSearchQuery}
+              />
+              
+              {isLoading && (
+                <div className="py-6 text-center text-sm text-muted-foreground flex items-center justify-center">
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Loading customers...
+                </div>
+              )}
+              
+              {!isLoading && safeCustomers.length === 0 && (
+                <CommandEmpty>No customers found.</CommandEmpty>
+              )}
+              
+              {!isLoading && safeCustomers.length > 0 && (
+                <CommandGroup>
+                  {safeCustomers.map((customer) => (
+                    <CommandItem
+                      key={customer.id}
+                      value={`${customer.first_name || ''} ${customer.last_name || ''}`}
+                      onSelect={() => applyCustomerData(customer)}
+                      className="flex items-center"
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          form.getValues("first_name") === customer.first_name &&
+                          form.getValues("last_name") === customer.last_name
+                            ? "opacity-100"
+                            : "opacity-0"
+                        )}
+                      />
+                      <span>{customer.first_name || ''} {customer.last_name || ''}</span>
+                      <span className="ml-2 text-sm text-muted-foreground">{customer.email || ''}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+            </Command>
+          </PopoverContent>
+        )}
       </Popover>
     </div>
   );
