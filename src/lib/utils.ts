@@ -34,40 +34,50 @@ export const applyThemeClass = (theme: string | undefined, resolvedTheme: string
   // If theme is not explicitly set in the component, check localStorage
   if (!themeToApply && savedTheme) {
     themeToApply = savedTheme;
+    console.log("Using theme from localStorage:", themeToApply);
   }
   
   // Apply theme based on our determined value
   if (themeToApply === 'dark') {
     document.documentElement.classList.add('dark');
     localStorage.setItem('theme', 'dark');
+    console.log("Applied dark theme");
     return;
   } else if (themeToApply === 'light') {
     document.documentElement.classList.remove('dark');
     localStorage.setItem('theme', 'light');
+    console.log("Applied light theme");
     return;
   } else if (themeToApply === 'system') {
     localStorage.setItem('theme', 'system');
+    console.log("Set theme to system preference");
   }
   
   // If theme is system or undefined, use the resolved theme
   if (resolvedTheme === 'dark') {
     document.documentElement.classList.add('dark');
+    console.log("Applied dark theme from resolved theme");
   } else if (resolvedTheme === 'light') {
     document.documentElement.classList.remove('dark');
+    console.log("Applied light theme from resolved theme");
   }
   
   // If no theme info is available, check localStorage directly as a fallback
   if (!themeToApply && !resolvedTheme) {
     if (savedTheme === 'dark') {
       document.documentElement.classList.add('dark');
+      console.log("Applied dark theme from localStorage fallback");
     } else if (savedTheme === 'light') {
       document.documentElement.classList.remove('dark');
+      console.log("Applied light theme from localStorage fallback");
     } else {
       // Fall back to system preference
       if (getSystemTheme() === 'dark') {
         document.documentElement.classList.add('dark');
+        console.log("Applied dark theme from system preference");
       } else {
         document.documentElement.classList.remove('dark');
+        console.log("Applied light theme from system preference");
       }
     }
   }

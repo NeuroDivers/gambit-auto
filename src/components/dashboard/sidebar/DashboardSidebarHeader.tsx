@@ -39,9 +39,9 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
   
   // Determine if dark mode is active
   useEffect(() => {
-    // Simple check - if resolvedTheme is available, use it directly
     if (resolvedTheme) {
       setIsDarkTheme(resolvedTheme === 'dark');
+      console.log("Theme updated in dashboard sidebar:", { resolvedTheme, isDark: resolvedTheme === 'dark' });
     }
   }, [resolvedTheme]);
 
@@ -49,7 +49,7 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
   const logoUrl = React.useMemo(() => {
     if (!businessProfile) return null;
     
-    console.log("Logo selection - Dark mode:", isDarkTheme);
+    console.log("Logo selection in dashboard - Dark mode:", isDarkTheme);
     console.log("Available logos - Dark:", businessProfile.dark_logo_url, "Light:", businessProfile.light_logo_url);
     
     if (isDarkTheme) {
@@ -61,7 +61,7 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
     }
   }, [businessProfile, isDarkTheme]);
 
-  console.log("Final logo URL being used:", logoUrl);
+  console.log("Final logo URL being used in dashboard:", logoUrl);
 
   return (
     <div className="relative py-4">

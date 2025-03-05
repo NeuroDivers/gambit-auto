@@ -19,7 +19,7 @@ export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebar
   const { theme, resolvedTheme } = useTheme();
   const [isDarkTheme, setIsDarkTheme] = useState(false);
 
-  const { data: businessProfile } = useQuery({
+  const { data: businessProfile, isLoading } = useQuery({
     queryKey: ["business-profile"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -61,7 +61,9 @@ export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebar
 
   return (
     <div className="flex flex-col items-center py-4">
-      {logoUrl ? (
+      {isLoading ? (
+        <div className="h-16 w-16 rounded-full bg-muted animate-pulse"></div>
+      ) : logoUrl ? (
         <img 
           src={logoUrl}
           alt="Business Logo"
