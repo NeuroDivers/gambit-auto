@@ -19,7 +19,7 @@ interface DashboardSidebarHeaderProps {
 
 export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardSidebarHeaderProps) {
   const { state } = useSidebar();
-  const { theme, resolvedTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
   const [currentTheme, setCurrentTheme] = useState<string | undefined>(undefined);
 
   // Query to fetch business profile data including logo URLs
@@ -36,21 +36,64 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
       return data;
     }
   });
+  
+  // Check if we're in dark mode by examining document classes
+  const isDarkMode = () => {
+    // Check if document exists (for SSR compatibility)
+    if (typeof document !== 'undefined') {
+      return document.documentElement.classList.contains('dark');
+    }
+    return false;
+  };
 
-  // Update currentTheme whenever theme or resolvedTheme changes
+  // Get the current system theme
+  const getSystemTheme = () => {
+    if (typeof window !== 'undefined') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return 'light';
+  };
+
+  // Update currentTheme whenever theme-related variables change
   useEffect(() => {
-    setCurrentTheme(resolvedTheme);
-    console.log("Current theme updated:", resolvedTheme);
-  }, [resolvedTheme]);
+    // Try to determine the theme from various sources
+    const documentHasDarkClass = isDarkMode();
+    const systemTheme = getSystemTheme();
+    
+    // Debug information
+    console.log({
+      selectedTheme: theme,
+      resolvedTheme: resolvedTheme,
+      currentSystemTheme: systemTheme,
+      documentClassList: documentHasDarkClass ? "has dark class" : "no dark class"
+    });
+    
+    // Set the current theme based on the most reliable information
+    if (documentHasDarkClass) {
+      setCurrentTheme('dark');
+    } else if (resolvedTheme) {
+      setCurrentTheme(resolvedTheme);
+    } else if (theme) {
+      setCurrentTheme(theme);
+    } else {
+      setCurrentTheme(systemTheme);
+    }
+  }, [theme, resolvedTheme]);
 
   // Determine which logo to display based on current theme
   const logoUrl = React.useMemo(() => {
     if (!businessProfile) return null;
     
-    console.log("Determining logo for theme:", currentTheme, "Current resolved theme:", resolvedTheme);
+    // Check multiple sources to determine if dark mode is active
+    const isDark = 
+      currentTheme === 'dark' || 
+      resolvedTheme === 'dark' || 
+      isDarkMode();
+    
+    console.log("Determining logo for theme:", currentTheme);
     console.log("Available logos - Dark:", businessProfile.dark_logo_url, "Light:", businessProfile.light_logo_url);
     
-    if (currentTheme === 'dark' || resolvedTheme === 'dark') {
+    if (isDark) {
       // For dark theme: Use dark_logo_url, fall back to logo_url
       const darkLogo = businessProfile.dark_logo_url || businessProfile.logo_url;
       console.log("Using dark logo:", darkLogo);
