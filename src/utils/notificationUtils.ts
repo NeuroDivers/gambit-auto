@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Notification, SenderProfile } from "@/hooks/useHeaderNotifications";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 
 // Fetch regular notifications from the database
 export const fetchRegularNotifications = async (userId: string) => {
@@ -78,7 +78,11 @@ export const markNotificationAsRead = async (notification: Notification) => {
 
       if (error) {
         console.error("Error marking chat message as read:", error);
-        toast.error("Failed to mark message as read");
+        toast({
+          title: "Error",
+          description: "Failed to mark message as read",
+          variant: "destructive",
+        });
         return false;
       }
     } else {
@@ -90,7 +94,11 @@ export const markNotificationAsRead = async (notification: Notification) => {
 
       if (error) {
         console.error("Error marking notification as read:", error);
-        toast.error("Failed to mark notification as read");
+        toast({
+          title: "Error",
+          description: "Failed to mark notification as read",
+          variant: "destructive",
+        });
         return false;
       }
     }
@@ -103,13 +111,8 @@ export const markNotificationAsRead = async (notification: Notification) => {
 
 // Set up realtime subscriptions for notifications and chat messages
 export const setupNotificationSubscriptions = (onUpdate: () => void) => {
-  console.log("Setting up notification page subscriptions");
-  
-  // Create unique channel names with timestamp to avoid conflicts
-  const timestamp = new Date().getTime();
-  
   const notificationsChannel = supabase
-    .channel(`notifications-page-${timestamp}`)
+    .channel("notifications-page")
     .on(
       "postgres_changes",
       {
@@ -117,17 +120,14 @@ export const setupNotificationSubscriptions = (onUpdate: () => void) => {
         schema: "public",
         table: "notifications",
       },
-      (payload) => {
-        console.log("Notification page change detected:", payload);
+      () => {
         onUpdate();
       }
     )
-    .subscribe((status) => {
-      console.log("Notification page subscription status:", status);
-    });
+    .subscribe();
 
   const chatChannel = supabase
-    .channel(`chat-notifications-page-${timestamp}`)
+    .channel("chat-notifications-page")
     .on(
       "postgres_changes",
       {
@@ -135,17 +135,13 @@ export const setupNotificationSubscriptions = (onUpdate: () => void) => {
         schema: "public",
         table: "chat_messages",
       },
-      (payload) => {
-        console.log("Chat message page change detected:", payload);
+      () => {
         onUpdate();
       }
     )
-    .subscribe((status) => {
-      console.log("Chat notification page subscription status:", status);
-    });
+    .subscribe();
 
   return () => {
-    console.log("Cleaning up notification page subscriptions");
     supabase.removeChannel(notificationsChannel);
     supabase.removeChannel(chatChannel);
   };

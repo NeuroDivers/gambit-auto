@@ -21,7 +21,7 @@ import { Edit, Eye } from "lucide-react"
 import { useStaffData } from "./hooks/useStaffData"
 import { StaffDetailsDialog } from "./StaffDetailsDialog"
 import { Skeleton } from "@/components/ui/skeleton"
-import { toast } from "sonner"
+import { toast } from "@/components/ui/use-toast"
 
 export function StaffList() {
   const { data: staffMembers, isLoading, error } = useStaffData()
@@ -29,9 +29,10 @@ export function StaffList() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
 
   if (error) {
-    toast("Error loading staff data", {
+    toast({
+      title: "Error loading staff data",
       description: error.message,
-      style: { backgroundColor: 'red', color: 'white' }
+      variant: "destructive",
     })
   }
 

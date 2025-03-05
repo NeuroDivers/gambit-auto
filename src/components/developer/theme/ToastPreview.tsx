@@ -1,8 +1,8 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Megaphone } from "lucide-react";
 import { toast } from "sonner";
+import { Megaphone } from "lucide-react";
 
 export function ToastPreview() {
   const showDefaultToast = () => {

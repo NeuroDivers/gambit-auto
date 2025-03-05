@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { useProfileData } from "./hooks/useProfileData"
 import { useEffect } from "react"
-import { toast } from "sonner"
+import { toast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { Loader2 } from "lucide-react"
 
@@ -70,8 +70,9 @@ export function StaffProfileForm({ profileId, onSuccess }: StaffProfileFormProps
 
       if (error) throw error
 
-      toast("Profile updated", {
-        description: "The staff profile has been updated successfully"
+      toast({
+        title: "Profile updated",
+        description: "The staff profile has been updated successfully",
       })
       
       if (onSuccess) {
@@ -79,9 +80,10 @@ export function StaffProfileForm({ profileId, onSuccess }: StaffProfileFormProps
       }
     } catch (error: any) {
       console.error("Error updating profile:", error)
-      toast("Error", {
+      toast({
+        variant: "destructive",
+        title: "Error",
         description: error.message || "Failed to update profile",
-        style: { backgroundColor: 'red', color: 'white' }
       })
     }
   }

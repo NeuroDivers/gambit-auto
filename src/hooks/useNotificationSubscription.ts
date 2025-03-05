@@ -2,9 +2,10 @@
 import { useEffect, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { toast } from "sonner"
+import { useToast } from "@/hooks/use-toast"
 
 export function useNotificationSubscription() {
+  const { toast } = useToast()
   const queryClient = useQueryClient()
   const [userId, setUserId] = useState<string | null>(null)
 
@@ -18,12 +19,9 @@ export function useNotificationSubscription() {
       
       setUserId(user.id)
       
-      // Create unique channel names with timestamp to avoid conflicts
-      const timestamp = new Date().getTime()
-      
       // Set up notification subscription
       const notificationsChannel = supabase
-        .channel(`notifications-subscription-${timestamp}`)
+        .channel('notifications-subscription')
         .on(
           'postgres_changes',
           {
@@ -39,11 +37,9 @@ export function useNotificationSubscription() {
             queryClient.invalidateQueries({ queryKey: ['notifications'] })
             
             const notification = payload.new
-            // Display toast notification
-            console.log('Showing notification toast:', notification.title)
-            toast(notification.title, {
+            toast({
+              title: notification.title,
               description: notification.message,
-              duration: 5000,
             })
           }
         )
@@ -53,7 +49,7 @@ export function useNotificationSubscription() {
       
       // Set up chat message subscription
       const chatChannel = supabase
-        .channel(`chat-messages-subscription-${timestamp}`)
+        .channel('chat-messages-subscription')
         .on(
           'postgres_changes',
           {
@@ -71,29 +67,18 @@ export function useNotificationSubscription() {
             
             // We'll need to fetch the sender details for the toast
             const fetchSenderDetails = async () => {
-              try {
-                const { data } = await supabase
-                  .from('profiles')
-                  .select('first_name, last_name, email')
-                  .eq('id', payload.new.sender_id)
-                  .single()
-                
-                const senderName = data?.first_name || data?.email || 'Someone'
-                
-                // Display toast notification
-                console.log('Showing chat message toast from:', senderName)
-                toast("New Message", {
-                  description: `${senderName}: ${payload.new.message.substring(0, 50)}${payload.new.message.length > 50 ? '...' : ''}`,
-                  duration: 5000,
-                })
-              } catch (error) {
-                console.error('Error fetching sender details:', error)
-                // Fallback toast if we can't get sender details
-                toast("New Message", {
-                  description: payload.new.message.substring(0, 50) + (payload.new.message.length > 50 ? '...' : ''),
-                  duration: 5000,
-                })
-              }
+              const { data } = await supabase
+                .from('profiles')
+                .select('first_name, last_name, email')
+                .eq('id', payload.new.sender_id)
+                .single()
+              
+              const senderName = data?.first_name || data?.email || 'Someone'
+              
+              toast({
+                title: "New Message",
+                description: `${senderName}: ${payload.new.message.substring(0, 50)}${payload.new.message.length > 50 ? '...' : ''}`,
+              })
             }
             
             fetchSenderDetails()
@@ -119,7 +104,7 @@ export function useNotificationSubscription() {
         })
       }
     }
-  }, [queryClient])
+  }, [queryClient, toast])
 
   return { userId }
 }

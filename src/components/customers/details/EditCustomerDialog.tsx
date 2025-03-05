@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { ClientFormFields } from "@/components/clients/form/ClientFormFields";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -18,6 +18,7 @@ interface EditCustomerDialogProps {
 }
 
 export function EditCustomerDialog({ customer, open, onOpenChange }: EditCustomerDialogProps) {
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   
   const form = useForm<typeof customerFormSchema._type>({
@@ -59,7 +60,8 @@ export function EditCustomerDialog({ customer, open, onOpenChange }: EditCustome
 
       if (error) throw error;
 
-      toast("Customer updated", {
+      toast({
+        title: "Customer updated",
         description: "Customer information has been updated successfully.",
       });
       
@@ -69,9 +71,10 @@ export function EditCustomerDialog({ customer, open, onOpenChange }: EditCustome
       onOpenChange(false);
     } catch (error: any) {
       console.error("Error updating customer:", error);
-      toast("Update failed", {
+      toast({
+        variant: "destructive",
+        title: "Update failed",
         description: error.message || "There was an error updating the customer.",
-        style: { backgroundColor: 'red', color: 'white' }
       });
     }
   };

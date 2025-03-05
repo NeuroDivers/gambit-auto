@@ -9,7 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { toast } from "sonner"
+import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 
 interface DeleteRoleDialogProps {
@@ -25,6 +25,8 @@ export function DeleteRoleDialog({
   roleId,
   onSuccess,
 }: DeleteRoleDialogProps) {
+  const { toast } = useToast()
+
   const handleDelete = async () => {
     if (!roleId) return
 
@@ -36,15 +38,17 @@ export function DeleteRoleDialog({
 
       if (error) throw error
 
-      toast("Role deleted", {
+      toast({
+        title: "Role deleted",
         description: "The role has been successfully deleted",
       })
 
       onSuccess?.()
     } catch (error: any) {
-      toast("Error", {
+      toast({
+        title: "Error",
         description: error.message,
-        style: { backgroundColor: 'red', color: 'white' }
+        variant: "destructive",
       })
     }
   }

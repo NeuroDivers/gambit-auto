@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { PageTitle } from "@/components/shared/PageTitle"
 import { ArrowLeft, Printer, Send, Trash } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/components/ui/use-toast"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
 
 export default function EstimateDetails() {

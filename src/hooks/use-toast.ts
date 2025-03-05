@@ -1,6 +1,4 @@
-
 import * as React from "react"
-import { toast as sonnerToast } from "sonner"
 
 import type {
   ToastActionElement,
@@ -141,24 +139,9 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
-// Enhanced toast function that better wraps sonner toast
 function toast({ ...props }: Toast) {
   const id = genId()
 
-  // Call sonner toast with adapted props
-  if (props.variant === "destructive") {
-    sonnerToast.error(props.title as string, {
-      description: props.description,
-      duration: 4000,
-    });
-  } else {
-    sonnerToast.success(props.title as string, {
-      description: props.description,
-      duration: 3000,
-    });
-  }
-
-  // Keep compatibility with the existing API
   const update = (props: ToasterToast) =>
     dispatch({
       type: "UPDATE_TOAST",
@@ -205,5 +188,4 @@ function useToast() {
   }
 }
 
-// Export both the original sonner toast and our wrapped version
-export { useToast, toast, sonnerToast }
+export { useToast, toast }

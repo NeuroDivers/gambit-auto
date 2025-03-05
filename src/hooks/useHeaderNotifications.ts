@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useToast } from "./use-toast";
 import {
   fetchHeaderNotifications,
   fetchHeaderChatMessages,
@@ -40,6 +40,7 @@ export function useHeaderNotifications() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   const fetchNotifications = async () => {
     try {
@@ -49,24 +50,7 @@ export function useHeaderNotifications() {
         return;
       }
 
-      // Count all unread notifications first - this will give us the accurate total count
-      const [notifCountResponse, chatCountResponse] = await Promise.all([
-        supabase
-          .from("notifications")
-          .select("*", { count: 'exact', head: true })
-          .eq("profile_id", user.id)
-          .eq("read", false),
-        supabase
-          .from("chat_messages")
-          .select("*", { count: 'exact', head: true })
-          .eq("recipient_id", user.id)
-          .eq("read", false)
-      ]);
-
-      const totalUnreadCount = (notifCountResponse.count || 0) + (chatCountResponse.count || 0);
-      setUnreadCount(totalUnreadCount);
-
-      // Now fetch the data for display (limited to 5 items)
+      // Fetch both notifications and chat messages in parallel
       const [notificationsResponse, chatMessagesResponse] = await Promise.all([
         fetchHeaderNotifications(user.id),
         fetchHeaderChatMessages(user.id)
@@ -84,6 +68,7 @@ export function useHeaderNotifications() {
         .slice(0, 5);
 
       setNotifications(allNotifications);
+      setUnreadCount(allNotifications.filter(n => !n.read).length);
       setIsLoading(false);
     } catch (error) {
       console.error("Error fetching notifications:", error);

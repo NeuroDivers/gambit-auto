@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAdminStatus } from "@/hooks/useAdminStatus"
 import { supabase } from "@/integrations/supabase/client"
-import { toast } from "sonner"
+import { useToast } from "@/hooks/use-toast"
 import { useQueryClient, useQuery } from "@tanstack/react-query"
 
 interface CreateUserDialogProps {
@@ -22,6 +22,7 @@ interface CreateUserDialogProps {
 
 export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) {
   const { isAdmin, isLoading } = useAdminStatus()
+  const { toast } = useToast()
   const queryClient = useQueryClient()
   const [email, setEmail] = useState("")
   const [firstName, setFirstName] = useState("")
@@ -44,9 +45,11 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
 
   const handleCreateUser = async () => {
     if (!isAdmin) {
-      toast("Unauthorized", {
-        description: "You do not have permission to create users."
-      });
+      toast({
+        title: "Unauthorized",
+        description: "You do not have permission to create users.",
+        variant: "destructive",
+      })
       return
     }
 
@@ -81,9 +84,10 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
         queryClient.invalidateQueries({ queryKey: ["roleStats"] })
       ])
 
-      toast("Success", {
-        description: "User created successfully. They will receive a verification email."
-      });
+      toast({
+        title: "Success",
+        description: "User created successfully. They will receive a verification email.",
+      })
 
       // Reset form and close dialog
       setEmail("")
@@ -104,10 +108,11 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
         ? 'A user with this email address already exists.'
         : errorMessage
 
-      toast("Error", {
+      toast({
+        title: "Error",
         description: userFriendlyMessage,
-        style: { backgroundColor: 'red', color: 'white' }
-      });
+        variant: "destructive",
+      })
     } finally {
       setIsSubmitting(false)
     }
