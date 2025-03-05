@@ -46,10 +46,12 @@ export function DashboardSidebarHeader({ firstName, role, onLogout }: DashboardS
 
   // Get the appropriate logo URL based on current theme
   const logoUrl = currentTheme === 'dark' 
-    ? businessProfile?.dark_logo_url || businessProfile?.logo_url
-    : businessProfile?.light_logo_url || businessProfile?.logo_url;
+    ? (businessProfile?.dark_logo_url || businessProfile?.logo_url)
+    : (businessProfile?.light_logo_url || businessProfile?.logo_url);
 
   console.log("Using logo URL:", logoUrl, "for theme:", currentTheme);
+  console.log("Dark logo URL:", businessProfile?.dark_logo_url);
+  console.log("Light logo URL:", businessProfile?.light_logo_url);
 
   return (
     <div className="relative py-4">

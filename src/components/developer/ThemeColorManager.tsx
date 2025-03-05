@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
 import { Card, CardContent } from "@/components/ui/card"
@@ -169,6 +170,13 @@ export function ThemeColorManager() {
   const handleColorPickerChange = (theme: 'light' | 'dark', name: string, hex: string) => {
     const hslValue = hexToHsl(hex);
     handleColorChange(theme, name, hslValue);
+  }
+
+  const handleHexInputChange = (theme: 'light' | 'dark', name: string, hex: string) => {
+    // Basic validation for hex color
+    if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+      handleColorPickerChange(theme, name, hex);
+    }
   }
   
   const applyThemeColors = () => {
@@ -378,69 +386,93 @@ export function ThemeColorManager() {
           
           <TabsContent value="light" className="mt-0">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              {themeColorVariables.map((variable) => (
-                <div key={`light-${variable.name}`} className="space-y-2">
-                  <Label htmlFor={`light-${variable.name}`} className="flex items-center justify-between">
-                    <span>{variable.name}</span>
-                    <div 
-                      className="h-4 w-4 rounded-full border"
-                      style={{ 
-                        background: `hsl(${lightColors[variable.name] || variable.defaultLight})` 
-                      }}
-                    />
-                  </Label>
-                  <div className="flex gap-2 items-center">
-                    <Input
-                      id={`light-${variable.name}`}
-                      value={lightColors[variable.name] || variable.defaultLight}
-                      onChange={(e) => handleColorChange('light', variable.name, e.target.value)}
-                      placeholder={variable.defaultLight}
-                      className="flex-1"
-                    />
-                    <ColorPicker
-                      name={variable.name}
-                      value={lightColors[variable.name] || variable.defaultLight}
-                      onChange={(hex) => handleColorPickerChange('light', variable.name, hex)}
-                      theme="light"
-                    />
+              {themeColorVariables.map((variable) => {
+                const hslValue = lightColors[variable.name] || variable.defaultLight;
+                const hexValue = hslToHex(hslValue);
+                return (
+                  <div key={`light-${variable.name}`} className="space-y-2">
+                    <Label htmlFor={`light-${variable.name}`} className="flex items-center justify-between">
+                      <span>{variable.name}</span>
+                      <div 
+                        className="h-4 w-4 rounded-full border"
+                        style={{ 
+                          background: `hsl(${hslValue})` 
+                        }}
+                      />
+                    </Label>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        id={`light-${variable.name}`}
+                        value={hslValue}
+                        onChange={(e) => handleColorChange('light', variable.name, e.target.value)}
+                        placeholder={variable.defaultLight}
+                        className="flex-1"
+                      />
+                      <ColorPicker
+                        name={variable.name}
+                        value={hslValue}
+                        onChange={(hex) => handleColorPickerChange('light', variable.name, hex)}
+                        theme="light"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs">Hex:</Label>
+                      <Input
+                        value={hexValue}
+                        onChange={(e) => handleHexInputChange('light', variable.name, e.target.value)}
+                        className="h-6 text-xs font-mono"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">{variable.description}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground">{variable.description}</p>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </TabsContent>
           
           <TabsContent value="dark" className="mt-0">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              {themeColorVariables.map((variable) => (
-                <div key={`dark-${variable.name}`} className="space-y-2">
-                  <Label htmlFor={`dark-${variable.name}`} className="flex items-center justify-between">
-                    <span>{variable.name}</span>
-                    <div 
-                      className="h-4 w-4 rounded-full border dark:border-gray-600"
-                      style={{ 
-                        background: `hsl(${darkColors[variable.name] || variable.defaultDark})` 
-                      }}
-                    />
-                  </Label>
-                  <div className="flex gap-2 items-center">
-                    <Input
-                      id={`dark-${variable.name}`}
-                      value={darkColors[variable.name] || variable.defaultDark}
-                      onChange={(e) => handleColorChange('dark', variable.name, e.target.value)}
-                      placeholder={variable.defaultDark}
-                      className="flex-1"
-                    />
-                    <ColorPicker
-                      name={variable.name}
-                      value={darkColors[variable.name] || variable.defaultDark}
-                      onChange={(hex) => handleColorPickerChange('dark', variable.name, hex)}
-                      theme="dark"
-                    />
+              {themeColorVariables.map((variable) => {
+                const hslValue = darkColors[variable.name] || variable.defaultDark;
+                const hexValue = hslToHex(hslValue);
+                return (
+                  <div key={`dark-${variable.name}`} className="space-y-2">
+                    <Label htmlFor={`dark-${variable.name}`} className="flex items-center justify-between">
+                      <span>{variable.name}</span>
+                      <div 
+                        className="h-4 w-4 rounded-full border dark:border-gray-600"
+                        style={{ 
+                          background: `hsl(${hslValue})` 
+                        }}
+                      />
+                    </Label>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        id={`dark-${variable.name}`}
+                        value={hslValue}
+                        onChange={(e) => handleColorChange('dark', variable.name, e.target.value)}
+                        placeholder={variable.defaultDark}
+                        className="flex-1"
+                      />
+                      <ColorPicker
+                        name={variable.name}
+                        value={hslValue}
+                        onChange={(hex) => handleColorPickerChange('dark', variable.name, hex)}
+                        theme="dark"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs">Hex:</Label>
+                      <Input
+                        value={hexValue}
+                        onChange={(e) => handleHexInputChange('dark', variable.name, e.target.value)}
+                        className="h-6 text-xs font-mono"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">{variable.description}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground">{variable.description}</p>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </TabsContent>
         </Tabs>
