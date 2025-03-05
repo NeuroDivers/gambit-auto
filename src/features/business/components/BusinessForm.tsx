@@ -103,53 +103,8 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
 
   async function onSubmit(values: BusinessFormValues) {
     try {
-      // If there are existing old logos, we'll delete them manually here
-      // instead of relying on the database trigger that uses storage_domain parameter
-      if (businessProfile) {
-        // For light logo
-        if (businessProfile.light_logo_url && 
-            values.light_logo_url !== businessProfile.light_logo_url) {
-          try {
-            // Extract just the file name from the URL
-            const lightLogoPath = businessProfile.light_logo_url.split('/').pop();
-            if (lightLogoPath) {
-              const { error: deleteError } = await supabase.storage
-                .from('business-logos')
-                .remove([lightLogoPath]);
-                
-              if (deleteError) {
-                console.error("Warning: Failed to delete old light logo:", deleteError);
-                // Continue with update even if delete fails
-              }
-            }
-          } catch (deleteError) {
-            console.error("Error handling light logo deletion:", deleteError);
-            // Continue with update even if delete fails
-          }
-        }
-        
-        // For dark logo
-        if (businessProfile.dark_logo_url && 
-            values.dark_logo_url !== businessProfile.dark_logo_url) {
-          try {
-            // Extract just the file name from the URL
-            const darkLogoPath = businessProfile.dark_logo_url.split('/').pop();
-            if (darkLogoPath) {
-              const { error: deleteError } = await supabase.storage
-                .from('business-logos')
-                .remove([darkLogoPath]);
-                
-              if (deleteError) {
-                console.error("Warning: Failed to delete old dark logo:", deleteError);
-                // Continue with update even if delete fails
-              }
-            }
-          } catch (deleteError) {
-            console.error("Error handling dark logo deletion:", deleteError);
-            // Continue with update even if delete fails
-          }
-        }
-      }
+      // We don't need to handle old logo deletion here anymore
+      // The upsert: true parameter in the upload call will overwrite files with the same name
 
       const { error } = businessProfile 
         ? await supabase
