@@ -29,13 +29,18 @@ type EstimateFormProps = {
   isSubmitting: boolean
 }
 
+// Extend ServiceType to handle the base_price vs price mismatch
+interface ServiceTypeWithBasePrice extends Omit<ServiceType, 'price'> {
+  base_price: number | null;
+}
+
 export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps) {
-  const [selectedClient, setSelectedClient] = useState<string | null>(null)
+  const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null)
   const [subtotal, setSubtotal] = useState<number>(0)
   const [selectedServices, setSelectedServices] = useState<any[]>([])
   const [createNewCustomer, setCreateNewCustomer] = useState<boolean>(true)
-  const [standaloneServices, setStandaloneServices] = useState<ServiceType[]>([])
-  const [subServices, setSubServices] = useState<{[key: string]: ServiceType[]}>({})
+  const [standaloneServices, setStandaloneServices] = useState<ServiceTypeWithBasePrice[]>([])
+  const [subServices, setSubServices] = useState<{[key: string]: ServiceTypeWithBasePrice[]}>({})
   const [openCustomerSelect, setOpenCustomerSelect] = useState(false)
   const [customerSearchQuery, setCustomerSearchQuery] = useState("")
   
@@ -53,13 +58,13 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
   })
   
   const { data: vehicles, isLoading: vehiclesLoading } = useQuery({
-    queryKey: ["vehicles", selectedClient],
-    enabled: !!selectedClient,
+    queryKey: ["vehicles", selectedCustomer],
+    enabled: !!selectedCustomer,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("vehicles")
         .select("id, make, model, year, vin")
-        .eq("customer_id", selectedClient)
+        .eq("customer_id", selectedCustomer)
         .order("created_at", { ascending: false })
       
       if (error) throw error
@@ -84,7 +89,7 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
       );
       
       // Group sub-services by parent ID
-      const subServicesByParent: {[key: string]: ServiceType[]} = {};
+      const subServicesByParent: {[key: string]: ServiceTypeWithBasePrice[]} = {};
       data.filter(service => service.parent_service_id).forEach(subService => {
         if (!subServicesByParent[subService.parent_service_id!]) {
           subServicesByParent[subService.parent_service_id!] = [];
@@ -99,17 +104,17 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
     }
   })
   
-  const handleClientChange = (clientId: string) => {
-    setSelectedClient(clientId)
-    form.setValue("client_id", clientId)
+  const handleCustomerChange = (customerId: string) => {
+    setSelectedCustomer(customerId)
+    form.setValue("client_id", customerId)
     
-    // Find the selected client to set customer info
-    const selectedClient = clients?.find(client => client.id === clientId)
-    if (selectedClient) {
-      form.setValue("customer_first_name", selectedClient.first_name)
-      form.setValue("customer_last_name", selectedClient.last_name)
-      form.setValue("customer_email", selectedClient.email)
-      form.setValue("customer_phone", selectedClient.phone_number)
+    // Find the selected customer to set customer info
+    const selectedCustomer = clients?.find(client => client.id === customerId)
+    if (selectedCustomer) {
+      form.setValue("customer_first_name", selectedCustomer.first_name)
+      form.setValue("customer_last_name", selectedCustomer.last_name)
+      form.setValue("customer_email", selectedCustomer.email)
+      form.setValue("customer_phone", selectedCustomer.phone_number)
       setCreateNewCustomer(false)
     }
   }
@@ -356,9 +361,9 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
                   aria-expanded={openCustomerSelect}
                   className="w-full justify-between"
                 >
-                  {selectedClient ? 
-                    clients?.find(client => client.id === selectedClient)
-                      ? `${clients.find(client => client.id === selectedClient)?.first_name} ${clients.find(client => client.id === selectedClient)?.last_name}`
+                  {selectedCustomer ? 
+                    clients?.find(client => client.id === selectedCustomer)
+                      ? `${clients.find(client => client.id === selectedCustomer)?.first_name} ${clients.find(client => client.id === selectedCustomer)?.last_name}`
                       : "Select a customer" 
                     : "Select a customer"}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -378,14 +383,14 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
                         key={client.id}
                         value={client.id}
                         onSelect={() => {
-                          handleClientChange(client.id)
+                          handleCustomerChange(client.id)
                           setOpenCustomerSelect(false)
                         }}
                       >
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
-                            selectedClient === client.id ? "opacity-100" : "opacity-0"
+                            selectedCustomer === client.id ? "opacity-100" : "opacity-0"
                           )}
                         />
                         {client.first_name} {client.last_name}
@@ -461,7 +466,7 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
                 }
               }}
               defaultValue={form.watch("vehicle_id")}
-              disabled={!selectedClient || vehiclesLoading}
+              disabled={!selectedCustomer || vehiclesLoading}
             >
               <SelectTrigger id="vehicle_id">
                 <SelectValue placeholder="Select a vehicle" />

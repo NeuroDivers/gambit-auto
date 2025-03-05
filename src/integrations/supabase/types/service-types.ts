@@ -19,11 +19,13 @@ export interface ServiceType {
   name: string;
   description: string | null;
   duration: number | null;
-  price: number | null;
+  price?: number | null;  // Made optional to accommodate base_price from DB
   status: Database["public"]["Enums"]["service_status"];
   updated_at: string;
   pricing_model: 'flat_rate' | 'hourly' | 'variable';
   base_price: number | null;
+  parent_service_id?: string | null;
+  service_type?: 'standalone' | 'sub_service' | 'bundle';
 }
 
 export interface ServiceTypesTable {
@@ -38,6 +40,8 @@ export interface ServiceTypesTable {
     updated_at: string
     pricing_model: 'flat_rate' | 'hourly' | 'variable'
     base_price: number | null
+    parent_service_id?: string | null
+    service_type?: 'standalone' | 'sub_service' | 'bundle'
   }
   Insert: {
     created_at?: string
@@ -50,6 +54,8 @@ export interface ServiceTypesTable {
     updated_at?: string
     pricing_model?: 'flat_rate' | 'hourly' | 'variable'
     base_price?: number | null
+    parent_service_id?: string | null
+    service_type?: 'standalone' | 'sub_service' | 'bundle'
   }
   Update: {
     created_at?: string
@@ -62,6 +68,8 @@ export interface ServiceTypesTable {
     updated_at?: string
     pricing_model?: 'flat_rate' | 'hourly' | 'variable'
     base_price?: number | null
+    parent_service_id?: string | null
+    service_type?: 'standalone' | 'sub_service' | 'bundle'
   }
   Relationships: []
 }
