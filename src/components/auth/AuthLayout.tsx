@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { LayoutDashboard } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
+import { applyThemeClass } from "@/lib/utils"
 
 interface AuthLayoutProps {
   children: React.ReactNode
@@ -25,15 +26,38 @@ export function AuthLayout({
   footerText,
   footerAction,
 }: AuthLayoutProps) {
-  const { theme, resolvedTheme } = useTheme()
+  const { theme, resolvedTheme, setTheme } = useTheme()
   const [isDarkTheme, setIsDarkTheme] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Load saved theme on initial mount
+  useEffect(() => {
+    setMounted(true)
+    // Try to load theme from localStorage
+    const savedTheme = localStorage.getItem('theme')
+    if (savedTheme) {
+      console.log("Auth layout: Loading saved theme:", savedTheme)
+      setTheme(savedTheme)
+    }
+  }, [setTheme])
 
   // Determine if dark mode is active
   useEffect(() => {
+    if (!mounted) return
+    
+    // Apply theme class for immediate effect
+    applyThemeClass(theme, resolvedTheme)
+    
     // Check if the HTML element has the dark class
-    const isDark = document.documentElement.classList.contains('dark');
-    setIsDarkTheme(isDark);
-  }, [theme, resolvedTheme])
+    const isDark = document.documentElement.classList.contains('dark')
+    setIsDarkTheme(isDark)
+    
+    console.log("Auth layout: Dark mode detection:", { 
+      htmlHasDarkClass: isDark, 
+      theme, 
+      resolvedTheme 
+    })
+  }, [theme, resolvedTheme, mounted])
 
   const { data: businessProfile } = useQuery({
     queryKey: ['business-profile'],
@@ -52,6 +76,11 @@ export function AuthLayout({
   const logoUrl = isDarkTheme 
     ? businessProfile?.dark_logo_url
     : businessProfile?.light_logo_url;
+
+  // Don't render anything until after mounting to prevent hydration mismatch
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="container relative min-h-screen flex items-center justify-center">

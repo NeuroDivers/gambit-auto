@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react"
 import { ChatUser } from "@/types/chat"
 import { ChatWindow } from "@/components/chat/ChatWindow"
@@ -7,10 +8,12 @@ import { supabase } from "@/integrations/supabase/client"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Search, Circle, CircleCheck, User } from "lucide-react"
+import { Search, Circle, CircleCheck, User, AlertCircle } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
 
 export default function Chat() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null)
@@ -19,11 +22,13 @@ export default function Chat() {
   const messageChannelRef = useRef<any>(null)
   const readStatusChannelRef = useRef<any>(null)
 
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isLoading, isError, error } = useQuery({
     queryKey: ["chat-users"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return []
+      
+      console.log("Fetching chat users for:", user.id)
       
       // First get all profiles except current user
       const { data: profiles, error } = await supabase
@@ -32,7 +37,12 @@ export default function Chat() {
         .neq('id', user.id) // Exclude current user
         .order("role_id")
       
-      if (error) throw error
+      if (error) {
+        console.error("Error fetching profiles for chat:", error)
+        throw error
+      }
+      
+      console.log("Fetched profiles for chat:", profiles?.length || 0)
 
       // Get unread message counts for each user
       const unreadCounts = await Promise.all(
@@ -66,6 +76,16 @@ export default function Chat() {
       return usersWithCounts
     },
   })
+
+  // Log error if any
+  useEffect(() => {
+    if (isError && error) {
+      console.error("Error fetching chat users:", error)
+      toast.error("Couldn't load chat users", {
+        description: "Please try refreshing the page"
+      })
+    }
+  }, [isError, error])
 
   useEffect(() => {
     const setupSubscription = async () => {
@@ -151,11 +171,16 @@ export default function Chat() {
     return acc;
   }, {} as Record<string, typeof users>);
 
+  const handleRefreshUsers = () => {
+    queryClient.invalidateQueries({ queryKey: ["chat-users"] })
+    toast.success("Refreshing user list...")
+  }
+
   return (
     <div className="flex h-[calc(100vh-4rem)] gap-4 p-4">
       <Card className="w-72 flex flex-col">
         <div className="p-3 border-b">
-          <div className="relative">
+          <div className="relative mb-2">
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search conversations..."
@@ -164,6 +189,15 @@ export default function Chat() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full"
+            onClick={handleRefreshUsers}
+            disabled={isLoading}
+          >
+            {isLoading ? "Loading..." : "Refresh Users"}
+          </Button>
         </div>
         <CardContent className="p-0 flex-1 overflow-hidden">
           <ScrollArea className="h-full py-2">
@@ -265,13 +299,29 @@ export default function Chat() {
 
                 {filteredUsers.length === 0 && (
                   <div className="flex flex-col items-center justify-center p-6 text-center">
-                    <User className="h-10 w-10 mb-2 text-muted-foreground" />
-                    <h3 className="font-medium">No conversations found</h3>
+                    <AlertCircle className="h-10 w-10 mb-2 text-muted-foreground" />
+                    <h3 className="font-medium">
+                      {isError ? "Failed to load users" : "No users found"}
+                    </h3>
                     <p className="text-sm text-muted-foreground mt-1">
                       {searchTerm 
                         ? "Try a different search term" 
-                        : "Start a conversation with someone"}
+                        : isError 
+                          ? "There was an error loading the user list"
+                          : users && users.length === 0 
+                            ? "No other users exist yet in the system" 
+                            : "Try refreshing the user list"}
                     </p>
+                    {(isError || users?.length === 0) && (
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRefreshUsers}
+                        className="mt-4"
+                      >
+                        Refresh Users
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
@@ -291,6 +341,12 @@ export default function Chat() {
               <p className="text-muted-foreground mt-2">
                 Choose a person from the sidebar to start or continue a conversation
               </p>
+              {users?.length === 0 && !isLoading && (
+                <div className="mt-4 p-4 bg-muted/50 rounded-lg text-sm">
+                  <p className="font-medium mb-1">No users available</p>
+                  <p>There are no other users in the system yet. Once other users sign up, they will appear here.</p>
+                </div>
+              )}
             </div>
           </Card>
         )}

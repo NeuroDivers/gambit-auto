@@ -19,11 +19,21 @@ import Chat from "@/pages/admin/Chat"
 import Notifications from "@/pages/admin/Notifications"
 import CommissionsPage from "@/components/commissions/CommissionsPage"
 import ServiceSkills from "@/pages/staff/ServiceSkills"
-import { Suspense } from "react"
+import { Suspense, useEffect } from "react"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
+import { applyThemeClass } from "@/lib/utils"
 
 const RoleBasedLayout = () => {
   const { currentUserRole, isLoading, error } = usePermissions();
+  
+  // Apply saved theme when dashboard is loaded
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme')
+    if (savedTheme) {
+      console.log("Dashboard: Loading saved theme:", savedTheme)
+      applyThemeClass(savedTheme, null)
+    }
+  }, [])
   
   if (isLoading) {
     return <LoadingScreen />;
