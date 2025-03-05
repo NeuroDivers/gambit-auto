@@ -5,6 +5,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CalendarDays } from "lucide-react";
 
 export default function StaffCalendar() {
   const navigate = useNavigate();
@@ -60,8 +62,21 @@ export default function StaffCalendar() {
       role={profile?.role}
       onLogout={handleLogout}
     >
-      <div className="p-6">
-        <h1 className="text-3xl font-bold mb-6">Calendar View</h1>
+      <div className="p-6 space-y-6">
+        <Card className="bg-gradient-to-r from-primary/10 to-white">
+          <CardHeader className="pb-1">
+            <CardTitle className="flex items-center gap-2 text-2xl">
+              <CalendarDays className="h-6 w-6 text-primary" />
+              Calendar View
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-4">
+              View your assigned work orders and appointments on the calendar below.
+            </p>
+          </CardContent>
+        </Card>
+        
         <WorkOrderCalendar />
       </div>
     </StaffLayout>

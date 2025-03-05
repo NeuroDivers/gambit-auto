@@ -28,8 +28,8 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
   const { serviceBays } = useServiceBays()
   const { blockedDates } = useBlockedDates()
   const DAYS_TO_LOAD = 14
-  const CELL_WIDTH = 80
-  const BAY_COLUMN_WIDTH = 100
+  const CELL_WIDTH = 60
+  const BAY_COLUMN_WIDTH = 80
 
   const isDateBlocked = useCallback((date: Date) => {
     return blockedDates?.some(blocked => 
@@ -123,7 +123,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
   const totalWidth = BAY_COLUMN_WIDTH + (days.length * CELL_WIDTH)
 
   return (
-    <div className={cn("p-4 bg-white rounded-lg", className)}>
+    <div className={cn("p-4 bg-white rounded-lg shadow-sm border border-gray-200", className)}>
       <CalendarControls
         currentMonth={currentMonth}
         onNavigateMonth={navigateMonth}
@@ -142,7 +142,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={stopDragging}
-        className="overflow-x-auto relative [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-gray-100"
+        className="overflow-x-auto relative [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-gray-100"
         style={{ 
           maxWidth: '100%',
           WebkitOverflowScrolling: 'touch'

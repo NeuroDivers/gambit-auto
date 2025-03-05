@@ -9,6 +9,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { CalendarClock, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "react-router-dom"
+import { Card, CardContent } from "@/components/ui/card"
 
 interface WorkOrderCalendarProps {
   clientView?: boolean;
@@ -75,31 +76,38 @@ export const WorkOrderCalendar = ({ clientView = false }: WorkOrderCalendarProps
   }, [queryClient])
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {!clientView && (
-        <div className="flex justify-end px-6">
-          <Button onClick={() => navigate("/work-orders/create")}>
+        <div className="flex justify-end">
+          <Button onClick={() => navigate("/work-orders/create")} className="bg-primary hover:bg-primary/90">
             <Plus className="h-4 w-4 mr-2" />
             New Work Order
           </Button>
         </div>
       )}
-      <div className="space-y-20">
+      
+      <div className="space-y-8">
         <MobileCalendarView
           currentDate={currentDate}
           workOrders={workOrders}
           onDateChange={(date) => console.log("Date changed:", date)}
         />
+        
         {!clientView && (
           <>
-            <Alert>
-              <CalendarClock className="h-4 w-4" />
+            <Alert className="border-l-4 border-l-amber-500">
+              <CalendarClock className="h-4 w-4 text-amber-500" />
               <AlertTitle>Unscheduled Work Orders</AlertTitle>
               <AlertDescription>
                 Work orders without a start time won't appear on the calendar. They will be listed in the section below.
               </AlertDescription>
             </Alert>
-            <WorkOrdersSection />
+            
+            <Card>
+              <CardContent className="p-0">
+                <WorkOrdersSection />
+              </CardContent>
+            </Card>
           </>
         )}
       </div>

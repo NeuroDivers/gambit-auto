@@ -7,6 +7,8 @@ import { startOfDay, isWithinInterval, parseISO } from "date-fns"
 import { useBlockedDates } from "../hooks/useBlockedDates"
 import { MonthPicker } from "@/components/work-orders/calendar/MonthPicker"
 import { toast } from "sonner"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CalendarClock } from "lucide-react"
 
 type MobileCalendarViewProps = {
   currentDate: Date
@@ -40,28 +42,36 @@ export function MobileCalendarView({ currentDate, workOrders, onDateChange }: Mo
   }
 
   return (
-    <div className="space-y-4">
-      <HorizontalCalendar 
-        onDateSelect={handleDateSelect}
-        className="border border-gray-200 bg-white shadow-sm rounded-lg"
-        workOrders={workOrders}
-      />
+    <Card className="border border-gray-200 shadow-sm">
+      <CardHeader className="pb-0">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <CalendarClock className="h-5 w-5 text-primary" />
+          Schedule Calendar
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <HorizontalCalendar 
+          onDateSelect={handleDateSelect}
+          className="border-none shadow-none p-0"
+          workOrders={workOrders}
+        />
 
-      <CreateWorkOrderDialog 
-        open={showWorkOrderDialog}
-        onOpenChange={setShowWorkOrderDialog}
-        defaultStartTime={selectedDate || undefined}
-      />
+        <CreateWorkOrderDialog 
+          open={showWorkOrderDialog}
+          onOpenChange={setShowWorkOrderDialog}
+          defaultStartTime={selectedDate || undefined}
+        />
 
-      <MonthPicker
-        currentDate={currentDate}
-        open={showMonthPicker}
-        onOpenChange={setShowMonthPicker}
-        onDateChange={(date) => {
-          onDateChange?.(date)
-          setShowMonthPicker(false)
-        }}
-      />
-    </div>
+        <MonthPicker
+          currentDate={currentDate}
+          open={showMonthPicker}
+          onOpenChange={setShowMonthPicker}
+          onDateChange={(date) => {
+            onDateChange?.(date)
+            setShowMonthPicker(false)
+          }}
+        />
+      </CardContent>
+    </Card>
   )
 }

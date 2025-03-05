@@ -31,7 +31,7 @@ export function CalendarContent({
           className="grid"
           style={{ gridTemplateColumns: `80px repeat(${days.length}, 60px)` }}
         >
-          <div className="p-2 text-gray-600 sticky left-0 bg-white z-10 border-b border-r border-gray-200 text-sm">
+          <div className="p-2 text-gray-600 sticky left-0 bg-white z-10 border-b border-r border-gray-200 text-sm font-medium">
             {bay.name}
           </div>
           {days.map((date, index) => {

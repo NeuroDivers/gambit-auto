@@ -1,6 +1,7 @@
 
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
+import { isToday } from "date-fns"
 
 type CalendarHeaderProps = {
   days: Date[]
@@ -14,17 +15,22 @@ export function CalendarHeader({ days, isDateBlocked }: CalendarHeaderProps) {
         Bay
       </div>
       {days.map((date) => {
-        const blocked = isDateBlocked(date)
+        const blocked = isDateBlocked(date);
+        const today = isToday(date);
+        
         return (
           <div 
             key={date.toISOString()}
             className={cn(
               "p-2 text-gray-600 font-medium text-center border-b border-r border-gray-200 text-sm",
-              blocked && "bg-red-50 cursor-not-allowed"
+              blocked && "bg-red-50 cursor-not-allowed",
+              today && "bg-primary/10"
             )}
           >
-            <div>{format(date, 'EEE')}</div>
-            <div>{format(date, 'd')}</div>
+            <div className="font-bold">{format(date, 'EEE')}</div>
+            <div className={cn(today && "text-primary font-semibold rounded-full w-6 h-6 flex items-center justify-center mx-auto")}>
+              {format(date, 'd')}
+            </div>
           </div>
         )
       })}
