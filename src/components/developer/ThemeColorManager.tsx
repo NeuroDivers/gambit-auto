@@ -297,19 +297,17 @@ export function ThemeColorManager() {
           align="start"
           side="right"
           sideOffset={10}
-          onClick={(e) => e.stopPropagation()}
         >
           <div 
             className="p-3"
             onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
           >
-            <div 
-              className="mb-3"
-              onMouseDown={(e) => e.preventDefault()}
-            >
+            <div className="mb-3">
               <HexColorPicker 
                 color={hexColor} 
-                onChange={onChange} 
+                onChange={onChange}
+                onMouseDown={(e) => e.stopPropagation()}
               />
             </div>
             <div className="flex flex-col gap-2">
