@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -138,8 +139,8 @@ export default function ProfileSettings() {
               disabled
             />
           </div>
-          <Button onClick={form.handleSubmit(onSubmit)} loading={loading}>
-            Update Profile
+          <Button onClick={form.handleSubmit(onSubmit)} disabled={loading}>
+            {loading ? "Updating..." : "Update Profile"}
           </Button>
         </CardContent>
       </Card>

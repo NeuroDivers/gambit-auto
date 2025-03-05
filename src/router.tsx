@@ -35,7 +35,7 @@ export const router = createBrowserRouter([
     path: "/p/:invoiceId",
     element: <PublicInvoiceView />
   },
-  protectedRoutes, // Changed from ...protectedRoutes to protectedRoutes
+  ...protectedRoutes, // Spread the protected routes array
   {
     path: "*",
     element: <NotFound />

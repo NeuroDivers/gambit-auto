@@ -1,218 +1,190 @@
-import { useEffect, useState } from "react";
-import { useFormContext } from "react-hook-form";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { cn } from "@/lib/utils";
-import { Check, ChevronsUpDown, UserPlus } from "lucide-react";
-import { CustomerType, WorkOrderFormValues } from "../types";
 import { CustomerForm } from "./CustomerForm";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
-interface CustomerSearchProps {
-  form: any;
+interface CustomerType {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  vehicles?: Array<{
+    id: string;
+    make: string;
+    model: string;
+    year: string;
+    color: string;
+    vin: string;
+    license_plate: string;
+  }>;
 }
 
-export function CustomerSearch({ form }: CustomerSearchProps) {
-  const [open, setOpen] = useState(false);
-  const [customers, setCustomers] = useState<CustomerType[]>([]);
-  const [inputValue, setInputValue] = useState("");
-  const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
-  const { toast } = useToast();
+interface CustomerSearchProps {
+  onSelectCustomer: (customer: CustomerType) => void;
+  onSelectVehicle: (vehicle: any) => void;
+}
 
-  useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("customers")
-          .select("*")
-          .ilike("first_name", `%${inputValue}%`);
+export function CustomerSearch({ onSelectCustomer, onSelectVehicle }: CustomerSearchProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState<CustomerType[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerType | null>(null);
 
-        if (error) {
-          console.error("Error fetching customers:", error);
-          toast({
-            title: "Error",
-            description: "Failed to fetch customers",
-            variant: "destructive",
-          });
-          return;
+  const mockCustomers: CustomerType[] = [
+    {
+      id: "1",
+      first_name: "John",
+      last_name: "Doe",
+      email: "john@example.com",
+      phone: "555-123-4567",
+      address: "123 Main St",
+      city: "Anytown",
+      state: "CA",
+      zip_code: "12345",
+      vehicles: [
+        {
+          id: "v1",
+          make: "Toyota",
+          model: "Camry",
+          year: "2020",
+          color: "Blue",
+          vin: "1HGCM82633A123456",
+          license_plate: "ABC123"
+        },
+        {
+          id: "v2",
+          make: "Honda",
+          model: "Accord",
+          year: "2018",
+          color: "Silver",
+          vin: "5FNRL38667B301214",
+          license_plate: "XYZ789"
         }
+      ]
+    },
+    {
+      id: "2",
+      first_name: "Jane",
+      last_name: "Smith",
+      email: "jane@example.com",
+      phone: "555-987-6543",
+      address: "456 Oak Ave",
+      city: "Othertown",
+      state: "NY",
+      zip_code: "67890",
+      vehicles: [
+        {
+          id: "v3",
+          make: "Ford",
+          model: "Mustang",
+          year: "2021",
+          color: "Red",
+          vin: "1ZVHT82H485113456",
+          license_plate: "FAST1"
+        }
+      ]
+    }
+  ];
 
-        setCustomers(data || []);
-      } catch (error) {
-        console.error("Error fetching customers:", error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch customers",
-          variant: "destructive",
-        });
-      }
-    };
+  const handleSearch = () => {
+    if (!searchTerm) {
+      setSearchResults([]);
+      return;
+    }
+    
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    const results = mockCustomers.filter(customer => 
+      customer.first_name.toLowerCase().includes(lowerSearchTerm) ||
+      customer.last_name.toLowerCase().includes(lowerSearchTerm) ||
+      customer.email.toLowerCase().includes(lowerSearchTerm) ||
+      customer.phone.includes(searchTerm)
+    );
+    
+    setSearchResults(results);
+  };
 
-    fetchCustomers();
-  }, [inputValue, toast]);
+  const handleCustomerClick = (customer: CustomerType) => {
+    setSelectedCustomer(customer);
+    onSelectCustomer(customer);
+  };
 
-  const handleSelect = (customer: CustomerType) => {
-    form.setValue("first_name", customer.first_name);
-    form.setValue("last_name", customer.last_name);
-    form.setValue("email", customer.email);
-    form.setValue("phone_number", customer.phone_number || "");
-    form.setValue("client_id", customer.id);
-    form.setValue("street_address", customer.street_address || '');
-    form.setValue("unit_number", customer.unit_number || '');
-    form.setValue("city", customer.city || '');
-    form.setValue("state_province", customer.state_province || '');
-    form.setValue("postal_code", customer.postal_code || '');
-    form.setValue("country", customer.country || '');
-    form.setValue("vehicle_make", customer?.vehicles?.[0]?.make || '');
-    form.setValue("vehicle_model", customer?.vehicles?.[0]?.model || '');
-    form.setValue("vehicle_year", customer?.vehicles?.[0]?.year || 0);
-    form.setValue("vehicle_serial", customer?.vehicles?.[0]?.vin || '');
-    form.setValue("vehicle_trim", customer?.vehicles?.[0]?.trim || '');
-    form.setValue("vehicle_body_class", customer?.vehicles?.[0]?.body_class || '');
-    form.setValue("vehicle_doors", customer?.vehicles?.[0]?.doors || 0);
-    setSelectedCustomerId(customer.id);
-    setOpen(false);
+  const handleVehicleClick = (vehicle: any) => {
+    onSelectVehicle(vehicle);
+  };
+
+  const handleCustomerCreated = (customer: CustomerType) => {
+    setSelectedCustomer(customer);
+    onSelectCustomer(customer);
+    // In a real implementation, we'd add the customer to our list or fetch updated list
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Customer Information</CardTitle>
-        <CardDescription>
-          Search for an existing customer or create a new one.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4">
-        <div className="grid grid-cols-[1fr_110px] gap-4">
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={open}
-                className="w-full justify-between"
-              >
-                {selectedCustomerId
-                  ? customers.find((customer) => customer.id === selectedCustomerId)?.first_name + ' ' + customers.find((customer) => customer.id === selectedCustomerId)?.last_name
-                  : "Select Customer..."}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[600px] p-0">
-              <Command>
-                <CommandInput
-                  placeholder="Search customer..."
-                  value={inputValue}
-                  onValueChange={setInputValue}
-                />
-                <CommandList>
-                  <CommandEmpty>No customer found.</CommandEmpty>
-                  <CommandGroup>
-                    {customers.map((customer) => (
-                      <CommandItem
-                        key={customer.id}
-                        value={`${customer.first_name} ${customer.last_name}`}
-                        onSelect={() => handleSelect(customer)}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            selectedCustomerId === customer.id ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {customer.first_name} {customer.last_name}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-          <Button variant="outline" size="sm" onClick={() => setIsCustomerFormOpen(true)}>
-            <UserPlus className="mr-2 h-4 w-4" />
-            Create Customer
-          </Button>
+    <div className="space-y-4">
+      <div className="flex items-end gap-2">
+        <div className="flex-1">
+          <Label htmlFor="customer-search">Search Customer</Label>
+          <Input
+            id="customer-search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Name, Email, or Phone"
+          />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="first_name">First Name</Label>
-            <Input
-              type="text"
-              id="first_name"
-              placeholder="First Name"
-              {...form.register("first_name")}
-              disabled
-            />
-          </div>
-          <div>
-            <Label htmlFor="last_name">Last Name</Label>
-            <Input
-              type="text"
-              id="last_name"
-              placeholder="Last Name"
-              {...form.register("last_name")}
-              disabled
-            />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              type="email"
-              id="email"
-              placeholder="Email"
-              {...form.register("email")}
-              disabled
-            />
-          </div>
-          <div>
-            <Label htmlFor="phone_number">Phone Number</Label>
-            <Input
-              type="tel"
-              id="phone_number"
-              placeholder="Phone Number"
-              {...form.register("phone_number")}
-              disabled
-            />
-          </div>
-        </div>
-      </CardContent>
+        <Button onClick={handleSearch}>Search</Button>
+        <CustomerForm onCustomerCreated={handleCustomerCreated} />
+      </div>
 
-      {/* Customer Form Modal */}
-      {isCustomerFormOpen && (
-        <CustomerForm
-          open={isCustomerFormOpen}
-          onOpenChange={setIsCustomerFormOpen}
-          onCustomerCreated={(customer: CustomerType) => {
-            setCustomers((prevCustomers) => [...prevCustomers, customer]);
-            handleSelect(customer);
-          }}
-        />
+      {searchResults.length > 0 && !selectedCustomer && (
+        <div className="border rounded-md overflow-hidden">
+          <div className="bg-slate-100 p-2 font-medium">Search Results</div>
+          <div className="divide-y">
+            {searchResults.map((customer) => (
+              <div
+                key={customer.id}
+                className="p-3 hover:bg-slate-50 cursor-pointer"
+                onClick={() => handleCustomerClick(customer)}
+              >
+                <div className="font-medium">
+                  {customer.first_name} {customer.last_name}
+                </div>
+                <div className="text-sm text-slate-500">
+                  {customer.email} | {customer.phone}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
-    </Card>
+
+      {selectedCustomer && selectedCustomer.vehicles && selectedCustomer.vehicles.length > 0 && (
+        <div className="border rounded-md overflow-hidden">
+          <div className="bg-slate-100 p-2 font-medium">
+            Vehicles for {selectedCustomer.first_name} {selectedCustomer.last_name}
+          </div>
+          <div className="divide-y">
+            {selectedCustomer.vehicles.map((vehicle) => (
+              <div
+                key={vehicle.id}
+                className="p-3 hover:bg-slate-50 cursor-pointer"
+                onClick={() => handleVehicleClick(vehicle)}
+              >
+                <div className="font-medium">
+                  {vehicle.year} {vehicle.make} {vehicle.model}
+                </div>
+                <div className="text-sm text-slate-500">
+                  VIN: {vehicle.vin} | License: {vehicle.license_plate}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

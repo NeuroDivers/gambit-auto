@@ -1,111 +1,131 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { PlusCircle } from "lucide-react";
 import { ServiceItem } from "./ServiceItem";
-import { ServiceItemType } from "@/types/service-item";
+import { ServiceItemType } from "@/components/shared/form-fields/service-selection/types";
+import { PackageSelect } from "./PackageSelect";
 
 interface ServiceListProps {
   services: ServiceItemType[];
-  onServicesChange: (services: ServiceItemType[]) => void;
+  onChange: (services: ServiceItemType[]) => void;
   disabled?: boolean;
   showCommission?: boolean;
   showAssignedStaff?: boolean;
 }
 
-export default function ServiceList({
+export function ServiceList({
   services,
-  onServicesChange,
+  onChange,
   disabled = false,
-  showCommission = false,
-  showAssignedStaff = false,
+  showCommission = true,
+  showAssignedStaff = true,
 }: ServiceListProps) {
-  const [editingService, setEditingService] = useState<string | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [showPackageSelect, setShowPackageSelect] = useState(false);
 
-  const handleAddNewService = () => {
+  const handleAddService = () => {
+    // This would typically open a service selection dialog/dropdown
+    // For now, we'll add a placeholder service
     const newService: ServiceItemType = {
       service_id: `temp-${Date.now()}`,
-      service_name: "",
+      service_name: "New Service",
+      description: "",
       quantity: 1,
       unit_price: 0,
       commission_rate: 0,
-      commission_type: null,
-      description: ""
+      commission_type: "percentage",
+      assigned_profile_id: null,
+      assigned_profiles: [],
     };
-    onServicesChange([...services, newService]);
-    setEditingService(newService.service_id);
+
+    onChange([...services, newService]);
+    setEditingIndex(services.length);
   };
 
-  const handleRemoveService = (id: string) => {
-    onServicesChange(services.filter((service) => service.service_id !== id));
+  const handleEditService = (index: number) => {
+    setEditingIndex(index);
   };
 
-  const handleUpdateService = (updatedService: ServiceItemType) => {
-    const updatedServices = services.map((service) =>
-      service.service_id === updatedService.service_id ? updatedService : service
-    );
-    onServicesChange(updatedServices);
-    setEditingService(null);
+  const handleUpdateService = (updatedService: ServiceItemType, index: number) => {
+    const updatedServices = [...services];
+    updatedServices[index] = updatedService;
+    onChange(updatedServices);
+    setEditingIndex(null);
   };
 
-  const convertToWorkOrderItemType = (service: any): ServiceItemType => {
-    return {
-      ...service,
-      description: service.description || ""
-    };
+  const handleRemoveService = (index: number) => {
+    const updatedServices = services.filter((_, i) => i !== index);
+    onChange(updatedServices);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingIndex(null);
+  };
+
+  const handleAddPackage = (packageServices: ServiceItemType[]) => {
+    onChange([...services, ...packageServices]);
+    setShowPackageSelect(false);
   };
 
   return (
-    <CardContent className="p-0 space-y-4">
+    <div className="space-y-4">
       {services.length === 0 ? (
-        <div className="text-center p-6">
-          <p className="text-muted-foreground mb-2">No services added yet</p>
+        <div className="text-center p-8 bg-muted/20 rounded-lg">
+          <p className="text-muted-foreground">No services selected</p>
           <Button
-            onClick={handleAddNewService}
-            disabled={disabled}
             variant="outline"
-            size="sm"
+            className="mt-4"
+            onClick={handleAddService}
+            disabled={disabled}
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <PlusCircle className="mr-2 h-4 w-4" />
             Add Service
           </Button>
         </div>
       ) : (
         <>
-          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-            {services.map((service, index) => (
-              <div key={service.service_id}>
-                {index > 0 && <Separator className="my-4" />}
-                <ServiceItem
-                  service={convertToWorkOrderItemType(service)}
-                  isEditing={editingService === service.service_id}
-                  onEdit={() => setEditingService(service.service_id)}
-                  onRemove={() => handleRemoveService(service.service_id)}
-                  onUpdate={handleUpdateService}
-                  onCancelEdit={() => setEditingService(null)}
-                  disabled={disabled}
-                  showCommission={showCommission}
-                  showAssignedStaff={showAssignedStaff}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="pt-2">
+          {services.map((service, index) => (
+            <ServiceItem
+              key={`${service.service_id}-${index}`}
+              service={service}
+              isEditing={editingIndex === index}
+              onEdit={() => handleEditService(index)}
+              onRemove={() => handleRemoveService(index)}
+              onUpdate={(updatedService) => handleUpdateService(updatedService, index)}
+              onCancelEdit={handleCancelEdit}
+              disabled={disabled || editingIndex !== null}
+              showCommission={showCommission}
+              showAssignedStaff={showAssignedStaff}
+            />
+          ))}
+
+          <div className="flex justify-between mt-4">
             <Button
-              onClick={handleAddNewService}
-              disabled={disabled}
               variant="outline"
-              size="sm"
-              className="w-full bg-muted/30"
+              onClick={handleAddService}
+              disabled={disabled || editingIndex !== null}
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Another Service
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add Service
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowPackageSelect(true)}
+              disabled={disabled || editingIndex !== null}
+            >
+              Add Package
             </Button>
           </div>
         </>
       )}
-    </CardContent>
+
+      {showPackageSelect && (
+        <PackageSelect
+          onSelect={handleAddPackage}
+          onCancel={() => setShowPackageSelect(false)}
+        />
+      )}
+    </div>
   );
 }

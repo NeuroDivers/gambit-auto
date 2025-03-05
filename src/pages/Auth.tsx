@@ -1,3 +1,4 @@
+
 import { useAuthForm } from "@/hooks/useAuthForm"
 import { AuthLayout } from "@/components/auth/AuthLayout"
 import { AuthContent } from "@/components/auth/AuthContent"
