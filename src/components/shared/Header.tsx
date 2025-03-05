@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -29,7 +28,6 @@ interface HeaderProps {
   children?: React.ReactNode;
 }
 
-// Add interfaces for type safety
 interface ChatMessage {
   id: string;
   message: string;
@@ -64,7 +62,6 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Fetch both notifications and unread chat messages
       const [notificationsResponse, chatMessagesResponse] = await Promise.all([
         supabase
           .from("notifications")
@@ -94,7 +91,6 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
 
       const notifications = (notificationsResponse.data || []) as Notification[]
       
-      // Transform chat messages to ensure they match the expected type
       const typedChatMessages = (chatMessagesResponse.data || []).map(msg => ({
         id: msg.id,
         message: msg.message,
@@ -108,7 +104,6 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
         }
       })) as ChatMessage[]
 
-      // Convert chat messages to notification format
       const chatNotifications: Notification[] = typedChatMessages.map(msg => ({
         id: msg.id,
         title: "New Message",
@@ -119,7 +114,6 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
         sender_id: msg.sender_id
       }))
 
-      // Combine and sort all notifications
       const allNotifications = [...notifications, ...chatNotifications]
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 5)
@@ -131,14 +125,11 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
     }
   }
 
-  // Initial fetch of notifications
   useEffect(() => {
     fetchNotifications()
   }, [])
 
-  // Set up real-time subscriptions for both notifications and chat messages
   useEffect(() => {
-    // Subscribe to new notifications
     const notificationsChannel = supabase
       .channel("notifications-header")
       .on(
@@ -154,7 +145,6 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
       )
       .subscribe()
 
-    // Subscribe to chat message changes
     const chatChannel = supabase
       .channel("chat-messages-header")
       .on(
@@ -178,9 +168,7 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
 
   const markAsRead = async (notification: Notification) => {
     try {
-      // Check notification type
       if (notification.type === 'chat_message') {
-        // Mark chat message as read
         const { error } = await supabase
           .from("chat_messages")
           .update({ read: true })
@@ -189,7 +177,6 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
         if (error) throw error
 
       } else {
-        // Mark regular notification as read
         const { error } = await supabase
           .from("notifications")
           .update({ read: true })
@@ -198,14 +185,12 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
         if (error) throw error
       }
 
-      // Update local state immediately
       setNotifications(prevNotifications => 
         prevNotifications.map(n => 
           n.id === notification.id ? { ...n, read: true } : n
         )
       )
       
-      // Update unread count
       setUnreadCount(prev => Math.max(0, prev - 1))
 
     } catch (error) {
@@ -217,7 +202,6 @@ export function Header({ firstName, role, onLogout, className, children }: Heade
     markAsRead(notification)
     
     if (notification.type === 'chat_message' && notification.sender_id) {
-      // Navigate to chat with the sender
       window.location.href = `/chat?user=${notification.sender_id}`;
     }
   }
