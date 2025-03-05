@@ -3,11 +3,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
 import { PageTitle } from "@/components/shared/PageTitle"
 import { VinScanner } from "@/components/shared/VinScanner"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ThemeColorManager } from "@/components/developer/ThemeColorManager"
+import { useTheme } from "next-themes"
+import { applyThemeClass } from "@/lib/utils"
 
 export default function DeveloperSettings() {
   const [scannedVin, setScannedVin] = useState<string>("")
+  const { theme, resolvedTheme } = useTheme()
+  
+  // Ensure theme is applied on component mount
+  useEffect(() => {
+    applyThemeClass(theme, resolvedTheme)
+  }, [theme, resolvedTheme])
 
   return (
     <div className="container py-8 space-y-6">

@@ -27,9 +27,36 @@ export const getSystemTheme = (): "dark" | "light" => {
 }
 
 export const applyThemeClass = (theme: string | undefined, resolvedTheme: string | undefined): void => {
-  if (theme === 'dark' || (theme === 'system' && resolvedTheme === 'dark')) {
+  // First try to use the explicitly set theme
+  if (theme === 'dark') {
+    document.documentElement.classList.add('dark');
+    return;
+  } else if (theme === 'light') {
+    document.documentElement.classList.remove('dark');
+    return;
+  }
+  
+  // If theme is system or undefined, use the resolved theme
+  if (resolvedTheme === 'dark') {
     document.documentElement.classList.add('dark');
   } else {
     document.documentElement.classList.remove('dark');
+  }
+  
+  // If no theme info is available, check localStorage directly
+  if (!theme && !resolvedTheme) {
+    const storedTheme = localStorage.getItem('theme');
+    if (storedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else if (storedTheme === 'light') {
+      document.documentElement.classList.remove('dark');
+    } else {
+      // Fall back to system preference
+      if (getSystemTheme() === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
   }
 }

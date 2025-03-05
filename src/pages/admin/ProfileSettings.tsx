@@ -22,7 +22,7 @@ export default function ProfileSettings() {
     }
   }, [theme, setTheme]);
 
-  // Force theme application immediately
+  // Force theme application immediately and store in localStorage
   useEffect(() => {
     if (!mounted) return;
     
@@ -32,6 +32,9 @@ export default function ProfileSettings() {
     } else {
       document.documentElement.classList.remove('dark');
     }
+    
+    // Persist theme preference in localStorage
+    localStorage.setItem('theme', theme || 'system');
     
     // Log theme state for debugging
     console.log({
@@ -43,25 +46,22 @@ export default function ProfileSettings() {
     
   }, [theme, resolvedTheme, mounted]);
 
-  // Handle theme change
+  // Use a separate function to handle theme changes to ensure immediate application
   const handleThemeChange = (value: string) => {
-    setTheme(value);
-    toast.success(`Theme changed to ${value === 'system' ? 'system default' : value} mode`);
-
     // Apply dark class immediately to avoid flicker
     if (value === 'dark' || (value === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-
-    // Log theme state for debugging
-    console.log({
-      selectedTheme: value,
-      resolvedTheme,
-      currentSystemTheme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
-      documentClassList: document.documentElement.classList.contains('dark') ? 'has dark class' : 'no dark class'
-    });
+    
+    // Update theme in next-themes
+    setTheme(value);
+    
+    // Store in localStorage for persistence
+    localStorage.setItem('theme', value);
+    
+    toast.success(`Theme changed to ${value === 'system' ? 'system default' : value} mode`);
   };
 
   // Don't render anything until after mounting to prevent hydration mismatch
