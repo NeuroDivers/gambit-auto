@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { CustomerInfoFields } from "./CustomerInfoFields"
 
-type InvoiceFormFieldsProps = {
+export type InvoiceFormFieldsProps = {
   form: UseFormReturn<InvoiceFormValues> 
   notes: string
   setNotes: (value: string) => void

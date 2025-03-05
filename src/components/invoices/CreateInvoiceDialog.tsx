@@ -58,6 +58,15 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
     businessTaxes
   })
 
+  // Function to handle customer selection
+  const handleCustomerSelect = (customerId: string) => {
+    // This is just a placeholder function, actual implementation would depend on your app
+    console.log('Customer selected:', customerId);
+    if (setters.setCustomerId) {
+      setters.setCustomerId(customerId);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-full h-screen flex flex-col animate-slide-in-right data-[state=closed]:animate-slide-out-right">
@@ -78,7 +87,7 @@ export function CreateInvoiceDialog({ open, onOpenChange }: CreateInvoiceDialogP
               setInvoiceItems={setters.setInvoiceItems}
               notes={formData.notes}
               setNotes={setters.setNotes}
-              onCustomerSelect={formData.onCustomerSelect}
+              onCustomerSelect={handleCustomerSelect}
             />
             <Button type="submit" className="w-full">
               Create Invoice
