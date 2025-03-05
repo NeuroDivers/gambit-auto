@@ -49,6 +49,20 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
     }
   }, [businessProfile, form])
 
+  const extractFilePathFromUrl = (url: string | null): string | null => {
+    if (!url) return null;
+    
+    // Parse the URL to extract just the filename
+    try {
+      const urlObj = new URL(url);
+      const pathParts = urlObj.pathname.split('/');
+      return pathParts[pathParts.length - 1]; // Get the last part which should be the filename
+    } catch (e) {
+      console.error("Error parsing URL:", e);
+      return null;
+    }
+  }
+
   const handleFileUpload = (type: 'light' | 'dark') => async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -103,9 +117,7 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
 
   async function onSubmit(values: BusinessFormValues) {
     try {
-      // We don't need to handle old logo deletion here anymore
-      // The upsert: true parameter in the upload call will overwrite files with the same name
-
+      // Using upsert in the file upload logic, so we don't need to manually delete old files here
       const { error } = businessProfile 
         ? await supabase
             .from("business_profile")

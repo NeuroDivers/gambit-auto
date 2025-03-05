@@ -30,16 +30,20 @@ export const applyThemeClass = (theme: string | undefined, resolvedTheme: string
   // First try to use the explicitly set theme
   if (theme === 'dark') {
     document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
     return;
   } else if (theme === 'light') {
     document.documentElement.classList.remove('dark');
+    localStorage.setItem('theme', 'light');
     return;
+  } else if (theme === 'system') {
+    localStorage.setItem('theme', 'system');
   }
   
   // If theme is system or undefined, use the resolved theme
   if (resolvedTheme === 'dark') {
     document.documentElement.classList.add('dark');
-  } else {
+  } else if (resolvedTheme === 'light') {
     document.documentElement.classList.remove('dark');
   }
   
