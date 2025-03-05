@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -172,43 +171,37 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
             </Select>
           </div>
           
-          {/* Customer Information */}
-          {selectedClient && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="customer_first_name">First Name</Label>
-                <Input
-                  id="customer_first_name"
-                  {...form.register("customer_first_name")}
-                  readOnly
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="customer_last_name">Last Name</Label>
-                <Input
-                  id="customer_last_name"
-                  {...form.register("customer_last_name")}
-                  readOnly
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="customer_email">Email</Label>
-                <Input
-                  id="customer_email"
-                  {...form.register("customer_email")}
-                  readOnly
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="customer_phone">Phone</Label>
-                <Input
-                  id="customer_phone"
-                  {...form.register("customer_phone")}
-                  readOnly
-                />
-              </div>
+          {/* Customer Information - Always visible now */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="customer_first_name">First Name</Label>
+              <Input
+                id="customer_first_name"
+                {...form.register("customer_first_name")}
+              />
             </div>
-          )}
+            <div className="space-y-2">
+              <Label htmlFor="customer_last_name">Last Name</Label>
+              <Input
+                id="customer_last_name"
+                {...form.register("customer_last_name")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="customer_email">Email</Label>
+              <Input
+                id="customer_email"
+                {...form.register("customer_email")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="customer_phone">Phone</Label>
+              <Input
+                id="customer_phone"
+                {...form.register("customer_phone")}
+              />
+            </div>
+          </div>
           
           {/* Vehicle Selection */}
           <div className="space-y-2">
@@ -241,43 +234,37 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
             </Select>
           </div>
           
-          {/* Vehicle Information */}
-          {form.watch("vehicle_id") && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="vehicle_make">Make</Label>
-                <Input
-                  id="vehicle_make"
-                  {...form.register("vehicle_make")}
-                  readOnly
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="vehicle_model">Model</Label>
-                <Input
-                  id="vehicle_model"
-                  {...form.register("vehicle_model")}
-                  readOnly
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="vehicle_year">Year</Label>
-                <Input
-                  id="vehicle_year"
-                  {...form.register("vehicle_year")}
-                  readOnly
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="vehicle_vin">VIN</Label>
-                <Input
-                  id="vehicle_vin"
-                  {...form.register("vehicle_vin")}
-                  readOnly
-                />
-              </div>
+          {/* Vehicle Information - Always visible now */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="vehicle_make">Make</Label>
+              <Input
+                id="vehicle_make"
+                {...form.register("vehicle_make")}
+              />
             </div>
-          )}
+            <div className="space-y-2">
+              <Label htmlFor="vehicle_model">Model</Label>
+              <Input
+                id="vehicle_model"
+                {...form.register("vehicle_model")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="vehicle_year">Year</Label>
+              <Input
+                id="vehicle_year"
+                {...form.register("vehicle_year")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="vehicle_vin">VIN</Label>
+              <Input
+                id="vehicle_vin"
+                {...form.register("vehicle_vin")}
+              />
+            </div>
+          </div>
           
           {/* Services Selection */}
           <div className="space-y-4">
