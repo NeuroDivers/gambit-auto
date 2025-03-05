@@ -22,7 +22,6 @@ export function EstimateRequestsList() {
         // First, check database tables and columns
         const { data: tableInfo, error: tableError } = await supabase
           .rpc('get_table_info')
-          .eq('table_name', 'estimate_requests')
         
         if (tableError) {
           console.error("Error checking table info:", tableError)
@@ -70,7 +69,20 @@ export function EstimateRequestsList() {
           }
         }
         
-        // Now fetch the actual data with relations
+        // Now fetch the actual data with relations - using a simplified query first to confirm we can get data
+        const { data: basicEstimateRequests, error: basicError } = await supabase
+          .from("estimate_requests")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(30)
+          
+        if (basicError) {
+          console.error("Error fetching basic estimate requests:", basicError)
+        } else {
+          console.log("Basic estimate requests data:", basicEstimateRequests)
+        }
+        
+        // Try the query with relations
         const { data: estimateRequests, error } = await supabase
           .from("estimate_requests")
           .select(`
@@ -79,17 +91,27 @@ export function EstimateRequestsList() {
             status, 
             description,
             customer_id,
-            customers!estimate_requests_customer_id_fkey(first_name, last_name, email)
+            vehicle_make,
+            vehicle_model,
+            vehicle_year,
+            customers(first_name, last_name, email)
           `)
           .order("created_at", { ascending: false })
           .limit(30)
         
         if (error) {
-          console.error("Error fetching estimate requests:", error)
-          toast.error("Failed to load estimate requests. Please try again.")
-          setEstimateRequests([])
+          console.error("Error fetching estimate requests with relations:", error)
+          
+          // Fallback to basic data without relations if that's the issue
+          if (basicEstimateRequests) {
+            console.log("Using basic estimate requests data as fallback")
+            setEstimateRequests(basicEstimateRequests)
+          } else {
+            toast.error("Failed to load estimate requests. Please try again.")
+            setEstimateRequests([])
+          }
         } else {
-          console.log("Successfully fetched estimate requests:", estimateRequests)
+          console.log("Successfully fetched estimate requests with relations:", estimateRequests)
           setEstimateRequests(estimateRequests || [])
         }
       } catch (error) {
@@ -162,7 +184,7 @@ export function EstimateRequestsList() {
                 <TableHead>Request ID</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead>Service Type</TableHead>
+                <TableHead>Vehicle</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -176,13 +198,17 @@ export function EstimateRequestsList() {
                   <TableCell>
                     {request.customers 
                       ? `${request.customers.first_name} ${request.customers.last_name}`
-                      : "Unknown Customer"}
+                      : request.customer_id 
+                        ? "Customer ID: " + request.customer_id.substring(0, 8)
+                        : "Unknown Customer"}
                   </TableCell>
                   <TableCell>
                     {new Date(request.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    {request.description ? "Custom Request" : "General"}
+                    {request.vehicle_make && request.vehicle_model 
+                      ? `${request.vehicle_make} ${request.vehicle_model} ${request.vehicle_year || ''}`
+                      : "Not specified"}
                   </TableCell>
                   <TableCell>
                     <Badge 

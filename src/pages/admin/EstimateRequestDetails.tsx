@@ -8,8 +8,6 @@ import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/components/ui/use-toast"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
 import { CustomerInfo } from "@/components/estimates/sections/CustomerInfo"
-import { VehicleInfo } from "@/components/estimates/sections/VehicleInfo"
-import { EstimateNotes } from "@/components/estimates/sections/EstimateNotes"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { EstimateStatus } from "@/components/estimates/sections/EstimateStatus"
 import { toast } from "sonner"
@@ -20,6 +18,7 @@ export default function EstimateRequestDetails() {
   const { toast: useToastApi } = useToast()
   const [estimateRequest, setEstimateRequest] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [debug, setDebug] = useState(null)
 
   useEffect(() => {
     document.title = "Estimate Request | Auto Detailing CRM"
@@ -48,23 +47,45 @@ export default function EstimateRequestDetails() {
           return
         }
         
+        // Try a basic query first to make sure we can get the data
+        const { data: basicData, error: basicError } = await supabase
+          .from("estimate_requests")
+          .select("*")
+          .eq("id", id)
+          .single()
+          
+        if (basicError) {
+          console.error("Error fetching basic estimate request data:", basicError)
+        } else {
+          console.log("Basic estimate request data:", basicData)
+          setDebug(basicData)
+        }
+        
+        // Now try with the customer relation
         const { data, error } = await supabase
           .from("estimate_requests")
           .select(`
             *,
-            customers!estimate_requests_customer_id_fkey(*)
+            customers(*)
           `)
           .eq("id", id)
           .single()
           
         if (error) {
-          console.error("Error fetching estimate request:", error)
-          toast.error("Could not load estimate request data")
-          throw error
+          console.error("Error fetching estimate request with relations:", error)
+          
+          // Fall back to basic data if relations failed
+          if (basicData) {
+            console.log("Using basic estimate request data as fallback")
+            setEstimateRequest(basicData)
+          } else {
+            toast.error("Could not load estimate request data")
+            throw error
+          }
+        } else {
+          console.log("Successfully retrieved estimate request data:", data)
+          setEstimateRequest(data)
         }
-        
-        console.log("Successfully retrieved estimate request data:", data)
-        setEstimateRequest(data)
       } catch (error) {
         console.error("Error fetching estimate request:", error)
         toast.error("Failed to load estimate request")
@@ -137,8 +158,38 @@ export default function EstimateRequestDetails() {
         </Button>
       </div>
       
+      {debug && (
+        <Card className="bg-yellow-50 border-yellow-200">
+          <CardHeader>
+            <CardTitle className="text-yellow-800">Debug Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <pre className="text-xs overflow-auto max-h-60">{JSON.stringify(debug, null, 2)}</pre>
+          </CardContent>
+        </Card>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <CustomerInfo customer={estimateRequest.customers} />
+        {estimateRequest.customers ? (
+          <CustomerInfo customer={estimateRequest.customers} />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Customer Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div>
+                <p className="font-medium">Customer ID:</p>
+                <p>{estimateRequest.customer_id}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  Full customer details not available
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         <Card>
           <CardHeader>
             <CardTitle>Vehicle Information</CardTitle>
@@ -175,6 +226,12 @@ export default function EstimateRequestDetails() {
             <div>
               <p className="font-medium">Description:</p>
               <p>{estimateRequest.description}</p>
+            </div>
+          )}
+          {estimateRequest.service_details && Object.keys(estimateRequest.service_details).length > 0 && (
+            <div>
+              <p className="font-medium">Service Details:</p>
+              <pre className="text-xs mt-2 bg-gray-50 p-2 rounded">{JSON.stringify(estimateRequest.service_details, null, 2)}</pre>
             </div>
           )}
         </CardContent>

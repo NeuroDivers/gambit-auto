@@ -2807,6 +2807,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_table_info: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          table_name: string
+          column_name: string
+          data_type: string
+          table_exists: boolean
+          row_count: number
+        }[]
+      }
       has_permission: {
         Args: {
           user_id: string
