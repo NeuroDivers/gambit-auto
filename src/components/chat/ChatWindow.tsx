@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react"
 import { ChatMessage, ChatUser } from "@/types/chat"
 import { Card } from "@/components/ui/card"
@@ -31,16 +30,19 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   useEffect(() => {
     // Set the active status when the component mounts
     isActiveConversation.current = true
+    console.log("Chat window mounted, setting active conversation to true")
     
     // Clean up when component unmounts
     return () => {
       isActiveConversation.current = false
+      console.log("Chat window unmounted, setting active conversation to false")
     }
   }, [])
 
   // Make sure to update active status when recipient changes
   useEffect(() => {
     isActiveConversation.current = true
+    console.log("Recipient changed, setting active conversation to true for:", recipientId)
   }, [recipientId])
 
   const scrollToBottom = (immediate = false) => {
@@ -227,6 +229,8 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         console.log("Chat subscription status:", status)
       })
 
+    // Setup typing indicator channel
+    // Use a standardized channel name format that's the same for both participants
     const channelName = `typing_indicator_${[currentUserId, recipientId].sort().join('_')}`
     console.log(`Setting up typing indicator channel: ${channelName}`)
     
@@ -238,6 +242,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
           console.log("Setting typing indicator to true")
           setIsTyping(true)
           
+          // Auto-clear typing indicator after 3 seconds if no new typing events
           setTimeout(() => {
             console.log("Auto-clearing typing indicator")
             setIsTyping(false)
@@ -260,6 +265,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     }
   }, [recipientId, currentUserId, recipient?.first_name, toast])
 
+  // Ensure scrolling to bottom when new messages come in
   useEffect(() => {
     if (messages.length > 0) {
       scrollToBottom()
@@ -308,6 +314,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       clearTimeout(typingTimeout)
     }
 
+    // Send typing indicator using broadcast
     typingChannelRef.current.broadcast({
       event: 'typing',
       payload: {

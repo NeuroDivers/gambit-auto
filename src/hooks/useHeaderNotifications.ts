@@ -38,6 +38,7 @@ export interface Notification {
 
 export function useHeaderNotifications() {
   const [unreadCount, setUnreadCount] = useState(0);
+  const [totalUnreadCount, setTotalUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -69,6 +70,21 @@ export function useHeaderNotifications() {
 
       setNotifications(allNotifications);
       setUnreadCount(allNotifications.filter(n => !n.read).length);
+      
+      // Get total counts for both types
+      const { count: totalNotificationCount } = await supabase
+        .from("notifications")
+        .select("*", { count: 'exact', head: true })
+        .eq("profile_id", user.id)
+        .eq("read", false);
+      
+      const { count: totalChatCount } = await supabase
+        .from("chat_messages")
+        .select("*", { count: 'exact', head: true })
+        .eq("recipient_id", user.id)
+        .eq("read", false);
+      
+      setTotalUnreadCount((totalNotificationCount || 0) + (totalChatCount || 0));
       setIsLoading(false);
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -97,6 +113,7 @@ export function useHeaderNotifications() {
       );
       
       setUnreadCount(prev => Math.max(0, prev - 1));
+      setTotalUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
       console.error("Error marking as read:", error);
     }
@@ -113,6 +130,7 @@ export function useHeaderNotifications() {
 
   return {
     unreadCount,
+    totalUnreadCount,
     notifications,
     isLoading,
     handleNotificationClick,

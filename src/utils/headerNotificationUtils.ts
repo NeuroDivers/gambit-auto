@@ -65,7 +65,7 @@ export const markNotificationAsRead = async (notification: Notification) => {
     if (notification.type === 'chat_message') {
       return await supabase
         .from("chat_messages")
-        .update({ read: true })
+        .update({ read: true, read_at: new Date().toISOString() })
         .eq("id", notification.id);
     } else {
       return await supabase

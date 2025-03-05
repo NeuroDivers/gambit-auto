@@ -18,7 +18,7 @@ interface NotificationDropdownProps {
 }
 
 export function NotificationDropdown({ className }: NotificationDropdownProps) {
-  const { unreadCount, notifications, handleNotificationClick } = useHeaderNotifications();
+  const { unreadCount, totalUnreadCount, notifications, handleNotificationClick } = useHeaderNotifications();
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
 
   return (
@@ -30,9 +30,9 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
           className="relative"
         >
           <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
+          {totalUnreadCount > 0 && (
             <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-xs text-white">
-              {unreadCount}
+              {totalUnreadCount}
             </span>
           )}
         </Button>
