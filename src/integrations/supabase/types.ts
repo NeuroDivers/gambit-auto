@@ -2831,7 +2831,7 @@ export type Database = {
           }
         | {
             Args: {
-              table_name: string
+              p_table_name: string
             }
             Returns: Json
           }
