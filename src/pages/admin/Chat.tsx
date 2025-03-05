@@ -39,7 +39,7 @@ export default function Chat() {
       
       const { data: profiles, error } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name, email, role:role_id(name, nicename), avatar_url, last_seen_at")
+        .select("id, first_name, last_name, email, role:role_id(id, name, nicename), avatar_url, last_seen_at")
         .neq('id', user.id)
         .order("role_id")
       

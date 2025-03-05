@@ -11,6 +11,7 @@ export interface ChatMessage {
 }
 
 export interface ChatRole {
+  id: string
   name: string
   nicename: string
 }
