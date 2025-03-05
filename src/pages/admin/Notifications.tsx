@@ -1,37 +1,10 @@
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNotificationSubscription } from "@/hooks/useNotificationSubscription";
-
-// Properly define interfaces for notifications and chat messages
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  created_at: string;
-  read: boolean;
-  type?: string;
-  sender_id?: string;
-}
-
-// Define a proper interface for sender profiles to fix the TypeScript errors
-interface SenderProfile {
-  first_name: string | null;
-  last_name: string | null;
-  email: string | null;
-}
-
-// Interface for chat messages with properly defined profiles
-interface ChatMessage {
-  id: string;
-  message: string;
-  created_at: string;
-  sender_id: string;
-  read: boolean;
-  profiles: SenderProfile;
-}
+import { Notification, SenderProfile } from "@/hooks/useHeaderNotifications";
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -92,7 +65,6 @@ const Notifications = () => {
 
     // Transform chat messages to the correct type structure with proper typing
     const typedChatMessages = (chatMessagesResponse.data || []).map(msg => {
-      // The profiles property is an object, not an array
       // Convert to unknown first to satisfy TypeScript
       const profileData = typeof msg.profiles === 'object' ? msg.profiles as unknown as SenderProfile : null;
       
@@ -107,7 +79,7 @@ const Notifications = () => {
           last_name: profileData?.last_name || null,
           email: profileData?.email || null
         }
-      } as ChatMessage;
+      };
     });
 
     // Format chat messages as notifications
