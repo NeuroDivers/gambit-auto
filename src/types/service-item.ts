@@ -6,12 +6,18 @@ export type ServiceItemType = {
   quantity: number
   unit_price: number
   commission_rate: number
-  commission_type: 'percentage' | 'fixed' | null
+  commission_type: 'percentage' | 'flat' | null
   is_parent?: boolean
   sub_services?: ServiceItemType[]
   parent_id?: string | null
   assigned_profile_id?: string | null
   package_id?: string | null
+  // Support for multi-staff assignments
+  assigned_profiles?: Array<{
+    profile_id: string,
+    commission_rate: number,
+    commission_type: 'percentage' | 'flat' | null
+  }>
 }
 
 export type ServiceFormData = {

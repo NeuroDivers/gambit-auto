@@ -12,18 +12,24 @@ export interface ServiceItemType {
   parent_id?: string | null;
   assigned_profile_id?: string | null;
   package_id?: string | null;
+  // Support for multi-staff assignments
+  assigned_profiles?: Array<{
+    profile_id: string,
+    commission_rate: number,
+    commission_type: 'percentage' | 'flat' | null
+  }>;
 }
 
 export interface ServiceDropdownProps {
+  service: ServiceItemType;
+  onEdit: (service: ServiceItemType) => void;
+  onRemove: (serviceId: string) => void;
   selectedServiceName?: string;
   servicesByType?: Record<string, any[]>;
   open?: boolean;
   setOpen?: (open: boolean) => void;
   handleServiceSelect?: (serviceId: string) => void;
   serviceId?: string;
-  service?: ServiceItemType;
-  onEdit?: (service: ServiceItemType) => void;
-  onRemove?: (serviceId: string) => void;
 }
 
 export interface ServiceItemProps {

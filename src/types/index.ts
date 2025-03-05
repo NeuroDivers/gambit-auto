@@ -30,9 +30,14 @@ export type WorkOrder = {
   assigned_profile_id?: string | null
   client_id?: string
   vehicle_id?: string | null
+  // Add service items field for work orders
   service_items?: any[]
   service_bays?: {
     id: string
     name: string
   }
+  // Added fields for vehicle details
+  vehicle_body_class?: string
+  vehicle_doors?: number
+  vehicle_trim?: string
 }

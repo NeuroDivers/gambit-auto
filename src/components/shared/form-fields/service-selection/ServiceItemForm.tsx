@@ -8,6 +8,9 @@ import { ServiceItemFormProps, ServiceItemType, ServicesByType } from "./types";
 import { ServiceDropdown } from "./ServiceDropdown";
 import { ServiceDescription } from "./ServiceDescription";
 import { CommissionRateFields } from "../CommissionRateFields";
+import { MultiStaffAssignment } from "../MultiStaffAssignment";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export function ServiceItemForm({
   service,
@@ -22,6 +25,26 @@ export function ServiceItemForm({
 }: ServiceItemFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Fetch staff for assignment
+  const { data: staffList = [] } = useQuery({
+    queryKey: ['staff-list'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('staff_view')
+        .select('profile_id, first_name, last_name, email')
+        .eq('status', 'active');
+        
+      if (error) throw error;
+      return data.map(staff => ({
+        id: staff.profile_id,
+        first_name: staff.first_name || '',
+        last_name: staff.last_name || '',
+        email: staff.email
+      }));
+    },
+    enabled: showAssignedStaff
+  });
 
   const handleServiceChange = (updates: Partial<ServiceItemType>) => {
     if (onChange) {
@@ -118,10 +141,19 @@ export function ServiceItemForm({
           </div>
         )}
 
+        {showAssignedStaff && (
+          <div className="pt-2">
+            <MultiStaffAssignment
+              service={service}
+              staffList={staffList}
+              onUpdate={handleServiceChange}
+            />
+          </div>
+        )}
+
         <ServiceDescription
-          description=""
-          onChange={() => {}}
-          selectedServiceId={service.service_id}
+          description={service.description || ""}
+          onChange={(value) => handleServiceChange({ description: value })}
           servicesByType={services}
           expanded={isExpanded}
           onExpandToggle={() => setIsExpanded(!isExpanded)}
@@ -161,7 +193,7 @@ export function ServiceItemForm({
           type="button"
           variant="ghost"
           size="sm"
-          onClick={onRemove}
+          onClick={onRemove || onCancel}
           disabled={disabled}
         >
           <X className="h-4 w-4" />
@@ -210,10 +242,19 @@ export function ServiceItemForm({
         </div>
       )}
 
+      {showAssignedStaff && (
+        <div className="pt-2">
+          <MultiStaffAssignment
+            service={service}
+            staffList={staffList}
+            onUpdate={handleServiceChange}
+          />
+        </div>
+      )}
+
       <ServiceDescription
-        description=""
-        onChange={() => {}}
-        selectedServiceId={service.service_id}
+        description={service.description || ""}
+        onChange={(value) => handleServiceChange({ description: value })}
         servicesByType={services}
         expanded={isExpanded}
         onExpandToggle={() => setIsExpanded(!isExpanded)}
