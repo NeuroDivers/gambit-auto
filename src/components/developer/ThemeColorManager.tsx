@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -130,14 +131,14 @@ export function ThemeColorManager() {
             <TabsList>
               <TabsTrigger 
                 value="light" 
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                className="flex items-center gap-2"
               >
                 <Sun className="h-4 w-4" />
                 Light Theme
               </TabsTrigger>
               <TabsTrigger 
                 value="dark" 
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                className="flex items-center gap-2"
               >
                 <Moon className="h-4 w-4" />
                 Dark Theme
