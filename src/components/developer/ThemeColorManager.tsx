@@ -132,6 +132,7 @@ export function ThemeColorManager() {
               <TabsTrigger 
                 value="light" 
                 className="flex items-center gap-2"
+                onClick={() => previewTheme('light')}
               >
                 <Sun className="h-4 w-4" />
                 Light Theme
@@ -139,6 +140,7 @@ export function ThemeColorManager() {
               <TabsTrigger 
                 value="dark" 
                 className="flex items-center gap-2"
+                onClick={() => previewTheme('dark')}
               >
                 <Moon className="h-4 w-4" />
                 Dark Theme
@@ -172,27 +174,31 @@ export function ThemeColorManager() {
             setSelectedCategory={setSelectedCategory} 
           />
           
-          <ThemeTabContent 
-            themeMode="light"
-            colors={lightColors}
-            selectedCategory={selectedCategory}
-            handleColorChange={handleColorChange}
-            handleColorPickerChange={handleColorPickerChange}
-            handleHexInputChange={handleHexInputChange}
-            activeColorName={activeColorName}
-            setActiveColorName={setActiveColorName}
-          />
+          <TabsContent value="light">
+            <ThemeTabContent 
+              themeMode="light"
+              colors={lightColors}
+              selectedCategory={selectedCategory}
+              handleColorChange={handleColorChange}
+              handleColorPickerChange={handleColorPickerChange}
+              handleHexInputChange={handleHexInputChange}
+              activeColorName={activeColorName}
+              setActiveColorName={setActiveColorName}
+            />
+          </TabsContent>
           
-          <ThemeTabContent 
-            themeMode="dark"
-            colors={darkColors}
-            selectedCategory={selectedCategory}
-            handleColorChange={handleColorChange}
-            handleColorPickerChange={handleColorPickerChange}
-            handleHexInputChange={handleHexInputChange}
-            activeColorName={activeColorName}
-            setActiveColorName={setActiveColorName}
-          />
+          <TabsContent value="dark">
+            <ThemeTabContent 
+              themeMode="dark"
+              colors={darkColors}
+              selectedCategory={selectedCategory}
+              handleColorChange={handleColorChange}
+              handleColorPickerChange={handleColorPickerChange}
+              handleHexInputChange={handleHexInputChange}
+              activeColorName={activeColorName}
+              setActiveColorName={setActiveColorName}
+            />
+          </TabsContent>
         </Tabs>
         
         <Separator className="my-4" />

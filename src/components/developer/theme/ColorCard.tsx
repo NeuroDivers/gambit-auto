@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { ColorVariable, ThemeMode } from "./types";
 import { ColorPicker } from "./ColorPicker";
@@ -32,6 +32,8 @@ export function ColorCard({
   
   const handleLocalHexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    
+    // Allow typing even if it's not a valid hex yet
     setLocalHexValue(value);
     
     // Only apply the change when a valid hex color is entered
@@ -40,10 +42,19 @@ export function ColorCard({
     }
   };
   
-  // Update local state when the hexValue from props changes
-  React.useEffect(() => {
-    setLocalHexValue(hexValue);
+  // Reset local input value when the hexValue from props changes
+  useEffect(() => {
+    if (hexValue !== "#000000" && hexValue !== "#NaNNaNNaN") {
+      setLocalHexValue(hexValue);
+    }
   }, [hexValue]);
+  
+  // Reset to a default color if we get an invalid value
+  useEffect(() => {
+    if (localHexValue === "#NaNNaNNaN" || localHexValue === "#000000" && hslValue !== "0 0% 0%") {
+      setLocalHexValue("#");
+    }
+  }, [localHexValue, hslValue]);
   
   return (
     <div className="bg-card rounded-lg border p-4 space-y-3 transition-all hover:shadow-md">
