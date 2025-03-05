@@ -1,5 +1,5 @@
 
-import { WorkOrder } from "@/components/work-orders/types"
+import { WorkOrder } from "@/types/work-order"
 import { User2 } from "lucide-react"
 import { formatTime } from "../utils/dateUtils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
