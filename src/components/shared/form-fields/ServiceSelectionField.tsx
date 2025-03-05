@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { v4 as uuidv4 } from 'uuid';
@@ -21,11 +22,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { cn } from '@/lib/utils';
-import { ServiceType } from '@/types/service-type';
-import { useServiceTypes } from '@/hooks/useServiceTypes';
 import { Textarea } from '@/components/ui/textarea';
 import { CommissionFields } from './CommissionFields';
+import { useServiceTypes } from '@/hooks/useServiceTypes';
+
+interface ServiceItem {
+  id: string;
+  service_id: string;
+  service_name: string;
+  quantity: number;
+  unit_price: number;
+  description: string;
+  commission_rate?: number | null;
+  commission_type?: 'percentage' | 'fixed' | null;
+  package_id?: string | null;
+}
 
 interface ServiceSelectionFieldProps {
   services: {
@@ -36,14 +47,19 @@ interface ServiceSelectionFieldProps {
     description: string;
     commission_rate?: number | null;
     commission_type?: 'percentage' | 'fixed' | null;
-		package_id?: string | null;
+    package_id?: string | null;
   }[];
   onChange: (items: any[]) => void;
   allowPriceEdit?: boolean;
   showCommission?: boolean;
 }
 
-export function ServiceSelectionField({ services, onChange, allowPriceEdit = true, showCommission = false }: ServiceSelectionFieldProps) {
+export function ServiceSelectionField({ 
+  services, 
+  onChange, 
+  allowPriceEdit = true, 
+  showCommission = false 
+}: ServiceSelectionFieldProps) {
   const { fields, append, remove, update } = useFieldArray({
     name: "services",
   });
@@ -75,8 +91,17 @@ export function ServiceSelectionField({ services, onChange, allowPriceEdit = tru
   // Sync the form values with the parent component's state
   useEffect(() => {
     if (initialized) {
-      const currentValues = getValues("services");
-      onChange(currentValues);
+      const currentValues = getValues("services") as ServiceItem[];
+      onChange(currentValues.map(item => ({
+        service_id: item.service_id,
+        service_name: item.service_name,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        description: item.description || "",
+        commission_rate: item.commission_rate,
+        commission_type: item.commission_type,
+        package_id: item.package_id
+      })));
     }
   }, [fields, onChange, getValues, initialized]);
 
@@ -90,7 +115,7 @@ export function ServiceSelectionField({ services, onChange, allowPriceEdit = tru
       description: "",
       commission_rate: 0,
       commission_type: null,
-			package_id: null
+      package_id: null
     });
   }, [append]);
 
@@ -100,8 +125,9 @@ export function ServiceSelectionField({ services, onChange, allowPriceEdit = tru
     const selectedService = availableServices.find((service) => service.id === serviceId);
 
     if (selectedService) {
+      const currentField = fields[index] as ServiceItem;
       update(index, {
-        ...fields[index],
+        ...currentField,
         service_id: selectedService.id,
         service_name: selectedService.name,
         unit_price: selectedService.price || 0,
@@ -111,29 +137,33 @@ export function ServiceSelectionField({ services, onChange, allowPriceEdit = tru
   }, [availableServices, fields, update]);
 
   const handleQuantityChange = useCallback((index: number, quantity: number) => {
+    const currentField = fields[index] as ServiceItem;
     update(index, {
-      ...fields[index],
+      ...currentField,
       quantity: quantity,
     });
   }, [fields, update]);
 
   const handlePriceChange = useCallback((index: number, price: number) => {
+    const currentField = fields[index] as ServiceItem;
     update(index, {
-      ...fields[index],
+      ...currentField,
       unit_price: price,
     });
   }, [fields, update]);
 
   const handleDescriptionChange = useCallback((index: number, description: string) => {
+    const currentField = fields[index] as ServiceItem;
     update(index, {
-      ...fields[index],
+      ...currentField,
       description: description,
     });
   }, [fields, update]);
 
   const handleCommissionChange = useCallback((index: number, commissionRate: number | null, commissionType: 'percentage' | 'fixed' | null) => {
+    const currentField = fields[index] as ServiceItem;
     update(index, {
-      ...fields[index],
+      ...currentField,
       commission_rate: commissionRate,
       commission_type: commissionType,
     });
@@ -145,8 +175,9 @@ export function ServiceSelectionField({ services, onChange, allowPriceEdit = tru
     }
 
     return fields.reduce((total, item) => {
-      const quantity = item.quantity || 0;
-      const unitPrice = item.unit_price || 0;
+      const serviceItem = item as ServiceItem;
+      const quantity = serviceItem.quantity || 0;
+      const unitPrice = serviceItem.unit_price || 0;
       return total + (quantity * unitPrice);
     }, 0);
   };
@@ -157,16 +188,17 @@ export function ServiceSelectionField({ services, onChange, allowPriceEdit = tru
     }
   
     return fields.reduce((totalCommission, item) => {
-      if (item.commission_type === 'percentage') {
+      const serviceItem = item as ServiceItem;
+      if (serviceItem.commission_type === 'percentage') {
         // Ensure commission_rate is not undefined and is treated as 0 if it is
-        const commissionRate = item.commission_rate || 0;
+        const commissionRate = serviceItem.commission_rate || 0;
         // Calculate commission based on percentage
-        const totalItemPrice = (item.quantity || 0) * (item.unit_price || 0);
+        const totalItemPrice = (serviceItem.quantity || 0) * (serviceItem.unit_price || 0);
         const itemCommission = (commissionRate / 100) * totalItemPrice;
         return totalCommission + itemCommission;
-      } else if (item.commission_type === 'fixed') {
+      } else if (serviceItem.commission_type === 'fixed') {
         // If commission_type is fixed, add the commission_rate directly
-        const commissionRate = item.commission_rate || 0;
+        const commissionRate = serviceItem.commission_rate || 0;
         return totalCommission + commissionRate;
       } else {
         return totalCommission; // If no commission or commission_type is not percentage, add 0
@@ -191,64 +223,70 @@ export function ServiceSelectionField({ services, onChange, allowPriceEdit = tru
           </TableRow>
         </TableHead>
         <TableBody>
-          {fields.map((item, index) => (
-            <TableRow key={item.id}>
-              <TableCell className="font-medium">
-                <Select onValueChange={(value) => handleServiceChange(index, value)}>
-                  <SelectTrigger className="w-[280px]">
-                    <SelectValue placeholder="Select a service" defaultValue={item.service_id} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableServices?.map((service) => (
-                      <SelectItem key={service.id} value={service.id}>
-                        {service.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </TableCell>
-              <TableCell>
-                <Textarea 
-                  value={item.description}
-                  onChange={(e) => handleDescriptionChange(index, e.target.value)}
-                  placeholder="Service description"
-                  className="resize-none border-none focus-visible:ring-0 shadow-none"
-                />
-              </TableCell>
-              <TableCell>
-                <Input
-                  type="number"
-                  value={item.quantity}
-                  onChange={(e) => handleQuantityChange(index, parseInt(e.target.value))}
-                  className="w-24"
-                  defaultValue={1}
-                />
-              </TableCell>
-              <TableCell>
-                <Input
-                  type="number"
-                  value={item.unit_price}
-                  onChange={(e) => handlePriceChange(index, parseFloat(e.target.value))}
-                  className="w-24"
-                  disabled={!allowPriceEdit}
-                />
-              </TableCell>
-              {showCommission && (
+          {fields.map((item, index) => {
+            const serviceItem = item as ServiceItem;
+            return (
+              <TableRow key={serviceItem.id}>
+                <TableCell className="font-medium">
+                  <Select 
+                    value={serviceItem.service_id} 
+                    onValueChange={(value) => handleServiceChange(index, value)}
+                  >
+                    <SelectTrigger className="w-[280px]">
+                      <SelectValue placeholder="Select a service" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableServices?.map((service) => (
+                        <SelectItem key={service.id} value={service.id}>
+                          {service.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
                 <TableCell>
-                  <CommissionFields 
-                    commissionRate={item.commission_rate || 0}
-                    commissionType={item.commission_type || null}
-                    onCommissionChange={(rate, type) => handleCommissionChange(index, rate, type)}
+                  <Textarea 
+                    value={serviceItem.description}
+                    onChange={(e) => handleDescriptionChange(index, e.target.value)}
+                    placeholder="Service description"
+                    className="resize-none border-none focus-visible:ring-0 shadow-none"
                   />
                 </TableCell>
-              )}
-              <TableCell className="text-right">
-                <Button variant="ghost" size="icon" onClick={() => remove(index)}>
-                  <Trash className="h-4 w-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
+                <TableCell>
+                  <Input
+                    type="number"
+                    value={serviceItem.quantity}
+                    onChange={(e) => handleQuantityChange(index, parseInt(e.target.value))}
+                    className="w-24"
+                    min={1}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Input
+                    type="number"
+                    value={serviceItem.unit_price}
+                    onChange={(e) => handlePriceChange(index, parseFloat(e.target.value))}
+                    className="w-24"
+                    disabled={!allowPriceEdit}
+                  />
+                </TableCell>
+                {showCommission && (
+                  <TableCell>
+                    <CommissionFields 
+                      commissionRate={serviceItem.commission_rate || 0}
+                      commissionType={serviceItem.commission_type || null}
+                      onCommissionChange={(rate, type) => handleCommissionChange(index, rate, type)}
+                    />
+                  </TableCell>
+                )}
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" onClick={() => remove(index)}>
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
         <TableFooter>
           <TableRow>

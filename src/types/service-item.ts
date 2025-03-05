@@ -2,11 +2,11 @@
 export type ServiceItemType = {
   service_id: string
   service_name: string
-  description?: string
+  description: string // Changed from optional to required
   quantity: number
   unit_price: number
   commission_rate: number
-  commission_type: 'percentage' | 'flat' | null
+  commission_type: 'percentage' | 'fixed' | null
   is_parent?: boolean
   sub_services?: ServiceItemType[]
   parent_id?: string
@@ -14,7 +14,6 @@ export type ServiceItemType = {
   package_id?: string | null
 }
 
-// Add the ServiceFormData type that was missing but referenced in other files
 export type ServiceFormData = {
   vehicleInfo: {
     make: string

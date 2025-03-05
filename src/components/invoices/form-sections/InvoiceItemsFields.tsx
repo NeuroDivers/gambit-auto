@@ -1,4 +1,3 @@
-
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
 import { ServiceItemType } from "@/types/service-item"
 import { InvoiceItem } from "@/components/invoices/types"
@@ -16,9 +15,9 @@ export function InvoiceItemsFields({
   allowPriceEdit = true,
   showCommission = false 
 }: InvoiceItemsFieldsProps) {
-  // Map items to ServiceItemType[] for ServiceSelectionField
+  // Map items to ensure they have all required properties
   const mappedItems = items.map(item => {
-    const serviceItem: ServiceItemType = {
+    const serviceItem = {
       service_id: item.service_id,
       service_name: item.service_name,
       quantity: item.quantity,
@@ -32,9 +31,9 @@ export function InvoiceItemsFields({
   });
 
   // Handle the conversion back
-  const handleItemsChange = (updatedItems: ServiceItemType[]) => {
+  const handleItemsChange = (updatedItems: any[]) => {
     // If original items were InvoiceItem[], convert back to that type
-    if (items.length > 0 && 'description' in items[0] && items[0].description !== undefined) {
+    if (items.length > 0 && 'description' in items[0]) {
       const convertedItems = updatedItems.map(item => {
         const invoiceItem: InvoiceItem = {
           service_id: item.service_id,
@@ -53,7 +52,7 @@ export function InvoiceItemsFields({
       setItems(convertedItems as InvoiceItem[]);
     } else {
       // Otherwise just pass through the ServiceItemType[]
-      setItems(updatedItems);
+      setItems(updatedItems as ServiceItemType[]);
     }
   };
 

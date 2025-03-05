@@ -1,7 +1,7 @@
 
 import { CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Trash2, Tools, Clock, CheckCircle } from "lucide-react"
+import { Trash2, Wrench, Clock, CheckCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -47,7 +47,7 @@ export function BayCardHeader({ name, bayId, status }: BayCardHeaderProps) {
       case 'in_use':
         return <Clock className="h-5 w-5 text-purple-500" />
       case 'maintenance':
-        return <Tools className="h-5 w-5 text-amber-500" />
+        return <Wrench className="h-5 w-5 text-amber-500" />
       default:
         return null
     }
