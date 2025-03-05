@@ -50,14 +50,12 @@ export function ServiceSelectionField({
     }
   })
 
-  // Filter to get only standalone services
   const standaloneServices = allServices.filter(service => 
     service.service_type === 'standalone' || 
     service.hierarchy_type === 'main' || 
     !service.parent_service_id
   )
   
-  // Group sub-services by parent service id
   const subServicesByParent: Record<string, typeof allServices> = {}
   allServices.filter(service => 
     service.parent_service_id || 
@@ -96,7 +94,6 @@ export function ServiceSelectionField({
 
     onChange([...services, newService])
     
-    // Auto-expand the service to show sub-services if available
     if (subServicesByParent[service.id]?.length > 0) {
       setExpandedServices(prev => ({
         ...prev,
@@ -113,7 +110,6 @@ export function ServiceSelectionField({
     
     const updatedServices = [...services]
     
-    // Check if the sub-service is already added
     const existingSubIndex = parentService.sub_services?.findIndex(
       (s: any) => s.service_id === subServiceId
     )
@@ -207,7 +203,6 @@ export function ServiceSelectionField({
                     )}
                   </div>
                   
-                  {/* Only show expand button if there are available sub-services */}
                   {subServicesByParent[service.service_id]?.length > 0 && (
                     <Button
                       variant="ghost"
@@ -269,7 +264,6 @@ export function ServiceSelectionField({
                   )}
                 </div>
                 
-                {/* Sub-service selection */}
                 {expandedServices[service.service_id] && subServicesByParent[service.service_id]?.length > 0 && (
                   <div className="mb-4 border-t pt-3">
                     <div className="flex items-center justify-between mb-2">
@@ -283,7 +277,6 @@ export function ServiceSelectionField({
                         </SelectTrigger>
                         <SelectContent>
                           {subServicesByParent[service.service_id]?.map((subService) => {
-                            // Check if this sub-service is already added
                             const alreadyAdded = service.sub_services?.some(
                               (s: any) => s.service_id === subService.id
                             )
@@ -300,7 +293,6 @@ export function ServiceSelectionField({
                       </Select>
                     </div>
                     
-                    {/* Display currently selected sub-services */}
                     {service.sub_services && service.sub_services.length > 0 && (
                       <div className="space-y-3 pl-3 border-l-2">
                         {service.sub_services.map((subService: any, subIndex: number) => (
