@@ -4,112 +4,104 @@ import { Button } from "@/components/ui/button"
 import { useNavigate } from "react-router-dom"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { supabase } from "@/integrations/supabase/client"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
 import { toast } from "sonner"
+import { useEstimateRequestsData } from "@/hooks/useEstimateRequestsData"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { AlertTriangle } from "lucide-react"
 
 export function EstimateRequestsList() {
   const navigate = useNavigate()
   const [estimateRequests, setEstimateRequests] = useState([])
   const [loading, setLoading] = useState(true)
   const [debugInfo, setDebugInfo] = useState(null)
+  const { fetchEstimateRequests, createTestEstimateRequest } = useEstimateRequestsData()
 
   useEffect(() => {
-    const fetchEstimateRequests = async () => {
+    const loadEstimateRequests = async () => {
       try {
-        console.log("Attempting to fetch estimate_requests")
+        setLoading(true)
+        const { data, count, tableInfo, error } = await fetchEstimateRequests();
         
-        // First, try to get a count of records to verify data exists
-        const { count, error: countError } = await supabase
-          .from("estimate_requests")
-          .select('*', { count: 'exact', head: true })
-        
-        if (countError) {
-          console.error("Error counting estimate requests:", countError)
-        } else {
-          console.log(`Total estimate requests in database: ${count}`)
-        }
-        
-        // Fetch all estimate requests without any joins to ensure we get all records
-        const { data: basicEstimateRequests, error: basicError } = await supabase
-          .from("estimate_requests")
-          .select("*")
-          .order("created_at", { ascending: false })
-          
-        if (basicError) {
-          console.error("Error fetching basic estimate requests:", basicError)
-          toast.error("Failed to load estimate requests. Please try again.")
-          setEstimateRequests([])
-          setLoading(false)
-          return
-        } 
-        
-        console.log("Estimate requests data:", basicEstimateRequests)
-        
-        // Include detailed debug info for troubleshooting
+        // Prepare detailed debug info for troubleshooting
         const debugData = {
-          rawData: basicEstimateRequests,
-          count: basicEstimateRequests?.length || 0,
-          recordStats: basicEstimateRequests?.map(req => ({
+          rawData: data,
+          count: data?.length || 0,
+          tableInfo,
+          error: error ? {
+            message: error.message,
+            hint: error.hint,
+            code: error.code
+          } : null,
+          recordStats: data?.map(req => ({
             id: req.id,
             customerIdPresent: Boolean(req.customer_id),
             createdAt: req.created_at,
             status: req.status
-          })),
+          })) || [],
           timestamp: new Date().toISOString()
-        }
-        setDebugInfo(debugData)
+        };
+        setDebugInfo(debugData);
         
-        // Use the basic data as our primary data source
-        if (basicEstimateRequests && basicEstimateRequests.length > 0) {
-          setEstimateRequests(basicEstimateRequests)
+        if (data && data.length > 0) {
+          setEstimateRequests(data);
           
-          // Try to fetch additional customer data for each request
-          const customerIds = [...new Set(basicEstimateRequests
+          // Fetch customers separately if needed
+          const customerIds = [...new Set(data
             .filter(req => req.customer_id)
-            .map(req => req.customer_id))]
+            .map(req => req.customer_id))];
           
           if (customerIds.length > 0) {
-            // Fetch customer data separately
             const { data: customers, error: customerError } = await supabase
               .from("customers")
               .select("id, first_name, last_name, email")
-              .in("id", customerIds)
+              .in("id", customerIds);
             
             if (customerError) {
-              console.error("Error fetching customer data:", customerError)
+              console.error("Error fetching customer data:", customerError);
+              toast.error("Could not load customer details");
             } else if (customers && customers.length > 0) {
               // Create a map of customer data by ID for quick lookup
               const customerMap = customers.reduce((map, customer) => {
-                map[customer.id] = customer
-                return map
-              }, {})
+                map[customer.id] = customer;
+                return map;
+              }, {});
               
               // Enhance the estimate requests with customer data
-              const enhancedRequests = basicEstimateRequests.map(request => ({
+              const enhancedRequests = data.map(request => ({
                 ...request,
                 customers: customerMap[request.customer_id] || null
-              }))
+              }));
               
-              setEstimateRequests(enhancedRequests)
+              setEstimateRequests(enhancedRequests);
             }
           }
         } else {
-          // If no data is returned, set an empty array
-          setEstimateRequests([])
+          setEstimateRequests([]);
+          
+          if (error) {
+            toast.error(`Error loading estimate requests: ${error.message}`);
+          }
         }
-        
-        setLoading(false)
       } catch (error) {
-        console.error("Error in estimate requests fetch flow:", error)
-        toast.error("Failed to load estimate requests. Please try again.")
-        setEstimateRequests([])
-        setLoading(false)
+        console.error("Error in estimate requests fetch flow:", error);
+        toast.error(`Failed to load estimate requests: ${error.message}`);
+        setEstimateRequests([]);
+      } finally {
+        setLoading(false);
       }
-    }
+    };
 
-    fetchEstimateRequests()
-  }, [])
+    loadEstimateRequests();
+  }, []);
+
+  const handleCreateTestRequest = async () => {
+    const result = await createTestEstimateRequest();
+    if (result) {
+      // Refresh the list
+      window.location.reload();
+    }
+  };
 
   if (loading) {
     return <LoadingScreen />
@@ -141,15 +133,34 @@ export function EstimateRequestsList() {
           Review and respond to customer estimate requests
         </p>
         {debugInfo && (
-          <div className="bg-yellow-50 p-4 mt-4 rounded border border-yellow-200">
-            <h3 className="text-sm font-medium text-yellow-800">Debug Information</h3>
-            <div className="text-xs mt-2">
-              <p>Timestamp: {debugInfo.timestamp}</p>
-              <p>Number of Records: {debugInfo.count}</p>
-              <p>Row IDs: {debugInfo.recordStats?.map(r => r.id?.substring(0,8)).join(', ') || 'None'}</p>
-            </div>
-            <pre className="text-xs mt-2 overflow-auto max-h-40">{JSON.stringify(debugInfo, null, 2)}</pre>
-          </div>
+          <Card className="bg-yellow-50 p-4 mt-4 rounded border border-yellow-200">
+            <CardHeader className="p-4 pb-0">
+              <CardTitle className="text-sm font-medium text-yellow-800 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                Debug Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="text-xs mt-2">
+                <p>Timestamp: {debugInfo.timestamp}</p>
+                <p>Number of Records: {debugInfo.count}</p>
+                <p>Row IDs: {debugInfo.recordStats?.map(r => r.id?.substring(0,8)).join(', ') || 'None'}</p>
+                {debugInfo.tableInfo && (
+                  <div className="mt-2">
+                    <p>Table Info: {JSON.stringify(debugInfo.tableInfo, null, 2)}</p>
+                  </div>
+                )}
+                {debugInfo.error && (
+                  <div className="mt-2 text-red-600">
+                    <p>Error: {debugInfo.error.message}</p>
+                    <p>Code: {debugInfo.error.code}</p>
+                    {debugInfo.error.hint && <p>Hint: {debugInfo.error.hint}</p>}
+                  </div>
+                )}
+              </div>
+              <pre className="text-xs mt-2 overflow-auto max-h-40 bg-white p-2 rounded">{JSON.stringify(debugInfo, null, 2)}</pre>
+            </CardContent>
+          </Card>
         )}
       </div>
 
@@ -160,10 +171,7 @@ export function EstimateRequestsList() {
             Customers can submit estimate requests through your website
           </p>
           <Button 
-            onClick={() => {
-              navigate('/estimates/create')
-              toast.info("Creating a test estimate request...")
-            }}
+            onClick={handleCreateTestRequest}
             variant="outline"
           >
             Create Test Estimate Request

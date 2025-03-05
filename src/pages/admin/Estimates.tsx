@@ -5,14 +5,16 @@ import { EstimateRequestsList } from "./quotes/EstimateRequestsList"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PageTitle } from "@/components/shared/PageTitle"
 import { Button } from "@/components/ui/button"
-import { PlusCircle } from "lucide-react"
+import { PlusCircle, AlertTriangle } from "lucide-react"
 import { useEstimateRequestsData } from "@/hooks/useEstimateRequestsData"
 import { useNavigate } from "react-router-dom"
+import { Card, CardContent } from "@/components/ui/card"
 
 export default function Estimates() {
   const [activeTab, setActiveTab] = useState("estimates")
-  const { createTestEstimateRequest, loading } = useEstimateRequestsData()
+  const { createTestEstimateRequest, loading, debugInfo } = useEstimateRequestsData()
   const navigate = useNavigate()
+  const [error, setError] = useState(null)
 
   // Update the document title when the component mounts
   useEffect(() => {
@@ -20,11 +22,17 @@ export default function Estimates() {
   }, [])
 
   const handleCreateTestData = async () => {
-    const data = await createTestEstimateRequest()
-    if (data && data.length > 0) {
-      setActiveTab("requests")
-      // Force a refresh of the component
-      navigate(0)
+    try {
+      setError(null)
+      const data = await createTestEstimateRequest()
+      if (data) {
+        setActiveTab("requests")
+        // Force a refresh of the component
+        navigate(0)
+      }
+    } catch (err) {
+      console.error("Error creating test data:", err)
+      setError(err.message || "Failed to create test data")
     }
   }
 
@@ -45,6 +53,21 @@ export default function Estimates() {
           Create Test Request
         </Button>
       </div>
+
+      {error && (
+        <Card className="bg-red-50 border-red-200">
+          <CardContent className="p-4 flex items-start gap-2">
+            <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-red-800">Error creating test data</p>
+              <p className="text-sm text-red-600">{error}</p>
+              {debugInfo && (
+                <pre className="text-xs mt-2 overflow-auto max-h-32 bg-white p-2 rounded">{JSON.stringify(debugInfo, null, 2)}</pre>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs
         defaultValue="estimates"
