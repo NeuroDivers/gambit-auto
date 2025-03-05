@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
+import { Sun, Moon, Laptop } from "lucide-react";
 
 export default function ProfileSettings() {
   const { theme, setTheme, resolvedTheme } = useTheme();
@@ -55,7 +56,7 @@ export default function ProfileSettings() {
           </CardHeader>
           <CardContent>
             <RadioGroup 
-              defaultValue={theme || 'system'} 
+              value={theme} 
               onValueChange={handleThemeChange}
               className="grid grid-cols-3 gap-4"
             >
@@ -69,6 +70,7 @@ export default function ProfileSettings() {
                   htmlFor="theme-light"
                   className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                 >
+                  <Sun className="h-6 w-6 mb-2" />
                   Light
                 </Label>
               </div>
@@ -82,6 +84,7 @@ export default function ProfileSettings() {
                   htmlFor="theme-dark"
                   className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                 >
+                  <Moon className="h-6 w-6 mb-2" />
                   Dark
                 </Label>
               </div>
@@ -95,6 +98,7 @@ export default function ProfileSettings() {
                   htmlFor="theme-system"
                   className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                 >
+                  <Laptop className="h-6 w-6 mb-2" />
                   System
                 </Label>
               </div>
