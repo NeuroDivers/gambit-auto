@@ -74,7 +74,7 @@ export function useNotificationSubscription() {
               
               const senderName = data?.first_name || data?.email || 'Someone'
               
-              // Use sonner toast
+              // Ensure we use sonner toast
               toast("New Message", {
                 description: `${senderName}: ${payload.new.message.substring(0, 50)}${payload.new.message.length > 50 ? '...' : ''}`,
               })

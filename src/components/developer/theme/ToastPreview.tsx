@@ -2,24 +2,19 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Megaphone } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export function ToastPreview() {
-  const { toast } = useToast();
-
   const showDefaultToast = () => {
-    toast({
-      title: "Default Toast",
+    toast("Default Toast", {
       description: "This is a default toast notification",
       duration: 3000,
     });
   };
 
   const showDestructiveToast = () => {
-    toast({
-      title: "Error Toast",
+    toast.error("Error Toast", {
       description: "This is a destructive toast notification",
-      variant: "destructive",
       duration: 3000,
     });
   };

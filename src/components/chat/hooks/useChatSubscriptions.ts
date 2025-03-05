@@ -48,7 +48,7 @@ export function useChatSubscriptions(
 
             await markSingleMessageAsRead(newMessage.id)
 
-            // Use sonner toast instead of shadcn/ui toast
+            // Make sure we use sonner toast
             toast(recipient?.first_name || 'New Message', {
               description: newMessage.message.substring(0, 50) + (newMessage.message.length > 50 ? '...' : ''),
               duration: 5000,

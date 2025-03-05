@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Notification, SenderProfile } from "@/hooks/useHeaderNotifications";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 // Fetch regular notifications from the database
 export const fetchRegularNotifications = async (userId: string) => {
@@ -78,11 +78,7 @@ export const markNotificationAsRead = async (notification: Notification) => {
 
       if (error) {
         console.error("Error marking chat message as read:", error);
-        toast({
-          title: "Error",
-          description: "Failed to mark message as read",
-          variant: "destructive",
-        });
+        toast.error("Failed to mark message as read");
         return false;
       }
     } else {
@@ -94,11 +90,7 @@ export const markNotificationAsRead = async (notification: Notification) => {
 
       if (error) {
         console.error("Error marking notification as read:", error);
-        toast({
-          title: "Error",
-          description: "Failed to mark notification as read",
-          variant: "destructive",
-        });
+        toast.error("Failed to mark notification as read");
         return false;
       }
     }

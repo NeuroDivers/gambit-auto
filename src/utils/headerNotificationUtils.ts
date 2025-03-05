@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Notification, SenderProfile, ChatMessage } from "@/hooks/useHeaderNotifications";
+import { toast } from "sonner";
 
 /**
  * Fetches a limited number of latest notifications for the header display
@@ -92,7 +93,13 @@ export const setupHeaderNotificationSubscriptions = (onUpdate: () => void) => {
         schema: "public",
         table: "notifications",
       },
-      () => {
+      (payload) => {
+        // Show toast for new notifications
+        if (payload.eventType === 'INSERT') {
+          toast(payload.new.title, {
+            description: payload.new.message,
+          });
+        }
         onUpdate();
       }
     )
@@ -107,7 +114,8 @@ export const setupHeaderNotificationSubscriptions = (onUpdate: () => void) => {
         schema: "public",
         table: "chat_messages",
       },
-      () => {
+      (payload) => {
+        // We don't show toast here since it's handled by useNotificationSubscription
         onUpdate();
       }
     )
