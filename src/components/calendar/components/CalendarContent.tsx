@@ -18,20 +18,20 @@ type CalendarContentProps = {
 // Sort function for service bays
 const sortServiceBays = (bays: ServiceBay[]): ServiceBay[] => {
   return [...bays].sort((a, b) => {
-    // Extract numbers from bay names if they exist
-    const aMatch = a.name.match(/(\d+)/)
-    const bMatch = b.name.match(/(\d+)/)
+    // Extract numbers from bay names
+    const aNumberMatch = a.name.match(/(\d+)/)
+    const bNumberMatch = b.name.match(/(\d+)/)
     
-    // If both have numbers, sort numerically
-    if (aMatch && bMatch) {
-      return parseInt(aMatch[1], 10) - parseInt(bMatch[1], 10)
+    // Both have numbers, sort numerically
+    if (aNumberMatch && bNumberMatch) {
+      return parseInt(aNumberMatch[1], 10) - parseInt(bNumberMatch[1], 10)
     }
     
-    // If only a has a number, it comes first
-    if (aMatch) return -1
+    // Only a has a number, it comes first
+    if (aNumberMatch) return -1
     
-    // If only b has a number, it comes first
-    if (bMatch) return 1
+    // Only b has a number, it comes first
+    if (bNumberMatch) return 1
     
     // Neither has a number, sort alphabetically
     return a.name.localeCompare(b.name)

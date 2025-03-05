@@ -27,7 +27,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
   const { serviceBays } = useServiceBays()
   const { blockedDates } = useBlockedDates()
-  const DAYS_TO_LOAD = 7 // Changed from 14 to 7
+  const DAYS_TO_LOAD = 7
   const CELL_WIDTH = 60
   const BAY_COLUMN_WIDTH = 80
 
@@ -49,7 +49,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
   } = useDragScroll(scrollRef)
 
   useEffect(() => {
-    const initialDays = Array.from({ length: DAYS_TO_LOAD }, (_, i) =>
+    const initialDays = Array.from({ length: DAYS_TO_LOAD * 3 }, (_, i) =>
       addDays(startOfDay(new Date()), i)
     )
     setDays(initialDays)
@@ -59,16 +59,17 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     if (!scrollRef.current || isLoading) return
 
     const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
-    const scrollEndThreshold = scrollWidth - clientWidth - (CELL_WIDTH * 2)
+    const scrollEndThreshold = scrollWidth - clientWidth - (CELL_WIDTH * 4)
 
     if (scrollLeft >= scrollEndThreshold) {
       setIsLoading(true)
       const lastDate = days[days.length - 1]
-      const newDays = Array.from({ length: DAYS_TO_LOAD }, (_, i) =>
+      const newDays = Array.from({ length: DAYS_TO_LOAD * 2 }, (_, i) =>
         addDays(lastDate, i + 1)
       )
+      
       setDays(prev => [...prev, ...newDays])
-      setIsLoading(false)
+      setTimeout(() => setIsLoading(false), 100)
     }
 
     const visibleIndex = Math.floor(scrollLeft / CELL_WIDTH)
@@ -132,38 +133,44 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
         onDateChange={handleDateChange}
       />
 
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={stopDragging}
-        onMouseLeave={stopDragging}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={stopDragging}
-        className="overflow-x-auto relative [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-gray-100 w-full"
-        style={{ 
-          maxWidth: '100%',
-          WebkitOverflowScrolling: 'touch'
-        }}
+      <div 
+        className="relative overflow-hidden w-full"
+        style={{ maxWidth: '100%' }}
       >
-        <div 
-          className="relative"
-          style={{
-            width: `${totalWidth}px`,
-            minWidth: 'max-content'
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={stopDragging}
+          onMouseLeave={stopDragging}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={stopDragging}
+          className="overflow-x-auto relative [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-gray-100 w-full"
+          style={{ 
+            maxWidth: '100%',
+            WebkitOverflowScrolling: 'touch',
+            cursor: 'grab'
           }}
         >
-          <CalendarHeader days={days} isDateBlocked={isDateBlocked} />
-          <CalendarContent
-            days={days}
-            serviceBays={serviceBays}
-            workOrders={workOrders}
-            isDateBlocked={isDateBlocked}
-            onDateSelect={onDateSelect}
-            onWorkOrderSelect={setSelectedWorkOrder}
-          />
+          <div 
+            className="relative"
+            style={{
+              width: `${totalWidth}px`,
+              minWidth: 'max-content'
+            }}
+          >
+            <CalendarHeader days={days} isDateBlocked={isDateBlocked} />
+            <CalendarContent
+              days={days}
+              serviceBays={serviceBays}
+              workOrders={workOrders}
+              isDateBlocked={isDateBlocked}
+              onDateSelect={onDateSelect}
+              onWorkOrderSelect={setSelectedWorkOrder}
+            />
+          </div>
         </div>
       </div>
 
