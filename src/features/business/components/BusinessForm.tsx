@@ -27,7 +27,6 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
       email: "",
       phone_number: "",
       address: "",
-      logo_url: "",
       light_logo_url: "",
       dark_logo_url: "",
     }
@@ -40,7 +39,6 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
         email: businessProfile.email || "",
         phone_number: businessProfile.phone_number || "",
         address: businessProfile.address || "",
-        logo_url: businessProfile.logo_url || "",
         light_logo_url: businessProfile.light_logo_url || "",
         dark_logo_url: businessProfile.dark_logo_url || "",
       })
@@ -121,10 +119,6 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
       
       if (businessProfile?.dark_logo_url !== values.dark_logo_url) {
         updateData.dark_logo_url = values.dark_logo_url;
-      }
-      
-      if (businessProfile?.logo_url !== values.logo_url) {
-        updateData.logo_url = values.logo_url;
       }
       
       const { error } = businessProfile 

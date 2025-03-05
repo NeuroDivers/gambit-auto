@@ -6,7 +6,6 @@ export const businessFormSchema = z.object({
   email: z.string().email("Invalid email address"),
   phone_number: z.string().optional(),
   address: z.string().optional(),
-  logo_url: z.string().url().optional().or(z.literal("")),
   light_logo_url: z.string().url().optional().or(z.literal("")),
   dark_logo_url: z.string().url().optional().or(z.literal("")),
 })
