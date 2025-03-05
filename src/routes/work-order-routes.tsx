@@ -7,6 +7,7 @@ import StaffCalendar from "@/pages/staff/StaffCalendar"
 import CreateWorkOrder from "@/pages/admin/CreateWorkOrder"
 import EditWorkOrder from "@/pages/admin/EditWorkOrder"
 import Calendar from "@/pages/admin/Calendar"
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary"
 import { usePermissions } from "@/hooks/usePermissions"
 
 const RoleBasedWorkOrders = () => {
@@ -36,32 +37,60 @@ export const workOrderRoutes: RouteObject[] = [
     path: "work-orders",
     element: (
       <PermissionGuard resource="work_orders" type="page_access">
-        <RoleBasedWorkOrders />
+        <ErrorBoundary />
       </PermissionGuard>
     ),
+    errorElement: <ErrorBoundary />,
+    children: [
+      {
+        index: true,
+        element: <RoleBasedWorkOrders />
+      }
+    ]
   },
   {
     path: "work-orders/create",
     element: (
       <PermissionGuard resource="work_orders" type="page_access">
-        <CreateWorkOrder />
+        <ErrorBoundary />
       </PermissionGuard>
     ),
+    errorElement: <ErrorBoundary />,
+    children: [
+      {
+        index: true,
+        element: <CreateWorkOrder />
+      }
+    ]
   },
   {
     path: "work-orders/:id/edit",
     element: (
       <PermissionGuard resource="work_orders" type="page_access">
-        <EditWorkOrder />
+        <ErrorBoundary />
       </PermissionGuard>
     ),
+    errorElement: <ErrorBoundary />,
+    children: [
+      {
+        index: true,
+        element: <EditWorkOrder />
+      }
+    ]
   },
   {
     path: "calendar",
     element: (
       <PermissionGuard resource="calendar" type="page_access">
-        <RoleBasedCalendar />
+        <ErrorBoundary />
       </PermissionGuard>
     ),
+    errorElement: <ErrorBoundary />,
+    children: [
+      {
+        index: true,
+        element: <RoleBasedCalendar />
+      }
+    ]
   },
-]
+];

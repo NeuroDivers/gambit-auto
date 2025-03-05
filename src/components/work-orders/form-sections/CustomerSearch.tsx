@@ -37,7 +37,7 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [customers, setCustomers] = useState<CustomerWithVehicles[]>([])
   
-  // Fetch customers with their vehicles
+  // Fetch customers with their vehicles - but don't run on mount
   const { isLoading, error, refetch } = useQuery({
     queryKey: ['customers', searchQuery],
     queryFn: async () => {
@@ -70,10 +70,10 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
         throw error
       }
     },
-    enabled: false, // Don't run on mount - we'll use refetch when the popover opens
+    enabled: false, // Don't run on mount
   })
 
-  // Single fetch effect that runs when popover opens or search changes
+  // Fetch customers when popover opens or search changes
   useEffect(() => {
     if (open) {
       console.log('Popover opened or search changed, fetching customers');
@@ -82,7 +82,7 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
           const result = await refetch();
           
           if (result.isSuccess && result.data?.customers) {
-            // Make sure customers is always an array
+            // Ensure customers is always an array
             const customersData = Array.isArray(result.data.customers) ? result.data.customers : [];
             console.log('Setting customers state with:', customersData.length, 'customers');
             setCustomers(customersData);
@@ -186,7 +186,6 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
           </Button>
         </PopoverTrigger>
         
-        {/* Only render PopoverContent when open to avoid premature rendering and errors */}
         {open && (
           <PopoverContent className="p-0 w-full" align="start">
             <Command className="w-full">

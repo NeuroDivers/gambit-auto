@@ -1,24 +1,68 @@
 
-import { useRouteError, useNavigate } from "react-router-dom"
+import { useRouteError, useNavigate, isRouteErrorResponse, Outlet } from "react-router-dom"
 import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, Home, ArrowLeft } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AlertCircle, Home, ArrowLeft, RefreshCw } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export function ErrorBoundary() {
-  const error = useRouteError() as Error
+  const error = useRouteError()
   const navigate = useNavigate()
+  const [errorDetails, setErrorDetails] = useState<{
+    title: string,
+    message: string
+  }>({
+    title: "An error occurred",
+    message: "Something went wrong. Please try again."
+  })
+  
+  useEffect(() => {
+    console.error("Application error:", error)
+    
+    if (isRouteErrorResponse(error)) {
+      // Handle route errors (404, etc)
+      setErrorDetails({
+        title: `${error.status} - ${error.statusText}`,
+        message: error.data?.message || "The requested page could not be found."
+      })
+    } else if (error instanceof Error) {
+      // Handle JavaScript errors
+      setErrorDetails({
+        title: error.name || "Error",
+        message: error.message || "An unexpected error occurred."
+      })
+      
+      // Log more details to console for debugging
+      if (error.stack) {
+        console.error("Error stack:", error.stack)
+      }
+    } else if (typeof error === 'string') {
+      setErrorDetails({
+        title: "Error",
+        message: error
+      })
+    }
+  }, [error])
+  
+  // If there's no error, render the children
+  if (!error) {
+    return <Outlet />
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-4">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription className="mt-2">
-            {error?.message || "An unexpected error occurred"}
+    <div className="min-h-[50vh] flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-6">
+        <Alert variant="destructive" className="border-2">
+          <AlertCircle className="h-5 w-5" />
+          <AlertTitle className="text-lg font-semibold mt-2">
+            {errorDetails.title}
+          </AlertTitle>
+          <AlertDescription className="mt-2 text-sm opacity-90">
+            {errorDetails.message}
           </AlertDescription>
         </Alert>
         
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-3">
           <Button 
             variant="outline" 
             onClick={() => navigate(-1)}
@@ -26,6 +70,15 @@ export function ErrorBoundary() {
           >
             <ArrowLeft className="h-4 w-4" />
             Go Back
+          </Button>
+          
+          <Button 
+            onClick={() => window.location.reload()}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh Page
           </Button>
           
           <Button 
