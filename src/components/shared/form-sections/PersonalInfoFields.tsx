@@ -58,7 +58,7 @@ export function PersonalInfoFields({ form, fieldPrefix = "customer_" }: Personal
 
         <FormField
           control={form.control}
-          name={`${fieldPrefix}phone`}
+          name={`${fieldPrefix}phone_number`}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Phone</FormLabel>
