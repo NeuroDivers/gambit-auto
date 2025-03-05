@@ -41,6 +41,11 @@ export interface ServiceItemProps {
   availableServices?: any[];
   onChange?: (service: ServiceItemType) => void;
   isEditing?: boolean;
+  onUpdate?: (updatedService: ServiceItemType) => void;
+  onCancelEdit?: () => void;
+  disabled?: boolean;
+  showCommission?: boolean;
+  showAssignedStaff?: boolean;
 }
 
 export interface ServiceItemFormProps {

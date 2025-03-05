@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,7 +42,15 @@ export function MultiStaffAssignment({
   const handleAddStaff = () => {
     const staff = staffList.find(s => s.id === selectedStaffId);
     if (staff) {
-      addStaffMember(staff);
+      // Make email optional to match the interface
+      const staffWithOptionalEmail: StaffMember = {
+        id: staff.id,
+        first_name: staff.first_name,
+        last_name: staff.last_name,
+        email: staff.email
+      };
+      
+      addStaffMember(staffWithOptionalEmail);
       setSelectedStaffId("");
       
       // Apply changes to service

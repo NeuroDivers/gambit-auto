@@ -34,7 +34,11 @@ export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmit
       }
     });
     
-    return () => subscription.unsubscribe();
+    return () => {
+      if (subscription && typeof subscription.unsubscribe === 'function') {
+        subscription.unsubscribe();
+      }
+    };
   }, [form.watch]);
 
   useEffect(() => {
