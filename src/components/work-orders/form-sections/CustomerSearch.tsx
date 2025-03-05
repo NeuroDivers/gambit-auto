@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { UseFormReturn } from "react-hook-form"
@@ -51,6 +51,30 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     enabled: !!selectedCustomer,
   })
 
+  // Effect to fill vehicle information when vehicles are loaded
+  useEffect(() => {
+    if (vehicles && vehicles.length > 0) {
+      // First try to find a primary vehicle
+      const primaryVehicle = vehicles.find(v => v.is_primary);
+      
+      // If no primary vehicle exists, use the first vehicle in the list
+      const vehicleToUse = primaryVehicle || vehicles[0];
+      
+      if (vehicleToUse) {
+        console.log("Setting vehicle info from:", vehicleToUse);
+        form.setValue("vehicle_make", vehicleToUse.make);
+        form.setValue("vehicle_model", vehicleToUse.model);
+        form.setValue("vehicle_year", vehicleToUse.year);
+        form.setValue("vehicle_serial", vehicleToUse.vin || "");
+        
+        // Set additional vehicle fields if they exist
+        if (vehicleToUse.trim) form.setValue("vehicle_trim", vehicleToUse.trim);
+        if (vehicleToUse.body_class) form.setValue("vehicle_body_class", vehicleToUse.body_class);
+        if (vehicleToUse.doors) form.setValue("vehicle_doors", vehicleToUse.doors);
+      }
+    }
+  }, [vehicles, form]);
+
   const handleCustomerChange = (customerId: string) => {
     setSelectedCustomer(customerId)
     
@@ -68,25 +92,6 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
       form.setValue("postal_code", selectedCustomer.postal_code || "")
       form.setValue("country", selectedCustomer.country || "")
       setCreateNewCustomer(false)
-      
-      // Set vehicle info if vehicles exist
-      if (vehicles && vehicles.length > 0) {
-        // Find primary vehicle or use the first one if no primary exists
-        const primaryVehicle = vehicles.find(v => v.is_primary) || vehicles[0]
-        
-        if (primaryVehicle) {
-          console.log("Setting vehicle info from:", primaryVehicle)
-          form.setValue("vehicle_make", primaryVehicle.make)
-          form.setValue("vehicle_model", primaryVehicle.model)
-          form.setValue("vehicle_year", primaryVehicle.year)
-          form.setValue("vehicle_serial", primaryVehicle.vin || "")
-          
-          // Set additional vehicle fields if they exist
-          if (primaryVehicle.trim) form.setValue("vehicle_trim", primaryVehicle.trim)
-          if (primaryVehicle.body_class) form.setValue("vehicle_body_class", primaryVehicle.body_class)
-          if (primaryVehicle.doors) form.setValue("vehicle_doors", primaryVehicle.doors)
-        }
-      }
     }
   }
 
