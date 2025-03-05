@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -29,7 +28,6 @@ type EstimateFormProps = {
   isSubmitting: boolean
 }
 
-// Extend ServiceType to handle the base_price vs price mismatch
 interface ServiceTypeWithBasePrice extends Omit<ServiceType, 'price'> {
   base_price: number | null;
 }
@@ -63,7 +61,7 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
     queryFn: async () => {
       const { data, error } = await supabase
         .from("vehicles")
-        .select("id, make, model, year, vin")
+        .select("id, make, model, year, vin, is_primary")
         .eq("customer_id", selectedCustomer)
         .order("created_at", { ascending: false })
       
@@ -83,12 +81,10 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
       
       if (error) throw error
       
-      // Process services to categorize them
       const standaloneServs = data.filter(service => 
         service.service_type === 'standalone' || !service.parent_service_id
       );
       
-      // Group sub-services by parent ID
       const subServicesByParent: {[key: string]: ServiceTypeWithBasePrice[]} = {};
       data.filter(service => service.parent_service_id).forEach(subService => {
         if (!subServicesByParent[subService.parent_service_id!]) {
@@ -108,7 +104,6 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
     setSelectedCustomer(customerId)
     form.setValue("client_id", customerId)
     
-    // Find the selected customer to set customer info
     const selectedCustomer = clients?.find(client => client.id === customerId)
     if (selectedCustomer) {
       form.setValue("customer_first_name", selectedCustomer.first_name)
@@ -118,6 +113,20 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
       setCreateNewCustomer(false)
     }
   }
+  
+  useEffect(() => {
+    if (vehicles && vehicles.length > 0 && selectedCustomer) {
+      const primaryVehicle = vehicles.find(v => v.is_primary) || vehicles[0]
+      
+      if (primaryVehicle) {
+        console.log("Setting vehicle info from:", primaryVehicle)
+        form.setValue("vehicle_make", primaryVehicle.make)
+        form.setValue("vehicle_model", primaryVehicle.model)
+        form.setValue("vehicle_year", primaryVehicle.year)
+        form.setValue("vehicle_vin", primaryVehicle.vin || "")
+      }
+    }
+  }, [vehicles, selectedCustomer, form])
   
   const updateServiceSelection = (serviceId: string, isChecked: boolean) => {
     const service = services?.find(s => s.id === serviceId)
@@ -144,10 +153,9 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
       form.setValue("services", updatedServices)
     }
     
-    // Recalculate subtotal
     setTimeout(() => calculateSubtotal(), 0)
   }
-
+  
   const updateSubServiceSelection = (parentServiceId: string, subServiceId: string, isChecked: boolean) => {
     const subService = services?.find(s => s.id === subServiceId)
     if (!subService) return
@@ -158,7 +166,6 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
     if (parentIndex === -1) return
     
     if (isChecked) {
-      // Add the sub-service to the parent
       updatedServices[parentIndex].sub_services = [
         ...(updatedServices[parentIndex].sub_services || []),
         {
@@ -171,7 +178,6 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
         }
       ]
     } else {
-      // Remove the sub-service from the parent
       updatedServices[parentIndex].sub_services = 
         updatedServices[parentIndex].sub_services.filter(s => s.id !== subServiceId)
     }
@@ -179,7 +185,6 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
     setSelectedServices(updatedServices)
     form.setValue("services", updatedServices)
     
-    // Recalculate subtotal
     setTimeout(() => calculateSubtotal(), 0)
   }
   
@@ -187,7 +192,6 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
     let updatedServices = [...selectedServices]
     
     if (isSubService && parentId) {
-      // Update sub-service quantity
       const parentIndex = updatedServices.findIndex(service => service.id === parentId)
       if (parentIndex !== -1) {
         const subServiceIndex = updatedServices[parentIndex].sub_services.findIndex(
@@ -198,7 +202,6 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
         }
       }
     } else {
-      // Update main service quantity
       updatedServices = updatedServices.map(service => 
         service.id === serviceId ? { ...service, quantity } : service
       )
@@ -213,7 +216,6 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
     let updatedServices = [...selectedServices]
     
     if (isSubService && parentId) {
-      // Update sub-service price
       const parentIndex = updatedServices.findIndex(service => service.id === parentId)
       if (parentIndex !== -1) {
         const subServiceIndex = updatedServices[parentIndex].sub_services.findIndex(
@@ -224,7 +226,6 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
         }
       }
     } else {
-      // Update main service price
       updatedServices = updatedServices.map(service => 
         service.id === serviceId ? { ...service, price } : service
       )
@@ -237,10 +238,8 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
   
   const calculateSubtotal = () => {
     const total = selectedServices.reduce((sum, service) => {
-      // Calculate main service total
       const mainServiceTotal = service.quantity * service.price
       
-      // Calculate sub-services total if any
       const subServicesTotal = service.sub_services ? 
         service.sub_services.reduce((subSum: number, subService: any) => {
           return subSum + (subService.quantity * subService.price)
@@ -253,12 +252,10 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
     form.setValue("total", total)
   }
   
-  // Recalculate when services change
   useEffect(() => {
     calculateSubtotal()
   }, [selectedServices])
-
-  // Check if customer email exists
+  
   const checkEmailExists = async (email: string) => {
     if (!email) return false
     
@@ -270,12 +267,10 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
         .single()
       
       if (error && error.code === 'PGRST116') {
-        // No record found
         return false
       }
       
       if (data) {
-        // Email exists
         return true
       }
       
@@ -288,13 +283,11 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
 
   const handleFormSubmit = async (data: any) => {
     if (createNewCustomer) {
-      // If creating new customer, make sure all required fields are filled
       if (!data.customer_first_name || !data.customer_last_name || !data.customer_email) {
         toast.error("Please fill in all required customer information")
         return
       }
       
-      // Check if email already exists
       const emailExists = await checkEmailExists(data.customer_email)
       if (emailExists) {
         toast.error("A customer with this email already exists. Please select from the customer list or use a different email.")
@@ -302,7 +295,6 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
       }
     }
     
-    // Flatten the services array to include both parent and sub-services
     const flattenedServices = selectedServices.flatMap(service => {
       const mainService = {
         id: service.id,
@@ -326,10 +318,7 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
       return [mainService, ...subServices]
     })
     
-    // Update the services in the form data
     data.services = flattenedServices
-    
-    // Add createNewCustomer flag to the data
     data.createNewCustomer = createNewCustomer
     
     onSubmit(data)
@@ -342,7 +331,6 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
       </CardHeader>
       <form onSubmit={form.handleSubmit(handleFormSubmit)}>
         <CardContent className="space-y-6">
-          {/* Customer Selection */}
           <div className="space-y-2">
             <Label htmlFor="client_id">Customer</Label>
             <Popover open={openCustomerSelect} onOpenChange={setOpenCustomerSelect}>
@@ -362,7 +350,6 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0" align="start">
-                {/* Only render the Command component when the popover is open to avoid initialization issues */}
                 {openCustomerSelect && (
                   <div className="relative">
                     <div className="flex items-center border-b px-3">
@@ -437,7 +424,6 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
             </div>
           </div>
           
-          {/* Customer Information - Always visible */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="customer_first_name">First Name</Label>
@@ -469,13 +455,11 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
             </div>
           </div>
           
-          {/* Vehicle Selection */}
           <div className="space-y-2">
             <Label htmlFor="vehicle_id">Vehicle</Label>
             <Select 
               onValueChange={(value) => {
                 form.setValue("vehicle_id", value)
-                // Set vehicle information
                 const selectedVehicle = vehicles?.find(vehicle => vehicle.id === value)
                 if (selectedVehicle) {
                   form.setValue("vehicle_make", selectedVehicle.make)
@@ -500,7 +484,6 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
             </Select>
           </div>
           
-          {/* Vehicle Information - Always visible */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="vehicle_make">Make</Label>
@@ -532,14 +515,12 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
             </div>
           </div>
           
-          {/* Services Selection */}
           <div className="space-y-4">
             <Label>Services</Label>
             {servicesLoading ? (
               <div>Loading services...</div>
             ) : (
               <div className="space-y-4">
-                {/* Display only standalone services first */}
                 {standaloneServices.map((service) => (
                   <div key={service.id} className="flex flex-col p-3 border rounded-md">
                     <div className="flex items-start space-x-3">
@@ -564,7 +545,6 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
                       </div>
                     </div>
                     
-                    {/* Service quantity and price input fields (visible when service is selected) */}
                     {selectedServices.some(s => s.id === service.id) && (
                       <div className="mt-3 space-y-4">
                         <div className="grid grid-cols-2 gap-3">
@@ -591,7 +571,6 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
                           </div>
                         </div>
                         
-                        {/* Sub-services selection (if available) */}
                         {subServices[service.id] && subServices[service.id].length > 0 && (
                           <div className="pl-6 mt-2 border-l-2 border-gray-200">
                             <h4 className="font-medium mb-2">Additional Options</h4>
@@ -619,7 +598,6 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
                                   </div>
                                 </div>
                                 
-                                {/* Sub-service quantity and price (visible when selected) */}
                                 {selectedServices.some(s => 
                                   s.id === service.id && 
                                   s.sub_services && 
@@ -671,7 +649,6 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
             )}
           </div>
           
-          {/* Total */}
           <div className="pt-4 border-t">
             <div className="flex justify-between items-center">
               <Label className="text-lg">Total:</Label>
@@ -679,7 +656,6 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
             </div>
           </div>
           
-          {/* Notes */}
           <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
             <Textarea
