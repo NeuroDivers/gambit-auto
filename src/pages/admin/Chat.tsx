@@ -281,7 +281,7 @@ export default function Chat() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
-                            <p className="truncate font-medium">{getUserDisplayName(user)}</p>
+                            <p className={`truncate font-medium ${selectedUser === user.id ? "text-primary-foreground" : ""}`}>{getUserDisplayName(user)}</p>
                             <Badge 
                               variant="destructive" 
                               className="ml-2 text-xs"
@@ -289,7 +289,7 @@ export default function Chat() {
                               {user.unread_count}
                             </Badge>
                           </div>
-                          <p className="text-xs text-muted-foreground truncate">
+                          <p className={`text-xs truncate ${selectedUser === user.id ? "text-primary-foreground" : "text-muted-foreground"}`}>
                             {user.role?.nicename || "User"}
                           </p>
                         </div>
@@ -324,8 +324,8 @@ export default function Chat() {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="truncate font-medium">{getUserDisplayName(user)}</p>
-                          <p className="text-xs text-muted-foreground truncate">
+                          <p className={`truncate font-medium ${selectedUser === user.id ? "text-primary-foreground" : ""}`}>{getUserDisplayName(user)}</p>
+                          <p className={`text-xs truncate ${selectedUser === user.id ? "text-primary-foreground" : "text-muted-foreground"}`}>
                             {user.role?.nicename || "User"}
                           </p>
                         </div>
