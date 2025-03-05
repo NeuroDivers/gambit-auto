@@ -28,6 +28,7 @@ export function ThemeTabContent({
   activeColorName,
   setActiveColorName
 }: ThemeTabContentProps) {
+  // Fix for the "all" category - ensure it displays ALL variables regardless of category
   const getFilteredVariables = () => {
     return themeColorVariables.filter(
       variable => selectedCategory === "all" || variable.category === selectedCategory

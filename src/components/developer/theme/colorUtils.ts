@@ -1,6 +1,11 @@
 
 export function hslToHex(hslString: string): string {
   try {
+    // Handle empty or invalid input
+    if (!hslString || hslString.trim() === '') {
+      return "#000000";
+    }
+    
     const [h, s, l] = hslString.split(' ').map(val => parseFloat(val.replace('%', '')));
     
     // Check if any of the values is NaN
@@ -39,7 +44,12 @@ export function hslToHex(hslString: string): string {
 export function hexToHsl(hex: string): string {
   try {
     // Return a default HSL value if hex is empty or invalid
-    if (!hex || hex === '#NaNNaNNaN' || !hex.startsWith('#') || hex.length !== 7) {
+    if (!hex || !hex.startsWith('#')) {
+      return "0 0% 0%";
+    }
+    
+    // If it's not a complete hex code yet, return a default to prevent NaN errors
+    if (hex.length < 7) {
       return "0 0% 0%";
     }
     
