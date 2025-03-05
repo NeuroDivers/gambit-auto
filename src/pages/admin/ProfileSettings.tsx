@@ -5,8 +5,9 @@ import { ProfileForm } from "@/components/profile/ProfileForm";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useTheme } from "next-themes";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { Sun, Moon, Laptop } from "lucide-react";
+import { applyThemeClass } from "@/lib/utils";
 
 export default function ProfileSettings() {
   const { theme, setTheme, resolvedTheme } = useTheme();
@@ -22,49 +23,12 @@ export default function ProfileSettings() {
     }
   }, [theme, setTheme]);
 
-  // Force theme application immediately and store in localStorage
+  // Force theme application immediately
   useEffect(() => {
     if (!mounted) return;
     
-    // Immediately toggle the dark class on the html element
-    if (theme === 'dark' || (theme === 'system' && resolvedTheme === 'dark')) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    
-    // Persist theme preference in localStorage
-    localStorage.setItem('theme', theme || 'system');
-    
-    // Apply any custom theme colors that may have been saved
-    const customThemeColors = localStorage.getItem("custom-theme-colors")
-    if (customThemeColors) {
-      const existingStyle = document.getElementById('theme-colors-style')
-      if (!existingStyle) {
-        try {
-          const { light, dark } = JSON.parse(customThemeColors)
-          
-          const style = document.createElement('style')
-          let cssText = `:root {\n`
-          Object.entries(light).forEach(([name, value]) => {
-            cssText += `  --${name}: ${value};\n`
-          })
-          cssText += `}\n\n`
-          
-          cssText += `.dark {\n`
-          Object.entries(dark).forEach(([name, value]) => {
-            cssText += `  --${name}: ${value};\n`
-          })
-          cssText += `}\n`
-          
-          style.textContent = cssText
-          style.id = 'theme-colors-style'
-          document.head.appendChild(style)
-        } catch (error) {
-          console.error("Error applying saved theme colors:", error)
-        }
-      }
-    }
+    // Apply theme class for immediate effect
+    applyThemeClass(theme, resolvedTheme);
     
     // Log theme state for debugging
     console.log({
@@ -91,7 +55,10 @@ export default function ProfileSettings() {
     // Store in localStorage for persistence
     localStorage.setItem('theme', value);
     
-    toast.success(`Theme changed to ${value === 'system' ? 'system default' : value} mode`);
+    toast({
+      title: "Theme Updated",
+      description: `Theme changed to ${value === 'system' ? 'system default' : value} mode`
+    });
   };
 
   // Don't render anything until after mounting to prevent hydration mismatch
@@ -127,9 +94,13 @@ export default function ProfileSettings() {
                 />
                 <Label
                   htmlFor="theme-light"
-                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                  className={`flex flex-col items-center justify-between rounded-md border-2 ${
+                    theme === 'light' 
+                      ? 'border-primary bg-primary/5 ring-2 ring-primary/30' 
+                      : 'border-muted bg-popover'
+                  } p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all`}
                 >
-                  <Sun className="h-6 w-6 mb-2" />
+                  <Sun className={`h-6 w-6 mb-2 ${theme === 'light' ? 'text-primary' : ''}`} />
                   Light
                 </Label>
               </div>
@@ -141,9 +112,13 @@ export default function ProfileSettings() {
                 />
                 <Label
                   htmlFor="theme-dark"
-                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                  className={`flex flex-col items-center justify-between rounded-md border-2 ${
+                    theme === 'dark' 
+                      ? 'border-primary bg-primary/5 ring-2 ring-primary/30' 
+                      : 'border-muted bg-popover'
+                  } p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all`}
                 >
-                  <Moon className="h-6 w-6 mb-2" />
+                  <Moon className={`h-6 w-6 mb-2 ${theme === 'dark' ? 'text-primary' : ''}`} />
                   Dark
                 </Label>
               </div>
@@ -155,9 +130,13 @@ export default function ProfileSettings() {
                 />
                 <Label
                   htmlFor="theme-system"
-                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                  className={`flex flex-col items-center justify-between rounded-md border-2 ${
+                    theme === 'system' 
+                      ? 'border-primary bg-primary/5 ring-2 ring-primary/30' 
+                      : 'border-muted bg-popover'
+                  } p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all`}
                 >
-                  <Laptop className="h-6 w-6 mb-2" />
+                  <Laptop className={`h-6 w-6 mb-2 ${theme === 'system' ? 'text-primary' : ''}`} />
                   System
                 </Label>
               </div>
