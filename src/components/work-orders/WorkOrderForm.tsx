@@ -10,6 +10,7 @@ import { CustomerSearch } from "./form-sections/CustomerSearch"
 
 export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmitting }: WorkOrderFormProps) {
   const mounted = useRef(true);
+  // Use optional chaining for client_id to avoid TypeScript errors
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(workOrder?.client_id || null);
 
   useEffect(() => {

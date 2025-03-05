@@ -15,7 +15,7 @@ export type WorkOrder = {
   status: string
   created_at: string
   price?: number | null
-  address?: string | null // Made optional to match the other WorkOrder type
+  address?: string | null
   street_address?: string
   unit_number?: string
   city?: string
@@ -28,4 +28,9 @@ export type WorkOrder = {
   end_time?: string | null
   assigned_bay_id?: string | null
   assigned_profile_id?: string | null
+  client_id?: string
+  service_bays?: {
+    id: string
+    name: string
+  }
 }
