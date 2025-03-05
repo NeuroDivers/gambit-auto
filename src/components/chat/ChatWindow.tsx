@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react"
 import { ChatMessage, ChatUser } from "@/types/chat"
 import { Card } from "@/components/ui/card"
@@ -20,13 +21,13 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   const [isTyping, setIsTyping] = useState(false)
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null)
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
-  const [editedMessageText, setEditedMessageText] = useState("")
   const channelRef = useRef<any>(null)
   const typingChannelRef = useRef<any>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const firstUnreadRef = useRef<HTMLDivElement>(null)
   const { toast } = useToast()
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const isActiveConversation = useRef<boolean>(true)
 
@@ -94,16 +95,19 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
 
   const startEditing = (message: ChatMessage) => {
     setEditingMessageId(message.id)
-    setEditedMessageText(message.message)
+    setNewMessage(message.message)
+    setTimeout(() => {
+      inputRef.current?.focus()
+    }, 50)
   }
 
   const cancelEditing = () => {
     setEditingMessageId(null)
-    setEditedMessageText("")
+    setNewMessage("")
   }
 
   const saveEdit = async (messageId: string) => {
-    if (!editedMessageText.trim() || !currentUserId) return
+    if (!newMessage.trim() || !currentUserId) return
 
     const messageToUpdate = messages.find(m => m.id === messageId)
     if (!messageToUpdate) return
@@ -113,7 +117,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     setMessages(prevMessages => 
       prevMessages.map(msg => 
         msg.id === messageId 
-          ? { ...msg, message: editedMessageText, is_edited: true, original_message: originalMessage, updated_at: new Date().toISOString() } 
+          ? { ...msg, message: newMessage, is_edited: true, original_message: originalMessage, updated_at: new Date().toISOString() } 
           : msg
       )
     )
@@ -121,7 +125,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     const { error } = await supabase
       .from("chat_messages")
       .update({
-        message: editedMessageText,
+        message: newMessage,
         is_edited: true,
         original_message: originalMessage,
         updated_at: new Date().toISOString()
@@ -145,7 +149,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         channelRef.current.send({
           type: 'broadcast',
           event: 'message-edited',
-          payload: { messageId, newText: editedMessageText }
+          payload: { messageId, newText: newMessage }
         })
       }
     }
@@ -407,6 +411,20 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     }
   }, [messages.length])
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      
+      if (editingMessageId) {
+        saveEdit(editingMessageId)
+      } else {
+        sendMessage()
+      }
+    } else if (e.key === 'Escape' && editingMessageId) {
+      cancelEditing()
+    }
+  }
+
   const sendMessage = async () => {
     if (!newMessage.trim() || !currentUserId) return
 
@@ -475,12 +493,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
     return recipient?.email || "Unknown User"
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape' && editingMessageId) {
-      cancelEditing()
-    }
-  }
-
   return (
     <Card className="flex flex-col h-full">
       <div className="p-4 border-b">
@@ -496,7 +508,6 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
 
             const isOwnMessage = message.sender_id === currentUserId
             const canEdit = isOwnMessage && isWithinEditWindow(message)
-            const isEditing = editingMessageId === message.id
 
             return (
               <div
@@ -506,105 +517,78 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
                   message.sender_id === recipientId ? "justify-start" : "justify-end"
                 }`}
               >
-                {isEditing ? (
-                  <div className="w-3/4 space-y-2">
-                    <Textarea 
-                      value={editedMessageText}
-                      onChange={(e) => setEditedMessageText(e.target.value)}
-                      className="min-h-[80px]"
-                      onKeyDown={handleKeyDown}
-                      autoFocus
-                    />
-                    <div className="flex justify-end gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={cancelEditing}
-                      >
-                        <X className="h-4 w-4 mr-1" /> Cancel
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        onClick={() => saveEdit(message.id)}
-                      >
-                        <Check className="h-4 w-4 mr-1" /> Save
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="group relative flex items-start">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div
-                            className={`rounded-lg px-4 py-2 max-w-[75%] ${
-                              message.sender_id === recipientId
-                                ? "bg-muted"
-                                : "bg-primary text-primary-foreground"
-                            }`}
-                          >
-                            <div className="whitespace-pre-wrap break-words">{message.message}</div>
-                            <div className="text-xs opacity-70 mt-1 flex items-center gap-1">
-                              {formatMessageTime(message.created_at)}
-                              {message.is_edited && (
-                                <span className="italic text-xs">(edited)</span>
-                              )}
-                              {message.sender_id !== recipientId && (
-                                message.read_at ? (
-                                  <Check className="h-3 w-3" />
-                                ) : (
-                                  <Circle className="h-3 w-3" />
-                                )
-                              )}
-                            </div>
+                <div className="group relative flex items-start">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={`rounded-lg px-4 py-2 max-w-[75%] ${
+                            message.sender_id === recipientId
+                              ? "bg-muted"
+                              : "bg-primary text-primary-foreground"
+                          }`}
+                        >
+                          <div className="whitespace-pre-wrap break-words">{message.message}</div>
+                          <div className="text-xs opacity-70 mt-1 flex items-center gap-1">
+                            {formatMessageTime(message.created_at)}
+                            {message.is_edited && (
+                              <span className="italic text-xs">(edited)</span>
+                            )}
+                            {message.sender_id !== recipientId && (
+                              message.read_at ? (
+                                <Check className="h-3 w-3" />
+                              ) : (
+                                <Circle className="h-3 w-3" />
+                              )
+                            )}
                           </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {message.read_at ? (
-                            `Read ${formatMessageTime(message.read_at)}`
-                          ) : (
-                            "Not read yet"
-                          )}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    
-                    {isOwnMessage && !isEditing && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity ml-1 bg-background"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40 bg-popover">
-                          {canEdit && (
-                            <DropdownMenuItem onClick={() => startEditing(message)} className="cursor-pointer">
-                              <Pencil className="h-4 w-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                          )}
-                          {!canEdit && (
-                            <DropdownMenuItem disabled className="cursor-not-allowed">
-                              <Clock className="h-4 w-4 mr-2" />
-                              Can't edit (over 5 min)
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem 
-                            onClick={() => unsendMessage(message.id)}
-                            className="text-destructive cursor-pointer"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Unsend
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {message.read_at ? (
+                          `Read ${formatMessageTime(message.read_at)}`
+                        ) : (
+                          "Not read yet"
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  
+                  {isOwnMessage && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity ml-1 bg-background"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40 bg-popover">
+                        {canEdit && (
+                          <DropdownMenuItem onClick={() => startEditing(message)} className="cursor-pointer">
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Edit
                           </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </div>
-                )}
+                        )}
+                        {!canEdit && (
+                          <DropdownMenuItem disabled className="cursor-not-allowed">
+                            <Clock className="h-4 w-4 mr-2" />
+                            Can't edit (over 5 min)
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem 
+                          onClick={() => unsendMessage(message.id)}
+                          className="text-destructive cursor-pointer"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Unsend
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
               </div>
             )
           })}
@@ -621,19 +605,30 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
       </ScrollArea>
       <div className="p-4 border-t flex gap-2">
         <Input
+          ref={inputRef}
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+          onKeyDown={handleKeyDown}
           onKeyUp={handleTyping}
-          placeholder="Type a message..."
+          placeholder={editingMessageId ? "Edit your message..." : "Type a message..."}
+          className={editingMessageId ? "border-primary" : ""}
         />
         <Button 
-          onClick={sendMessage}
+          onClick={editingMessageId ? () => saveEdit(editingMessageId) : sendMessage}
           size="icon"
           className="bg-primary hover:bg-primary/90 text-primary-foreground"
         >
-          <Send className="h-4 w-4" />
+          {editingMessageId ? <Check className="h-4 w-4" /> : <Send className="h-4 w-4" />}
         </Button>
+        {editingMessageId && (
+          <Button 
+            onClick={cancelEditing}
+            size="icon"
+            variant="outline"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </div>
     </Card>
   )
