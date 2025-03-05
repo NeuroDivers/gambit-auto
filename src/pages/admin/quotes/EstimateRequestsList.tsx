@@ -19,6 +19,17 @@ export function EstimateRequestsList() {
       try {
         console.log("Attempting to fetch estimate_requests")
         
+        // First, try to get a count of records to verify data exists
+        const { count, error: countError } = await supabase
+          .from("estimate_requests")
+          .select('*', { count: 'exact', head: true })
+        
+        if (countError) {
+          console.error("Error counting estimate requests:", countError)
+        } else {
+          console.log(`Total estimate requests in database: ${count}`)
+        }
+        
         // Fetch all estimate requests without any joins to ensure we get all records
         const { data: basicEstimateRequests, error: basicError } = await supabase
           .from("estimate_requests")
@@ -34,7 +45,20 @@ export function EstimateRequestsList() {
         } 
         
         console.log("Estimate requests data:", basicEstimateRequests)
-        setDebugInfo(basicEstimateRequests)
+        
+        // Include detailed debug info for troubleshooting
+        const debugData = {
+          rawData: basicEstimateRequests,
+          count: basicEstimateRequests?.length || 0,
+          recordStats: basicEstimateRequests?.map(req => ({
+            id: req.id,
+            customerIdPresent: Boolean(req.customer_id),
+            createdAt: req.created_at,
+            status: req.status
+          })),
+          timestamp: new Date().toISOString()
+        }
+        setDebugInfo(debugData)
         
         // Use the basic data as our primary data source
         if (basicEstimateRequests && basicEstimateRequests.length > 0) {
@@ -119,6 +143,11 @@ export function EstimateRequestsList() {
         {debugInfo && (
           <div className="bg-yellow-50 p-4 mt-4 rounded border border-yellow-200">
             <h3 className="text-sm font-medium text-yellow-800">Debug Information</h3>
+            <div className="text-xs mt-2">
+              <p>Timestamp: {debugInfo.timestamp}</p>
+              <p>Number of Records: {debugInfo.count}</p>
+              <p>Row IDs: {debugInfo.recordStats?.map(r => r.id?.substring(0,8)).join(', ') || 'None'}</p>
+            </div>
             <pre className="text-xs mt-2 overflow-auto max-h-40">{JSON.stringify(debugInfo, null, 2)}</pre>
           </div>
         )}
@@ -131,7 +160,10 @@ export function EstimateRequestsList() {
             Customers can submit estimate requests through your website
           </p>
           <Button 
-            onClick={() => navigate('/estimates/create')}
+            onClick={() => {
+              navigate('/estimates/create')
+              toast.info("Creating a test estimate request...")
+            }}
             variant="outline"
           >
             Create Test Estimate Request
