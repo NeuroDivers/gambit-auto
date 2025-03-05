@@ -1,6 +1,6 @@
 
 import * as React from "react"
-import { toast as sonnerToast, Toast as SonnerToast } from "sonner"
+import { toast as sonnerToast } from "sonner"
 
 import type {
   ToastActionElement,
@@ -206,4 +206,4 @@ function useToast() {
 }
 
 // Export both the original sonner toast and our wrapped version
-export { useToast, toast, sonnerToast as sonnerToast }
+export { useToast, toast, sonnerToast }

@@ -1,11 +1,11 @@
 
-import { toast } from 'sonner';
+import { sonnerToast } from '@/hooks/use-toast';
 
 /**
  * Show a success toast notification
  */
 export function showSuccessToast(title: string, description?: string) {
-  toast.success(title, {
+  sonnerToast.success(title, {
     description,
     duration: 3000,
   });
@@ -15,7 +15,7 @@ export function showSuccessToast(title: string, description?: string) {
  * Show an error toast notification
  */
 export function showErrorToast(title: string, description?: string) {
-  toast.error(title, {
+  sonnerToast.error(title, {
     description,
     duration: 4000,
   });
@@ -25,7 +25,7 @@ export function showErrorToast(title: string, description?: string) {
  * Show an info toast notification
  */
 export function showInfoToast(title: string, description?: string) {
-  toast.info(title, {
+  sonnerToast.info(title, {
     description,
     duration: 3000,
   });
@@ -35,7 +35,7 @@ export function showInfoToast(title: string, description?: string) {
  * Show a warning toast notification
  */
 export function showWarningToast(title: string, description?: string) {
-  toast.warning(title, {
+  sonnerToast.warning(title, {
     description,
     duration: 3500,
   });
