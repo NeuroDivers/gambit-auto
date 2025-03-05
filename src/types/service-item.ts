@@ -9,6 +9,10 @@ export interface ServiceItemType {
   commission_type: 'percentage' | 'flat' | null;
   assigned_profile_id?: string | null;
   package_id?: string;
+  // Add missing properties for sub-services
+  is_parent?: boolean;
+  sub_services?: ServiceItemType[];
+  parent_id?: string;
 }
 
 export interface EstimateItem extends ServiceItemType {

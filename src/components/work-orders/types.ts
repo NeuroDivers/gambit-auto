@@ -1,6 +1,6 @@
 
 import { ServiceItemType } from "@/types/service-item"
-import { WorkOrder } from "@/types"
+import { WorkOrder as BaseWorkOrder } from "@/types"
 
 export interface WorkOrderFormValues {
   first_name: string
@@ -31,6 +31,7 @@ export interface WorkOrderFormValues {
   assigned_bay_id: string | null
   service_items: ServiceItemType[]
   is_primary_vehicle?: boolean
+  save_vehicle?: boolean
 }
 
 export interface WorkOrderFormProps {
@@ -39,3 +40,6 @@ export interface WorkOrderFormProps {
   defaultStartTime?: Date
   onSubmitting?: (isSubmitting: boolean) => void
 }
+
+// Export the WorkOrder type
+export type WorkOrder = BaseWorkOrder;

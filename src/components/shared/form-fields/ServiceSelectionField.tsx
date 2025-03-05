@@ -1,4 +1,3 @@
-
 import { ServiceItemType } from "@/types/service-item"
 import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
@@ -88,7 +87,7 @@ export function ServiceSelectionField({
       service_name: service.name,
       quantity: 1,
       unit_price: service.base_price || 0,
-      commission_rate: null,
+      commission_rate: 0,
       commission_type: null,
       description: service.description || "",
       is_parent: true,
@@ -126,7 +125,7 @@ export function ServiceSelectionField({
       service_name: subService.name,
       quantity: 1,
       unit_price: subService.base_price || 0,
-      commission_rate: null,
+      commission_rate: 0,
       commission_type: null,
       description: subService.description || "",
       parent_id: parentService.service_id
