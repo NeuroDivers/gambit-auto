@@ -26,25 +26,25 @@ interface ColorVariable {
   defaultDark: string;
 }
 
-// Theme colors inspired by the Realtime Colors image
+// Updated theme colors based on Material Design dark theme guidelines
 const themeColorVariables: ColorVariable[] = [
-  { name: "background", description: "Main background color", defaultLight: "0 0% 100%", defaultDark: "260 25% 11%" }, // Darker purple-black
+  { name: "background", description: "Main background color", defaultLight: "0 0% 100%", defaultDark: "260 15% 8%" }, // Material dark background
   { name: "foreground", description: "Main text color", defaultLight: "240 10% 3.9%", defaultDark: "210 40% 98%" },
-  { name: "card", description: "Card background color", defaultLight: "0 0% 100%", defaultDark: "260 25% 14%" }, // Slightly lighter than background
+  { name: "card", description: "Card background color", defaultLight: "0 0% 100%", defaultDark: "260 15% 11%" }, // Slightly elevated surface
   { name: "card-foreground", description: "Card text color", defaultLight: "240 10% 3.9%", defaultDark: "210 40% 98%" },
-  { name: "primary", description: "Primary action color", defaultLight: "262 83.3% 57.8%", defaultDark: "267 85% 72%" }, // Bright purple
+  { name: "primary", description: "Primary action color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 75%" }, // Brighter in dark mode
   { name: "primary-foreground", description: "Text on primary color", defaultLight: "0 0% 100%", defaultDark: "0 0% 100%" },
-  { name: "secondary", description: "Secondary color", defaultLight: "240 4.8% 95.9%", defaultDark: "260 25% 18%" }, // Dark purple
+  { name: "secondary", description: "Secondary color", defaultLight: "240 4.8% 95.9%", defaultDark: "260 15% 18%" }, // Dark purple-gray
   { name: "secondary-foreground", description: "Text on secondary color", defaultLight: "240 5.9% 10%", defaultDark: "210 40% 98%" },
-  { name: "muted", description: "Muted background color", defaultLight: "240 4.8% 95.9%", defaultDark: "260 25% 18%" },
-  { name: "muted-foreground", description: "Muted text color", defaultLight: "240 3.8% 46.1%", defaultDark: "215 20% 65%" },
-  { name: "accent", description: "Accent color", defaultLight: "262 83.3% 57.8%", defaultDark: "267 85% 40%" }, // Purple accent
+  { name: "muted", description: "Muted background color", defaultLight: "240 4.8% 95.9%", defaultDark: "260 15% 18%" },
+  { name: "muted-foreground", description: "Muted text color", defaultLight: "240 3.8% 46.1%", defaultDark: "217 10% 70%" },
+  { name: "accent", description: "Accent color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 30%" }, // Deeper accent for dark mode
   { name: "accent-foreground", description: "Text on accent color", defaultLight: "0 0% 100%", defaultDark: "210 40% 98%" },
-  { name: "destructive", description: "Destructive action color", defaultLight: "0 84.2% 60.2%", defaultDark: "0 62.8% 30.6%" },
+  { name: "destructive", description: "Destructive action color", defaultLight: "0 84.2% 60.2%", defaultDark: "0 62.8% 40.6%" }, // Adjusted red for dark theme
   { name: "destructive-foreground", description: "Text on destructive color", defaultLight: "0 0% 98%", defaultDark: "210 40% 98%" },
-  { name: "border", description: "Border color", defaultLight: "240 5.9% 90%", defaultDark: "260 25% 25%" }, // Dark border
-  { name: "input", description: "Input border color", defaultLight: "240 5.9% 90%", defaultDark: "260 25% 25%" },
-  { name: "ring", description: "Focus ring color", defaultLight: "262 83.3% 57.8%", defaultDark: "267 85% 72%" }, // Purple ring
+  { name: "border", description: "Border color", defaultLight: "240 5.9% 90%", defaultDark: "260 15% 22%" }, // Slightly lighter than background
+  { name: "input", description: "Input border color", defaultLight: "240 5.9% 90%", defaultDark: "260 15% 22%" },
+  { name: "ring", description: "Focus ring color", defaultLight: "262 83.3% 57.8%", defaultDark: "262 83.3% 75%" }, // Brighter in dark mode for visibility
 ];
 
 const LOCAL_STORAGE_KEY = "custom-theme-colors";
@@ -296,9 +296,11 @@ export function ThemeColorManager() {
         </PopoverTrigger>
         <PopoverContent 
           className="w-auto p-0" 
+          align="start"
+          side="right"
+          sideOffset={10}
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.preventDefault()}
-          sideOffset={5}
         >
           <div className="p-3">
             <div className="mb-3">
@@ -314,6 +316,7 @@ export function ThemeColorManager() {
                   value={hexColor}
                   onChange={(e) => onChange(e.target.value)}
                   className="w-24 font-mono"
+                  onClick={(e) => e.stopPropagation()}
                 />
               </div>
               <div className="flex justify-between">

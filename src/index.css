@@ -37,33 +37,42 @@
   }
 
   .dark {
-    --background: 222 47% 11%;
+    /* Background - Material recommends #121212 (a very dark gray) as base */
+    --background: 260 15% 8%;
     --foreground: 210 40% 98%;
 
-    --card: 222 47% 14%;
+    /* Card - Slightly elevated surface */
+    --card: 260 15% 11%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222 47% 14%;
+    /* Popover - another elevated surface */
+    --popover: 260 15% 11%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 262 83.3% 70%;
+    /* Primary - Brighter in dark mode for contrast */
+    --primary: 262 83.3% 75%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 32% 20%;
+    /* Secondary - More saturated in dark mode */
+    --secondary: 260 15% 18%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217 32% 20%;
-    --muted-foreground: 215 20% 65%;
+    /* Muted - Low emphasis UI elements */
+    --muted: 260 15% 18%;
+    --muted-foreground: 217 10% 70%;
 
-    --accent: 262 83.3% 25%;
+    /* Accent - More saturated in dark mode */
+    --accent: 262 83.3% 30%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    /* Destructive - Slightly muted red for dark mode */
+    --destructive: 0 62.8% 40.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217 32% 25%;
-    --input: 217 32% 25%;
-    --ring: 262 83.3% 70%;
+    /* Borders and inputs - slightly lighter than background */
+    --border: 260 15% 22%;
+    --input: 260 15% 22%;
+    --ring: 262 83.3% 75%;
   }
 }
 
