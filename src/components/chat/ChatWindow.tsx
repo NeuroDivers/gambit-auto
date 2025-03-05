@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react"
 import { ChatMessage, ChatUser } from "@/types/chat"
 import { Card } from "@/components/ui/card"
@@ -158,11 +157,23 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
   }
 
   const unsendMessage = async (messageId: string) => {
-    setMessages(prevMessages => prevMessages.filter(msg => msg.id !== messageId))
+    const messageToDelete = messages.find(msg => msg.id === messageId)
+    if (!messageToDelete) return
+    
+    setMessages(prevMessages => 
+      prevMessages.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, is_deleted: true, message: "This message was unsent" }
+          : msg
+      )
+    )
 
     const { error } = await supabase
       .from("chat_messages")
-      .delete()
+      .update({
+        is_deleted: true,
+        message: "This message was unsent"
+      })
       .eq('id', messageId)
 
     if (error) {
@@ -172,12 +183,22 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
         description: "Please try again",
         variant: "destructive"
       })
-      fetchMessages()
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId ? messageToDelete : msg
+      ))
     } else {
       toast({
         title: "Message unsent",
         duration: 2000
       })
+      
+      if (channelRef.current) {
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'message-deleted',
+          payload: { messageId }
+        })
+      }
     }
   }
 
@@ -507,7 +528,8 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
               messages[index - 1]?.read_at !== undefined
 
             const isOwnMessage = message.sender_id === currentUserId
-            const canEdit = isOwnMessage && isWithinEditWindow(message)
+            const canEdit = isOwnMessage && isWithinEditWindow(message) && !message.is_deleted
+            const isDeleted = message.is_deleted
 
             return (
               <div
@@ -523,29 +545,41 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
                       <TooltipTrigger asChild>
                         <div
                           className={`rounded-lg px-4 py-2 max-w-[75%] ${
-                            message.sender_id === recipientId
-                              ? "bg-muted"
-                              : "bg-primary text-primary-foreground"
+                            isDeleted 
+                              ? "bg-muted/50 italic" 
+                              : message.sender_id === recipientId
+                                ? "bg-muted"
+                                : "bg-primary text-primary-foreground"
                           }`}
                         >
-                          <div className="whitespace-pre-wrap break-words">{message.message}</div>
-                          <div className="text-xs opacity-70 mt-1 flex items-center gap-1">
-                            {formatMessageTime(message.created_at)}
-                            {message.is_edited && (
-                              <span className="italic text-xs">(edited)</span>
-                            )}
-                            {message.sender_id !== recipientId && (
-                              message.read_at ? (
-                                <Check className="h-3 w-3" />
-                              ) : (
-                                <Circle className="h-3 w-3" />
-                              )
+                          <div className="whitespace-pre-wrap break-words">
+                            {isDeleted ? (
+                              <span className="text-muted-foreground text-sm">This message was unsent</span>
+                            ) : (
+                              message.message
                             )}
                           </div>
+                          {!isDeleted && (
+                            <div className="text-xs opacity-70 mt-1 flex items-center gap-1">
+                              {formatMessageTime(message.created_at)}
+                              {message.is_edited && (
+                                <span className="italic text-xs">(edited)</span>
+                              )}
+                              {message.sender_id !== recipientId && (
+                                message.read_at ? (
+                                  <Check className="h-3 w-3" />
+                                ) : (
+                                  <Circle className="h-3 w-3" />
+                                )
+                              )}
+                            </div>
+                          )}
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
-                        {message.read_at ? (
+                        {isDeleted ? (
+                          `Unsent ${formatDistanceToNow(new Date(message.updated_at || message.created_at), { addSuffix: true })}`
+                        ) : message.read_at ? (
                           `Read ${formatMessageTime(message.read_at)}`
                         ) : (
                           "Not read yet"
@@ -554,7 +588,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
                     </Tooltip>
                   </TooltipProvider>
                   
-                  {isOwnMessage && (
+                  {isOwnMessage && !isDeleted && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button 
@@ -572,7 +606,7 @@ export function ChatWindow({ recipientId }: { recipientId: string }) {
                             Edit
                           </DropdownMenuItem>
                         )}
-                        {!canEdit && (
+                        {!canEdit && !isDeleted && (
                           <DropdownMenuItem disabled className="cursor-not-allowed">
                             <Clock className="h-4 w-4 mr-2" />
                             Can't edit (over 5 min)

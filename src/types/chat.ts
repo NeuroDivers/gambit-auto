@@ -10,6 +10,7 @@ export interface ChatMessage {
   updated_at: string
   is_edited?: boolean
   original_message?: string
+  is_deleted?: boolean
 }
 
 export interface ChatRole {
