@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Pencil, Trash } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
 
 interface ServiceCardActionsProps {
@@ -11,8 +11,6 @@ interface ServiceCardActionsProps {
 }
 
 export const ServiceCardActions = ({ serviceId, onEdit, onRefetch }: ServiceCardActionsProps) => {
-  const { toast } = useToast();
-
   const handleDelete = async () => {
     try {
       const { error } = await supabase
@@ -22,17 +20,15 @@ export const ServiceCardActions = ({ serviceId, onEdit, onRefetch }: ServiceCard
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
+      toast("Success", {
         description: "Service type deleted successfully",
       });
 
       onRefetch();
     } catch (error: any) {
-      toast({
-        title: "Error",
+      toast("Error", {
         description: error.message,
-        variant: "destructive",
+        style: { backgroundColor: 'red', color: 'white' }
       });
     }
   };
