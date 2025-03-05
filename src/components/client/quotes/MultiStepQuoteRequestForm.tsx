@@ -1,4 +1,5 @@
 
+import { useState } from 'react'
 import { QuoteFormProvider } from './providers/QuoteFormProvider'
 import { ServiceSelectionForm } from './form-steps/service-selection/ServiceSelectionForm'
 import { VehicleInfoStep } from './form-steps/VehicleInfoStep'
@@ -10,6 +11,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ServiceItemType } from '@/types/service-item'
+import { useForm } from 'react-hook-form'
 
 interface Props {
   onSuccess?: () => void
@@ -26,7 +28,6 @@ const convertServices = (services: ServiceItemType[] = []): { id: string; name: 
 
 export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
   const {
-    form,
     step,
     totalSteps,
     services,
@@ -39,9 +40,10 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
     handleImageRemove,
     onVehicleSave,
     selectedServiceId
-  } = useQuoteRequestSubmission()
-
-  const progress = (step / totalSteps) * 100
+  } = useQuoteRequestSubmission();
+  
+  const form = useForm();
+  const progress = (step / totalSteps) * 100;
 
   // Helper function to adapt File[] to FileList for handleImageUpload
   const handleImagesAdapter = async (files: FileList): Promise<string[]> => {

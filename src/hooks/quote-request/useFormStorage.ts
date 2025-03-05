@@ -12,7 +12,7 @@ export function useFormStorage() {
     vehicleInfo: {
       make: "",
       model: "",
-      year: 0,
+      year: new Date().getFullYear(),
       vin: "",
       saveToAccount: false,
     },

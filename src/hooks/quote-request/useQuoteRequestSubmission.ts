@@ -1,36 +1,47 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ServiceFormData, ServiceItemType } from "@/types/service-item";
 import { useFormStorage } from "./useFormStorage";
 import { UseFormReturn } from "react-hook-form";
 
-// This is a fixed version of the hook to handle form submission
-export function useQuoteRequestSubmission(form: UseFormReturn<ServiceFormData>) {
+// This is an expanded version of the hook to handle form submission with all the required properties
+export function useQuoteRequestSubmission() {
+  const [step, setStep] = useState(1);
+  const totalSteps = 3; // Define the total number of steps
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+  const [services, setServices] = useState<ServiceItemType[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const formRef = useRef<UseFormReturn<ServiceFormData>>(null);
   const { toast } = useToast();
   
   // Get the form storage functions separately
   const { formData, updateFormData, clearStoredFormData } = useFormStorage();
   
-  // Watch for relevant form fields
-  const watchedServiceItems = form.watch("service_items") || [];
-  const watchedServiceType = form.watch("serviceType");
+  const nextStep = () => {
+    if (step < totalSteps) {
+      setStep(prev => prev + 1);
+    }
+  };
   
-  const submitRequest = async () => {
+  const prevStep = () => {
+    if (step > 1) {
+      setStep(prev => prev - 1);
+    }
+  };
+  
+  const handleSubmit = async (values: ServiceFormData) => {
     try {
       setIsSubmitting(true);
-      
-      // Get the current form values
-      const values = form.getValues();
       
       // Create the request payload
       const payload = {
         customer: {
           vehicle: {
-            make: values.vehicleInfo?.make,
-            model: values.vehicleInfo?.model,
-            year: values.vehicleInfo?.year,
+            make: values.vehicleInfo?.make || "",
+            model: values.vehicleInfo?.model || "",
+            year: values.vehicleInfo?.year || 0,
           }
         },
         services: values.service_items || [],
@@ -67,52 +78,57 @@ export function useQuoteRequestSubmission(form: UseFormReturn<ServiceFormData>) 
   };
   
   // Function to handle media upload for service details
-  const handleMediaUpload = async () => {
+  const handleImageUpload = async (files: File[]) => {
     try {
-      const values = form.getValues();
-      const serviceDetails = values.service_details;
+      setUploading(true);
+      console.log("Uploading images:", files);
       
-      if (!serviceDetails) return [];
+      // Simulate upload process
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const uploads: Promise<string>[] = [];
-      
-      // Process each service detail's images
-      Object.keys(serviceDetails).forEach(serviceId => {
-        const images = form.getValues(`details.${serviceId}.images` as any);
-        if (images && Array.isArray(images)) {
-          // Process image uploads
-          // For now, just simulate it
-        }
-      });
-      
-      return await Promise.all(uploads);
+      // Return mock URLs
+      return files.map((_, i) => `https://example.com/image_${i}.jpg`);
     } catch (error) {
-      console.error("Error uploading media:", error);
+      console.error("Error uploading images:", error);
+      toast({
+        variant: "destructive",
+        title: "Upload Failed",
+        description: "Could not upload images. Please try again.",
+      });
       return [];
+    } finally {
+      setUploading(false);
     }
+  };
+  
+  // Function to handle image removal
+  const handleImageRemove = (index: number) => {
+    console.log("Removing image at index:", index);
+    // Image removal logic would go here
   };
   
   // Function to save vehicle information
-  const saveVehicle = async () => {
-    const values = form.getValues();
-    if (values.vehicleInfo?.saveToAccount) {
-      try {
-        // Simulate saving vehicle to account
-        console.log("Saving vehicle to account:", values.vehicleInfo);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return true;
-      } catch (error) {
-        console.error("Error saving vehicle:", error);
-        return false;
-      }
-    }
-    return false;
+  const onVehicleSave = async (vehicleData: any) => {
+    console.log("Saving vehicle data:", vehicleData);
+    return true;
   };
   
   return {
+    form: formRef.current,
+    step,
+    totalSteps,
+    services,
     isSubmitting,
-    submitRequest,
-    handleMediaUpload,
-    saveVehicle
+    uploading,
+    handleSubmit,
+    nextStep,
+    prevStep,
+    handleImageUpload,
+    handleImageRemove,
+    onVehicleSave,
+    selectedServiceId,
+    submitRequest: handleSubmit,
+    handleMediaUpload: handleImageUpload,
+    saveVehicle: onVehicleSave
   };
 }
