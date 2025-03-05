@@ -12,7 +12,7 @@ export const useEstimateRequestsData = () => {
     try {
       console.log("Fetching estimate requests data");
       
-      // First check table info using our new security definer function
+      // First check table info using our security definer function
       const { data: tableInfo, error: tableInfoError } = await supabase
         .rpc('get_table_info', { table_name: 'estimate_requests' });
       
@@ -112,7 +112,7 @@ export const useEstimateRequestsData = () => {
         customerId = newCustomer.id;
       }
 
-      // Now create a test estimate request with our new RPC function to bypass RLS
+      // Now create a test estimate request with our RPC function to bypass RLS
       const { data, error } = await supabase.rpc('create_estimate_request', {
         p_customer_id: customerId,
         p_vehicle_make: "Test",
