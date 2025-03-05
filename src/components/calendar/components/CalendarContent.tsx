@@ -23,12 +23,9 @@ export function CalendarContent({
   onDateSelect,
   onWorkOrderSelect
 }: CalendarContentProps) {
-  // Sort service bays alphabetically by name
-  const sortedBays = serviceBays ? [...serviceBays].sort((a, b) => a.name.localeCompare(b.name)) : [];
-
   return (
     <>
-      {sortedBays.map((bay) => (
+      {serviceBays?.map((bay) => (
         <div 
           key={bay.id}
           className="grid"

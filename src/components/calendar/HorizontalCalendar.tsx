@@ -1,3 +1,4 @@
+
 import { useRef, useState, useCallback, useEffect } from "react"
 import { format, addDays, startOfDay, isWithinInterval, parseISO } from "date-fns"
 import { cn } from "@/lib/utils"
@@ -26,7 +27,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
   const { serviceBays } = useServiceBays()
   const { blockedDates } = useBlockedDates()
-  const DAYS_TO_LOAD = 7
+  const DAYS_TO_LOAD = 14
   const CELL_WIDTH = 60
   const BAY_COLUMN_WIDTH = 80
 
