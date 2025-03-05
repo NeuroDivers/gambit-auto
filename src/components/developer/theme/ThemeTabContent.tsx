@@ -1,4 +1,3 @@
-
 import React from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,11 +27,15 @@ export function ThemeTabContent({
   activeColorName,
   setActiveColorName
 }: ThemeTabContentProps) {
-  // Fix for the "all" category - ensure it displays ALL variables regardless of category
+  // Make sure ALL color variables are shown when "all" is selected
   const getFilteredVariables = () => {
-    return themeColorVariables.filter(
-      variable => selectedCategory === "all" || variable.category === selectedCategory
-    );
+    if (selectedCategory === "all") {
+      // When "all" is selected, return all variables without filtering
+      return themeColorVariables;
+    } else {
+      // Otherwise filter by the selected category
+      return themeColorVariables.filter(variable => variable.category === selectedCategory);
+    }
   };
 
   return (
