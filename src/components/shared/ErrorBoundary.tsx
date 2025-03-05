@@ -36,10 +36,22 @@ export function ErrorBoundary() {
       if (error.stack) {
         console.error("Error stack:", error.stack)
       }
+    } else if (error === null) {
+      // Handle null errors specifically
+      setErrorDetails({
+        title: "Application Error",
+        message: "The application encountered an unexpected null value. This might be due to missing data or a network issue."
+      })
     } else if (typeof error === 'string') {
       setErrorDetails({
         title: "Error",
         message: error
+      })
+    } else {
+      // Handle unknown error types
+      setErrorDetails({
+        title: "Unknown Error",
+        message: "An unexpected error occurred. Please try refreshing the page."
       })
     }
   }, [error])
