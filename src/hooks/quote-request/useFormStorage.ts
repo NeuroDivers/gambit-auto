@@ -1,50 +1,54 @@
-import { useCallback, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { ServiceFormData } from '@/types/service-item';
 
-export function useFormStorage(formKey: string) {
-  const methods = useForm<ServiceFormData>({
-    defaultValues: {
-      serviceType: '',
-      details: {},
-      images: [],
-      description: '',
-      vehicleInfo: {
-        make: '',
-        model: '',
-        year: new Date().getFullYear(),
-        vin: '',
-        saveToAccount: false
-      },
-      service_items: [],
-      service_details: {}
+import { useState, useEffect } from "react";
+import { ServiceFormData } from "@/types/service-item";
+
+export function useFormStorage() {
+  // Initialize with the default form state
+  const initialFormData: ServiceFormData = {
+    serviceType: "",
+    details: {},
+    images: [],
+    description: "",
+    vehicleInfo: {
+      make: "",
+      model: "",
+      year: 0,
+      vin: "",
+      saveToAccount: false,
+    },
+    service_items: [],
+    service_details: {}
+  };
+
+  const [formData, setFormData] = useState<ServiceFormData>(
+    () => {
+      try {
+        const saved = localStorage.getItem("quote_request_form");
+        return saved ? JSON.parse(saved) : initialFormData;
+      } catch (error) {
+        console.error("Error loading form data:", error);
+        return initialFormData;
+      }
     }
-  });
-  const { setValue, getValues } = methods;
+  );
 
-  const storageKey = `form-storage-${formKey}`;
-
-  const saveFormToStorage = useCallback(() => {
-    const values = getValues();
-    localStorage.setItem(storageKey, JSON.stringify(values));
-  }, [getValues, storageKey]);
-
-  useEffect(() => {
-    const storedData = localStorage.getItem(storageKey);
-    if (storedData) {
-      const parsedData = JSON.parse(storedData);
-      Object.keys(parsedData).forEach((key) => {
-        setValue(key as keyof ServiceFormData, parsedData[key]);
-      });
+  // Updates form data and stores in localStorage
+  const updateFormData = (data: Partial<ServiceFormData>) => {
+    const updatedData = { ...formData, ...data };
+    setFormData(updatedData);
+    
+    try {
+      localStorage.setItem("quote_request_form", JSON.stringify(updatedData));
+    } catch (error) {
+      console.error("Error saving form data:", error);
     }
-  }, [setValue, storageKey]);
+  };
 
-  useEffect(() => {
-    window.addEventListener('beforeunload', saveFormToStorage);
-    return () => {
-      window.removeEventListener('beforeunload', saveFormToStorage);
-    };
-  }, [saveFormToStorage]);
+  // Clears the stored form data
+  const clearStoredFormData = () => {
+    setFormData(initialFormData);
+    localStorage.removeItem("quote_request_form");
+  };
 
-  return methods;
+  return { formData, updateFormData, clearStoredFormData };
 }

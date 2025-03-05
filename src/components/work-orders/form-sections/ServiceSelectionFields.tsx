@@ -21,8 +21,6 @@ export function ServiceSelectionFields() {
                 onChange={field.onChange}
                 showCommission={true}
                 showAssignedStaff={true}
-                label="Services" 
-                description="Select services for this work order"
               />
             </FormControl>
           </FormItem>

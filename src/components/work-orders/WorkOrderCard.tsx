@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { WorkOrder } from "@/types/work-order"
+import { WorkOrder } from "@/types"
 import { WorkOrderCardHeader } from "./card/WorkOrderCardHeader"
 import { WorkOrderCardDetails } from "./card/WorkOrderCardDetails"
 import { WorkOrderCardActions } from "./card/WorkOrderCardActions"
@@ -11,7 +11,7 @@ export function WorkOrderCard({ request }: { request: WorkOrder }) {
   // Create a copy with optional timeframe to satisfy the interface
   const workOrderWithTimeframe = {
     ...request,
-    timeframe: request.timeframe as "flexible" | "asap" | "within_week" | "within_month" || "flexible"
+    timeframe: (request.timeframe as "flexible" | "asap" | "within_week" | "within_month") || "flexible"
   };
 
   return (

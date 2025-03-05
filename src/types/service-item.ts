@@ -28,8 +28,11 @@ export interface ServiceSelectionFieldProps {
   disabled?: boolean;
   allowPriceEdit?: boolean;
   onServicesChange?: (services: ServiceItemType[]) => void;
-  // Add this for compatibility with existing code
+  // Add these for compatibility with existing code
   services?: ServiceItemType[];
+  name?: string;
+  label?: string;
+  description?: string;
 }
 
 export interface PackageSelectProps {
