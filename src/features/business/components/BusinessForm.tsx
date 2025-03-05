@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Form } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
 import { businessFormSchema, BusinessFormValues } from "../schemas/businessFormSchema"
 import { LogoUploadSection } from "./LogoUploadSection"
@@ -15,7 +15,6 @@ interface BusinessFormProps {
 }
 
 export function BusinessForm({ businessProfile }: BusinessFormProps) {
-  const { toast } = useToast()
   const [isUploading, setIsUploading] = React.useState(false)
   const [lightLogoPreview, setLightLogoPreview] = React.useState<string | null>(null)
   const [darkLogoPreview, setDarkLogoPreview] = React.useState<string | null>(null)
@@ -86,17 +85,15 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
         setDarkLogoPreview(publicUrl)
       }
 
-      toast({
-        title: "Success",
-        description: `${type === 'light' ? 'Light' : 'Dark'} logo uploaded successfully.`,
-      })
+      toast("Success", {
+        description: `${type === 'light' ? 'Light' : 'Dark'} logo uploaded successfully.`
+      });
     } catch (error) {
       console.error("Error uploading logo:", error)
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast("Error", {
         description: "Failed to upload logo. Please try again.",
-      })
+        style: { backgroundColor: 'red', color: 'white' }
+      });
     } finally {
       setIsUploading(false)
     }
@@ -135,17 +132,15 @@ export function BusinessForm({ businessProfile }: BusinessFormProps) {
 
       if (error) throw error
 
-      toast({
-        title: "Success",
-        description: "Business profile updated successfully.",
-      })
+      toast("Success", {
+        description: "Business profile updated successfully."
+      });
     } catch (error) {
       console.error("Error updating business profile:", error)
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast("Error", {
         description: "There was an error updating the business profile.",
-      })
+        style: { backgroundColor: 'red', color: 'white' }
+      });
     }
   }
 

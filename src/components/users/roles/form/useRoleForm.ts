@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { roleFormSchema, RoleFormValues } from "./RoleFormSchema"
 import { supabase } from "@/integrations/supabase/client"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { useCallback, useEffect } from "react"
 import { Role } from "../types/role"
 
@@ -19,8 +19,6 @@ const PROTECTED_ROLE_IDS = [
 ];
 
 export const useRoleForm = ({ role, onSuccess, onOpenChange }: UseRoleFormProps) => {
-  const { toast } = useToast()
-
   const form = useForm<RoleFormValues>({
     resolver: zodResolver(roleFormSchema),
     defaultValues: {
@@ -91,21 +89,16 @@ export const useRoleForm = ({ role, onSuccess, onOpenChange }: UseRoleFormProps)
         if (error) throw error
       }
 
-      toast({
-        title: "Success",
-        description: `Role ${role ? "updated" : "created"} successfully`
-      })
+      toast(`Role ${role ? "updated" : "created"} successfully`);
 
       onSuccess?.()
       onOpenChange(false)
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      })
+      toast(`Error: ${error.message}`, { 
+        style: { backgroundColor: 'red', color: 'white' }
+      });
     }
-  }, [role, onSuccess, onOpenChange, toast])
+  }, [role, onSuccess, onOpenChange])
 
   return {
     form,
