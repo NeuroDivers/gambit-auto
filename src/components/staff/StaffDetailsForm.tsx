@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { useEffect } from "react"
-import { toast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
 import { Loader2 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -87,9 +87,8 @@ export function StaffDetailsForm({ staffDetails, staffId, onSuccess }: StaffDeta
 
       if (error) throw error
 
-      toast({
-        title: "Staff details updated",
-        description: "The staff details have been updated successfully",
+      toast("Staff details updated", {
+        description: "The staff details have been updated successfully"
       })
       
       if (onSuccess) {
@@ -97,10 +96,9 @@ export function StaffDetailsForm({ staffDetails, staffId, onSuccess }: StaffDeta
       }
     } catch (error: any) {
       console.error("Error updating staff details:", error)
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast("Error", {
         description: error.message || "Failed to update staff details",
+        style: { backgroundColor: 'red', color: 'white' }
       })
     }
   }

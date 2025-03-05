@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { toast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
 import { Loader2 } from "lucide-react"
 import { useRoleData } from "@/hooks/useRoleData"
@@ -91,19 +91,17 @@ export function CreateStaffDialog({ open, onOpenChange }: CreateStaffDialogProps
 
       if (staffError) throw staffError
 
-      toast({
-        title: "Staff member created",
-        description: "New staff member has been added successfully",
+      toast("Staff member created", {
+        description: "New staff member has been added successfully"
       })
       
       form.reset()
       onOpenChange(false)
     } catch (error: any) {
       console.error("Error creating staff:", error)
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast("Error", {
         description: error.message || "Failed to create staff member",
+        style: { backgroundColor: 'red', color: 'white' }
       })
     }
   }
