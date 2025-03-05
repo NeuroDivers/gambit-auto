@@ -5,11 +5,12 @@ import { useWorkOrderForm } from "./hooks/useWorkOrderForm"
 import { FormSections } from "./form-sections/FormSections"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { CustomerSearch } from "./form-sections/CustomerSearch"
 
 export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmitting }: WorkOrderFormProps) {
   const mounted = useRef(true);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(workOrder?.client_id || null);
 
   useEffect(() => {
     return () => {
@@ -23,6 +24,17 @@ export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmit
       onSuccess();
     }
   }, defaultStartTime);
+
+  // Watch for changes to customer selection
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'client_id' && value.client_id) {
+        setSelectedCustomerId(value.client_id as string);
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form.watch]);
 
   useEffect(() => {
     if (onSubmitting && mounted.current) {
@@ -62,6 +74,7 @@ export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmit
           form={form}
           isSubmitting={form.formState.isSubmitting}
           isEditing={!!workOrder}
+          customerId={selectedCustomerId}
         />
         
         <div className="flex justify-end pt-6">

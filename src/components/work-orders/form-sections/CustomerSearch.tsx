@@ -79,6 +79,9 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
           form.setValue("vehicle_model", primaryVehicle.model)
           form.setValue("vehicle_year", primaryVehicle.year)
           form.setValue("vehicle_serial", primaryVehicle.vin || "")
+          form.setValue("vehicle_trim", primaryVehicle.trim || "")
+          form.setValue("vehicle_body_class", primaryVehicle.body_class || "")
+          form.setValue("vehicle_doors", primaryVehicle.doors || null)
         }
       }
     }
