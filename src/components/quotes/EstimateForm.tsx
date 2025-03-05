@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -334,14 +335,6 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
     onSubmit(data)
   }
 
-  // Filter customers based on search query - Ensure we always have an array for filteredCustomers
-  const filteredCustomers = customerSearchQuery && clients 
-    ? clients.filter(client => 
-        `${client.first_name} ${client.last_name}`.toLowerCase().includes(customerSearchQuery.toLowerCase()) ||
-        client.email?.toLowerCase().includes(customerSearchQuery.toLowerCase())
-      )
-    : clients || [] // Ensure we always have an array, even if clients is undefined
-
   return (
     <Card>
       <CardHeader>
@@ -369,45 +362,64 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0" align="start">
-                <Command>
-                  <CommandInput 
-                    placeholder="Search customers..." 
-                    value={customerSearchQuery}
-                    onValueChange={setCustomerSearchQuery}
-                  />
-                  {clientsLoading ? (
-                    <div className="py-6 text-center text-sm text-muted-foreground">
-                      Loading customers...
+                {/* Only render the Command component when the popover is open to avoid initialization issues */}
+                {openCustomerSelect && (
+                  <div className="relative">
+                    <div className="flex items-center border-b px-3">
+                      <input
+                        className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                        value={customerSearchQuery}
+                        onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                        placeholder="Search customers..."
+                      />
                     </div>
-                  ) : (
-                    <>
-                      <CommandEmpty>No customers found.</CommandEmpty>
-                      <CommandGroup className="max-h-[300px] overflow-y-auto">
-                        {filteredCustomers.map((client) => (
-                          <CommandItem
-                            key={client.id}
-                            value={client.id}
-                            onSelect={() => {
-                              handleCustomerChange(client.id)
-                              setOpenCustomerSelect(false)
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                selectedCustomer === client.id ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {client.first_name} {client.last_name}
-                            <span className="ml-2 text-sm text-muted-foreground">
-                              {client.email}
-                            </span>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </>
-                  )}
-                </Command>
+                    
+                    {clientsLoading ? (
+                      <div className="py-6 text-center text-sm text-muted-foreground">
+                        Loading customers...
+                      </div>
+                    ) : (
+                      <div className="max-h-[300px] overflow-y-auto py-1">
+                        {!clients || clients.length === 0 ? (
+                          <div className="py-6 text-center text-sm">No customers found.</div>
+                        ) : (
+                          <div>
+                            {clients
+                              .filter(client => 
+                                !customerSearchQuery || 
+                                `${client.first_name || ''} ${client.last_name || ''}`.toLowerCase().includes(customerSearchQuery.toLowerCase()) ||
+                                client.email?.toLowerCase().includes(customerSearchQuery.toLowerCase())
+                              )
+                              .map((client) => (
+                                <div
+                                  key={client.id}
+                                  className={cn(
+                                    "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+                                    selectedCustomer === client.id ? "bg-accent text-accent-foreground" : ""
+                                  )}
+                                  onClick={() => {
+                                    handleCustomerChange(client.id);
+                                    setOpenCustomerSelect(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      selectedCustomer === client.id ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  <span>{client.first_name || ''} {client.last_name || ''}</span>
+                                  <span className="ml-2 text-sm text-muted-foreground">
+                                    {client.email || ''}
+                                  </span>
+                                </div>
+                              ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </PopoverContent>
             </Popover>
             <div className="flex items-center space-x-2 mt-2">
