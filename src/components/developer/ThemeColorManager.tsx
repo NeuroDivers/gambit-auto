@@ -265,6 +265,12 @@ export function ThemeColorManager() {
                 value={hexColor}
                 onChange={(e) => onChange(e.target.value)}
                 className="w-full h-10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                }}
               />
             </div>
           </div>
