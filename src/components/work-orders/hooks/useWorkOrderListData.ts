@@ -119,18 +119,19 @@ export function useWorkOrderListData() {
         }
 
         return data.sort((a, b) => {
-          const aMatch = a.name.match(/^(\d+)/);
-          const bMatch = b.name.match(/^(\d+)/);
+          // Extract numeric prefixes if they exist
+          const aNumMatch = a.name.match(/^(\d+)/);
+          const bNumMatch = b.name.match(/^(\d+)/);
           
           // If both have numeric prefixes, sort numerically
-          if (aMatch && bMatch) {
-            const aNum = parseInt(aMatch[1], 10);
-            const bNum = parseInt(bMatch[1], 10);
+          if (aNumMatch && bNumMatch) {
+            const aNum = parseInt(aNumMatch[1], 10);
+            const bNum = parseInt(bNumMatch[1], 10);
             return aNum - bNum;
           }
           
-          if (aMatch && !bMatch) return -1;
-          if (!aMatch && bMatch) return 1;
+          if (aNumMatch && !bNumMatch) return -1;
+          if (!aNumMatch && bNumMatch) return 1;
           
           return a.name.localeCompare(b.name);
         });
