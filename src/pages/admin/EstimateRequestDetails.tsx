@@ -26,32 +26,46 @@ export default function EstimateRequestDetails() {
     
     const fetchEstimateRequest = async () => {
       try {
-        // First check if the estimate request exists
-        const { data: checkData, error: checkError } = await supabase
+        // First try a simple query without joins
+        const { data: basicData, error: basicError } = await supabase
           .from("estimate_requests")
-          .select("id")
+          .select("*")
           .eq("id", id)
           .single()
           
-        if (checkError) {
-          console.error("Error checking estimate request:", checkError)
-          throw checkError
+        if (basicError) {
+          console.error("Error checking basic estimate request:", basicError)
+          throw basicError
         }
         
-        // Now fetch the full data with relations
+        console.log("Basic estimate request data:", basicData)
+        
+        // Now try to fetch with customer data
         const { data, error } = await supabase
           .from("estimate_requests")
           .select(`
             *,
-            customer:customers!estimate_requests_customer_id_fkey(*),
+            customer:customers(*),
             vehicle_info:vehicles(*)
           `)
           .eq("id", id)
           .single()
 
-        if (error) throw error
-        console.log("Fetched estimate request:", data)
-        setEstimateRequest(data)
+        if (error) {
+          console.error("Error fetching full estimate request:", error)
+          
+          // Fall back to the basic data if join fails
+          if (basicData) {
+            console.log("Using basic data as fallback since join failed")
+            setEstimateRequest(basicData)
+          } else {
+            toast.error("Failed to load estimate request")
+            throw error
+          }
+        } else {
+          console.log("Fetched estimate request with joins:", data)
+          setEstimateRequest(data)
+        }
       } catch (error) {
         console.error("Error fetching estimate request:", error)
         toast.error("Failed to load estimate request")

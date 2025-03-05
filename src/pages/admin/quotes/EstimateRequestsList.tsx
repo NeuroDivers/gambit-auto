@@ -16,27 +16,7 @@ export function EstimateRequestsList() {
   useEffect(() => {
     const fetchEstimateRequests = async () => {
       try {
-        // First, let's do a raw count to check if data exists
-        const { count, error: countError } = await supabase
-          .from("estimate_requests")
-          .select("*", { count: "exact", head: true })
-        
-        if (countError) {
-          console.error("Error counting estimate requests:", countError)
-          toast.error("Error checking estimate requests")
-          throw countError
-        }
-        
-        console.log("Estimate requests count:", count)
-        
-        if (count === 0) {
-          console.log("No estimate requests found in the database")
-          setEstimateRequests([])
-          setLoading(false)
-          return
-        }
-        
-        // Now fetch the actual data without joins first to verify basic access
+        // Use a simpler query first to check if we can access the table
         const { data: basicData, error: basicError } = await supabase
           .from("estimate_requests")
           .select("*")
@@ -49,7 +29,14 @@ export function EstimateRequestsList() {
         
         console.log("Basic estimate requests data:", basicData)
         
-        // Now fetch with the join to customers
+        if (basicData && basicData.length === 0) {
+          console.log("No estimate requests found in the database query")
+          setEstimateRequests([])
+          setLoading(false)
+          return
+        }
+        
+        // Since we have records in the basic query, try fetching with customer relationship
         const { data, error } = await supabase
           .from("estimate_requests")
           .select(`
@@ -60,12 +47,19 @@ export function EstimateRequestsList() {
 
         if (error) {
           console.error("Error fetching estimate requests with customer join:", error)
-          toast.error("Error loading complete estimate requests")
-          throw error
+          
+          // Fall back to the basic data if the join fails
+          if (basicData) {
+            console.log("Using basic data as fallback since join failed")
+            setEstimateRequests(basicData)
+          } else {
+            toast.error("Error loading estimate requests")
+            throw error
+          }
+        } else {
+          console.log("Fetched estimate requests with customer join:", data)
+          setEstimateRequests(data || [])
         }
-        
-        console.log("Fetched estimate requests with customer join:", data)
-        setEstimateRequests(data || [])
       } catch (error) {
         console.error("Error in estimate requests fetch flow:", error)
         toast.error("Failed to load estimate requests. Please try again.")
