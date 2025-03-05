@@ -26,12 +26,13 @@ export function AuthLayout({
   footerAction,
 }: AuthLayoutProps) {
   const { theme, resolvedTheme } = useTheme()
-  const [currentTheme, setCurrentTheme] = useState<string | undefined>(undefined)
+  const [isDarkTheme, setIsDarkTheme] = useState(false)
 
-  // Update currentTheme whenever theme or resolvedTheme changes
+  // Determine if dark mode is active
   useEffect(() => {
-    const effectiveTheme = theme === 'system' ? resolvedTheme : theme;
-    setCurrentTheme(effectiveTheme);
+    // Check if the HTML element has the dark class
+    const isDark = document.documentElement.classList.contains('dark');
+    setIsDarkTheme(isDark);
   }, [theme, resolvedTheme])
 
   const { data: businessProfile } = useQuery({
@@ -48,9 +49,9 @@ export function AuthLayout({
   })
 
   // Get the appropriate logo URL based on current theme
-  const logoUrl = currentTheme === 'dark' 
-    ? businessProfile?.dark_logo_url || businessProfile?.logo_url
-    : businessProfile?.light_logo_url || businessProfile?.logo_url
+  const logoUrl = isDarkTheme 
+    ? businessProfile?.dark_logo_url
+    : businessProfile?.light_logo_url;
 
   return (
     <div className="container relative min-h-screen flex items-center justify-center">

@@ -52,13 +52,10 @@ export function ClientSidebarHeader({ firstName, role, onLogout }: ClientSidebar
     console.log("Logo selection in client sidebar - Dark mode:", isDarkTheme);
     console.log("Available logos - Dark:", businessProfile.dark_logo_url, "Light:", businessProfile.light_logo_url);
     
-    if (isDarkTheme) {
-      // For dark theme: Use dark_logo_url, fall back to logo_url
-      return businessProfile.dark_logo_url || businessProfile.logo_url;
-    } else {
-      // For light theme: Use light_logo_url, fall back to logo_url
-      return businessProfile.light_logo_url || businessProfile.logo_url;
-    }
+    // Use the appropriate logo based on current theme
+    return isDarkTheme 
+      ? businessProfile.dark_logo_url 
+      : businessProfile.light_logo_url;
   }, [businessProfile, isDarkTheme]);
 
   const initials = firstName ? firstName.charAt(0).toUpperCase() : '?';
