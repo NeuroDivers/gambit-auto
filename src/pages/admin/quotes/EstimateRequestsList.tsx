@@ -17,6 +17,22 @@ export function EstimateRequestsList() {
     const fetchEstimateRequests = async () => {
       try {
         console.log("Attempting to fetch estimate_requests")
+        
+        // First, check that the table exists and has data
+        const { count, error: countError } = await supabase
+          .from("estimate_requests")
+          .select("*", { count: "exact", head: true })
+        
+        if (countError) {
+          console.error("Error checking estimate requests count:", countError)
+          toast.error("Failed to check estimate requests. Please try again.")
+          setEstimateRequests([])
+          return
+        }
+        
+        console.log(`Found ${count} estimate requests in the database`)
+        
+        // Now fetch the actual data with relations
         const { data: estimateRequests, error } = await supabase
           .from("estimate_requests")
           .select(`

@@ -28,6 +28,26 @@ export default function EstimateRequestDetails() {
       try {
         console.log("Attempting to fetch estimate request with ID:", id)
         
+        // First, check if the estimate request exists
+        const { count, error: countError } = await supabase
+          .from("estimate_requests")
+          .select("*", { count: "exact", head: true })
+          .eq("id", id)
+        
+        if (countError) {
+          console.error("Error checking estimate request:", countError)
+          throw countError
+        }
+        
+        console.log(`Found ${count} matching estimate requests`)
+        
+        if (count === 0) {
+          console.error("No estimate request found with ID:", id)
+          setEstimateRequest(null)
+          setLoading(false)
+          return
+        }
+        
         const { data, error } = await supabase
           .from("estimate_requests")
           .select(`
