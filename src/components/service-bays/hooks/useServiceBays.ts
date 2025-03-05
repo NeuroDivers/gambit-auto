@@ -57,13 +57,11 @@ export function useServiceBays() {
         const aMatch = a.name.match(/^(\d+)/);
         const bMatch = b.name.match(/^(\d+)/);
         
-        // If both have numeric prefixes, sort by number
+        // If both have numeric prefixes, sort numerically
         if (aMatch && bMatch) {
           const aNum = parseInt(aMatch[1], 10);
           const bNum = parseInt(bMatch[1], 10);
-          if (aNum !== bNum) {
-            return aNum - bNum;
-          }
+          return aNum - bNum;
         }
         
         // If only one has a numeric prefix, put it first

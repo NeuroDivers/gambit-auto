@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -121,12 +122,11 @@ export function useWorkOrderListData() {
           const aMatch = a.name.match(/^(\d+)/);
           const bMatch = b.name.match(/^(\d+)/);
           
+          // If both have numeric prefixes, sort numerically
           if (aMatch && bMatch) {
             const aNum = parseInt(aMatch[1], 10);
             const bNum = parseInt(bMatch[1], 10);
-            if (aNum !== bNum) {
-              return aNum - bNum;
-            }
+            return aNum - bNum;
           }
           
           if (aMatch && !bMatch) return -1;
