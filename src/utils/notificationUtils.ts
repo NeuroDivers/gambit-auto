@@ -103,8 +103,13 @@ export const markNotificationAsRead = async (notification: Notification) => {
 
 // Set up realtime subscriptions for notifications and chat messages
 export const setupNotificationSubscriptions = (onUpdate: () => void) => {
+  console.log("Setting up notification page subscriptions");
+  
+  // Create unique channel names with timestamp to avoid conflicts
+  const timestamp = new Date().getTime();
+  
   const notificationsChannel = supabase
-    .channel("notifications-page")
+    .channel(`notifications-page-${timestamp}`)
     .on(
       "postgres_changes",
       {
@@ -112,14 +117,17 @@ export const setupNotificationSubscriptions = (onUpdate: () => void) => {
         schema: "public",
         table: "notifications",
       },
-      () => {
+      (payload) => {
+        console.log("Notification page change detected:", payload);
         onUpdate();
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      console.log("Notification page subscription status:", status);
+    });
 
   const chatChannel = supabase
-    .channel("chat-notifications-page")
+    .channel(`chat-notifications-page-${timestamp}`)
     .on(
       "postgres_changes",
       {
@@ -127,13 +135,17 @@ export const setupNotificationSubscriptions = (onUpdate: () => void) => {
         schema: "public",
         table: "chat_messages",
       },
-      () => {
+      (payload) => {
+        console.log("Chat message page change detected:", payload);
         onUpdate();
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      console.log("Chat notification page subscription status:", status);
+    });
 
   return () => {
+    console.log("Cleaning up notification page subscriptions");
     supabase.removeChannel(notificationsChannel);
     supabase.removeChannel(chatChannel);
   };

@@ -84,8 +84,13 @@ export const markNotificationAsRead = async (notification: Notification) => {
  * Sets up realtime subscriptions for notifications
  */
 export const setupHeaderNotificationSubscriptions = (onUpdate: () => void) => {
+  console.log("Setting up header notification subscriptions");
+  
+  // Create a unique channel name to avoid conflicts
+  const timestamp = new Date().getTime();
+  
   const notificationsChannel = supabase
-    .channel("notifications-header")
+    .channel(`notifications-header-${timestamp}`)
     .on(
       "postgres_changes",
       {
@@ -94,19 +99,25 @@ export const setupHeaderNotificationSubscriptions = (onUpdate: () => void) => {
         table: "notifications",
       },
       (payload) => {
+        console.log("Header notification change detected:", payload);
+        
         // Show toast for new notifications
         if (payload.eventType === 'INSERT') {
+          console.log("Showing toast for new notification:", payload.new);
           toast(payload.new.title, {
             description: payload.new.message,
+            duration: 5000,
           });
         }
         onUpdate();
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      console.log("Header notifications subscription status:", status);
+    });
 
   const chatChannel = supabase
-    .channel("chat-messages-header")
+    .channel(`chat-messages-header-${timestamp}`)
     .on(
       "postgres_changes",
       {
@@ -115,13 +126,17 @@ export const setupHeaderNotificationSubscriptions = (onUpdate: () => void) => {
         table: "chat_messages",
       },
       (payload) => {
+        console.log("Chat message change detected in header:", payload);
         // We don't show toast here since it's handled by useNotificationSubscription
         onUpdate();
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      console.log("Header chat messages subscription status:", status);
+    });
 
   return () => {
+    console.log("Cleaning up header notification subscriptions");
     supabase.removeChannel(notificationsChannel);
     supabase.removeChannel(chatChannel);
   };

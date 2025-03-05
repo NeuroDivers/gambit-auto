@@ -26,9 +26,12 @@ export function useChatSubscriptions(
     if (presenceChannelRef.current) {
       supabase.removeChannel(presenceChannelRef.current)
     }
+    
+    // Create unique channel name with timestamp to avoid conflicts
+    const timestamp = new Date().getTime()
 
     channelRef.current = supabase
-      .channel(`chat_messages_${currentUserId}_${recipientId}`)
+      .channel(`chat_messages_${currentUserId}_${recipientId}_${timestamp}`)
       .on(
         "postgres_changes",
         {
@@ -48,7 +51,8 @@ export function useChatSubscriptions(
 
             await markSingleMessageAsRead(newMessage.id)
 
-            // Make sure we use sonner toast
+            // Display toast notification
+            console.log("Showing chat message toast in chat view")
             toast(recipient?.first_name || 'New Message', {
               description: newMessage.message.substring(0, 50) + (newMessage.message.length > 50 ? '...' : ''),
               duration: 5000,
@@ -61,7 +65,7 @@ export function useChatSubscriptions(
       })
 
     presenceChannelRef.current = supabase
-      .channel(`typing_status_${currentUserId}_${recipientId}`)
+      .channel(`typing_status_${currentUserId}_${recipientId}_${timestamp}`)
       .on('presence', { event: 'sync' }, () => {
         const state = presenceChannelRef.current.presenceState();
         console.log('Presence sync state:', state);
