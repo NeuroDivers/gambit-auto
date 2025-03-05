@@ -13,8 +13,9 @@ export const useEstimateRequestsData = () => {
       console.log("Fetching estimate requests data");
       
       // First check table info using our security definer function
+      // We're passing the parameter as a string literal, not as a named parameter
       const { data: tableInfo, error: tableInfoError } = await supabase
-        .rpc('get_table_info', { table_name: 'estimate_requests' });
+        .rpc('get_table_info', 'estimate_requests');
       
       if (tableInfoError) {
         console.error("Error checking table info:", tableInfoError);
