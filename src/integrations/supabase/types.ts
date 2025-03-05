@@ -1925,57 +1925,6 @@ export type Database = {
           },
         ]
       }
-      site_colors: {
-        Row: {
-          accent_color: string
-          accent_hover: string
-          background: string
-          button_primary: string
-          button_primary_hover: string
-          button_secondary: string
-          button_secondary_hover: string
-          created_at: string
-          foreground: string
-          id: string
-          primary_color: string
-          primary_hover: string
-          theme_mode: string
-          updated_at: string
-        }
-        Insert: {
-          accent_color?: string
-          accent_hover?: string
-          background?: string
-          button_primary?: string
-          button_primary_hover?: string
-          button_secondary?: string
-          button_secondary_hover?: string
-          created_at?: string
-          foreground?: string
-          id?: string
-          primary_color?: string
-          primary_hover?: string
-          theme_mode?: string
-          updated_at?: string
-        }
-        Update: {
-          accent_color?: string
-          accent_hover?: string
-          background?: string
-          button_primary?: string
-          button_primary_hover?: string
-          button_secondary?: string
-          button_secondary_hover?: string
-          created_at?: string
-          foreground?: string
-          id?: string
-          primary_color?: string
-          primary_hover?: string
-          theme_mode?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       staff: {
         Row: {
           city: string | null
