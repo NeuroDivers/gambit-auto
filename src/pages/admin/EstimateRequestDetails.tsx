@@ -42,6 +42,7 @@ export default function EstimateRequestDetails() {
           throw requestError
         }
         
+        console.log("Retrieved estimate request data:", requestData)
         setEstimateRequest(requestData)
         setDebug(requestData)
         
@@ -56,6 +57,7 @@ export default function EstimateRequestDetails() {
           if (customerError) {
             console.error("Error fetching customer data:", customerError)
           } else {
+            console.log("Retrieved customer data:", customer)
             setCustomerData(customer)
             
             // Update the estimate request with the customer data
@@ -157,7 +159,7 @@ export default function EstimateRequestDetails() {
             <CardContent className="space-y-2">
               <div>
                 <p className="font-medium">Customer ID:</p>
-                <p>{estimateRequest.customer_id}</p>
+                <p>{estimateRequest.customer_id || "Not provided"}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">

@@ -19,12 +19,11 @@ export function EstimateRequestsList() {
       try {
         console.log("Attempting to fetch estimate_requests")
         
-        // Use a simple query without joins to get the basic data
+        // Fetch all estimate requests without any joins to ensure we get all records
         const { data: basicEstimateRequests, error: basicError } = await supabase
           .from("estimate_requests")
           .select("*")
           .order("created_at", { ascending: false })
-          .limit(30)
           
         if (basicError) {
           console.error("Error fetching basic estimate requests:", basicError)
@@ -34,39 +33,46 @@ export function EstimateRequestsList() {
           return
         } 
         
-        console.log("Basic estimate requests data:", basicEstimateRequests)
+        console.log("Estimate requests data:", basicEstimateRequests)
+        setDebugInfo(basicEstimateRequests)
         
         // Use the basic data as our primary data source
-        setEstimateRequests(basicEstimateRequests || [])
-        
-        // Try to fetch additional customer data for each request
         if (basicEstimateRequests && basicEstimateRequests.length > 0) {
-          // Get all unique customer IDs
-          const customerIds = [...new Set(basicEstimateRequests.map(req => req.customer_id))]
+          setEstimateRequests(basicEstimateRequests)
           
-          // Fetch customer data separately
-          const { data: customers, error: customerError } = await supabase
-            .from("customers")
-            .select("id, first_name, last_name, email")
-            .in("id", customerIds)
+          // Try to fetch additional customer data for each request
+          const customerIds = [...new Set(basicEstimateRequests
+            .filter(req => req.customer_id)
+            .map(req => req.customer_id))]
           
-          if (customerError) {
-            console.error("Error fetching customer data:", customerError)
-          } else if (customers && customers.length > 0) {
-            // Create a map of customer data by ID for quick lookup
-            const customerMap = customers.reduce((map, customer) => {
-              map[customer.id] = customer
-              return map
-            }, {})
+          if (customerIds.length > 0) {
+            // Fetch customer data separately
+            const { data: customers, error: customerError } = await supabase
+              .from("customers")
+              .select("id, first_name, last_name, email")
+              .in("id", customerIds)
             
-            // Enhance the estimate requests with customer data
-            const enhancedRequests = basicEstimateRequests.map(request => ({
-              ...request,
-              customers: customerMap[request.customer_id] || null
-            }))
-            
-            setEstimateRequests(enhancedRequests)
+            if (customerError) {
+              console.error("Error fetching customer data:", customerError)
+            } else if (customers && customers.length > 0) {
+              // Create a map of customer data by ID for quick lookup
+              const customerMap = customers.reduce((map, customer) => {
+                map[customer.id] = customer
+                return map
+              }, {})
+              
+              // Enhance the estimate requests with customer data
+              const enhancedRequests = basicEstimateRequests.map(request => ({
+                ...request,
+                customers: customerMap[request.customer_id] || null
+              }))
+              
+              setEstimateRequests(enhancedRequests)
+            }
           }
+        } else {
+          // If no data is returned, set an empty array
+          setEstimateRequests([])
         }
         
         setLoading(false)
