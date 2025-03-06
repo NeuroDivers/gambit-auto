@@ -1,121 +1,127 @@
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { format } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
-import { Loader2, CalendarRange } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { CalendarIcon } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { toast } from "sonner"
 
 interface DateRangeSelectorProps {
-  onAddBlockedDate: (startDate: Date, endDate: Date, reason: string) => void
-  isLoading: boolean
+  onSubmit: (startDate: Date, endDate: Date, reason: string | null) => void
+  onCancel: () => void
 }
 
-export function DateRangeSelector({ onAddBlockedDate, isLoading }: DateRangeSelectorProps) {
-  const [selectedStartDate, setSelectedStartDate] = useState<Date | undefined>(undefined)
-  const [selectedEndDate, setSelectedEndDate] = useState<Date | undefined>(undefined)
-  const [blockReason, setBlockReason] = useState<string>("")
+export function DateRangeSelector({ onSubmit, onCancel }: DateRangeSelectorProps) {
+  const [startDate, setStartDate] = useState<Date>(new Date())
+  const [endDate, setEndDate] = useState<Date>(new Date())
+  const [reason, setReason] = useState<string>("")
+  const [startDateOpen, setStartDateOpen] = useState(false)
+  const [endDateOpen, setEndDateOpen] = useState(false)
 
-  const handleAddDate = () => {
-    if (!selectedStartDate) {
-      toast.error("Please select a start date")
-      return;
-    }
-    
-    // Use the same date as end date if not selected
-    const endDate = selectedEndDate || selectedStartDate;
-    
-    onAddBlockedDate(selectedStartDate, endDate, blockReason);
-    
-    // Reset form after submission
-    setSelectedStartDate(undefined);
-    setSelectedEndDate(undefined);
-    setBlockReason("");
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSubmit(startDate, endDate, reason || null)
   }
 
   return (
-    <div>
-      <Label className="text-sm font-medium mb-2 block">Block Date Range</Label>
-      <div className="flex flex-col sm:flex-row gap-4 items-start">
-        <div className="w-full sm:w-1/2">
-          <Label className="text-xs mb-1 block">Start Date</Label>
-          <Popover>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="start-date">Start Date</Label>
+          <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
             <PopoverTrigger asChild>
               <Button
+                id="start-date"
                 variant="outline"
                 className={cn(
                   "w-full justify-start text-left font-normal",
-                  !selectedStartDate && "text-muted-foreground"
                 )}
               >
-                <CalendarRange className="mr-2 h-4 w-4" />
-                {selectedStartDate ? format(selectedStartDate, "PPP") : "Select start date"}
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {startDate ? format(startDate, "PPP") : "Select date"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={selectedStartDate}
-                onSelect={setSelectedStartDate}
+                selected={startDate}
+                onSelect={(date) => {
+                  if (date) {
+                    setStartDate(date)
+                    // If end date is before start date, update it
+                    if (date > endDate) {
+                      setEndDate(date)
+                    }
+                    setStartDateOpen(false)
+                  }
+                }}
                 initialFocus
+                className="p-3 pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
         </div>
-        <div className="w-full sm:w-1/2">
-          <Label className="text-xs mb-1 block">End Date</Label>
-          <Popover>
+        
+        <div className="space-y-2">
+          <Label htmlFor="end-date">End Date</Label>
+          <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
             <PopoverTrigger asChild>
               <Button
+                id="end-date"
                 variant="outline"
                 className={cn(
                   "w-full justify-start text-left font-normal",
-                  !selectedEndDate && "text-muted-foreground"
                 )}
               >
-                <CalendarRange className="mr-2 h-4 w-4" />
-                {selectedEndDate ? format(selectedEndDate, "PPP") : "Select end date"}
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {endDate ? format(endDate, "PPP") : "Select date"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={selectedEndDate}
-                onSelect={setSelectedEndDate}
-                disabled={date => {
-                  // Can't select end date before start date
-                  return selectedStartDate ? date < selectedStartDate : false;
+                selected={endDate}
+                onSelect={(date) => {
+                  if (date) {
+                    // Ensure end date is not before start date
+                    if (date >= startDate) {
+                      setEndDate(date)
+                      setEndDateOpen(false)
+                    }
+                  }
                 }}
+                disabled={(date) => date < startDate}
                 initialFocus
+                className="p-3 pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
         </div>
       </div>
       
-      <div className="mt-4">
-        <Label htmlFor="block-reason" className="text-sm font-medium">Reason (optional)</Label>
-        <Input
-          id="block-reason"
-          placeholder="Enter reason for blocking"
-          value={blockReason}
-          onChange={(e) => setBlockReason(e.target.value)}
-          className="mt-1"
+      <div className="space-y-2">
+        <Label htmlFor="reason">Reason (Optional)</Label>
+        <Textarea
+          id="reason"
+          placeholder="Enter a reason for blocking these dates..."
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          className="resize-none"
         />
       </div>
       
-      <Button 
-        onClick={handleAddDate} 
-        disabled={!selectedStartDate || isLoading}
-        className="w-full mt-4"
-      >
-        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Block Date{selectedStartDate && selectedEndDate && selectedStartDate.getTime() !== selectedEndDate.getTime() ? " Range" : ""}
-      </Button>
-    </div>
+      <div className="flex justify-end gap-2 pt-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit">
+          Block Dates
+        </Button>
+      </div>
+    </form>
   )
 }

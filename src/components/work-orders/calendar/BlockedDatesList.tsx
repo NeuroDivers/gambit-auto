@@ -1,76 +1,38 @@
 
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Loader2 } from "lucide-react"
-import { useBlockedDates } from "./hooks/useBlockedDates"
-import { Separator } from "@/components/ui/separator"
-import { DateRangeSelector } from "./components/DateRangeSelector"
-import { BlockedDateItem } from "./components/BlockedDateItem"
-import { BlockedDatesListView } from "./components/BlockedDatesList"
+import { BlockedDate } from "./hooks/useBlockedDates"
+import { CalendarOff } from "lucide-react"
 
-export function BlockedDatesList() {
-  const queryClient = useQueryClient()
-  
-  const { 
-    blockedDates, 
-    isLoading, 
-    addBlockedDate, 
-    removeBlockedDate 
-  } = useBlockedDates()
-
-  const addBlockedDateMutation = useMutation({
-    mutationFn: async (params: { startDate: Date, endDate: Date, reason: string }) => {
-      const { startDate, endDate, reason } = params;
-      return addBlockedDate(startDate, endDate, reason || null);
-    },
-    onSuccess: (success) => {
-      if (success) {
-        queryClient.invalidateQueries({ queryKey: ["blockedDates"] })
-      }
-    }
-  })
-
-  const removeBlockedDateMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return removeBlockedDate(id);
-    },
-    onSuccess: (success) => {
-      if (success) {
-        queryClient.invalidateQueries({ queryKey: ["blockedDates"] })
-      }
-    }
-  })
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-4">
-        <Loader2 className="h-6 w-6 animate-spin" />
-      </div>
-    )
-  }
-
-  const handleAddBlockedDate = (startDate: Date, endDate: Date, reason: string) => {
-    addBlockedDateMutation.mutate({ startDate, endDate, reason });
-  }
-
+export function BlockedDatesList({ children }: { children: React.ReactNode }) {
   return (
-    <div className="space-y-6">
-      <DateRangeSelector 
-        onAddBlockedDate={handleAddBlockedDate}
-        isLoading={addBlockedDateMutation.isPending}
-      />
+    <BlockedDatesListView blockedDates={[]} children={children} />
+  )
+}
 
-      <Separator />
+interface BlockedDatesListViewProps {
+  blockedDates: BlockedDate[]
+  children: React.ReactNode
+}
 
-      <BlockedDatesListView blockedDates={blockedDates}>
-        {blockedDates.map((blockedDate) => (
-          <BlockedDateItem 
-            key={blockedDate.id}
-            blockedDate={blockedDate}
-            onRemove={id => removeBlockedDateMutation.mutate(id)}
-            isRemoving={removeBlockedDateMutation.isPending}
-          />
-        ))}
-      </BlockedDatesListView>
+export function BlockedDatesListView({ blockedDates, children }: BlockedDatesListViewProps) {
+  return (
+    <div className="space-y-3">
+      <h4 className="font-medium text-lg flex items-center gap-2">
+        <CalendarOff className="h-4 w-4" />
+        Blocked Date Ranges
+      </h4>
+      {blockedDates && blockedDates.length > 0 ? (
+        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+          {children}
+        </div>
+      ) : (
+        <div className="text-sm text-muted-foreground p-8 text-center border rounded-md flex flex-col items-center gap-2 bg-muted/10">
+          <CalendarOff className="h-8 w-8 text-muted-foreground opacity-50" />
+          <p>No dates are currently blocked</p>
+          <p className="text-xs max-w-[300px]">
+            When you block dates, they will appear here and be unavailable for scheduling on the calendar.
+          </p>
+        </div>
+      )}
     </div>
   )
 }

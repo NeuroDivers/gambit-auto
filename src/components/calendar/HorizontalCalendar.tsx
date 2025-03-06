@@ -1,6 +1,5 @@
-
 import { useRef, useState, useCallback, useEffect } from "react"
-import { format, addDays, startOfDay, isWithinInterval, parseISO } from "date-fns"
+import { format, addDays, startOfDay, isWithinInterval, parseISO, subDays } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useDragScroll } from "./hooks/useDragScroll"
 import { toast } from "sonner"
@@ -11,6 +10,9 @@ import { CalendarControls } from "./components/CalendarControls"
 import { useBlockedDates } from "@/components/work-orders/calendar/hooks/useBlockedDates"
 import { CalendarHeader } from "./components/CalendarHeader"
 import { CalendarContent } from "./components/CalendarContent"
+import { Button } from "@/components/ui/button"
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
+import { MonthPicker } from "@/components/work-orders/calendar/MonthPicker"
 
 type HorizontalCalendarProps = {
   onDateSelect?: (date: Date) => void
@@ -25,9 +27,11 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
   const [currentDate, setCurrentDate] = useState(new Date())
   const [isLoading, setIsLoading] = useState(false)
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
+  const [showMonthPicker, setShowMonthPicker] = useState(false)
   const { serviceBays } = useServiceBays()
   const { blockedDates } = useBlockedDates()
-  const DAYS_TO_LOAD = 7
+  const DAYS_TO_LOAD = 14
+  const PAST_DAYS = 30  // Show 30 days in the past
   const CELL_WIDTH = 60
   const BAY_COLUMN_WIDTH = 80
 
@@ -49,9 +53,19 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
   } = useDragScroll(scrollRef)
 
   useEffect(() => {
-    const initialDays = Array.from({ length: DAYS_TO_LOAD * 3 }, (_, i) =>
-      addDays(startOfDay(new Date()), i)
+    // Create an array with past days, today, and future days
+    const pastDays = Array.from({ length: PAST_DAYS }, (_, i) => 
+      subDays(startOfDay(new Date()), PAST_DAYS - i)
     )
+    
+    const futureDays = Array.from({ length: DAYS_TO_LOAD * 2 }, (_, i) =>
+      addDays(startOfDay(new Date()), i + 1)
+    )
+    
+    // Combine past, today and future
+    const today = startOfDay(new Date())
+    const initialDays = [...pastDays, today, ...futureDays]
+    
     setDays(initialDays)
   }, [])
 
@@ -70,6 +84,27 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
       
       setDays(prev => [...prev, ...newDays])
       setTimeout(() => setIsLoading(false), 100)
+    }
+
+    // Also check if we're near the beginning and need to load more past days
+    if (scrollLeft < CELL_WIDTH * 4) {
+      setIsLoading(true)
+      const firstDate = days[0]
+      const newPastDays = Array.from({ length: DAYS_TO_LOAD }, (_, i) =>
+        subDays(firstDate, DAYS_TO_LOAD - i)
+      )
+      
+      setDays(prev => [...newPastDays, ...prev])
+      
+      // Keep the scroll position after adding new days
+      if (scrollRef.current) {
+        setTimeout(() => {
+          if (scrollRef.current) {
+            scrollRef.current.scrollLeft = DAYS_TO_LOAD * CELL_WIDTH + scrollLeft
+          }
+          setIsLoading(false)
+        }, 100)
+      }
     }
 
     const visibleIndex = Math.floor(scrollLeft / CELL_WIDTH)
@@ -98,8 +133,21 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     if (!scrollRef.current) return
     
     const currentPosition = scrollRef.current.scrollLeft
-    const daysToScroll = direction === 'next' ? 7 : -7
+    const daysToScroll = direction === 'next' ? 30 : -30
     const newPosition = currentPosition + (CELL_WIDTH * daysToScroll)
+    
+    scrollRef.current.scrollTo({
+      left: newPosition,
+      behavior: 'smooth'
+    })
+  }
+
+  const scrollDays = (direction: 'prev' | 'next', amount: number = 7) => {
+    if (!scrollRef.current) return
+    
+    const currentPosition = scrollRef.current.scrollLeft
+    const scrollAmount = direction === 'next' ? amount : -amount
+    const newPosition = currentPosition + (CELL_WIDTH * scrollAmount)
     
     scrollRef.current.scrollTo({
       left: newPosition,
@@ -125,16 +173,72 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
 
   return (
     <div className={cn("p-4 bg-white rounded-lg shadow-sm border border-gray-200", className)}>
-      <CalendarControls
-        currentMonth={currentMonth}
-        onNavigateMonth={navigateMonth}
-        onScrollToToday={scrollToToday}
-        currentDate={currentDate}
-        onDateChange={handleDateChange}
-      />
+      <div className="mb-4 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => scrollDays('prev')}
+              className="p-0 w-8 h-8"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowMonthPicker(true)}
+              className="min-w-[120px] font-medium text-center"
+            >
+              {currentMonth}
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => scrollDays('next')}
+              className="p-0 w-8 h-8"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={scrollToToday}
+              className="text-sm"
+            >
+              Today
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateMonth('prev')}
+              title="Previous month"
+              className="p-0 w-8 h-8"
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateMonth('next')}
+              title="Next month"
+              className="p-0 w-8 h-8"
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
 
       <div 
-        className="relative overflow-hidden w-full"
+        className="relative overflow-hidden w-full border rounded-md"
         style={{ maxWidth: '100%' }}
       >
         <div
@@ -181,6 +285,13 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
           onOpenChange={(open) => !open && setSelectedWorkOrder(null)}
         />
       )}
+      
+      <MonthPicker
+        currentDate={currentDate}
+        open={showMonthPicker}
+        onOpenChange={setShowMonthPicker}
+        onDateChange={handleDateChange}
+      />
     </div>
   )
 }
