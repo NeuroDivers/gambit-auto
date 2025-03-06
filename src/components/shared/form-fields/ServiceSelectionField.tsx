@@ -36,7 +36,7 @@ export function ServiceSelectionField({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_types")
-        .select("id, name, base_price, description, service_type, parent_service_id")
+        .select("id, name, base_price, description, service_type, parent_service_id, status")
         .order("name");
       
       if (error) throw error;
@@ -44,12 +44,18 @@ export function ServiceSelectionField({
     }
   });
 
-  // Filter for standalone services only in the dropdown
-  const standaloneServices = serviceTypes.filter(s => s.service_type === 'standalone' || s.service_type === 'bundle');
+  // Filter for standalone services only in the dropdown that are active
+  const standaloneServices = serviceTypes.filter(s => 
+    (s.service_type === 'standalone' || s.service_type === 'bundle') &&
+    s.status === 'active'
+  );
 
   // Get sub-services for a parent service
   const getSubServices = (parentId: string) => {
-    return serviceTypes.filter(s => s.parent_service_id === parentId);
+    return serviceTypes.filter(s => 
+      s.parent_service_id === parentId && 
+      s.status === 'active'
+    );
   };
 
   const handleAddService = () => {
@@ -253,9 +259,9 @@ export function ServiceSelectionField({
               {/* Sub-services section */}
               <div className="mt-4 pt-2 border-t">
                 <CollapsibleTrigger className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 mb-2">
-                  {({open}) => (
+                  {(props: { open: boolean }) => (
                     <>
-                      {open ? <ChevronDown className="h-4 w-4 mr-1" /> : <ChevronRight className="h-4 w-4 mr-1" />}
+                      {props.open ? <ChevronDown className="h-4 w-4 mr-1" /> : <ChevronRight className="h-4 w-4 mr-1" />}
                       Customize with sub-services
                     </>
                   )}
