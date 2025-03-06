@@ -11,6 +11,11 @@ import { useNavigate } from "react-router-dom"
 import { WorkOrderDetailsDialog } from "./calendar/WorkOrderDetailsDialog"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { WorkOrder } from "./types"
+import { memo } from "react"
+
+// Using memo to prevent unnecessary re-renders
+const MemoizedWorkOrderFilters = memo(WorkOrderFilters)
+const MemoizedWorkOrderPagination = memo(WorkOrderPagination)
 
 export function WorkOrderList() {
   const navigate = useNavigate()
@@ -65,7 +70,7 @@ export function WorkOrderList() {
   return (
     <div className="space-y-4">
       <TooltipProvider>
-        <WorkOrderFilters
+        <MemoizedWorkOrderFilters
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
           statusFilter={statusFilter}
@@ -93,7 +98,7 @@ export function WorkOrderList() {
         />
       )}
 
-      <WorkOrderPagination
+      <MemoizedWorkOrderPagination
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}

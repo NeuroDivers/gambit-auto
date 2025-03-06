@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Eye, FileEdit, Wrench, Receipt } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 import { WorkOrderStatusBadge } from "../WorkOrderStatusBadge"
+import { memo } from "react"
 
 interface WorkOrderTableProps {
   workOrders: WorkOrder[]
@@ -21,13 +22,14 @@ interface WorkOrderTableProps {
   onViewDetails: (workOrder: WorkOrder) => void
 }
 
-export function WorkOrderTable({ 
+// Using memo to prevent unnecessary re-renders
+export const WorkOrderTable = memo(({ 
   workOrders, 
   onAssignBay, 
   onEdit, 
   onCreateInvoice,
   onViewDetails
-}: WorkOrderTableProps) {
+}: WorkOrderTableProps) => {
   return (
     <div className="rounded-md border">
       <Table>
@@ -119,4 +121,6 @@ export function WorkOrderTable({
       </Table>
     </div>
   )
-}
+})
+
+WorkOrderTable.displayName = 'WorkOrderTable'

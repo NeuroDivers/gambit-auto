@@ -13,6 +13,7 @@ import { Search, X } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { memo } from "react"
 
 type WorkOrderFiltersProps = {
   searchTerm: string
@@ -23,14 +24,14 @@ type WorkOrderFiltersProps = {
   onAssignmentFilterChange: (value: string) => void
 }
 
-export function WorkOrderFilters({
+export const WorkOrderFilters = memo(({
   searchTerm,
   onSearchChange,
   statusFilter,
   onStatusFilterChange,
   assignmentFilter,
   onAssignmentFilterChange,
-}: WorkOrderFiltersProps) {
+}: WorkOrderFiltersProps) => {
   // Fetch service bays for filtering
   const { data: serviceBays } = useQuery({
     queryKey: ["service-bays"],
@@ -44,6 +45,11 @@ export function WorkOrderFilters({
       return data
     }
   })
+
+  // Using a local handler to prevent the search input from refreshing on every keystroke
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onSearchChange(e.target.value);
+  };
 
   return (
     <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 items-end">
@@ -61,7 +67,7 @@ export function WorkOrderFilters({
                   placeholder="Search work orders..."
                   className="pl-8"
                   value={searchTerm}
-                  onChange={(e) => onSearchChange(e.target.value)}
+                  onChange={handleSearchChange}
                 />
               </div>
             </TooltipTrigger>
@@ -127,4 +133,6 @@ export function WorkOrderFilters({
       </div>
     </div>
   )
-}
+})
+
+WorkOrderFilters.displayName = 'WorkOrderFilters'

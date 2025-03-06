@@ -1,84 +1,125 @@
 
-import { useState, useEffect, createContext, useContext } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useState, useEffect, createContext, useContext } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Session, User } from '@supabase/supabase-js';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
-interface AuthContextProps {
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  user: any;
+type AuthContextType = {
+  user: User | null;
+  session: Session | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  requestPasswordReset: (email: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
+  isLoading: boolean;
+  isAdmin: boolean;
+  userRole: string | null;
+  forgotPassword: (email: string) => Promise<void>;
   resetPassword: (newPassword: string) => Promise<void>;
-}
+};
 
-const AuthContext = createContext<AuthContextProps | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  session: null,
+  signIn: async () => {},
+  signOut: async () => {},
+  signUp: async () => {},
+  isLoading: true,
+  isAdmin: false,
+  userRole: null,
+  forgotPassword: async () => {},
+  resetPassword: async () => {},
+});
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchSession = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
+    async function getInitialSession() {
+      setIsLoading(true);
 
-        if (data.session) {
-          setIsAuthenticated(true);
-          setUser(data.session.user);
-        }
-      } catch (error) {
-        console.error("Error fetching session:", error);
-      } finally {
-        setIsLoading(false);
+      // Check for active session
+      const { data: { session }, error } = await supabase.auth.getSession();
+
+      if (error) {
+        console.error('Error getting session:', error.message);
       }
-    };
 
-    fetchSession();
+      if (session) {
+        setSession(session);
+        setUser(session.user);
+        await checkUserRole(session.user.id);
+      }
 
+      setIsLoading(false);
+    }
+
+    getInitialSession();
+
+    // Listen for auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (session) {
-          setIsAuthenticated(true);
-          setUser(session.user);
+        console.log('Auth state changed:', event);
+        setSession(session);
+        setUser(session?.user || null);
+
+        if (session?.user) {
+          await checkUserRole(session.user.id);
         } else {
-          setIsAuthenticated(false);
-          setUser(null);
+          setIsAdmin(false);
+          setUserRole(null);
         }
+
         setIsLoading(false);
       }
     );
 
     return () => {
-      if (authListener && typeof authListener.subscription.unsubscribe === "function") {
-        authListener.subscription.unsubscribe();
-      }
+      authListener.subscription.unsubscribe();
     };
   }, []);
+
+  const checkUserRole = async (userId: string) => {
+    try {
+      // Fetch the user's role information
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role_id, roles(name, is_admin)')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user role:', error);
+        return;
+      }
+
+      if (data?.roles) {
+        setIsAdmin(data.roles.is_admin || false);
+        setUserRole(data.roles.name);
+      }
+    } catch (error) {
+      console.error('Error checking user role:', error);
+    }
+  };
 
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
-
-      setIsAuthenticated(true);
-      setUser(data.user);
-      navigate("/dashboard");
-      toast.success("Signed in successfully!");
+      navigate('/dashboard');
     } catch (error: any) {
-      toast.error(`Error signing in: ${error.message}`);
-      throw error;
+      toast.error(`Login failed: ${error.message}`);
+      console.error('Error signing in:', error.message);
     } finally {
       setIsLoading(false);
     }
@@ -87,17 +128,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
       });
 
       if (error) throw error;
-
-      toast.success("Registration successful! Please check your email for confirmation.");
+      toast.success('Registration successful! Please check your email for verification.');
     } catch (error: any) {
-      toast.error(`Error signing up: ${error.message}`);
-      throw error;
+      toast.error(`Registration failed: ${error.message}`);
+      console.error('Error signing up:', error.message);
     } finally {
       setIsLoading(false);
     }
@@ -106,67 +146,56 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-
-      setIsAuthenticated(false);
-      setUser(null);
-      navigate("/auth");
-      toast.success("Signed out successfully!");
+      await supabase.auth.signOut();
+      navigate('/');
     } catch (error: any) {
-      toast.error(`Error signing out: ${error.message}`);
+      console.error('Error signing out:', error.message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const requestPasswordReset = async (email: string) => {
+  const forgotPassword = async (email: string) => {
     try {
-      setIsLoading(true);
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
-
+      
       if (error) throw error;
-
-      toast.success("Password reset email sent! Please check your inbox.");
+      toast.success('Password reset email sent. Please check your inbox.');
     } catch (error: any) {
-      toast.error(`Error requesting password reset: ${error.message}`);
-      throw error;
-    } finally {
-      setIsLoading(false);
+      toast.error(`Failed to send reset email: ${error.message}`);
+      console.error('Error sending reset email:', error.message);
     }
   };
 
   const resetPassword = async (newPassword: string) => {
     try {
-      setIsLoading(true);
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
 
       if (error) throw error;
-
-      toast.success("Password updated successfully!");
-      navigate("/auth");
+      toast.success('Password has been reset successfully');
+      navigate('/');
     } catch (error: any) {
-      toast.error(`Error resetting password: ${error.message}`);
-      throw error;
-    } finally {
-      setIsLoading(false);
+      toast.error(`Failed to reset password: ${error.message}`);
+      console.error('Error resetting password:', error.message);
     }
   };
 
   return (
     <AuthContext.Provider
       value={{
-        isAuthenticated,
-        isLoading,
         user,
+        session,
         signIn,
-        signUp,
         signOut,
-        requestPasswordReset,
+        signUp,
+        isLoading,
+        isAdmin,
+        userRole,
+        forgotPassword,
         resetPassword,
       }}
     >
@@ -176,9 +205,5 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+  return useContext(AuthContext);
 };
