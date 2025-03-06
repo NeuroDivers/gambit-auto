@@ -24,11 +24,13 @@ export type WorkOrder = {
   country?: string
   timeframe: "flexible" | "asap" | "within_week" | "within_month"
   start_time?: string | null
-  estimated_duration?: string | null
+  estimated_duration?: number | null
   end_time?: string | null
   assigned_bay_id?: string | null
   assigned_profile_id?: string | null
   client_id?: string
+  vehicle_id?: string | null
+  service_items?: any[]
   service_bays?: {
     id: string
     name: string
