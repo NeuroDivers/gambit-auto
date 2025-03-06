@@ -1,60 +1,63 @@
 
-import { FormStorage } from "./types"
-import { ServiceFormData } from "@/types/service-item"
-
-const storageKey = "quote_request_form"
+import { useState, useCallback, useEffect } from 'react';
+import { ServiceFormData } from '@/types/service-item';
 
 export function useFormStorage() {
-  const getData = (): FormStorage => {
-    const stored = localStorage.getItem(storageKey)
-    if (!stored) {
-      return {
-        step: 1,
-        data: {
-          vehicleInfo: {
-            make: "",
-            model: "",
-            year: new Date().getFullYear(),
-            vin: "",
-          },
-          service_items: [],
-          description: "",
-          service_details: {}
-        }
+  const [formData, setFormData] = useState<ServiceFormData>(() => {
+    const savedData = localStorage.getItem('quoteRequestForm');
+    
+    if (savedData) {
+      try {
+        return JSON.parse(savedData);
+      } catch (error) {
+        console.error('Error parsing saved form data:', error);
       }
     }
-    return JSON.parse(stored)
-  }
+    
+    return {
+      service_type: '',
+      vehicleInfo: {
+        make: '',
+        model: '',
+        year: 0,
+        vin: '',
+      },
+      service_items: [],
+      description: '',
+      service_details: {},
+    };
+  });
 
-  const setData = (data: Partial<ServiceFormData>) => {
-    const stored = getData()
-    localStorage.setItem(storageKey, JSON.stringify({
-      ...stored,
-      data: {
-        ...stored.data,
-        ...data
-      }
-    }))
-  }
+  useEffect(() => {
+    localStorage.setItem('quoteRequestForm', JSON.stringify(formData));
+  }, [formData]);
 
-  const setStep = (step: number) => {
-    const stored = getData()
-    localStorage.setItem(storageKey, JSON.stringify({
-      ...stored,
-      step
-    }))
-  }
+  const updateFormData = useCallback((newData: Partial<ServiceFormData>) => {
+    setFormData(prev => ({
+      ...prev,
+      ...newData,
+    }));
+  }, []);
 
-  const clearFormData = () => {
-    localStorage.removeItem(storageKey)
-  }
+  const resetFormData = useCallback(() => {
+    localStorage.removeItem('quoteRequestForm');
+    setFormData({
+      service_type: '',
+      vehicleInfo: {
+        make: '',
+        model: '',
+        year: 0,
+        vin: '',
+      },
+      service_items: [],
+      description: '',
+      service_details: {},
+    });
+  }, []);
 
   return {
-    data: getData().data,
-    step: getData().step,
-    setStep,
-    setData,
-    getData,
-    clearFormData
-  }
+    formData,
+    updateFormData,
+    resetFormData,
+  };
 }

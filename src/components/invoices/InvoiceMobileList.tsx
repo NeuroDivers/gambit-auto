@@ -1,9 +1,9 @@
-
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { FileText, Calendar, DollarSign } from "lucide-react"
 import { format } from "date-fns"
 import { Invoice } from "./types"
+import { getInvoiceStatusVariant } from "@/components/shared/BadgeVariants"
 
 interface InvoiceMobileListProps {
   invoices: Invoice[]
@@ -51,8 +51,8 @@ export function InvoiceMobileList({ invoices, onRowClick }: InvoiceMobileListPro
               </h3>
               <p className="text-sm text-muted-foreground">{invoice.customer_email}</p>
             </div>
-            <Badge variant={getBadgeVariant(invoice.status)}>
-              {invoice.status}
+            <Badge variant={getInvoiceStatusVariant(invoice.status)}>
+              {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
             </Badge>
           </div>
 

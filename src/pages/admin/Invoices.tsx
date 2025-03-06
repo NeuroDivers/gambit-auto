@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
@@ -22,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { Invoice } from "@/components/invoices/types"
 import { InvoiceMobileList } from "@/components/invoices/InvoiceMobileList"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { getInvoiceStatusVariant } from "@/components/shared/BadgeVariants"
 
 export default function Invoices() {
   const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -166,8 +166,8 @@ export default function Invoices() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getBadgeVariant(invoice.status)}>
-                          {invoice.status}
+                        <Badge variant={getInvoiceStatusVariant(invoice.status)}>
+                          {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
                         </Badge>
                       </TableCell>
                       <TableCell>

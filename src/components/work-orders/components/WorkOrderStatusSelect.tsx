@@ -1,93 +1,97 @@
 
-import { Check } from "lucide-react"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { cn } from "@/lib/utils"
-import { useState } from "react"
-import { supabase } from "@/integrations/supabase/client"
-import { toast } from "sonner"
-import { useQueryClient } from "@tanstack/react-query"
-import { Badge } from "@/components/ui/badge"
-import { getStatusLabel } from "../WorkOrderStatusBadge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { WorkOrderStatus } from "../types"
+import { Badge } from "@/components/ui/badge"
+import { getBadgeVariant } from "../WorkOrderStatusBadge"
 
-interface WorkOrderStatusSelectProps {
-  workOrderId: string;
-  initialStatus: WorkOrderStatus;
+type WorkOrderStatusSelectProps = {
+  value: WorkOrderStatus
+  onChange: (value: WorkOrderStatus) => void
+  disabled?: boolean
 }
 
-export function WorkOrderStatusSelect({ workOrderId, initialStatus }: WorkOrderStatusSelectProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [status, setStatus] = useState<WorkOrderStatus>(initialStatus)
-  const queryClient = useQueryClient()
+// Helper function to manually get status label since we can't import it
+const getStatusLabel = (status: string): string => {
+  return status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ');
+}
 
-  const updateStatus = async (newStatus: WorkOrderStatus) => {
-    if (newStatus === status) return
-
-    setIsLoading(true)
-    try {
-      const { error } = await supabase
-        .from('work_orders')
-        .update({ status: newStatus })
-        .eq('id', workOrderId)
-
-      if (error) throw error
-
-      setStatus(newStatus)
-      toast.success(`Status updated to ${getStatusLabel(newStatus)}`)
-      queryClient.invalidateQueries({ queryKey: ['workOrders'] })
-    } catch (error) {
-      console.error('Error updating status:', error)
-      toast.error("Failed to update status")
-    } finally {
-      setIsLoading(false)
-    }
+// Helper function for badge variant mapping
+const getBadgeVariant = (status: WorkOrderStatus) => {
+  switch (status) {
+    case "pending":
+      return "outline" 
+    case "approved":
+      return "outline" 
+    case "rejected":
+      return "rejected"
+    case "in_progress":
+      return "info"
+    case "completed":
+      return "success"
+    case "cancelled":
+      return "destructive"
+    case "invoiced":
+      return "secondary"
+    case "estimated":
+      return "warning"
+    default:
+      return "default"
   }
+}
 
-  const allStatuses: WorkOrderStatus[] = [
-    "pending", 
-    "approved", 
-    "rejected", 
-    "in_progress", 
-    "completed", 
-    "cancelled", 
-    "invoiced", 
-    "estimated"
-  ]
-
+export function WorkOrderStatusSelect({ value, onChange, disabled = false }: WorkOrderStatusSelectProps) {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger disabled={isLoading} asChild>
-        <div>
-          <Badge 
-            variant={status}
-            className="cursor-pointer"
-          >
-            {getStatusLabel(status)}
-          </Badge>
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[200px]">
-        {allStatuses.map((statusOption) => (
-          <DropdownMenuItem
-            key={statusOption}
-            onClick={() => updateStatus(statusOption)}
-            className={cn(
-              "flex items-center justify-between",
-              statusOption === status && "bg-accent"
-            )}
-          >
-            <span>{getStatusLabel(statusOption)}</span>
-            {statusOption === status && (
-              <Check className="h-4 w-4" />
-            )}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Select
+      value={value}
+      onValueChange={(val) => onChange(val as WorkOrderStatus)}
+      disabled={disabled}
+    >
+      <SelectTrigger className="w-[180px]">
+        <SelectValue placeholder="Select status">
+          <div className="flex items-center gap-2">
+            <Badge variant={getBadgeVariant(value)}>
+              {getStatusLabel(value)}
+            </Badge>
+          </div>
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="pending">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">Pending</Badge>
+          </div>
+        </SelectItem>
+        <SelectItem value="approved">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">Approved</Badge>
+          </div>
+        </SelectItem>
+        <SelectItem value="in_progress">
+          <div className="flex items-center gap-2">
+            <Badge variant="info">In Progress</Badge>
+          </div>
+        </SelectItem>
+        <SelectItem value="completed">
+          <div className="flex items-center gap-2">
+            <Badge variant="success">Completed</Badge>
+          </div>
+        </SelectItem>
+        <SelectItem value="cancelled">
+          <div className="flex items-center gap-2">
+            <Badge variant="destructive">Cancelled</Badge>
+          </div>
+        </SelectItem>
+        <SelectItem value="invoiced">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">Invoiced</Badge>
+          </div>
+        </SelectItem>
+        <SelectItem value="estimated">
+          <div className="flex items-center gap-2">
+            <Badge variant="warning">Estimated</Badge>
+          </div>
+        </SelectItem>
+      </SelectContent>
+    </Select>
   )
 }

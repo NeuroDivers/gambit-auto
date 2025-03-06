@@ -129,12 +129,21 @@ export function EditInvoiceForm({
                 setVehicleYear={(value) => form.setValue('customer_vehicle_year', value)}
                 vehicleVin={form.watch('customer_vehicle_vin')}
                 setVehicleVin={(value) => form.setValue('customer_vehicle_vin', value)}
-                vehicleBodyClass={vehicleBodyClass}
-                setVehicleBodyClass={setVehicleBodyClass}
-                vehicleDoors={vehicleDoors}
-                setVehicleDoors={setVehicleDoors}
-                vehicleTrim={vehicleTrim}
-                setVehicleTrim={setVehicleTrim}
+                vehicleBodyClass={form.watch('customer_vehicle_body_class') || vehicleBodyClass}
+                setVehicleBodyClass={(value) => {
+                  form.setValue('customer_vehicle_body_class', value);
+                  setVehicleBodyClass(value);
+                }}
+                vehicleDoors={form.watch('customer_vehicle_doors') || vehicleDoors}
+                setVehicleDoors={(value) => {
+                  form.setValue('customer_vehicle_doors', value);
+                  setVehicleDoors(value);
+                }}
+                vehicleTrim={form.watch('customer_vehicle_trim') || vehicleTrim}
+                setVehicleTrim={(value) => {
+                  form.setValue('customer_vehicle_trim', value);
+                  setVehicleTrim(value);
+                }}
               />
             </CardContent>
           </Card>

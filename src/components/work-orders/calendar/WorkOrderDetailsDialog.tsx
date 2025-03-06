@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { WorkOrder } from "../types"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -13,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Receipt } from "lucide-react"
 import { useWorkOrderInvoice } from "../hooks/useWorkOrderInvoice"
 import React, { useMemo } from "react"
+import { getWorkOrderStatusVariant } from "@/components/shared/BadgeVariants"
 
 type WorkOrderDetailsDialogProps = {
   workOrder: WorkOrder
@@ -138,7 +138,9 @@ export const WorkOrderDetailsDialog = React.memo(function WorkOrderDetailsDialog
       badgeVariant = "invoiced";
     }
     
-    return <Badge variant={badgeVariant}>{label}</Badge>
+    return <Badge variant={getWorkOrderStatusVariant(workOrder.status)}>
+      {workOrder.status.replace('_', ' ')}
+    </Badge>
   }
 
   const totalServiceCost = useMemo(() => {

@@ -1,7 +1,7 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
+import { getQuoteStatusVariant } from "@/components/shared/BadgeVariants"
 
 interface Quote {
   id: string
@@ -54,10 +54,8 @@ export function QuotesTable({ quotes, onRowClick }: QuotesTableProps) {
         {quote.vehicle_year} {quote.vehicle_make} {quote.vehicle_model}
       </TableCell>
       <TableCell>
-        <Badge 
-          variant={quote.status as "pending" | "accepted" | "rejected" | "estimated"}
-        >
-          {quote.status}
+        <Badge variant={getQuoteStatusVariant(quote.status)}>
+          {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
         </Badge>
       </TableCell>
       <TableCell>

@@ -1,50 +1,67 @@
 
-import { createContext, useContext, ReactNode } from 'react'
-import { useForm, UseFormReturn } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { formSchema } from '@/hooks/quote-request/formSchema'
-import type { ServiceFormData } from '@/types/service-item'
-import { Form } from '@/components/ui/form'
+import { ReactNode, createContext, useContext, useState } from "react";
+import { ServiceFormData } from "@/types/service-item";
 
-const QuoteFormContext = createContext<UseFormReturn<ServiceFormData> | null>(null)
+type QuoteFormContextType = {
+  formData: ServiceFormData;
+  updateFormData: (data: Partial<ServiceFormData>) => void;
+  currentStep: number;
+  setCurrentStep: (step: number) => void;
+  resetForm: () => void;
+};
 
-export const useQuoteForm = () => {
-  const context = useContext(QuoteFormContext)
-  if (!context) throw new Error('useQuoteForm must be used within QuoteFormProvider')
-  return context
-}
+const defaultFormData: ServiceFormData = {
+  service_type: "",
+  service_items: [],
+  description: "",
+  service_details: {},
+  vehicleInfo: {
+    make: "",
+    model: "",
+    year: 0,
+    vin: "",
+    color: "",
+    saveToAccount: false,
+  },
+};
 
-interface QuoteFormProviderProps {
-  children: ReactNode
-  defaultValues?: Partial<ServiceFormData>
-  onSubmit: (data: ServiceFormData) => Promise<void>
-}
+const QuoteFormContext = createContext<QuoteFormContextType | undefined>(undefined);
 
-export function QuoteFormProvider({ children, defaultValues, onSubmit }: QuoteFormProviderProps) {
-  const form = useForm<ServiceFormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      vehicleInfo: {
-        make: '',
-        model: '',
-        year: new Date().getFullYear(),
-        vin: '',
-        saveToAccount: false,
-      },
-      service_items: [],
-      description: '',
-      service_details: {},
-      ...defaultValues
-    }
-  })
+export function QuoteFormProvider({ children }: { children: ReactNode }) {
+  const [formData, setFormData] = useState<ServiceFormData>(defaultFormData);
+  const [currentStep, setCurrentStep] = useState(0);
+
+  const updateFormData = (data: Partial<ServiceFormData>) => {
+    setFormData((prev) => ({
+      ...prev,
+      ...data,
+    }));
+  };
+
+  const resetForm = () => {
+    setFormData(defaultFormData);
+    setCurrentStep(0);
+  };
 
   return (
-    <QuoteFormContext.Provider value={form}>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          {children}
-        </form>
-      </Form>
+    <QuoteFormContext.Provider
+      value={{
+        formData,
+        updateFormData,
+        currentStep,
+        setCurrentStep,
+        resetForm,
+      }}
+    >
+      {children}
     </QuoteFormContext.Provider>
-  )
+  );
+}
+
+export function useQuoteFormContext() {
+  const context = useContext(QuoteFormContext);
+  if (context === undefined) {
+    throw new Error("useQuoteFormContext must be used within a QuoteFormProvider");
+  }
+  return context;
 }

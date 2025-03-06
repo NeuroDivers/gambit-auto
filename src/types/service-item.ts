@@ -25,8 +25,10 @@ export interface ServiceFormData {
     year: number;
     vin?: string;
     color?: string;
+    saveToAccount?: boolean;
   };
   description?: string;
-  service_items?: string[];
+  service_items?: ServiceItemType[] | string[];
   service_details?: Record<string, any>;
+  saveToAccount?: boolean;
 }

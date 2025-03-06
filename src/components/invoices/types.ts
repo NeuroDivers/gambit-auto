@@ -24,10 +24,15 @@ export interface InvoiceFormValues {
   total?: number;
   due_date?: string;
   work_order_id?: string;
-  vehicle_make?: string;
-  vehicle_model?: string;
-  vehicle_year?: number;
-  vehicle_vin?: string;
+  customer_vehicle_make?: string;
+  customer_vehicle_model?: string;
+  customer_vehicle_year?: number;
+  customer_vehicle_vin?: string;
+  customer_vehicle_color?: string;
+  customer_vehicle_trim?: string;
+  customer_vehicle_body_class?: string;
+  customer_vehicle_doors?: number;
+  customer_vehicle_license_plate?: string;
 }
 
 export interface InvoiceItem {
@@ -74,11 +79,14 @@ export interface Invoice {
   gst_number?: string;
   qst_number?: string;
   vehicle_id?: string;
-  vehicle_make?: string;
-  vehicle_model?: string;
-  vehicle_year?: number;
-  vehicle_vin?: string;
-  vehicle_body_class?: string;
-  vehicle_doors?: number;
-  vehicle_trim?: string;
+  customer_vehicle_make?: string;
+  customer_vehicle_model?: string;
+  customer_vehicle_year?: number;
+  customer_vehicle_vin?: string;
+  customer_vehicle_body_class?: string;
+  customer_vehicle_doors?: number;
+  customer_vehicle_trim?: string;
+  customer_vehicle_license_plate?: string;
+  stripe_customer_id?: string;
+  invoice_items?: InvoiceItem[];
 }

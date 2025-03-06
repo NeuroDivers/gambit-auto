@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "react-router-dom"
@@ -9,6 +8,7 @@ import { toast } from "sonner"
 import { useEstimateRequestsData } from "@/hooks/useEstimateRequestsData"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { supabase } from "@/integrations/supabase/client"
+import { getQuoteStatusVariant } from "@/components/shared/BadgeVariants"
 
 export function EstimateRequestsList() {
   const navigate = useNavigate()
@@ -25,8 +25,6 @@ export function EstimateRequestsList() {
         if (data && data.length > 0) {
           setEstimateRequests(data);
           
-          // Customer data should already be joined in the query, but if it's missing
-          // for some records, we can fetch it separately
           const missingCustomerIds = data
             .filter(req => req.customer_id && !req.customers)
             .map(req => req.customer_id);
@@ -41,13 +39,11 @@ export function EstimateRequestsList() {
               console.error("Error fetching customer data:", customerError);
               toast.error("Could not load customer details");
             } else if (customers && customers.length > 0) {
-              // Create a map of customer data by ID for quick lookup
               const customerMap = customers.reduce((map, customer) => {
                 map[customer.id] = customer;
                 return map;
               }, {});
               
-              // Enhance the estimate requests with customer data
               const enhancedRequests = data.map(request => ({
                 ...request,
                 customers: request.customers || customerMap[request.customer_id] || null
@@ -78,7 +74,6 @@ export function EstimateRequestsList() {
   const handleCreateTestRequest = async () => {
     const result = await createTestEstimateRequest();
     if (result) {
-      // Refresh the list
       window.location.reload();
     }
   };
@@ -87,7 +82,6 @@ export function EstimateRequestsList() {
     return <LoadingScreen />
   }
 
-  // Map status to badge variant
   const getBadgeVariant = (status) => {
     switch (status?.toLowerCase()) {
       case "pending":
@@ -165,8 +159,8 @@ export function EstimateRequestsList() {
                       : "Not specified"}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={getBadgeVariant(request.status)}>
-                      {request.status || "Pending"}
+                    <Badge variant={getQuoteStatusVariant(request.status)}>
+                      {request.status.replace('_', ' ')}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">

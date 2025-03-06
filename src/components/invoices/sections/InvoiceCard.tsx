@@ -1,4 +1,3 @@
-
 import { CustomerInfo } from "./CustomerInfo"
 import { VehicleInfo } from "./VehicleInfo"
 import { ServicesList } from "./ServicesList"
@@ -43,7 +42,9 @@ export function InvoiceCard({ invoice }: InvoiceCardProps) {
         />
       </div>
 
-      <ServicesList services={invoice.invoice_items || []} />
+      {invoice.invoice_items && invoice.invoice_items.length > 0 && (
+        <ServicesList services={invoice.invoice_items} />
+      )}
 
       <div>
         <InvoiceTotals

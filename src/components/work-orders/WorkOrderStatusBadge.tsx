@@ -12,6 +12,10 @@ type WorkOrderStatusBadgeProps = {
   editable?: boolean
 }
 
+export function getStatusLabel(status: WorkOrderStatus): string {
+  return status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ');
+}
+
 export function WorkOrderStatusBadge({ status, workOrderId, editable = false }: WorkOrderStatusBadgeProps) {
   const [currentStatus, setCurrentStatus] = useState<WorkOrderStatus>(status)
   const [isLoading, setIsLoading] = useState(false)

@@ -1,4 +1,3 @@
-
 import { Invoice } from '../types'
 import { Tables } from '@/integrations/supabase/types'
 import { useQuery } from '@tanstack/react-query'
@@ -66,7 +65,7 @@ export function InvoicePrintPreview({ invoice, businessProfile }: InvoicePrintPr
               </tr>
             </thead>
             <tbody>
-              {invoice.invoice_items?.map((item, index) => (
+              {invoice.invoice_items && invoice.invoice_items.map((item, index) => (
                 <tr key={index} className="border-t">
                   <td className="py-2 text-black text-sm">{item.service_name}</td>
                   <td className="py-2 text-black text-sm">{item.description}</td>
