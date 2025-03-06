@@ -23,7 +23,7 @@ export function WorkOrderStatusBadge({ status }: WorkOrderStatusBadgeProps) {
       case "approved":
         return "pending"; // Map to existing variant
       case "rejected":
-        return "cancelled"; // Map to existing variant
+        return "rejected"; // Updated to match badge variant
       case "in_progress":
         return "in_progress";
       case "completed":
