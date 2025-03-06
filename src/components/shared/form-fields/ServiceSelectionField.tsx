@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ServiceItemType } from "@/types/service-item"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { 
@@ -85,7 +85,16 @@ export function ServiceSelectionField({
       sub_services: []
     };
     
-    onChange([...services, newService]);
+    const newServices = [...services, newService];
+    onChange(newServices);
+    
+    if (hasSubServices(serviceToAdd.id)) {
+      const index = newServices.length - 1;
+      setOpenCollapsibles(prev => ({
+        ...prev,
+        [index]: true
+      }));
+    }
   };
 
   const handleRemoveService = (index: number) => {
@@ -161,6 +170,17 @@ export function ServiceSelectionField({
   const hasSubServices = (serviceId: string): boolean => {
     return getSubServices(serviceId).length > 0;
   };
+
+  useEffect(() => {
+    services.forEach((service, index) => {
+      if (service.service_id && hasSubServices(service.service_id)) {
+        setOpenCollapsibles(prev => ({
+          ...prev,
+          [index]: true
+        }));
+      }
+    });
+  }, [services, serviceTypes]);
 
   return (
     <div className="space-y-5">

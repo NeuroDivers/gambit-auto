@@ -173,6 +173,22 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
   }
 
   useEffect(() => {
+    if (Object.keys(subServicesByParent).length > 0) {
+      const formValues = form.getValues();
+      if (formValues.service_items) {
+        formValues.service_items.forEach((item, index) => {
+          if (item.service_id && hasSubServices(item.service_id)) {
+            setExpandedServices(prev => ({
+              ...prev,
+              [index]: true
+            }));
+          }
+        });
+      }
+    }
+  }, [subServicesByParent, form]);
+
+  useEffect(() => {
     serviceItems.forEach((item, index) => {
       if (item.service_id && hasSubServices(item.service_id)) {
         setExpandedServices(prev => ({
