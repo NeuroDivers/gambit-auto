@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -6,7 +5,7 @@ import { Customer } from "./types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight } from "lucide-react"
+import { Search, ChevronRight } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { useNavigate } from "react-router-dom"
@@ -62,14 +61,14 @@ export function CustomerList() {
         .from('customers')
         .select(`
           id, 
-          first_name, 
-          last_name, 
-          email, 
-          city, 
-          state_province,
+          customer_first_name, 
+          customer_last_name, 
+          customer_email, 
+          customer_city, 
+          customer_state_province,
           profile_id,
           created_at,
-          phone_number
+          customer_phone_number
         `)
         .order('created_at', { ascending: false })
         .range(from, to)
@@ -92,10 +91,10 @@ export function CustomerList() {
             customerWithProfile.profile = profileData
             
             // Use profile data if customer fields are empty
-            if (!customer.first_name) customerWithProfile.first_name = profileData.first_name || ''
-            if (!customer.last_name) customerWithProfile.last_name = profileData.last_name || ''
-            if (!customer.email) customerWithProfile.email = profileData.email || ''
-            if (!customer.phone_number) customerWithProfile.phone_number = profileData.phone_number
+            if (!customer.customer_first_name) customerWithProfile.customer_first_name = profileData.first_name || ''
+            if (!customer.customer_last_name) customerWithProfile.customer_last_name = profileData.last_name || ''
+            if (!customer.customer_email) customerWithProfile.customer_email = profileData.email || ''
+            if (!customer.customer_phone_number) customerWithProfile.customer_phone_number = profileData.phone_number
           }
         }
         
@@ -133,12 +132,12 @@ export function CustomerList() {
     if (!search) return true
     
     const searchLower = search.toLowerCase()
-    const fullName = `${customer.first_name} ${customer.last_name}`.toLowerCase()
+    const fullName = `${customer.customer_first_name} ${customer.customer_last_name}`.toLowerCase()
     
     return (
       fullName.includes(searchLower) ||
-      (customer.email && customer.email.toLowerCase().includes(searchLower)) ||
-      (customer.phone_number && customer.phone_number.includes(search))
+      (customer.customer_email && customer.customer_email.toLowerCase().includes(searchLower)) ||
+      (customer.customer_phone_number && customer.customer_phone_number.includes(search))
     )
   })
 
@@ -237,18 +236,18 @@ export function CustomerList() {
                     <tr key={customer.id} className="border-b hover:bg-muted/40">
                       <td className="py-3">
                         <div className="font-medium">
-                          {customer.first_name} {customer.last_name}
+                          {customer.customer_first_name} {customer.customer_last_name}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {customer.city && customer.state_province ? 
-                            `${customer.city}, ${customer.state_province}` : 
+                          {customer.customer_city && customer.customer_state_province ? 
+                            `${customer.customer_city}, ${customer.customer_state_province}` : 
                             "No location data"}
                         </div>
                       </td>
                       <td className="py-3">
-                        <div>{customer.email}</div>
+                        <div>{customer.customer_email}</div>
                         <div className="text-sm text-muted-foreground">
-                          {customer.phone_number || "No phone"}
+                          {customer.customer_phone_number || "No phone"}
                         </div>
                       </td>
                       <td className="py-3">

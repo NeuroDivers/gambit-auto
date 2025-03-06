@@ -20,11 +20,11 @@ export function CustomerHeader({ customer }: CustomerHeaderProps) {
           <div>
             <div className="flex items-center gap-4">
               <div className="bg-primary/10 text-primary rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl">
-                {customer.first_name?.[0]}{customer.last_name?.[0]}
+                {customer.customer_first_name?.[0]}{customer.customer_last_name?.[0]}
               </div>
               <div>
                 <h1 className="text-2xl font-bold">
-                  {customer.first_name} {customer.last_name}
+                  {customer.customer_first_name} {customer.customer_last_name}
                 </h1>
                 <p className="text-muted-foreground">
                   Customer since {new Date(customer.created_at).toLocaleDateString()}
@@ -41,23 +41,23 @@ export function CustomerHeader({ customer }: CustomerHeaderProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
           <div className="flex items-center gap-2">
             <Mail className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">{customer.email}</span>
+            <span className="text-sm">{customer.customer_email}</span>
           </div>
-          {customer.phone_number && (
+          {customer.customer_phone_number && (
             <div className="flex items-center gap-2">
               <Phone className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">{customer.phone_number}</span>
+              <span className="text-sm">{customer.customer_phone_number}</span>
             </div>
           )}
-          {(customer.city || customer.state_province) && (
+          {(customer.customer_city || customer.customer_state_province) && (
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">
                 {[
-                  customer.street_address,
-                  customer.city,
-                  customer.state_province,
-                  customer.postal_code,
+                  customer.customer_street_address,
+                  customer.customer_city,
+                  customer.customer_state_province,
+                  customer.customer_postal_code,
                 ]
                   .filter(Boolean)
                   .join(", ")}

@@ -19,7 +19,7 @@ export type WorkOrder = {
   vehicle_make: string;
   vehicle_model: string;
   vehicle_year: number;
-  vehicle_vin?: string; // Made optional to match actual usage
+  vehicle_vin?: string;
   vehicle_color?: string;
   vehicle_trim?: string;
   vehicle_body_class?: string;
@@ -38,7 +38,7 @@ export type WorkOrder = {
     name: string;
   } | null;
   work_order_services?: WorkOrderService[];
-  timeframe?: string | "flexible" | "asap" | "within_week" | "within_month"; // Updated to handle string or specific values
+  timeframe?: string | "flexible" | "asap" | "within_week" | "within_month";
   client_id?: string | null;
 };
 

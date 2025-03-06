@@ -26,20 +26,20 @@ export default function CustomerDetails() {
         .select(`
           id,
           profile_id,
-          street_address,
-          unit_number,
-          city,
-          state_province,
-          postal_code,
-          country,
+          customer_street_address,
+          customer_unit_number,
+          customer_city,
+          customer_state_province,
+          customer_postal_code,
+          customer_country,
           created_at,
           updated_at,
           user_id,
           access_token,
-          email,
-          phone_number,
-          first_name,
-          last_name
+          customer_email,
+          customer_phone_number,
+          customer_first_name,
+          customer_last_name
         `)
         .eq('id', id)
         .single()
@@ -57,10 +57,10 @@ export default function CustomerDetails() {
         if (!profileError && profile) {
           profileData = profile;
           
-          if (!customerData.first_name) customerData.first_name = profile.first_name || '';
-          if (!customerData.last_name) customerData.last_name = profile.last_name || '';
-          if (!customerData.email) customerData.email = profile.email || '';
-          if (!customerData.phone_number) customerData.phone_number = profile.phone_number;
+          if (!customerData.customer_first_name) customerData.customer_first_name = profile.first_name || '';
+          if (!customerData.customer_last_name) customerData.customer_last_name = profile.last_name || '';
+          if (!customerData.customer_email) customerData.customer_email = profile.email || '';
+          if (!customerData.customer_phone_number) customerData.customer_phone_number = profile.phone_number;
         }
       }
       
