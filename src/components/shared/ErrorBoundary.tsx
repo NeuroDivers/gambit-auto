@@ -19,7 +19,7 @@ export function ErrorBoundary({ children }: { children?: React.ReactNode }) {
   useEffect(() => {
     console.error("Application error:", error)
     
-    if (error === null) {
+    if (error === null || error === undefined) {
       // Handle null errors specifically
       setErrorDetails({
         title: "Application Error",
@@ -96,7 +96,7 @@ export function ErrorBoundary({ children }: { children?: React.ReactNode }) {
           </Button>
           
           <Button 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/')}
             className="flex items-center gap-2"
           >
             <Home className="h-4 w-4" />

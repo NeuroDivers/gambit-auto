@@ -22,7 +22,10 @@ export default function Dashboard() {
     queryFn: async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return null // Return null instead of throwing error
+        if (!user) {
+          console.log("No user found, returning null")
+          return null
+        }
         
         const { data: profileData, error } = await supabase
           .from("profiles")
@@ -32,13 +35,12 @@ export default function Dashboard() {
         
         if (error) {
           console.error("Profile query error:", error)
-          return null // Return null instead of throwing error
+          return null
         }
         
         return profileData
       } catch (err) {
         console.error("Error fetching profile:", err)
-        // Don't set error state here, just return null and handle below
         return null
       }
     },

@@ -9,12 +9,13 @@ import Unauthorized from "./pages/Unauthorized"
 import PublicInvoiceView from "./pages/PublicInvoiceView"
 import { protectedRoutes } from "./routes/protectedRoutes"
 import { ErrorBoundary } from "./components/shared/ErrorBoundary"
+import { DashboardLayout } from "./components/layouts/DashboardLayout"
 
 // Create the router
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Dashboard />,
+    element: <DashboardLayout><Dashboard /></DashboardLayout>,
     errorElement: <ErrorBoundary />
   },
   {
