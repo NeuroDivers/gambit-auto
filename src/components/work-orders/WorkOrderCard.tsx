@@ -18,8 +18,8 @@ export function WorkOrderCard({ request }: { request: WorkOrder }) {
           <WorkOrderCardDetails request={request} />
           {request?.additional_notes && (
             <div className="bg-background/40 rounded-lg p-3 mt-3">
-              <span className="text-sm text-white/50 block mb-1">Notes</span>
-              <p className="text-sm text-white/90">{request.additional_notes}</p>
+              <span className="text-sm text-muted-foreground block mb-1">Notes</span>
+              <p className="text-sm">{request.additional_notes}</p>
             </div>
           )}
           <WorkOrderCardActions workOrder={request} />
