@@ -8,6 +8,7 @@ import { NotesFields } from "./NotesFields"
 import { Separator } from "@/components/ui/separator"
 import { Card, CardContent } from "@/components/ui/card"
 import { VehicleInfoFields } from "./VehicleInfoFields"
+import { SchedulingFields } from "./SchedulingFields"
 
 interface FormSectionsProps {
   form: UseFormReturn<WorkOrderFormValues>
@@ -31,6 +32,14 @@ export function FormSections({
       <Card>
         <CardContent className="p-6">
           <VehicleInfoFields form={form} />
+        </CardContent>
+      </Card>
+      
+      <Separator />
+      
+      <Card>
+        <CardContent className="p-6">
+          <SchedulingFields form={form} />
         </CardContent>
       </Card>
       
