@@ -12,16 +12,9 @@ import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
+import { Badge } from "@/components/ui/badge"
 
-const statusStyles = {
-  pending: "bg-yellow-100 text-yellow-700 hover:bg-yellow-200",
-  in_progress: "bg-blue-100 text-blue-700 hover:bg-blue-200",
-  completed: "bg-green-100 text-green-700 hover:bg-green-200",
-  cancelled: "bg-red-100 text-red-700 hover:bg-red-200",
-  invoiced: "bg-purple-100 text-purple-700 hover:bg-purple-200",
-}
-
-type Status = keyof typeof statusStyles
+type Status = "pending" | "in_progress" | "completed" | "cancelled" | "invoiced"
 
 const statusLabels: Record<Status, string> = {
   pending: "Pending",
@@ -62,7 +55,7 @@ export function WorkOrderStatusSelect({ workOrder }: WorkOrderStatusSelectProps)
   }
 
   // Map any legacy status values to our new consistent values
-  const currentStatus = (workOrder.status in statusStyles) 
+  const currentStatus = (workOrder.status in statusLabels) 
     ? workOrder.status as Status 
     : workOrder.status === "approved" 
       ? "pending" 
@@ -73,14 +66,14 @@ export function WorkOrderStatusSelect({ workOrder }: WorkOrderStatusSelectProps)
   return (
     <DropdownMenu>
       <DropdownMenuTrigger disabled={isLoading} asChild>
-        <button
-          className={cn(
-            "px-2.5 py-1 rounded-full text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-            statusStyles[currentStatus] || statusStyles.pending
-          )}
-        >
-          {statusLabels[currentStatus] || "Pending"}
-        </button>
+        <div>
+          <Badge 
+            variant={currentStatus}
+            className="cursor-pointer"
+          >
+            {statusLabels[currentStatus]}
+          </Badge>
+        </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[200px]">
         {Object.entries(statusLabels).map(([status, label]) => (

@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { WorkOrderStatusBadge } from "../WorkOrderStatusBadge";
 
 interface WorkOrderMobileListProps {
   workOrders: WorkOrder[];
@@ -27,21 +28,6 @@ export function WorkOrderMobileList({
   onCreateInvoice,
   onViewDetails
 }: WorkOrderMobileListProps) {
-  const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string, variant: "default" | "outline" | "secondary" | "destructive" | "success" }> = {
-      pending: { label: "Pending", variant: "outline" },
-      approved: { label: "Pending", variant: "outline" },
-      rejected: { label: "Cancelled", variant: "destructive" },
-      in_progress: { label: "In Progress", variant: "secondary" },
-      completed: { label: "Completed", variant: "success" },
-      cancelled: { label: "Cancelled", variant: "destructive" }
-    }
-
-    const { label, variant } = statusMap[status] || { label: status, variant: "outline" }
-    
-    return <Badge variant={variant}>{label}</Badge>
-  };
-
   if (workOrders.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -61,7 +47,7 @@ export function WorkOrderMobileList({
                   <h3 className="font-medium">
                     {workOrder.customer_first_name} {workOrder.customer_last_name}
                   </h3>
-                  {getStatusBadge(workOrder.status)}
+                  <WorkOrderStatusBadge status={workOrder.status} />
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}

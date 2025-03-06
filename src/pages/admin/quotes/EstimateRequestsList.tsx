@@ -87,21 +87,24 @@ export function EstimateRequestsList() {
     return <LoadingScreen />
   }
 
-  const getStatusColor = (status) => {
+  // Map status to badge variant
+  const getBadgeVariant = (status) => {
     switch (status?.toLowerCase()) {
       case "pending":
-        return "bg-yellow-100 text-yellow-800"
+        return "estimate_pending"
       case "estimated":
       case "in_progress":
-        return "bg-blue-100 text-blue-800"
+        return "in_progress"
       case "accepted":
       case "completed":
-        return "bg-green-100 text-green-800"
+        return "accepted"
       case "rejected":
       case "cancelled":
-        return "bg-red-100 text-red-800"
+        return "rejected"
+      case "expired":
+        return "expired"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "estimate_pending"
     }
   }
 
@@ -162,10 +165,7 @@ export function EstimateRequestsList() {
                       : "Not specified"}
                   </TableCell>
                   <TableCell>
-                    <Badge 
-                      className={getStatusColor(request.status)}
-                      variant="outline"
-                    >
+                    <Badge variant={getBadgeVariant(request.status)}>
                       {request.status || "Pending"}
                     </Badge>
                   </TableCell>

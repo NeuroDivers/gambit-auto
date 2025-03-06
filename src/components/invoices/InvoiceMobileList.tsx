@@ -14,15 +14,17 @@ export function InvoiceMobileList({ invoices, onRowClick }: InvoiceMobileListPro
   const getBadgeVariant = (status: string) => {
     switch (status) {
       case 'paid':
-        return 'success'
+        return 'paid'
       case 'overdue':
-        return 'destructive'
+        return 'overdue'
       case 'pending':
         return 'pending'
       case 'draft':
         return 'draft'
+      case 'sent':
+        return 'sent'
       default:
-        return 'secondary'
+        return 'draft'
     }
   }
 
