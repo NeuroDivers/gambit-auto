@@ -140,7 +140,7 @@ export const WorkOrderCalendar = ({ clientView = false }: WorkOrderCalendarProps
             
             <Card>
               <CardContent className="p-0">
-                <WorkOrdersSection />
+                <WorkOrdersSection workOrders={workOrders.filter(wo => !wo.start_time)} />
               </CardContent>
             </Card>
           </>
