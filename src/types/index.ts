@@ -5,14 +5,14 @@ export type WorkOrder = {
   customer_last_name: string
   customer_email: string
   customer_phone: string
-  contact_preference: "phone" | "email"
+  contact_preference?: "phone" | "email"
   vehicle_make: string
   vehicle_model: string
   vehicle_year: number
-  vehicle_vin: string
+  vehicle_vin?: string  // Made optional to match actual usage
   additional_notes?: string
   media_url?: string | null
-  status: "pending" | "in_progress" | "completed" | "cancelled" | "approved" | "rejected"
+  status: "pending" | "approved" | "rejected" | "in_progress" | "completed" | "cancelled" | "invoiced" | "estimated"
   created_at: string
   price?: number | null
   customer_address?: string | null

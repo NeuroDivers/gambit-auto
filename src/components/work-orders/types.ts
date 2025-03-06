@@ -1,3 +1,4 @@
+
 import { UseFormReturn } from "react-hook-form";
 
 export type WorkOrder = {
@@ -18,14 +19,14 @@ export type WorkOrder = {
   vehicle_make: string;
   vehicle_model: string;
   vehicle_year: number;
-  vehicle_vin?: string;
+  vehicle_vin?: string; // Made optional to match actual usage
   vehicle_color?: string;
   vehicle_trim?: string;
   vehicle_body_class?: string;
   vehicle_doors?: number | null;
   vehicle_license_plate?: string;
   contact_preference?: "phone" | "email";
-  status: "pending" | "approved" | "rejected" | "in_progress" | "completed" | "cancelled" | "invoiced";
+  status: "pending" | "approved" | "rejected" | "in_progress" | "completed" | "cancelled" | "invoiced" | "estimated";
   assigned_bay_id?: string | null;
   assigned_profile_id?: string | null;
   start_time?: string | null;
@@ -110,7 +111,7 @@ export interface WorkOrderFormValues {
   start_time?: Date | null;
   end_time?: Date | null;
   estimated_duration?: number | null;
-  status: "pending" | "approved" | "rejected" | "in_progress" | "completed" | "cancelled" | "invoiced";
+  status: "pending" | "approved" | "rejected" | "in_progress" | "completed" | "cancelled" | "invoiced" | "estimated";
   assigned_bay_id?: string | null;
   additional_notes?: string;
   service_items: ServiceItemType[];

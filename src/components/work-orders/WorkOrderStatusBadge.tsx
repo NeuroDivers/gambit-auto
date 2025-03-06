@@ -8,7 +8,8 @@ type WorkOrderStatus =
   | "in_progress"
   | "completed"
   | "cancelled"
-  | "invoiced";
+  | "invoiced"
+  | "estimated";
 
 interface WorkOrderStatusBadgeProps {
   status: WorkOrderStatus;
@@ -31,6 +32,8 @@ export function WorkOrderStatusBadge({ status }: WorkOrderStatusBadgeProps) {
         return "cancelled";
       case "invoiced":
         return "invoiced";
+      case "estimated":
+        return "estimate_pending";
       default:
         return "default";
     }
@@ -52,8 +55,13 @@ export function WorkOrderStatusBadge({ status }: WorkOrderStatusBadgeProps) {
         return "Cancelled";
       case "invoiced":
         return "Invoiced";
+      case "estimated":
+        return "Estimated";
       default:
-        return status.charAt(0).toUpperCase() + status.slice(1);
+        // Fix the "never" type issue by ensuring status is treated as a string
+        return (typeof status === 'string') 
+          ? status.charAt(0).toUpperCase() + status.slice(1) 
+          : "Unknown";
     }
   };
 
