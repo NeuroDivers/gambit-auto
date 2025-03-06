@@ -606,11 +606,11 @@ export type Database = {
           city: string | null
           country: string | null
           created_at: string
+          customer_first_name: string
+          customer_last_name: string
           email: string
-          first_name: string
           id: string
           is_archived: boolean | null
-          last_name: string
           notes: string | null
           phone_number: string | null
           postal_code: string | null
@@ -626,11 +626,11 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          customer_first_name: string
+          customer_last_name: string
           email: string
-          first_name: string
           id?: string
           is_archived?: boolean | null
-          last_name: string
           notes?: string | null
           phone_number?: string | null
           postal_code?: string | null
@@ -646,11 +646,11 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          customer_first_name?: string
+          customer_last_name?: string
           email?: string
-          first_name?: string
           id?: string
           is_archived?: boolean | null
-          last_name?: string
           notes?: string | null
           phone_number?: string | null
           postal_code?: string | null

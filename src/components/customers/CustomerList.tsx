@@ -19,6 +19,7 @@ import {
   PaginationLink,
   PaginationEllipsis
 } from "@/components/ui/pagination"
+import { toast } from "sonner"
 
 export function CustomerList() {
   const navigate = useNavigate()
@@ -31,18 +32,23 @@ export function CustomerList() {
   // Fetch total count for pagination
   useEffect(() => {
     const fetchTotalCount = async () => {
-      const { count, error } = await supabase
-        .from('customers')
-        .select('id', { count: 'exact', head: true })
-      
-      if (error) {
-        console.error('Error fetching customer count:', error)
-        return
-      }
-      
-      if (count !== null) {
-        setTotalCustomers(count)
-        setTotalPages(Math.ceil(count / PAGE_SIZE))
+      try {
+        const { count, error } = await supabase
+          .from('customers')
+          .select('id', { count: 'exact', head: true })
+        
+        if (error) {
+          console.error('Error fetching customer count:', error)
+          return
+        }
+        
+        if (count !== null) {
+          setTotalCustomers(count)
+          setTotalPages(Math.ceil(count / PAGE_SIZE))
+        }
+      } catch (err) {
+        console.error('Error in fetchTotalCount:', err)
+        toast.error("Failed to load customer count")
       }
     }
     
@@ -75,7 +81,10 @@ export function CustomerList() {
           .order('created_at', { ascending: false })
           .range(from, to)
         
-        if (error) throw error
+        if (error) {
+          console.error("Error fetching customers:", error)
+          throw error
+        }
         
         if (!customersData || customersData.length === 0) {
           return []
