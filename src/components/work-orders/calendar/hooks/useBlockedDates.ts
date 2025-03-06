@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { isWithinInterval, parseISO, format } from "date-fns";
+import { isWithinInterval, parseISO, format, addDays } from "date-fns";
 
 export interface BlockedDate {
   id: string;
@@ -42,7 +42,7 @@ export function useBlockedDates() {
     });
   };
 
-  const getBlockedDateReason = (date: Date): string | null => {
+  const getBlockedDateInfo = (date: Date): { reason: string | null; dates: string } | null => {
     if (!blockedDates.length) return null;
     
     const blockedDate = blockedDates.find(blocked => {
@@ -52,13 +52,73 @@ export function useBlockedDates() {
       return isWithinInterval(date, { start: startDate, end: endDate });
     });
     
-    return blockedDate?.reason || `Blocked from ${format(parseISO(blockedDate?.start_date || ''), 'MMM d')} to ${format(parseISO(blockedDate?.end_date || ''), 'MMM d')}`;
+    if (!blockedDate) return null;
+    
+    const startFormat = format(parseISO(blockedDate.start_date), 'MMM d');
+    const endFormat = format(parseISO(blockedDate.end_date), 'MMM d');
+    const dateRange = startFormat === endFormat ? startFormat : `${startFormat} to ${endFormat}`;
+    
+    return { 
+      reason: blockedDate.reason, 
+      dates: dateRange
+    };
+  };
+
+  const getBlockedDateReason = (date: Date): string | null => {
+    const info = getBlockedDateInfo(date);
+    if (!info) return null;
+    
+    return info.reason 
+      ? `${info.reason} (${info.dates})` 
+      : `Blocked: ${info.dates}`;
+  };
+
+  const addBlockedDate = async (startDate: Date, endDate: Date, reason: string | null = null) => {
+    try {
+      const { error } = await supabase
+        .from("blocked_dates")
+        .insert([{ 
+          start_date: format(startDate, 'yyyy-MM-dd'), 
+          end_date: format(endDate, 'yyyy-MM-dd'),
+          reason
+        }]);
+
+      if (error) throw error;
+      
+      toast.success("Date blocked successfully");
+      return true;
+    } catch (error) {
+      console.error("Error adding blocked date:", error);
+      toast.error("Failed to block date");
+      return false;
+    }
+  };
+
+  const removeBlockedDate = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("blocked_dates")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+      
+      toast.success("Date unblocked successfully");
+      return true;
+    } catch (error) {
+      console.error("Error removing blocked date:", error);
+      toast.error("Failed to unblock date");
+      return false;
+    }
   };
 
   return { 
     blockedDates, 
     isDateBlocked, 
+    getBlockedDateInfo,
     getBlockedDateReason,
+    addBlockedDate,
+    removeBlockedDate,
     isLoading, 
     error 
   };

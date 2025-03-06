@@ -74,7 +74,7 @@ export function CalendarContent({
                 <div 
                   key={date.toISOString()}
                   className={cn(
-                    "h-full w-full border-b border-r border-gray-200",
+                    "h-full min-h-[60px] w-full border-b border-r border-gray-200",
                     "bg-red-50 cursor-not-allowed"
                   )}
                   style={{
@@ -126,7 +126,7 @@ export function CalendarContent({
               <div 
                 key={date.toISOString()}
                 className={cn(
-                  "h-full w-full border-b border-r border-gray-200",
+                  "h-full min-h-[60px] w-full border-b border-r border-gray-200",
                   "transition-colors hover:bg-gray-50 cursor-pointer p-2",
                   isToday(date) && "bg-gray-50"
                 )}

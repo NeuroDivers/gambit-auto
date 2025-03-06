@@ -3,7 +3,6 @@ import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { isToday } from "date-fns"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { BlockedDate } from "@/components/work-orders/calendar/hooks/useBlockedDates"
 
 type CalendarHeaderProps = {
   days: Date[]
@@ -34,7 +33,11 @@ export function CalendarHeader({ days, isDateBlocked, getBlockedDateReason, onDa
             onClick={() => !blocked && onDateChange && onDateChange(date)}
           >
             <div className="font-bold">{format(date, 'EEE')}</div>
-            <div className={cn(today && !blocked && "text-primary font-semibold rounded-full w-6 h-6 flex items-center justify-center mx-auto")}>
+            <div className={cn(
+              "text-center",
+              today && !blocked && "text-primary font-semibold rounded-full w-6 h-6 flex items-center justify-center mx-auto",
+              blocked && "text-red-600"
+            )}>
               {format(date, 'd')}
             </div>
           </div>

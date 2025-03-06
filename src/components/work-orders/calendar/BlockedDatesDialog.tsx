@@ -2,23 +2,27 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useState } from "react"
 import { BlockedDatesList } from "./BlockedDatesList"
+import { Button } from "@/components/ui/button"
+import { CalendarOff } from "lucide-react"
 
 export function BlockedDatesDialog() {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
     <>
-      <button
+      <Button
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"
+        variant="outline"
+        className="flex items-center gap-2"
       >
-        Manage Blocked Dates
-      </button>
+        <CalendarOff className="h-4 w-4" />
+        <span>Manage Blocked Dates</span>
+      </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
-            <DialogTitle>Blocked Dates</DialogTitle>
+            <DialogTitle>Manage Blocked Dates</DialogTitle>
           </DialogHeader>
           <BlockedDatesList />
         </DialogContent>

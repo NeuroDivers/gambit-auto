@@ -1,63 +1,58 @@
 
 import { useState } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
+import { format, addDays, parseISO } from "date-fns"
+import { Loader2, Trash2, CalendarRange } from "lucide-react"
+import { useBlockedDates, BlockedDate } from "./hooks/useBlockedDates"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 import { toast } from "sonner"
-import { format } from "date-fns"
-import { Loader2, Trash2 } from "lucide-react"
 
 export function BlockedDatesList() {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
+  const [selectedStartDate, setSelectedStartDate] = useState<Date | undefined>(undefined)
+  const [selectedEndDate, setSelectedEndDate] = useState<Date | undefined>(undefined)
+  const [blockReason, setBlockReason] = useState<string>("")
   const queryClient = useQueryClient()
+  
+  const { 
+    blockedDates, 
+    isLoading, 
+    addBlockedDate, 
+    removeBlockedDate 
+  } = useBlockedDates()
 
-  const { data: blockedDates, isLoading } = useQuery({
-    queryKey: ["blocked-dates"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("blocked_dates")
-        .select("*")
-        .order("date", { ascending: true })
-
-      if (error) throw error
-      return data
+  const addBlockedDateMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedStartDate) return false;
+      
+      // Use the same date as end date if not selected
+      const endDate = selectedEndDate || selectedStartDate;
+      
+      return addBlockedDate(selectedStartDate, endDate, blockReason || null);
+    },
+    onSuccess: (success) => {
+      if (success) {
+        queryClient.invalidateQueries({ queryKey: ["blockedDates"] })
+        setSelectedStartDate(undefined)
+        setSelectedEndDate(undefined)
+        setBlockReason("")
+      }
     }
   })
 
-  const addBlockedDate = useMutation({
-    mutationFn: async (date: Date) => {
-      const { error } = await supabase
-        .from("blocked_dates")
-        .insert([{ date: format(date, "yyyy-MM-dd") }])
-
-      if (error) throw error
+  const removeBlockedDateMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return removeBlockedDate(id);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["blocked-dates"] })
-      toast.success("Date blocked successfully")
-      setSelectedDate(undefined)
-    },
-    onError: () => {
-      toast.error("Failed to block date")
-    }
-  })
-
-  const removeBlockedDate = useMutation({
-    mutationFn: async (date: string) => {
-      const { error } = await supabase
-        .from("blocked_dates")
-        .delete()
-        .eq("date", date)
-
-      if (error) throw error
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["blocked-dates"] })
-      toast.success("Date unblocked successfully")
-    },
-    onError: () => {
-      toast.error("Failed to unblock date")
+    onSuccess: (success) => {
+      if (success) {
+        queryClient.invalidateQueries({ queryKey: ["blockedDates"] })
+      }
     }
   })
 
@@ -70,53 +65,160 @@ export function BlockedDatesList() {
   }
 
   const handleAddDate = () => {
-    if (selectedDate) {
-      addBlockedDate.mutate(selectedDate)
+    if (!selectedStartDate) {
+      toast.error("Please select a start date")
+      return;
     }
+    
+    addBlockedDateMutation.mutate()
   }
 
-  const disabledDays = blockedDates?.map(bd => new Date(bd.date)) || []
+  const calendarDate = selectedStartDate || new Date();
+
+  // Prepare already blocked dates to disable in calendar
+  const disabledDates = blockedDates?.flatMap(bd => {
+    const startDate = parseISO(bd.start_date);
+    const endDate = parseISO(bd.end_date);
+    
+    // Generate all dates in the range
+    const dates: Date[] = [];
+    let currentDate = startDate;
+    
+    while (currentDate <= endDate) {
+      dates.push(new Date(currentDate));
+      currentDate = addDays(currentDate, 1);
+    }
+    
+    return dates;
+  }) || [];
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Calendar
-          mode="single"
-          selected={selectedDate}
-          onSelect={setSelectedDate}
-          disabled={disabledDays}
-        />
+    <div className="space-y-6">
+      <div>
+        <Label className="text-sm font-medium mb-2 block">Block Date Range</Label>
+        <div className="flex flex-col sm:flex-row gap-4 items-start">
+          <div className="w-full sm:w-1/2">
+            <Label className="text-xs mb-1 block">Start Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !selectedStartDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarRange className="mr-2 h-4 w-4" />
+                  {selectedStartDate ? format(selectedStartDate, "PPP") : "Select start date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={selectedStartDate}
+                  onSelect={setSelectedStartDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="w-full sm:w-1/2">
+            <Label className="text-xs mb-1 block">End Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !selectedEndDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarRange className="mr-2 h-4 w-4" />
+                  {selectedEndDate ? format(selectedEndDate, "PPP") : "Select end date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={selectedEndDate}
+                  onSelect={setSelectedEndDate}
+                  disabled={date => {
+                    // Can't select end date before start date
+                    return selectedStartDate ? date < selectedStartDate : false;
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+        
+        <div className="mt-4">
+          <Label htmlFor="block-reason" className="text-sm font-medium">Reason (optional)</Label>
+          <Input
+            id="block-reason"
+            placeholder="Enter reason for blocking"
+            value={blockReason}
+            onChange={(e) => setBlockReason(e.target.value)}
+            className="mt-1"
+          />
+        </div>
+        
         <Button 
           onClick={handleAddDate} 
-          disabled={!selectedDate}
-          className="w-full"
+          disabled={!selectedStartDate || addBlockedDateMutation.isPending}
+          className="w-full mt-4"
         >
-          Block Selected Date
+          {addBlockedDateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Block Date{selectedStartDate && selectedEndDate && selectedStartDate.getTime() !== selectedEndDate.getTime() ? " Range" : ""}
         </Button>
       </div>
 
+      <Separator />
+
       <div className="space-y-2">
-        <h4 className="font-medium">Blocked Dates</h4>
+        <h4 className="font-medium">Blocked Date Ranges</h4>
         {blockedDates && blockedDates.length > 0 ? (
-          <div className="space-y-2">
-            {blockedDates.map((bd) => (
-              <div
-                key={bd.date}
-                className="flex items-center justify-between rounded-md border p-2"
-              >
-                <span>{format(new Date(bd.date), "MMMM d, yyyy")}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeBlockedDate.mutate(bd.date)}
+          <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+            {blockedDates.map((bd: BlockedDate) => {
+              const startDate = parseISO(bd.start_date);
+              const endDate = parseISO(bd.end_date);
+              const isRange = bd.start_date !== bd.end_date;
+              
+              return (
+                <div
+                  key={bd.id}
+                  className="flex items-center justify-between rounded-md border p-3"
                 >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+                  <div className="space-y-1">
+                    <div className="font-medium">
+                      {format(startDate, "MMMM d, yyyy")}
+                      {isRange && ` - ${format(endDate, "MMMM d, yyyy")}`}
+                    </div>
+                    {bd.reason && (
+                      <p className="text-sm text-muted-foreground">{bd.reason}</p>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeBlockedDateMutation.mutate(bd.id)}
+                    disabled={removeBlockedDateMutation.isPending}
+                  >
+                    {removeBlockedDateMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    )}
+                  </Button>
+                </div>
+              );
+            })}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">No blocked dates</p>
+          <p className="text-sm text-muted-foreground p-4 text-center border rounded-md">
+            No dates are currently blocked
+          </p>
         )}
       </div>
     </div>
