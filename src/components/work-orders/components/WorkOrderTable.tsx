@@ -7,17 +7,17 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
 import { WorkOrder } from "../types"
 import { Button } from "@/components/ui/button"
 import { Eye, FileEdit, Wrench, Receipt } from "lucide-react"
 import { formatDate } from "@/lib/utils"
+import { WorkOrderStatusBadge } from "../WorkOrderStatusBadge"
 
 interface WorkOrderTableProps {
   workOrders: WorkOrder[]
   onAssignBay: (workOrder: WorkOrder) => void
   onEdit: (workOrder: WorkOrder) => void
-  onCreateInvoice: (workOrderId: string) => void
+  onCreateInvoice: (workOrder: WorkOrder) => void
   onViewDetails: (workOrder: WorkOrder) => void
 }
 
@@ -28,21 +28,6 @@ export function WorkOrderTable({
   onCreateInvoice,
   onViewDetails
 }: WorkOrderTableProps) {
-  const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string, variant: "default" | "outline" | "secondary" | "destructive" | "success" }> = {
-      pending: { label: "Pending", variant: "outline" },
-      approved: { label: "Pending", variant: "outline" },
-      rejected: { label: "Cancelled", variant: "destructive" },
-      in_progress: { label: "In Progress", variant: "secondary" },
-      completed: { label: "Completed", variant: "success" },
-      cancelled: { label: "Cancelled", variant: "destructive" }
-    }
-
-    const { label, variant } = statusMap[status] || { label: status, variant: "outline" }
-    
-    return <Badge variant={variant}>{label}</Badge>
-  }
-
   return (
     <div className="rounded-md border">
       <Table>
@@ -78,7 +63,11 @@ export function WorkOrderTable({
                   {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
                 </TableCell>
                 <TableCell>
-                  {getStatusBadge(workOrder.status)}
+                  <WorkOrderStatusBadge 
+                    status={workOrder.status} 
+                    workOrderId={workOrder.id}
+                    editable={true}
+                  />
                 </TableCell>
                 <TableCell>
                   {workOrder.created_at ? formatDate(workOrder.created_at) : '-'}
@@ -115,7 +104,7 @@ export function WorkOrderTable({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => onCreateInvoice(workOrder.id)}
+                      onClick={() => onCreateInvoice(workOrder)}
                       title="Create Invoice"
                       disabled={workOrder.status !== 'completed'}
                     >

@@ -40,14 +40,17 @@ export function WorkOrderMobileList({
         <Card
           key={workOrder.id}
           className="overflow-hidden"
-          onClick={() => onViewDetails(workOrder)}
         >
-          <div className="p-4 cursor-pointer">
+          <div className="p-4">
             <div className="flex justify-between items-start mb-3">
               <h3 className="font-medium truncate mr-2">
                 {workOrder.customer_first_name} {workOrder.customer_last_name}
               </h3>
-              <WorkOrderStatusBadge status={workOrder.status} />
+              <WorkOrderStatusBadge 
+                status={workOrder.status} 
+                workOrderId={workOrder.id}
+                editable={true}
+              />
             </div>
             
             <div className="grid gap-2 text-sm">
@@ -74,10 +77,7 @@ export function WorkOrderMobileList({
                 variant="ghost" 
                 size="sm" 
                 className="text-xs"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onViewDetails(workOrder)
-                }}
+                onClick={() => onViewDetails(workOrder)}
               >
                 View Details
                 <ArrowRight className="ml-1 h-3 w-3" />

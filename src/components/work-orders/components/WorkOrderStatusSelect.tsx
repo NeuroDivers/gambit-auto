@@ -7,44 +7,39 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { WorkOrder } from "../types"
 import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 import { Badge } from "@/components/ui/badge"
+import { getStatusLabel } from "../WorkOrderStatusBadge"
 
-type Status = "pending" | "in_progress" | "completed" | "cancelled" | "invoiced"
-
-const statusLabels: Record<Status, string> = {
-  pending: "Pending",
-  in_progress: "In Progress",
-  completed: "Completed",
-  cancelled: "Cancelled",
-  invoiced: "Invoiced",
-}
+type Status = "pending" | "approved" | "rejected" | "in_progress" | "completed" | "cancelled" | "invoiced" | "estimated"
 
 interface WorkOrderStatusSelectProps {
-  workOrder: WorkOrder
+  workOrderId: string;
+  initialStatus: Status;
 }
 
-export function WorkOrderStatusSelect({ workOrder }: WorkOrderStatusSelectProps) {
+export function WorkOrderStatusSelect({ workOrderId, initialStatus }: WorkOrderStatusSelectProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const [status, setStatus] = useState<Status>(initialStatus)
   const queryClient = useQueryClient()
 
   const updateStatus = async (newStatus: Status) => {
-    if (newStatus === workOrder.status) return
+    if (newStatus === status) return
 
     setIsLoading(true)
     try {
       const { error } = await supabase
         .from('work_orders')
         .update({ status: newStatus })
-        .eq('id', workOrder.id)
+        .eq('id', workOrderId)
 
       if (error) throw error
 
-      toast.success(`Status updated to ${statusLabels[newStatus]}`)
+      setStatus(newStatus)
+      toast.success(`Status updated to ${getStatusLabel(newStatus)}`)
       queryClient.invalidateQueries({ queryKey: ['workOrders'] })
     } catch (error) {
       console.error('Error updating status:', error)
@@ -54,40 +49,41 @@ export function WorkOrderStatusSelect({ workOrder }: WorkOrderStatusSelectProps)
     }
   }
 
-  // Map any legacy status values to our new consistent values
-  const currentStatus = (workOrder.status in statusLabels) 
-    ? workOrder.status as Status 
-    : workOrder.status === "approved" 
-      ? "pending" 
-      : workOrder.status === "rejected" 
-        ? "cancelled" 
-        : "pending";
+  const allStatuses: Status[] = [
+    "pending", 
+    "approved", 
+    "rejected", 
+    "in_progress", 
+    "completed", 
+    "cancelled", 
+    "invoiced", 
+    "estimated"
+  ]
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger disabled={isLoading} asChild>
         <div>
           <Badge 
-            variant={currentStatus}
+            variant={status}
             className="cursor-pointer"
           >
-            {statusLabels[currentStatus]}
+            {getStatusLabel(status)}
           </Badge>
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[200px]">
-        {Object.entries(statusLabels).map(([status, label]) => (
+        {allStatuses.map((statusOption) => (
           <DropdownMenuItem
-            key={status}
-            onClick={() => updateStatus(status as Status)}
-            disabled={status === "invoiced"}
+            key={statusOption}
+            onClick={() => updateStatus(statusOption)}
             className={cn(
               "flex items-center justify-between",
-              status === "invoiced" && "opacity-60 cursor-not-allowed"
+              statusOption === status && "bg-accent"
             )}
           >
-            <span>{label}</span>
-            {status === currentStatus && (
+            <span>{getStatusLabel(statusOption)}</span>
+            {statusOption === status && (
               <Check className="h-4 w-4" />
             )}
           </DropdownMenuItem>

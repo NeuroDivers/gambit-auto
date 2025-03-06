@@ -6,8 +6,8 @@ import { LoadingScreen } from "@/components/shared/LoadingScreen"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { WorkOrderStatusSelect } from "@/components/work-orders/components/WorkOrderStatusSelect"
 import { RatingSubmissionForm } from "@/components/service-ratings/RatingSubmissionForm"
+import { WorkOrderStatusBadge } from "@/components/work-orders/WorkOrderStatusBadge"
 import {
   Dialog,
   DialogContent,
@@ -167,7 +167,11 @@ export default function StaffWorkOrders() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <WorkOrderStatusSelect workOrder={order} />
+                  <WorkOrderStatusBadge 
+                    status={order.status} 
+                    workOrderId={order.id}
+                    editable={true}
+                  />
                   {renderServiceRatingDialog(order)}
                 </div>
               </div>

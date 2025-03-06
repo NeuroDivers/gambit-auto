@@ -10,6 +10,7 @@ import { WorkOrderMobileList } from "./components/WorkOrderMobileList"
 import { useNavigate } from "react-router-dom"
 import { WorkOrderDetailsDialog } from "./calendar/WorkOrderDetailsDialog"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { WorkOrder } from "./types"
 
 export function WorkOrderList() {
   const navigate = useNavigate()
@@ -52,8 +53,14 @@ export function WorkOrderList() {
     )
   }
 
-  const handleEdit = (workOrder: any) => {
+  const handleEdit = (workOrder: WorkOrder) => {
     navigate(`/work-orders/${workOrder.id}/edit`)
+  }
+
+  // Handle create invoice action 
+  const onCreateInvoice = (workOrder: WorkOrder) => {
+    const workOrderId = typeof workOrder === 'string' ? workOrder : workOrder.id
+    handleCreateInvoice(workOrderId)
   }
 
   return (
@@ -74,7 +81,7 @@ export function WorkOrderList() {
           workOrders={workOrders}
           onAssignBay={setAssignBayWorkOrder}
           onEdit={handleEdit}
-          onCreateInvoice={handleCreateInvoice}
+          onCreateInvoice={onCreateInvoice}
           onViewDetails={setSelectedWorkOrder}
         />
       ) : (
@@ -82,7 +89,7 @@ export function WorkOrderList() {
           workOrders={workOrders}
           onAssignBay={setAssignBayWorkOrder}
           onEdit={handleEdit}
-          onCreateInvoice={handleCreateInvoice}
+          onCreateInvoice={onCreateInvoice}
           onViewDetails={setSelectedWorkOrder}
         />
       )}
