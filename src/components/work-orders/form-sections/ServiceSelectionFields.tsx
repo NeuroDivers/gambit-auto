@@ -1,3 +1,4 @@
+
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
 import { useFieldArray } from "react-hook-form"
@@ -133,6 +134,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
       form.setValue(`service_items.${index}.unit_price`, selectedService.base_price || 0)
       form.setValue(`service_items.${index}.service_id`, serviceId)
       
+      // Immediately expand services with sub-services
       if (hasSubServices(serviceId)) {
         setExpandedServices(prev => ({
           ...prev,
@@ -172,6 +174,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
     return subServicesByParent[parentServiceId] || [];
   }
 
+  // When sub-services data loads, check for services that should have their sub-services section expanded
   useEffect(() => {
     if (Object.keys(subServicesByParent).length > 0) {
       const formValues = form.getValues();
@@ -188,6 +191,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
     }
   }, [subServicesByParent, form]);
 
+  // When service items change (added/removed), check if any have sub-services
   useEffect(() => {
     serviceItems.forEach((item, index) => {
       if (item.service_id && hasSubServices(item.service_id)) {
@@ -198,6 +202,27 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
       }
     });
   }, [serviceItems, subServicesByParent]);
+
+  // Watch for form value changes to catch when a service_id changes
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name && name.includes('service_id') && !name.includes('sub_services')) {
+        const matches = name.match(/service_items\.(\d+)\.service_id/);
+        if (matches && matches[1]) {
+          const index = parseInt(matches[1]);
+          const serviceId = form.getValues(`service_items.${index}.service_id`);
+          if (serviceId && hasSubServices(serviceId)) {
+            setExpandedServices(prev => ({
+              ...prev,
+              [index]: true
+            }));
+          }
+        }
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form, hasSubServices]);
 
   return (
     <div className="space-y-6">
@@ -708,5 +733,5 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
         </Button>
       )}
     </div>
-  )
+  );
 }

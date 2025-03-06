@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ServiceItemType } from "@/types/service-item"
@@ -88,6 +89,7 @@ export function ServiceSelectionField({
     const newServices = [...services, newService];
     onChange(newServices);
     
+    // If the service has sub-services, open the collapsible immediately
     if (hasSubServices(serviceToAdd.id)) {
       const index = newServices.length - 1;
       setOpenCollapsibles(prev => ({
@@ -171,6 +173,7 @@ export function ServiceSelectionField({
     return getSubServices(serviceId).length > 0;
   };
 
+  // Check for existing services with sub-services and open their collapsibles
   useEffect(() => {
     services.forEach((service, index) => {
       if (service.service_id && hasSubServices(service.service_id)) {
