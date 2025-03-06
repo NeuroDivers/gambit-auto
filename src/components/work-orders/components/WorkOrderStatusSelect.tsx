@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { WorkOrder } from "../types"  // Use our local WorkOrder type
+import { WorkOrder } from "../types"
 import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
@@ -50,7 +50,7 @@ export function WorkOrderStatusSelect({ workOrder }: WorkOrderStatusSelectProps)
       if (error) throw error
 
       toast.success(`Status updated to ${statusLabels[newStatus]}`)
-      queryClient.invalidateQueries({ queryKey: ['work-orders'] })
+      queryClient.invalidateQueries({ queryKey: ['workOrders'] })
     } catch (error) {
       console.error('Error updating status:', error)
       toast.error("Failed to update status")
@@ -59,16 +59,25 @@ export function WorkOrderStatusSelect({ workOrder }: WorkOrderStatusSelectProps)
     }
   }
 
+  // Map any legacy status values to our new consistent values
+  const currentStatus = (workOrder.status in statusStyles) 
+    ? workOrder.status as Status 
+    : workOrder.status === "approved" 
+      ? "pending" 
+      : workOrder.status === "rejected" 
+        ? "cancelled" 
+        : "pending";
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger disabled={isLoading} asChild>
         <button
           className={cn(
             "px-2.5 py-1 rounded-full text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-            statusStyles[workOrder.status as Status] || statusStyles.pending
+            statusStyles[currentStatus] || statusStyles.pending
           )}
         >
-          {statusLabels[workOrder.status as Status] || "Pending"}
+          {statusLabels[currentStatus] || "Pending"}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[200px]">
@@ -79,7 +88,7 @@ export function WorkOrderStatusSelect({ workOrder }: WorkOrderStatusSelectProps)
             className="flex items-center justify-between"
           >
             <span>{label}</span>
-            {status === workOrder.status && (
+            {status === currentStatus && (
               <Check className="h-4 w-4" />
             )}
           </DropdownMenuItem>

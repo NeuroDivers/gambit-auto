@@ -58,6 +58,8 @@ export function useWorkOrderListData() {
     queryKey: ["workOrders", searchTerm, statusFilter, assignmentFilter, page],
     queryFn: async () => {
       try {
+        console.log("Fetching work orders with filters:", { searchTerm, statusFilter, assignmentFilter });
+        
         let query = supabase
           .from("work_orders")
           .select(`
@@ -66,43 +68,60 @@ export function useWorkOrderListData() {
               id,
               name
             )
-          `)
+          `, { count: 'exact' })
           .order("created_at", { ascending: false })
 
-        if (searchTerm) {
+        // Handle search term
+        if (searchTerm && searchTerm.trim() !== '') {
           query = query.or(
-            `first_name.ilike.%${searchTerm}%,` +
-            `last_name.ilike.%${searchTerm}%,` +
-            `email.ilike.%${searchTerm}%,` +
-            `phone_number.ilike.%${searchTerm}%`
+            `first_name.ilike.%${searchTerm.trim()}%,` +
+            `last_name.ilike.%${searchTerm.trim()}%,` +
+            `email.ilike.%${searchTerm.trim()}%,` +
+            `phone_number.ilike.%${searchTerm.trim()}%`
           )
         }
 
+        // Handle status filter - map approved/rejected to our standard statuses if needed
         if (statusFilter !== "all") {
-          query = query.eq("status", statusFilter)
+          if (statusFilter === "in_progress") {
+            query = query.eq("status", "in_progress");
+          } else if (statusFilter === "pending") {
+            query = query.or("status.eq.pending,status.eq.approved");
+          } else if (statusFilter === "cancelled") {
+            query = query.or("status.eq.cancelled,status.eq.rejected");
+          } else {
+            query = query.eq("status", statusFilter);
+          }
         }
 
-        if (assignmentFilter === "assigned") {
-          query = query.not("assigned_bay_id", "is", null)
-        } else if (assignmentFilter === "unassigned") {
-          query = query.is("assigned_bay_id", null)
+        // Handle assignment filter
+        if (assignmentFilter === "assigned-bay") {
+          query = query.not("assigned_bay_id", "is", null);
+        } else if (assignmentFilter === "unassigned-bay") {
+          query = query.is("assigned_bay_id", null);
         }
 
-        const { data, error } = await query
+        const { data, error, count } = await query;
 
         if (error) {
-          console.error('Work orders fetch error:', error)
-          throw new Error(`Failed to fetch work orders: ${error.message}`)
+          console.error('Work orders fetch error:', error);
+          throw new Error(`Failed to fetch work orders: ${error.message}`);
         }
 
-        return data || []
+        // Calculate total pages
+        if (count !== null) {
+          setTotalPages(Math.ceil(count / 10)); // Assuming 10 items per page
+        }
+
+        console.log("Fetched work orders:", data);
+        return data || [];
       } catch (err) {
-        console.error('Work orders fetch error:', err)
-        toast.error('Failed to load work orders')
-        throw err
+        console.error('Work orders fetch error:', err);
+        toast.error('Failed to load work orders');
+        throw err;
       }
     }
-  })
+  });
 
   const { data: serviceBays } = useQuery({
     queryKey: ["service-bays"],
@@ -111,7 +130,6 @@ export function useWorkOrderListData() {
         const { data, error } = await supabase
           .from("service_bays")
           .select("*")
-          .eq("status", "available")
           .order('name')
       
         if (error) {

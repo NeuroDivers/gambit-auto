@@ -38,9 +38,9 @@ export function WorkOrderFilters({
         <SelectContent>
           <SelectItem value="all">All Status</SelectItem>
           <SelectItem value="pending">Pending</SelectItem>
-          <SelectItem value="approved">Approved</SelectItem>
-          <SelectItem value="rejected">Rejected</SelectItem>
+          <SelectItem value="in_progress">In Progress</SelectItem>
           <SelectItem value="completed">Completed</SelectItem>
+          <SelectItem value="cancelled">Cancelled</SelectItem>
         </SelectContent>
       </Select>
       <Select value={assignmentFilter} onValueChange={onAssignmentFilterChange}>
@@ -49,10 +49,8 @@ export function WorkOrderFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Assignments</SelectItem>
-          <SelectItem value="unassigned-user">Unassigned User</SelectItem>
-          <SelectItem value="assigned-user">Assigned User</SelectItem>
-          <SelectItem value="unassigned-bay">Unassigned Bay</SelectItem>
           <SelectItem value="assigned-bay">Assigned Bay</SelectItem>
+          <SelectItem value="unassigned-bay">Unassigned Bay</SelectItem>
         </SelectContent>
       </Select>
     </div>

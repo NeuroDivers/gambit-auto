@@ -12,7 +12,7 @@ export type WorkOrder = {
   vehicle_vin: string
   additional_notes?: string
   media_url?: string | null
-  status: string
+  status: "pending" | "in_progress" | "completed" | "cancelled" | "approved" | "rejected"
   created_at: string
   price?: number | null
   customer_address?: string | null

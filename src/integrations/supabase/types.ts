@@ -2420,7 +2420,9 @@ export type Database = {
           status: string
           updated_at: string
           vehicle_body_class: string | null
+          vehicle_color: string | null
           vehicle_doors: number | null
+          vehicle_license_plate: string | null
           vehicle_make: string
           vehicle_model: string
           vehicle_trim: string | null
@@ -2454,7 +2456,9 @@ export type Database = {
           status?: string
           updated_at?: string
           vehicle_body_class?: string | null
+          vehicle_color?: string | null
           vehicle_doors?: number | null
+          vehicle_license_plate?: string | null
           vehicle_make: string
           vehicle_model: string
           vehicle_trim?: string | null
@@ -2488,7 +2492,9 @@ export type Database = {
           status?: string
           updated_at?: string
           vehicle_body_class?: string | null
+          vehicle_color?: string | null
           vehicle_doors?: number | null
+          vehicle_license_plate?: string | null
           vehicle_make?: string
           vehicle_model?: string
           vehicle_trim?: string | null
