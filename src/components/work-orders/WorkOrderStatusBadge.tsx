@@ -5,6 +5,7 @@ import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { getWorkOrderStatusVariant } from "@/components/shared/BadgeVariants"
 
 type WorkOrderStatusBadgeProps = {
   status: WorkOrderStatus
@@ -16,34 +17,14 @@ export function getStatusLabel(status: WorkOrderStatus): string {
   return status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ');
 }
 
+export function getBadgeVariant(status: WorkOrderStatus) {
+  return getWorkOrderStatusVariant(status);
+}
+
 export function WorkOrderStatusBadge({ status, workOrderId, editable = false }: WorkOrderStatusBadgeProps) {
   const [currentStatus, setCurrentStatus] = useState<WorkOrderStatus>(status)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
-
-  // Map work order status to badge variant
-  const getBadgeVariant = (status: WorkOrderStatus) => {
-    switch (status) {
-      case "pending":
-        return "outline" // Using outline instead of pending
-      case "approved":
-        return "outline" 
-      case "rejected":
-        return "rejected"
-      case "in_progress":
-        return "info" // Using info instead of in_progress
-      case "completed":
-        return "success"
-      case "cancelled":
-        return "destructive"
-      case "invoiced":
-        return "secondary"
-      case "estimated":
-        return "warning" // Using warning instead of estimated
-      default:
-        return "default"
-    }
-  }
 
   const handleStatusChange = async (newStatus: WorkOrderStatus) => {
     if (!workOrderId) return

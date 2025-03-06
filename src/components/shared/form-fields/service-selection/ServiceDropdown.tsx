@@ -1,43 +1,36 @@
 
-import { ServiceDropdownProps, ServiceType } from "./types";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import React from 'react';
+import { ServiceDropdownProps } from './types';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export function ServiceDropdown({
-  selectedServiceName,
-  servicesByType,
-  open,
-  setOpen,
-  handleServiceSelect,
-  serviceId
+export function ServiceDropdown({ 
+  services, 
+  selectedService, 
+  onChange, 
+  placeholder = "Select a service", 
+  disabled = false 
 }: ServiceDropdownProps) {
+  if (!services || !Array.isArray(services) || services.length === 0) {
+    return null;
+  }
+
   return (
-    <Select
-      value={serviceId}
-      onValueChange={handleServiceSelect}
-      open={open}
-      onOpenChange={setOpen}
+    <Select 
+      value={selectedService} 
+      onValueChange={onChange}
+      disabled={disabled}
     >
-      <SelectTrigger>
-        <SelectValue placeholder="Select a service">
-          {selectedServiceName}
-        </SelectValue>
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        {Object.entries(servicesByType).map(([category, services]) => (
-          <div key={category}>
-            {services.map((service) => (
-              <SelectItem key={service.id} value={service.id}>
-                {service.name}
-              </SelectItem>
-            ))}
-          </div>
-        ))}
+        <SelectGroup>
+          {services.map((service) => (
+            <SelectItem key={service.id} value={service.id}>
+              {service.name}
+            </SelectItem>
+          ))}
+        </SelectGroup>
       </SelectContent>
     </Select>
   );
