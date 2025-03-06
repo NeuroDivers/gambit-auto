@@ -71,7 +71,7 @@ export function WorkOrderMobileList({
                     Bay: {workOrder.service_bays?.name || "Unassigned"}
                   </span>
                   <span className="text-muted-foreground">
-                    Created: {workOrder.created_at ? formatDate(new Date(workOrder.created_at)) : '-'}
+                    Created: {workOrder.created_at ? formatDate(workOrder.created_at) : '-'}
                   </span>
                 </div>
               </div>

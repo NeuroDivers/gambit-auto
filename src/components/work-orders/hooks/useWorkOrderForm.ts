@@ -1,4 +1,3 @@
-
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -40,7 +39,7 @@ const formSchema = z.object({
     quantity: z.number().min(1),
     unit_price: z.number().min(0),
     commission_rate: z.number(),
-    commission_type: z.enum(['percentage', 'flat']).nullable(),
+    commission_type: z.enum(['percentage', 'flat_rate']).nullable(),
     assigned_profile_id: z.string().nullable().optional(),
     description: z.string().optional(),
     sub_services: z.array(z.object({
@@ -49,7 +48,7 @@ const formSchema = z.object({
       quantity: z.number().min(1),
       unit_price: z.number().min(0),
       commission_rate: z.number().optional(),
-      commission_type: z.enum(['percentage', 'flat']).nullable().optional(),
+      commission_type: z.enum(['percentage', 'flat_rate']).nullable().optional(),
       assigned_profile_id: z.string().nullable().optional(),
       description: z.string().optional(),
       parent_id: z.string().optional()
@@ -69,7 +68,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
       customer_last_name: workOrder?.customer_last_name || "",
       customer_email: workOrder?.customer_email || "",
       customer_phone: workOrder?.customer_phone || "",
-      contact_preference: workOrder?.contact_preference || "phone",
+      contact_preference: workOrder?.contact_preference as "phone" | "email" || "phone",
       vehicle_make: workOrder?.vehicle_make || "",
       vehicle_model: workOrder?.vehicle_model || "",
       vehicle_year: workOrder?.vehicle_year || new Date().getFullYear(),
@@ -123,7 +122,6 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
         if (servicesError) throw servicesError
 
         if (servicesData && Array.isArray(servicesData)) {
-          // Group services by main and sub-services
           const mainServices: Record<string, any> = {}
           const subServices: Record<string, any[]> = {}
 
@@ -131,21 +129,19 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
             const serviceType = service.service_types as unknown as { name: string; description?: string } | null;
             
             if (!service.main_service_id) {
-              // This is a main service
               mainServices[service.service_id] = {
                 service_id: service.service_id,
                 service_name: serviceType?.name || '',
                 quantity: service.quantity,
                 unit_price: service.unit_price,
                 commission_rate: service.commission_rate ?? 0,
-                commission_type: service.commission_type as 'percentage' | 'flat' | null,
+                commission_type: service.commission_type as 'percentage' | 'flat_rate' | null,
                 assigned_profile_id: service.assigned_profile_id,
                 description: serviceType?.description || '',
                 is_parent: true,
                 sub_services: []
               };
             } else {
-              // This is a sub-service
               if (!subServices[service.main_service_id]) {
                 subServices[service.main_service_id] = [];
               }
@@ -156,7 +152,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
                 quantity: service.quantity,
                 unit_price: service.unit_price,
                 commission_rate: service.commission_rate ?? 0,
-                commission_type: service.commission_type as 'percentage' | 'flat' | null,
+                commission_type: service.commission_type as 'percentage' | 'flat_rate' | null,
                 assigned_profile_id: service.assigned_profile_id,
                 description: serviceType?.description || '',
                 parent_id: service.main_service_id
@@ -164,14 +160,12 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
             }
           });
 
-          // Add sub-services to their main services
           Object.keys(mainServices).forEach(mainServiceId => {
             if (subServices[mainServiceId]) {
               mainServices[mainServiceId].sub_services = subServices[mainServiceId];
             }
           });
 
-          // Set form value with the processed services
           form.setValue('service_items', Object.values(mainServices));
         }
       } catch (error) {

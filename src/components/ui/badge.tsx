@@ -50,6 +50,8 @@ const badgeVariants = cva(
           "border-transparent bg-[hsl(var(--estimate-rejected-bg))] text-[hsl(var(--estimate-rejected-text))]",
         expired:
           "border-transparent bg-[hsl(var(--estimate-expired-bg))] text-[hsl(var(--estimate-expired-text))]",
+        estimated:
+          "border-transparent bg-[hsl(var(--estimate-pending-bg))] text-[hsl(var(--estimate-pending-text))]",
       },
     },
     defaultVariants: {

@@ -25,7 +25,7 @@ export type WorkOrder = {
   vehicle_body_class?: string;
   vehicle_doors?: number | null;
   vehicle_license_plate?: string;
-  contact_preference?: "phone" | "email" | string;
+  contact_preference?: "phone" | "email";
   status: "pending" | "approved" | "rejected" | "in_progress" | "completed" | "cancelled" | "invoiced";
   assigned_bay_id?: string | null;
   assigned_profile_id?: string | null;
@@ -80,8 +80,8 @@ export interface ServiceItemType {
   unit_price: number;
   description?: string;
   assigned_profile_id?: string | null;
-  commission_rate?: number;
-  commission_type?: 'percentage' | 'flat_rate' | null;
+  commission_rate: number;
+  commission_type: 'percentage' | 'flat_rate' | null;
   sub_services?: ServiceItemType[];
   parent_id?: string;
 }

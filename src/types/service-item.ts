@@ -6,7 +6,7 @@ export interface ServiceItemType {
   unit_price: number;
   description?: string;
   commission_rate: number;
-  commission_type: 'percentage' | 'flat' | null;
+  commission_type: 'percentage' | 'flat_rate' | null;
   assigned_profile_id?: string | null;
   package_id?: string;
   // Properties for sub-services

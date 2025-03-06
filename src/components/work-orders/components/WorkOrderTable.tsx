@@ -81,7 +81,7 @@ export function WorkOrderTable({
                   {getStatusBadge(workOrder.status)}
                 </TableCell>
                 <TableCell>
-                  {workOrder.created_at ? formatDate(new Date(workOrder.created_at)) : '-'}
+                  {workOrder.created_at ? formatDate(workOrder.created_at) : '-'}
                 </TableCell>
                 <TableCell>
                   {workOrder.service_bays?.name || 'Unassigned'}

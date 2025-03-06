@@ -23,6 +23,30 @@ export function FormSections({
   isEditing, 
   customerId 
 }: FormSectionsProps) {
+  // Convert service items to match the expected format
+  const convertServiceItems = (items: any[]) => {
+    return items.map(item => ({
+      ...item,
+      commission_type: item.commission_type === 'flat' ? 'flat_rate' : item.commission_type,
+      sub_services: item.sub_services ? item.sub_services.map((sub: any) => ({
+        ...sub,
+        commission_type: sub.commission_type === 'flat' ? 'flat_rate' : sub.commission_type
+      })) : undefined
+    }));
+  };
+
+  // Convert back for when the component returns data
+  const convertBackServiceItems = (items: any[]) => {
+    return items.map(item => ({
+      ...item,
+      commission_type: item.commission_type === 'flat_rate' ? 'flat' : item.commission_type,
+      sub_services: item.sub_services ? item.sub_services.map((sub: any) => ({
+        ...sub,
+        commission_type: sub.commission_type === 'flat_rate' ? 'flat' : sub.commission_type
+      })) : undefined
+    }));
+  };
+
   return (
     <div className="space-y-6">
       <CustomerInfoFields form={form} isEditing={isEditing} />
@@ -48,8 +72,8 @@ export function FormSections({
       <Card>
         <CardContent className="p-6">
           <ServiceItemsField 
-            value={form.watch('service_items') || []}
-            onChange={(services) => form.setValue('service_items', services, { shouldValidate: true })}
+            value={convertServiceItems(form.watch('service_items') || [])}
+            onChange={(services) => form.setValue('service_items', convertBackServiceItems(services), { shouldValidate: true })}
             showCommission={true}
           />
         </CardContent>
