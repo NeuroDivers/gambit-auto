@@ -8,9 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CalendarDays } from "lucide-react"
 import { toast } from "sonner"
 import { WorkOrder } from "@/components/work-orders/types"
+import { CreateWorkOrderDialog } from "@/components/work-orders/CreateWorkOrderDialog"
 
 export default function Bookings() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
   
   const { data: workOrders = [], isLoading } = useQuery({
     queryKey: ["clientWorkOrders"],
@@ -41,7 +43,7 @@ export default function Bookings() {
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date)
-    console.log("Selected date:", date)
+    setShowCreateDialog(true)
   }
 
   return (
@@ -60,7 +62,7 @@ export default function Bookings() {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground mb-4">
-            View your upcoming scheduled services below.
+            View your upcoming scheduled services below or click on a date to request a new service.
           </p>
         </CardContent>
       </Card>
@@ -76,6 +78,12 @@ export default function Bookings() {
           className="bg-card"
         />
       )}
+      
+      <CreateWorkOrderDialog 
+        open={showCreateDialog} 
+        onOpenChange={setShowCreateDialog} 
+        defaultStartTime={selectedDate || undefined}
+      />
     </div>
   )
 }
