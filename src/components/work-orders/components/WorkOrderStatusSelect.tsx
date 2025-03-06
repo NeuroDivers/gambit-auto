@@ -13,20 +13,19 @@ import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 import { Badge } from "@/components/ui/badge"
 import { getStatusLabel } from "../WorkOrderStatusBadge"
-
-type Status = "pending" | "approved" | "rejected" | "in_progress" | "completed" | "cancelled" | "invoiced" | "estimated"
+import { WorkOrderStatus } from "../types"
 
 interface WorkOrderStatusSelectProps {
   workOrderId: string;
-  initialStatus: Status;
+  initialStatus: WorkOrderStatus;
 }
 
 export function WorkOrderStatusSelect({ workOrderId, initialStatus }: WorkOrderStatusSelectProps) {
   const [isLoading, setIsLoading] = useState(false)
-  const [status, setStatus] = useState<Status>(initialStatus)
+  const [status, setStatus] = useState<WorkOrderStatus>(initialStatus)
   const queryClient = useQueryClient()
 
-  const updateStatus = async (newStatus: Status) => {
+  const updateStatus = async (newStatus: WorkOrderStatus) => {
     if (newStatus === status) return
 
     setIsLoading(true)
@@ -49,7 +48,7 @@ export function WorkOrderStatusSelect({ workOrderId, initialStatus }: WorkOrderS
     }
   }
 
-  const allStatuses: Status[] = [
+  const allStatuses: WorkOrderStatus[] = [
     "pending", 
     "approved", 
     "rejected", 

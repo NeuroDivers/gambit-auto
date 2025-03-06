@@ -1,15 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { WorkOrderStatusSelect } from "./components/WorkOrderStatusSelect";
-
-type WorkOrderStatus = 
-  | "pending"
-  | "approved"
-  | "rejected"
-  | "in_progress"
-  | "completed"
-  | "cancelled"
-  | "invoiced"
-  | "estimated";
+import { WorkOrderStatus } from "./types";
 
 interface WorkOrderStatusBadgeProps {
   status: WorkOrderStatus;
