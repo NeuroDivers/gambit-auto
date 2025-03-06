@@ -15,8 +15,9 @@ export interface EstimateFormValues extends Omit<WorkOrderFormValues, 'additiona
   vehicle_id: string;
   
   // For backward compatibility
-  services?: any[];
+  services?: ServiceItemType[];
   
-  // Re-include additional_notes from WorkOrderFormValues but make it equivalent to notes
+  // Re-include additional_notes from WorkOrderFormValues but make it optional
+  // This allows us to sync between notes and additional_notes
   additional_notes?: string;
 }

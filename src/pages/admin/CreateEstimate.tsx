@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { EstimateFormAdapter } from "@/components/estimates/EstimateFormAdapter"
 import { EstimateFormValues } from "@/components/estimates/types/estimate-form"
+import { ServiceItemType } from "@/types/service-item"
 
 export default function CreateEstimate() {
   const navigate = useNavigate()
@@ -27,10 +28,11 @@ export default function CreateEstimate() {
     defaultValues: {
       client_id: '',
       vehicle_id: '',
-      services: [],
       service_items: [],
+      services: [],
       total: 0,
       notes: '',
+      additional_notes: '',
       first_name: '',
       last_name: '',
       email: '',
@@ -69,16 +71,37 @@ export default function CreateEstimate() {
       if (name === 'client_id' && value.client_id) {
         setSelectedCustomerId(value.client_id as string);
       }
+      
+      if (name === 'notes' && value.notes !== value.additional_notes) {
+        form.setValue('additional_notes', value.notes);
+      }
+      if (name === 'additional_notes' && value.additional_notes !== value.notes) {
+        form.setValue('notes', value.additional_notes || '');
+      }
     });
     
     return () => subscription.unsubscribe();
-  }, [form.watch]);
+  }, [form]);
 
   useEffect(() => {
     const serviceItems = form.getValues('service_items') || [];
     const services = form.getValues('services') || [];
     
-    const total = services.reduce((sum, service) => {
+    if (services.length > 0 && serviceItems.length === 0) {
+      form.setValue('service_items', services);
+    } else if (serviceItems.length > 0 && services.length === 0) {
+      form.setValue('services', serviceItems);
+    }
+    
+    const items = services.length > 0 ? services : serviceItems;
+    const total = calculateTotal(items);
+    
+    setSubtotal(total);
+    form.setValue('total', total);
+  }, [form.watch('service_items'), form.watch('services')]);
+
+  const calculateTotal = (items: ServiceItemType[]) => {
+    return items.reduce((sum, service) => {
       const serviceTotal = (service.quantity || 1) * (service.unit_price || 0);
       
       const subServicesTotal = service.sub_services ? 
@@ -88,15 +111,7 @@ export default function CreateEstimate() {
       
       return sum + serviceTotal + subServicesTotal;
     }, 0);
-    
-    setSubtotal(total);
-    form.setValue('total', total);
-    
-    const notes = form.getValues('notes');
-    if (notes) {
-      form.setValue('additional_notes', notes);
-    }
-  }, [form.watch('service_items'), form.watch('services'), form.watch('notes')]);
+  };
 
   const onSubmit = async (data: EstimateFormValues) => {
     setIsSubmitting(true)
@@ -139,7 +154,8 @@ export default function CreateEstimate() {
         }
       }
 
-      const services = data.services || [];
+      const services = data.services || data.service_items || [];
+      
       const flattenedServices = services.flatMap(service => {
         const mainService = {
           service_id: service.service_id,
@@ -303,10 +319,6 @@ export default function CreateEstimate() {
                             placeholder="Add any additional notes or information for this estimate"
                             className="min-h-[120px]"
                             {...field}
-                            onChange={(e) => {
-                              field.onChange(e);
-                              form.setValue('additional_notes', e.target.value);
-                            }}
                           />
                         </FormControl>
                         <FormMessage />
