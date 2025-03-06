@@ -1,6 +1,7 @@
 
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
-import { UseFormReturn, useFieldArray } from "react-hook-form"
+import { UseFormReturn } from "react-hook-form"
+import { useFieldArray } from "react-hook-form"
 import { WorkOrderFormValues } from "../types"
 import { Button } from "@/components/ui/button"
 import { PlusIcon, MinusIcon, ChevronDownIcon, ChevronUpIcon, UsersIcon } from "lucide-react"
@@ -39,7 +40,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
         .from("service_types")
         .select("*")
         .eq("status", "active")
-        .in("service_type", ["standalone", "bundle"])
+        .eq("service_type", "standalone")
         .order("name")
 
       if (error) throw error
@@ -129,6 +130,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
   const getActiveSubServices = (parentServiceId: string) => {
     if (!serviceTypes) return []
     
+    // Query for sub-services that belong to this parent service
     return serviceTypes.filter(s => 
       s.parent_service_id === parentServiceId && 
       s.status === 'active' &&
@@ -295,57 +297,60 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
             />
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name={`service_items.${index}.commission_type`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Commission Type</FormLabel>
-                  <FormControl>
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Commission Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="percentage">Percentage</SelectItem>
-                        <SelectItem value="flat">Fixed Amount</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          {/* Only show commission fields if staff is assigned */}
+          {form.watch(`service_items.${index}.assigned_profile_id`) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name={`service_items.${index}.commission_type`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Commission Type</FormLabel>
+                    <FormControl>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Commission Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="percentage">Percentage</SelectItem>
+                          <SelectItem value="flat">Fixed Amount</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name={`service_items.${index}.commission_rate`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {form.watch(`service_items.${index}.commission_type`) === 'percentage' 
-                      ? 'Commission %' 
-                      : 'Commission Amount'}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={0}
-                      step={form.watch(`service_items.${index}.commission_type`) === 'percentage' ? "1" : "0.01"}
-                      max={form.watch(`service_items.${index}.commission_type`) === 'percentage' ? 100 : undefined}
-                      {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+              <FormField
+                control={form.control}
+                name={`service_items.${index}.commission_rate`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {form.watch(`service_items.${index}.commission_type`) === 'percentage' 
+                        ? 'Commission %' 
+                        : 'Commission Amount'}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={0}
+                        step={form.watch(`service_items.${index}.commission_type`) === 'percentage' ? "1" : "0.01"}
+                        max={form.watch(`service_items.${index}.commission_type`) === 'percentage' ? 100 : undefined}
+                        {...field}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
 
           <FormField
             control={form.control}
@@ -506,48 +511,51 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                           </div>
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-                          <div>
-                            <label className="text-sm font-medium mb-1 block">Commission Type</label>
-                            <Select
-                              value={(subService as ServiceItemType).commission_type || 'percentage'}
-                              onValueChange={(value) => {
-                                const updatedServices = [...form.getValues().service_items];
-                                updatedServices[index].sub_services[subIndex].commission_type = value as 'percentage' | 'flat' | null;
-                                form.setValue("service_items", updatedServices);
-                              }}
-                            >
-                              <SelectTrigger className="text-sm h-8">
-                                <SelectValue placeholder="Select Commission Type" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="percentage">Percentage</SelectItem>
-                                <SelectItem value="flat">Fixed Amount</SelectItem>
-                              </SelectContent>
-                            </Select>
+                        {/* Only show commission fields if staff is assigned */}
+                        {(subService as ServiceItemType).assigned_profile_id && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                            <div>
+                              <label className="text-sm font-medium mb-1 block">Commission Type</label>
+                              <Select
+                                value={(subService as ServiceItemType).commission_type || 'percentage'}
+                                onValueChange={(value) => {
+                                  const updatedServices = [...form.getValues().service_items];
+                                  updatedServices[index].sub_services[subIndex].commission_type = value as 'percentage' | 'flat' | null;
+                                  form.setValue("service_items", updatedServices);
+                                }}
+                              >
+                                <SelectTrigger className="text-sm h-8">
+                                  <SelectValue placeholder="Select Commission Type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="percentage">Percentage</SelectItem>
+                                  <SelectItem value="flat">Fixed Amount</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div>
+                              <label className="text-sm font-medium mb-1 block">
+                                {(subService as ServiceItemType).commission_type === 'percentage' 
+                                  ? 'Commission %' 
+                                  : 'Commission Amount'}
+                              </label>
+                              <Input
+                                className="text-sm h-8"
+                                type="number"
+                                min={0}
+                                step={(subService as ServiceItemType).commission_type === 'percentage' ? "1" : "0.01"}
+                                max={(subService as ServiceItemType).commission_type === 'percentage' ? 100 : undefined}
+                                value={(subService as ServiceItemType).commission_rate || 0}
+                                onChange={(e) => {
+                                  const updatedServices = [...form.getValues().service_items];
+                                  updatedServices[index].sub_services[subIndex].commission_rate = parseFloat(e.target.value) || 0;
+                                  form.setValue("service_items", updatedServices);
+                                }}
+                              />
+                            </div>
                           </div>
-                          
-                          <div>
-                            <label className="text-sm font-medium mb-1 block">
-                              {(subService as ServiceItemType).commission_type === 'percentage' 
-                                ? 'Commission %' 
-                                : 'Commission Amount'}
-                            </label>
-                            <Input
-                              className="text-sm h-8"
-                              type="number"
-                              min={0}
-                              step={(subService as ServiceItemType).commission_type === 'percentage' ? "1" : "0.01"}
-                              max={(subService as ServiceItemType).commission_type === 'percentage' ? 100 : undefined}
-                              value={(subService as ServiceItemType).commission_rate || 0}
-                              onChange={(e) => {
-                                const updatedServices = [...form.getValues().service_items];
-                                updatedServices[index].sub_services[subIndex].commission_rate = parseFloat(e.target.value) || 0;
-                                form.setValue("service_items", updatedServices);
-                              }}
-                            />
-                          </div>
-                        </div>
+                        )}
                       </div>
                     ))
                   ) : (
