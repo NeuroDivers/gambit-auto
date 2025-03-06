@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch"
 import { CommissionRateFields } from "@/components/shared/form-fields/CommissionRateFields"
 import { UseFormReturn } from "react-hook-form"
 import * as z from "zod"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -34,6 +35,7 @@ export type ServiceTypeFormValues = z.infer<typeof formSchema>
 export function ServiceTypeFormFields({ form }: { form: UseFormReturn<ServiceTypeFormValues> }) {
   const commissionRate = form.watch('commission_rate')
   const commissionType = form.watch('commission_type')
+  const serviceType = form.watch('service_type')
 
   return (
     <div className="space-y-4">
@@ -63,6 +65,52 @@ export function ServiceTypeFormFields({ form }: { form: UseFormReturn<ServiceTyp
           </FormItem>
         )}
       />
+      
+      {/* Service Type Selection */}
+      <FormField
+        control={form.control}
+        name="service_type"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Service Type</FormLabel>
+            <Select 
+              onValueChange={field.onChange} 
+              defaultValue={field.value}
+              value={field.value}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select service type" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="standalone">Standalone</SelectItem>
+                <SelectItem value="sub_service">Sub-service</SelectItem>
+                <SelectItem value="bundle">Bundle</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {/* Only show parent service field if type is sub_service */}
+      {serviceType === 'sub_service' && (
+        <FormField
+          control={form.control}
+          name="parent_service_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Parent Service</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Enter parent service ID" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+      
       <FormField
         control={form.control}
         name="base_price"

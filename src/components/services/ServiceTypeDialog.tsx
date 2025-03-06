@@ -8,6 +8,8 @@ import { Form } from "@/components/ui/form"
 import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
 import { ServiceTypeFormFields, formSchema, type ServiceTypeFormValues } from "./ServiceTypeFormFields"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 
 interface ServiceTypeDialogProps {
   open: boolean
@@ -18,6 +20,7 @@ interface ServiceTypeDialogProps {
 
 export function ServiceTypeDialog({ open, onOpenChange, serviceType, onSuccess }: ServiceTypeDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [parentServices, setParentServices] = useState<any[]>([])
   
   const form = useForm<ServiceTypeFormValues>({
     resolver: zodResolver(formSchema),
@@ -36,6 +39,28 @@ export function ServiceTypeDialog({ open, onOpenChange, serviceType, onSuccess }
       visible_on_website: true,
     }
   })
+
+  // Load parent services for sub-service selection
+  useEffect(() => {
+    const loadParentServices = async () => {
+      const { data, error } = await supabase
+        .from('service_types')
+        .select('id, name')
+        .in('service_type', ['standalone', 'bundle'])
+        .eq('status', 'active')
+        
+      if (error) {
+        console.error('Error loading parent services:', error)
+        return
+      }
+      
+      setParentServices(data || [])
+    }
+    
+    if (open) {
+      loadParentServices()
+    }
+  }, [open])
 
   // Update form values when serviceType changes or dialog opens
   useEffect(() => {
@@ -89,7 +114,7 @@ export function ServiceTypeDialog({ open, onOpenChange, serviceType, onSuccess }
         status: data.status,
         service_type: data.service_type,
         pricing_model: data.pricing_model,
-        parent_service_id: data.parent_service_id && data.parent_service_id !== "" ? data.parent_service_id : null,
+        parent_service_id: data.service_type === 'sub_service' && data.parent_service_id ? data.parent_service_id : null,
         visible_on_app: data.visible_on_app,
         visible_on_website: data.visible_on_website,
         // Exclude commission_rate and commission_type as they don't exist in the service_types table
@@ -126,6 +151,9 @@ export function ServiceTypeDialog({ open, onOpenChange, serviceType, onSuccess }
     }
   }
 
+  // Get the current service type and watch for changes to update parent service field visibility
+  const serviceTypeValue = form.watch('service_type')
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
@@ -136,6 +164,38 @@ export function ServiceTypeDialog({ open, onOpenChange, serviceType, onSuccess }
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <ServiceTypeFormFields form={form} />
+            
+            {/* Replace the parent_service_id input with a Select when service_type is sub_service */}
+            {serviceTypeValue === 'sub_service' && (
+              <FormField
+                control={form.control}
+                name="parent_service_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Parent Service</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a parent service" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {parentServices.map(service => (
+                          <SelectItem key={service.id} value={service.id}>
+                            {service.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             
             <div className="flex justify-end gap-2">
               <Button 
