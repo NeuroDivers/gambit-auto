@@ -39,7 +39,7 @@ export function BayCardActions({ bayId, onEdit }: BayCardActionsProps) {
   }
 
   return (
-    <div className="px-6 py-4 mt-auto border-t flex items-center justify-end gap-2">
+    <div className="px-6 py-4 mt-auto flex items-center justify-end gap-2">
       <Button
         variant="outline"
         size="sm"
