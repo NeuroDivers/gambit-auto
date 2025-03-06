@@ -84,9 +84,10 @@ export default function Bookings() {
         </div>
       ) : (
         <HorizontalCalendar
+          selectedDate={selectedDate || new Date()}
           onDateSelect={handleDateSelect}
-          workOrders={workOrders}
           className="bg-card"
+          workOrders={workOrders}
         />
       )}
       

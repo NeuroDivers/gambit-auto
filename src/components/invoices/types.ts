@@ -90,3 +90,11 @@ export interface Invoice {
   stripe_customer_id?: string;
   invoice_items?: InvoiceItem[];
 }
+
+export interface CustomerInfo {
+  customer_first_name: string;
+  customer_last_name: string;
+  customer_email: string;
+  customer_phone: string;
+  customer_address?: string;
+}

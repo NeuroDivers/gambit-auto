@@ -1,54 +1,47 @@
 
-import { ServiceItemType as BaseServiceItemType } from "@/types/service-item";
+import { ServiceType } from "@/integrations/supabase/types/service-types";
 
-// Define shared service selection types
-export interface ServiceType {
-  id: string;
-  name: string;
+export interface ServiceItemType {
+  service_id: string;
+  service_name: string;
+  quantity: number;
+  unit_price: number;
+  commission_rate: number;
+  commission_type: 'percentage' | 'flat' | 'flat_rate' | null;
+  assigned_profile_id?: string | null;
   description?: string;
-  base_price?: number;
-  parent_service_id?: string | null;
-  hierarchy_type?: string;
+  sub_services?: ServiceItemType[];
+  is_parent?: boolean;
+  parent_id?: string;
+  package_id?: string | null;
 }
 
 export interface ServiceItemProps {
-  service: BaseServiceItemType;
-  onRemove?: (id: string) => void;
-  onQuantityChange?: (id: string, quantity: number) => void;
-  onPriceChange?: (id: string, price: number) => void;
-  showPrice?: boolean;
-  showQuantity?: boolean;
-  onSelect?: (serviceId: string) => void;
-  isSelected?: boolean;
-  hideDescription?: boolean;
-  showRemove?: boolean;
-  showCommission?: boolean;
-  disabled?: boolean;
-}
-
-export interface ServiceDescriptionProps {
-  service: ServiceType | BaseServiceItemType;
-  hideDescription?: boolean;
+  service: ServiceItemType;
+  availableServices: ServiceType[];
+  onRemove: () => void;
+  onChange: (updatedService: ServiceItemType) => void;
 }
 
 export interface ServiceDropdownProps {
-  services: ServiceType[];
-  selectedService?: string;
-  onChange: (serviceId: string) => void;
-  placeholder?: string;
-  disabled?: boolean;
+  selectedService?: string | ServiceType;
+  selectedServiceName?: string;
+  servicesByType: ServicesByType;
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  handleServiceSelect: (serviceId: string) => void;
+  serviceId: string;
+}
+
+export interface ServiceDescriptionProps {
+  service?: ServiceItemType | ServiceType;
+  selectedServiceId?: string;
+  servicesByType?: ServicesByType;
+  expanded: boolean;
+  onExpandToggle: () => void;
 }
 
 export interface ServicesByType {
+  available: ServiceType[];
   [key: string]: ServiceType[];
-}
-
-export interface ServiceItemFormProps {
-  value: BaseServiceItemType;
-  onChange: (value: BaseServiceItemType) => void;
-  servicesByType?: ServicesByType;
-  showQuantity?: boolean;
-  showPrice?: boolean;
-  showCommission?: boolean;
-  disabled?: boolean;
 }

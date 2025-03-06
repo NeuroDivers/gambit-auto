@@ -1,97 +1,82 @@
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { WorkOrderStatus } from "../types"
-import { Badge } from "@/components/ui/badge"
-import { getBadgeVariant } from "../WorkOrderStatusBadge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { WorkOrderStatus } from "../types";
+import { getWorkOrderStatusVariant } from "@/components/shared/BadgeVariants";
 
-type WorkOrderStatusSelectProps = {
-  value: WorkOrderStatus
-  onChange: (value: WorkOrderStatus) => void
-  disabled?: boolean
-}
-
-// Helper function to manually get status label since we can't import it
-const getStatusLabel = (status: string): string => {
+export function getStatusLabel(status: WorkOrderStatus): string {
   return status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ');
 }
 
-// Helper function for badge variant mapping
-const getBadgeVariant = (status: WorkOrderStatus) => {
-  switch (status) {
-    case "pending":
-      return "outline" 
-    case "approved":
-      return "outline" 
-    case "rejected":
-      return "rejected"
-    case "in_progress":
-      return "info"
-    case "completed":
-      return "success"
-    case "cancelled":
-      return "destructive"
-    case "invoiced":
-      return "secondary"
-    case "estimated":
-      return "warning"
-    default:
-      return "default"
-  }
+export function getBadgeVariant(status: WorkOrderStatus) {
+  return getWorkOrderStatusVariant(status);
 }
 
-export function WorkOrderStatusSelect({ value, onChange, disabled = false }: WorkOrderStatusSelectProps) {
+interface WorkOrderStatusSelectProps {
+  status: WorkOrderStatus;
+  onStatusChange: (status: WorkOrderStatus) => void;
+  isUpdating?: boolean;
+  disabled?: boolean;
+}
+
+export function WorkOrderStatusSelect({ 
+  status, 
+  onStatusChange, 
+  isUpdating = false,
+  disabled = false
+}: WorkOrderStatusSelectProps) {
   return (
     <Select
-      value={value}
-      onValueChange={(val) => onChange(val as WorkOrderStatus)}
-      disabled={disabled}
+      value={status}
+      onValueChange={(value) => onStatusChange(value as WorkOrderStatus)}
+      disabled={isUpdating || disabled}
     >
-      <SelectTrigger className="w-[180px]">
-        <SelectValue placeholder="Select status">
+      <SelectTrigger className="w-[160px]">
+        <SelectValue placeholder="Status">
           <div className="flex items-center gap-2">
-            <Badge variant={getBadgeVariant(value)}>
-              {getStatusLabel(value)}
+            <Badge variant={getBadgeVariant(status)}>
+              {getStatusLabel(status)}
             </Badge>
           </div>
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="pending">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline">Pending</Badge>
-          </div>
+          <Badge variant={getBadgeVariant("pending")}>
+            {getStatusLabel("pending")}
+          </Badge>
         </SelectItem>
         <SelectItem value="approved">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline">Approved</Badge>
-          </div>
+          <Badge variant={getBadgeVariant("approved")}>
+            {getStatusLabel("approved")}
+          </Badge>
         </SelectItem>
         <SelectItem value="in_progress">
-          <div className="flex items-center gap-2">
-            <Badge variant="info">In Progress</Badge>
-          </div>
+          <Badge variant={getBadgeVariant("in_progress")}>
+            {getStatusLabel("in_progress")}
+          </Badge>
         </SelectItem>
         <SelectItem value="completed">
-          <div className="flex items-center gap-2">
-            <Badge variant="success">Completed</Badge>
-          </div>
+          <Badge variant={getBadgeVariant("completed")}>
+            {getStatusLabel("completed")}
+          </Badge>
         </SelectItem>
         <SelectItem value="cancelled">
-          <div className="flex items-center gap-2">
-            <Badge variant="destructive">Cancelled</Badge>
-          </div>
+          <Badge variant={getBadgeVariant("cancelled")}>
+            {getStatusLabel("cancelled")}
+          </Badge>
         </SelectItem>
         <SelectItem value="invoiced">
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary">Invoiced</Badge>
-          </div>
+          <Badge variant={getBadgeVariant("invoiced")}>
+            {getStatusLabel("invoiced")}
+          </Badge>
         </SelectItem>
         <SelectItem value="estimated">
-          <div className="flex items-center gap-2">
-            <Badge variant="warning">Estimated</Badge>
-          </div>
+          <Badge variant={getBadgeVariant("estimated")}>
+            {getStatusLabel("estimated")}
+          </Badge>
         </SelectItem>
       </SelectContent>
     </Select>
-  )
+  );
 }

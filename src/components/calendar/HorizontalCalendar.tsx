@@ -2,18 +2,27 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
-import { CalendarDay, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import { add, eachDayOfInterval, endOfMonth, endOfWeek, format, getDay, isEqual, isSameMonth, isToday, parse, startOfMonth, startOfToday, startOfWeek } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { useDragScroll } from './hooks/useDragScroll'
+import { WorkOrder } from '@/components/work-orders/types'
 
 export interface HorizontalCalendarProps {
   selectedDate: Date;
   onDateSelect: (date: Date) => void;
   range?: 'week' | 'month';
+  className?: string;
+  workOrders?: WorkOrder[];
 }
 
-export function HorizontalCalendar({ selectedDate, onDateSelect, range = 'week' }: HorizontalCalendarProps) {
+export function HorizontalCalendar({ 
+  selectedDate, 
+  onDateSelect, 
+  range = 'week', 
+  className,
+  workOrders = [] 
+}: HorizontalCalendarProps) {
   const today = startOfToday()
   const [currentMonth, setCurrentMonth] = useState(format(today, 'MMM-yyyy'))
   const firstDayCurrentMonth = parse(currentMonth, 'MMM-yyyy', new Date())
@@ -59,7 +68,7 @@ export function HorizontalCalendar({ selectedDate, onDateSelect, range = 'week' 
   }
 
   return (
-    <div className="space-y-4">
+    <div className={cn("space-y-4", className)}>
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="icon" onClick={previousMonth}>

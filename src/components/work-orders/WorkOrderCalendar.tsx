@@ -43,6 +43,9 @@ export function WorkOrderCalendar() {
           customer_vehicle_model,
           customer_vehicle_year,
           assigned_profile_id,
+          created_at,
+          contact_preference,
+          timeframe,
           profiles (
             id,
             first_name,
@@ -55,7 +58,16 @@ export function WorkOrderCalendar() {
         .order("start_time", { ascending: true });
 
       if (error) throw error;
-      return data;
+      
+      // Transform to ensure workOrder has all required fields
+      const transformedData = data.map(order => ({
+        ...order,
+        created_at: order.created_at || new Date().toISOString(),
+        contact_preference: order.contact_preference || 'email',
+        timeframe: order.timeframe || 'flexible'
+      }));
+      
+      return transformedData;
     },
   });
 

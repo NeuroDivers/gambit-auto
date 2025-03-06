@@ -1,4 +1,5 @@
 
+// Modify only the specific parts that need fixing, don't completely rewrite the file
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,10 +36,12 @@ export function PublicView({
   const isOverdue = invoice?.status === 'overdue';
   
   const customerInfo = invoice ? {
-    name: `${invoice.customer_first_name} ${invoice.customer_last_name}`,
-    email: invoice.customer_email,
-    phone: invoice.customer_phone || '',
-    address: invoice.customer_address || ''
+    customer_first_name: invoice.customer_first_name,
+    customer_last_name: invoice.customer_last_name,
+    customer_email: invoice.customer_email,
+    customer_phone: invoice.customer_phone || '',
+    customer_address: invoice.customer_address || '',
+    stripeCustomerId: invoice.stripe_customer_id
   } : null;
 
   const handleUpdate = () => {
@@ -59,7 +62,7 @@ export function PublicView({
     <div className="space-y-6">
       {!isVerified ? (
         <EmailVerification 
-          customerEmail={invoice.customer_email} 
+          email={invoice.customer_email} 
           invoiceId={invoice.id}
           onVerified={() => setIsVerified(true)}
         />

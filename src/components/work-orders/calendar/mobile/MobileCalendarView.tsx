@@ -1,136 +1,106 @@
 
-import { WorkOrder } from "../../types"
-import React, { useState } from "react"
-import { HorizontalCalendar } from "@/components/calendar"
-import { CreateWorkOrderDialog } from "../../CreateWorkOrderDialog"
-import { startOfDay, isWithinInterval, parseISO, format } from "date-fns"
-import { useBlockedDates } from "../hooks/useBlockedDates"
-import { MonthPicker } from "@/components/work-orders/calendar/MonthPicker"
-import { toast } from "sonner"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { CalendarClock, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react"
+import React, { useState } from "react";
+import { 
+  Card, 
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { HorizontalCalendar } from "@/components/calendar/HorizontalCalendar";
+import { Button } from "@/components/ui/button";
+import { WorkOrderCard } from "@/components/work-orders/calendar/WorkOrderCard";
+import { CreateWorkOrderDialog } from "@/components/work-orders/CreateWorkOrderDialog";
+import { format } from "date-fns";
+import { PlusCircle } from "lucide-react";
+import { WorkOrder } from "@/components/work-orders/types";
 
-type MobileCalendarViewProps = {
-  currentDate: Date
-  workOrders: WorkOrder[]
-  onDateChange?: (date: Date) => void
+interface MobileCalendarViewProps {
+  workOrders: WorkOrder[];
+  isLoading: boolean;
+  title?: string;
+  onDateSelected?: (date: Date) => void;
 }
 
-export function MobileCalendarView({ currentDate, workOrders, onDateChange }: MobileCalendarViewProps) {
-  const [showWorkOrderDialog, setShowWorkOrderDialog] = useState(false)
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-  const [showMonthPicker, setShowMonthPicker] = useState(false)
-  const { blockedDates } = useBlockedDates()
-  
-  const currentMonthYear = format(currentDate, "MMMM yyyy")
+export function MobileCalendarView({
+  workOrders = [],
+  isLoading,
+  title = "Work Orders",
+  onDateSelected,
+}: MobileCalendarViewProps) {
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+
+  // Filter work orders for the selected date
+  const filteredWorkOrders = workOrders.filter((order) => {
+    if (!order.start_time) return false;
+    const startDate = new Date(order.start_time);
+    return (
+      startDate.getDate() === selectedDate.getDate() &&
+      startDate.getMonth() === selectedDate.getMonth() &&
+      startDate.getFullYear() === selectedDate.getFullYear()
+    );
+  });
 
   const handleDateSelect = (date: Date) => {
-    // Check if the selected date is blocked
-    const isBlocked = blockedDates?.some(blocked => 
-      isWithinInterval(startOfDay(date), {
-        start: parseISO(blocked.start_date),
-        end: parseISO(blocked.end_date)
-      })
-    )
-
-    if (isBlocked) {
-      toast.error("This date is blocked and unavailable for bookings")
-      return
+    setSelectedDate(date);
+    if (onDateSelected) {
+      onDateSelected(date);
     }
-
-    setSelectedDate(date)
-    setShowWorkOrderDialog(true)
-    onDateChange?.(date)
-  }
+  };
 
   return (
-    <Card className="border border-gray-200 shadow-sm">
-      <CardHeader className="pb-2 space-y-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <CalendarClock className="h-5 w-5 text-primary" />
-            Schedule Calendar
-          </CardTitle>
-          
-          <div className="flex items-center space-x-1">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setShowMonthPicker(true)}
-              className="font-medium px-2 text-sm"
-            >
-              {currentMonthYear}
-            </Button>
-          </div>
-        </div>
-        
-        <div className="flex items-center justify-between">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => onDateChange?.(new Date())}
-            className="text-xs"
-          >
-            <CalendarIcon className="h-3 w-3 mr-1" />
-            Today
-          </Button>
-          
-          <div className="flex items-center bg-muted rounded-md">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8" 
-              onClick={() => {
-                if (onDateChange) {
-                  const newDate = new Date(currentDate);
-                  newDate.setDate(newDate.getDate() - 7);
-                  onDateChange(newDate);
-                }
-              }}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8" 
-              onClick={() => {
-                if (onDateChange) {
-                  const newDate = new Date(currentDate);
-                  newDate.setDate(newDate.getDate() + 7);
-                  onDateChange(newDate);
-                }
-              }}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <HorizontalCalendar 
-          onDateSelect={handleDateSelect}
-          className="border-none shadow-none p-0"
-          workOrders={workOrders}
-        />
+    <div className="space-y-4">
+      <HorizontalCalendar 
+        selectedDate={selectedDate}
+        onDateSelect={handleDateSelect}
+        className="bg-card p-4 rounded-lg"
+      />
+      
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold">
+          {format(selectedDate, "MMMM d, yyyy")}
+        </h2>
+        <Button
+          size="sm"
+          onClick={() => setShowCreateDialog(true)}
+          className="flex items-center gap-1"
+        >
+          <PlusCircle className="w-4 h-4" />
+          New
+        </Button>
+      </div>
 
-        <CreateWorkOrderDialog 
-          open={showWorkOrderDialog}
-          onOpenChange={setShowWorkOrderDialog}
-          defaultStartTime={selectedDate || undefined}
-        />
+      <Card>
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+            </div>
+          ) : filteredWorkOrders.length > 0 ? (
+            <ScrollArea className="h-[calc(100vh-20rem)]">
+              <div className="space-y-4">
+                {filteredWorkOrders.map((order) => (
+                  <WorkOrderCard key={order.id} workOrder={order} />
+                ))}
+              </div>
+            </ScrollArea>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              No work orders scheduled for this date.
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-        <MonthPicker
-          currentDate={currentDate}
-          open={showMonthPicker}
-          onOpenChange={setShowMonthPicker}
-          onDateChange={(date) => {
-            onDateChange?.(date)
-            setShowMonthPicker(false)
-          }}
-        />
-      </CardContent>
-    </Card>
-  )
+      <CreateWorkOrderDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        defaultStartTime={selectedDate}
+      />
+    </div>
+  );
 }

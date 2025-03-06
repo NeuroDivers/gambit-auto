@@ -94,10 +94,10 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
       customer_email: '',
       customer_phone: '',
       customer_address: '',
-      vehicle_make: '',
-      vehicle_model: '',
-      vehicle_year: 0,
-      vehicle_vin: ''
+      customer_vehicle_make: '',
+      customer_vehicle_model: '',
+      customer_vehicle_year: 0,
+      customer_vehicle_vin: ''
     }
   })
 
@@ -123,10 +123,10 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
           customer_email: invoice.customer_email || '',
           customer_phone: invoice.customer_phone || '',
           customer_address: invoice.customer_address || '',
-          vehicle_make: invoice.vehicle_make || '',
-          vehicle_model: invoice.vehicle_model || '',
-          vehicle_year: invoice.vehicle_year || 0,
-          vehicle_vin: invoice.vehicle_vin || ''
+          customer_vehicle_make: invoice.customer_vehicle_make || '',
+          customer_vehicle_model: invoice.customer_vehicle_model || '',
+          customer_vehicle_year: invoice.customer_vehicle_year || 0,
+          customer_vehicle_vin: invoice.customer_vehicle_vin || ''
         })
       }
 
