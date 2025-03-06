@@ -8,6 +8,7 @@ export type InvoiceItem = {
   unit_price: number
   commission_rate?: number | null
   commission_type?: 'percentage' | 'flat' | null
+  assigned_profile_id?: string | null
 }
 
 export type InvoiceFormValues = {
@@ -20,6 +21,12 @@ export type InvoiceFormValues = {
   customer_email: string
   customer_phone: string
   customer_address: string
+  customer_street_address?: string
+  customer_unit_number?: string
+  customer_city?: string
+  customer_state_province?: string
+  customer_postal_code?: string
+  customer_country?: string
   vehicle_make: string
   vehicle_model: string
   vehicle_year: number
@@ -52,10 +59,19 @@ export type Invoice = {
   customer_email: string | null
   customer_address: string | null
   customer_phone: string | null
+  customer_street_address?: string | null
+  customer_unit_number?: string | null
+  customer_city?: string | null
+  customer_state_province?: string | null
+  customer_postal_code?: string | null
+  customer_country?: string | null
   vehicle_make: string | null
   vehicle_model: string | null
   vehicle_year: number | null
   vehicle_vin: string | null
+  vehicle_body_class?: string | null
+  vehicle_doors?: number | null
+  vehicle_trim?: string | null
   invoice_items: InvoiceItem[]
   payment_status?: string
   stripe_customer_id?: string | null
