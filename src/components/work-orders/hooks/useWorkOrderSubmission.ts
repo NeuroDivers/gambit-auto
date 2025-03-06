@@ -56,8 +56,19 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
       vehicle_model: values.vehicle_model,
       vehicle_year: values.vehicle_year,
       vehicle_serial: values.vehicle_serial,
+      vehicle_color: values.vehicle_color,
+      vehicle_body_class: values.vehicle_body_class,
+      vehicle_doors: values.vehicle_doors,
+      vehicle_trim: values.vehicle_trim,
+      vehicle_license_plate: values.vehicle_license_plate,
       additional_notes: values.additional_notes,
       address: values.address,
+      street_address: values.street_address,
+      unit_number: values.unit_number,
+      city: values.city,
+      state_province: values.state_province,
+      postal_code: values.postal_code,
+      country: values.country,
       start_time: values.start_time?.toISOString(),
       estimated_duration: values.estimated_duration ? `${values.estimated_duration} hours` : null,
       end_time: values.end_time?.toISOString(),
@@ -76,6 +87,7 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
 
   if (deleteError) throw deleteError
 
+  // Process main services
   const validServices = values.service_items.filter(item => 
     item.service_id && 
     item.service_id.trim() !== "" && 
@@ -84,15 +96,37 @@ async function updateWorkOrder(workOrderId: string, values: WorkOrderFormValues)
   );
   
   if (validServices.length > 0) {
-    const servicesToInsert = validServices.map(item => ({
-      work_order_id: workOrderId,
-      service_id: item.service_id,
-      quantity: item.quantity || 1,
-      unit_price: item.unit_price || 0,
-      commission_rate: item.commission_rate,
-      commission_type: item.commission_type,
-      assigned_profile_id: item.assigned_profile_id
-    }))
+    const servicesToInsert = [];
+    
+    // Add main services
+    for (const item of validServices) {
+      servicesToInsert.push({
+        work_order_id: workOrderId,
+        service_id: item.service_id,
+        quantity: item.quantity || 1,
+        unit_price: item.unit_price || 0,
+        commission_rate: item.commission_rate,
+        commission_type: item.commission_type,
+        assigned_profile_id: item.assigned_profile_id
+      });
+      
+      // Add sub-services if they exist
+      if (item.sub_services && item.sub_services.length > 0) {
+        for (const subItem of item.sub_services) {
+          servicesToInsert.push({
+            work_order_id: workOrderId,
+            service_id: subItem.service_id,
+            quantity: subItem.quantity || 1,
+            unit_price: subItem.unit_price || 0,
+            commission_rate: subItem.commission_rate,
+            commission_type: subItem.commission_type,
+            assigned_profile_id: subItem.assigned_profile_id,
+            main_service_id: item.service_id,
+            sub_service_id: subItem.service_id
+          });
+        }
+      }
+    }
 
     const { error: servicesError } = await supabase
       .from('work_order_services')
@@ -116,8 +150,19 @@ async function createWorkOrder(values: WorkOrderFormValues) {
       vehicle_model: values.vehicle_model,
       vehicle_year: values.vehicle_year,
       vehicle_serial: values.vehicle_serial,
+      vehicle_color: values.vehicle_color,
+      vehicle_body_class: values.vehicle_body_class,
+      vehicle_doors: values.vehicle_doors,
+      vehicle_trim: values.vehicle_trim,
+      vehicle_license_plate: values.vehicle_license_plate,
       additional_notes: values.additional_notes,
       address: values.address,
+      street_address: values.street_address,
+      unit_number: values.unit_number,
+      city: values.city,
+      state_province: values.state_province,
+      postal_code: values.postal_code,
+      country: values.country,
       start_time: values.start_time?.toISOString(),
       estimated_duration: values.estimated_duration ? `${values.estimated_duration} hours` : null,
       end_time: values.end_time?.toISOString(),
@@ -129,7 +174,7 @@ async function createWorkOrder(values: WorkOrderFormValues) {
 
   if (workOrderError || !workOrder) throw workOrderError
 
-  // Insert services
+  // Process main services
   const validServices = values.service_items.filter(item => 
     item.service_id && 
     item.service_id.trim() !== "" && 
@@ -138,20 +183,69 @@ async function createWorkOrder(values: WorkOrderFormValues) {
   );
   
   if (validServices.length > 0) {
-    const servicesToInsert = validServices.map(item => ({
-      work_order_id: workOrder.id,
-      service_id: item.service_id,
-      quantity: item.quantity || 1,
-      unit_price: item.unit_price || 0,
-      commission_rate: item.commission_rate,
-      commission_type: item.commission_type,
-      assigned_profile_id: item.assigned_profile_id
-    }))
+    const servicesToInsert = [];
+    
+    // Add main services
+    for (const item of validServices) {
+      servicesToInsert.push({
+        work_order_id: workOrder.id,
+        service_id: item.service_id,
+        quantity: item.quantity || 1,
+        unit_price: item.unit_price || 0,
+        commission_rate: item.commission_rate,
+        commission_type: item.commission_type,
+        assigned_profile_id: item.assigned_profile_id
+      });
+      
+      // Add sub-services if they exist
+      if (item.sub_services && item.sub_services.length > 0) {
+        for (const subItem of item.sub_services) {
+          servicesToInsert.push({
+            work_order_id: workOrder.id,
+            service_id: subItem.service_id,
+            quantity: subItem.quantity || 1,
+            unit_price: subItem.unit_price || 0,
+            commission_rate: subItem.commission_rate,
+            commission_type: subItem.commission_type,
+            assigned_profile_id: subItem.assigned_profile_id,
+            main_service_id: item.service_id,
+            sub_service_id: subItem.service_id
+          });
+        }
+      }
+    }
 
     const { error: servicesError } = await supabase
       .from('work_order_services')
       .insert(servicesToInsert)
 
     if (servicesError) throw servicesError
+  }
+  
+  // Save vehicle to customer's account if requested
+  if (values.save_vehicle && values.client_id) {
+    try {
+      const { error: vehicleError } = await supabase
+        .from('vehicles')
+        .insert({
+          customer_id: values.client_id,
+          make: values.vehicle_make,
+          model: values.vehicle_model,
+          year: values.vehicle_year,
+          vin: values.vehicle_serial || null,
+          color: values.vehicle_color || null,
+          body_class: values.vehicle_body_class || null,
+          doors: values.vehicle_doors || null,
+          trim: values.vehicle_trim || null,
+          license_plate: values.vehicle_license_plate || null,
+          is_primary: values.is_primary_vehicle || false
+        });
+      
+      if (vehicleError) {
+        console.error('Error saving vehicle:', vehicleError);
+      }
+    } catch (error) {
+      console.error('Error saving vehicle:', error);
+    }
   }
 }

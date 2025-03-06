@@ -41,7 +41,19 @@ const formSchema = z.object({
     unit_price: z.number().min(0),
     commission_rate: z.number(),
     commission_type: z.enum(['percentage', 'flat']).nullable(),
-    description: z.string().optional()
+    assigned_profile_id: z.string().nullable().optional(),
+    description: z.string().optional(),
+    sub_services: z.array(z.object({
+      service_id: z.string(),
+      service_name: z.string(),
+      quantity: z.number().min(1),
+      unit_price: z.number().min(0),
+      commission_rate: z.number().optional(),
+      commission_type: z.enum(['percentage', 'flat']).nullable().optional(),
+      assigned_profile_id: z.string().nullable().optional(),
+      description: z.string().optional(),
+      parent_id: z.string().optional()
+    })).optional()
   })),
   save_vehicle: z.boolean().optional(),
   is_primary_vehicle: z.boolean().optional()
@@ -98,6 +110,9 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
             unit_price,
             commission_rate,
             commission_type,
+            assigned_profile_id,
+            main_service_id,
+            sub_service_id,
             service_types:service_types!work_order_services_service_id_fkey (
               name,
               description
@@ -108,20 +123,56 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
         if (servicesError) throw servicesError
 
         if (servicesData && Array.isArray(servicesData)) {
-          const formattedServices = servicesData.map(service => {
+          // Group services by main and sub-services
+          const mainServices: Record<string, any> = {}
+          const subServices: Record<string, any[]> = {}
+
+          servicesData.forEach(service => {
             const serviceType = service.service_types as unknown as { name: string; description?: string } | null;
-            return {
-              service_id: service.service_id,
-              service_name: serviceType?.name || '',
-              quantity: service.quantity,
-              unit_price: service.unit_price,
-              commission_rate: service.commission_rate ?? 0,
-              commission_type: service.commission_type as 'percentage' | 'flat' | null,
-              description: serviceType?.description || ''
-            };
+            
+            if (!service.main_service_id) {
+              // This is a main service
+              mainServices[service.service_id] = {
+                service_id: service.service_id,
+                service_name: serviceType?.name || '',
+                quantity: service.quantity,
+                unit_price: service.unit_price,
+                commission_rate: service.commission_rate ?? 0,
+                commission_type: service.commission_type as 'percentage' | 'flat' | null,
+                assigned_profile_id: service.assigned_profile_id,
+                description: serviceType?.description || '',
+                is_parent: true,
+                sub_services: []
+              };
+            } else {
+              // This is a sub-service
+              if (!subServices[service.main_service_id]) {
+                subServices[service.main_service_id] = [];
+              }
+              
+              subServices[service.main_service_id].push({
+                service_id: service.service_id,
+                service_name: serviceType?.name || '',
+                quantity: service.quantity,
+                unit_price: service.unit_price,
+                commission_rate: service.commission_rate ?? 0,
+                commission_type: service.commission_type as 'percentage' | 'flat' | null,
+                assigned_profile_id: service.assigned_profile_id,
+                description: serviceType?.description || '',
+                parent_id: service.main_service_id
+              });
+            }
           });
 
-          form.setValue('service_items', formattedServices)
+          // Add sub-services to their main services
+          Object.keys(mainServices).forEach(mainServiceId => {
+            if (subServices[mainServiceId]) {
+              mainServices[mainServiceId].sub_services = subServices[mainServiceId];
+            }
+          });
+
+          // Set form value with the processed services
+          form.setValue('service_items', Object.values(mainServices));
         }
       } catch (error) {
         console.error('Error fetching work order services:', error)

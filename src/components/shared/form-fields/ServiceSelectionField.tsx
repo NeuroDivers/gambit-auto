@@ -5,7 +5,7 @@ import { ServiceItemType } from "@/types/service-item"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { Trash, ChevronDown, ChevronRight } from "lucide-react"
+import { Trash, ChevronDown, ChevronRight, UserCircle } from "lucide-react"
 import { 
   Select,
   SelectContent,
@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { StaffSelector } from "./StaffSelector"
 
 interface ServiceSelectionFieldProps {
   services: ServiceItemType[];
@@ -28,6 +29,7 @@ export function ServiceSelectionField({
   showCommission = false
 }: ServiceSelectionFieldProps) {
   const [openCollapsibles, setOpenCollapsibles] = useState<Record<number, boolean>>({});
+  const [openAssignments, setOpenAssignments] = useState<Record<number, boolean>>({});
   
   // Fetch service types for dropdown
   const { data: serviceTypes = [] } = useQuery({
@@ -71,6 +73,7 @@ export function ServiceSelectionField({
       unit_price: serviceToAdd.base_price || 0,
       commission_rate: 0,
       commission_type: null,
+      assigned_profile_id: null,
       is_parent: true,
       sub_services: []
     };
@@ -107,6 +110,7 @@ export function ServiceSelectionField({
       unit_price: subService.base_price || 0,
       commission_rate: 0,
       commission_type: null,
+      assigned_profile_id: null,
       parent_id: updatedServices[parentIndex].service_id
     };
 
@@ -135,6 +139,13 @@ export function ServiceSelectionField({
 
   const toggleCollapsible = (index: number) => {
     setOpenCollapsibles(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
+  const toggleAssignment = (index: number) => {
+    setOpenAssignments(prev => ({
       ...prev,
       [index]: !prev[index]
     }));
@@ -249,8 +260,39 @@ export function ServiceSelectionField({
                 )}
               </div>
 
+              {/* Staff Assignment Section */}
+              <div className="mt-3 pt-2 border-t">
+                <div className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 mb-2">
+                  <button 
+                    type="button" 
+                    onClick={() => toggleAssignment(index)}
+                    className="flex items-center focus:outline-none"
+                  >
+                    {openAssignments[index] ? (
+                      <ChevronDown className="h-4 w-4 mr-1" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 mr-1" />
+                    )}
+                    <UserCircle className="h-4 w-4 mr-1" />
+                    Assign staff member
+                  </button>
+                </div>
+                
+                {openAssignments[index] && (
+                  <div className="pl-4 border-l-2 border-gray-100 mt-2 mb-4">
+                    <div className="mb-3">
+                      <label className="text-sm font-medium mb-1 block">Assigned Staff</label>
+                      <StaffSelector
+                        value={service.assigned_profile_id || null}
+                        onChange={(value) => handleItemChange(index, 'assigned_profile_id', value)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Sub-services section */}
-              <div className="mt-4 pt-2 border-t">
+              <div className="mt-1 pt-2 border-t">
                 <div className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 mb-2">
                   <button 
                     type="button" 
@@ -333,6 +375,15 @@ export function ServiceSelectionField({
                                   }}
                                   disabled={!allowPriceEdit}
                                   className="w-full h-8 text-sm"
+                                />
+                              </div>
+                              
+                              {/* Sub-service staff assignment */}
+                              <div className="md:col-span-2 mt-2">
+                                <label className="text-xs font-medium mb-1 block">Assigned Staff</label>
+                                <StaffSelector
+                                  value={subService.assigned_profile_id || null}
+                                  onChange={(value) => handleSubServiceChange(index, subIndex, 'assigned_profile_id', value)}
                                 />
                               </div>
                             </div>
