@@ -1,10 +1,10 @@
 
-import { Card } from "@/components/ui/card"
-import { Calendar, User, Car, ArrowRight } from "lucide-react"
-import { format } from "date-fns"
-import { WorkOrderStatusBadge } from "../WorkOrderStatusBadge"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { WorkOrder } from "../types"
 import { Button } from "@/components/ui/button"
+import { Edit, ExternalLink, FileText, MapPin } from "lucide-react"
+import { formatDate } from "@/lib/utils"
+import { WorkOrderStatusBadge } from "../WorkOrderStatusBadge"
 
 interface WorkOrderMobileListProps {
   workOrders: WorkOrder[]
@@ -19,73 +19,85 @@ export function WorkOrderMobileList({
   onAssignBay,
   onEdit,
   onCreateInvoice,
-  onViewDetails
+  onViewDetails,
 }: WorkOrderMobileListProps) {
-  if (!workOrders.length) {
-    return (
-      <Card className="p-6 text-center text-muted-foreground">
-        No work orders found
-      </Card>
-    )
-  }
-
-  const formatDate = (date: string | null) => {
-    if (!date) return "Not scheduled"
-    return format(new Date(date), "MMM d, yyyy")
-  }
-
   return (
     <div className="space-y-4">
-      {workOrders.map((workOrder) => (
-        <Card
-          key={workOrder.id}
-          className="overflow-hidden"
-          onClick={() => onViewDetails(workOrder)}
-        >
-          <div className="p-4 cursor-pointer">
-            <div className="flex justify-between items-start mb-3">
-              <h3 className="font-medium truncate mr-2">
-                {workOrder.customer_first_name} {workOrder.customer_last_name}
-              </h3>
-              <WorkOrderStatusBadge status={workOrder.status} />
-            </div>
-            
-            <div className="grid gap-2 text-sm">
-              <div className="flex items-center text-muted-foreground">
-                <Car className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span className="truncate">
-                  {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
-                </span>
-              </div>
-
-              <div className="flex items-center text-muted-foreground">
-                <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span>{formatDate(workOrder.start_time)}</span>
-              </div>
-
-              <div className="flex items-center text-muted-foreground">
-                <User className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span className="truncate">{workOrder.customer_email}</span>
-              </div>
-            </div>
-            
-            <div className="flex justify-end mt-3">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-xs"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onViewDetails(workOrder)
-                }}
-              >
-                View Details
-                <ArrowRight className="ml-1 h-3 w-3" />
-              </Button>
-            </div>
-          </div>
+      {workOrders.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6 text-center text-muted-foreground">
+            No work orders found.
+          </CardContent>
         </Card>
-      ))}
+      ) : (
+        workOrders.map((order) => (
+          <Card key={order.id} className="overflow-hidden">
+            <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
+              <div>
+                <h3 className="text-lg font-medium">
+                  {order.customer_first_name} {order.customer_last_name}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {formatDate(order.created_at)}
+                </p>
+              </div>
+              <WorkOrderStatusBadge status={order.status} workOrderId={order.id} />
+            </CardHeader>
+            <CardContent className="p-4 pt-2">
+              <div className="space-y-2 mb-4">
+                <p className="text-sm">
+                  {order.vehicle_year} {order.vehicle_make} {order.vehicle_model}
+                  {order.vehicle_color && ` • ${order.vehicle_color}`}
+                </p>
+                {order.service_bays ? (
+                  <p className="text-sm flex items-center">
+                    <MapPin className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
+                    {order.service_bays.name}
+                  </p>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => onAssignBay(order)}
+                  >
+                    Assign Bay
+                  </Button>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => onViewDetails(order)}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Details
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => onEdit(order)}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => onCreateInvoice(order)}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Invoice
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))
+      )}
     </div>
   )
 }

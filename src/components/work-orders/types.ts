@@ -2,7 +2,7 @@
 export interface WorkOrder {
   id: string;
   created_at: string;
-  updated_at?: string;
+  updated_at?: string | null;
   customer_first_name: string;
   customer_last_name: string;
   customer_email: string;
@@ -30,3 +30,5 @@ export interface WorkOrder {
   assigned_profile_id?: string | null;
   client_id?: string | null;
 }
+
+// Add the additional types here if they're needed for the build errors
