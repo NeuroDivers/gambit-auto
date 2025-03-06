@@ -1,4 +1,3 @@
-
 import { ColorVariable, LOCAL_STORAGE_KEY } from "./types";
 
 export const themeColorVariables: ColorVariable[] = [
@@ -162,6 +161,30 @@ export const themeColorVariables: ColorVariable[] = [
   defaultDark: "48 100% 96%",
   category: "status"
 }, {
+  name: "status-approved-bg",
+  description: "Approved badge background",
+  defaultLight: "142 76% 90%", // Green background
+  defaultDark: "142 70% 45%",
+  category: "status"
+}, {
+  name: "status-approved-text",
+  description: "Approved badge text",
+  defaultLight: "142 70% 30%", // Darker green text
+  defaultDark: "142 100% 96%",
+  category: "status"
+}, {
+  name: "status-rejected-bg",
+  description: "Rejected badge background",
+  defaultLight: "0 84% 95%", // Red background
+  defaultDark: "0 70% 45%",
+  category: "status"
+}, {
+  name: "status-rejected-text",
+  description: "Rejected badge text",
+  defaultLight: "0 70% 40%", // Darker red text
+  defaultDark: "0 100% 96%",
+  category: "status"
+}, {
   name: "status-in-progress-bg",
   description: "In Progress badge background",
   defaultLight: "220 83% 92%", // Blue background
@@ -208,6 +231,18 @@ export const themeColorVariables: ColorVariable[] = [
   description: "Invoiced badge text",
   defaultLight: "270 70% 45%", // Darker purple text
   defaultDark: "270 100% 96%",
+  category: "status"
+}, {
+  name: "status-estimated-bg",
+  description: "Estimated badge background",
+  defaultLight: "48 96% 89%", // Yellow background
+  defaultDark: "48 70% 45%",
+  category: "status"
+}, {
+  name: "status-estimated-text",
+  description: "Estimated badge text",
+  defaultLight: "36 40% 30%", // Darker yellow text
+  defaultDark: "48 100% 96%",
   category: "status"
 },
 // Invoice status colors

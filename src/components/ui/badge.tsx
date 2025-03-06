@@ -23,7 +23,7 @@ const badgeVariants = cva(
         pending:
           "border-transparent bg-[hsl(var(--status-pending-bg))] text-[hsl(var(--status-pending-text))]",
         approved:
-          "border-transparent bg-[hsl(var(--status-pending-bg))] text-[hsl(var(--status-pending-text))]",
+          "border-transparent bg-[hsl(var(--status-approved-bg))] text-[hsl(var(--status-approved-text))]",
         in_progress:
           "border-transparent bg-[hsl(var(--status-in-progress-bg))] text-[hsl(var(--status-in-progress-text))]",
         completed:
@@ -33,9 +33,9 @@ const badgeVariants = cva(
         invoiced:
           "border-transparent bg-[hsl(var(--status-invoiced-bg))] text-[hsl(var(--status-invoiced-text))]",
         rejected:
-          "border-transparent bg-[hsl(var(--status-cancelled-bg))] text-[hsl(var(--status-cancelled-text))]",
+          "border-transparent bg-[hsl(var(--status-rejected-bg))] text-[hsl(var(--status-rejected-text))]",
         estimated:
-          "border-transparent bg-[hsl(var(--estimate-pending-bg))] text-[hsl(var(--estimate-pending-text))]",
+          "border-transparent bg-[hsl(var(--status-estimated-bg))] text-[hsl(var(--status-estimated-text))]",
         
         // Invoice status badges
         draft:
