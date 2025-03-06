@@ -1,24 +1,17 @@
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { formatDate } from "@/lib/utils";
-import { WorkOrder } from "../types";
-import { Eye, FileEdit, MoreVertical, Receipt, Wrench } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { WorkOrderStatusBadge } from "../WorkOrderStatusBadge";
+import { Card } from "@/components/ui/card"
+import { Calendar, User, Car, ArrowRight } from "lucide-react"
+import { format } from "date-fns"
+import { WorkOrderStatusBadge } from "../WorkOrderStatusBadge"
+import { WorkOrder } from "../types"
+import { Button } from "@/components/ui/button"
 
 interface WorkOrderMobileListProps {
-  workOrders: WorkOrder[];
-  onAssignBay: (workOrder: WorkOrder) => void;
-  onEdit: (workOrder: WorkOrder) => void;
-  onCreateInvoice: (workOrderId: string) => void;
-  onViewDetails: (workOrder: WorkOrder) => void;
+  workOrders: WorkOrder[]
+  onAssignBay: (workOrder: WorkOrder) => void
+  onEdit: (workOrder: WorkOrder) => void
+  onCreateInvoice: (workOrder: WorkOrder) => void
+  onViewDetails: (workOrder: WorkOrder) => void
 }
 
 export function WorkOrderMobileList({
@@ -28,76 +21,71 @@ export function WorkOrderMobileList({
   onCreateInvoice,
   onViewDetails
 }: WorkOrderMobileListProps) {
-  if (workOrders.length === 0) {
+  if (!workOrders.length) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
+      <Card className="p-6 text-center text-muted-foreground">
         No work orders found
-      </div>
-    );
+      </Card>
+    )
+  }
+
+  const formatDate = (date: string | null) => {
+    if (!date) return "Not scheduled"
+    return format(new Date(date), "MMM d, yyyy")
   }
 
   return (
     <div className="space-y-4">
       {workOrders.map((workOrder) => (
-        <Card key={workOrder.id} className="overflow-hidden">
-          <CardContent className="p-0">
-            <div className="p-4 flex items-start justify-between gap-4">
-              <div className="space-y-1 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-medium">
-                    {workOrder.customer_first_name} {workOrder.customer_last_name}
-                  </h3>
-                  <WorkOrderStatusBadge status={workOrder.status} />
-                </div>
-                <p className="text-sm text-muted-foreground">
+        <Card
+          key={workOrder.id}
+          className="overflow-hidden"
+          onClick={() => onViewDetails(workOrder)}
+        >
+          <div className="p-4 cursor-pointer">
+            <div className="flex justify-between items-start mb-3">
+              <h3 className="font-medium truncate mr-2">
+                {workOrder.customer_first_name} {workOrder.customer_last_name}
+              </h3>
+              <WorkOrderStatusBadge status={workOrder.status} />
+            </div>
+            
+            <div className="grid gap-2 text-sm">
+              <div className="flex items-center text-muted-foreground">
+                <Car className="h-4 w-4 mr-2 flex-shrink-0" />
+                <span className="truncate">
                   {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
-                </p>
-                <div className="flex flex-wrap gap-x-4 text-sm">
-                  <span className="text-muted-foreground">
-                    Bay: {workOrder.service_bays?.name || "Unassigned"}
-                  </span>
-                  <span className="text-muted-foreground">
-                    Created: {workOrder.created_at ? formatDate(workOrder.created_at) : '-'}
-                  </span>
-                </div>
+                </span>
               </div>
 
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onViewDetails(workOrder)}
-                  title="View Details"
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
+              <div className="flex items-center text-muted-foreground">
+                <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
+                <span>{formatDate(workOrder.start_time)}</span>
+              </div>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onEdit(workOrder)}>
-                      <FileEdit className="mr-2 h-4 w-4" /> Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onAssignBay(workOrder)}>
-                      <Wrench className="mr-2 h-4 w-4" /> Assign Bay
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => onCreateInvoice(workOrder.id)} 
-                      disabled={workOrder.status !== 'completed'}
-                    >
-                      <Receipt className="mr-2 h-4 w-4" /> Create Invoice
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              <div className="flex items-center text-muted-foreground">
+                <User className="h-4 w-4 mr-2 flex-shrink-0" />
+                <span className="truncate">{workOrder.customer_email}</span>
               </div>
             </div>
-          </CardContent>
+            
+            <div className="flex justify-end mt-3">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-xs"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onViewDetails(workOrder)
+                }}
+              >
+                View Details
+                <ArrowRight className="ml-1 h-3 w-3" />
+              </Button>
+            </div>
+          </div>
         </Card>
       ))}
     </div>
-  );
+  )
 }

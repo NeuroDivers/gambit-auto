@@ -9,7 +9,7 @@ export function EstimateStatus({ status }) {
       case "sent":
         return "sent"
       case "approved":
-        return "accepted"
+        return "accepted" // Map to theme editor variable
       case "rejected":
         return "rejected"
       case "expired":

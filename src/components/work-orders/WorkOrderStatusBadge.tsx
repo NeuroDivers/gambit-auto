@@ -21,9 +21,9 @@ export function WorkOrderStatusBadge({ status }: WorkOrderStatusBadgeProps) {
       case "pending":
         return "pending";
       case "approved":
-        return "success";
+        return "pending"; // Map to existing variant
       case "rejected":
-        return "destructive";
+        return "cancelled"; // Map to existing variant
       case "in_progress":
         return "in_progress";
       case "completed":
@@ -33,7 +33,7 @@ export function WorkOrderStatusBadge({ status }: WorkOrderStatusBadgeProps) {
       case "invoiced":
         return "invoiced";
       case "estimated":
-        return "estimate_pending";
+        return "estimate_pending"; // Map to existing variant
       default:
         return "default";
     }
