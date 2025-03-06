@@ -2,6 +2,7 @@
 import { Card } from "@/components/ui/card"
 import { BayCardHeader } from "./card/BayCardHeader"
 import { BayCardContent } from "./card/BayCardContent"
+import { BayCardActions } from "./card/BayCardActions"
 import { useBayActions } from "./hooks/useBayActions"
 import { useState } from "react"
 
@@ -51,6 +52,10 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
         onNotesChange={updateBayNotes}
         onToggleService={toggleService}
         isExpanded={isExpanded}
+      />
+      <BayCardActions 
+        bayId={bay.id}
+        onEdit={() => setIsExpanded(true)}
       />
     </Card>
   )

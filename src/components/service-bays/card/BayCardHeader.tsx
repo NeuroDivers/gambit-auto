@@ -1,10 +1,7 @@
 
 import { CardHeader, CardTitle } from "@/components/ui/card"
+import { ChevronDown, ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Trash2, ChevronDown, ChevronUp } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { useQueryClient } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
 import { Badge } from "@/components/ui/badge"
 
 type BayCardHeaderProps = {
@@ -16,34 +13,7 @@ type BayCardHeaderProps = {
   hasServices: boolean
 }
 
-export function BayCardHeader({ name, bayId, status, isExpanded, onToggleExpand, hasServices }: BayCardHeaderProps) {
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
-
-  const handleDelete = async () => {
-    try {
-      const { error } = await supabase
-        .from('service_bays')
-        .delete()
-        .eq('id', bayId)
-
-      if (error) throw error
-
-      toast({
-        title: "Success",
-        description: "Service bay deleted successfully",
-      })
-
-      queryClient.invalidateQueries({ queryKey: ["serviceBays"] })
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
-    }
-  }
-
+export function BayCardHeader({ name, status, isExpanded, onToggleExpand, hasServices }: BayCardHeaderProps) {
   const getStatusBadge = () => {
     switch (status) {
       case 'available':
@@ -76,24 +46,6 @@ export function BayCardHeader({ name, bayId, status, isExpanded, onToggleExpand,
         <div className="flex gap-2 flex-wrap">
           {getStatusBadge()}
         </div>
-      </div>
-      
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-destructive hover:text-destructive-foreground hover:bg-destructive"
-          onClick={handleDelete}
-        >
-          <Trash2 className="h-4 w-4 mr-1" /> Delete
-        </Button>
-        <Button
-          size="sm"
-          className="bg-purple-600 hover:bg-purple-700 text-white"
-          onClick={onToggleExpand}
-        >
-          <span className="mr-1">Edit</span>
-        </Button>
       </div>
     </CardHeader>
   )
