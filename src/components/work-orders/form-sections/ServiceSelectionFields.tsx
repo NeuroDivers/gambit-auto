@@ -36,6 +36,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
   const { data: serviceTypes } = useQuery({
     queryKey: ["service-types"],
     queryFn: async () => {
+      // Only get standalone services that are active
       const { data, error } = await supabase
         .from("service_types")
         .select("*")
@@ -98,6 +99,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
     if (selectedService) {
       form.setValue(`service_items.${index}.service_name`, selectedService.name)
       form.setValue(`service_items.${index}.unit_price`, selectedService.base_price || 0)
+      form.setValue(`service_items.${index}.service_id`, serviceId)
     }
   }
 
@@ -136,6 +138,44 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
       s.status === 'active' &&
       s.service_type === 'sub_service'
     )
+  }
+
+  // Fetch additional sub-services when needed
+  const { data: subServiceTypes } = useQuery({
+    queryKey: ["sub-service-types"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_types")
+        .select("*")
+        .eq("status", "active")
+        .eq("service_type", "sub_service")
+        .order("name")
+
+      if (error) throw error
+      return data || []
+    }
+  })
+
+  // Enhanced function to get sub-services that combines local data and fetched data
+  const getAllSubServices = (parentServiceId: string) => {
+    if (!serviceTypes && !subServiceTypes) return []
+    
+    const fromServiceTypes = serviceTypes?.filter(s => 
+      s.parent_service_id === parentServiceId && 
+      s.status === 'active' &&
+      s.service_type === 'sub_service'
+    ) || []
+    
+    const fromSubServiceTypes = subServiceTypes?.filter(s => 
+      s.parent_service_id === parentServiceId && 
+      s.status === 'active'
+    ) || []
+    
+    // Combine and deduplicate
+    const combined = [...fromServiceTypes, ...fromSubServiceTypes]
+    const uniqueServices = Array.from(new Map(combined.map(item => [item.id, item])).values())
+    
+    return uniqueServices
   }
 
   return (
@@ -405,6 +445,13 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
             {expandedServices[index] && (
               <div className="mt-4 pl-4 border-l-2 border-accent">
                 <div className="space-y-4">
+                  {/* If we have a parent service ID, show the sub-service selector */}
+                  {field.service_id && (
+                    <div className="text-sm text-accent-foreground mb-4">
+                      Available sub-services for {field.service_name}
+                    </div>
+                  )}
+                  
                   {field.sub_services && field.sub_services.length > 0 ? (
                     field.sub_services.map((subService, subIndex) => (
                       <div key={subIndex} className="border rounded-md p-3 bg-accent/10">
@@ -428,7 +475,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                             <Select
                               value={(subService as ServiceItemType).service_id}
                               onValueChange={(value) => {
-                                const selectedService = serviceTypes?.find(s => s.id === value);
+                                const selectedService = subServiceTypes?.find(s => s.id === value);
                                 if (selectedService) {
                                   const updatedServices = [...form.getValues().service_items];
                                   updatedServices[index].sub_services[subIndex].service_id = value;
@@ -442,7 +489,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                                 <SelectValue placeholder="Select Sub-Service" />
                               </SelectTrigger>
                               <SelectContent>
-                                {getActiveSubServices(field.service_id).map((service) => (
+                                {getAllSubServices(field.service_id).map((service) => (
                                   <SelectItem key={service.id} value={service.id}>
                                     {service.name}
                                   </SelectItem>
