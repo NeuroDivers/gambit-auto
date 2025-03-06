@@ -22,11 +22,11 @@ export function InvoiceItemsFields({
       service_id: item.service_id,
       service_name: item.service_name,
       quantity: item.quantity,
-      unit_price: typeof item.unit_price === 'string' ? parseFloat(item.unit_price) : item.unit_price,
+      unit_price: item.unit_price,
       description: item.description || "",
-      commission_rate: (item as any).commission_rate ?? 0,
+      commission_rate: (item as any).commission_rate ?? null,
       commission_type: (item as any).commission_type ?? null,
-      package_id: (item as any).package_id || null
+      package_id: (item as any).package_id || undefined
     };
     return serviceItem;
   });
@@ -62,7 +62,7 @@ export function InvoiceItemsFields({
       services={mappedItems}
       onChange={handleItemsChange}
       allowPriceEdit={allowPriceEdit}
-      showCommission={showCommission}
+      showCommission={false}
     />
   )
 }

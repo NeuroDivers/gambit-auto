@@ -2317,7 +2317,6 @@ export type Database = {
       }
       work_order_services: {
         Row: {
-          assigned_profile_id: string | null
           commission_rate: number | null
           commission_type: string | null
           created_at: string
@@ -2331,7 +2330,6 @@ export type Database = {
           work_order_id: string
         }
         Insert: {
-          assigned_profile_id?: string | null
           commission_rate?: number | null
           commission_type?: string | null
           created_at?: string
@@ -2345,7 +2343,6 @@ export type Database = {
           work_order_id: string
         }
         Update: {
-          assigned_profile_id?: string | null
           commission_rate?: number | null
           commission_type?: string | null
           created_at?: string

@@ -9,20 +9,10 @@ import { useQuoteRequestSubmission } from '@/hooks/quote-request/useQuoteRequest
 import { AnimatePresence, motion } from 'framer-motion'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ServiceItemType } from '@/types/service-item'
 
 interface Props {
   onSuccess?: () => void
 }
-
-// Helper function to convert ServiceItemType[] to the expected format
-const convertServices = (services: ServiceItemType[] = []): { id: string; name: string; base_price: number }[] => {
-  return services.map(service => ({
-    id: service.service_id,
-    name: service.service_name,
-    base_price: service.unit_price || 0
-  }));
-};
 
 export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
   const {
@@ -42,13 +32,6 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
   } = useQuoteRequestSubmission()
 
   const progress = (step / totalSteps) * 100
-
-  // Helper function to adapt File[] to FileList for handleImageUpload
-  const handleImagesAdapter = async (files: FileList): Promise<string[]> => {
-    const fileArray = Array.from(files);
-    await handleImageUpload(fileArray);
-    return []; // Return empty array as we're handling the urls internally
-  };
 
   return (
     <Card className="border-none shadow-none bg-transparent">
@@ -78,7 +61,7 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
                     form={form} 
                     onVehicleSave={onVehicleSave} 
                   />
-                  <ServiceSelectionForm services={convertServices(services)} />
+                  <ServiceSelectionForm services={services || []} />
                 </motion.div>
               )}
 
@@ -90,9 +73,9 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
                 >
                   <ServiceDetailsStep
                     form={form}
-                    services={convertServices(services)}
+                    services={services || []}
                     serviceId={selectedServiceId}
-                    onImageUpload={handleImagesAdapter}
+                    onImageUpload={handleImageUpload}
                     onImageRemove={handleImageRemove}
                   />
                 </motion.div>
@@ -106,7 +89,7 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
                 >
                   <SummaryStep 
                     form={form} 
-                    services={convertServices(services)} 
+                    services={services || []} 
                   />
                 </motion.div>
               )}

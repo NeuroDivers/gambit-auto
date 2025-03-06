@@ -1,230 +1,190 @@
 
-import { useState, useEffect } from "react"
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
 import { UseFormReturn } from "react-hook-form"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { WorkOrderFormValues } from "../types"
 import { Button } from "@/components/ui/button"
 import { Check, ChevronsUpDown } from "lucide-react"
-import { supabase } from "@/integrations/supabase/client"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { Switch } from "@/components/ui/switch"
 
-type CustomerType = {
-  id: string
-  email: string
-  first_name: string
-  last_name: string
-  phone_number: string
-}
-
 interface CustomerSearchProps {
-  form: UseFormReturn<any>
+  form: UseFormReturn<WorkOrderFormValues>
 }
 
 export function CustomerSearch({ form }: CustomerSearchProps) {
-  const [customers, setCustomers] = useState<CustomerType[]>([])
-  const [openCustomerSelect, setOpenCustomerSelect] = useState(false)
+  const [open, setOpen] = useState(false)
   const [customerSearchQuery, setCustomerSearchQuery] = useState("")
-  const [useNewCustomer, setUseNewCustomer] = useState(true)
-  
-  // Fetch customer list
-  useEffect(() => {
-    async function fetchCustomers() {
+  const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null)
+  const [createNewCustomer, setCreateNewCustomer] = useState<boolean>(true)
+
+  const { data: clients, isLoading: clientsLoading } = useQuery({
+    queryKey: ["customers"],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("customers")
-        .select("id, first_name, last_name, email, phone_number")
+        .select("id, first_name, last_name, email, phone_number, street_address, unit_number, city, state_province, postal_code, country")
         .order("last_name", { ascending: true })
       
-      if (error) {
-        console.error("Error fetching customers:", error)
-        return
-      }
-      
-      setCustomers(data || [])
+      if (error) throw error
+      return data || []
     }
+  })
+
+  // Fetch vehicles for the selected customer
+  const { data: vehicles } = useQuery({
+    queryKey: ["customer_vehicles", selectedCustomer],
+    queryFn: async () => {
+      if (!selectedCustomer) return []
+      
+      const { data, error } = await supabase
+        .from("vehicles")
+        .select("*")
+        .eq("customer_id", selectedCustomer)
+        .order("is_primary", { ascending: false })
+      
+      if (error) throw error
+      return data || []
+    },
+    enabled: !!selectedCustomer,
+  })
+
+  const handleCustomerChange = (customerId: string) => {
+    setSelectedCustomer(customerId)
     
-    fetchCustomers()
-  }, [])
-  
-  // Handle customer selection
-  const handleCustomerSelect = (customerId: string) => {
-    form.setValue("client_id", customerId)
-    
-    // Find the selected customer
-    const selectedCustomer = customers.find(customer => customer.id === customerId)
+    // Find the selected customer to set customer info
+    const selectedCustomer = clients?.find(client => client.id === customerId)
     if (selectedCustomer) {
-      // Auto-fill customer details
       form.setValue("first_name", selectedCustomer.first_name)
       form.setValue("last_name", selectedCustomer.last_name)
       form.setValue("email", selectedCustomer.email)
       form.setValue("phone_number", selectedCustomer.phone_number)
-      form.setValue("contact_preference", "phone") // Default to phone since it's not in the DB
-      setUseNewCustomer(false)
+      form.setValue("street_address", selectedCustomer.street_address || "")
+      form.setValue("unit_number", selectedCustomer.unit_number || "")
+      form.setValue("city", selectedCustomer.city || "")
+      form.setValue("state_province", selectedCustomer.state_province || "")
+      form.setValue("postal_code", selectedCustomer.postal_code || "")
+      form.setValue("country", selectedCustomer.country || "")
+      setCreateNewCustomer(false)
+      
+      // Set vehicle info if vehicles exist
+      if (vehicles && vehicles.length > 0) {
+        // Find primary vehicle or use the first one if no primary exists
+        const primaryVehicle = vehicles.find(v => v.is_primary) || vehicles[0]
+        
+        if (primaryVehicle) {
+          console.log("Setting vehicle info from:", primaryVehicle)
+          form.setValue("vehicle_make", primaryVehicle.make)
+          form.setValue("vehicle_model", primaryVehicle.model)
+          form.setValue("vehicle_year", primaryVehicle.year)
+          form.setValue("vehicle_serial", primaryVehicle.vin || "")
+          
+          // Set additional vehicle fields if they exist
+          if (primaryVehicle.trim) form.setValue("vehicle_trim", primaryVehicle.trim)
+          if (primaryVehicle.body_class) form.setValue("vehicle_body_class", primaryVehicle.body_class)
+          if (primaryVehicle.doors) form.setValue("vehicle_doors", primaryVehicle.doors)
+        }
+      }
     }
-    
-    setOpenCustomerSelect(false)
   }
-  
+
   return (
-    <div className="space-y-4">
-      <FormItem className="flex flex-col">
-        <FormLabel>Customer</FormLabel>
-        <Popover open={openCustomerSelect} onOpenChange={setOpenCustomerSelect}>
-          <PopoverTrigger asChild>
-            <FormControl>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={openCustomerSelect}
-                className="justify-between w-full"
-              >
-                {form.watch("client_id") ? 
-                  customers.find(c => c.id === form.watch("client_id")) 
-                    ? `${customers.find(c => c.id === form.watch("client_id"))?.first_name} ${customers.find(c => c.id === form.watch("client_id"))?.last_name}` 
-                    : "Select customer"
-                  : "Select customer"}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </FormControl>
-          </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-0" align="start">
-            <div className="flex items-center border-b px-3">
-              <input
-                className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
-                value={customerSearchQuery}
-                onChange={(e) => setCustomerSearchQuery(e.target.value)}
-                placeholder="Search customers..."
-              />
-            </div>
-            <div className="max-h-[300px] overflow-y-auto py-1">
-              {customers.length === 0 ? (
-                <div className="py-6 text-center text-sm">No customers found</div>
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-1">
+        <h3 className="text-sm font-medium">Select Existing Customer</h3>
+      </div>
+      
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between"
+          >
+            {selectedCustomer ? 
+              clients?.find(client => client.id === selectedCustomer)
+                ? `${clients.find(client => client.id === selectedCustomer)?.first_name} ${clients.find(client => client.id === selectedCustomer)?.last_name}`
+                : "Select a customer" 
+              : "Select a customer"}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-full p-0" align="start">
+          {open && (
+            <div className="relative">
+              <div className="flex items-center border-b px-3">
+                <input
+                  className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                  value={customerSearchQuery}
+                  onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                  placeholder="Search customers..."
+                />
+              </div>
+              
+              {clientsLoading ? (
+                <div className="py-6 text-center text-sm text-muted-foreground">
+                  Loading customers...
+                </div>
               ) : (
-                customers
-                  .filter(customer => 
-                    !customerSearchQuery || 
-                    `${customer.first_name} ${customer.last_name}`.toLowerCase().includes(customerSearchQuery.toLowerCase()) ||
-                    customer.email?.toLowerCase().includes(customerSearchQuery.toLowerCase())
-                  )
-                  .map(customer => (
-                    <div
-                      key={customer.id}
-                      className={cn(
-                        "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-                        form.watch("client_id") === customer.id ? "bg-accent text-accent-foreground" : ""
-                      )}
-                      onClick={() => handleCustomerSelect(customer.id)}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          form.watch("client_id") === customer.id ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      <div>
-                        <div className="font-medium">{customer.first_name} {customer.last_name}</div>
-                        <div className="text-xs text-muted-foreground">{customer.email}</div>
-                      </div>
+                <div className="max-h-[300px] overflow-y-auto py-1">
+                  {!clients || clients.length === 0 ? (
+                    <div className="py-6 text-center text-sm">No customers found.</div>
+                  ) : (
+                    <div>
+                      {clients
+                        .filter(client => 
+                          !customerSearchQuery || 
+                          `${client.first_name || ''} ${client.last_name || ''}`.toLowerCase().includes(customerSearchQuery.toLowerCase()) ||
+                          client.email?.toLowerCase().includes(customerSearchQuery.toLowerCase())
+                        )
+                        .map((client) => (
+                          <div
+                            key={client.id}
+                            className={cn(
+                              "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+                              selectedCustomer === client.id ? "bg-accent text-accent-foreground" : ""
+                            )}
+                            onClick={() => {
+                              handleCustomerChange(client.id);
+                              setOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedCustomer === client.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <span>{client.first_name || ''} {client.last_name || ''}</span>
+                            <span className="ml-2 text-sm text-muted-foreground">
+                              {client.email || ''}
+                            </span>
+                          </div>
+                        ))}
                     </div>
-                  ))
+                  )}
+                </div>
               )}
             </div>
-          </PopoverContent>
-        </Popover>
-        <FormMessage />
-      </FormItem>
-      
-      <div className="flex items-center space-x-2">
+          )}
+        </PopoverContent>
+      </Popover>
+      <div className="flex items-center space-x-2 mt-2">
         <Switch
-          id="newCustomer"
-          checked={useNewCustomer}
-          onCheckedChange={(checked) => {
-            setUseNewCustomer(checked)
-            if (checked) {
-              form.setValue("client_id", "")
-            }
-          }}
+          id="createNewCustomer" 
+          checked={createNewCustomer}
+          onCheckedChange={setCreateNewCustomer}
         />
         <label
-          htmlFor="newCustomer"
+          htmlFor="createNewCustomer"
           className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >
           Create new customer
         </label>
       </div>
-      
-      {useNewCustomer && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-          <FormField
-            control={form.control}
-            name="first_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First Name</FormLabel>
-                <FormControl>
-                  <input
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="last_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last Name</FormLabel>
-                <FormControl>
-                  <input
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <input
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    type="email"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="phone_number"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone</FormLabel>
-                <FormControl>
-                  <input
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-      )}
     </div>
   )
 }

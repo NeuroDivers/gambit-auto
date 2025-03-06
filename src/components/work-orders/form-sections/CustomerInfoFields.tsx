@@ -9,10 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 interface CustomerInfoFieldsProps {
   form: UseFormReturn<WorkOrderFormValues>
   isEditing: boolean
-  customerId?: string | null
 }
 
-export function CustomerInfoFields({ form, isEditing, customerId }: CustomerInfoFieldsProps) {
+export function CustomerInfoFields({ form, isEditing }: CustomerInfoFieldsProps) {
   const { control } = form
   
   return (

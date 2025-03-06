@@ -1,40 +1,9 @@
-import { useState, useEffect, useCallback } from "react"
-import { v4 as uuidv4 } from 'uuid'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Trash2 } from "lucide-react"
-import { Label } from "@/components/ui/label"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
-import { Listbox } from '@headlessui/react'
-import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid'
+import { ServiceItemType } from "@/types/service-item"
+import { useEffect, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@/components/ui/button"
+import { Plus, Loader2, ChevronDown, ChevronUp } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -42,433 +11,384 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ServiceItemType } from "@/types/service-item"
-import { Profile } from "@/types/profile"
-import { CommissionType } from "@/types/commission"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { CommissionRateFields } from "@/components/shared/form-fields/CommissionRateFields"
+import { UseFormReturn } from "react-hook-form"
+import { Card, CardContent } from "@/components/ui/card"
 
-interface ServiceSelectionFieldProps {
-  items: ServiceItemType[]
-  setItems: (items: ServiceItemType[]) => void
-  allowPriceEdit?: boolean
+type ServiceSelectionFieldProps = {
+  services: ServiceItemType[]
+  onChange: (services: ServiceItemType[]) => void
+  onServicesChange?: (services: ServiceItemType[]) => void // For backward compatibility
+  disabled?: boolean
+  isClient?: boolean
   showCommission?: boolean
+  allowPriceEdit?: boolean
 }
 
-export function InvoiceItemsFields({
-  items,
-  setItems,
-  allowPriceEdit = false,
-  showCommission = false
+export function ServiceSelectionField({
+  services = [],
+  onChange,
+  onServicesChange,
+  disabled = false,
+  isClient = false,
+  showCommission = false,
+  allowPriceEdit = true
 }: ServiceSelectionFieldProps) {
-  const [open, setOpen] = useState(false)
-  const [date, setDate] = useState<Date | undefined>(new Date())
-  const [serviceName, setServiceName] = useState("")
-  const [serviceDescription, setServiceDescription] = useState("")
-  const [quantity, setQuantity] = useState(1)
-  const [unitPrice, setUnitPrice] = useState(0)
-  const [editingIndex, setEditingIndex] = useState(-1)
-  const [availableServices, setAvailableServices] = useState<any[]>([])
-  const [selectedService, setSelectedService] = useState<any>(null)
-  const [profiles, setProfiles] = useState<Profile[]>([])
-  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null)
-  const [commissionTypes, setCommissionTypes] = useState<CommissionType[]>([])
-  const [selectedCommissionType, setSelectedCommissionType] = useState<CommissionType | null>(null)
-  const [commissionRate, setCommissionRate] = useState<number | null>(null)
-  
-  // Fetch services
-  useEffect(() => {
-    async function fetchServices() {
+  const [expandedServices, setExpandedServices] = useState<Record<string, boolean>>({})
+
+  const { data: allServices = [], isLoading } = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("service_types")
         .select("*")
-        .order("name", { ascending: true })
-      
-      if (error) {
-        console.error("Error fetching services:", error)
-        return
-      }
-      
-      setAvailableServices(data || [])
+        .eq("status", "active")
+      if (error) throw error
+      return data || []
     }
-    
-    fetchServices()
-  }, [])
-  
-  // Fetch profiles
-  useEffect(() => {
-    async function fetchProfiles() {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, first_name, last_name")
-        .order("first_name", { ascending: true })
-      
-      if (error) {
-        console.error("Error fetching profiles:", error)
-        return
-      }
-      
-      setProfiles(data || [])
-    }
-    
-    fetchProfiles()
-  }, [])
+  })
 
-  // Fetch commission types
-  useEffect(() => {
-    async function fetchCommissionTypes() {
-      const { data, error } = await supabase
-        .from("commission_types")
-        .select("*")
-        .order("name", { ascending: true })
-      
-      if (error) {
-        console.error("Error fetching commission types:", error)
-        return
-      }
-      
-      setCommissionTypes(data || [])
-    }
-    
-    fetchCommissionTypes()
-  }, [])
+  const standaloneServices = allServices.filter(service => 
+    service.service_type === 'standalone' || 
+    service.hierarchy_type === 'main' || 
+    !service.parent_service_id
+  )
   
-  const handleAddItem = () => {
-    if (!selectedService) {
-      alert("Please select a service")
-      return
+  const subServicesByParent: Record<string, typeof allServices> = {}
+  allServices.filter(service => 
+    service.parent_service_id || 
+    service.hierarchy_type === 'sub' || 
+    service.service_type === 'addon'
+  ).forEach(subService => {
+    const parentId = subService.parent_service_id || ''
+    if (!subServicesByParent[parentId]) {
+      subServicesByParent[parentId] = []
     }
-    
-    const newItem: ServiceItemType = {
-      id: uuidv4(),
-      service_id: selectedService.id,
-      service_name: selectedService.name,
-      description: selectedService.description,
-      quantity: quantity,
-      unit_price: unitPrice,
-      assigned_profile_id: selectedProfile ? selectedProfile.id : null,
-      commission_type: selectedCommissionType ? selectedCommissionType.id : null,
-      commission_rate: commissionRate || null
-    }
-    
-    setItems([...items, newItem])
-    setServiceName("")
-    setServiceDescription("")
-    setQuantity(1)
-    setUnitPrice(0)
-    setSelectedService(null)
-    setSelectedProfile(null)
-    setSelectedCommissionType(null)
-    setCommissionRate(null)
-  }
-  
-  const handleEditItem = (index: number) => {
-    const itemToEdit = items[index]
-    setEditingIndex(index)
-    setSelectedService({
-      id: itemToEdit.service_id,
-      name: itemToEdit.service_name,
-      description: itemToEdit.description
-    })
-    setServiceName(itemToEdit.service_name)
-    setServiceDescription(itemToEdit.description || "")
-    setQuantity(itemToEdit.quantity)
-    setUnitPrice(itemToEdit.unit_price)
-    
-    // Set the selected profile if it exists
-    if (itemToEdit.assigned_profile_id) {
-      const profile = profiles.find(p => p.id === itemToEdit.assigned_profile_id)
-      setSelectedProfile(profile || null)
-    } else {
-      setSelectedProfile(null)
-    }
+    subServicesByParent[parentId].push(subService)
+  })
 
-    // Set the selected commission type if it exists
-    if (itemToEdit.commission_type) {
-      const commissionType = commissionTypes.find(ct => ct.id === itemToEdit.commission_type)
-      setSelectedCommissionType(commissionType || null)
-    } else {
-      setSelectedCommissionType(null)
-    }
-
-    // Set the commission rate
-    setCommissionRate(itemToEdit.commission_rate || null)
-  }
-  
-  const handleUpdateItem = () => {
-    if (editingIndex === -1) return
-    
-    if (!selectedService) {
-      alert("Please select a service")
-      return
-    }
-    
-    const updatedItem: ServiceItemType = {
-      id: items[editingIndex].id,
-      service_id: selectedService.id,
-      service_name: selectedService.name,
-      description: selectedService.description,
-      quantity: quantity,
-      unit_price: unitPrice,
-      assigned_profile_id: selectedProfile ? selectedProfile.id : null,
-      commission_type: selectedCommissionType ? selectedCommissionType.id : null,
-      commission_rate: commissionRate || null
-    }
-    
-    setItems(prevItems => {
-      const newItems = [...prevItems]
-      newItems[editingIndex] = updatedItem
-      return newItems
-    })
-    
-    setServiceName("")
-    setServiceDescription("")
-    setQuantity(1)
-    setUnitPrice(0)
-    setEditingIndex(-1)
-    setSelectedService(null)
-    setSelectedProfile(null)
-    setSelectedCommissionType(null)
-    setCommissionRate(null)
-  }
-  
-  const handleRemoveItem = (index: number) => {
-    setItems(prevItems => {
-      const newItems = [...prevItems]
-      newItems.splice(index, 1)
-      return newItems
-    })
-  }
-  
-  const handleServiceNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setServiceName(e.target.value)
-  }
-  
-  const handleServiceDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setServiceDescription(e.target.value)
-  }
-  
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value)
-    setQuantity(isNaN(value) ? 1 : value)
-  }
-  
-  const handleUnitPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value)
-    setUnitPrice(isNaN(value) ? 0 : value)
+  const toggleServiceExpanded = (serviceId: string) => {
+    setExpandedServices(prev => ({
+      ...prev,
+      [serviceId]: !prev[serviceId]
+    }))
   }
 
-  const handleProfileChange = (profile: Profile | null) => {
-    setSelectedProfile(profile);
+  const addService = (serviceId: string) => {
+    const service = standaloneServices?.find(s => s.id === serviceId)
+    if (!service) return
 
-    setItems((prevItems) => {
-      if (editingIndex === -1) return prevItems;
-      const updatedItems = [...prevItems];
-      updatedItems[editingIndex].assigned_profile_id = profile ? profile.id : null;
-      return updatedItems;
-    });
-  };
+    const newService: ServiceItemType = {
+      service_id: service.id,
+      service_name: service.name,
+      quantity: 1,
+      unit_price: service.base_price || 0,
+      commission_rate: 0,
+      commission_type: null,
+      description: service.description || "",
+      is_parent: true,
+      sub_services: []
+    }
 
-  const handleCommissionTypeChange = (commissionType: CommissionType | null) => {
-    setSelectedCommissionType(commissionType);
+    onChange([...services, newService])
+    
+    if (subServicesByParent[service.id]?.length > 0) {
+      setExpandedServices(prev => ({
+        ...prev,
+        [service.id]: true
+      }))
+    }
+  }
 
-    setItems((prevItems) => {
-      if (editingIndex === -1) return prevItems;
-      const updatedItems = [...prevItems];
-      updatedItems[editingIndex].commission_type = commissionType ? commissionType.id : null;
-      return updatedItems;
-    });
-  };
+  const addSubService = (parentIndex: number, subServiceId: string) => {
+    const parentService = services[parentIndex]
+    const subService = allServices?.find(s => s.id === subServiceId)
+    
+    if (!parentService || !subService) return
+    
+    const updatedServices = [...services]
+    
+    const existingSubIndex = parentService.sub_services?.findIndex(
+      (s: any) => s.service_id === subServiceId
+    )
+    
+    if (existingSubIndex >= 0) return
+    
+    const newSubService = {
+      service_id: subService.id,
+      service_name: subService.name,
+      quantity: 1,
+      unit_price: subService.base_price || 0,
+      commission_rate: 0,
+      commission_type: null,
+      description: subService.description || "",
+      parent_id: parentService.service_id
+    }
+    
+    updatedServices[parentIndex].sub_services = [
+      ...(updatedServices[parentIndex].sub_services || []),
+      newSubService
+    ]
+    
+    onChange(updatedServices)
+  }
 
-const handleCommissionRateChange = (value: string) => {
-  const numericValue = value === '' ? null : parseFloat(value);
-  
-  setItems((prevItems) => {
-    const updatedItems = [...prevItems];
-    updatedItems[editingIndex].commission_rate = numericValue;
-    return updatedItems;
-  });
-};
-  
+  const removeService = (index: number) => {
+    const newServices = [...services]
+    newServices.splice(index, 1)
+    onChange(newServices)
+  }
+
+  const removeSubService = (parentIndex: number, subIndex: number) => {
+    const updatedServices = [...services]
+    updatedServices[parentIndex].sub_services.splice(subIndex, 1)
+    onChange(updatedServices)
+  }
+
+  const updateService = (index: number, updates: Partial<ServiceItemType>) => {
+    const newServices = [...services]
+    newServices[index] = { ...newServices[index], ...updates }
+    onChange(newServices)
+  }
+
+  const updateSubService = (parentIndex: number, subIndex: number, updates: Partial<ServiceItemType>) => {
+    const updatedServices = [...services]
+    updatedServices[parentIndex].sub_services[subIndex] = {
+      ...updatedServices[parentIndex].sub_services[subIndex],
+      ...updates
+    }
+    onChange(updatedServices)
+  }
+
+  const handleChange = (newServices: ServiceItemType[]) => {
+    onChange(newServices)
+    if (onServicesChange) {
+      onServicesChange(newServices)
+    }
+  }
+
   return (
-    <div className="grid gap-4">
-      <Table>
-        <TableCaption>
-          {editingIndex !== -1 ? "Edit Service" : "Add a service"}
-        </TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Service</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Quantity</TableHead>
-            <TableHead>Unit Price</TableHead>
-            {showCommission && <TableHead>Assigned To</TableHead>}
-            {showCommission && <TableHead>Commission Type</TableHead>}
-            {showCommission && <TableHead>Commission Rate</TableHead>}
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow>
-            <TableCell>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    role="combobox"
-                    aria-expanded={open}
-                    className="w-[200px] justify-between"
-                  >
-                    {selectedService ? selectedService.name : "Select service"}
-                    <ChevronUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[200px] p-2">
-                  {availableServices.map((service) => (
-                    <div
-                      key={service.id}
-                      className="hover:bg-secondary cursor-pointer p-2 rounded-md"
-                      onClick={() => {
-                        setSelectedService(service)
-                      }}
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <Select
+          onValueChange={(value) => addService(value)}
+          disabled={disabled || isLoading}
+        >
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="Add service" />
+          </SelectTrigger>
+          <SelectContent>
+            {standaloneServices?.map((service) => (
+              <SelectItem key={service.id} value={service.id}>
+                {service.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+      </div>
+
+      {services.length > 0 && (
+        <div className="space-y-4">
+          {services.map((service, index) => (
+            <Card key={index} className="overflow-hidden">
+              <CardContent className="p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h3 className="font-medium text-lg">{service.service_name}</h3>
+                    {service.description && (
+                      <p className="text-sm text-muted-foreground">{service.description}</p>
+                    )}
+                  </div>
+                  
+                  {subServicesByParent[service.service_id]?.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleServiceExpanded(service.service_id)}
+                      className="p-1 h-8"
                     >
-                      {service.name}
+                      {expandedServices[service.service_id] ? 
+                        <ChevronUp className="h-4 w-4" /> : 
+                        <ChevronDown className="h-4 w-4" />}
+                    </Button>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <Label htmlFor={`quantity-${index}`}>Quantity</Label>
+                    <Input
+                      id={`quantity-${index}`}
+                      type="number"
+                      min="1"
+                      value={service.quantity}
+                      onChange={(e) => updateService(index, { quantity: parseInt(e.target.value) || 1 })}
+                      className="w-full"
+                      disabled={disabled}
+                    />
+                  </div>
+                  {!isClient && allowPriceEdit && (
+                    <div>
+                      <Label htmlFor={`price-${index}`}>Price</Label>
+                      <Input
+                        id={`price-${index}`}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={service.unit_price}
+                        onChange={(e) => updateService(index, { unit_price: parseFloat(e.target.value) || 0 })}
+                        className="w-full"
+                        disabled={disabled}
+                      />
                     </div>
-                  ))}
-                </PopoverContent>
-              </Popover>
-            </TableCell>
-            <TableCell>
-              <Textarea
-                value={selectedService?.description || ''}
-                onChange={handleServiceDescriptionChange}
-                placeholder="Service description"
-                className="w-[200px]"
-              />
-            </TableCell>
-            <TableCell>
-              <Input
-                type="number"
-                value={quantity.toString()}
-                onChange={handleQuantityChange}
-                className="w-[80px]"
-              />
-            </TableCell>
-            <TableCell>
-              <Input
-                type="number"
-                value={unitPrice.toString()}
-                onChange={handleUnitPriceChange}
-                className="w-[100px]"
-                disabled={!allowPriceEdit}
-              />
-            </TableCell>
-            {showCommission && (
-              <TableCell>
-                <Select onValueChange={(value) => {
-                  const profile = profiles.find(p => p.id === value) || null
-                  handleProfileChange(profile)
-                }}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select profile" value={selectedProfile?.id} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {profiles.map((profile) => (
-                      <SelectItem key={profile.id} value={profile.id}>
-                        {profile.first_name} {profile.last_name}
-                      </SelectItem>
-                    ))}
-                    <SelectItem value="">
-                      <em>No Profile</em>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </TableCell>
-            )}
-            {showCommission && (
-              <TableCell>
-                <Select onValueChange={(value) => {
-                  const commissionType = commissionTypes.find(ct => ct.id === value) || null
-                  handleCommissionTypeChange(commissionType)
-                }}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select type" value={selectedCommissionType?.id} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {commissionTypes.map((commissionType) => (
-                      <SelectItem key={commissionType.id} value={commissionType.id}>
-                        {commissionType.name}
-                      </SelectItem>
-                    ))}
-                    <SelectItem value="">
-                      <em>No Type</em>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </TableCell>
-            )}
-            {showCommission && (
-              <TableCell>
-                <Input
-                  type="number"
-                  value={(commissionRate === null ? '' : commissionRate).toString()}
-                  onChange={(e) => handleCommissionRateChange(e.target.value)}
-                  className="w-[100px]"
-                  placeholder="Rate"
-                />
-              </TableCell>
-            )}
-            <TableCell className="text-right">
-              {editingIndex !== -1 ? (
-                <Button size="sm" onClick={handleUpdateItem}>
-                  Update
-                </Button>
-              ) : (
-                <Button size="sm" onClick={handleAddItem}>
-                  Add
-                </Button>
-              )}
-            </TableCell>
-          </TableRow>
-          {items.map((item, index) => (
-            <TableRow key={item.id}>
-              <TableCell>{item.service_name}</TableCell>
-              <TableCell>{item.description}</TableCell>
-              <TableCell>{item.quantity}</TableCell>
-              <TableCell>${item.unit_price.toFixed(2)}</TableCell>
-              {showCommission && (
-                <TableCell>
-                  {profiles.find(p => p.id === item.assigned_profile_id)?.first_name || '-'}
-                </TableCell>
-              )}
-              {showCommission && (
-                <TableCell>
-                  {commissionTypes.find(ct => ct.id === item.commission_type)?.name || '-'}
-                </TableCell>
-              )}
-              {showCommission && (
-                <TableCell>
-                  {item.commission_rate !== null ? `${item.commission_rate}%` : '-'}
-                </TableCell>
-              )}
-              <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleEditItem(index)}
-                >
-                  Edit
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleRemoveItem(index)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
+                  )}
+                  
+                  {showCommission && (
+                    <div className="col-span-2">
+                      <CommissionRateFields
+                        serviceIndex={index}
+                        value={{
+                          rate: service.commission_rate,
+                          type: service.commission_type
+                        }}
+                        onChange={(value) => updateService(index, {
+                          commission_rate: value.rate,
+                          commission_type: value.type
+                        })}
+                        disabled={disabled}
+                      />
+                    </div>
+                  )}
+                </div>
+                
+                {expandedServices[service.service_id] && subServicesByParent[service.service_id]?.length > 0 && (
+                  <div className="mb-4 border-t pt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-medium">Additional Options</h4>
+                      <Select
+                        onValueChange={(value) => addSubService(index, value)}
+                        disabled={disabled}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Add option" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {subServicesByParent[service.service_id]?.map((subService) => {
+                            const alreadyAdded = service.sub_services?.some(
+                              (s: any) => s.service_id === subService.id
+                            )
+                            
+                            if (alreadyAdded) return null
+                            
+                            return (
+                              <SelectItem key={subService.id} value={subService.id}>
+                                {subService.name}
+                              </SelectItem>
+                            )
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {service.sub_services && service.sub_services.length > 0 && (
+                      <div className="space-y-3 pl-3 border-l-2">
+                        {service.sub_services.map((subService: any, subIndex: number) => (
+                          <div key={subIndex} className="bg-muted/50 p-3 rounded-md">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h5 className="font-medium">{subService.service_name}</h5>
+                                {subService.description && (
+                                  <p className="text-xs text-muted-foreground">{subService.description}</p>
+                                )}
+                              </div>
+                              <Button 
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeSubService(index, subIndex)}
+                                disabled={disabled}
+                                className="h-6 p-1"
+                              >
+                                ✕
+                              </Button>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div>
+                                <Label htmlFor={`sub-quantity-${index}-${subIndex}`} className="text-xs">Quantity</Label>
+                                <Input
+                                  id={`sub-quantity-${index}-${subIndex}`}
+                                  type="number"
+                                  min="1"
+                                  value={subService.quantity}
+                                  onChange={(e) => updateSubService(index, subIndex, { 
+                                    quantity: parseInt(e.target.value) || 1 
+                                  })}
+                                  className="w-full h-8 text-sm"
+                                  disabled={disabled}
+                                />
+                              </div>
+                              {!isClient && allowPriceEdit && (
+                                <div>
+                                  <Label htmlFor={`sub-price-${index}-${subIndex}`} className="text-xs">Price</Label>
+                                  <Input
+                                    id={`sub-price-${index}-${subIndex}`}
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={subService.unit_price}
+                                    onChange={(e) => updateSubService(index, subIndex, { 
+                                      unit_price: parseFloat(e.target.value) || 0 
+                                    })}
+                                    className="w-full h-8 text-sm"
+                                    disabled={disabled}
+                                  />
+                                </div>
+                              )}
+                              
+                              {showCommission && (
+                                <div className="col-span-2">
+                                  <CommissionRateFields
+                                    serviceIndex={`${index}-${subIndex}`}
+                                    value={{
+                                      rate: subService.commission_rate,
+                                      type: subService.commission_type
+                                    }}
+                                    onChange={(value) => updateSubService(index, subIndex, {
+                                      commission_rate: value.rate,
+                                      commission_type: value.type
+                                    })}
+                                    disabled={disabled}
+                                    isCompact={true}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeService(index)}
+                    disabled={disabled}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           ))}
-        </TableBody>
-      </Table>
+        </div>
+      )}
     </div>
   )
 }

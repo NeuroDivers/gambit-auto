@@ -38,42 +38,21 @@ export function useServiceBays() {
             )
           )
         `)
+        .order('name', { ascending: true })
 
       if (error) {
         console.error("Error fetching service bays:", error)
         throw error
       }
       
-      const formattedBays = data?.map(bay => ({
+      return data?.map(bay => ({
         ...bay,
         bay_services: bay.bay_services?.map(service => ({
           service_id: service.service_id,
           name: service.service_types.name,
           is_active: service.is_active
         })) || []
-      })) || [];
-
-      // Sort bays numerically then alphabetically
-      return formattedBays.sort((a, b) => {
-        // Extract numeric prefixes if they exist
-        const aNumMatch = a.name.match(/^(\d+)/);
-        const bNumMatch = b.name.match(/^(\d+)/);
-        
-        // If both have numeric prefixes, convert to numbers and compare
-        if (aNumMatch && bNumMatch) {
-          // Convert to numbers for proper numerical comparison
-          const aNum = parseInt(aNumMatch[0], 10);
-          const bNum = parseInt(bNumMatch[0], 10);
-          return aNum - bNum;
-        }
-        
-        // If only one has a numeric prefix, put it first
-        if (aNumMatch && !bNumMatch) return -1;
-        if (!aNumMatch && bNumMatch) return 1;
-        
-        // Otherwise sort alphabetically
-        return a.name.localeCompare(b.name);
-      });
+      })) || []
     },
   })
 

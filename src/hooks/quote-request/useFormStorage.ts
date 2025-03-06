@@ -1,53 +1,60 @@
 
-import { useState, useEffect } from "react"
+import { FormStorage } from "./types"
 import { ServiceFormData } from "@/types/service-item"
-import { useLocalStorage } from "usehooks-ts"
 
-// Default initial form data
-const initialFormData: ServiceFormData = {
-  vehicleInfo: {
-    make: "",
-    model: "",
-    year: new Date().getFullYear(),
-    vin: "",
-    saveToAccount: false
-  },
-  service_items: [],
-  description: "",
-  service_details: {}
-}
+const storageKey = "quote_request_form"
 
 export function useFormStorage() {
-  // Use useLocalStorage hook for persistent storage
-  const [storedFormData, setStoredFormData] = useLocalStorage<ServiceFormData>(
-    "quote-request-form-data",
-    initialFormData
-  )
-  
-  // Local state to track data
-  const [formData, setFormData] = useState<ServiceFormData>(storedFormData)
-  
-  // Update local state when storage changes
-  useEffect(() => {
-    setFormData(storedFormData)
-  }, [storedFormData])
-  
-  // Update both local state and storage
-  const updateFormData = (newData: Partial<ServiceFormData>) => {
-    const updatedData = { ...formData, ...newData }
-    setFormData(updatedData)
-    setStoredFormData(updatedData)
+  const getData = (): FormStorage => {
+    const stored = localStorage.getItem(storageKey)
+    if (!stored) {
+      return {
+        step: 1,
+        data: {
+          vehicleInfo: {
+            make: "",
+            model: "",
+            year: new Date().getFullYear(),
+            vin: "",
+          },
+          service_items: [],
+          description: "",
+          service_details: {}
+        }
+      }
+    }
+    return JSON.parse(stored)
   }
-  
-  // Clear form data from storage
-  const clearStoredFormData = () => {
-    setStoredFormData(initialFormData)
-    setFormData(initialFormData)
+
+  const setData = (data: Partial<ServiceFormData>) => {
+    const stored = getData()
+    localStorage.setItem(storageKey, JSON.stringify({
+      ...stored,
+      data: {
+        ...stored.data,
+        ...data
+      }
+    }))
   }
-  
+
+  const setStep = (step: number) => {
+    const stored = getData()
+    localStorage.setItem(storageKey, JSON.stringify({
+      ...stored,
+      step
+    }))
+  }
+
+  const clearFormData = () => {
+    localStorage.removeItem(storageKey)
+  }
+
   return {
-    formData,
-    updateFormData,
-    clearStoredFormData
+    data: getData().data,
+    step: getData().step,
+    setStep,
+    setData,
+    getData,
+    clearFormData
   }
 }
