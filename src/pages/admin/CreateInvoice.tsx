@@ -149,7 +149,7 @@ export default function CreateInvoice() {
       }
 
       toast.success("Invoice created successfully")
-      navigate(`/admin/invoices/${invoice.id}/edit`)
+      navigate(`/invoices/${invoice.id}/edit`)
     } catch (error: any) {
       console.error('Error creating invoice:', error)
       toast.error("Failed to create invoice: " + error.message)
@@ -211,7 +211,7 @@ export default function CreateInvoice() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate("/admin/invoices")}
+          onClick={() => navigate("/invoices")}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -369,7 +369,7 @@ export default function CreateInvoice() {
           </div>
 
           <div className="flex justify-end gap-4 p-4 border-t bg-background sticky bottom-0">
-            <Button variant="outline" type="button" onClick={() => navigate("/admin/invoices")}>
+            <Button variant="outline" type="button" onClick={() => navigate("/invoices")}>
               Cancel
             </Button>
             <Button type="submit" disabled={isPending}>
