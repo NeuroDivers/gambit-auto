@@ -11,8 +11,7 @@ export function convertServiceItemForWorkOrder(item: any): ServiceItemType {
     commission_rate: item.commission_rate,
     commission_type: item.commission_type === 'flat' ? 'fixed' : item.commission_type,
     description: item.description || "",
-    assigned_profile_id: item.assigned_profile_id,
-    staff_assignments: item.staff_assignments || []
+    assigned_profile_id: item.assigned_profile_id
   };
 }
 
@@ -33,13 +32,6 @@ export function convertSharedToWorkOrderServiceItem(item: SharedServiceItemType)
 
   if (item.package_id) {
     workOrderItem.package_id = item.package_id;
-  }
-
-  if (item.staff_assignments) {
-    workOrderItem.staff_assignments = item.staff_assignments.map(assignment => ({
-      ...assignment,
-      commission_type: assignment.commission_type === 'flat' ? 'fixed' : assignment.commission_type
-    }));
   }
 
   return workOrderItem;
@@ -77,13 +69,6 @@ export function convertWorkOrderToSharedServiceItem(item: ServiceItemType): Shar
 
   if (item.parent_id) {
     sharedItem.parent_id = item.parent_id;
-  }
-
-  if (item.staff_assignments) {
-    sharedItem.staff_assignments = item.staff_assignments.map(assignment => ({
-      ...assignment,
-      commission_type: assignment.commission_type === 'fixed' ? 'percentage' : assignment.commission_type
-    }));
   }
 
   return sharedItem;
