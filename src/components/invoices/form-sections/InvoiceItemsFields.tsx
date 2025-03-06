@@ -24,7 +24,7 @@ export function InvoiceItemsFields({
       quantity: item.quantity,
       unit_price: item.unit_price,
       description: item.description || "",
-      commission_rate: (item as any).commission_rate ?? null,
+      commission_rate: (item as any).commission_rate ?? 0, // Ensure it's not null
       commission_type: (item as any).commission_type ?? null,
       package_id: (item as any).package_id || undefined
     };
@@ -34,7 +34,7 @@ export function InvoiceItemsFields({
   // Handle the conversion back
   const handleItemsChange = (updatedItems: ServiceItemType[]) => {
     // If original items were InvoiceItem[], convert back to that type
-    if (items.length > 0 && 'description' in items[0] && items[0].description !== undefined) {
+    if (items.length > 0 && 'description' in items[0]) {
       const convertedItems = updatedItems.map(item => {
         const invoiceItem: InvoiceItem = {
           service_id: item.service_id,
@@ -43,7 +43,7 @@ export function InvoiceItemsFields({
           unit_price: item.unit_price,
           description: item.description || "",
           commission_rate: item.commission_rate,
-          commission_type: item.commission_type,
+          commission_type: item.commission_type, // Now using same type throughout
           package_id: item.package_id
         };
         

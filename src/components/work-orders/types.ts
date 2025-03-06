@@ -1,4 +1,3 @@
-
 import { UseFormReturn } from "react-hook-form";
 
 export type WorkOrder = {
@@ -61,17 +60,10 @@ export type WorkOrderService = {
   };
   assigned_profile_id?: string | null;
   commission_rate?: number | null;
-  commission_type?: 'percentage' | 'flat_rate' | null;
+  commission_type?: 'percentage' | 'flat' | null;
   main_service_id?: string | null;
   sub_service_id?: string | null;
 };
-
-export interface WorkOrderFormProps {
-  workOrder?: WorkOrder;
-  onSuccess?: () => void;
-  defaultStartTime?: Date;
-  onSubmitting?: (isSubmitting: boolean) => void;
-}
 
 export interface ServiceItemType {
   service_id: string;
@@ -81,9 +73,16 @@ export interface ServiceItemType {
   description?: string;
   assigned_profile_id?: string | null;
   commission_rate: number;
-  commission_type: 'percentage' | 'flat_rate' | null;
+  commission_type: 'percentage' | 'flat' | null;
   sub_services?: ServiceItemType[];
   parent_id?: string;
+}
+
+export interface WorkOrderFormProps {
+  workOrder?: WorkOrder;
+  onSuccess?: () => void;
+  defaultStartTime?: Date;
+  onSubmitting?: (isSubmitting: boolean) => void;
 }
 
 export interface WorkOrderFormValues {

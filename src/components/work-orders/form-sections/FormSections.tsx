@@ -27,10 +27,11 @@ export function FormSections({
   const convertServiceItems = (items: any[]) => {
     return items.map(item => ({
       ...item,
-      commission_type: item.commission_type === 'flat' ? 'flat_rate' : item.commission_type,
+      // Standardize on 'flat' for the UI, we use 'flat_rate' in the backend
+      commission_type: item.commission_type,
       sub_services: item.sub_services ? item.sub_services.map((sub: any) => ({
         ...sub,
-        commission_type: sub.commission_type === 'flat' ? 'flat_rate' : sub.commission_type
+        commission_type: sub.commission_type
       })) : undefined
     }));
   };
@@ -39,10 +40,11 @@ export function FormSections({
   const convertBackServiceItems = (items: any[]) => {
     return items.map(item => ({
       ...item,
-      commission_type: item.commission_type === 'flat_rate' ? 'flat' : item.commission_type,
+      // No conversion needed as we're now using 'flat' throughout
+      commission_type: item.commission_type,
       sub_services: item.sub_services ? item.sub_services.map((sub: any) => ({
         ...sub,
-        commission_type: sub.commission_type === 'flat_rate' ? 'flat' : sub.commission_type
+        commission_type: sub.commission_type
       })) : undefined
     }));
   };

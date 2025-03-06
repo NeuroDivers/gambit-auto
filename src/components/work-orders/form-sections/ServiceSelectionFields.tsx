@@ -1,4 +1,3 @@
-
 import React from "react"
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
@@ -358,10 +357,14 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                             <FormLabel className="text-sm">Commission Type</FormLabel>
                             <FormControl>
                               <Select
-                                value={field.value}
-                                onValueChange={field.onChange}
+                                value={(subService as ServiceItemType).commission_type || 'percentage'}
+                                onValueChange={(value) => {
+                                  const updatedServices = [...form.getValues().service_items];
+                                  updatedServices[index].sub_services[subIndex].commission_type = value as 'percentage' | 'flat' | null;
+                                  form.setValue("service_items", updatedServices);
+                                }}
                               >
-                                <SelectTrigger>
+                                <SelectTrigger className="text-xs h-8">
                                   <SelectValue placeholder="Select Type" />
                                 </SelectTrigger>
                                 <SelectContent>
