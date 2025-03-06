@@ -11,8 +11,6 @@ import { useNavigate } from "react-router-dom"
 import { WorkOrderDetailsDialog } from "./calendar/WorkOrderDetailsDialog"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { WorkOrder } from "./types"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
 
 export function WorkOrderList() {
   const navigate = useNavigate()
@@ -48,69 +46,75 @@ export function WorkOrderList() {
     handleCreateInvoice(workOrder.id)
   }
 
-  console.log("WorkOrderList rendering:", { isLoading, error, workOrdersCount: workOrders?.length })
+  // Always render the filter section
+  const renderFilters = () => (
+    <TooltipProvider>
+      <WorkOrderFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        assignmentFilter={assignmentFilter}
+        onAssignmentFilterChange={setAssignmentFilter}
+      />
+    </TooltipProvider>
+  )
+
+  // Render content based on loading/error state
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center p-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )
+    }
+
+    if (error) {
+      return (
+        <div className="p-8 text-center text-red-500">
+          Error loading work orders. Please try again later.
+        </div>
+      )
+    }
+
+    return (
+      <>
+        {isMobile ? (
+          <WorkOrderMobileList
+            workOrders={workOrders}
+            onAssignBay={setAssignBayWorkOrder}
+            onEdit={handleEdit}
+            onCreateInvoice={onCreateInvoice}
+            onViewDetails={setSelectedWorkOrder}
+          />
+        ) : (
+          <WorkOrderTable
+            workOrders={workOrders}
+            onAssignBay={setAssignBayWorkOrder}
+            onEdit={handleEdit}
+            onCreateInvoice={onCreateInvoice}
+            onViewDetails={setSelectedWorkOrder}
+          />
+        )}
+
+        <WorkOrderPagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
+      </>
+    )
+  }
 
   return (
     <div className="space-y-4">
-      {/* Filter section always visible */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-3">
-        <TooltipProvider>
-          <WorkOrderFilters
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-            assignmentFilter={assignmentFilter}
-            onAssignmentFilterChange={setAssignmentFilter}
-          />
-        </TooltipProvider>
-      </div>
+      {/* Filter section is always visible */}
+      {renderFilters()}
       
-      {/* Content section that reloads when filtering */}
+      {/* Only this section reloads when filtering */}
       <div id="work-orders-content" className="space-y-4">
-        {isLoading ? (
-          <div className="flex items-center justify-center p-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : error ? (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>
-              {error instanceof Error ? error.message : "Failed to load work orders. Please try again later."}
-            </AlertDescription>
-          </Alert>
-        ) : workOrders.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">
-            No work orders found. Try adjusting your filters.
-          </div>
-        ) : (
-          <>
-            {isMobile ? (
-              <WorkOrderMobileList
-                workOrders={workOrders}
-                onAssignBay={setAssignBayWorkOrder}
-                onEdit={handleEdit}
-                onCreateInvoice={onCreateInvoice}
-                onViewDetails={setSelectedWorkOrder}
-              />
-            ) : (
-              <WorkOrderTable
-                workOrders={workOrders}
-                onAssignBay={setAssignBayWorkOrder}
-                onEdit={handleEdit}
-                onCreateInvoice={onCreateInvoice}
-                onViewDetails={setSelectedWorkOrder}
-              />
-            )}
-
-            <WorkOrderPagination
-              page={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-            />
-          </>
-        )}
+        {renderContent()}
       </div>
 
       {/* Modals and sheets */}

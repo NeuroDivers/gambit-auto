@@ -1,60 +1,35 @@
 
 import { Badge } from "@/components/ui/badge"
+import { WorkOrderStatus } from "./types"
 import { useState } from "react"
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu"
 import { supabase } from "@/integrations/supabase/client"
-import { toast } from "sonner"
-import { Check } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { getWorkOrderStatusVariant } from "@/components/shared/BadgeVariants"
 
-interface WorkOrderStatusBadgeProps {
-  status: string
+type WorkOrderStatusBadgeProps = {
+  status: WorkOrderStatus
   workOrderId?: string
   editable?: boolean
 }
 
-const getWorkOrderStatusVariant = (status: string) => {
-  switch (status.toLowerCase()) {
-    case "completed":
-      return "success"
-    case "in_progress":
-      return "warning"
-    case "pending":
-      return "secondary"
-    case "cancelled":
-      return "destructive"
-    case "approved":
-      return "info"
-    default:
-      return "default"
-  }
+export function getStatusLabel(status: WorkOrderStatus): string {
+  return status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ');
 }
 
-export function WorkOrderStatusBadge({ 
-  status, 
-  workOrderId, 
-  editable = false 
-}: WorkOrderStatusBadgeProps) {
-  const [currentStatus, setCurrentStatus] = useState(status)
-  const [isUpdating, setIsUpdating] = useState(false)
+export function getBadgeVariant(status: WorkOrderStatus) {
+  return getWorkOrderStatusVariant(status);
+}
 
-  const variant = getWorkOrderStatusVariant(currentStatus)
-  
-  const formatStatus = (status: string) => {
-    return status
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ')
-  }
+export function WorkOrderStatusBadge({ status, workOrderId, editable = false }: WorkOrderStatusBadgeProps) {
+  const [currentStatus, setCurrentStatus] = useState<WorkOrderStatus>(status)
+  const [isLoading, setIsLoading] = useState(false)
+  const { toast } = useToast()
 
-  const handleStatusChange = async (newStatus: string) => {
-    if (!workOrderId || newStatus === currentStatus) return
-    
-    setIsUpdating(true)
+  const handleStatusChange = async (newStatus: WorkOrderStatus) => {
+    if (!workOrderId) return
+
+    setIsLoading(true)
     try {
       const { error } = await supabase
         .from('work_orders')
@@ -64,46 +39,47 @@ export function WorkOrderStatusBadge({
       if (error) throw error
       
       setCurrentStatus(newStatus)
-      toast.success(`Status updated to ${formatStatus(newStatus)}`)
-    } catch (error) {
-      console.error('Error updating status:', error)
-      toast.error('Failed to update status')
+      toast({
+        title: "Status Updated",
+        description: `Work order status changed to ${newStatus}`,
+      })
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      })
     } finally {
-      setIsUpdating(false)
+      setIsLoading(false)
     }
   }
 
-  const statuses = ["pending", "in_progress", "completed", "cancelled"]
-
   if (editable && workOrderId) {
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger disabled={isUpdating} asChild>
-          <div className="cursor-pointer">
-            <Badge variant={variant as any} className={isUpdating ? "opacity-50" : ""}>
-              {formatStatus(currentStatus)}
-            </Badge>
-          </div>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {statuses.map((statusOption) => (
-            <DropdownMenuItem 
-              key={statusOption}
-              onClick={() => handleStatusChange(statusOption)}
-              className="flex items-center justify-between"
-            >
-              <span>{formatStatus(statusOption)}</span>
-              {statusOption === currentStatus && <Check className="h-4 w-4 ml-2" />}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Select
+        value={currentStatus}
+        onValueChange={(value) => handleStatusChange(value as WorkOrderStatus)}
+        disabled={isLoading}
+      >
+        <SelectTrigger className="w-[160px]">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="pending">Pending</SelectItem>
+          <SelectItem value="approved">Approved</SelectItem>
+          <SelectItem value="in_progress">In Progress</SelectItem>
+          <SelectItem value="completed">Completed</SelectItem>
+          <SelectItem value="cancelled">Cancelled</SelectItem>
+          <SelectItem value="invoiced">Invoiced</SelectItem>
+          <SelectItem value="estimated">Estimated</SelectItem>
+        </SelectContent>
+      </Select>
     )
   }
-  
+
   return (
-    <Badge variant={variant as any}>
-      {formatStatus(currentStatus)}
+    <Badge variant={getBadgeVariant(currentStatus)}>
+      {currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1).replace('_', ' ')}
     </Badge>
   )
 }

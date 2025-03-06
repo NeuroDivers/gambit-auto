@@ -1,153 +1,169 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { Navigate, useNavigate } from "react-router-dom";
+import { AuthError } from "@supabase/supabase-js";
 import { toast } from "sonner";
 
-interface AuthContextType {
-  user: User | null;
+type AuthContextType = {
+  user: any;
+  profile: any;
   loading: boolean;
-  error: Error | null;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  setNewPassword: (password: string) => Promise<void>;
-}
+  login: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signup: (email: string, password: string) => Promise<{ error: AuthError | null; data: any }>;
+  logout: () => Promise<void>;
+  signOut: () => Promise<void>; // Alias for logout
+  resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
+  updatePassword: (password: string) => Promise<{ error: AuthError | null }>;
+};
 
-const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    // Check active sessions and sets the user
-    const getUser = async () => {
-      try {
-        setLoading(true);
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(user);
-      } catch (error) {
-        console.error("Error fetching user:", error);
-        setError(error as Error);
-      } finally {
+    // Set up auth state listener
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        const currentUser = session?.user || null;
+        setUser(currentUser);
         setLoading(false);
+
+        if (currentUser) {
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", currentUser.id)
+            .single();
+
+          setProfile(profileData);
+        }
       }
+    );
+
+    // Initial session check
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        setUser(session.user);
+        
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .single();
+        
+        setProfile(profileData);
+      }
+      
+      setLoading(false);
     };
 
-    getUser();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    checkUser();
 
     return () => {
-      subscription.unsubscribe();
+      authListener?.subscription?.unsubscribe();
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const login = async (email: string, password: string) => {
     try {
-      setLoading(true);
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
-      
-      setUser(data.user);
-      navigate("/dashboard");
-      toast.success("Successfully signed in!");
-    } catch (error: any) {
-      console.error("Error signing in:", error.message);
-      setError(error);
-      toast.error(error.message || "An error occurred during sign in");
-    } finally {
-      setLoading(false);
+      if (error) {
+        toast.error(error.message);
+        return { error };
+      }
+
+      return { error: null };
+    } catch (error) {
+      console.error("Login error:", error);
+      const authError = error as AuthError;
+      toast.error(authError.message || "An error occurred during login");
+      return { error: authError };
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signup = async (email: string, password: string) => {
     try {
-      setLoading(true);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
 
-      if (error) throw error;
-      
-      toast.success("Registration successful! Please check your email for verification.");
-    } catch (error: any) {
-      console.error("Error signing up:", error.message);
-      setError(error);
-      toast.error(error.message || "An error occurred during sign up");
-    } finally {
-      setLoading(false);
+      if (error) {
+        toast.error(error.message);
+        return { error, data: null };
+      }
+
+      return { error: null, data };
+    } catch (error) {
+      console.error("Signup error:", error);
+      const authError = error as AuthError;
+      toast.error(authError.message || "An error occurred during signup");
+      return { error: authError, data: null };
     }
   };
 
-  const signOut = async () => {
+  const logout = async () => {
     try {
-      setLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
+      await supabase.auth.signOut();
       setUser(null);
-      navigate("/auth");
-      toast.success("Successfully signed out!");
-    } catch (error: any) {
-      console.error("Error signing out:", error.message);
-      setError(error);
-      toast.error(error.message || "An error occurred during sign out");
-    } finally {
-      setLoading(false);
+      setProfile(null);
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("An error occurred during logout");
     }
   };
+
+  // Alias for logout to match common Auth naming conventions
+  const signOut = logout;
 
   const resetPassword = async (email: string) => {
     try {
-      setLoading(true);
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
-      
-      if (error) throw error;
-      
-      toast.success("Password reset email sent!");
-    } catch (error: any) {
-      console.error("Error resetting password:", error.message);
-      setError(error);
-      toast.error(error.message || "An error occurred while sending reset email");
-    } finally {
-      setLoading(false);
+
+      if (error) {
+        toast.error(error.message);
+        return { error };
+      }
+
+      toast.success("Password reset link sent to your email");
+      return { error: null };
+    } catch (error) {
+      console.error("Reset password error:", error);
+      const authError = error as AuthError;
+      toast.error(authError.message || "An error occurred during password reset");
+      return { error: authError };
     }
   };
 
-  const setNewPassword = async (password: string) => {
+  const updatePassword = async (password: string) => {
     try {
-      setLoading(true);
       const { error } = await supabase.auth.updateUser({
         password,
       });
-      
-      if (error) throw error;
-      
-      toast.success("Password updated successfully!");
-      navigate("/auth");
-    } catch (error: any) {
-      console.error("Error updating password:", error.message);
-      setError(error);
-      toast.error(error.message || "An error occurred while updating password");
-    } finally {
-      setLoading(false);
+
+      if (error) {
+        toast.error(error.message);
+        return { error };
+      }
+
+      toast.success("Password updated successfully");
+      return { error: null };
+    } catch (error) {
+      console.error("Update password error:", error);
+      const authError = error as AuthError;
+      toast.error(authError.message || "An error occurred updating password");
+      return { error: authError };
     }
   };
 
@@ -155,13 +171,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider
       value={{
         user,
+        profile,
         loading,
-        error,
-        signIn,
-        signUp,
+        login,
+        signup,
+        logout,
         signOut,
         resetPassword,
-        setNewPassword,
+        updatePassword,
       }}
     >
       {children}
@@ -171,22 +188,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
 
-export const RequireAuth = ({ children }: { children: ReactNode }) => {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-  
-  if (!user) {
-    return <Navigate to="/auth" />;
-  }
-  
-  return <>{children}</>;
-};
+export default useAuth;
