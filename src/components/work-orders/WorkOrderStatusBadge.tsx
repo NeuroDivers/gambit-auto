@@ -58,10 +58,9 @@ export function WorkOrderStatusBadge({ status }: WorkOrderStatusBadgeProps) {
       case "estimated":
         return "Estimated";
       default:
-        // Type guard to ensure status is treated as a string
-        return typeof status === 'string' 
-          ? status.charAt(0).toUpperCase() + status.slice(1)
-          : "Unknown";
+        // Ensure status is treated as a string by explicitly casting it
+        const statusString = String(status);
+        return statusString.charAt(0).toUpperCase() + statusString.slice(1);
     }
   };
 
