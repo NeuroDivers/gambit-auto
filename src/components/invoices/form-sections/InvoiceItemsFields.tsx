@@ -22,7 +22,7 @@ export function InvoiceItemsFields({
       service_id: item.service_id,
       service_name: item.service_name,
       quantity: item.quantity,
-      unit_price: item.unit_price,
+      unit_price: typeof item.unit_price === 'string' ? parseFloat(item.unit_price) : item.unit_price,
       description: item.description || "",
       commission_rate: (item as any).commission_rate ?? 0,
       commission_type: (item as any).commission_type ?? null,

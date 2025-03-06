@@ -61,10 +61,10 @@ export function VehicleInfoFields({ form, isEditing, customerId }: VehicleInfoFi
                   </div>
                   <VinScanner onScan={(scannedVin) => field.onChange(scannedVin)} />
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Enter VIN to auto-fill vehicle details
-                </p>
               </FormControl>
+              <p className="text-xs text-muted-foreground mt-1">
+                Enter VIN to auto-fill vehicle details
+              </p>
               <FormMessage />
             </FormItem>
           )}
