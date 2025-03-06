@@ -1,92 +1,83 @@
-
-import { format, isToday } from "date-fns"
-import { WorkOrder } from "@/components/work-orders/types"
-import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
+import { Calendar } from "@/components/ui/calendar"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { findWorkOrderForDate, isWorkOrderStart, getWorkOrderSpan } from "../utils/dateUtils"
-import { WorkOrderCard } from "./WorkOrderCard"
+import { add, endOfMonth, startOfMonth, sub } from "date-fns"
+import { useState } from "react"
+import { useWorkOrderData } from "../useWorkOrderData"
 
 interface CalendarGridProps {
-  days: Date[]
-  serviceBays?: ServiceBay[]
-  workOrders: WorkOrder[]
-  onDateSelect?: (date: Date) => void
-  onWorkOrderSelect: (workOrder: WorkOrder) => void
+  date: Date
+  setDate: (date: Date) => void
 }
 
-export function CalendarGrid({ 
-  days, 
-  serviceBays, 
-  workOrders,
-  onDateSelect,
-  onWorkOrderSelect
-}: CalendarGridProps) {
+export function CalendarGrid({ date, setDate }: CalendarGridProps) {
+  const [month, setMonth] = useState(date)
+  const { data: workOrders = [], isLoading } = useWorkOrderData()
+
+  const workOrdersByDate = workOrders.reduce((acc: { [key: string]: any[] }, workOrder) => {
+    if (!workOrder.start_time) return acc
+
+    const startTime = new Date(workOrder.start_time).toLocaleDateString()
+    if (!acc[startTime]) {
+      acc[startTime] = []
+    }
+    acc[startTime].push(workOrder)
+    return acc
+  }, {})
+
   return (
-    <>
-      <div className="grid" style={{ gridTemplateColumns: `100px repeat(${days.length}, 80px)` }}>
-        <div className="p-4 text-gray-600 font-medium sticky left-0 bg-white z-10 border-r border-gray-200">Bay</div>
-        {days.map((date) => (
-          <div 
-            key={date.toISOString()}
-            className="p-4 text-gray-600 font-medium text-center border-b border-r border-gray-200"
-          >
-            <div>{format(date, 'EEE')}</div>
-            <div>{format(date, 'd')}</div>
-          </div>
-        ))}
-      </div>
-
-      {serviceBays?.map((bay) => (
-        <div 
-          key={bay.id}
-          className="grid"
-          style={{ gridTemplateColumns: `100px repeat(${days.length}, 80px)` }}
-        >
-          <div className="p-4 text-gray-600 sticky left-0 bg-white z-10 border-b border-r border-gray-200">
-            {bay.name}
-          </div>
-          {days.map((date, index) => {
-            const workOrder = findWorkOrderForDate(date, bay.id, workOrders);
-            
-            // Skip rendering empty cells if we're in the middle of a work order span
-            if (workOrder && !isWorkOrderStart(date, workOrder)) {
-              return null;
-            }
-            
-            if (workOrder && isWorkOrderStart(date, workOrder)) {
-              console.log('Rendering work order:', {
-                workOrderId: workOrder.id,
-                date: date.toISOString(),
-                name: `${workOrder.first_name} ${workOrder.last_name}`
-              });
-              
-              const span = getWorkOrderSpan(workOrder, index, days.length);
-              
-              return (
-                <WorkOrderCard
-                  key={date.toISOString()}
-                  workOrder={workOrder}
-                  date={date}
-                  span={span}
-                  onClick={() => onWorkOrderSelect(workOrder)}
-                />
-              );
-            }
-
-            return (
-              <div 
-                key={date.toISOString()}
-                className={cn(
-                  "p-2 relative flex items-center justify-center border-b border-r border-gray-200",
-                  "hover:bg-[#E5DEFF] transition-colors cursor-pointer",
-                  isToday(date) && "bg-[#E5DEFF]"
-                )}
-                onClick={() => onDateSelect?.(date)}
-              />
-            );
+    <Card className="border-none shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between p-4 mb-2">
+        <CardTitle className="text-base font-semibold">
+          {date.toLocaleDateString("en-US", {
+            month: "long",
+            year: "numeric",
           })}
+        </CardTitle>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setMonth(sub(month, { months: 1 }))}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setMonth(add(month, { months: 1 }))}
+          >
+            Next
+          </Button>
         </div>
-      ))}
-    </>
+      </CardHeader>
+      <CardContent className="grid gap-4 p-4">
+        <Calendar
+          mode="single"
+          month={month}
+          selected={date}
+          onSelect={setDate}
+          initialFocus
+          className="border rounded-md"
+        />
+      </CardContent>
+      <CardFooter className="p-4">
+        <h4 className="mb-2 font-medium">Work Orders for {date.toLocaleDateString()}</h4>
+        {isLoading ? (
+          <div>Loading work orders...</div>
+        ) : !workOrdersByDate[date.toLocaleDateString()] ? (
+          <div>No work orders scheduled for this day.</div>
+        ) : (
+          <div className="grid gap-2">
+            {workOrdersByDate[date.toLocaleDateString()].map((workOrder) => (
+              <div key={workOrder.id} className="p-2 border-b border-gray-200">
+                {workOrder.customer_first_name} {workOrder.customer_last_name}
+              </div>
+            ))}
+          </div>
+        )}
+      </CardFooter>
+    </Card>
   )
 }

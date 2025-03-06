@@ -109,8 +109,8 @@ export function WorkOrderDetailsDialog({
           {/* Basic work order info */}
           <div>
             <h3 className="font-medium">Customer Information</h3>
-            <p>{workOrder.first_name} {workOrder.last_name}</p>
-            <p className="text-sm text-muted-foreground">{workOrder.email}</p>
+            <p>{workOrder.customer_first_name} {workOrder.customer_last_name}</p>
+            <p className="text-sm text-muted-foreground">{workOrder.customer_email}</p>
           </div>
 
           <div>

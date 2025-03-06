@@ -26,7 +26,7 @@ export function WorkOrderSelect({
         <SelectContent>
           {workOrders?.map((wo) => (
             <SelectItem key={wo.id} value={wo.id}>
-              {wo.first_name} {wo.last_name} - {wo.vehicle_make} {wo.vehicle_model}
+              {wo.customer_first_name} {wo.customer_last_name} - {wo.vehicle_make} {wo.vehicle_model}
             </SelectItem>
           ))}
         </SelectContent>

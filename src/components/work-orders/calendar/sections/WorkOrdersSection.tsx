@@ -29,7 +29,7 @@ export function WorkOrdersSection() {
           key={workOrder.id}
           className="p-4 rounded-lg border border-border/50 bg-card"
         >
-          <h4 className="font-medium">{workOrder.first_name} {workOrder.last_name}</h4>
+          <h4 className="font-medium">{workOrder.customer_first_name} {workOrder.customer_last_name}</h4>
           <p className="text-sm text-muted-foreground mt-1">{workOrder.additional_notes}</p>
         </div>
       ))}

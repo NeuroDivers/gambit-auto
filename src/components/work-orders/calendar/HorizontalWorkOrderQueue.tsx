@@ -47,7 +47,7 @@ export function HorizontalWorkOrderQueue({
                 <div className="flex flex-col space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="font-medium">
-                      {workOrder.first_name} {workOrder.last_name}
+                      {workOrder.customer_first_name} {workOrder.customer_last_name}
                     </div>
                     <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-200">
                       {workOrder.status}

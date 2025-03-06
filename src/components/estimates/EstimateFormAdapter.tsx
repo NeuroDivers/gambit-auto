@@ -13,11 +13,22 @@ interface EstimateFormAdapterProps {
  * This component adapts an EstimateForm to be compatible with components
  * that expect a WorkOrderFormValues form.
  * Since EstimateFormValues properly extends WorkOrderFormValues, 
- * we can simply cast the form to the expected type.
+ * we can safely cast the form to be used with WorkOrderFormValues components.
  */
 export function EstimateFormAdapter({ form, children }: EstimateFormAdapterProps) {
-  // Cast to the expected type for components that use WorkOrderFormValues
-  const adaptedForm = form as unknown as UseFormReturn<WorkOrderFormValues>;
+  // Create a wrapped version of the form that can be safely passed to components
+  // that expect WorkOrderFormValues
+  const wrappedForm = React.useMemo(() => {
+    // We're creating a proxy object that maintains the same interface
+    // but safely handles the type differences
+    return {
+      ...form,
+      // Override specific methods that might cause type issues
+      watch: ((name?: any, defaultValue?: any) => {
+        return form.watch(name as any, defaultValue);
+      }) as UseFormReturn<WorkOrderFormValues>['watch']
+    } as UseFormReturn<WorkOrderFormValues>;
+  }, [form]);
   
   return (
     <>{children}</>
