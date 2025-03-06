@@ -1,4 +1,3 @@
-
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -43,6 +42,7 @@ const formSchema = z.object({
     commission_type: z.enum(['percentage', 'flat', 'flat_rate']).nullable(),
     assigned_profile_id: z.string().nullable().optional(),
     description: z.string().optional(),
+    package_id: z.string().nullable().optional(),
     sub_services: z.array(z.object({
       service_id: z.string(),
       service_name: z.string(),
@@ -52,12 +52,22 @@ const formSchema = z.object({
       commission_type: z.enum(['percentage', 'flat', 'flat_rate']).nullable().optional(),
       assigned_profile_id: z.string().nullable().optional(),
       description: z.string().optional(),
-      parent_id: z.string().optional()
+      parent_id: z.string().optional(),
+      package_id: z.string().nullable().optional()
     })).optional()
   })),
   save_vehicle: z.boolean().optional(),
   is_primary_vehicle: z.boolean().optional(),
-  client_id: z.string().optional()
+  client_id: z.string().optional(),
+  vehicle_make: z.string().optional(),
+  vehicle_model: z.string().optional(),
+  vehicle_year: z.number().optional(),
+  vehicle_vin: z.string().optional(),
+  vehicle_color: z.string().optional(),
+  vehicle_body_class: z.string().optional(),
+  vehicle_doors: z.number().nullable().optional(),
+  vehicle_trim: z.string().optional(),
+  vehicle_license_plate: z.string().optional()
 })
 
 export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, defaultStartTime?: Date) {
@@ -94,7 +104,16 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
       assigned_bay_id: workOrder?.assigned_bay_id || null,
       service_items: [],
       save_vehicle: false,
-      is_primary_vehicle: false
+      is_primary_vehicle: false,
+      vehicle_make: workOrder?.vehicle_make || "",
+      vehicle_model: workOrder?.vehicle_model || "",
+      vehicle_year: workOrder?.vehicle_year || new Date().getFullYear(),
+      vehicle_vin: workOrder?.vehicle_vin || "",
+      vehicle_color: workOrder?.vehicle_color || "",
+      vehicle_body_class: workOrder?.vehicle_body_class || "",
+      vehicle_doors: workOrder?.vehicle_doors || null,
+      vehicle_trim: workOrder?.vehicle_trim || "",
+      vehicle_license_plate: workOrder?.customer_vehicle_license_plate || ""
     }
   })
 

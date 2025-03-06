@@ -29,6 +29,15 @@ export interface WorkOrder extends CustomerVehicleRecordInfo {
     first_name: string | null;
     last_name: string | null;
   };
+  // Vehicle fields
+  vehicle_make?: string;
+  vehicle_model?: string;
+  vehicle_year?: number;
+  vehicle_vin?: string;
+  vehicle_color?: string;
+  vehicle_trim?: string;
+  vehicle_body_class?: string;
+  vehicle_doors?: number;
 }
 
 export type WorkOrderStatus = WorkOrder['status'];
@@ -44,6 +53,15 @@ export interface WorkOrderFormValues extends CustomerVehicleInfo {
   save_vehicle?: boolean;
   is_primary_vehicle?: boolean;
   client_id?: string;
+  vehicle_make?: string;
+  vehicle_model?: string;
+  vehicle_year?: number;
+  vehicle_vin?: string;
+  vehicle_color?: string;
+  vehicle_trim?: string;
+  vehicle_body_class?: string;
+  vehicle_doors?: number;
+  vehicle_license_plate?: string;
 }
 
 export interface ServiceItemType {
