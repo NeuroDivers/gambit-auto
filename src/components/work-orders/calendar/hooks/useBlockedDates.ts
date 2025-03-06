@@ -1,5 +1,5 @@
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { isWithinInterval, parseISO, format, addDays } from "date-fns";
@@ -14,20 +14,26 @@ export interface BlockedDate {
 }
 
 export function useBlockedDates() {
+  const queryClient = useQueryClient();
   const { data: blockedDates = [], isLoading, error } = useQuery({
     queryKey: ["blockedDates"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("blocked_dates")
-        .select("*")
-        .order("start_date", { ascending: true });
+      try {
+        const { data, error } = await supabase
+          .from("blocked_dates")
+          .select("*")
+          .order("start_date", { ascending: true });
 
-      if (error) {
+        if (error) {
+          throw error;
+        }
+
+        return data as BlockedDate[];
+      } catch (error: any) {
         toast.error("Failed to load blocked dates");
-        throw error;
+        console.error("Error loading blocked dates:", error.message);
+        return [];
       }
-
-      return data as BlockedDate[];
     }
   });
 
@@ -75,21 +81,31 @@ export function useBlockedDates() {
 
   const addBlockedDate = async (startDate: Date, endDate: Date, reason: string | null = null) => {
     try {
-      const { error } = await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const { error, data } = await supabase
         .from("blocked_dates")
         .insert([{ 
           start_date: format(startDate, 'yyyy-MM-dd'), 
           end_date: format(endDate, 'yyyy-MM-dd'),
-          reason
-        }]);
+          reason,
+          created_by: user?.id
+        }])
+        .select()
+        .single();
 
       if (error) throw error;
       
+      // Add to cache immediately for UI response
+      queryClient.setQueryData(["blockedDates"], (old: BlockedDate[] | undefined) => {
+        return [...(old || []), data as BlockedDate];
+      });
+      
       toast.success("Date blocked successfully");
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding blocked date:", error);
-      toast.error("Failed to block date");
+      toast.error(error.message || "Failed to block date");
       return false;
     }
   };
@@ -103,11 +119,16 @@ export function useBlockedDates() {
 
       if (error) throw error;
       
+      // Remove from cache immediately for UI response
+      queryClient.setQueryData(["blockedDates"], (old: BlockedDate[] | undefined) => {
+        return (old || []).filter(date => date.id !== id);
+      });
+      
       toast.success("Date unblocked successfully");
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error removing blocked date:", error);
-      toast.error("Failed to unblock date");
+      toast.error(error.message || "Failed to unblock date");
       return false;
     }
   };
