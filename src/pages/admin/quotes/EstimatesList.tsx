@@ -1,43 +1,61 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "react-router-dom"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { supabase } from "@/integrations/supabase/client"
-import { useEffect } from "react"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
-import { PlusCircle } from "lucide-react"
+import { PlusCircle, Search } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { useDebounce } from "@/hooks/useDebounce"
+import { toast } from "@/components/ui/use-toast"
 
 export function EstimatesList() {
   const navigate = useNavigate()
   const [estimates, setEstimates] = useState([])
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const debouncedSearchTerm = useDebounce(searchTerm, 500)
 
   useEffect(() => {
-    const fetchEstimates = async () => {
-      try {
-        // Fetch estimates without trying to join with customers
-        const { data, error } = await supabase
-          .from("estimates")
-          .select('*')
-          .order("created_at", { ascending: false })
-
-        if (error) throw error
-        
-        setEstimates(data || [])
-      } catch (error) {
-        console.error("Error fetching estimates:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchEstimates()
-  }, [])
+  }, [debouncedSearchTerm])
 
-  if (loading) {
-    return <LoadingScreen />
+  const fetchEstimates = async () => {
+    try {
+      setLoading(true)
+      
+      let query = supabase
+        .from("estimates")
+        .select('*')
+        .order("created_at", { ascending: false })
+      
+      // Apply search filter if search term exists
+      if (debouncedSearchTerm) {
+        query = query.or(
+          `customer_first_name.ilike.%${debouncedSearchTerm}%,` +
+          `customer_last_name.ilike.%${debouncedSearchTerm}%,` + 
+          `customer_email.ilike.%${debouncedSearchTerm}%,` +
+          `estimate_number.ilike.%${debouncedSearchTerm}%`
+        )
+      }
+
+      const { data, error } = await query
+      
+      if (error) throw error
+      
+      setEstimates(data || [])
+    } catch (error) {
+      console.error("Error fetching estimates:", error)
+      toast({
+        variant: "destructive",
+        title: "Error fetching estimates",
+        description: error.message,
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   // Map status to badge variant
@@ -73,11 +91,24 @@ export function EstimatesList() {
         </Button>
       </div>
 
-      {estimates.length === 0 ? (
+      <div className="flex w-full max-w-sm items-center space-x-2 mb-4">
+        <Input
+          type="text"
+          placeholder="Search estimates..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full"
+          prefix={<Search className="h-4 w-4 text-muted-foreground" />}
+        />
+      </div>
+
+      {loading ? (
+        <LoadingScreen />
+      ) : estimates.length === 0 ? (
         <div className="text-center py-12">
-          <h3 className="text-lg font-medium">No estimates yet</h3>
+          <h3 className="text-lg font-medium">No estimates found</h3>
           <p className="text-muted-foreground mt-1">
-            Create your first estimate to get started
+            {searchTerm ? "Try a different search term or" : "Create your first estimate to get started"}
           </p>
           <Button onClick={() => navigate("/estimates/create")} className="mt-4">
             <PlusCircle className="h-4 w-4 mr-2" />
