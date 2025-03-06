@@ -19,7 +19,7 @@ export function EstimateFormAdapter({ form, children }: EstimateFormAdapterProps
   // Create a wrapped version of the form that can be safely passed to components
   // that expect WorkOrderFormValues
   const wrappedForm = React.useMemo(() => {
-    // We need to use a type assertion (as unknown as ...) to work around the TypeScript error
+    // We need to use a type assertion to work around the TypeScript error
     // This is safe because EstimateFormValues extends WorkOrderFormValues and we're handling
     // the additional fields properly
     return {

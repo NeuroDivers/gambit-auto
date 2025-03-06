@@ -15,8 +15,8 @@ export function WorkOrdersSection() {
   // Filter work orders based on search query and status
   const filteredRequests = requests?.filter(request => {
     const matchesSearch = 
-      `${request.first_name} ${request.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      request.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      `${request.customer_first_name} ${request.customer_last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      request.customer_email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       request.vehicle_make?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       request.vehicle_model?.toLowerCase().includes(searchQuery.toLowerCase())
 

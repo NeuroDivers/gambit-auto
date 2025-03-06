@@ -1,5 +1,5 @@
 
-import { WorkOrder } from "@/components/work-orders/types"
+import { WorkOrder } from "../types"
 import { User2 } from "lucide-react"
 import { formatTime } from "../utils/dateUtils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -7,19 +7,21 @@ import { cn } from "@/lib/utils"
 import { isToday } from "date-fns"
 
 interface WorkOrderCardProps {
-  workOrder: WorkOrder & { isStart?: boolean; isEnd?: boolean; duration?: number }
+  workOrder: WorkOrder & { isStart?: boolean; isEnd?: boolean; duration?: number; }
   date: Date
   span: number
   onClick: () => void
+  className?: string // Added className prop
 }
 
-export function WorkOrderCard({ workOrder, date, span, onClick }: WorkOrderCardProps) {
+export function WorkOrderCard({ workOrder, date, span, onClick, className }: WorkOrderCardProps) {
   return (
     <div 
       className={cn(
         "p-2 relative flex items-center border-b border-r border-gray-200",
         "hover:brightness-95 transition-all cursor-pointer",
-        isToday(date) ? "bg-primary/10" : "bg-white"
+        isToday(date) ? "bg-primary/10" : "bg-white",
+        className
       )}
       onClick={onClick}
       style={{
