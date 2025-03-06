@@ -1,16 +1,5 @@
-import { Check } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
 
 type WorkOrderStatus = 
   | "pending"
@@ -24,18 +13,9 @@ type WorkOrderStatus =
 
 interface WorkOrderStatusBadgeProps {
   status: WorkOrderStatus;
-  workOrderId?: string;
-  readonly?: boolean;
 }
 
-export function WorkOrderStatusBadge({ 
-  status, 
-  workOrderId, 
-  readonly = false 
-}: WorkOrderStatusBadgeProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const queryClient = useQueryClient();
-
+export function WorkOrderStatusBadge({ status }: WorkOrderStatusBadgeProps) {
   const getVariant = (status: WorkOrderStatus) => {
     switch (status) {
       case "pending":
@@ -84,72 +64,9 @@ export function WorkOrderStatusBadge({
     }
   };
 
-  const statusOptions: WorkOrderStatus[] = [
-    "pending",
-    "in_progress",
-    "completed",
-    "cancelled",
-  ];
-
-  const updateStatus = async (newStatus: WorkOrderStatus) => {
-    if (!workOrderId || newStatus === status) return;
-    
-    setIsLoading(true);
-    try {
-      const { error } = await supabase
-        .from('work_orders')
-        .update({ status: newStatus })
-        .eq('id', workOrderId);
-
-      if (error) throw error;
-
-      toast.success(`Status updated to ${getLabel(newStatus)}`);
-      queryClient.invalidateQueries({ queryKey: ['workOrders'] });
-    } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error("Failed to update status");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (readonly || !workOrderId) {
-    return (
-      <Badge variant={getVariant(status)}>
-        {getLabel(status)}
-      </Badge>
-    );
-  }
-
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger disabled={isLoading} asChild>
-        <div>
-          <Badge 
-            variant={getVariant(status)}
-            className="cursor-pointer"
-          >
-            {getLabel(status)}
-          </Badge>
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[200px]">
-        {statusOptions.map((statusOption) => (
-          <DropdownMenuItem
-            key={statusOption}
-            onClick={() => updateStatus(statusOption)}
-            className={cn(
-              "flex items-center justify-between",
-              statusOption === "invoiced" && "opacity-60 cursor-not-allowed"
-            )}
-          >
-            <span>{getLabel(statusOption)}</span>
-            {statusOption === status && (
-              <Check className="h-4 w-4" />
-            )}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Badge variant={getVariant(status)}>
+      {getLabel(status)}
+    </Badge>
   );
 }
