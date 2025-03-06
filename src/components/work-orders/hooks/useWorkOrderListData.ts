@@ -1,10 +1,10 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { WorkOrder } from "../types";
 import { toast } from "sonner";
 import { useWorkOrderInvoice } from "./useWorkOrderInvoice";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export function useWorkOrderListData() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -16,16 +16,17 @@ export function useWorkOrderListData() {
   const queryClient = useQueryClient();
   const { createInvoice } = useWorkOrderInvoice();
   
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  
   const pageSize = 10;
   const offset = (page - 1) * pageSize;
 
-  // Fetch work orders with pagination
   const {
     data: workOrdersData,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["workOrders", searchTerm, statusFilter, assignmentFilter, page],
+    queryKey: ["workOrders", debouncedSearchTerm, statusFilter, assignmentFilter, page],
     queryFn: async () => {
       let query = supabase
         .from("work_orders")
@@ -42,14 +43,13 @@ export function useWorkOrderListData() {
         .order("created_at", { ascending: false })
         .range(offset, offset + pageSize - 1);
 
-      // Apply filters
-      if (searchTerm) {
+      if (debouncedSearchTerm) {
         query = query.or(
-          `customer_first_name.ilike.%${searchTerm}%,customer_last_name.ilike.%${searchTerm}%,customer_email.ilike.%${searchTerm}%,customer_vehicle_make.ilike.%${searchTerm}%,customer_vehicle_model.ilike.%${searchTerm}%,customer_vehicle_vin.ilike.%${searchTerm}%`
+          `customer_first_name.ilike.%${debouncedSearchTerm}%,customer_last_name.ilike.%${debouncedSearchTerm}%,customer_email.ilike.%${debouncedSearchTerm}%,customer_vehicle_make.ilike.%${debouncedSearchTerm}%,customer_vehicle_model.ilike.%${debouncedSearchTerm}%,customer_vehicle_vin.ilike.%${debouncedSearchTerm}%`
         );
       }
 
-      if (statusFilter) {
+      if (statusFilter && statusFilter !== "all") {
         query = query.eq("status", statusFilter);
       }
 
@@ -58,7 +58,6 @@ export function useWorkOrderListData() {
       } else if (assignmentFilter === "unassigned") {
         query = query.is("assigned_bay_id", null);
       } else if (assignmentFilter && assignmentFilter !== "all") {
-        // If it's not "all", "assigned", or "unassigned", it's a specific bay id
         query = query.eq("assigned_bay_id", assignmentFilter);
       }
 
@@ -74,7 +73,10 @@ export function useWorkOrderListData() {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  // Fetch service bays
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearchTerm, statusFilter, assignmentFilter]);
+
   const { data: serviceBays } = useQuery({
     queryKey: ["service-bays"],
     queryFn: async () => {
@@ -90,7 +92,6 @@ export function useWorkOrderListData() {
     staleTime: 1000 * 60 * 15, // 15 minutes
   });
 
-  // Mutation to assign a bay
   const assignBayMutation = useMutation({
     mutationFn: async ({
       workOrderId,
@@ -117,13 +118,11 @@ export function useWorkOrderListData() {
     },
   });
 
-  // Handler for bay assignment
   const handleAssignBay = (workOrderId: string, bayId: string | null) => {
     assignBayMutation.mutate({ workOrderId, bayId });
     setAssignBayWorkOrder(null);
   };
 
-  // Handler for creating an invoice
   const handleCreateInvoice = (workOrderId: string) => {
     createInvoice(workOrderId);
   };
