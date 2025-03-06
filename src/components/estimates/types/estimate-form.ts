@@ -15,7 +15,4 @@ export interface EstimateFormValues extends WorkOrderFormValues {
   
   // For backward compatibility 
   services?: ServiceItemType[];
-  
-  // Override additional_notes from WorkOrderFormValues to make it required
-  additional_notes: string;
 }
