@@ -8,7 +8,7 @@ import { CalendarIcon, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { format, addMinutes, differenceInMinutes } from "date-fns"
+import { format, addHours, differenceInHours } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -47,8 +47,8 @@ export function SchedulingFields({ form }: SchedulingFieldsProps) {
     const duration = form.watch('estimated_duration');
     
     if (startTime && duration) {
-      // Calculate end time by adding minutes to start time
-      const endTime = addMinutes(startTime, duration);
+      // Calculate end time by adding hours to start time
+      const endTime = addHours(startTime, duration);
       form.setValue('end_time', endTime, { shouldValidate: true });
     }
   }, [form.watch('start_time'), form.watch('estimated_duration')]);
@@ -60,7 +60,7 @@ export function SchedulingFields({ form }: SchedulingFieldsProps) {
     
     if (startTime && endTime) {
       // Only update if the user manually changed the end time (not via our own effect)
-      const calculatedDuration = differenceInMinutes(endTime, startTime);
+      const calculatedDuration = differenceInHours(endTime, startTime);
       if (calculatedDuration > 0 && calculatedDuration !== form.watch('estimated_duration')) {
         form.setValue('estimated_duration', calculatedDuration, { shouldValidate: true });
       }
@@ -188,15 +188,15 @@ export function SchedulingFields({ form }: SchedulingFieldsProps) {
           name="estimated_duration"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Estimated Duration (minutes)</FormLabel>
+              <FormLabel>Estimated Duration (hours)</FormLabel>
               <FormControl>
                 <Input
                   type="number" 
                   min="0"
-                  step="15"
-                  placeholder="e.g. 60"
+                  step="0.5"
+                  placeholder="e.g. 2"
                   {...field}
-                  onChange={e => field.onChange(e.target.value ? parseInt(e.target.value, 10) : null)}
+                  onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
                   value={field.value ?? ''}
                 />
               </FormControl>
