@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { UseFormReturn } from "react-hook-form"
 import { WorkOrderFormValues } from "../types"
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
@@ -8,7 +8,7 @@ import { CalendarIcon, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { format } from "date-fns"
+import { format, addMinutes, differenceInMinutes } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -40,6 +40,32 @@ export function SchedulingFields({ form }: SchedulingFieldsProps) {
     newDate.setHours(hours, minutes, 0, 0)
     return newDate
   }
+  
+  // Synchronize end time based on start time and duration
+  useEffect(() => {
+    const startTime = form.watch('start_time');
+    const duration = form.watch('estimated_duration');
+    
+    if (startTime && duration) {
+      // Calculate end time by adding minutes to start time
+      const endTime = addMinutes(startTime, duration);
+      form.setValue('end_time', endTime, { shouldValidate: true });
+    }
+  }, [form.watch('start_time'), form.watch('estimated_duration')]);
+
+  // Calculate duration when end time is manually set
+  useEffect(() => {
+    const startTime = form.watch('start_time');
+    const endTime = form.watch('end_time');
+    
+    if (startTime && endTime) {
+      // Only update if the user manually changed the end time (not via our own effect)
+      const calculatedDuration = differenceInMinutes(endTime, startTime);
+      if (calculatedDuration > 0 && calculatedDuration !== form.watch('estimated_duration')) {
+        form.setValue('estimated_duration', calculatedDuration, { shouldValidate: true });
+      }
+    }
+  }, [form.watch('end_time')]);
 
   return (
     <div className="space-y-4">
@@ -184,7 +210,7 @@ export function SchedulingFields({ form }: SchedulingFieldsProps) {
           name="end_time"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>End Date/Time (Optional)</FormLabel>
+              <FormLabel>End Date/Time</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>

@@ -11,7 +11,7 @@ export default function CreateWorkOrder() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col h-full">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-6 py-3">
         <div className="flex items-center gap-4 max-w-7xl mx-auto">
           <Button
@@ -30,7 +30,7 @@ export default function CreateWorkOrder() {
         </div>
       </div>
       
-      <div className="flex-1 px-6 pb-6 overflow-auto">
+      <div className="flex-1 px-6 pb-6">
         <div className="max-w-7xl mx-auto py-6">
           <WorkOrderForm 
             onSuccess={() => navigate("/work-orders")}
