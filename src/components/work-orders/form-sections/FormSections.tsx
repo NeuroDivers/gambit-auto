@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import { Card, CardContent } from "@/components/ui/card"
 import { VehicleInfoFields } from "./VehicleInfoFields"
 import { SchedulingFields } from "./SchedulingFields"
-import { ServiceItemType } from "@/types/service-item"
+import { ServiceItemType } from "@/components/work-orders/types"
 
 interface FormSectionsProps {
   form: UseFormReturn<WorkOrderFormValues>

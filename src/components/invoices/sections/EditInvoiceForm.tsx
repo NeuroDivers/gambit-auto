@@ -121,14 +121,14 @@ export function EditInvoiceForm({
             </CardHeader>
             <CardContent>
               <VehicleInfoFields
-                vehicleMake={form.watch('vehicle_make')}
-                setVehicleMake={(value) => form.setValue('vehicle_make', value)}
-                vehicleModel={form.watch('vehicle_model')}
-                setVehicleModel={(value) => form.setValue('vehicle_model', value)}
-                vehicleYear={form.watch('vehicle_year')}
-                setVehicleYear={(value) => form.setValue('vehicle_year', value)}
-                vehicleVin={form.watch('vehicle_vin')}
-                setVehicleVin={(value) => form.setValue('vehicle_vin', value)}
+                vehicleMake={form.watch('customer_vehicle_make')}
+                setVehicleMake={(value) => form.setValue('customer_vehicle_make', value)}
+                vehicleModel={form.watch('customer_vehicle_model')}
+                setVehicleModel={(value) => form.setValue('customer_vehicle_model', value)}
+                vehicleYear={form.watch('customer_vehicle_year')}
+                setVehicleYear={(value) => form.setValue('customer_vehicle_year', value)}
+                vehicleVin={form.watch('customer_vehicle_vin')}
+                setVehicleVin={(value) => form.setValue('customer_vehicle_vin', value)}
                 vehicleBodyClass={vehicleBodyClass}
                 setVehicleBodyClass={setVehicleBodyClass}
                 vehicleDoors={vehicleDoors}

@@ -11,7 +11,7 @@ interface WorkOrderCardProps {
   date: Date
   span: number
   onClick: () => void
-  className?: string // Add className prop
+  className?: string
 }
 
 export function WorkOrderCard({ workOrder, date, span, onClick, className }: WorkOrderCardProps) {
@@ -45,7 +45,7 @@ export function WorkOrderCard({ workOrder, date, span, onClick, className }: Wor
                 </div>
               </div>
               <div className="text-[10px] text-primary-foreground/80 truncate mt-1">
-                {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
+                {workOrder.customer_vehicle_year} {workOrder.customer_vehicle_make} {workOrder.customer_vehicle_model}
               </div>
             </div>
           </TooltipTrigger>
@@ -53,7 +53,7 @@ export function WorkOrderCard({ workOrder, date, span, onClick, className }: Wor
             <div className="space-y-1">
               <p className="font-medium">{workOrder.customer_first_name} {workOrder.customer_last_name}</p>
               <p className="text-sm text-gray-400">
-                {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
+                {workOrder.customer_vehicle_year} {workOrder.customer_vehicle_make} {workOrder.customer_vehicle_model}
               </p>
               <p className="text-sm text-primary">
                 {formatTime(workOrder.start_time)} - {formatTime(workOrder.end_time)}

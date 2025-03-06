@@ -1,19 +1,11 @@
 
-export interface WorkOrder {
+import { CustomerVehicleInfo, CustomerVehicleRecordInfo } from "@/types/shared-types";
+
+export interface WorkOrder extends CustomerVehicleRecordInfo {
   id: string;
   created_at: string;
   updated_at?: string | null;
-  customer_first_name: string;
-  customer_last_name: string;
-  customer_email: string;
-  customer_phone: string;
   contact_preference: 'phone' | 'email';
-  customer_vehicle_year: string;
-  customer_vehicle_make: string;
-  customer_vehicle_model: string;
-  customer_vehicle_trim?: string | null;
-  customer_vehicle_color?: string | null;
-  customer_vehicle_vin?: string | null;
   service_bays?: {
     id: string;
     name: string;
@@ -27,8 +19,50 @@ export interface WorkOrder {
   service_type?: string | null;
   additional_notes?: string | null;
   assigned_bay?: string | null;
+  assigned_bay_id?: string | null;
   assigned_profile_id?: string | null;
   client_id?: string | null;
+  estimated_duration?: string | number | null;
+  is_archived?: boolean;
+  media_url?: string | null;
+  profiles?: {
+    first_name: string | null;
+    last_name: string | null;
+  };
 }
 
 export type WorkOrderStatus = WorkOrder['status'];
+
+export interface WorkOrderFormValues extends CustomerVehicleInfo {
+  contact_preference: 'phone' | 'email';
+  additional_notes?: string;
+  start_time: Date | null;
+  estimated_duration: number | null;
+  end_time: Date | null;
+  assigned_bay_id: string | null;
+  service_items: Array<ServiceItemType>;
+  save_vehicle?: boolean;
+  is_primary_vehicle?: boolean;
+  client_id?: string;
+}
+
+export interface ServiceItemType {
+  service_id: string;
+  service_name: string;
+  quantity: number;
+  unit_price: number;
+  commission_rate: number;
+  commission_type: 'percentage' | 'flat' | 'flat_rate' | null;
+  assigned_profile_id?: string | null;
+  description?: string;
+  sub_services?: ServiceItemType[];
+  is_parent?: boolean;
+  parent_id?: string;
+}
+
+export interface WorkOrderFormProps {
+  workOrder?: WorkOrder;
+  onSuccess?: () => void;
+  defaultStartTime?: Date;
+  onSubmitting?: (isSubmitting: boolean) => void;
+}

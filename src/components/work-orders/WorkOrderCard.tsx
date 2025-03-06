@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { WorkOrderStatusBadge } from "./WorkOrderStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { WorkOrder } from "./types";
 
 interface WorkOrderCardProps {
-  workOrder: any;
+  workOrder: WorkOrder;
 }
 
 export function WorkOrderCard({ workOrder }: WorkOrderCardProps) {

@@ -13,19 +13,19 @@ interface VehicleInfoFieldsProps {
 }
 
 export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
-  const vin = form.watch('vehicle_vin')
+  const vin = form.watch('customer_vehicle_vin')
   const { data: vinData, isLoading: isLoadingVin } = useVinLookup(vin)
 
   // Auto-fill vehicle information when VIN data is available
   useEffect(() => {
     if (vinData && !vinData.error) {
-      if (vinData.make) form.setValue('vehicle_make', vinData.make)
-      if (vinData.model) form.setValue('vehicle_model', vinData.model)
-      if (vinData.year) form.setValue('vehicle_year', vinData.year)
-      if (vinData.color) form.setValue('vehicle_color', vinData.color)
-      if (vinData.bodyClass) form.setValue('vehicle_body_class', vinData.bodyClass)
-      if (vinData.doors) form.setValue('vehicle_doors', vinData.doors)
-      if (vinData.trim) form.setValue('vehicle_trim', vinData.trim)
+      if (vinData.make) form.setValue('customer_vehicle_make', vinData.make)
+      if (vinData.model) form.setValue('customer_vehicle_model', vinData.model)
+      if (vinData.year) form.setValue('customer_vehicle_year', vinData.year)
+      if (vinData.color) form.setValue('customer_vehicle_color', vinData.color)
+      if (vinData.bodyClass) form.setValue('customer_vehicle_body_class', vinData.bodyClass)
+      if (vinData.doors) form.setValue('customer_vehicle_doors', vinData.doors)
+      if (vinData.trim) form.setValue('customer_vehicle_trim', vinData.trim)
     }
   }, [vinData, form])
 
@@ -35,7 +35,7 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
       
       <FormField
         control={form.control}
-        name="vehicle_vin"
+        name="customer_vehicle_vin"
         render={({ field }) => (
           <FormItem>
             <FormLabel>
@@ -61,7 +61,7 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <FormField
           control={form.control}
-          name="vehicle_make"
+          name="customer_vehicle_make"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Make</FormLabel>
@@ -75,7 +75,7 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
 
         <FormField
           control={form.control}
-          name="vehicle_model"
+          name="customer_vehicle_model"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Model</FormLabel>
@@ -89,7 +89,7 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
 
         <FormField
           control={form.control}
-          name="vehicle_year"
+          name="customer_vehicle_year"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Year</FormLabel>
@@ -110,7 +110,7 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <FormField
           control={form.control}
-          name="vehicle_color"
+          name="customer_vehicle_color"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Color</FormLabel>
@@ -124,7 +124,7 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
 
         <FormField
           control={form.control}
-          name="vehicle_trim"
+          name="customer_vehicle_trim"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Trim</FormLabel>
@@ -138,7 +138,7 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
 
         <FormField
           control={form.control}
-          name="vehicle_license_plate"
+          name="customer_vehicle_license_plate"
           render={({ field }) => (
             <FormItem>
               <FormLabel>License Plate</FormLabel>
@@ -154,7 +154,7 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
-          name="vehicle_body_class"
+          name="customer_vehicle_body_class"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Body Type</FormLabel>
@@ -168,7 +168,7 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
 
         <FormField
           control={form.control}
-          name="vehicle_doors"
+          name="customer_vehicle_doors"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Doors</FormLabel>
