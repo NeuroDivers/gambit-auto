@@ -2392,21 +2392,27 @@ export type Database = {
       work_orders: {
         Row: {
           additional_notes: string | null
-          address: string | null
           assigned_bay_id: string | null
           assigned_profile_id: string | null
           client_id: string | null
           contact_preference: Database["public"]["Enums"]["contact_preference"]
           created_at: string
-          email: string
+          customer_address: string | null
+          customer_city: string | null
+          customer_country: string | null
+          customer_email: string
+          customer_first_name: string
+          customer_last_name: string
+          customer_phone: string
+          customer_postal_code: string | null
+          customer_state_province: string | null
+          customer_street_address: string | null
+          customer_unit_number: string | null
           end_time: string | null
           estimated_duration: unknown | null
-          first_name: string
           id: string
           is_archived: boolean | null
-          last_name: string
           media_url: string | null
-          phone_number: string
           start_time: string | null
           status: string
           updated_at: string
@@ -2414,27 +2420,33 @@ export type Database = {
           vehicle_doors: number | null
           vehicle_make: string
           vehicle_model: string
-          vehicle_serial: string | null
           vehicle_trim: string | null
+          vehicle_vin: string | null
           vehicle_year: number
         }
         Insert: {
           additional_notes?: string | null
-          address?: string | null
           assigned_bay_id?: string | null
           assigned_profile_id?: string | null
           client_id?: string | null
           contact_preference: Database["public"]["Enums"]["contact_preference"]
           created_at?: string
-          email: string
+          customer_address?: string | null
+          customer_city?: string | null
+          customer_country?: string | null
+          customer_email: string
+          customer_first_name: string
+          customer_last_name: string
+          customer_phone: string
+          customer_postal_code?: string | null
+          customer_state_province?: string | null
+          customer_street_address?: string | null
+          customer_unit_number?: string | null
           end_time?: string | null
           estimated_duration?: unknown | null
-          first_name: string
           id?: string
           is_archived?: boolean | null
-          last_name: string
           media_url?: string | null
-          phone_number: string
           start_time?: string | null
           status?: string
           updated_at?: string
@@ -2442,27 +2454,33 @@ export type Database = {
           vehicle_doors?: number | null
           vehicle_make: string
           vehicle_model: string
-          vehicle_serial?: string | null
           vehicle_trim?: string | null
+          vehicle_vin?: string | null
           vehicle_year: number
         }
         Update: {
           additional_notes?: string | null
-          address?: string | null
           assigned_bay_id?: string | null
           assigned_profile_id?: string | null
           client_id?: string | null
           contact_preference?: Database["public"]["Enums"]["contact_preference"]
           created_at?: string
-          email?: string
+          customer_address?: string | null
+          customer_city?: string | null
+          customer_country?: string | null
+          customer_email?: string
+          customer_first_name?: string
+          customer_last_name?: string
+          customer_phone?: string
+          customer_postal_code?: string | null
+          customer_state_province?: string | null
+          customer_street_address?: string | null
+          customer_unit_number?: string | null
           end_time?: string | null
           estimated_duration?: unknown | null
-          first_name?: string
           id?: string
           is_archived?: boolean | null
-          last_name?: string
           media_url?: string | null
-          phone_number?: string
           start_time?: string | null
           status?: string
           updated_at?: string
@@ -2470,8 +2488,8 @@ export type Database = {
           vehicle_doors?: number | null
           vehicle_make?: string
           vehicle_model?: string
-          vehicle_serial?: string | null
           vehicle_trim?: string | null
+          vehicle_vin?: string | null
           vehicle_year?: number
         }
         Relationships: [
@@ -2512,14 +2530,14 @@ export type Database = {
           },
           {
             foreignKeyName: "work_orders_client_email_fkey"
-            columns: ["email"]
+            columns: ["customer_email"]
             isOneToOne: false
             referencedRelation: "client_statistics"
             referencedColumns: ["email"]
           },
           {
             foreignKeyName: "work_orders_client_email_fkey"
-            columns: ["email"]
+            columns: ["customer_email"]
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["email"]

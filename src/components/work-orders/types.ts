@@ -3,15 +3,15 @@ import { ServiceItemType } from "@/types/service-item"
 import { WorkOrder as BaseWorkOrder } from "@/types"
 
 export interface WorkOrderFormValues {
-  first_name: string
-  last_name: string
-  email: string
-  phone_number: string
+  customer_first_name: string
+  customer_last_name: string
+  customer_email: string
+  customer_phone: string
   contact_preference: "phone" | "email"
   vehicle_make: string
   vehicle_model: string
   vehicle_year: number
-  vehicle_serial: string
+  vehicle_vin: string
   vehicle_color?: string
   vehicle_body_class?: string
   vehicle_doors?: number | null
@@ -19,13 +19,13 @@ export interface WorkOrderFormValues {
   vehicle_license_plate?: string
   additional_notes?: string
   media_url?: string | null
-  address?: string
-  street_address?: string
-  unit_number?: string
-  city?: string
-  state_province?: string
-  postal_code?: string
-  country?: string
+  customer_address?: string
+  customer_street_address?: string
+  customer_unit_number?: string
+  customer_city?: string
+  customer_state_province?: string
+  customer_postal_code?: string
+  customer_country?: string
   client_id?: string
   start_time: Date | null
   estimated_duration: number | null

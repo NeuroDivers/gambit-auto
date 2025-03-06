@@ -24,7 +24,7 @@ export function CustomerInfoFields({ form, isEditing }: CustomerInfoFieldsProps)
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={control}
-              name="first_name"
+              name="customer_first_name"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>First Name</FormLabel>
@@ -37,7 +37,7 @@ export function CustomerInfoFields({ form, isEditing }: CustomerInfoFieldsProps)
             />
             <FormField
               control={control}
-              name="last_name"
+              name="customer_last_name"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Last Name</FormLabel>
@@ -52,7 +52,7 @@ export function CustomerInfoFields({ form, isEditing }: CustomerInfoFieldsProps)
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={control}
-              name="email"
+              name="customer_email"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Email</FormLabel>
@@ -65,7 +65,7 @@ export function CustomerInfoFields({ form, isEditing }: CustomerInfoFieldsProps)
             />
             <FormField
               control={control}
-              name="phone_number"
+              name="customer_phone"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Phone</FormLabel>
@@ -79,7 +79,7 @@ export function CustomerInfoFields({ form, isEditing }: CustomerInfoFieldsProps)
           </div>
           
           {/* Address Fields Section - Pass the full form object */}
-          <AddressFields form={form} fieldPrefix="" />
+          <AddressFields form={form} fieldPrefix="customer_" />
         </div>
       </CardContent>
     </Card>
