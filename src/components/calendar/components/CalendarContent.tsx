@@ -5,12 +5,14 @@ import { WorkOrder } from "@/components/work-orders/types"
 import { ServiceBay } from "@/components/service-bays/hooks/useServiceBays"
 import { WorkOrderCard } from "./WorkOrderCard"
 import { findWorkOrderForDate, isWorkOrderStart, getWorkOrderSpan } from "../utils/dateUtils"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 type CalendarContentProps = {
   days: Date[]
   serviceBays?: ServiceBay[]
   workOrders: WorkOrder[]
   isDateBlocked: (date: Date) => boolean
+  getBlockedDateReason?: (date: Date) => string | null
   onDateSelect?: (date: Date) => void
   onWorkOrderSelect: (workOrder: WorkOrder) => void
 }
@@ -43,6 +45,7 @@ export function CalendarContent({
   serviceBays, 
   workOrders, 
   isDateBlocked,
+  getBlockedDateReason,
   onDateSelect,
   onWorkOrderSelect
 }: CalendarContentProps) {
@@ -63,10 +66,11 @@ export function CalendarContent({
           {days.map((date, index) => {
             const workOrder = findWorkOrderForDate(date, bay.id, workOrders);
             const blocked = isDateBlocked(date);
+            const blockedReason = blocked && getBlockedDateReason ? getBlockedDateReason(date) : null;
 
             // Blocked dates always take precedence
             if (blocked) {
-              return (
+              const blockedCell = (
                 <div 
                   key={date.toISOString()}
                   className={cn(
@@ -78,6 +82,23 @@ export function CalendarContent({
                   }}
                 />
               );
+              
+              if (blockedReason) {
+                return (
+                  <TooltipProvider key={date.toISOString()}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        {blockedCell}
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{blockedReason}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                );
+              }
+              
+              return blockedCell;
             }
 
             // Handle work order spans only if the date is not blocked

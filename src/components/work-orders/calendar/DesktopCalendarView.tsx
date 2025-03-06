@@ -19,7 +19,7 @@ interface DesktopCalendarViewProps {
 
 export function DesktopCalendarView({ currentDate, workOrders, onDateChange }: DesktopCalendarViewProps) {
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null);
-  const { isDateBlocked } = useBlockedDates();
+  const { isDateBlocked, getBlockedDateReason } = useBlockedDates();
   
   // Get the days for the current week
   const weekStart = startOfWeek(currentDate);
@@ -67,6 +67,7 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange }: D
             <CalendarHeader 
               days={days} 
               isDateBlocked={isDateBlocked}
+              getBlockedDateReason={getBlockedDateReason}
               onDateChange={onDateChange}
             />
             <CalendarContent

@@ -2,14 +2,17 @@
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { isToday } from "date-fns"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { BlockedDate } from "@/components/work-orders/calendar/hooks/useBlockedDates"
 
 type CalendarHeaderProps = {
   days: Date[]
   isDateBlocked: (date: Date) => boolean
+  getBlockedDateReason?: (date: Date) => string | null
   onDateChange?: (date: Date) => void
 }
 
-export function CalendarHeader({ days, isDateBlocked, onDateChange }: CalendarHeaderProps) {
+export function CalendarHeader({ days, isDateBlocked, getBlockedDateReason, onDateChange }: CalendarHeaderProps) {
   return (
     <div className="grid" style={{ gridTemplateColumns: `80px repeat(${days.length}, minmax(60px, 1fr))` }}>
       <div className="p-2 text-gray-600 font-medium sticky left-0 bg-white z-10 border-r border-gray-200 text-sm">
@@ -18,24 +21,45 @@ export function CalendarHeader({ days, isDateBlocked, onDateChange }: CalendarHe
       {days.map((date) => {
         const blocked = isDateBlocked(date);
         const today = isToday(date);
+        const blockedReason = blocked && getBlockedDateReason ? getBlockedDateReason(date) : null;
         
-        return (
+        const headerContent = (
           <div 
-            key={date.toISOString()}
             className={cn(
               "p-2 text-gray-600 font-medium text-center border-b border-r border-gray-200 text-sm",
               blocked && "bg-red-50 cursor-not-allowed",
-              today && "bg-primary/10",
-              onDateChange && "cursor-pointer hover:bg-gray-50"
+              today && !blocked && "bg-primary/10",
+              !blocked && onDateChange && "cursor-pointer hover:bg-gray-50"
             )}
             onClick={() => !blocked && onDateChange && onDateChange(date)}
           >
             <div className="font-bold">{format(date, 'EEE')}</div>
-            <div className={cn(today && "text-primary font-semibold rounded-full w-6 h-6 flex items-center justify-center mx-auto")}>
+            <div className={cn(today && !blocked && "text-primary font-semibold rounded-full w-6 h-6 flex items-center justify-center mx-auto")}>
               {format(date, 'd')}
             </div>
           </div>
-        )
+        );
+        
+        if (blocked && blockedReason) {
+          return (
+            <TooltipProvider key={date.toISOString()}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  {headerContent}
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{blockedReason}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          );
+        }
+        
+        return (
+          <div key={date.toISOString()}>
+            {headerContent}
+          </div>
+        );
       })}
     </div>
   )
