@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useForm } from "react-hook-form"
@@ -23,6 +22,7 @@ import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { InvoiceTaxSummary } from "@/components/invoices/form-sections/InvoiceTaxSummary"
 import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 
 interface LocationState {
   preselectedCustomer?: Customer;
@@ -74,7 +74,6 @@ export default function CreateInvoice() {
         sum + (item.quantity * item.unit_price), 0
       )
 
-      // Create invoice
       const { data: invoice, error } = await supabase
         .from('invoices')
         .insert({
@@ -108,7 +107,6 @@ export default function CreateInvoice() {
 
       if (error) throw error
 
-      // If selected to save vehicle to customer profile
       if (saveVehicleToCustomer && selectedCustomerId && values.vehicle_make && values.vehicle_model && values.vehicle_year) {
         const { error: vehicleError } = await supabase
           .from('vehicles')
@@ -130,7 +128,6 @@ export default function CreateInvoice() {
         }
       }
 
-      // Create invoice items
       if (invoice && values.invoice_items.length > 0) {
         const { error: itemsError } = await supabase
           .from('invoice_items')
