@@ -23,7 +23,7 @@ export function ErrorBoundary({ children }: { children?: React.ReactNode }) {
       // Handle null errors specifically
       setErrorDetails({
         title: "Application Error",
-        message: "The application encountered an unexpected null value. This might be due to missing data or a network issue."
+        message: "The application encountered an unexpected null error. Please try refreshing the page."
       })
     } else if (isRouteErrorResponse(error)) {
       // Handle route errors (404, etc)
