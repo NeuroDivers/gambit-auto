@@ -2,7 +2,7 @@ import React from "react"
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
 import { useFieldArray } from "react-hook-form"
-import { WorkOrderFormValues } from "../types"
+import { WorkOrderFormValues, ServiceItemType } from "../types"
 import { Button } from "@/components/ui/button"
 import { 
   PlusIcon, 
@@ -22,7 +22,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { StaffSelector } from "@/components/shared/form-fields/StaffSelector"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { ServiceItemType } from "@/types/service-item"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card"
@@ -357,12 +356,8 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                             <FormLabel className="text-sm">Commission Type</FormLabel>
                             <FormControl>
                               <Select
-                                value={(subService as ServiceItemType).commission_type || 'percentage'}
-                                onValueChange={(value) => {
-                                  const updatedServices = [...form.getValues().service_items];
-                                  updatedServices[index].sub_services[subIndex].commission_type = value as 'percentage' | 'flat' | null;
-                                  form.setValue("service_items", updatedServices);
-                                }}
+                                value={field.value || 'percentage'}
+                                onValueChange={field.onChange}
                               >
                                 <SelectTrigger className="text-xs h-8">
                                   <SelectValue placeholder="Select Type" />
@@ -453,20 +448,19 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                           </div>
                         ) : (
                           <div className="space-y-4">
-                            {/* Display existing sub-services */}
                             {field.sub_services && field.sub_services.length > 0 && (
                               <div className="space-y-3">
-                                {field.sub_services.map((subService, subIndex) => (
-                                  <Card key={subIndex} className="bg-muted/10 border border-primary/10 shadow-sm">
+                                {field.sub_services.map((subService, subServiceIndex) => (
+                                  <Card key={subServiceIndex} className="bg-muted/10 border border-primary/10 shadow-sm">
                                     <CardHeader className="p-3 pb-2 flex flex-row justify-between items-center">
                                       <Badge variant="outline" className="bg-primary/5 text-primary">
-                                        Sub-Service {subIndex + 1}
+                                        Sub-Service {subServiceIndex + 1}
                                       </Badge>
                                       <Button
                                         type="button"
                                         size="sm"
                                         variant="ghost"
-                                        onClick={() => removeSubService(index, subIndex)}
+                                        onClick={() => removeSubService(index, subServiceIndex)}
                                         className="h-7 px-2 text-destructive hover:bg-destructive/10"
                                       >
                                         <Trash2Icon className="h-3 w-3 mr-1" />
@@ -479,7 +473,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                                           <label className="text-sm font-medium block mb-1">Service Type</label>
                                           <Select
                                             value={(subService as ServiceItemType).service_id}
-                                            onValueChange={(value) => handleSubServiceChange(index, subIndex, value)}
+                                            onValueChange={(value) => handleSubServiceChange(index, subServiceIndex, value)}
                                           >
                                             <SelectTrigger className="h-9 text-sm">
                                               <SelectValue placeholder="Select Sub-Service" />
@@ -502,7 +496,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                                             value={(subService as ServiceItemType).service_name}
                                             onChange={(e) => {
                                               const updatedServices = [...form.getValues().service_items];
-                                              updatedServices[index].sub_services[subIndex].service_name = e.target.value;
+                                              updatedServices[index].sub_services[subServiceIndex].service_name = e.target.value;
                                               form.setValue("service_items", updatedServices);
                                             }}
                                           />
@@ -519,7 +513,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                                             value={(subService as ServiceItemType).quantity}
                                             onChange={(e) => {
                                               const updatedServices = [...form.getValues().service_items];
-                                              updatedServices[index].sub_services[subIndex].quantity = parseInt(e.target.value) || 1;
+                                              updatedServices[index].sub_services[subServiceIndex].quantity = parseInt(e.target.value) || 1;
                                               form.setValue("service_items", updatedServices);
                                             }}
                                           />
@@ -537,7 +531,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                                               value={(subService as ServiceItemType).unit_price}
                                               onChange={(e) => {
                                                 const updatedServices = [...form.getValues().service_items];
-                                                updatedServices[index].sub_services[subIndex].unit_price = parseFloat(e.target.value) || 0;
+                                                updatedServices[index].sub_services[subServiceIndex].unit_price = parseFloat(e.target.value) || 0;
                                                 form.setValue("service_items", updatedServices);
                                               }}
                                             />
@@ -551,7 +545,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                                           </label>
                                           <StaffSelector
                                             value={(subService as ServiceItemType).assigned_profile_id}
-                                            onChange={(value) => updateAssignedStaffForSubService(index, subIndex, value)}
+                                            onChange={(value) => updateAssignedStaffForSubService(index, subServiceIndex, value)}
                                             placeholder="Assign staff"
                                             className="h-9 text-sm"
                                           />
@@ -566,7 +560,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                                               value={(subService as ServiceItemType).commission_type || 'percentage'}
                                               onValueChange={(value) => {
                                                 const updatedServices = [...form.getValues().service_items];
-                                                updatedServices[index].sub_services[subIndex].commission_type = value as 'percentage' | 'flat' | null;
+                                                updatedServices[index].sub_services[subServiceIndex].commission_type = value as 'percentage' | 'flat' | null;
                                                 form.setValue("service_items", updatedServices);
                                               }}
                                             >
@@ -599,7 +593,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                                                 value={(subService as ServiceItemType).commission_rate || 0}
                                                 onChange={(e) => {
                                                   const updatedServices = [...form.getValues().service_items];
-                                                  updatedServices[index].sub_services[subIndex].commission_rate = parseFloat(e.target.value) || 0;
+                                                  updatedServices[index].sub_services[subServiceIndex].commission_rate = parseFloat(e.target.value) || 0;
                                                   form.setValue("service_items", updatedServices);
                                                 }}
                                               />
@@ -613,7 +607,6 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                               </div>
                             )}
                             
-                            {/* Add sub-service button */}
                             <Button 
                               type="button" 
                               variant="outline"

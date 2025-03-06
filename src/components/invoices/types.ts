@@ -7,7 +7,7 @@ export type InvoiceItem = {
   quantity: number
   unit_price: number
   commission_rate?: number | null
-  commission_type?: 'percentage' | 'flat' | null  // Changed from 'flat_rate' to 'flat'
+  commission_type?: 'percentage' | 'flat' | null  // Standardized to 'flat' throughout
   assigned_profile_id?: string | null
 }
 

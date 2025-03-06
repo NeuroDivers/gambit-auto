@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import { Card, CardContent } from "@/components/ui/card"
 import { VehicleInfoFields } from "./VehicleInfoFields"
 import { SchedulingFields } from "./SchedulingFields"
+import { ServiceItemType } from "@/types/service-item"
 
 interface FormSectionsProps {
   form: UseFormReturn<WorkOrderFormValues>
@@ -27,11 +28,11 @@ export function FormSections({
   const convertServiceItems = (items: any[]) => {
     return items.map(item => ({
       ...item,
-      // Standardize on 'flat' for the UI, we use 'flat_rate' in the backend
-      commission_type: item.commission_type,
+      // Ensure commission_type is standardized as 'flat'
+      commission_type: item.commission_type === 'flat_rate' ? 'flat' : item.commission_type,
       sub_services: item.sub_services ? item.sub_services.map((sub: any) => ({
         ...sub,
-        commission_type: sub.commission_type
+        commission_type: sub.commission_type === 'flat_rate' ? 'flat' : sub.commission_type
       })) : undefined
     }));
   };

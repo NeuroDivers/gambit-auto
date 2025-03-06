@@ -2,7 +2,6 @@
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-import { WorkOrdersSection } from "@/components/work-orders/sections/WorkOrdersSection";
 import { MobileCalendarView } from "@/components/work-orders/calendar/mobile/MobileCalendarView";
 import { DesktopCalendarView } from "@/components/work-orders/calendar/DesktopCalendarView";
 import { toast } from "sonner";
@@ -10,12 +9,13 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { CalendarClock, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { HorizontalWorkOrderQueue } from "./calendar/HorizontalWorkOrderQueue";
 import { WorkOrder } from "./types";
 import { WorkOrderDetailsDialog } from "./calendar/WorkOrderDetailsDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useServiceBays } from "@/components/service-bays/hooks/useServiceBays";
+import { WorkOrdersSection } from "./sections/WorkOrdersSection";
 
 interface WorkOrderCalendarProps {
   clientView?: boolean;
@@ -173,12 +173,10 @@ export const WorkOrderCalendar = ({
             </Alert>
             
             <Card>
-              <CardContent className="p-0">
-                <WorkOrdersSection 
-                  workOrders={workOrders.filter(wo => !wo.start_time)} 
-                  onViewDetails={handleWorkOrderSelect}
-                />
-              </CardContent>
+              <WorkOrdersSection 
+                workOrders={workOrders.filter(wo => !wo.start_time)} 
+                onViewDetails={handleWorkOrderSelect}
+              />
             </Card>
           </>
         )}
