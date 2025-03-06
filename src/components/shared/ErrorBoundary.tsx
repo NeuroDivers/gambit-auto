@@ -58,7 +58,7 @@ export function ErrorBoundary({ children }: { children?: React.ReactNode }) {
     }
   }, [error])
   
-  // If there's no error, render the children
+  // If there's no error, render the children or outlet
   if (!error && children) {
     return <>{children}</>
   } else if (!error) {

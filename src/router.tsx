@@ -43,7 +43,9 @@ export const router = createBrowserRouter([
     element: <PublicInvoiceView />,
     errorElement: <ErrorBoundary />
   },
+  // Add protected routes
   ...protectedRoutes,
+  // Catch-all route for 404
   {
     path: "*",
     element: <NotFound />,
