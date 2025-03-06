@@ -11,6 +11,8 @@ import { useNavigate } from "react-router-dom"
 import { WorkOrderDetailsDialog } from "./calendar/WorkOrderDetailsDialog"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { WorkOrder } from "./types"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 
 export function WorkOrderList() {
   const navigate = useNavigate()
@@ -46,6 +48,8 @@ export function WorkOrderList() {
     handleCreateInvoice(workOrder.id)
   }
 
+  console.log("WorkOrderList rendering:", { isLoading, error, workOrdersCount: workOrders?.length })
+
   return (
     <div className="space-y-4">
       {/* Filter section always visible */}
@@ -69,8 +73,16 @@ export function WorkOrderList() {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : error ? (
-          <div className="p-8 text-center text-red-500">
-            Error loading work orders. Please try again later.
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              {error instanceof Error ? error.message : "Failed to load work orders. Please try again later."}
+            </AlertDescription>
+          </Alert>
+        ) : workOrders.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground">
+            No work orders found. Try adjusting your filters.
           </div>
         ) : (
           <>

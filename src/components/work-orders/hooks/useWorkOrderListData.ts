@@ -28,6 +28,7 @@ export function useWorkOrderListData() {
   } = useQuery({
     queryKey: ["workOrders", searchTerm, statusFilter, assignmentFilter, page],
     queryFn: async () => {
+      console.log("Fetching work orders with filters:", { searchTerm, statusFilter, assignmentFilter, page });
       let query = supabase
         .from("work_orders")
         .select(
@@ -70,6 +71,7 @@ export function useWorkOrderListData() {
         throw error;
       }
 
+      console.log("Fetched work orders:", data?.length, "Total count:", count);
       return {
         workOrders: data as WorkOrder[],
         totalCount: count || 0,

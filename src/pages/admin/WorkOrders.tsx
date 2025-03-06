@@ -12,32 +12,47 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function WorkOrders() {
   const [view, setView] = React.useState<"list" | "calendar">("list")
   const { isAdmin } = useAdminStatus()
+  console.log("WorkOrders page rendering with view:", view);
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['workOrderStats'],
     queryFn: async () => {
-      console.log("Fetching work order statistics...")
-      const { data, error } = await supabase
-        .from('work_order_statistics')
-        .select('*')
-        .single()
-      
-      if (error) {
-        console.error("Error fetching work order statistics:", error)
-        toast.error("Failed to load work order statistics")
-        throw error
-      }
+      console.log("Fetching work order statistics...");
+      try {
+        const { data, error } = await supabase
+          .from('work_order_statistics')
+          .select('*')
+          .single();
+        
+        if (error) {
+          console.error("Error fetching work order statistics:", error);
+          toast.error("Failed to load work order statistics");
+          throw error;
+        }
 
-      return data
-    }
-  })
+        console.log("Work order statistics loaded:", data);
+        return data;
+      } catch (error) {
+        console.error("Failed to fetch work order statistics:", error);
+        return {
+          total_work_orders: 0,
+          completed_work_orders: 0,
+          in_progress_work_orders: 0,
+          total_bays: 0,
+          active_bays: 0
+        };
+      }
+    },
+    staleTime: 60000 // 1 minute
+  });
 
   // Show loading state
-  const loadingValue = <div className="animate-pulse bg-muted h-8 w-20 rounded" />
+  const loadingValue = <Skeleton className="h-8 w-20 rounded" />
 
   return (
     <div>

@@ -9,10 +9,14 @@ import EditWorkOrder from "@/pages/admin/EditWorkOrder"
 import Calendar from "@/pages/admin/Calendar"
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary"
 import { usePermissions } from "@/hooks/usePermissions"
+import { Suspense } from "react"
+import { LoadingScreen } from "@/components/shared/LoadingScreen"
 
 const RoleBasedWorkOrders = () => {
   const { currentUserRole } = usePermissions();
   const role = currentUserRole?.name?.toLowerCase();
+  
+  console.log("RoleBasedWorkOrders rendering with role:", role);
   
   if (role === 'staff' || role === 'technician') {
     return <StaffWorkOrders />;
@@ -24,6 +28,8 @@ const RoleBasedWorkOrders = () => {
 const RoleBasedCalendar = () => {
   const { currentUserRole } = usePermissions();
   const role = currentUserRole?.name?.toLowerCase();
+  
+  console.log("RoleBasedCalendar rendering with role:", role);
   
   if (role === 'staff' || role === 'technician') {
     return <StaffCalendar />;
@@ -37,9 +43,11 @@ export const workOrderRoutes: RouteObject[] = [
     path: "work-orders",
     element: (
       <PermissionGuard resource="work_orders" type="page_access">
-        <ErrorBoundary>
-          <RoleBasedWorkOrders />
-        </ErrorBoundary>
+        <Suspense fallback={<LoadingScreen />}>
+          <ErrorBoundary>
+            <RoleBasedWorkOrders />
+          </ErrorBoundary>
+        </Suspense>
       </PermissionGuard>
     ),
     errorElement: <ErrorBoundary />,
@@ -48,9 +56,11 @@ export const workOrderRoutes: RouteObject[] = [
     path: "work-orders/create",
     element: (
       <PermissionGuard resource="work_orders" type="page_access">
-        <ErrorBoundary>
-          <CreateWorkOrder />
-        </ErrorBoundary>
+        <Suspense fallback={<LoadingScreen />}>
+          <ErrorBoundary>
+            <CreateWorkOrder />
+          </ErrorBoundary>
+        </Suspense>
       </PermissionGuard>
     ),
     errorElement: <ErrorBoundary />,
@@ -59,9 +69,11 @@ export const workOrderRoutes: RouteObject[] = [
     path: "work-orders/:id/edit",
     element: (
       <PermissionGuard resource="work_orders" type="page_access">
-        <ErrorBoundary>
-          <EditWorkOrder />
-        </ErrorBoundary>
+        <Suspense fallback={<LoadingScreen />}>
+          <ErrorBoundary>
+            <EditWorkOrder />
+          </ErrorBoundary>
+        </Suspense>
       </PermissionGuard>
     ),
     errorElement: <ErrorBoundary />,
@@ -70,9 +82,11 @@ export const workOrderRoutes: RouteObject[] = [
     path: "calendar",
     element: (
       <PermissionGuard resource="calendar" type="page_access">
-        <ErrorBoundary>
-          <RoleBasedCalendar />
-        </ErrorBoundary>
+        <Suspense fallback={<LoadingScreen />}>
+          <ErrorBoundary>
+            <RoleBasedCalendar />
+          </ErrorBoundary>
+        </Suspense>
       </PermissionGuard>
     ),
     errorElement: <ErrorBoundary />,
