@@ -9,6 +9,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { WorkOrderMobileList } from "./components/WorkOrderMobileList"
 import { useNavigate } from "react-router-dom"
 import { WorkOrderDetailsDialog } from "./calendar/WorkOrderDetailsDialog"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 export function WorkOrderList() {
   const navigate = useNavigate()
@@ -57,14 +58,16 @@ export function WorkOrderList() {
 
   return (
     <div className="space-y-4">
-      <WorkOrderFilters
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
-        assignmentFilter={assignmentFilter}
-        onAssignmentFilterChange={setAssignmentFilter}
-      />
+      <TooltipProvider>
+        <WorkOrderFilters
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          assignmentFilter={assignmentFilter}
+          onAssignmentFilterChange={setAssignmentFilter}
+        />
+      </TooltipProvider>
 
       {isMobile ? (
         <WorkOrderMobileList

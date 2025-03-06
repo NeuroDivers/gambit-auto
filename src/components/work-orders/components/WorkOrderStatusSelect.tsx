@@ -18,6 +18,7 @@ const statusStyles = {
   in_progress: "bg-blue-100 text-blue-700 hover:bg-blue-200",
   completed: "bg-green-100 text-green-700 hover:bg-green-200",
   cancelled: "bg-red-100 text-red-700 hover:bg-red-200",
+  invoiced: "bg-purple-100 text-purple-700 hover:bg-purple-200",
 }
 
 type Status = keyof typeof statusStyles
@@ -27,6 +28,7 @@ const statusLabels: Record<Status, string> = {
   in_progress: "In Progress",
   completed: "Completed",
   cancelled: "Cancelled",
+  invoiced: "Invoiced",
 }
 
 interface WorkOrderStatusSelectProps {
@@ -85,7 +87,11 @@ export function WorkOrderStatusSelect({ workOrder }: WorkOrderStatusSelectProps)
           <DropdownMenuItem
             key={status}
             onClick={() => updateStatus(status as Status)}
-            className="flex items-center justify-between"
+            disabled={status === "invoiced"}
+            className={cn(
+              "flex items-center justify-between",
+              status === "invoiced" && "opacity-60 cursor-not-allowed"
+            )}
           >
             <span>{label}</span>
             {status === currentStatus && (

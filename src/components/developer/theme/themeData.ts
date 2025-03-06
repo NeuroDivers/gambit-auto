@@ -1,3 +1,4 @@
+
 import { ColorVariable, LOCAL_STORAGE_KEY } from "./types";
 
 export const themeColorVariables: ColorVariable[] = [
@@ -146,6 +147,168 @@ export const themeColorVariables: ColorVariable[] = [
   defaultLight: "0 0% 98%",
   defaultDark: "210 40% 98%",
   category: "states"
+},
+// Status badge colors
+{
+  name: "status-pending-bg",
+  description: "Pending badge background",
+  defaultLight: "48 96% 89%", // Yellow background
+  defaultDark: "48 70% 45%",
+  category: "status"
+}, {
+  name: "status-pending-text",
+  description: "Pending badge text",
+  defaultLight: "36 40% 30%", // Darker yellow text
+  defaultDark: "48 100% 96%",
+  category: "status"
+}, {
+  name: "status-in-progress-bg",
+  description: "In Progress badge background",
+  defaultLight: "220 83% 92%", // Blue background
+  defaultDark: "220 70% 46%",
+  category: "status"
+}, {
+  name: "status-in-progress-text",
+  description: "In Progress badge text",
+  defaultLight: "220 70% 30%", // Darker blue text
+  defaultDark: "220 100% 96%",
+  category: "status"
+}, {
+  name: "status-completed-bg",
+  description: "Completed badge background",
+  defaultLight: "142 76% 90%", // Green background
+  defaultDark: "142 70% 45%",
+  category: "status"
+}, {
+  name: "status-completed-text",
+  description: "Completed badge text",
+  defaultLight: "142 70% 30%", // Darker green text
+  defaultDark: "142 100% 96%",
+  category: "status"
+}, {
+  name: "status-cancelled-bg",
+  description: "Cancelled badge background",
+  defaultLight: "0 84% 95%", // Red background
+  defaultDark: "0 70% 45%",
+  category: "status"
+}, {
+  name: "status-cancelled-text",
+  description: "Cancelled badge text",
+  defaultLight: "0 70% 40%", // Darker red text
+  defaultDark: "0 100% 96%",
+  category: "status"
+}, {
+  name: "status-invoiced-bg",
+  description: "Invoiced badge background",
+  defaultLight: "270 76% 94%", // Purple background
+  defaultDark: "270 70% 60%",
+  category: "status"
+}, {
+  name: "status-invoiced-text",
+  description: "Invoiced badge text",
+  defaultLight: "270 70% 45%", // Darker purple text
+  defaultDark: "270 100% 96%",
+  category: "status"
+},
+// Invoice status colors
+{
+  name: "invoice-draft-bg",
+  description: "Draft invoice background",
+  defaultLight: "240 10% 94%", // Light gray background
+  defaultDark: "240 10% 36%",
+  category: "invoice"
+}, {
+  name: "invoice-draft-text",
+  description: "Draft invoice text",
+  defaultLight: "240 10% 40%", // Darker gray text
+  defaultDark: "240 10% 92%",
+  category: "invoice"
+}, {
+  name: "invoice-sent-bg",
+  description: "Sent invoice background",
+  defaultLight: "270 76% 94%", // Purple background
+  defaultDark: "270 70% 60%",
+  category: "invoice"
+}, {
+  name: "invoice-sent-text",
+  description: "Sent invoice text",
+  defaultLight: "270 70% 45%", // Darker purple text
+  defaultDark: "270 100% 96%",
+  category: "invoice"
+}, {
+  name: "invoice-paid-bg",
+  description: "Paid invoice background",
+  defaultLight: "142 76% 90%", // Green background
+  defaultDark: "142 70% 45%",
+  category: "invoice"
+}, {
+  name: "invoice-paid-text",
+  description: "Paid invoice text",
+  defaultLight: "142 70% 30%", // Darker green text
+  defaultDark: "142 100% 96%",
+  category: "invoice"
+}, {
+  name: "invoice-overdue-bg",
+  description: "Overdue invoice background",
+  defaultLight: "0 84% 95%", // Red background
+  defaultDark: "0 70% 45%",
+  category: "invoice"
+}, {
+  name: "invoice-overdue-text",
+  description: "Overdue invoice text",
+  defaultLight: "0 70% 40%", // Darker red text
+  defaultDark: "0 100% 96%",
+  category: "invoice"
+},
+// Estimate status colors
+{
+  name: "estimate-pending-bg",
+  description: "Pending estimate background",
+  defaultLight: "48 96% 89%", // Yellow background
+  defaultDark: "48 70% 45%",
+  category: "estimate"
+}, {
+  name: "estimate-pending-text",
+  description: "Pending estimate text",
+  defaultLight: "36 40% 30%", // Darker yellow text
+  defaultDark: "48 100% 96%",
+  category: "estimate"
+}, {
+  name: "estimate-accepted-bg",
+  description: "Accepted estimate background",
+  defaultLight: "142 76% 90%", // Green background
+  defaultDark: "142 70% 45%",
+  category: "estimate"
+}, {
+  name: "estimate-accepted-text",
+  description: "Accepted estimate text",
+  defaultLight: "142 70% 30%", // Darker green text
+  defaultDark: "142 100% 96%",
+  category: "estimate"
+}, {
+  name: "estimate-rejected-bg",
+  description: "Rejected estimate background",
+  defaultLight: "0 84% 95%", // Red background
+  defaultDark: "0 70% 45%",
+  category: "estimate"
+}, {
+  name: "estimate-rejected-text",
+  description: "Rejected estimate text",
+  defaultLight: "0 70% 40%", // Darker red text
+  defaultDark: "0 100% 96%",
+  category: "estimate"
+}, {
+  name: "estimate-expired-bg",
+  description: "Expired estimate background",
+  defaultLight: "240 10% 94%", // Gray background
+  defaultDark: "240 10% 40%",
+  category: "estimate"
+}, {
+  name: "estimate-expired-text",
+  description: "Expired estimate text",
+  defaultLight: "240 10% 40%", // Gray text
+  defaultDark: "240 10% 92%",
+  category: "estimate"
 },
 // Toast colors
 {

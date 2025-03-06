@@ -18,18 +18,38 @@ const badgeVariants = cva(
         success:
           "border-transparent bg-green-500 text-white",
         outline: "text-foreground",
+        
+        // Work Order Status Badges using CSS variables 
         pending:
-          "border-transparent bg-[#FEF7CD] text-[#946800]",
-        accepted:
-          "border-transparent bg-[#F2FCE2] text-[#3F6212]",
-        rejected:
-          "border-transparent bg-[#FFDEE2] text-[#BE123C]",
-        estimated:
-          "border-transparent bg-[#D3E4FD] text-[#1E40AF]",
+          "border-transparent bg-[hsl(var(--status-pending-bg))] text-[hsl(var(--status-pending-text))]",
+        in_progress:
+          "border-transparent bg-[hsl(var(--status-in-progress-bg))] text-[hsl(var(--status-in-progress-text))]",
+        completed:
+          "border-transparent bg-[hsl(var(--status-completed-bg))] text-[hsl(var(--status-completed-text))]",
+        cancelled:
+          "border-transparent bg-[hsl(var(--status-cancelled-bg))] text-[hsl(var(--status-cancelled-text))]",
+        invoiced:
+          "border-transparent bg-[hsl(var(--status-invoiced-bg))] text-[hsl(var(--status-invoiced-text))]",
+        
+        // Invoice status badges
         draft:
-          "border-transparent bg-[#F1F0FB] text-[#4338CA]",
+          "border-transparent bg-[hsl(var(--invoice-draft-bg))] text-[hsl(var(--invoice-draft-text))]",
         sent:
-          "border-transparent bg-[#E5DEFF] text-[#6D28D9]",
+          "border-transparent bg-[hsl(var(--invoice-sent-bg))] text-[hsl(var(--invoice-sent-text))]",
+        paid:
+          "border-transparent bg-[hsl(var(--invoice-paid-bg))] text-[hsl(var(--invoice-paid-text))]",
+        overdue:
+          "border-transparent bg-[hsl(var(--invoice-overdue-bg))] text-[hsl(var(--invoice-overdue-text))]",
+        
+        // Estimate status badges
+        estimate_pending:
+          "border-transparent bg-[hsl(var(--estimate-pending-bg))] text-[hsl(var(--estimate-pending-text))]",
+        accepted:
+          "border-transparent bg-[hsl(var(--estimate-accepted-bg))] text-[hsl(var(--estimate-accepted-text))]",
+        rejected:
+          "border-transparent bg-[hsl(var(--estimate-rejected-bg))] text-[hsl(var(--estimate-rejected-text))]",
+        expired:
+          "border-transparent bg-[hsl(var(--estimate-expired-bg))] text-[hsl(var(--estimate-expired-text))]",
       },
     },
     defaultVariants: {
