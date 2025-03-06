@@ -1,40 +1,55 @@
 
-import { WorkOrder as BaseWorkOrder, WorkOrderFormValues as BaseWorkOrderFormValues, WorkOrderFormProps as BaseWorkOrderFormProps, CustomerType as BaseCustomerType } from "@/types/work-order";
+import { ServiceItemType } from "@/types/service-item"
+import { WorkOrder as BaseWorkOrder } from "@/types"
 
-// Use the base WorkOrder type
-export type WorkOrder = BaseWorkOrder;
-
-// Use the base WorkOrderFormValues type with client_id
-export interface WorkOrderFormValues extends BaseWorkOrderFormValues {
-  client_id?: string; // Add this for compatibility
-  start_time?: Date | string | null;
-  end_time?: Date | string | null;
-  service_items?: any[];
-  first_name: string;
-  last_name: string;
-  email: string; 
-  phone_number: string;
-  contact_preference: "phone" | "email";
-  vehicle_serial: string;
-  additional_notes?: string;
-  street_address?: string;
-  unit_number?: string;
-  city?: string;
-  state_province?: string;
-  postal_code?: string;
-  country?: string;
-  estimated_duration?: number | null;
-  assigned_bay_id?: string | null;
+export interface WorkOrderFormValues {
+  first_name: string
+  last_name: string
+  email: string
+  phone_number: string
+  contact_preference: "phone" | "email"
+  vehicle_make: string
+  vehicle_model: string
+  vehicle_year: number
+  vehicle_serial: string
+  vehicle_body_class?: string
+  vehicle_doors?: number | null
+  vehicle_trim?: string
+  additional_notes?: string
+  media_url?: string | null
+  address?: string
+  street_address?: string
+  unit_number?: string
+  city?: string
+  state_province?: string
+  postal_code?: string
+  country?: string
+  client_id?: string
+  start_time: Date | null
+  estimated_duration: number | null
+  end_time: Date | null
+  assigned_bay_id: string | null
+  service_items: ServiceItemType[]
+  is_primary_vehicle?: boolean
+  save_vehicle?: boolean
 }
 
-// Use the base WorkOrderFormProps type
-export type WorkOrderFormProps = BaseWorkOrderFormProps;
+export interface WorkOrderFormProps {
+  workOrder?: WorkOrder
+  onSuccess?: () => void
+  defaultStartTime?: Date
+  onSubmitting?: (isSubmitting: boolean) => void
+}
 
-// Use the base CustomerType
-export type CustomerType = BaseCustomerType;
+// Export the WorkOrder type
+export type WorkOrder = BaseWorkOrder;
 
-// Define the WorkOrderStatusSelectProps interface for the status select component
-export interface WorkOrderStatusSelectProps {
-  status: string;
-  quoteId: string;
+// Customer type definition for FormSections
+export interface CustomerType {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email?: string;
+  phone_number?: string;
+  // Add other customer fields as needed
 }

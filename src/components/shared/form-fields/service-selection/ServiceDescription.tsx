@@ -1,59 +1,53 @@
 
-import { useState } from 'react';
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { ServiceDescriptionProps } from "./types";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { ServiceDescriptionProps } from './types';
 
 export function ServiceDescription({
-  description = "",
+  description,
   onChange,
-  expanded = false,
+  selectedServiceId,
+  servicesByType,
+  expanded,
   onExpandToggle
 }: ServiceDescriptionProps) {
-  const [localExpanded, setLocalExpanded] = useState(expanded);
-  
-  const handleToggle = () => {
-    const newState = !localExpanded;
-    setLocalExpanded(newState);
-    if (onExpandToggle) {
-      onExpandToggle();
-    }
-  };
+  // Handle the case when used with just description and onChange
+  if (description !== undefined && onChange) {
+    return null; // Original implementation
+  }
+
+  // Handle the case when used with service selection
+  if (!selectedServiceId || !servicesByType || expanded === undefined || !onExpandToggle) {
+    return null;
+  }
+
+  // Find selected service in the servicesByType object
+  const selectedService = Object.values(servicesByType)
+    .flat()
+    .find(service => service && typeof service === 'object' && 'id' in service && service.id === selectedServiceId);
+
+  if (!selectedService || !selectedService.description) return null;
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <Label>Description</Label>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleToggle}
-          className="h-8 px-2"
-        >
-          {localExpanded ? (
-            <>
-              <ChevronUp className="h-4 w-4 mr-1" />
-              Hide
-            </>
-          ) : (
-            <>
-              <ChevronDown className="h-4 w-4 mr-1" />
-              Show
-            </>
-          )}
-        </Button>
-      </div>
-      
-      {localExpanded && (
-        <Textarea
-          value={description}
-          onChange={(e) => onChange && onChange(e.target.value)}
-          placeholder="Enter service description..."
-          className="min-h-[100px]"
-        />
+    <div className="mt-2">
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onExpandToggle}
+        className="w-full flex justify-between items-center"
+      >
+        <span>Description</span>
+        {expanded ? (
+          <ChevronUp className="h-4 w-4" />
+        ) : (
+          <ChevronDown className="h-4 w-4" />
+        )}
+      </Button>
+      {expanded && (
+        <div className="mt-2 text-sm text-muted-foreground">
+          {selectedService.description}
+        </div>
       )}
     </div>
   );

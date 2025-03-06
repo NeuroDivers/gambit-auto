@@ -5,7 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle, Home, ArrowLeft, RefreshCw } from "lucide-react"
 import { useEffect, useState } from "react"
 
-export function ErrorBoundary({ children }: { children?: React.ReactNode }) {
+export function ErrorBoundary() {
   const error = useRouteError()
   const navigate = useNavigate()
   const [errorDetails, setErrorDetails] = useState<{
@@ -17,51 +17,47 @@ export function ErrorBoundary({ children }: { children?: React.ReactNode }) {
   })
   
   useEffect(() => {
-    if (error) {
-      console.error("Application error:", error)
+    console.error("Application error:", error)
+    
+    if (error === null) {
+      // Handle null errors specifically
+      setErrorDetails({
+        title: "Application Error",
+        message: "The application encountered an unexpected null value. This might be due to missing data or a network issue."
+      })
+    } else if (isRouteErrorResponse(error)) {
+      // Handle route errors (404, etc)
+      setErrorDetails({
+        title: `${error.status} - ${error.statusText}`,
+        message: error.data?.message || "The requested page could not be found."
+      })
+    } else if (error instanceof Error) {
+      // Handle JavaScript errors
+      setErrorDetails({
+        title: error.name || "Error",
+        message: error.message || "An unexpected error occurred."
+      })
       
-      if (error === null || error === undefined) {
-        // Handle null errors specifically
-        setErrorDetails({
-          title: "Application Error",
-          message: "The application encountered an unexpected null error. Please try refreshing the page."
-        })
-      } else if (isRouteErrorResponse(error)) {
-        // Handle route errors (404, etc)
-        setErrorDetails({
-          title: `${error.status} - ${error.statusText}`,
-          message: error.data?.message || "The requested page could not be found."
-        })
-      } else if (error instanceof Error) {
-        // Handle JavaScript errors
-        setErrorDetails({
-          title: error.name || "Error",
-          message: error.message || "An unexpected error occurred."
-        })
-        
-        // Log more details to console for debugging
-        if (error.stack) {
-          console.error("Error stack:", error.stack)
-        }
-      } else if (typeof error === 'string') {
-        setErrorDetails({
-          title: "Error",
-          message: error
-        })
-      } else {
-        // Handle unknown error types
-        setErrorDetails({
-          title: "Unknown Error",
-          message: "An unexpected error occurred. Please try refreshing the page."
-        })
+      // Log more details to console for debugging
+      if (error.stack) {
+        console.error("Error stack:", error.stack)
       }
+    } else if (typeof error === 'string') {
+      setErrorDetails({
+        title: "Error",
+        message: error
+      })
+    } else {
+      // Handle unknown error types
+      setErrorDetails({
+        title: "Unknown Error",
+        message: "An unexpected error occurred. Please try refreshing the page."
+      })
     }
   }, [error])
   
-  // If there's no error, render the children or outlet
-  if (!error && children) {
-    return <>{children}</>
-  } else if (!error) {
+  // If there's no error, render the children
+  if (!error) {
     return <Outlet />
   }
 
@@ -98,7 +94,7 @@ export function ErrorBoundary({ children }: { children?: React.ReactNode }) {
           </Button>
           
           <Button 
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/dashboard')}
             className="flex items-center gap-2"
           >
             <Home className="h-4 w-4" />

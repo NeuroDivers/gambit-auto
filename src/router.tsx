@@ -8,56 +8,36 @@ import NotFound from "./pages/NotFound"
 import Unauthorized from "./pages/Unauthorized"
 import PublicInvoiceView from "./pages/PublicInvoiceView"
 import { protectedRoutes } from "./routes/protectedRoutes"
-import { ErrorBoundary } from "./components/shared/ErrorBoundary"
-import { DashboardLayout } from "./components/layouts/DashboardLayout"
-import { AuthProvider } from "./hooks/useAuth"
 
-// Create the router with routes wrapped in AuthProvider
-const routeElements = [
+// Create the router
+export const router = createBrowserRouter([
   {
     path: "/",
-    element: <DashboardLayout><Dashboard /></DashboardLayout>,
-    errorElement: <ErrorBoundary />
+    element: <Dashboard />
   },
   {
     path: "/auth",
-    element: <Auth />,
-    errorElement: <ErrorBoundary />
+    element: <Auth />
   },
   {
     path: "/reset-password",
-    element: <ResetPassword />,
-    errorElement: <ErrorBoundary />
+    element: <ResetPassword />
   },
   {
     path: "/user",
-    element: <UserDetails />,
-    errorElement: <ErrorBoundary />
+    element: <UserDetails />
   },
   {
     path: "/unauthorized",
-    element: <Unauthorized />,
-    errorElement: <ErrorBoundary />
+    element: <Unauthorized />
   },
   {
     path: "/p/:invoiceId",
-    element: <PublicInvoiceView />,
-    errorElement: <ErrorBoundary />
+    element: <PublicInvoiceView />
   },
-  // Add protected routes
-  ...protectedRoutes,
-  // Catch-all route for 404
+  protectedRoutes, // Changed from ...protectedRoutes to protectedRoutes
   {
     path: "*",
-    element: <NotFound />,
-    errorElement: <ErrorBoundary />
+    element: <NotFound />
   }
-]
-
-// Wrap each route element with AuthProvider
-export const router = createBrowserRouter(routeElements)
-
-// Custom wrapper function for JSX components in App.tsx
-export const AppWrapper = ({ children }: { children: React.ReactNode }) => (
-  <AuthProvider>{children}</AuthProvider>
-)
+])

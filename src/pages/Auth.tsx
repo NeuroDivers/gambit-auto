@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
 import { useEffect } from "react"
 import { toast } from "sonner"
-import { applyThemeClass } from "@/utils/themeUtils"
+import { applyThemeClass } from "@/lib/utils" 
 
 export default function Auth() {
   const navigate = useNavigate()
@@ -18,7 +18,7 @@ export default function Auth() {
     // Load theme from localStorage
     const savedTheme = localStorage.getItem('theme') || 'light'
     // Apply theme class directly
-    applyThemeClass("dark")
+    applyThemeClass(savedTheme, null)
     console.log("Auth page: Applied theme from localStorage:", savedTheme)
   }, [])
 

@@ -12,25 +12,18 @@ export interface ServiceItemType {
   parent_id?: string | null;
   assigned_profile_id?: string | null;
   package_id?: string | null;
-  // Support for multi-staff assignments
-  assigned_profiles?: Array<{
-    profile_id: string,
-    commission_rate: number,
-    commission_type: 'percentage' | 'flat' | null
-  }>;
 }
 
 export interface ServiceDropdownProps {
-  service: ServiceItemType;
-  onEdit: (service: ServiceItemType) => void;
-  onRemove: (serviceId: string) => void;
   selectedServiceName?: string;
   servicesByType?: Record<string, any[]>;
   open?: boolean;
   setOpen?: (open: boolean) => void;
   handleServiceSelect?: (serviceId: string) => void;
   serviceId?: string;
-  isLoading?: boolean;
+  service?: ServiceItemType;
+  onEdit?: (service: ServiceItemType) => void;
+  onRemove?: (serviceId: string) => void;
 }
 
 export interface ServiceItemProps {
@@ -42,12 +35,6 @@ export interface ServiceItemProps {
   availableServices?: any[];
   onChange?: (service: ServiceItemType) => void;
   isEditing?: boolean;
-  onUpdate?: (updatedService: ServiceItemType) => void;
-  onCancelEdit?: () => void;
-  disabled?: boolean;
-  showCommission?: boolean;
-  showAssignedStaff?: boolean;
-  serviceTypes?: any[];
 }
 
 export interface ServiceItemFormProps {
@@ -77,18 +64,13 @@ export interface ServiceDescriptionProps {
 }
 
 export interface ServiceSelectionFieldProps {
-  value?: ServiceItemType[];
+  services: ServiceItemType[];
   onChange: (services: ServiceItemType[]) => void;
   showCommission?: boolean;
   showAssignedStaff?: boolean;
   disabled?: boolean;
   allowPriceEdit?: boolean;
   onServicesChange?: (services: ServiceItemType[]) => void;
-  // Add these for compatibility with existing code
-  services?: ServiceItemType[];
-  name?: string;
-  label?: string;
-  description?: string;
 }
 
 export type ServicesByType = Record<string, any[]>;

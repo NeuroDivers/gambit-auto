@@ -1,46 +1,67 @@
 
-import { useState, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ThemeColorManager } from "@/components/developer/ThemeColorManager";
-import { applyThemeClass } from "@/utils/themeUtils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card } from "@/components/ui/card"
+import { PageTitle } from "@/components/shared/PageTitle"
+import { VinScanner } from "@/components/shared/VinScanner"
+import { useState, useEffect } from "react"
+import { ThemeColorManager } from "@/components/developer/ThemeColorManager"
+import { useTheme } from "next-themes"
+import { applyThemeClass, applyCustomThemeColors } from "@/lib/utils"
+import { Toaster } from "@/components/ui/toaster"
 
 export default function DeveloperSettings() {
-  const [activeTab, setActiveTab] = useState<string>("theme");
-
+  const [scannedVin, setScannedVin] = useState<string>("")
+  const { theme, resolvedTheme } = useTheme()
+  
+  // Ensure theme is applied on component mount
   useEffect(() => {
-    // Apply dark theme by default
-    applyThemeClass("dark");
-  }, []);
+    // Apply theme class based on current theme or system preference
+    applyThemeClass(theme, resolvedTheme)
+    
+    // Check for and apply any custom theme colors from localStorage
+    applyCustomThemeColors()
+  }, [theme, resolvedTheme])
 
   return (
-    <div className="container py-6 max-w-7xl">
-      <h1 className="text-3xl font-bold tracking-tight mb-6">Developer Settings</h1>
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6">
-          <TabsTrigger value="theme">Theme Settings</TabsTrigger>
-          <TabsTrigger value="api">API Keys</TabsTrigger>
-          <TabsTrigger value="logs">System Logs</TabsTrigger>
+    <div className="container py-8 space-y-6">
+      <PageTitle 
+        title="Developer Settings" 
+        description="Advanced settings and tools for developers"
+      />
+
+      <Tabs defaultValue="theme-editor" className="w-full">
+        <TabsList>
+          <TabsTrigger value="theme-editor">Theme Editor</TabsTrigger>
+          <TabsTrigger value="vin-scanner">VIN Scanner</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="theme" className="space-y-6">
+        <TabsContent value="theme-editor">
           <ThemeColorManager />
         </TabsContent>
         
-        <TabsContent value="api" className="space-y-6">
-          <div className="border rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">API Configuration</h2>
-            <p className="text-muted-foreground">API configuration will be implemented in a future update.</p>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="logs" className="space-y-6">
-          <div className="border rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">System Logs</h2>
-            <p className="text-muted-foreground">System logs will be implemented in a future update.</p>
-          </div>
+        <TabsContent value="vin-scanner">
+          <Card className="p-6">
+            <h3 className="text-lg font-medium mb-4">VIN Barcode Scanner</h3>
+            <p className="text-muted-foreground mb-6">
+              Test the VIN barcode scanner functionality. This uses the device camera to scan 
+              VIN barcodes found on vehicle windows and documentation.
+            </p>
+            
+            <div className="flex items-center gap-4">
+              <VinScanner onScan={setScannedVin} />
+              <div>
+                <span className="text-sm text-muted-foreground">Scanned VIN:</span>
+                <div className="font-mono bg-muted p-2 rounded mt-1">
+                  {scannedVin || "No VIN scanned yet"}
+                </div>
+              </div>
+            </div>
+          </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Add the Toaster component here */}
+      <Toaster />
     </div>
-  );
+  )
 }

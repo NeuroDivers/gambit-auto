@@ -1,31 +1,32 @@
 
-import { useFormContext } from "react-hook-form";
-import { FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
-import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { ServiceItemType } from "@/types/service-item";
+import ServiceSelectionField from "@/components/shared/form-fields/ServiceSelectionField";
 
-export function ServiceSelectionFields() {
-  const form = useFormContext();
+type ServiceSelectionFieldsProps = {
+  services: ServiceItemType[];
+  onChange: (newServices: ServiceItemType[]) => void;
+  disabled?: boolean;
+  showCommission?: boolean;
+};
 
+export function ServiceSelectionFields({
+  services,
+  onChange,
+  disabled = false,
+  showCommission = false,
+}: ServiceSelectionFieldsProps) {
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-medium">Services</h3>
-      <FormField
-        control={form.control}
-        name="service_items"
-        render={({ field }) => (
-          <FormItem>
-            <FormControl>
-              <ServiceSelectionField
-                value={field.value}
-                onChange={field.onChange}
-                showCommission={true}
-                showAssignedStaff={true}
-              />
-            </FormControl>
-          </FormItem>
-        )}
+    <Card>
+      <CardHeader>
+        <CardTitle>Service Selection</CardTitle>
+      </CardHeader>
+      <ServiceSelectionField
+        services={services}
+        onChange={onChange}
+        disabled={disabled}
+        showCommission={showCommission}
       />
-    </div>
+    </Card>
   );
 }

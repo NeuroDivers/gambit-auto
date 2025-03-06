@@ -1,3 +1,4 @@
+
 import { Control } from "react-hook-form"
 import { WorkOrderFormValues } from "../types"
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
@@ -101,7 +102,7 @@ export function ClientInfoFields({ control }: ClientInfoFieldsProps) {
 
       <FormField
         control={control}
-        name="street_address"
+        name="address"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Address (Optional)</FormLabel>

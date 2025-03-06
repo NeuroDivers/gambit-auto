@@ -24,10 +24,6 @@ export function QuoteFormProvider({ children, defaultValues, onSubmit }: QuoteFo
   const form = useForm<ServiceFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      serviceType: '',
-      details: {},
-      images: [],
-      description: '',
       vehicleInfo: {
         make: '',
         model: '',
@@ -36,6 +32,7 @@ export function QuoteFormProvider({ children, defaultValues, onSubmit }: QuoteFo
         saveToAccount: false,
       },
       service_items: [],
+      description: '',
       service_details: {},
       ...defaultValues
     }

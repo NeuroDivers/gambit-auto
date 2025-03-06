@@ -1,6 +1,6 @@
 
 import { Form } from "@/components/ui/form"
-import { WorkOrderFormProps } from "@/types/work-order"
+import { WorkOrderFormProps } from "./types"
 import { useWorkOrderForm } from "./hooks/useWorkOrderForm"
 import { FormSections } from "./form-sections/FormSections"
 import { Button } from "@/components/ui/button"
@@ -34,11 +34,7 @@ export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmit
       }
     });
     
-    return () => {
-      if (subscription && typeof subscription.unsubscribe === 'function') {
-        subscription.unsubscribe();
-      }
-    };
+    return () => subscription.unsubscribe();
   }, [form.watch]);
 
   useEffect(() => {
@@ -73,9 +69,25 @@ export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmit
   return (
     <Form {...form}>
       <form onSubmit={handleSubmit} className="space-y-6">
-        {!workOrder && <CustomerSearch />}
+        {!workOrder && <CustomerSearch form={form} />}
         
-        <FormSections />
+        <FormSections 
+          onSubmit={() => form.handleSubmit(onSubmit)()}
+          customer={null}
+          onCustomerChange={() => {}}
+          vehicleInfo={{}}
+          onVehicleInfoChange={() => {}}
+          scheduleInfo={{}}
+          onScheduleInfoChange={() => {}}
+          bayId={null}
+          onBayIdChange={() => {}}
+          notes=""
+          onNotesChange={() => {}}
+          services={[]}
+          onServicesChange={() => {}}
+          isCreating={!workOrder}
+          isSubmitting={form.formState.isSubmitting}
+        />
         
         <div className="flex justify-end pt-6">
           <Button 

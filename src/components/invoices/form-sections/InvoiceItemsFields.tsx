@@ -1,11 +1,8 @@
 
-import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField"
+import ServiceSelectionField from "@/components/shared/form-fields/ServiceSelectionField"
 import { ServiceItemType } from "@/types/service-item"
 import { InvoiceItem } from "@/components/invoices/types"
-import { 
-  convertWorkOrderToSharedServiceItem, 
-  convertSharedToWorkOrderServiceItems 
-} from "@/components/work-orders/utils/serviceItemConverters"
+import { convertWorkOrderToSharedServiceItem, convertSharedToWorkOrderServiceItem } from "@/components/work-orders/utils/serviceItemConverters"
 
 interface InvoiceItemsFieldsProps {
   items: InvoiceItem[] | ServiceItemType[];
@@ -38,14 +35,16 @@ export function InvoiceItemsFields({
   // Handle the conversion back
   const handleItemsChange = (updatedItems: any[]) => {
     // Convert back from shared component's ServiceItemType format
-    const convertedItems = convertSharedToWorkOrderServiceItems(updatedItems);
+    const convertedItems = updatedItems.map(item => 
+      convertSharedToWorkOrderServiceItem(item)
+    );
     
     setItems(convertedItems);
   };
 
   return (
     <ServiceSelectionField
-      value={mappedItems}
+      services={mappedItems}
       onChange={handleItemsChange}
       allowPriceEdit={allowPriceEdit}
       showCommission={showCommission}

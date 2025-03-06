@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 import { useDragScroll } from "./hooks/useDragScroll"
 import { toast } from "sonner"
 import { useServiceBays } from "@/components/service-bays/hooks/useServiceBays"
-import { WorkOrder } from "@/types/work-order"
+import { WorkOrder } from "../work-orders/types"
 import { WorkOrderDetailsDialog } from "../work-orders/calendar/WorkOrderDetailsDialog"
 import { CalendarControls } from "./components/CalendarControls"
 import { useBlockedDates } from "@/components/work-orders/calendar/hooks/useBlockedDates"
@@ -121,10 +121,6 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
     }
   }
 
-  const handleWorkOrderSelect = (workOrder: WorkOrder) => {
-    setSelectedWorkOrder(workOrder);
-  };
-
   const totalWidth = BAY_COLUMN_WIDTH + (days.length * CELL_WIDTH)
 
   return (
@@ -172,7 +168,7 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
               workOrders={workOrders}
               isDateBlocked={isDateBlocked}
               onDateSelect={onDateSelect}
-              onWorkOrderSelect={handleWorkOrderSelect}
+              onWorkOrderSelect={setSelectedWorkOrder}
             />
           </div>
         </div>

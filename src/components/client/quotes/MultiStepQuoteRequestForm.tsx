@@ -1,5 +1,4 @@
 
-import { useState } from 'react'
 import { QuoteFormProvider } from './providers/QuoteFormProvider'
 import { ServiceSelectionForm } from './form-steps/service-selection/ServiceSelectionForm'
 import { VehicleInfoStep } from './form-steps/VehicleInfoStep'
@@ -10,10 +9,7 @@ import { useQuoteRequestSubmission } from '@/hooks/quote-request/useQuoteRequest
 import { AnimatePresence, motion } from 'framer-motion'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ServiceItemType, ServiceFormData } from '@/types/service-item'
-import { useForm, UseFormReturn } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { formSchema } from '@/hooks/quote-request/formSchema'
+import { ServiceItemType } from '@/types/service-item'
 
 interface Props {
   onSuccess?: () => void
@@ -30,6 +26,7 @@ const convertServices = (services: ServiceItemType[] = []): { id: string; name: 
 
 export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
   const {
+    form,
     step,
     totalSteps,
     services,
@@ -42,34 +39,15 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
     handleImageRemove,
     onVehicleSave,
     selectedServiceId
-  } = useQuoteRequestSubmission();
-  
-  // Create a type-safe form
-  const form = useForm<ServiceFormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      serviceType: '',
-      details: {},
-      images: [],
-      description: '',
-      vehicleInfo: {
-        make: '',
-        model: '',
-        year: new Date().getFullYear(),
-        vin: '',
-        saveToAccount: false,
-      },
-      service_items: [],
-      service_details: {}
-    }
-  });
-  
-  const progress = (step / totalSteps) * 100;
+  } = useQuoteRequestSubmission()
+
+  const progress = (step / totalSteps) * 100
 
   // Helper function to adapt File[] to FileList for handleImageUpload
   const handleImagesAdapter = async (files: FileList): Promise<string[]> => {
     const fileArray = Array.from(files);
-    return await handleImageUpload(fileArray);
+    await handleImageUpload(fileArray);
+    return []; // Return empty array as we're handling the urls internally
   };
 
   return (

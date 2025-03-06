@@ -1,27 +1,19 @@
 
-import { RouterProvider } from "react-router-dom";
-import { router, AppWrapper } from "./router";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "sonner";
+import { BrowserRouter } from "react-router-dom"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { Toaster } from "@/components/ui/toaster"
+import { router } from "./router"
+import { RouterProvider } from "react-router-dom"
 
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-    },
-  },
-});
+const queryClient = new QueryClient()
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppWrapper>
-        <RouterProvider router={router} />
-        <Toaster position="top-right" />
-      </AppWrapper>
+      <RouterProvider router={router} />
+      <Toaster />
     </QueryClientProvider>
-  );
+  )
 }
 
-export default App;
+export default App

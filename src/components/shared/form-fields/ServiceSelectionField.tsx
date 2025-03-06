@@ -2,22 +2,20 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { ServiceItemType, ServiceSelectionFieldProps } from "@/types/service-item";
+import { ServiceItemType, ServiceSelectionFieldProps } from "./service-selection/types";
+import { ServiceItem } from "./service-selection/ServiceItem";
+import { ServiceItemForm } from "./service-selection/ServiceItemForm";
 import { Card } from "@/components/ui/card";
-import { ServiceItem, ServiceItemForm } from "./service-selection";
 
-export function ServiceSelectionField({
+export default function ServiceSelectionField({
   services = [],
-  value,
   onChange,
   showCommission = false,
   showAssignedStaff = false,
   disabled = false,
-  allowPriceEdit = true,
-  onServicesChange
+  onServicesChange,
+  allowPriceEdit = true
 }: ServiceSelectionFieldProps) {
-  // Handle both services and value props for backward compatibility
-  const serviceItems = value || services || [];
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [addingNewService, setAddingNewService] = useState(false);
   const [expandedServiceId, setExpandedServiceId] = useState<string | null>(null);
@@ -27,8 +25,7 @@ export function ServiceSelectionField({
   };
 
   const handleRemove = (serviceId: string) => {
-    // Create a new array using slice to ensure it's not readonly
-    const updatedServices = serviceItems.slice().filter(s => s.service_id !== serviceId);
+    const updatedServices = services.filter(s => s.service_id !== serviceId);
     onChange(updatedServices);
     if (onServicesChange) {
       onServicesChange(updatedServices);
@@ -36,8 +33,7 @@ export function ServiceSelectionField({
   };
 
   const handleUpdate = (updatedService: ServiceItemType) => {
-    // Create a new array using slice to ensure it's not readonly
-    const updatedServices = serviceItems.slice().map(s => 
+    const updatedServices = services.map(s => 
       s.service_id === updatedService.service_id ? updatedService : s
     );
     onChange(updatedServices);
@@ -48,9 +44,7 @@ export function ServiceSelectionField({
   };
 
   const handleAddNew = (newService: ServiceItemType) => {
-    // Create a new array using slice to ensure it's not readonly
-    const updatedServices = serviceItems.slice();
-    updatedServices.push(newService);
+    const updatedServices = [...services, newService];
     onChange(updatedServices);
     if (onServicesChange) {
       onServicesChange(updatedServices);
@@ -74,7 +68,7 @@ export function ServiceSelectionField({
 
   return (
     <div className="space-y-4">
-      {serviceItems.length === 0 && !addingNewService && (
+      {services.length === 0 && !addingNewService && (
         <Card className="p-8 flex flex-col items-center justify-center text-center border-dashed border-2 border-muted-foreground/30 bg-muted/10">
           <p className="text-muted-foreground mb-4">No services added yet</p>
           <Button
@@ -90,7 +84,7 @@ export function ServiceSelectionField({
       )}
 
       <div className="space-y-3">
-        {serviceItems.map((service) => (
+        {services.map((service) => (
           <div key={service.service_id}>
             {editingServiceId === service.service_id ? (
               <ServiceItemForm
@@ -107,7 +101,6 @@ export function ServiceSelectionField({
                 onRemove={handleRemove}
                 isExpanded={expandedServiceId === service.service_id}
                 onToggleExpand={() => handleToggleExpand(service.service_id)}
-                onUpdate={handleUpdate}
               />
             )}
           </div>
@@ -124,7 +117,7 @@ export function ServiceSelectionField({
         )}
       </div>
 
-      {!addingNewService && serviceItems.length > 0 && (
+      {!addingNewService && services.length > 0 && (
         <Button
           onClick={() => setAddingNewService(true)}
           variant="outline"
@@ -139,5 +132,5 @@ export function ServiceSelectionField({
   );
 }
 
-// Also export a default version for backward compatibility
-export default ServiceSelectionField;
+// Export both the default and named export for backward compatibility
+export { ServiceSelectionField };

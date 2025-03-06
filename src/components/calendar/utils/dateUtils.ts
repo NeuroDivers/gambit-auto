@@ -1,6 +1,6 @@
 
 import { startOfDay, isSameDay, parseISO, format, addDays, isWithinInterval } from "date-fns"
-import { WorkOrder } from "@/types/work-order"
+import { WorkOrder } from "../../work-orders/types"
 
 export const getWorkOrderSpan = (workOrder: WorkOrder, startIndex: number, totalDays: number) => {
   if (!workOrder.start_time || !workOrder.end_time) {
@@ -70,10 +70,5 @@ export const isWorkOrderStart = (date: Date, workOrder: WorkOrder) => {
 
 export const formatTime = (timeString: string | null | undefined) => {
   if (!timeString) return '';
-  try {
-    return format(parseISO(timeString), 'h:mm a');
-  } catch (error) {
-    console.error('Error formatting time:', error);
-    return '';
-  }
+  return format(parseISO(timeString), 'h:mm a');
 }
