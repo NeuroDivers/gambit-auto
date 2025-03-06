@@ -2,6 +2,7 @@
 import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { LoadingScreen } from "../shared/LoadingScreen";
 
 interface AuthGuardProps {
   children: ReactNode;
@@ -13,7 +14,7 @@ export function AuthGuard({ children, isPublic = false }: AuthGuardProps) {
   const location = useLocation();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <LoadingScreen />;
   }
 
   if (!session && !isPublic) {

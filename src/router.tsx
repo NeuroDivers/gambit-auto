@@ -10,9 +10,10 @@ import PublicInvoiceView from "./pages/PublicInvoiceView"
 import { protectedRoutes } from "./routes/protectedRoutes"
 import { ErrorBoundary } from "./components/shared/ErrorBoundary"
 import { DashboardLayout } from "./components/layouts/DashboardLayout"
+import { AuthProvider } from "./hooks/useAuth"
 
-// Create the router
-export const router = createBrowserRouter([
+// Create the router with routes wrapped in AuthProvider
+const routeElements = [
   {
     path: "/",
     element: <DashboardLayout><Dashboard /></DashboardLayout>,
@@ -51,4 +52,12 @@ export const router = createBrowserRouter([
     element: <NotFound />,
     errorElement: <ErrorBoundary />
   }
-])
+]
+
+// Wrap each route element with AuthProvider
+export const router = createBrowserRouter(routeElements)
+
+// Custom wrapper function for JSX components in App.tsx
+export const AppWrapper = ({ children }: { children: React.ReactNode }) => (
+  <AuthProvider>{children}</AuthProvider>
+)
