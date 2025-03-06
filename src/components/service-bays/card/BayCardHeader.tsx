@@ -43,11 +43,11 @@ export function BayCardHeader({ name, bayId, status }: BayCardHeaderProps) {
   const getStatusIcon = () => {
     switch (status) {
       case 'available':
-        return <CheckCircle className="h-6 w-6 text-green-600" />
+        return <CheckCircle className="h-5 w-5 text-green-500" />
       case 'in_use':
-        return <Clock className="h-6 w-6 text-purple-600" />
+        return <Clock className="h-5 w-5 text-purple-500" />
       case 'maintenance':
-        return <Wrench className="h-6 w-6 text-amber-600" />
+        return <Wrench className="h-5 w-5 text-amber-500" />
       default:
         return null
     }
@@ -56,20 +56,20 @@ export function BayCardHeader({ name, bayId, status }: BayCardHeaderProps) {
   const getHeaderGradient = () => {
     switch (status) {
       case 'available':
-        return 'bg-gradient-to-r from-green-50 via-green-100/60 to-green-50/40 dark:from-green-950/30 dark:via-green-900/20 dark:to-green-950/10'
+        return 'bg-gradient-to-r from-green-50 to-green-100/50 dark:from-green-950/20 dark:to-green-900/10'
       case 'in_use':
-        return 'bg-gradient-to-r from-purple-50 via-purple-100/60 to-purple-50/40 dark:from-purple-950/30 dark:via-purple-900/20 dark:to-purple-950/10'
+        return 'bg-gradient-to-r from-purple-50 to-purple-100/50 dark:from-purple-950/20 dark:to-purple-900/10'
       case 'maintenance':
-        return 'bg-gradient-to-r from-amber-50 via-amber-100/60 to-amber-50/40 dark:from-amber-950/30 dark:via-amber-900/20 dark:to-amber-950/10'
+        return 'bg-gradient-to-r from-amber-50 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10'
       default:
-        return 'bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5'
+        return 'bg-gradient-to-r from-primary/10 to-primary/5'
     }
   }
 
   return (
     <CardHeader className={`p-6 pb-4 ${getHeaderGradient()} border-b flex flex-row items-start justify-between gap-4 group-hover:shadow-sm transition-all`}>
       <div className="flex items-center gap-3">
-        <div className="flex-shrink-0 p-2 rounded-full bg-white/80 dark:bg-black/20 shadow-sm">
+        <div className="flex-shrink-0">
           {getStatusIcon()}
         </div>
         <div className="space-y-1">
@@ -79,7 +79,7 @@ export function BayCardHeader({ name, bayId, status }: BayCardHeaderProps) {
       <Button 
         variant="outline" 
         size="icon"
-        className="rounded-full h-9 w-9 border-none bg-background/90 shadow-md hover:bg-destructive hover:text-white transition-colors"
+        className="rounded-full h-8 w-8 border-none bg-background/90 shadow-sm hover:bg-destructive hover:text-white transition-colors"
         onClick={handleDelete}
       >
         <Trash2 className="h-4 w-4" />

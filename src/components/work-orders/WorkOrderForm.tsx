@@ -72,21 +72,10 @@ export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmit
         {!workOrder && <CustomerSearch form={form} />}
         
         <FormSections 
-          onSubmit={() => form.handleSubmit(onSubmit)()}
-          customer={null}
-          onCustomerChange={() => {}}
-          vehicleInfo={{}}
-          onVehicleInfoChange={() => {}}
-          scheduleInfo={{}}
-          onScheduleInfoChange={() => {}}
-          bayId={null}
-          onBayIdChange={() => {}}
-          notes=""
-          onNotesChange={() => {}}
-          services={[]}
-          onServicesChange={() => {}}
-          isCreating={!workOrder}
+          form={form}
           isSubmitting={form.formState.isSubmitting}
+          isEditing={!!workOrder}
+          customerId={selectedCustomerId}
         />
         
         <div className="flex justify-end pt-6">
