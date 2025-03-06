@@ -1,18 +1,16 @@
+
 import { UseFormReturn } from "react-hook-form";
-import { QuoteFormValues } from "../types";
 import { ServiceItemType } from "@/types/service-item";
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField";
 
 interface ServicesSectionProps {
-  form: UseFormReturn<QuoteFormValues>;
+  form: UseFormReturn<any>;
   onServicesChange?: (services: ServiceItemType[]) => void;
 }
 
 export function ServicesSection({ form, onServicesChange }: ServicesSectionProps) {
-  const { watch, setValue } = form;
-  const services = watch("services") || [];
+  const services = form.watch("service_items") || [];
 
-  // Update this part to match the ServiceSelectionField props properly
   return (
     <div className="space-y-4">
       <div className="mb-4">
@@ -21,9 +19,9 @@ export function ServicesSection({ form, onServicesChange }: ServicesSectionProps
       </div>
       
       <ServiceSelectionField
-        services={services}
+        services={services as ServiceItemType[]}
         onChange={(updatedServices) => {
-          form.setValue("services", updatedServices);
+          form.setValue("service_items", updatedServices);
           if (onServicesChange) {
             onServicesChange(updatedServices);
           }
