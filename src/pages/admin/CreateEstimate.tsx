@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
@@ -43,12 +44,12 @@ export default function CreateEstimate() {
       country: '',
       vehicle_make: '',
       vehicle_model: '',
-      vehicle_year: '',
+      vehicle_year: new Date().getFullYear(), // Ensure this is a number by default
       vehicle_serial: '',
       vehicle_color: '',
       vehicle_trim: '',
       vehicle_body_class: '',
-      vehicle_doors: '',
+      vehicle_doors: null,
       vehicle_license_plate: '',
       contact_preference: "phone",
       start_time: null,
@@ -175,7 +176,7 @@ export default function CreateEstimate() {
           customer_country: data.country,
           vehicle_make: data.vehicle_make,
           vehicle_model: data.vehicle_model,
-          vehicle_year: data.vehicle_year,
+          vehicle_year: data.vehicle_year, // This is now a number
           vehicle_vin: data.vehicle_serial,
           vehicle_body_class: data.vehicle_body_class,
           vehicle_trim: data.vehicle_trim,

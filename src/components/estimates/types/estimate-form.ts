@@ -19,12 +19,12 @@ export interface EstimateFormValues {
   country: string;
   vehicle_make: string;
   vehicle_model: string;
-  vehicle_year: string | number;
+  vehicle_year: number; // Changed from string | number to just number
   vehicle_serial: string;
   vehicle_color: string;
   vehicle_trim: string;
   vehicle_body_class: string;
-  vehicle_doors: string | number;
+  vehicle_doors: number | null; // Changed from string | number to number | null to match WorkOrderFormValues
   vehicle_license_plate: string;
   
   // Make these required fields to match WorkOrderFormValues
