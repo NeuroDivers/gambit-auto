@@ -21,23 +21,23 @@ export function CustomerInfo({ customer }) {
         <CardTitle>Customer</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        <p className="text-lg font-medium">{customer.first_name} {customer.last_name}</p>
-        {customer.email && (
+        <p className="text-lg font-medium">{customer.customer_first_name} {customer.customer_last_name}</p>
+        {customer.customer_email && (
           <p className="text-sm text-muted-foreground">
-            Email: {customer.email}
+            Email: {customer.customer_email}
           </p>
         )}
-        {customer.phone_number && (
+        {customer.customer_phone && (
           <p className="text-sm text-muted-foreground">
-            Phone: {customer.phone_number}
+            Phone: {customer.customer_phone}
           </p>
         )}
-        {(customer.street_address || customer.city || customer.state_province) && (
+        {(customer.customer_street_address || customer.customer_city || customer.customer_state_province) && (
           <div className="text-sm text-muted-foreground">
             <p>Address:</p>
-            {customer.street_address && <p>{customer.street_address}</p>}
+            {customer.customer_street_address && <p>{customer.customer_street_address}</p>}
             <p>
-              {[customer.city, customer.state_province, customer.postal_code]
+              {[customer.customer_city, customer.customer_state_province, customer.customer_postal_code]
                 .filter(Boolean)
                 .join(", ")}
             </p>

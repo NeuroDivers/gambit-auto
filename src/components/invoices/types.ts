@@ -27,10 +27,10 @@ export type InvoiceFormValues = {
   customer_state_province?: string
   customer_postal_code?: string
   customer_country?: string
-  vehicle_make: string
-  vehicle_model: string
-  vehicle_year: number
-  vehicle_vin: string
+  customer_vehicle_make: string
+  customer_vehicle_model: string
+  customer_vehicle_year: number
+  customer_vehicle_vin: string
   subtotal: number
   gst_amount: number
   qst_amount: number
@@ -65,13 +65,13 @@ export type Invoice = {
   customer_state_province?: string | null
   customer_postal_code?: string | null
   customer_country?: string | null
-  vehicle_make: string | null
-  vehicle_model: string | null
-  vehicle_year: number | null
-  vehicle_vin: string | null
-  vehicle_body_class?: string | null
-  vehicle_doors?: number | null
-  vehicle_trim?: string | null
+  customer_vehicle_make: string | null
+  customer_vehicle_model: string | null
+  customer_vehicle_year: number | null
+  customer_vehicle_vin: string | null
+  customer_vehicle_body_class?: string | null
+  customer_vehicle_doors?: number | null
+  customer_vehicle_trim?: string | null
   invoice_items: InvoiceItem[]
   payment_status?: string
   stripe_customer_id?: string | null

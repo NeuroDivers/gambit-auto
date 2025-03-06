@@ -22,21 +22,21 @@ export function VehicleInfo({ vehicle }) {
       </CardHeader>
       <CardContent className="space-y-2">
         <p className="text-lg font-medium">
-          {vehicle.year} {vehicle.make} {vehicle.model}
+          {vehicle.customer_vehicle_year} {vehicle.customer_vehicle_make} {vehicle.customer_vehicle_model}
         </p>
-        {vehicle.color && (
+        {vehicle.customer_vehicle_color && (
           <p className="text-sm text-muted-foreground">
-            Color: {vehicle.color}
+            Color: {vehicle.customer_vehicle_color}
           </p>
         )}
-        {vehicle.vin && (
+        {vehicle.customer_vehicle_vin && (
           <p className="text-sm text-muted-foreground">
-            VIN: {vehicle.vin}
+            VIN: {vehicle.customer_vehicle_vin}
           </p>
         )}
-        {vehicle.license_plate && (
+        {vehicle.customer_vehicle_license_plate && (
           <p className="text-sm text-muted-foreground">
-            License Plate: {vehicle.license_plate}
+            License Plate: {vehicle.customer_vehicle_license_plate}
           </p>
         )}
       </CardContent>

@@ -1,194 +1,168 @@
 
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+import React, { useState } from "react";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { WorkOrderCard } from "./WorkOrderCard";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
-import { MobileCalendarView } from "@/components/work-orders/calendar/mobile/MobileCalendarView";
-import { DesktopCalendarView } from "@/components/work-orders/calendar/DesktopCalendarView";
-import { toast } from "sonner";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { CalendarClock, Plus } from "lucide-react";
+import { format, isToday, isSameDay } from "date-fns";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
-import { HorizontalWorkOrderQueue } from "./calendar/HorizontalWorkOrderQueue";
-import { WorkOrder } from "./types";
-import { WorkOrderDetailsDialog } from "./calendar/WorkOrderDetailsDialog";
+import { HorizontalCalendar } from "@/components/calendar/HorizontalCalendar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useServiceBays } from "@/components/service-bays/hooks/useServiceBays";
-import { WorkOrdersSection } from "./sections/WorkOrdersSection";
 
-interface WorkOrderCalendarProps {
-  clientView?: boolean;
-}
-
-export const WorkOrderCalendar = ({
-  clientView = false
-}: WorkOrderCalendarProps) => {
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
+export function WorkOrderCalendar() {
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const isMobile = useIsMobile();
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null);
 
-  // Force a refetch of service bays when the calendar loads
-  const {
-    refetch: refetchServiceBays
-  } = useServiceBays();
-  
-  useEffect(() => {
-    // Ensure service bays are loaded when the calendar mounts
-    refetchServiceBays().catch(error => {
-      console.error("Error fetching service bays:", error);
-    });
-  }, [refetchServiceBays]);
-  
-  const {
-    data: workOrders = []
-  } = useQuery({
-    queryKey: ["workOrders"],
+  const { data: workOrders, isLoading } = useQuery({
+    queryKey: ["workOrders", format(currentDate, "yyyy-MM-dd")],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from("work_orders").select("*").order("created_at", {
-        ascending: false
-      });
+      const formattedDate = format(currentDate, "yyyy-MM-dd");
+
+      const { data, error } = await supabase
+        .from("work_orders")
+        .select(
+          `
+          id, 
+          customer_first_name,
+          customer_last_name,
+          customer_phone,
+          customer_email,
+          start_time,
+          end_time,
+          status,
+          customer_vehicle_make,
+          customer_vehicle_model,
+          customer_vehicle_year,
+          assigned_profile_id,
+          profiles (
+            id,
+            first_name,
+            last_name
+          )
+        `
+        )
+        .gte("start_time", `${formattedDate}T00:00:00`)
+        .lte("start_time", `${formattedDate}T23:59:59`)
+        .order("start_time", { ascending: true });
+
       if (error) throw error;
       return data;
-    }
+    },
   });
-  
-  const {
-    data: approvedUnscheduledWorkOrders = []
-  } = useQuery({
-    queryKey: ["approvedUnscheduledWorkOrders"],
-    queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from("work_orders").select("*").is("start_time", null).eq("status", "approved").order("created_at", {
-        ascending: false
-      });
-      if (error) {
-        toast.error("Failed to load approved work orders");
-        throw error;
-      }
-      return data as WorkOrder[];
+
+  const handleDateChange = (date: Date | undefined) => {
+    if (date) {
+      setCurrentDate(date);
     }
-  });
-  
-  useEffect(() => {
-    const channel = supabase.channel("work_orders_changes").on("postgres_changes", {
-      event: "*",
-      schema: "public",
-      table: "work_orders"
-    }, payload => {
-      console.log("Work order change detected:", payload);
-      switch (payload.eventType) {
-        case "DELETE":
-          toast.info("Work order deleted");
-          queryClient.setQueryData(["workOrders"], (oldData: any) => {
-            if (!oldData) return oldData;
-            return oldData.filter((workOrder: any) => workOrder.id !== payload.old.id);
-          });
-          break;
-        case "INSERT":
-          toast.success("New work order created");
-          queryClient.invalidateQueries({
-            queryKey: ["workOrders"]
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["approvedUnscheduledWorkOrders"]
-          });
-          break;
-        case "UPDATE":
-          toast.success("Work order updated");
-          queryClient.invalidateQueries({
-            queryKey: ["workOrders"]
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["approvedUnscheduledWorkOrders"]
-          });
-          break;
-      }
-    }).subscribe(status => {
-      console.log("Subscription status:", status);
-    });
-    return () => {
-      console.log("Cleaning up subscription");
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
-  
-  const handleWorkOrderSelect = (workOrder: WorkOrder) => {
-    setSelectedWorkOrder(workOrder);
   };
-  
-  const handleDateChange = (date: Date) => {
-    setCurrentDate(date);
-    console.log("Date changed:", date);
-  };
-  
+
   return (
-    <div className="space-y-6">
-      {!clientView && (
-        <div className="flex justify-end">
-          <Button onClick={() => navigate("/work-orders/create")}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Work Order
-          </Button>
+    <div className="flex flex-col h-full space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <CalendarIcon className="mr-2 h-5 w-5 text-muted-foreground" />
+          <h2 className="text-xl font-semibold">
+            {isToday(currentDate)
+              ? "Today's Schedule"
+              : format(currentDate, "MMMM d, yyyy")}
+          </h2>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => setCurrentDate(new Date())}
+          className="hidden md:flex"
+        >
+          Today
+        </Button>
+      </div>
+
+      {isMobile ? (
+        <HorizontalCalendar
+          selectedDate={currentDate}
+          onDateSelect={handleDateChange}
+        />
+      ) : (
+        <div className="flex flex-col md:flex-row gap-4">
+          <Card className="md:w-80">
+            <CardHeader>
+              <CardTitle>Calendar</CardTitle>
+              <CardDescription>
+                Select a date to view work orders
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Calendar
+                mode="single"
+                selected={currentDate}
+                onSelect={handleDateChange}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="flex-1">
+            <CardHeader>
+              <CardTitle>
+                Work Orders for {format(currentDate, "MMMM d, yyyy")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : workOrders && workOrders.length > 0 ? (
+                <ScrollArea className="h-[calc(100vh-24rem)]">
+                  <div className="space-y-4 pr-4">
+                    {workOrders.map((order) => (
+                      <WorkOrderCard key={order.id} workOrder={order} />
+                    ))}
+                  </div>
+                </ScrollArea>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No work orders scheduled for this date
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       )}
-      
-      <div className="space-y-8">
-        {isMobile ? (
-          <MobileCalendarView 
-            currentDate={currentDate} 
-            workOrders={workOrders} 
-            onDateChange={handleDateChange} 
-          />
-        ) : (
-          <DesktopCalendarView 
-            currentDate={currentDate} 
-            workOrders={workOrders} 
-            onDateChange={handleDateChange} 
-          />
-        )}
-        
-        {!clientView && (
-          <>
-            <div className="mt-10">
-              <HorizontalWorkOrderQueue 
-                workOrders={approvedUnscheduledWorkOrders} 
-                onSelectWorkOrder={handleWorkOrderSelect} 
-              />
-            </div>
-            
-            <Alert className="border-l-4 border-l-amber-500">
-              <CalendarClock className="h-4 w-4 text-amber-500" />
-              <AlertTitle>Unscheduled Work Orders</AlertTitle>
-              <AlertDescription>
-                Work orders without a start time won't appear on the calendar. They will be listed in the section below.
-              </AlertDescription>
-            </Alert>
-            
-            <Card>
-              <WorkOrdersSection 
-                workOrders={workOrders.filter(wo => !wo.start_time)} 
-                onViewDetails={handleWorkOrderSelect}
-              />
-            </Card>
-          </>
-        )}
-      </div>
-      
-      {selectedWorkOrder && (
-        <WorkOrderDetailsDialog 
-          workOrder={selectedWorkOrder} 
-          open={!!selectedWorkOrder} 
-          onOpenChange={open => !open && setSelectedWorkOrder(null)} 
-        />
+
+      {isMobile && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Work Orders for {format(currentDate, "MMMM d, yyyy")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : workOrders && workOrders.length > 0 ? (
+              <div className="space-y-4">
+                {workOrders.map((order) => (
+                  <WorkOrderCard key={order.id} workOrder={order} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                No work orders scheduled for this date
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
     </div>
   );
-};
+}

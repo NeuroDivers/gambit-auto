@@ -8,12 +8,12 @@ export interface WorkOrder {
   customer_email: string;
   customer_phone: string;
   contact_preference: 'phone' | 'email';
-  vehicle_year: string;
-  vehicle_make: string;
-  vehicle_model: string;
-  vehicle_trim?: string | null;
-  vehicle_color?: string | null;
-  vehicle_vin?: string | null;
+  customer_vehicle_year: string;
+  customer_vehicle_make: string;
+  customer_vehicle_model: string;
+  customer_vehicle_trim?: string | null;
+  customer_vehicle_color?: string | null;
+  customer_vehicle_vin?: string | null;
   service_bays?: {
     id: string;
     name: string;
