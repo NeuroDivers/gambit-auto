@@ -71,13 +71,16 @@ export function useWorkOrderListData() {
           `, { count: 'exact' })
           .order("created_at", { ascending: false })
 
-        // Handle search term
+        // Handle search term - fixed search logic
         if (searchTerm && searchTerm.trim() !== '') {
           query = query.or(
-            `first_name.ilike.%${searchTerm.trim()}%,` +
-            `last_name.ilike.%${searchTerm.trim()}%,` +
-            `email.ilike.%${searchTerm.trim()}%,` +
-            `phone_number.ilike.%${searchTerm.trim()}%`
+            `customer_first_name.ilike.%${searchTerm.trim()}%,` +
+            `customer_last_name.ilike.%${searchTerm.trim()}%,` +
+            `customer_email.ilike.%${searchTerm.trim()}%,` +
+            `customer_phone.ilike.%${searchTerm.trim()}%,` +
+            `vehicle_make.ilike.%${searchTerm.trim()}%,` +
+            `vehicle_model.ilike.%${searchTerm.trim()}%,` +
+            `vehicle_vin.ilike.%${searchTerm.trim()}%`
           )
         }
 
@@ -117,7 +120,6 @@ export function useWorkOrderListData() {
         return data || [];
       } catch (err) {
         console.error('Work orders fetch error:', err);
-        toast.error('Failed to load work orders');
         throw err;
       }
     }
