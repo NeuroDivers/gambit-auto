@@ -8,16 +8,14 @@ import { WorkOrderFormValues } from "@/components/work-orders/types";
  * components that expect WorkOrderFormValues, while adding
  * estimate-specific fields.
  */
-export interface EstimateFormValues extends Omit<WorkOrderFormValues, 'additional_notes'> {
+export interface EstimateFormValues extends WorkOrderFormValues {
   // Estimate-specific fields (not in WorkOrderFormValues)
-  notes: string;
   total: number;
   vehicle_id: string;
   
-  // For backward compatibility
+  // For backward compatibility 
   services?: ServiceItemType[];
   
-  // Re-include additional_notes from WorkOrderFormValues but make it optional
-  // This allows us to sync between notes and additional_notes
-  additional_notes?: string;
+  // Override additional_notes from WorkOrderFormValues to make it required
+  additional_notes: string;
 }

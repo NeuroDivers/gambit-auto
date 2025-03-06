@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
@@ -31,7 +32,6 @@ export default function CreateEstimate() {
       service_items: [],
       services: [],
       total: 0,
-      notes: '',
       additional_notes: '',
       first_name: '',
       last_name: '',
@@ -70,13 +70,6 @@ export default function CreateEstimate() {
     const subscription = form.watch((value, { name }) => {
       if (name === 'client_id' && value.client_id) {
         setSelectedCustomerId(value.client_id as string);
-      }
-      
-      if (name === 'notes' && value.notes !== value.additional_notes) {
-        form.setValue('additional_notes', value.notes);
-      }
-      if (name === 'additional_notes' && value.additional_notes !== value.notes) {
-        form.setValue('notes', value.additional_notes || '');
       }
     });
     
@@ -183,7 +176,7 @@ export default function CreateEstimate() {
           customer_id: data.client_id,
           status: "draft",
           total: data.total || 0,
-          notes: data.notes || "",
+          notes: data.additional_notes || "",
           customer_first_name: data.first_name,
           customer_last_name: data.last_name,
           customer_email: data.email,
@@ -310,7 +303,7 @@ export default function CreateEstimate() {
                 <CardContent className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="notes"
+                    name="additional_notes"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Notes</FormLabel>
