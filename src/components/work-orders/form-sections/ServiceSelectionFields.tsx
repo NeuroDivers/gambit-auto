@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react"
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
 import { useFieldArray } from "react-hook-form"
@@ -134,7 +135,6 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
       form.setValue(`service_items.${index}.unit_price`, selectedService.base_price || 0)
       form.setValue(`service_items.${index}.service_id`, serviceId)
       
-      // Immediately expand services with sub-services
       if (hasSubServices(serviceId)) {
         console.log(`Expanding service at index ${index} because it has sub-services`);
         setExpandedServices(prev => ({
@@ -723,7 +723,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                                 type="button" 
                                 variant="outline"
                                 size="sm"
-                                className="w-full flex items-center justify-center gap-2 h-20 border-dashed text-muted-foreground hover:text-primary"
+                                className="w-full flex items-center justify-center gap-2 h-20 border-dashed text-muted-foreground hover:text-accent hover:border-accent transition-colors"
                                 onClick={() => addSubService(index)}
                               >
                                 <PlusIcon className="h-4 w-4" />
@@ -750,7 +750,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
           type="button" 
           variant="outline" 
           onClick={addService} 
-          className="w-full py-6 border-dashed flex items-center gap-2"
+          className="w-full py-6 border-dashed flex items-center gap-2 hover:text-accent hover:border-accent transition-colors"
         >
           <PlusIcon className="h-4 w-4" />
           Add Another Service
