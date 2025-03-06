@@ -10,15 +10,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface StaffSelectorProps {
   value: string | null | undefined;
   onChange: (value: string | null) => void;
   placeholder?: string;
   required?: boolean;
+  className?: string; // Add className prop
 }
 
-export function StaffSelector({ value, onChange, placeholder = "Assign staff member", required = false }: StaffSelectorProps) {
+export function StaffSelector({ 
+  value, 
+  onChange, 
+  placeholder = "Assign staff member", 
+  required = false,
+  className 
+}: StaffSelectorProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   // Fetch staff members who can be assigned to service items
@@ -46,7 +54,7 @@ export function StaffSelector({ value, onChange, placeholder = "Assign staff mem
   };
 
   return (
-    <div className="w-full">
+    <div className={cn("w-full", className)}>
       <Select
         value={value || "unassigned"}
         onValueChange={handleChange}
