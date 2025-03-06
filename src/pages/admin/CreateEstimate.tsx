@@ -15,6 +15,8 @@ import { ServiceItemsField } from "@/components/work-orders/form-fields/ServiceI
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
+import { EstimateFormAdapter } from "@/components/estimates/EstimateFormAdapter"
+import { EstimateFormValues } from "@/components/estimates/types/estimate-form"
 
 export default function CreateEstimate() {
   const navigate = useNavigate()
@@ -23,7 +25,7 @@ export default function CreateEstimate() {
   const [subtotal, setSubtotal] = useState(0)
   const [selectedServices, setSelectedServices] = useState<any[]>([])
   
-  const form = useForm({
+  const form = useForm<EstimateFormValues>({
     defaultValues: {
       client_id: '',
       vehicle_id: '',
@@ -49,6 +51,15 @@ export default function CreateEstimate() {
       vehicle_body_class: '',
       vehicle_doors: '',
       vehicle_license_plate: '',
+      // Additional fields to match WorkOrderFormValues
+      contact_preference: "phone",
+      start_time: null,
+      estimated_duration: null,
+      end_time: null,
+      assigned_bay_id: null,
+      service_items: [],
+      is_primary_vehicle: false,
+      save_vehicle: false
     }
   })
 
@@ -89,7 +100,7 @@ export default function CreateEstimate() {
     form.setValue('total', total);
   }, [form.watch('services')]);
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: EstimateFormValues) => {
     setIsSubmitting(true)
     try {
       let customerId = data.client_id
@@ -161,7 +172,7 @@ export default function CreateEstimate() {
       const { data: estimate, error } = await supabase
         .from("estimates")
         .insert({
-          customer_id: customerId,
+          customer_id: data.client_id,
           status: "draft",
           total: data.total || 0,
           notes: data.notes || "",
@@ -241,7 +252,9 @@ export default function CreateEstimate() {
         <div className="max-w-7xl mx-auto py-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <CustomerSearch form={form} />
+              <EstimateFormAdapter form={form}>
+                <CustomerSearch form={form} />
+              </EstimateFormAdapter>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
@@ -249,7 +262,9 @@ export default function CreateEstimate() {
                     <CardTitle>Customer Information</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <CustomerInfoFields form={form} isEditing={false} />
+                    <EstimateFormAdapter form={form}>
+                      <CustomerInfoFields form={form} isEditing={false} />
+                    </EstimateFormAdapter>
                   </CardContent>
                 </Card>
                 
@@ -258,7 +273,9 @@ export default function CreateEstimate() {
                     <CardTitle>Vehicle Information</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <VehicleInfoFields form={form} />
+                    <EstimateFormAdapter form={form}>
+                      <VehicleInfoFields form={form} />
+                    </EstimateFormAdapter>
                   </CardContent>
                 </Card>
               </div>
