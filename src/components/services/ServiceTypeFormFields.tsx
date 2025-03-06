@@ -1,8 +1,7 @@
 
-import { UseFormReturn } from "react-hook-form"
+import { useFormContext } from "react-hook-form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
 import { 
   FormControl, 
   FormField, 
@@ -20,11 +19,8 @@ import { Switch } from "@/components/ui/switch"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 
-interface ServiceTypeFormFieldsProps {
-  form: UseFormReturn<any>
-}
-
-export function ServiceTypeFormFields({ form }: ServiceTypeFormFieldsProps) {
+export function ServiceTypeFormFields() {
+  const form = useFormContext();
   const serviceType = form.watch('service_type') || 'standalone';
   
   const { data: parentServices = [], isLoading: isLoadingParentServices } = useQuery({
@@ -144,6 +140,7 @@ export function ServiceTypeFormFields({ form }: ServiceTypeFormFieldsProps) {
                 step="0.01"
                 {...field}
                 onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                value={field.value}
               />
             </FormControl>
           </FormItem>
@@ -163,6 +160,7 @@ export function ServiceTypeFormFields({ form }: ServiceTypeFormFieldsProps) {
                 min="0"
                 {...field}
                 onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                value={field.value}
               />
             </FormControl>
           </FormItem>

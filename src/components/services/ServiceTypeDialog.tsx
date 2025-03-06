@@ -3,7 +3,7 @@ import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ServiceTypeFormFields } from "./ServiceTypeFormFields"
-import { useForm } from "react-hook-form"
+import { useForm, FormProvider } from "react-hook-form"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
@@ -24,7 +24,7 @@ export function ServiceTypeDialog({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const queryClient = useQueryClient()
   
-  const form = useForm({
+  const methods = useForm({
     defaultValues: {
       name: serviceType?.name || "",
       description: serviceType?.description || "",
@@ -120,25 +120,27 @@ export function ServiceTypeDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(handleSubmit)}>
-          <ServiceTypeFormFields form={form} />
-          
-          <DialogFooter className="mt-6">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting 
-                ? (serviceType?.id ? "Updating..." : "Creating...") 
-                : (serviceType?.id ? "Update" : "Create")
-              }
-            </Button>
-          </DialogFooter>
-        </form>
+        <FormProvider {...methods}>
+          <form onSubmit={methods.handleSubmit(handleSubmit)}>
+            <ServiceTypeFormFields />
+            
+            <DialogFooter className="mt-6">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting 
+                  ? (serviceType?.id ? "Updating..." : "Creating...") 
+                  : (serviceType?.id ? "Update" : "Create")
+                }
+              </Button>
+            </DialogFooter>
+          </form>
+        </FormProvider>
       </DialogContent>
     </Dialog>
   )
