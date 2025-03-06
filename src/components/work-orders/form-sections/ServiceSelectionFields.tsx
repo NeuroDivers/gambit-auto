@@ -1,3 +1,4 @@
+
 import React from "react"
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
@@ -16,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { debug } from "@/lib/utils"
 
 interface ServiceSelectionFieldsProps {
   form: UseFormReturn<WorkOrderFormValues>
@@ -75,7 +77,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
       });
       
       setSubServicesByParent(subServiceMap);
-      console.log("Sub-services loaded:", subServiceMap);
+      debug("Sub-services loaded:", subServiceMap);
       return data || []
     }
   })
@@ -136,7 +138,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
       form.setValue(`service_items.${index}.service_id`, serviceId)
       
       if (hasSubServices(serviceId)) {
-        console.log(`Expanding service at index ${index} because it has sub-services`);
+        debug(`Expanding service at index ${index} because it has sub-services`);
         setExpandedServices(prev => ({
           ...prev,
           [index]: true
@@ -177,12 +179,12 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
 
   useEffect(() => {
     if (Object.keys(subServicesByParent).length > 0) {
-      console.log("Sub-services data loaded, checking for services to expand");
+      debug("Sub-services data loaded, checking for services to expand");
       const formValues = form.getValues();
       if (formValues.service_items) {
         formValues.service_items.forEach((item, index) => {
           if (item.service_id && hasSubServices(item.service_id)) {
-            console.log(`Found service at index ${index} with sub-services, expanding`);
+            debug(`Found service at index ${index} with sub-services, expanding`);
             setExpandedServices(prev => ({
               ...prev,
               [index]: true
@@ -194,10 +196,10 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
   }, [subServicesByParent, form]);
 
   useEffect(() => {
-    console.log("Service items changed, checking for sub-services");
+    debug("Service items changed, checking for sub-services");
     serviceItems.forEach((item, index) => {
       if (item.service_id && hasSubServices(item.service_id)) {
-        console.log(`Service at index ${index} has sub-services, expanding`);
+        debug(`Service at index ${index} has sub-services, expanding`);
         setExpandedServices(prev => ({
           ...prev,
           [index]: true
@@ -207,17 +209,17 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
   }, [serviceItems, subServicesByParent]);
 
   useEffect(() => {
-    console.log("Setting up form watch for service_id changes");
+    debug("Setting up form watch for service_id changes");
     const subscription = form.watch((value, { name }) => {
       if (name && name.includes('service_id') && !name.includes('sub_services')) {
-        console.log(`Service ID changed: ${name}`);
+        debug(`Service ID changed: ${name}`);
         const matches = name.match(/service_items\.(\d+)\.service_id/);
         if (matches && matches[1]) {
           const index = parseInt(matches[1]);
           const serviceId = form.getValues(`service_items.${index}.service_id`);
-          console.log(`Service ID at index ${index} changed to ${serviceId}`);
+          debug(`Service ID at index ${index} changed to ${serviceId}`);
           if (serviceId && hasSubServices(serviceId)) {
-            console.log(`Service has sub-services, expanding section`);
+            debug(`Service has sub-services, expanding section`);
             setExpandedServices(prev => ({
               ...prev,
               [index]: true
@@ -260,7 +262,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
           type="button" 
           variant="outline" 
           onClick={addService}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 hover:text-primary hover:border-primary transition-colors"
         >
           <PlusIcon className="h-4 w-4" />
           Add Service
@@ -268,16 +270,16 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
       </div>
 
       {serviceItems.length === 0 && (
-        <Card className="bg-muted/40 border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-10">
-            <div className="text-muted-foreground text-center mb-4">
-              <p className="mb-2">No services added yet</p>
+        <Card className="border-dashed border-2 bg-muted/20">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="text-muted-foreground text-center mb-5">
+              <p className="mb-2 text-lg">No services added yet</p>
               <p className="text-sm">Add a service to begin creating your work order</p>
             </div>
             <Button 
               type="button" 
               onClick={addService}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 px-6"
             >
               <PlusIcon className="h-4 w-4" />
               Add Service
@@ -287,14 +289,14 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
       )}
 
       {serviceItems.map((field, index) => (
-        <Card key={field.id} className="overflow-hidden border shadow-sm">
-          <div className="bg-muted p-4 border-b">
+        <Card key={field.id} className="overflow-hidden border shadow-sm hover:shadow transition-shadow duration-200">
+          <div className="bg-muted/40 p-4 border-b">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="bg-background">
                   {index + 1}
                 </Badge>
-                <h4 className="font-medium">
+                <h4 className="font-medium text-lg">
                   {field.service_name || "New Service"}
                 </h4>
               </div>
@@ -311,14 +313,14 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
             </div>
           </div>
           
-          <CardContent className="p-4 pt-5 space-y-5">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent className="p-5 pt-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <FormField
                 control={form.control}
                 name={`service_items.${index}.service_id`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Service Type</FormLabel>
+                    <FormLabel className="text-base">Service Type</FormLabel>
                     <FormControl>
                       <Select
                         value={field.value}
@@ -327,7 +329,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                           handleServiceChange(index, value);
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="h-10">
                           <SelectValue placeholder="Select Service Type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -349,9 +351,9 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                 name={`service_items.${index}.service_name`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Service Name</FormLabel>
+                    <FormLabel className="text-base">Service Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Service Name" {...field} />
+                      <Input placeholder="Service Name" className="h-10" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -359,17 +361,18 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <FormField
                 control={form.control}
                 name={`service_items.${index}.quantity`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Quantity</FormLabel>
+                    <FormLabel className="text-base">Quantity</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         min={1}
+                        className="h-10"
                         {...field}
                         onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                       />
@@ -384,7 +387,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                 name={`service_items.${index}.unit_price`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Unit Price</FormLabel>
+                    <FormLabel className="text-base">Unit Price</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
@@ -392,7 +395,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                           type="number"
                           min={0}
                           step="0.01"
-                          className="pl-7"
+                          className="pl-7 h-10"
                           {...field}
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         />
@@ -408,12 +411,16 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                 name={`service_items.${index}.assigned_profile_id`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Staff Assignment</FormLabel>
+                    <FormLabel className="text-base flex items-center gap-1.5">
+                      <UserIcon className="h-3.5 w-3.5" />
+                      Staff Assignment
+                    </FormLabel>
                     <FormControl>
                       <StaffSelector 
                         value={field.value} 
                         onChange={field.onChange}
                         placeholder="Assign staff"
+                        className="h-10"
                       />
                     </FormControl>
                     <FormMessage />
@@ -423,8 +430,8 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
             </div>
             
             {form.watch(`service_items.${index}.assigned_profile_id`) && (
-              <Card className="border-muted bg-muted/30 p-3">
-                <CardContent className="p-0 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="border-primary/10 bg-primary/5 p-4 shadow-none">
+                <CardContent className="p-0 grid grid-cols-1 md:grid-cols-2 gap-5">
                   <FormField
                     control={form.control}
                     name={`service_items.${index}.commission_type`}
@@ -489,11 +496,11 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
               name={`service_items.${index}.description`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel className="text-base">Description</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Service description or notes" 
-                      className="resize-none" 
+                      placeholder="Add details about this service" 
+                      className="resize-none min-h-[80px]" 
                       {...field} 
                       value={field.value || ''}
                     />
@@ -504,7 +511,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
             />
 
             {field.service_id && hasSubServices(field.service_id) && (
-              <div className="pt-2 mt-4 border-t">
+              <div className="pt-4 mt-2 border-t border-primary/10">
                 <div className="flex justify-between items-center mb-3">
                   <Button
                     type="button"
@@ -531,7 +538,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                       variant="outline"
                       size="sm"
                       onClick={() => addSubService(index)}
-                      className="flex items-center gap-2 text-xs"
+                      className="flex items-center gap-2 text-xs hover:text-primary hover:border-primary transition-colors"
                     >
                       <PlusIcon className="h-3 w-3" />
                       Add Sub-Service
@@ -540,7 +547,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                 </div>
 
                 {expandedServices[index] && (
-                  <div className="relative pl-4 ml-1 border-l-2 border-primary/40 space-y-4">                  
+                  <div className="relative pl-5 ml-2 border-l-2 border-primary/30 space-y-4">                  
                     {!field.service_id && (
                       <div className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
                         Please select a service type first to see available sub-services
@@ -557,13 +564,13 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                     )}
                     
                     {field.sub_services && field.sub_services.length > 0 ? (
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {field.sub_services.map((subService, subIndex) => (
-                          <Card key={subIndex} className="bg-muted/30 shadow-none">
-                            <CardContent className="p-3 pt-3">
-                              <div className="flex justify-between items-center mb-3">
-                                <Badge variant="outline" className="bg-background">
-                                  Sub {subIndex + 1}
+                          <Card key={subIndex} className="bg-background border border-primary/20 shadow-sm">
+                            <CardContent className="p-4 pt-4">
+                              <div className="flex justify-between items-center mb-4">
+                                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/30">
+                                  Sub-Service {subIndex + 1}
                                 </Badge>
                                 <Button
                                   type="button"
@@ -577,14 +584,14 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                                 </Button>
                               </div>
                               
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                  <label className="text-xs font-medium block mb-1.5">Service Type</label>
+                                  <label className="text-sm font-medium block mb-1.5">Service Type</label>
                                   <Select
                                     value={(subService as ServiceItemType).service_id}
                                     onValueChange={(value) => handleSubServiceChange(index, subIndex, value)}
                                   >
-                                    <SelectTrigger className="h-8 text-sm">
+                                    <SelectTrigger className="h-9 text-sm">
                                       <SelectValue placeholder="Select Sub-Service" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -598,9 +605,9 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                                 </div>
                                 
                                 <div>
-                                  <label className="text-xs font-medium block mb-1.5">Service Name</label>
+                                  <label className="text-sm font-medium block mb-1.5">Service Name</label>
                                   <Input 
-                                    className="h-8 text-sm" 
+                                    className="h-9 text-sm" 
                                     placeholder="Sub-Service Name"
                                     value={(subService as ServiceItemType).service_name}
                                     onChange={(e) => {
@@ -612,11 +619,11 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                                 </div>
                               </div>
                               
-                              <div className="grid grid-cols-3 gap-3 mb-3">
+                              <div className="grid grid-cols-3 gap-4 mb-4">
                                 <div>
-                                  <label className="text-xs font-medium block mb-1.5">Quantity</label>
+                                  <label className="text-sm font-medium block mb-1.5">Quantity</label>
                                   <Input
-                                    className="h-8 text-sm"
+                                    className="h-9 text-sm"
                                     type="number"
                                     min={1}
                                     value={(subService as ServiceItemType).quantity}
@@ -629,11 +636,11 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                                 </div>
                                 
                                 <div>
-                                  <label className="text-xs font-medium block mb-1.5">Unit Price</label>
+                                  <label className="text-sm font-medium block mb-1.5">Unit Price</label>
                                   <div className="relative">
                                     <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">$</span>
                                     <Input
-                                      className="h-8 text-sm pl-5"
+                                      className="h-9 text-sm pl-5"
                                       type="number"
                                       min={0}
                                       step="0.01"
@@ -648,7 +655,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                                 </div>
                                 
                                 <div>
-                                  <label className="text-xs font-medium flex items-center gap-1 mb-1.5">
+                                  <label className="text-sm font-medium flex items-center gap-1 mb-1.5">
                                     <UserIcon className="h-3 w-3" />
                                     <span>Staff Assignment</span>
                                   </label>
@@ -656,13 +663,13 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                                     value={(subService as ServiceItemType).assigned_profile_id}
                                     onChange={(value) => updateAssignedStaffForSubService(index, subIndex, value)}
                                     placeholder="Assign staff"
-                                    className="h-8 text-sm"
+                                    className="h-9 text-sm"
                                   />
                                 </div>
                               </div>
                               
                               {(subService as ServiceItemType).assigned_profile_id && (
-                                <div className="bg-muted/50 rounded-md p-2 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="bg-primary/5 rounded-md p-3 grid grid-cols-1 md:grid-cols-2 gap-4 border border-primary/10">
                                   <div>
                                     <label className="text-xs font-medium block mb-1">Commission Type</label>
                                     <Select
@@ -673,7 +680,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                                         form.setValue("service_items", updatedServices);
                                       }}
                                     >
-                                      <SelectTrigger className="text-xs h-7">
+                                      <SelectTrigger className="text-xs h-8">
                                         <SelectValue placeholder="Select Type" />
                                       </SelectTrigger>
                                       <SelectContent>
@@ -694,7 +701,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                                         {(subService as ServiceItemType).commission_type === 'percentage' ? '%' : '$'}
                                       </span>
                                       <Input
-                                        className="h-7 text-xs pl-5"
+                                        className="h-8 text-xs pl-5"
                                         type="number"
                                         min={0}
                                         step={(subService as ServiceItemType).commission_type === 'percentage' ? "1" : "0.01"}
@@ -723,7 +730,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                                 type="button" 
                                 variant="outline"
                                 size="sm"
-                                className="w-full flex items-center justify-center gap-2 h-20 border-dashed text-muted-foreground hover:text-accent hover:border-accent transition-colors"
+                                className="w-full flex items-center justify-center gap-2 h-16 border-dashed border-primary/30 text-primary hover:text-primary hover:border-primary transition-colors"
                                 onClick={() => addSubService(index)}
                               >
                                 <PlusIcon className="h-4 w-4" />
@@ -750,7 +757,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
           type="button" 
           variant="outline" 
           onClick={addService} 
-          className="w-full py-6 border-dashed flex items-center gap-2 hover:text-accent hover:border-accent transition-colors"
+          className="w-full py-6 border-dashed flex items-center gap-2 hover:text-primary hover:border-primary transition-colors"
         >
           <PlusIcon className="h-4 w-4" />
           Add Another Service
