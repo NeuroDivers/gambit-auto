@@ -1,57 +1,62 @@
 
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
+import { UseFormReturn } from "react-hook-form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel 
+} from "@/components/ui/form"
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { CommissionRateFields } from "@/components/shared/form-fields/CommissionRateFields"
-import { UseFormReturn } from "react-hook-form"
-import * as z from "zod"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
 
-export const formSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().optional(),
-  base_price: z.string().refine(value => !value || !isNaN(parseFloat(value)), {
-    message: "Base price must be a valid number"
-  }),
-  discount_price: z.string().refine(value => !value || !isNaN(parseFloat(value)), {
-    message: "Discount price must be a valid number"
-  }).optional(),
-  estimated_time: z.string().refine(value => !value || !isNaN(parseInt(value)), {
-    message: "Estimated time must be a valid number"
-  }),
-  status: z.enum(["active", "inactive"]),
-  commission_rate: z.number().nullable(),
-  commission_type: z.enum(["percentage", "flat"]).nullable(),
-  service_type: z.enum(["standalone", "sub_service", "bundle"]).default("standalone"),
-  parent_service_id: z.string().optional(),
-  pricing_model: z.enum(["flat_rate", "hourly", "variable"]).default("flat_rate"),
-  visible_on_app: z.boolean().default(true),
-  visible_on_website: z.boolean().default(true)
-})
+interface ServiceTypeFormFieldsProps {
+  form: UseFormReturn<any>
+}
 
-export type ServiceTypeFormValues = z.infer<typeof formSchema>
-
-export function ServiceTypeFormFields({ form }: { form: UseFormReturn<ServiceTypeFormValues> }) {
-  const commissionRate = form.watch('commission_rate')
-  const commissionType = form.watch('commission_type')
-  const serviceType = form.watch('service_type')
+export function ServiceTypeFormFields({ form }: ServiceTypeFormFieldsProps) {
+  const serviceType = form.watch('service_type') || 'standalone';
+  
+  const { data: parentServices = [], isLoading: isLoadingParentServices } = useQuery({
+    queryKey: ["parent-services"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_types")
+        .select("id, name")
+        .eq("service_type", "standalone")
+        .order("name", { ascending: true });
+        
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: serviceType === 'sub_service' // Only fetch if sub_service is selected
+  });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <FormField
         control={form.control}
         name="name"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Name</FormLabel>
+            <FormLabel>Service Name</FormLabel>
             <FormControl>
-              <Input {...field} />
+              <Input placeholder="Enter service name" {...field} />
             </FormControl>
-            <FormMessage />
           </FormItem>
         )}
       />
+      
       <FormField
         control={form.control}
         name="description"
@@ -59,42 +64,42 @@ export function ServiceTypeFormFields({ form }: { form: UseFormReturn<ServiceTyp
           <FormItem>
             <FormLabel>Description</FormLabel>
             <FormControl>
-              <Textarea {...field} />
+              <Textarea
+                placeholder="Enter service description"
+                className="min-h-[100px]"
+                {...field}
+                value={field.value || ''}
+              />
             </FormControl>
-            <FormMessage />
           </FormItem>
         )}
       />
       
-      {/* Service Type Selection */}
       <FormField
         control={form.control}
         name="service_type"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Service Type</FormLabel>
-            <Select 
-              onValueChange={field.onChange} 
-              defaultValue={field.value}
-              value={field.value}
-            >
-              <FormControl>
-                <SelectTrigger>
+            <FormControl>
+              <Select
+                value={field.value || 'standalone'}
+                onValueChange={field.onChange}
+              >
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select service type" />
                 </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="standalone">Standalone</SelectItem>
-                <SelectItem value="sub_service">Sub-service</SelectItem>
-                <SelectItem value="bundle">Bundle</SelectItem>
-              </SelectContent>
-            </Select>
-            <FormMessage />
+                <SelectContent>
+                  <SelectItem value="standalone">Standalone</SelectItem>
+                  <SelectItem value="sub_service">Sub Service</SelectItem>
+                  <SelectItem value="bundle">Bundle</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormControl>
           </FormItem>
         )}
       />
-
-      {/* Only show parent service field if type is sub_service */}
+      
       {serviceType === 'sub_service' && (
         <FormField
           control={form.control}
@@ -103,9 +108,23 @@ export function ServiceTypeFormFields({ form }: { form: UseFormReturn<ServiceTyp
             <FormItem>
               <FormLabel>Parent Service</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter parent service ID" />
+                <Select
+                  value={field.value || ''}
+                  onValueChange={field.onChange}
+                  disabled={isLoadingParentServices}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select parent service" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {parentServices.map(service => (
+                      <SelectItem key={service.id} value={service.id}>
+                        {service.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </FormControl>
-              <FormMessage />
             </FormItem>
           )}
         />
@@ -116,63 +135,51 @@ export function ServiceTypeFormFields({ form }: { form: UseFormReturn<ServiceTyp
         name="base_price"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Base Price</FormLabel>
+            <FormLabel>Base Price ($)</FormLabel>
             <FormControl>
-              <Input type="number" step="0.01" {...field} />
+              <Input 
+                type="number" 
+                placeholder="0.00" 
+                min="0" 
+                step="0.01"
+                {...field}
+                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+              />
             </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="estimated_time"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Estimated Time (minutes)</FormLabel>
-            <FormControl>
-              <Input type="number" {...field} />
-            </FormControl>
-            <FormMessage />
           </FormItem>
         )}
       />
       
-      {/* Visibility Settings Section */}
-      <div className="border-t pt-4 mt-4">
-        <h3 className="font-medium text-base mb-3">Visibility Settings</h3>
-        
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 mb-3">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">Active</FormLabel>
-                <p className="text-sm text-muted-foreground">
-                  Service is available for selection in this application
-                </p>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value === 'active'}
-                  onCheckedChange={(checked) => field.onChange(checked ? 'active' : 'inactive')}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-        
+      <FormField
+        control={form.control}
+        name="duration"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Duration (minutes)</FormLabel>
+            <FormControl>
+              <Input 
+                type="number" 
+                placeholder="60" 
+                min="0"
+                {...field}
+                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+              />
+            </FormControl>
+          </FormItem>
+        )}
+      />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="visible_on_app"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 mb-3">
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
-                <FormLabel className="text-base">Visible on Mobile App</FormLabel>
-                <p className="text-sm text-muted-foreground">
-                  Service will be visible to users on the mobile application
-                </p>
+                <FormLabel className="text-base">Visible on App</FormLabel>
+                <div className="text-sm text-muted-foreground">
+                  Show this service in the mobile app
+                </div>
               </div>
               <FormControl>
                 <Switch
@@ -191,9 +198,9 @@ export function ServiceTypeFormFields({ form }: { form: UseFormReturn<ServiceTyp
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
                 <FormLabel className="text-base">Visible on Website</FormLabel>
-                <p className="text-sm text-muted-foreground">
-                  Service will be visible to users on the public website
-                </p>
+                <div className="text-sm text-muted-foreground">
+                  Show this service on the public website
+                </div>
               </div>
               <FormControl>
                 <Switch
@@ -205,21 +212,6 @@ export function ServiceTypeFormFields({ form }: { form: UseFormReturn<ServiceTyp
           )}
         />
       </div>
-      
-      {/* Commission fields removed */}
-      <CommissionRateFields
-        form={form}
-        label="Service Commission"
-        value={{
-          rate: commissionRate,
-          type: commissionType
-        }}
-        onChange={(value) => {
-          form.setValue('commission_rate', value.rate)
-          form.setValue('commission_type', value.type)
-        }}
-        hidden={true}
-      />
     </div>
   )
 }

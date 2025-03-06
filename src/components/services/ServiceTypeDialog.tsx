@@ -1,219 +1,144 @@
 
-import { useState, useEffect } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
+import { useState } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { DialogContent, DialogHeader, DialogTitle, Dialog } from "@/components/ui/dialog"
-import { Form } from "@/components/ui/form"
-import { toast } from "sonner"
+import { ServiceTypeFormFields } from "./ServiceTypeFormFields"
+import { useForm } from "react-hook-form"
 import { supabase } from "@/integrations/supabase/client"
-import { ServiceTypeFormFields, formSchema, type ServiceTypeFormValues } from "./ServiceTypeFormFields"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { toast } from "sonner"
+import { useQueryClient } from "@tanstack/react-query"
 
-interface ServiceTypeDialogProps {
+type ServiceTypeDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  serviceType?: any
   onSuccess?: () => void
+  serviceType?: any
 }
 
-export function ServiceTypeDialog({ open, onOpenChange, serviceType, onSuccess }: ServiceTypeDialogProps) {
+export function ServiceTypeDialog({ 
+  open, 
+  onOpenChange, 
+  onSuccess,
+  serviceType 
+}: ServiceTypeDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [parentServices, setParentServices] = useState<any[]>([])
+  const queryClient = useQueryClient()
   
-  const form = useForm<ServiceTypeFormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm({
     defaultValues: {
-      name: "",
-      description: "",
-      base_price: "",
-      estimated_time: "",
-      status: "active",
-      service_type: "standalone",
-      parent_service_id: "",
-      pricing_model: "flat_rate",
-      commission_rate: null,
-      commission_type: null,
-      visible_on_app: true,
-      visible_on_website: true,
+      name: serviceType?.name || "",
+      description: serviceType?.description || "",
+      base_price: serviceType?.base_price || 0,
+      duration: serviceType?.duration || 60,
+      service_type: serviceType?.service_type || "standalone",
+      parent_service_id: serviceType?.parent_service_id || null,
+      visible_on_app: serviceType?.visible_on_app !== false, // default to true if not specified
+      visible_on_website: serviceType?.visible_on_website !== false, // default to true if not specified
+      status: serviceType?.status || "active"
     }
   })
-
-  // Load parent services for sub-service selection
-  useEffect(() => {
-    const loadParentServices = async () => {
-      const { data, error } = await supabase
-        .from('service_types')
-        .select('id, name')
-        .in('service_type', ['standalone', 'bundle'])
-        .eq('status', 'active')
-        
-      if (error) {
-        console.error('Error loading parent services:', error)
-        return
-      }
-      
-      setParentServices(data || [])
-    }
-    
-    if (open) {
-      loadParentServices()
-    }
-  }, [open])
-
-  // Update form values when serviceType changes or dialog opens
-  useEffect(() => {
-    if (serviceType && open) {
-      form.reset({
-        name: serviceType.name || "",
-        description: serviceType.description || "",
-        base_price: serviceType.base_price ? serviceType.base_price.toString() : "",
-        estimated_time: serviceType.duration ? serviceType.duration.toString() : "",
-        status: serviceType.status || "active",
-        service_type: serviceType.service_type || "standalone",
-        parent_service_id: serviceType.parent_service_id || "",
-        pricing_model: serviceType.pricing_model || "flat_rate",
-        commission_rate: null,
-        commission_type: null,
-        visible_on_app: serviceType.visible_on_app ?? true,
-        visible_on_website: serviceType.visible_on_website ?? true,
-      });
-    } else if (!serviceType && open) {
-      // Reset form to default values when creating a new service type
-      form.reset({
-        name: "",
-        description: "",
-        base_price: "",
-        estimated_time: "",
-        status: "active",
-        service_type: "standalone",
-        parent_service_id: "",
-        pricing_model: "flat_rate",
-        commission_rate: null,
-        commission_type: null,
-        visible_on_app: true,
-        visible_on_website: true,
-      });
-    }
-  }, [serviceType, form, open]);
-
-  async function onSubmit(data: ServiceTypeFormValues) {
+  
+  const handleSubmit = async (values: any) => {
     setIsSubmitting(true)
+    
     try {
-      // Convert string fields to appropriate types
-      const basePrice = data.base_price ? parseFloat(data.base_price) : null
-      const duration = data.estimated_time ? parseInt(data.estimated_time, 10) : null
-      
-      // Prepare data for Supabase
-      const serviceData = {
-        name: data.name,
-        description: data.description,
-        base_price: basePrice,
-        duration: duration,
-        status: data.status,
-        service_type: data.service_type,
-        pricing_model: data.pricing_model,
-        parent_service_id: data.service_type === 'sub_service' && data.parent_service_id ? data.parent_service_id : null,
-        visible_on_app: data.visible_on_app,
-        visible_on_website: data.visible_on_website,
-        // Exclude commission_rate and commission_type as they don't exist in the service_types table
-      }
-
-      let result
-      if (serviceType?.id) {
-        console.log('Updating service type with ID:', serviceType.id, 'and data:', serviceData)
-        // Update existing service
-        result = await supabase
-          .from('service_types')
-          .update(serviceData)
-          .eq('id', serviceType.id)
-      } else {
-        // Insert new service
-        result = await supabase
-          .from('service_types')
-          .insert(serviceData)
-      }
-
-      if (result.error) {
-        console.error('Error saving service type:', result.error)
-        toast.error("Failed to save service type")
+      // For sub_service, ensure parent_service_id is set
+      if (values.service_type === 'sub_service' && !values.parent_service_id) {
+        toast.error("Please select a parent service")
+        setIsSubmitting(false)
         return
       }
-
-      toast.success(`Service type ${serviceType?.id ? 'updated' : 'created'} successfully`)
-      onSuccess?.()
-    } catch (error) {
-      console.error('Error in save:', error)
-      toast.error("An unexpected error occurred")
+      
+      // Clear parent_service_id if not a sub_service
+      if (values.service_type !== 'sub_service') {
+        values.parent_service_id = null
+      }
+      
+      if (serviceType?.id) {
+        // Update existing service
+        const { error } = await supabase
+          .from("service_types")
+          .update({
+            name: values.name,
+            description: values.description,
+            base_price: values.base_price,
+            duration: values.duration,
+            service_type: values.service_type,
+            parent_service_id: values.parent_service_id,
+            visible_on_app: values.visible_on_app,
+            visible_on_website: values.visible_on_website,
+            status: values.status,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", serviceType.id)
+        
+        if (error) throw error
+        
+        toast.success("Service type updated")
+      } else {
+        // Create new service
+        const { error } = await supabase
+          .from("service_types")
+          .insert({
+            name: values.name,
+            description: values.description,
+            base_price: values.base_price,
+            duration: values.duration,
+            service_type: values.service_type,
+            parent_service_id: values.parent_service_id,
+            visible_on_app: values.visible_on_app,
+            visible_on_website: values.visible_on_website
+          })
+        
+        if (error) throw error
+        
+        toast.success("Service type created")
+      }
+      
+      // Invalidate the service-types query to refetch the updated data
+      queryClient.invalidateQueries({ queryKey: ["service-types"] })
+      
+      // Call onSuccess handler
+      if (onSuccess) onSuccess()
+      
+      // Close the dialog
+      onOpenChange(false)
+    } catch (error: any) {
+      console.error("Error saving service type:", error)
+      toast.error(`Error: ${error.message}`)
     } finally {
       setIsSubmitting(false)
     }
   }
-
-  // Get the current service type and watch for changes to update parent service field visibility
-  const serviceTypeValue = form.watch('service_type')
-
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{serviceType?.id ? 'Edit' : 'Create'} Service Type</DialogTitle>
+          <DialogTitle>
+            {serviceType?.id ? "Edit Service Type" : "Create Service Type"}
+          </DialogTitle>
         </DialogHeader>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <ServiceTypeFormFields form={form} />
-            
-            {/* Replace the parent_service_id input with a Select when service_type is sub_service */}
-            {serviceTypeValue === 'sub_service' && (
-              <FormField
-                control={form.control}
-                name="parent_service_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Parent Service</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a parent service" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {parentServices.map(service => (
-                          <SelectItem key={service.id} value={service.id}>
-                            {service.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-            
-            <div className="flex justify-end gap-2">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Saving...' : 'Save'}
-              </Button>
-            </div>
-          </form>
-        </Form>
+
+        <form onSubmit={form.handleSubmit(handleSubmit)}>
+          <ServiceTypeFormFields form={form} />
+          
+          <DialogFooter className="mt-6">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting 
+                ? (serviceType?.id ? "Updating..." : "Creating...") 
+                : (serviceType?.id ? "Update" : "Create")
+              }
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )
