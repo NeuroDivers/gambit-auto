@@ -12,6 +12,12 @@ export interface ServiceItemType {
   parent_id?: string | null;
   assigned_profile_id?: string | null;
   package_id?: string | null;
+  staff_assignments?: {
+    profile_id: string;
+    commission_rate: number;
+    commission_type: 'percentage' | 'fixed';
+    notes?: string;
+  }[];
 }
 
 export interface ServiceDropdownProps {

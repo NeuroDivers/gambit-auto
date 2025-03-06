@@ -12,6 +12,15 @@ export type ServiceItemType = {
   parent_id?: string | null
   assigned_profile_id?: string | null
   package_id?: string | null
+  // Add support for multiple staff assignments with different commission rates
+  staff_assignments?: StaffAssignment[]
+}
+
+export type StaffAssignment = {
+  profile_id: string
+  commission_rate: number
+  commission_type: 'percentage' | 'fixed'
+  notes?: string
 }
 
 export type ServiceFormData = {

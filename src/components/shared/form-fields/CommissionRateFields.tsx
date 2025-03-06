@@ -14,9 +14,9 @@ export interface CommissionRateFieldsProps {
   serviceIndex?: number
   value: {
     rate: number | null
-    type: 'percentage' | 'flat' | null
+    type: 'percentage' | 'fixed' | null
   }
-  onChange: (value: { rate: number | null; type: 'percentage' | 'flat' | null }) => void
+  onChange: (value: { rate: number | null; type: 'percentage' | 'fixed' | null }) => void
   disabled?: boolean
   form?: UseFormReturn<any>
   namePrefix?: string
@@ -32,13 +32,13 @@ export function CommissionRateFields({
   form,
   namePrefix,
   label = "Commission",
-  hidden = true // Default to hidden now
+  hidden = false
 }: CommissionRateFieldsProps) {
   if (hidden) return null;
   
   return (
     <div className="space-y-2">
-      <Label>Commission</Label>
+      <Label>{label}</Label>
       <div className="grid grid-cols-2 gap-2">
         <Input
           type="number"
@@ -56,7 +56,7 @@ export function CommissionRateFields({
           value={value.type || ''}
           onValueChange={(type) => onChange({
             ...value,
-            type: type as 'percentage' | 'flat'
+            type: type as 'percentage' | 'fixed'
           })}
           disabled={disabled}
         >
@@ -65,7 +65,7 @@ export function CommissionRateFields({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="percentage">Percentage</SelectItem>
-            <SelectItem value="flat">Flat</SelectItem>
+            <SelectItem value="fixed">Fixed</SelectItem>
           </SelectContent>
         </Select>
       </div>
