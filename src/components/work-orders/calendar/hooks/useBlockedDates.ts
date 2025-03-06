@@ -1,14 +1,12 @@
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
-import { BlockedDate } from "../types";
+import { toast } from "sonner";
+import { isWithinInterval } from "date-fns";
 
 export function useBlockedDates() {
-  const queryClient = useQueryClient();
-
-  const { data: blockedDates = [], isLoading } = useQuery({
-    queryKey: ["blocked-dates"],
+  const { data: blockedDates = [] } = useQuery({
+    queryKey: ["blockedDates"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("blocked_dates")
@@ -16,35 +14,24 @@ export function useBlockedDates() {
         .order("start_date", { ascending: true });
 
       if (error) {
-        console.error("Error fetching blocked dates:", error);
+        toast.error("Failed to load blocked dates");
         throw error;
       }
 
-      console.log("Fetched blocked dates:", data);
-      return data as BlockedDate[];
-    },
+      return data;
+    }
   });
 
-  useEffect(() => {
-    const channel = supabase
-      .channel("blocked-dates-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "blocked_dates",
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["blocked-dates"] });
-        }
-      )
-      .subscribe();
+  const isDateBlocked = (date: Date) => {
+    if (!blockedDates.length) return false;
+    
+    return blockedDates.some(blockedDate => {
+      const startDate = new Date(blockedDate.start_date);
+      const endDate = new Date(blockedDate.end_date);
+      
+      return isWithinInterval(date, { start: startDate, end: endDate });
+    });
+  };
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
-
-  return { blockedDates, isLoading };
+  return { blockedDates, isDateBlocked };
 }

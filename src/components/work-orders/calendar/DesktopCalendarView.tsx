@@ -1,8 +1,10 @@
 
 import { useState } from "react";
-import { CalendarHeader } from "./CalendarHeader";
-import { CalendarGrid } from "./CalendarGrid";
 import { WorkOrder } from "../types";
+import { CalendarHeader } from "@/components/calendar/components/CalendarHeader";
+import { CalendarGrid } from "./CalendarGrid";
+import { eachDayOfInterval, endOfWeek, startOfWeek } from "date-fns";
+import { useBlockedDates } from "./hooks/useBlockedDates";
 
 export interface DesktopCalendarViewProps {
   currentDate: Date;
@@ -12,6 +14,7 @@ export interface DesktopCalendarViewProps {
 
 export function DesktopCalendarView({ currentDate, workOrders, onDateChange }: DesktopCalendarViewProps) {
   const [displayDate, setDisplayDate] = useState(currentDate);
+  const { blockedDates, isDateBlocked } = useBlockedDates();
 
   const handleDateChange = (newDate: Date) => {
     setDisplayDate(newDate);
@@ -20,15 +23,23 @@ export function DesktopCalendarView({ currentDate, workOrders, onDateChange }: D
     }
   };
 
+  const days = eachDayOfInterval({
+    start: startOfWeek(displayDate, { weekStartsOn: 1 }),
+    end: endOfWeek(displayDate, { weekStartsOn: 1 })
+  });
+
   return (
     <div className="bg-background border rounded-md overflow-hidden">
       <CalendarHeader 
-        currentDate={displayDate} 
+        days={days}
+        isDateBlocked={isDateBlocked}
         onDateChange={handleDateChange}
       />
       <CalendarGrid 
         currentDate={displayDate} 
         workOrders={workOrders}
+        days={days}
+        isDateBlocked={isDateBlocked}
       />
     </div>
   );
