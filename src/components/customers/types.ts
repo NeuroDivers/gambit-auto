@@ -1,15 +1,15 @@
 export type Customer = {
   id: string
-  first_name: string
-  last_name: string
-  email: string
-  phone_number?: string | null
-  unit_number?: string | null
-  street_address?: string | null
-  city?: string | null
-  state_province?: string | null
-  postal_code?: string | null
-  country?: string | null
+  customer_first_name: string
+  customer_last_name: string
+  customer_email: string
+  customer_phone_number?: string | null
+  customer_unit_number?: string | null
+  customer_street_address?: string | null
+  customer_city?: string | null
+  customer_state_province?: string | null
+  customer_postal_code?: string | null
+  customer_country?: string | null
   address?: string | null
   created_at: string
   updated_at: string
@@ -54,17 +54,17 @@ export type Customer = {
 }
 
 export type CustomerFormValues = {
-  first_name: string
-  last_name: string
-  email: string
-  phone_number?: string
+  customer_first_name: string
+  customer_last_name: string
+  customer_email: string
+  customer_phone_number?: string
   address?: string
-  street_address?: string
-  unit_number?: string
-  city?: string
-  state_province?: string
-  postal_code?: string
-  country?: string
+  customer_street_address?: string
+  customer_unit_number?: string
+  customer_city?: string
+  customer_state_province?: string
+  customer_postal_code?: string
+  customer_country?: string
 }
 
 // Vehicle type

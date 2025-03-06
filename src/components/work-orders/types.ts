@@ -38,7 +38,7 @@ export type WorkOrder = {
     name: string;
   } | null;
   work_order_services?: WorkOrderService[];
-  timeframe?: string;
+  timeframe?: string | "flexible" | "asap" | "within_week" | "within_month"; // Updated to handle string or specific values
   client_id?: string | null;
 };
 

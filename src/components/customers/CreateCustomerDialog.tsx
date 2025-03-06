@@ -17,16 +17,16 @@ interface CreateCustomerDialogProps {
 }
 
 const customerFormSchema = z.object({
-  first_name: z.string().min(1, "First name is required"),
-  last_name: z.string().min(1, "Last name is required"),
-  email: z.string().email("Invalid email address"),
-  phone_number: z.string().optional(),
-  street_address: z.string().optional(),
-  unit_number: z.string().optional(),
-  city: z.string().optional(),
-  state_province: z.string().optional(),
-  postal_code: z.string().optional(),
-  country: z.string().optional(),
+  customer_first_name: z.string().min(1, "First name is required"),
+  customer_last_name: z.string().min(1, "Last name is required"),
+  customer_email: z.string().email("Invalid email address"),
+  customer_phone_number: z.string().optional(),
+  customer_street_address: z.string().optional(),
+  customer_unit_number: z.string().optional(),
+  customer_city: z.string().optional(),
+  customer_state_province: z.string().optional(),
+  customer_postal_code: z.string().optional(),
+  customer_country: z.string().optional(),
 })
 
 type CustomerFormValues = z.infer<typeof customerFormSchema>
@@ -38,16 +38,16 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerFormSchema),
     defaultValues: {
-      first_name: "",
-      last_name: "",
-      email: "",
-      phone_number: "",
-      street_address: "",
-      unit_number: "",
-      city: "",
-      state_province: "",
-      postal_code: "",
-      country: "",
+      customer_first_name: "",
+      customer_last_name: "",
+      customer_email: "",
+      customer_phone_number: "",
+      customer_street_address: "",
+      customer_unit_number: "",
+      customer_city: "",
+      customer_state_province: "",
+      customer_postal_code: "",
+      customer_country: "",
     },
   })
 
@@ -58,7 +58,7 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
       const { data: existingProfiles, error: profileQueryError } = await supabase
         .from('profiles')
         .select('id')
-        .eq('email', data.email)
+        .eq('email', data.customer_email)
         .maybeSingle()
       
       if (profileQueryError) {
@@ -74,7 +74,7 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
       const { data: existingCustomer, error: customerQueryError } = await supabase
         .from("customers")
         .select("id")
-        .eq("email", data.email)
+        .eq("customer_email", data.customer_email)
         .maybeSingle();
         
       if (customerQueryError) {
@@ -92,16 +92,16 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
         .from("customers")
         .insert([{
           profile_id: profileId, // Will be null if no matching profile
-          first_name: data.first_name,
-          last_name: data.last_name,
-          email: data.email,
-          phone_number: data.phone_number,
-          street_address: data.street_address,
-          unit_number: data.unit_number,
-          city: data.city,
-          state_province: data.state_province,
-          postal_code: data.postal_code,
-          country: data.country,
+          customer_first_name: data.customer_first_name,
+          customer_last_name: data.customer_last_name,
+          customer_email: data.customer_email,
+          customer_phone_number: data.customer_phone_number,
+          customer_street_address: data.customer_street_address,
+          customer_unit_number: data.customer_unit_number,
+          customer_city: data.customer_city,
+          customer_state_province: data.customer_state_province,
+          customer_postal_code: data.customer_postal_code,
+          customer_country: data.customer_country,
         }])
         .select()
         .single()
@@ -141,7 +141,7 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="first_name"
+                name="customer_first_name"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>First Name</FormLabel>
@@ -155,7 +155,7 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
               
               <FormField
                 control={form.control}
-                name="last_name"
+                name="customer_last_name"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Last Name</FormLabel>
@@ -170,7 +170,7 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
             
             <FormField
               control={form.control}
-              name="email"
+              name="customer_email"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Email</FormLabel>
@@ -184,7 +184,7 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
             
             <FormField
               control={form.control}
-              name="phone_number"
+              name="customer_phone_number"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Phone Number</FormLabel>
@@ -198,7 +198,7 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
             
             <FormField
               control={form.control}
-              name="street_address"
+              name="customer_street_address"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Street Address</FormLabel>
@@ -212,7 +212,7 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
             
             <FormField
               control={form.control}
-              name="unit_number"
+              name="customer_unit_number"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Unit/Apt Number</FormLabel>
@@ -227,7 +227,7 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="city"
+                name="customer_city"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>City</FormLabel>
@@ -241,7 +241,7 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
               
               <FormField
                 control={form.control}
-                name="state_province"
+                name="customer_state_province"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>State/Province</FormLabel>
@@ -257,7 +257,7 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="postal_code"
+                name="customer_postal_code"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Postal Code</FormLabel>
@@ -271,7 +271,7 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
               
               <FormField
                 control={form.control}
-                name="country"
+                name="customer_country"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Country</FormLabel>

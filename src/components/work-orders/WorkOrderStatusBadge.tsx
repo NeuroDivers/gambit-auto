@@ -58,10 +58,11 @@ export function WorkOrderStatusBadge({ status }: WorkOrderStatusBadgeProps) {
       case "estimated":
         return "Estimated";
       default:
-        // Fix the "never" type issue by ensuring status is treated as a string
-        return (typeof status === 'string') 
-          ? status.charAt(0).toUpperCase() + status.slice(1) 
-          : "Unknown";
+        // Type guard to ensure status is treated as a string
+        if (typeof status === 'string') {
+          return status.charAt(0).toUpperCase() + status.slice(1);
+        }
+        return "Unknown";
     }
   };
 

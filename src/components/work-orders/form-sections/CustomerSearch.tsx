@@ -25,8 +25,8 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("customers")
-        .select("id, first_name, last_name, email, phone_number, street_address, unit_number, city, state_province, postal_code, country")
-        .order("last_name", { ascending: true })
+        .select("id, customer_first_name, customer_last_name, customer_email, customer_phone_number, customer_street_address, customer_unit_number, customer_city, customer_state_province, customer_postal_code, customer_country")
+        .order("customer_last_name", { ascending: true })
       
       if (error) throw error
       return data || []
@@ -57,16 +57,16 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     // Find the selected customer to set customer info
     const selectedCustomer = clients?.find(client => client.id === customerId)
     if (selectedCustomer) {
-      form.setValue("customer_first_name", selectedCustomer.first_name)
-      form.setValue("customer_last_name", selectedCustomer.last_name)
-      form.setValue("customer_email", selectedCustomer.email)
-      form.setValue("customer_phone", selectedCustomer.phone_number)
-      form.setValue("customer_street_address", selectedCustomer.street_address || "")
-      form.setValue("customer_unit_number", selectedCustomer.unit_number || "")
-      form.setValue("customer_city", selectedCustomer.city || "")
-      form.setValue("customer_state_province", selectedCustomer.state_province || "")
-      form.setValue("customer_postal_code", selectedCustomer.postal_code || "")
-      form.setValue("customer_country", selectedCustomer.country || "")
+      form.setValue("customer_first_name", selectedCustomer.customer_first_name)
+      form.setValue("customer_last_name", selectedCustomer.customer_last_name)
+      form.setValue("customer_email", selectedCustomer.customer_email)
+      form.setValue("customer_phone", selectedCustomer.customer_phone_number)
+      form.setValue("customer_street_address", selectedCustomer.customer_street_address || "")
+      form.setValue("customer_unit_number", selectedCustomer.customer_unit_number || "")
+      form.setValue("customer_city", selectedCustomer.customer_city || "")
+      form.setValue("customer_state_province", selectedCustomer.customer_state_province || "")
+      form.setValue("customer_postal_code", selectedCustomer.customer_postal_code || "")
+      form.setValue("customer_country", selectedCustomer.customer_country || "")
       setCreateNewCustomer(false)
       
       // Set vehicle info if vehicles exist
@@ -106,7 +106,7 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
           >
             {selectedCustomer ? 
               clients?.find(client => client.id === selectedCustomer)
-                ? `${clients.find(client => client.id === selectedCustomer)?.first_name} ${clients.find(client => client.id === selectedCustomer)?.last_name}`
+                ? `${clients.find(client => client.id === selectedCustomer)?.customer_first_name} ${clients.find(client => client.id === selectedCustomer)?.customer_last_name}`
                 : "Select a customer" 
               : "Select a customer"}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -137,8 +137,8 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
                       {clients
                         .filter(client => 
                           !customerSearchQuery || 
-                          `${client.first_name || ''} ${client.last_name || ''}`.toLowerCase().includes(customerSearchQuery.toLowerCase()) ||
-                          client.email?.toLowerCase().includes(customerSearchQuery.toLowerCase())
+                          `${client.customer_first_name || ''} ${client.customer_last_name || ''}`.toLowerCase().includes(customerSearchQuery.toLowerCase()) ||
+                          client.customer_email?.toLowerCase().includes(customerSearchQuery.toLowerCase())
                         )
                         .map((client) => (
                           <div
@@ -158,9 +158,9 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
                                 selectedCustomer === client.id ? "opacity-100" : "opacity-0"
                               )}
                             />
-                            <span>{client.first_name || ''} {client.last_name || ''}</span>
+                            <span>{client.customer_first_name || ''} {client.customer_last_name || ''}</span>
                             <span className="ml-2 text-sm text-muted-foreground">
-                              {client.email || ''}
+                              {client.customer_email || ''}
                             </span>
                           </div>
                         ))}
