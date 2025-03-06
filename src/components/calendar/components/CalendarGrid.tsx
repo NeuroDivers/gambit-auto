@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { add, endOfMonth, startOfMonth, sub } from "date-fns"
 import { useState } from "react"
-import { useWorkOrderData } from "../useWorkOrderData"
+import { useWorkOrderData } from '@/components/work-orders/calendar/useWorkOrderData'
 
 interface CalendarGridProps {
   date: Date

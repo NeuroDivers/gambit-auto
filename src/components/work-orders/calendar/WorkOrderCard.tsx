@@ -1,94 +1,71 @@
 
-import { WorkOrder } from "../types"
+import { WorkOrder } from "@/components/work-orders/types"
+import { User2 } from "lucide-react"
+import { formatTime } from "../utils/dateUtils"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
-import { useState } from "react"
-import { WorkOrderDetailsDialog } from "./WorkOrderDetailsDialog"
-import { format } from "date-fns"
+import { isToday } from "date-fns"
 
-type WorkOrderCardProps = {
-  workOrder: WorkOrder & {
-    isStart?: boolean
-    isEnd?: boolean
-    duration?: number
-  }
-  className?: string
+interface WorkOrderCardProps {
+  workOrder: WorkOrder & { isStart?: boolean; isEnd?: boolean; duration?: number }
+  date: Date
+  span: number
+  onClick: () => void
 }
 
-export function WorkOrderCard({ workOrder, className }: WorkOrderCardProps) {
-  const [showDetails, setShowDetails] = useState(false)
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation() // Stop event from bubbling up to calendar day
-    setShowDetails(true)
-  }
-
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-muted/40 text-muted-foreground hover:bg-muted/50'
-      case 'approved':
-        return 'bg-[rgb(59,130,246,0.2)] text-blue-400 hover:bg-[rgb(59,130,246,0.3)]'
-      case 'rejected':
-        return 'bg-[rgb(234,56,76,0.2)] text-[#ea384c] hover:bg-[rgb(234,56,76,0.3)]'
-      case 'completed':
-        return 'bg-[rgb(34,197,94,0.2)] text-green-400 hover:bg-[rgb(34,197,94,0.3)]'
-      default:
-        return 'bg-muted/40 text-muted-foreground hover:bg-muted/50'
-    }
-  }
-
-  const isMultiDay = workOrder.duration && workOrder.duration > 1
-
-  console.log("Rendering work order card:", workOrder)
-
+export function WorkOrderCard({ workOrder, date, span, onClick }: WorkOrderCardProps) {
   return (
-    <>
-      {(workOrder.isStart || !isMultiDay) && (
-        <div 
-          className={cn(
-            "relative text-xs p-1.5 truncate cursor-pointer transition-colors",
-            "hover:shadow-md",
-            getStatusStyle(workOrder.status),
-            {
-              'rounded-r-none border-r-0': workOrder.isStart && isMultiDay,
-              'rounded-l-none border-l-0': workOrder.isEnd && !workOrder.isStart,
-              'rounded-none border-l-0 border-r-0': !workOrder.isStart && !workOrder.isEnd,
-            },
-            className
-          )}
-          onClick={handleClick}
-          style={{
-            marginLeft: workOrder.isStart ? '0' : '-2px',
-            marginRight: workOrder.isEnd ? '0' : '-2px',
-            borderWidth: '1px',
-            borderStyle: 'solid',
-            borderColor: 'rgba(var(--primary), 0.2)',
-            width: isMultiDay && workOrder.duration ? `calc(${workOrder.duration * 100}% + ${(workOrder.duration - 1) * 16}px)` : undefined
-          }}
-        >
-          <div className="truncate font-medium">
-            {workOrder.first_name} {workOrder.last_name}
-          </div>
-          <div className="text-[10px] opacity-80 truncate">
-            {workOrder.vehicle_make} {workOrder.vehicle_model}
-          </div>
-          {workOrder.start_time && (
-            <div className="text-[10px] opacity-70">
-              {format(new Date(workOrder.start_time), 'h:mm a')}
-            </div>
-          )}
-          {workOrder.service_bays?.name && (
-            <div className="text-[10px] opacity-70">
-              Bay: {workOrder.service_bays.name}
-            </div>
-          )}
-        </div>
+    <div 
+      className={cn(
+        "p-2 relative flex items-center border-b border-r border-gray-200",
+        "hover:brightness-95 transition-all cursor-pointer",
+        isToday(date) ? "bg-primary/10" : "bg-white"
       )}
-      <WorkOrderDetailsDialog
-        workOrder={workOrder}
-        open={showDetails}
-        onOpenChange={setShowDetails}
-      />
-    </>
+      onClick={onClick}
+      style={{
+        gridColumn: `span ${span}`
+      }}
+    >
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="bg-primary p-2 rounded-lg border border-white/20 w-full shadow-sm overflow-hidden">
+              <div className="text-xs text-primary-foreground font-medium truncate">
+                {workOrder.customer_first_name} {workOrder.customer_last_name}
+              </div>
+              <div className="flex items-center justify-between mt-1">
+                <div className="text-xs text-primary-foreground/90 flex items-center gap-1">
+                  <User2 className="w-3 h-3" />
+                  <span className="whitespace-nowrap">{formatTime(workOrder.start_time)}</span>
+                </div>
+                <div className="text-xs text-primary-foreground/90 whitespace-nowrap">
+                  {formatTime(workOrder.end_time)}
+                </div>
+              </div>
+              <div className="text-[10px] text-primary-foreground/80 truncate mt-1">
+                {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
+              </div>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <div className="space-y-1">
+              <p className="font-medium">{workOrder.customer_first_name} {workOrder.customer_last_name}</p>
+              <p className="text-sm text-gray-400">
+                {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
+              </p>
+              <p className="text-sm text-primary">
+                {formatTime(workOrder.start_time)} - {formatTime(workOrder.end_time)}
+              </p>
+              {workOrder.additional_notes && (
+                <div className="mt-1">
+                  <span className="text-xs text-gray-400">Notes:</span>
+                  <p className="text-xs text-gray-300">{workOrder.additional_notes}</p>
+                </div>
+              )}
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
   )
 }

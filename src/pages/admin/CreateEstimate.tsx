@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useForm } from "react-hook-form"
@@ -210,7 +209,6 @@ export default function CreateEstimate() {
         form.setValue("vehicle_body_class", vehicle.body_class || "")
         if (vehicle.doors) form.setValue("vehicle_doors", vehicle.doors)
       } else {
-        // If no vehicle record but there's vehicle info in the request
         form.setValue("vehicle_make", estimateRequest.vehicle_make || "")
         form.setValue("vehicle_model", estimateRequest.vehicle_model || "")
         form.setValue("vehicle_year", estimateRequest.vehicle_year || new Date().getFullYear())
@@ -218,7 +216,6 @@ export default function CreateEstimate() {
 
       form.setValue("additional_notes", estimateRequest.description || "")
 
-      // Set the service items from the request
       if (estimateRequest.request_services && estimateRequest.request_services.length > 0) {
         const serviceItems = estimateRequest.request_services.map(service => ({
           service_id: service.service_type_id,
@@ -238,7 +235,6 @@ export default function CreateEstimate() {
       setIsSubmitting(true)
       console.log("Submitting estimate:", data)
 
-      // Calculate total from service items
       const total = data.service_items.reduce((acc, item) => {
         const itemTotal = (item.quantity || 1) * (item.unit_price || 0)
         const subServicesTotal = (item.sub_services || []).reduce(
@@ -248,7 +244,6 @@ export default function CreateEstimate() {
         return acc + itemTotal + subServicesTotal
       }, 0)
 
-      // Format data for the estimates table
       const estimateData = {
         estimate_number: `EST-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
         customer_first_name: data.customer_first_name,
@@ -287,7 +282,6 @@ export default function CreateEstimate() {
 
       if (error) throw error
 
-      // Insert services
       if (data.service_items && data.service_items.length > 0) {
         const estimateServices = data.service_items.map(service => ({
           estimate_id: estimate.id,
@@ -305,7 +299,6 @@ export default function CreateEstimate() {
         if (serviceError) throw serviceError
       }
 
-      // Update the estimate request status if this was created from a request
       if (requestId) {
         const { error: updateError } = await supabase
           .from("estimate_requests")
@@ -404,27 +397,27 @@ export default function CreateEstimate() {
                     </TabsList>
                     <TabsContent value="customer" className="mt-0">
                       <EstimateFormAdapter form={form}>
-                        <ClientInfoFields form={form} />
+                        <ClientInfoFields form={form as unknown as UseFormReturn<WorkOrderFormValues>} />
                       </EstimateFormAdapter>
                     </TabsContent>
                     <TabsContent value="vehicle" className="mt-0">
                       <EstimateFormAdapter form={form}>
-                        <VehicleInfoFields form={form} />
+                        <VehicleInfoFields form={form as unknown as UseFormReturn<WorkOrderFormValues>} />
                       </EstimateFormAdapter>
                     </TabsContent>
                     <TabsContent value="services" className="mt-0">
                       <EstimateFormAdapter form={form}>
-                        <ServiceSelectionFields form={form} />
+                        <ServiceSelectionFields form={form as unknown as UseFormReturn<WorkOrderFormValues>} />
                       </EstimateFormAdapter>
                     </TabsContent>
                     <TabsContent value="scheduling" className="mt-0">
                       <EstimateFormAdapter form={form}>
-                        <SchedulingFields form={form} />
+                        <SchedulingFields form={form as unknown as UseFormReturn<WorkOrderFormValues>} />
                       </EstimateFormAdapter>
                     </TabsContent>
                     <TabsContent value="notes" className="mt-0">
                       <EstimateFormAdapter form={form}>
-                        <NotesFields form={form} />
+                        <NotesFields form={form as unknown as UseFormReturn<WorkOrderFormValues>} />
                       </EstimateFormAdapter>
                     </TabsContent>
                   </Tabs>
