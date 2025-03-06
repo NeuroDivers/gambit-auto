@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useEffect, useRef, useState } from "react"
 import { CustomerSearch } from "./form-sections/CustomerSearch"
+import { Loader2 } from "lucide-react"
 
 export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmitting }: WorkOrderFormProps) {
   const mounted = useRef(true);
-  // Use optional chaining for client_id to avoid TypeScript errors
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(workOrder?.client_id || null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -39,7 +40,7 @@ export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmit
 
   useEffect(() => {
     if (onSubmitting && mounted.current) {
-      onSubmitting(form.formState.isSubmitting);
+      onSubmitting(isProcessing);
     }
     
     return () => {
@@ -47,7 +48,7 @@ export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmit
         onSubmitting(false);
       }
     };
-  }, [form.formState.isSubmitting, onSubmitting]);
+  }, [isProcessing, onSubmitting]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,12 +57,15 @@ export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmit
     if (!mounted.current) return;
     
     try {
+      setIsProcessing(true);
       await form.handleSubmit(onSubmit)(e);
     } catch (error) {
       console.error("Form submission error:", error);
       toast.error("Failed to save work order");
-      if (onSubmitting && mounted.current) {
-        onSubmitting(false);
+    } finally {
+      if (mounted.current) {
+        setIsProcessing(false);
+        if (onSubmitting) onSubmitting(false);
       }
     }
   };
@@ -73,7 +77,7 @@ export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmit
         
         <FormSections 
           form={form}
-          isSubmitting={form.formState.isSubmitting}
+          isSubmitting={isProcessing}
           isEditing={!!workOrder}
           customerId={selectedCustomerId}
         />
@@ -81,12 +85,17 @@ export function WorkOrderForm({ workOrder, onSuccess, defaultStartTime, onSubmit
         <div className="flex justify-end pt-6">
           <Button 
             type="submit" 
-            disabled={form.formState.isSubmitting}
+            disabled={isProcessing}
+            className="min-w-[150px]"
           >
-            {form.formState.isSubmitting ? 
-              (workOrder ? "Updating..." : "Creating...") : 
-              (workOrder ? "Update Work Order" : "Create Work Order")
-            }
+            {isProcessing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {workOrder ? "Updating..." : "Creating..."}
+              </>
+            ) : (
+              workOrder ? "Update Work Order" : "Create Work Order"
+            )}
           </Button>
         </div>
       </form>

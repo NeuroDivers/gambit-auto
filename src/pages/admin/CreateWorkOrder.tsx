@@ -5,9 +5,11 @@ import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
+import { useState } from "react"
 
 export default function CreateWorkOrder() {
   const navigate = useNavigate()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   return (
     <div className="space-y-6 pb-10">
@@ -18,6 +20,7 @@ export default function CreateWorkOrder() {
             size="icon"
             onClick={() => navigate(-1)}
             className="flex-shrink-0"
+            disabled={isSubmitting}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -33,6 +36,7 @@ export default function CreateWorkOrder() {
           <CardContent className="p-6">
             <WorkOrderForm 
               onSuccess={() => navigate("/work-orders")}
+              onSubmitting={setIsSubmitting}
             />
           </CardContent>
         </Card>
