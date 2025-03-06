@@ -15,7 +15,6 @@ type CustomerType = {
   first_name: string
   last_name: string
   phone_number: string
-  contact_preference?: 'phone' | 'email'
 }
 
 interface CustomerSearchProps {
@@ -33,7 +32,7 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     async function fetchCustomers() {
       const { data, error } = await supabase
         .from("customers")
-        .select("id, first_name, last_name, email, phone_number, contact_preference")
+        .select("id, first_name, last_name, email, phone_number")
         .order("last_name", { ascending: true })
       
       if (error) {
@@ -59,7 +58,7 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
       form.setValue("last_name", selectedCustomer.last_name)
       form.setValue("email", selectedCustomer.email)
       form.setValue("phone_number", selectedCustomer.phone_number)
-      form.setValue("contact_preference", selectedCustomer.contact_preference || "phone")
+      form.setValue("contact_preference", "phone") // Default to phone since it's not in the DB
       setUseNewCustomer(false)
     }
     
