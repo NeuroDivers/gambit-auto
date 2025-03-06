@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
@@ -51,7 +50,6 @@ export default function CreateEstimate() {
       vehicle_body_class: '',
       vehicle_doors: '',
       vehicle_license_plate: '',
-      // Additional fields to match WorkOrderFormValues
       contact_preference: "phone",
       start_time: null,
       estimated_duration: null,
@@ -63,12 +61,10 @@ export default function CreateEstimate() {
     }
   })
 
-  // Update the document title when the component mounts
   useEffect(() => {
     document.title = "Create Estimate | Auto Detailing CRM"
   }, [])
 
-  // Watch for changes to customer selection
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === 'client_id' && value.client_id) {
@@ -79,15 +75,12 @@ export default function CreateEstimate() {
     return () => subscription.unsubscribe();
   }, [form.watch]);
 
-  // Calculate subtotal when services change
   useEffect(() => {
     const services = form.getValues('services') || [];
     
     const total = services.reduce((sum, service) => {
-      // Calculate main service total
       const serviceTotal = (service.quantity || 1) * (service.unit_price || 0);
       
-      // Calculate sub-services total if any
       const subServicesTotal = service.sub_services ? 
         service.sub_services.reduce((subSum, subService) => {
           return subSum + ((subService.quantity || 1) * (subService.unit_price || 0));
@@ -105,9 +98,7 @@ export default function CreateEstimate() {
     try {
       let customerId = data.client_id
 
-      // If we don't have a client_id but we have customer info, create a new customer
       if (!customerId && data.first_name && data.last_name && data.email) {
-        // Check if customer with same email already exists
         const { data: existingCustomer, error: lookupError } = await supabase
           .from("customers")
           .select("id, email")
@@ -117,11 +108,9 @@ export default function CreateEstimate() {
         if (lookupError) throw lookupError
         
         if (existingCustomer) {
-          // Use existing customer ID
           customerId = existingCustomer.id
           toast.info(`Using existing customer with email ${data.email}`)
         } else {
-          // Create new customer
           const { data: newCustomer, error: customerError } = await supabase
             .from("customers")
             .insert({
@@ -145,7 +134,6 @@ export default function CreateEstimate() {
         }
       }
 
-      // Flatten services to format expected by the DB
       const services = data.services || [];
       const flattenedServices = services.flatMap(service => {
         const mainService = {
@@ -168,7 +156,6 @@ export default function CreateEstimate() {
         return [mainService, ...subServices];
       });
 
-      // Create the estimate in the database
       const { data: estimate, error } = await supabase
         .from("estimates")
         .insert({
@@ -200,7 +187,6 @@ export default function CreateEstimate() {
 
       if (error) throw error
 
-      // Create estimate items
       if (estimate && flattenedServices.length > 0) {
         const { error: itemsError } = await supabase
           .from("estimate_items")
@@ -287,7 +273,10 @@ export default function CreateEstimate() {
                 <CardContent>
                   <ServiceItemsField 
                     value={form.watch('services') || []} 
-                    onChange={(services) => form.setValue('services', services)}
+                    onChange={(services) => {
+                      form.setValue('services', services)
+                      form.setValue('service_items', services)
+                    }}
                     allowPriceEdit={true}
                   />
                 </CardContent>

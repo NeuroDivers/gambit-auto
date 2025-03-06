@@ -27,13 +27,13 @@ export interface EstimateFormValues {
   vehicle_doors: string | number;
   vehicle_license_plate: string;
   
-  // Additional fields to match WorkOrderFormValues
-  contact_preference?: "phone" | "email";
-  start_time?: Date | null;
-  estimated_duration?: number | null;
-  end_time?: Date | null;
-  assigned_bay_id?: string | null;
-  service_items?: ServiceItemType[];
-  is_primary_vehicle?: boolean;
-  save_vehicle?: boolean;
+  // Make these required fields to match WorkOrderFormValues
+  contact_preference: "phone" | "email";
+  start_time: Date | null;
+  estimated_duration: number | null;
+  end_time: Date | null;
+  assigned_bay_id: string | null;
+  service_items: ServiceItemType[];
+  is_primary_vehicle: boolean;
+  save_vehicle: boolean;
 }
