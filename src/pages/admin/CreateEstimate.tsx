@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
@@ -29,6 +28,7 @@ export default function CreateEstimate() {
       client_id: '',
       vehicle_id: '',
       services: [],
+      service_items: [],
       total: 0,
       notes: '',
       first_name: '',
@@ -55,7 +55,6 @@ export default function CreateEstimate() {
       estimated_duration: null,
       end_time: null,
       assigned_bay_id: null,
-      service_items: [],
       is_primary_vehicle: false,
       save_vehicle: false
     }
@@ -79,7 +78,6 @@ export default function CreateEstimate() {
     const serviceItems = form.getValues('service_items') || [];
     const services = form.getValues('services') || [];
     
-    // Calculate total based on services for consistency with existing code
     const total = services.reduce((sum, service) => {
       const serviceTotal = (service.quantity || 1) * (service.unit_price || 0);
       
@@ -93,7 +91,12 @@ export default function CreateEstimate() {
     
     setSubtotal(total);
     form.setValue('total', total);
-  }, [form.watch('service_items'), form.watch('services')]);
+    
+    const notes = form.getValues('notes');
+    if (notes) {
+      form.setValue('additional_notes', notes);
+    }
+  }, [form.watch('service_items'), form.watch('services'), form.watch('notes')]);
 
   const onSubmit = async (data: EstimateFormValues) => {
     setIsSubmitting(true)
@@ -300,6 +303,10 @@ export default function CreateEstimate() {
                             placeholder="Add any additional notes or information for this estimate"
                             className="min-h-[120px]"
                             {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              form.setValue('additional_notes', e.target.value);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
