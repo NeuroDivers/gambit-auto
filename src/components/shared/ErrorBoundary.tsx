@@ -17,42 +17,44 @@ export function ErrorBoundary({ children }: { children?: React.ReactNode }) {
   })
   
   useEffect(() => {
-    console.error("Application error:", error)
-    
-    if (error === null || error === undefined) {
-      // Handle null errors specifically
-      setErrorDetails({
-        title: "Application Error",
-        message: "The application encountered an unexpected null error. Please try refreshing the page."
-      })
-    } else if (isRouteErrorResponse(error)) {
-      // Handle route errors (404, etc)
-      setErrorDetails({
-        title: `${error.status} - ${error.statusText}`,
-        message: error.data?.message || "The requested page could not be found."
-      })
-    } else if (error instanceof Error) {
-      // Handle JavaScript errors
-      setErrorDetails({
-        title: error.name || "Error",
-        message: error.message || "An unexpected error occurred."
-      })
+    if (error) {
+      console.error("Application error:", error)
       
-      // Log more details to console for debugging
-      if (error.stack) {
-        console.error("Error stack:", error.stack)
+      if (error === null || error === undefined) {
+        // Handle null errors specifically
+        setErrorDetails({
+          title: "Application Error",
+          message: "The application encountered an unexpected null error. Please try refreshing the page."
+        })
+      } else if (isRouteErrorResponse(error)) {
+        // Handle route errors (404, etc)
+        setErrorDetails({
+          title: `${error.status} - ${error.statusText}`,
+          message: error.data?.message || "The requested page could not be found."
+        })
+      } else if (error instanceof Error) {
+        // Handle JavaScript errors
+        setErrorDetails({
+          title: error.name || "Error",
+          message: error.message || "An unexpected error occurred."
+        })
+        
+        // Log more details to console for debugging
+        if (error.stack) {
+          console.error("Error stack:", error.stack)
+        }
+      } else if (typeof error === 'string') {
+        setErrorDetails({
+          title: "Error",
+          message: error
+        })
+      } else {
+        // Handle unknown error types
+        setErrorDetails({
+          title: "Unknown Error",
+          message: "An unexpected error occurred. Please try refreshing the page."
+        })
       }
-    } else if (typeof error === 'string') {
-      setErrorDetails({
-        title: "Error",
-        message: error
-      })
-    } else {
-      // Handle unknown error types
-      setErrorDetails({
-        title: "Unknown Error",
-        message: "An unexpected error occurred. Please try refreshing the page."
-      })
     }
   }, [error])
   

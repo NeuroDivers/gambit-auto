@@ -20,27 +20,33 @@ export const router = createBrowserRouter([
   },
   {
     path: "/auth",
-    element: <Auth />
+    element: <Auth />,
+    errorElement: <ErrorBoundary />
   },
   {
     path: "/reset-password",
-    element: <ResetPassword />
+    element: <ResetPassword />,
+    errorElement: <ErrorBoundary />
   },
   {
     path: "/user",
-    element: <UserDetails />
+    element: <UserDetails />,
+    errorElement: <ErrorBoundary />
   },
   {
     path: "/unauthorized",
-    element: <Unauthorized />
+    element: <Unauthorized />,
+    errorElement: <ErrorBoundary />
   },
   {
     path: "/p/:invoiceId",
-    element: <PublicInvoiceView />
+    element: <PublicInvoiceView />,
+    errorElement: <ErrorBoundary />
   },
-  ...protectedRoutes, // Spread the protected routes array
+  ...protectedRoutes,
   {
     path: "*",
-    element: <NotFound />
+    element: <NotFound />,
+    errorElement: <ErrorBoundary />
   }
 ])
