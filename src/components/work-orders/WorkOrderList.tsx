@@ -8,6 +8,7 @@ import { WorkOrderPagination } from "./components/WorkOrderPagination"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { WorkOrderMobileList } from "./components/WorkOrderMobileList"
 import { useNavigate } from "react-router-dom"
+import { WorkOrderDetailsDialog } from "./calendar/WorkOrderDetailsDialog"
 
 export function WorkOrderList() {
   const navigate = useNavigate()
@@ -21,6 +22,8 @@ export function WorkOrderList() {
     setAssignmentFilter,
     assignBayWorkOrder,
     setAssignBayWorkOrder,
+    selectedWorkOrder,
+    setSelectedWorkOrder,
     workOrders,
     isLoading,
     error,
@@ -69,6 +72,7 @@ export function WorkOrderList() {
           onAssignBay={setAssignBayWorkOrder}
           onEdit={handleEdit}
           onCreateInvoice={handleCreateInvoice}
+          onViewDetails={setSelectedWorkOrder}
         />
       ) : (
         <WorkOrderTable
@@ -76,6 +80,7 @@ export function WorkOrderList() {
           onAssignBay={setAssignBayWorkOrder}
           onEdit={handleEdit}
           onCreateInvoice={handleCreateInvoice}
+          onViewDetails={setSelectedWorkOrder}
         />
       )}
 
@@ -95,6 +100,14 @@ export function WorkOrderList() {
         })) || []}
         onAssign={(bayId) => assignBayWorkOrder && handleAssignBay(assignBayWorkOrder.id, bayId || null)}
       />
+      
+      {selectedWorkOrder && (
+        <WorkOrderDetailsDialog 
+          workOrder={selectedWorkOrder} 
+          open={!!selectedWorkOrder} 
+          onOpenChange={(open) => !open && setSelectedWorkOrder(null)} 
+        />
+      )}
     </div>
   )
 }

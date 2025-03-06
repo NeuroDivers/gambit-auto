@@ -4,9 +4,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { WorkOrder } from "../types"
 import { toast } from "sonner"
+import { useNavigate } from "react-router-dom"
 
 export function useWorkOrderListData() {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [assignmentFilter, setAssignmentFilter] = useState<string>("all")
@@ -209,7 +211,45 @@ export function useWorkOrderListData() {
   }
 
   const handleCreateInvoice = async (workOrderId: string) => {
-    // Logic to create an invoice
+    try {
+      // Call the database function to create an invoice from work order
+      const { data, error } = await supabase.rpc(
+        'create_invoice_from_work_order',
+        { work_order_id: workOrderId }
+      )
+
+      if (error) {
+        console.error('Invoice creation error:', error)
+        toast.error('Failed to create invoice')
+        throw error
+      }
+
+      // Update the work order status to reflect it's been invoiced
+      const { error: updateError } = await supabase
+        .from('work_orders')
+        .update({ 
+          status: 'completed', 
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", workOrderId)
+
+      if (updateError) {
+        console.error('Work order status update error:', updateError)
+      }
+
+      toast.success('Invoice created successfully')
+      
+      // Invalidate queries to update the UI
+      queryClient.invalidateQueries({ queryKey: ["workOrders"] })
+      
+      // Navigate to the newly created invoice for editing
+      if (data) {
+        navigate(`/invoices/${data}/edit`)
+      }
+    } catch (err) {
+      console.error('Invoice creation error:', err)
+      toast.error('Failed to create invoice')
+    }
   }
 
   return {

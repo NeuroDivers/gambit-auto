@@ -1,3 +1,4 @@
+
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
@@ -15,9 +16,11 @@ import { WorkOrder } from "./types";
 import { WorkOrderDetailsDialog } from "./calendar/WorkOrderDetailsDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useServiceBays } from "@/components/service-bays/hooks/useServiceBays";
+
 interface WorkOrderCalendarProps {
   clientView?: boolean;
 }
+
 export const WorkOrderCalendar = ({
   clientView = false
 }: WorkOrderCalendarProps) => {
@@ -31,12 +34,14 @@ export const WorkOrderCalendar = ({
   const {
     refetch: refetchServiceBays
   } = useServiceBays();
+  
   useEffect(() => {
     // Ensure service bays are loaded when the calendar mounts
     refetchServiceBays().catch(error => {
       console.error("Error fetching service bays:", error);
     });
   }, [refetchServiceBays]);
+  
   const {
     data: workOrders = []
   } = useQuery({
@@ -52,6 +57,7 @@ export const WorkOrderCalendar = ({
       return data;
     }
   });
+  
   const {
     data: approvedUnscheduledWorkOrders = []
   } = useQuery({
@@ -70,6 +76,7 @@ export const WorkOrderCalendar = ({
       return data as WorkOrder[];
     }
   });
+  
   useEffect(() => {
     const channel = supabase.channel("work_orders_changes").on("postgres_changes", {
       event: "*",
@@ -112,24 +119,49 @@ export const WorkOrderCalendar = ({
       supabase.removeChannel(channel);
     };
   }, [queryClient]);
+  
   const handleWorkOrderSelect = (workOrder: WorkOrder) => {
     setSelectedWorkOrder(workOrder);
   };
+  
   const handleDateChange = (date: Date) => {
     setCurrentDate(date);
     console.log("Date changed:", date);
   };
-  return <div className="space-y-6">
-      {!clientView && <div className="flex justify-end">
-          
-        </div>}
+  
+  return (
+    <div className="space-y-6">
+      {!clientView && (
+        <div className="flex justify-end">
+          <Button onClick={() => navigate("/work-orders/create")}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Work Order
+          </Button>
+        </div>
+      )}
       
       <div className="space-y-8">
-        {isMobile ? <MobileCalendarView currentDate={currentDate} workOrders={workOrders} onDateChange={handleDateChange} /> : <DesktopCalendarView currentDate={currentDate} workOrders={workOrders} onDateChange={handleDateChange} />}
+        {isMobile ? (
+          <MobileCalendarView 
+            currentDate={currentDate} 
+            workOrders={workOrders} 
+            onDateChange={handleDateChange} 
+          />
+        ) : (
+          <DesktopCalendarView 
+            currentDate={currentDate} 
+            workOrders={workOrders} 
+            onDateChange={handleDateChange} 
+          />
+        )}
         
-        {!clientView && <>
+        {!clientView && (
+          <>
             <div className="mt-10">
-              <HorizontalWorkOrderQueue workOrders={approvedUnscheduledWorkOrders} onSelectWorkOrder={handleWorkOrderSelect} />
+              <HorizontalWorkOrderQueue 
+                workOrders={approvedUnscheduledWorkOrders} 
+                onSelectWorkOrder={handleWorkOrderSelect} 
+              />
             </div>
             
             <Alert className="border-l-4 border-l-amber-500">
@@ -142,12 +174,23 @@ export const WorkOrderCalendar = ({
             
             <Card>
               <CardContent className="p-0">
-                <WorkOrdersSection workOrders={workOrders.filter(wo => !wo.start_time)} />
+                <WorkOrdersSection 
+                  workOrders={workOrders.filter(wo => !wo.start_time)} 
+                  onViewDetails={handleWorkOrderSelect}
+                />
               </CardContent>
             </Card>
-          </>}
+          </>
+        )}
       </div>
       
-      {selectedWorkOrder && <WorkOrderDetailsDialog workOrder={selectedWorkOrder} open={!!selectedWorkOrder} onOpenChange={open => !open && setSelectedWorkOrder(null)} />}
-    </div>;
+      {selectedWorkOrder && (
+        <WorkOrderDetailsDialog 
+          workOrder={selectedWorkOrder} 
+          open={!!selectedWorkOrder} 
+          onOpenChange={open => !open && setSelectedWorkOrder(null)} 
+        />
+      )}
+    </div>
+  );
 };
