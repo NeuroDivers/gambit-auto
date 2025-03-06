@@ -59,8 +59,7 @@ export function WorkOrderList() {
 
   // Handle create invoice action 
   const onCreateInvoice = (workOrder: WorkOrder) => {
-    const workOrderId = typeof workOrder === 'string' ? workOrder : workOrder.id
-    handleCreateInvoice(workOrderId)
+    handleCreateInvoice(workOrder.id)
   }
 
   return (
