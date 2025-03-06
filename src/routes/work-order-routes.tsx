@@ -37,60 +37,44 @@ export const workOrderRoutes: RouteObject[] = [
     path: "work-orders",
     element: (
       <PermissionGuard resource="work_orders" type="page_access">
-        <ErrorBoundary />
+        <ErrorBoundary>
+          <RoleBasedWorkOrders />
+        </ErrorBoundary>
       </PermissionGuard>
     ),
     errorElement: <ErrorBoundary />,
-    children: [
-      {
-        index: true,
-        element: <RoleBasedWorkOrders />
-      }
-    ]
   },
   {
     path: "work-orders/create",
     element: (
       <PermissionGuard resource="work_orders" type="page_access">
-        <ErrorBoundary />
+        <ErrorBoundary>
+          <CreateWorkOrder />
+        </ErrorBoundary>
       </PermissionGuard>
     ),
     errorElement: <ErrorBoundary />,
-    children: [
-      {
-        index: true,
-        element: <CreateWorkOrder />
-      }
-    ]
   },
   {
     path: "work-orders/:id/edit",
     element: (
       <PermissionGuard resource="work_orders" type="page_access">
-        <ErrorBoundary />
+        <ErrorBoundary>
+          <EditWorkOrder />
+        </ErrorBoundary>
       </PermissionGuard>
     ),
     errorElement: <ErrorBoundary />,
-    children: [
-      {
-        index: true,
-        element: <EditWorkOrder />
-      }
-    ]
   },
   {
     path: "calendar",
     element: (
       <PermissionGuard resource="calendar" type="page_access">
-        <ErrorBoundary />
+        <ErrorBoundary>
+          <RoleBasedCalendar />
+        </ErrorBoundary>
       </PermissionGuard>
     ),
     errorElement: <ErrorBoundary />,
-    children: [
-      {
-        index: true,
-        element: <RoleBasedCalendar />
-      }
-    ]
   },
 ];
