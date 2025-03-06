@@ -89,7 +89,7 @@ export function useBlockedDates() {
           start_date: format(startDate, 'yyyy-MM-dd'), 
           end_date: format(endDate, 'yyyy-MM-dd'),
           reason,
-          created_by: user?.id
+          created_by: user?.id || null
         }])
         .select()
         .single();
