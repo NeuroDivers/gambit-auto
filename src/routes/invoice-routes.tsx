@@ -1,11 +1,13 @@
 
-import { ErrorBoundary } from "@/components/shared/ErrorBoundary"
-import InvoiceDetails from "@/pages/admin/InvoiceDetails"
-import Invoices from "@/pages/admin/Invoices"
-import CreateInvoice from "@/pages/admin/CreateInvoice"
-import EditInvoice from "@/pages/admin/EditInvoice"
+import { RouteObject } from "react-router-dom";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import InvoiceDetails from "@/pages/admin/InvoiceDetails";
+import Invoices from "@/pages/admin/Invoices";
+import CreateInvoice from "@/pages/admin/CreateInvoice";
+import EditInvoice from "@/pages/admin/EditInvoice";
+import PublicInvoiceView from "@/pages/PublicInvoiceView";
 
-export const invoiceRoutes = [
+export const invoiceRoutes: RouteObject[] = [
   {
     path: "invoices",
     element: <Invoices />,
@@ -24,4 +26,10 @@ export const invoiceRoutes = [
     element: <EditInvoice />,
     errorElement: <ErrorBoundary />
   },
-]
+  // Public route for invoice viewing
+  {
+    path: "public/invoice/:id",
+    element: <PublicInvoiceView />,
+    errorElement: <ErrorBoundary />
+  }
+];
