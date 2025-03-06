@@ -58,6 +58,7 @@ export interface ServiceItemType {
   sub_services?: ServiceItemType[];
   is_parent?: boolean;
   parent_id?: string;
+  package_id?: string | null;
 }
 
 export interface WorkOrderFormProps {

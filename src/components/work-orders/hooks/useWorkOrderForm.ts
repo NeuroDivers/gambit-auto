@@ -1,3 +1,4 @@
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -12,15 +13,15 @@ const formSchema = z.object({
   customer_email: z.string().email("Invalid email address"),
   customer_phone: z.string().min(1, "Phone number is required"),
   contact_preference: z.enum(["phone", "email"]),
-  vehicle_make: z.string().min(1, "Vehicle make is required"),
-  vehicle_model: z.string().min(1, "Vehicle model is required"),
-  vehicle_year: z.number().min(1900).max(new Date().getFullYear() + 1),
-  vehicle_vin: z.string().optional(),
-  vehicle_color: z.string().optional(),
-  vehicle_body_class: z.string().optional(),
-  vehicle_doors: z.number().nullable().optional(),
-  vehicle_trim: z.string().optional(),
-  vehicle_license_plate: z.string().optional(),
+  customer_vehicle_make: z.string().min(1, "Vehicle make is required"),
+  customer_vehicle_model: z.string().min(1, "Vehicle model is required"),
+  customer_vehicle_year: z.number().min(1900).max(new Date().getFullYear() + 1),
+  customer_vehicle_vin: z.string().optional(),
+  customer_vehicle_color: z.string().optional(),
+  customer_vehicle_body_class: z.string().optional(),
+  customer_vehicle_doors: z.number().nullable().optional(),
+  customer_vehicle_trim: z.string().optional(),
+  customer_vehicle_license_plate: z.string().optional(),
   additional_notes: z.string().optional(),
   customer_address: z.string().optional(),
   customer_street_address: z.string().optional(),
@@ -39,7 +40,7 @@ const formSchema = z.object({
     quantity: z.number().min(1),
     unit_price: z.number().min(0),
     commission_rate: z.number(),
-    commission_type: z.enum(['percentage', 'flat_rate']).nullable(),
+    commission_type: z.enum(['percentage', 'flat', 'flat_rate']).nullable(),
     assigned_profile_id: z.string().nullable().optional(),
     description: z.string().optional(),
     sub_services: z.array(z.object({
@@ -48,14 +49,15 @@ const formSchema = z.object({
       quantity: z.number().min(1),
       unit_price: z.number().min(0),
       commission_rate: z.number().optional(),
-      commission_type: z.enum(['percentage', 'flat_rate']).nullable().optional(),
+      commission_type: z.enum(['percentage', 'flat', 'flat_rate']).nullable().optional(),
       assigned_profile_id: z.string().nullable().optional(),
       description: z.string().optional(),
       parent_id: z.string().optional()
     })).optional()
   })),
   save_vehicle: z.boolean().optional(),
-  is_primary_vehicle: z.boolean().optional()
+  is_primary_vehicle: z.boolean().optional(),
+  client_id: z.string().optional()
 })
 
 export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, defaultStartTime?: Date) {
@@ -69,15 +71,15 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
       customer_email: workOrder?.customer_email || "",
       customer_phone: workOrder?.customer_phone || "",
       contact_preference: workOrder?.contact_preference as "phone" | "email" || "phone",
-      vehicle_make: workOrder?.vehicle_make || "",
-      vehicle_model: workOrder?.vehicle_model || "",
-      vehicle_year: workOrder?.vehicle_year || new Date().getFullYear(),
-      vehicle_vin: workOrder?.vehicle_vin || "",
-      vehicle_color: workOrder?.vehicle_color || "",
-      vehicle_body_class: workOrder?.vehicle_body_class || "",
-      vehicle_doors: workOrder?.vehicle_doors || null,
-      vehicle_trim: workOrder?.vehicle_trim || "",
-      vehicle_license_plate: workOrder?.vehicle_license_plate || "",
+      customer_vehicle_make: workOrder?.customer_vehicle_make || "",
+      customer_vehicle_model: workOrder?.customer_vehicle_model || "",
+      customer_vehicle_year: workOrder?.customer_vehicle_year || new Date().getFullYear(),
+      customer_vehicle_vin: workOrder?.customer_vehicle_vin || "",
+      customer_vehicle_color: workOrder?.customer_vehicle_color || "",
+      customer_vehicle_body_class: workOrder?.customer_vehicle_body_class || "",
+      customer_vehicle_doors: workOrder?.customer_vehicle_doors || null,
+      customer_vehicle_trim: workOrder?.customer_vehicle_trim || "",
+      customer_vehicle_license_plate: workOrder?.customer_vehicle_license_plate || "",
       additional_notes: workOrder?.additional_notes || "",
       customer_address: workOrder?.customer_address || "",
       customer_street_address: workOrder?.customer_street_address || "",

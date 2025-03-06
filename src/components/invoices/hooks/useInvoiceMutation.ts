@@ -28,6 +28,9 @@ export function useInvoiceMutation(invoiceId?: string) {
       description: item.description || "",
       quantity: Math.max(1, item.quantity || 1),
       unit_price: Math.max(0, item.unit_price || 0),
+      commission_rate: item.commission_rate,
+      commission_type: item.commission_type,
+      assigned_profile_id: item.assigned_profile_id
     }
   }
 
@@ -76,6 +79,9 @@ export function useInvoiceMutation(invoiceId?: string) {
           customer_vehicle_model: values.customer_vehicle_model || "",
           customer_vehicle_year: values.customer_vehicle_year || 0,
           customer_vehicle_vin: values.customer_vehicle_vin || "",
+          customer_vehicle_body_class: values.customer_vehicle_body_class || "",
+          customer_vehicle_doors: values.customer_vehicle_doors || null,
+          customer_vehicle_trim: values.customer_vehicle_trim || "",
           subtotal: subtotal,
           gst_amount: gstAmount,
           qst_amount: qstAmount,
