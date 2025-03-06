@@ -2,10 +2,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { isWithinInterval } from "date-fns";
+import { isWithinInterval, parseISO } from "date-fns";
 
 export function useBlockedDates() {
-  const { data: blockedDates = [] } = useQuery({
+  const { data: blockedDates = [], isLoading, error } = useQuery({
     queryKey: ["blockedDates"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -33,5 +33,5 @@ export function useBlockedDates() {
     });
   };
 
-  return { blockedDates, isDateBlocked };
+  return { blockedDates, isDateBlocked, isLoading, error };
 }

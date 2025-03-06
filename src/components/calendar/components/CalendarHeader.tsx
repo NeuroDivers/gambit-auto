@@ -6,7 +6,7 @@ import { isToday } from "date-fns"
 type CalendarHeaderProps = {
   days: Date[]
   isDateBlocked: (date: Date) => boolean
-  onDateChange?: (date: Date) => void // Added this prop
+  onDateChange?: (date: Date) => void
 }
 
 export function CalendarHeader({ days, isDateBlocked, onDateChange }: CalendarHeaderProps) {
@@ -28,7 +28,7 @@ export function CalendarHeader({ days, isDateBlocked, onDateChange }: CalendarHe
               today && "bg-primary/10",
               onDateChange && "cursor-pointer hover:bg-gray-50"
             )}
-            onClick={() => onDateChange && onDateChange(date)}
+            onClick={() => !blocked && onDateChange && onDateChange(date)}
           >
             <div className="font-bold">{format(date, 'EEE')}</div>
             <div className={cn(today && "text-primary font-semibold rounded-full w-6 h-6 flex items-center justify-center mx-auto")}>

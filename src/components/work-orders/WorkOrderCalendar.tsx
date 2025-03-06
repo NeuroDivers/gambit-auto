@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { useEffect, useState } from "react"
 import { WorkOrdersSection } from "@/components/work-orders/sections/WorkOrdersSection"
 import { MobileCalendarView } from "@/components/work-orders/calendar/mobile/MobileCalendarView"
+import { DesktopCalendarView } from "@/components/work-orders/calendar/DesktopCalendarView"
 import { toast } from "sonner"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { CalendarClock, Plus } from "lucide-react"
@@ -13,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { HorizontalWorkOrderQueue } from "./calendar/HorizontalWorkOrderQueue"
 import { WorkOrder } from "./types"
 import { WorkOrderDetailsDialog } from "./calendar/WorkOrderDetailsDialog"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface WorkOrderCalendarProps {
   clientView?: boolean;
@@ -21,7 +23,8 @@ interface WorkOrderCalendarProps {
 export const WorkOrderCalendar = ({ clientView = false }: WorkOrderCalendarProps) => {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const [currentDate] = useState(new Date())
+  const isMobile = useIsMobile()
+  const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
 
   const { data: workOrders = [] } = useQuery({
@@ -103,6 +106,11 @@ export const WorkOrderCalendar = ({ clientView = false }: WorkOrderCalendarProps
     setSelectedWorkOrder(workOrder)
   }
 
+  const handleDateChange = (date: Date) => {
+    setCurrentDate(date)
+    console.log("Date changed:", date)
+  }
+
   return (
     <div className="space-y-6">
       {!clientView && (
@@ -115,11 +123,19 @@ export const WorkOrderCalendar = ({ clientView = false }: WorkOrderCalendarProps
       )}
       
       <div className="space-y-8">
-        <MobileCalendarView
-          currentDate={currentDate}
-          workOrders={workOrders}
-          onDateChange={(date) => console.log("Date changed:", date)}
-        />
+        {isMobile ? (
+          <MobileCalendarView
+            currentDate={currentDate}
+            workOrders={workOrders}
+            onDateChange={handleDateChange}
+          />
+        ) : (
+          <DesktopCalendarView
+            currentDate={currentDate}
+            workOrders={workOrders}
+            onDateChange={handleDateChange}
+          />
+        )}
         
         {!clientView && (
           <>
