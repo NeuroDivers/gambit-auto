@@ -55,6 +55,8 @@ export function ServiceSelectionField({
       description: serviceToAdd.description || "",
       quantity: 1,
       unit_price: serviceToAdd.base_price || 0,
+      commission_rate: 0,
+      commission_type: null
     };
     
     onChange([...services, newService]);

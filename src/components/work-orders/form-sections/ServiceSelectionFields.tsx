@@ -16,7 +16,6 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
     <ServiceSelectionField
       services={services as ServiceItemType[]}
       onChange={(newServices) => form.setValue("service_items", newServices)}
-      disabled={false}
       showCommission
     />
   );

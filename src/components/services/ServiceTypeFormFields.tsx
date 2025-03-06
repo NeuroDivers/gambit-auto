@@ -210,6 +210,35 @@ export function ServiceTypeFormFields() {
           )}
         />
       </div>
+
+      <FormField
+        control={form.control}
+        name="status"
+        render={({ field }) => (
+          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <FormLabel className="text-base">Active Status</FormLabel>
+              <div className="text-sm text-muted-foreground">
+                Set this service as active or inactive
+              </div>
+            </div>
+            <FormControl>
+              <Select
+                value={field.value || 'active'}
+                onValueChange={field.onChange}
+              >
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent className="z-[9999]">
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormControl>
+          </FormItem>
+        )}
+      />
     </div>
   )
 }

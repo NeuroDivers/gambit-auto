@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -39,6 +40,7 @@ export function ServiceTypeDialog({
   
   useEffect(() => {
     if (serviceType) {
+      console.log("Resetting form with service type data:", serviceType);
       methods.reset({
         name: serviceType.name || "",
         description: serviceType.description || "",
@@ -79,6 +81,8 @@ export function ServiceTypeDialog({
         values.parent_service_id = null
       }
       
+      console.log("Submitting service type:", values);
+      
       if (serviceType?.id) {
         const { error } = await supabase
           .from("service_types")
@@ -110,7 +114,8 @@ export function ServiceTypeDialog({
             service_type: values.service_type,
             parent_service_id: values.parent_service_id,
             visible_on_app: values.visible_on_app,
-            visible_on_website: values.visible_on_website
+            visible_on_website: values.visible_on_website,
+            status: values.status
           })
         
         if (error) throw error
