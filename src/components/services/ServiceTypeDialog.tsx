@@ -34,7 +34,8 @@ export function ServiceTypeDialog({
       parent_service_id: serviceType?.parent_service_id || null,
       visible_on_app: serviceType?.visible_on_app !== false, // default to true if not specified
       visible_on_website: serviceType?.visible_on_website !== false, // default to true if not specified
-      status: serviceType?.status || "active"
+      status: serviceType?.status || "active",
+      hierarchy_type: serviceType?.hierarchy_type || "main"
     }
   })
   
@@ -50,7 +51,8 @@ export function ServiceTypeDialog({
         parent_service_id: serviceType.parent_service_id || null,
         visible_on_app: serviceType.visible_on_app !== false,
         visible_on_website: serviceType.visible_on_website !== false,
-        status: serviceType.status || "active"
+        status: serviceType.status || "active",
+        hierarchy_type: serviceType.hierarchy_type || "main"
       });
     } else {
       methods.reset({
@@ -62,7 +64,8 @@ export function ServiceTypeDialog({
         parent_service_id: null,
         visible_on_app: true,
         visible_on_website: true,
-        status: "active"
+        status: "active",
+        hierarchy_type: "main"
       });
     }
   }, [serviceType, methods]);
@@ -81,6 +84,15 @@ export function ServiceTypeDialog({
         values.parent_service_id = null
       }
       
+      // Set hierarchy_type based on service_type
+      if (values.service_type === 'standalone') {
+        values.hierarchy_type = 'main'
+      } else if (values.service_type === 'sub_service') {
+        values.hierarchy_type = 'sub'
+      } else if (values.service_type === 'bundle') {
+        values.hierarchy_type = 'bundle'
+      }
+      
       console.log("Submitting service type:", values);
       
       if (serviceType?.id) {
@@ -96,6 +108,7 @@ export function ServiceTypeDialog({
             visible_on_app: values.visible_on_app,
             visible_on_website: values.visible_on_website,
             status: values.status,
+            hierarchy_type: values.hierarchy_type,
             updated_at: new Date().toISOString()
           })
           .eq("id", serviceType.id)
@@ -115,7 +128,8 @@ export function ServiceTypeDialog({
             parent_service_id: values.parent_service_id,
             visible_on_app: values.visible_on_app,
             visible_on_website: values.visible_on_website,
-            status: values.status
+            status: values.status,
+            hierarchy_type: values.hierarchy_type
           })
         
         if (error) throw error
