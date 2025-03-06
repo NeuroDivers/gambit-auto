@@ -173,10 +173,9 @@ export function InvoiceView({ invoiceId, isEditing, isPublic, onClose }: Invoice
       {isPublic ? (
         <PublicView
           invoice={invoice}
-          verified={isVerified}
-          onVerified={() => setIsVerified(true)}
-          setIsVerified={setIsVerified}
           businessProfile={businessProfile}
+          isVerified={isVerified}
+          setIsVerified={setIsVerified}
           isAdmin={isAdmin}
           onPrint={handlePrint}
           printRef={printRef}

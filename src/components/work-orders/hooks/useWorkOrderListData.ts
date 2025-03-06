@@ -24,7 +24,6 @@ export function useWorkOrderListData() {
     data: workOrdersData,
     isLoading,
     error,
-    refetch
   } = useQuery({
     queryKey: ["workOrders", searchTerm, statusFilter, assignmentFilter, page],
     queryFn: async () => {
@@ -50,7 +49,7 @@ export function useWorkOrderListData() {
         );
       }
 
-      if (statusFilter && statusFilter !== "all") {
+      if (statusFilter) {
         query = query.eq("status", statusFilter);
       }
 
@@ -65,10 +64,7 @@ export function useWorkOrderListData() {
 
       const { data, error, count } = await query;
 
-      if (error) {
-        console.error("Error fetching work orders:", error);
-        throw error;
-      }
+      if (error) throw error;
 
       return {
         workOrders: data as WorkOrder[],
@@ -116,8 +112,7 @@ export function useWorkOrderListData() {
       toast.success("Bay assignment updated");
       queryClient.invalidateQueries({ queryKey: ["workOrders"] });
     },
-    onError: (error) => {
-      console.error("Error assigning bay:", error);
+    onError: () => {
       toast.error("Failed to update bay assignment");
     },
   });
@@ -133,15 +128,9 @@ export function useWorkOrderListData() {
     createInvoice(workOrderId);
   };
 
-  const totalPages = Math.ceil((workOrdersData?.totalCount || 0) / pageSize);
-
-  // Add filter state reset function
-  const resetFilters = () => {
-    setSearchTerm("");
-    setStatusFilter("");
-    setAssignmentFilter("");
-    setPage(1);
-  };
+  const totalPages = Math.ceil(
+    (workOrdersData?.totalCount || 0) / pageSize
+  );
 
   return {
     searchTerm,
@@ -163,7 +152,5 @@ export function useWorkOrderListData() {
     page,
     setPage,
     totalPages,
-    resetFilters,
-    refetch,
   };
 }

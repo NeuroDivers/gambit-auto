@@ -15,25 +15,10 @@ interface PublicViewProps {
   invoice: Invoice;
   verified: boolean;
   onVerified: () => void;
-  businessProfile?: any; // Adding this to match the expected props
-  isAdmin?: boolean; // Adding this to match the expected props
-  onPrint?: () => void; // Adding this to match the expected props
-  printRef?: React.RefObject<HTMLDivElement>; // Adding this to match the expected props
-  setIsVerified?: (value: boolean) => void; // Adding this to match the expected props
   children?: React.ReactNode;
 }
 
-export function PublicView({ 
-  invoice, 
-  verified, 
-  onVerified, 
-  businessProfile,
-  isAdmin,
-  onPrint,
-  printRef,
-  setIsVerified,
-  children 
-}: PublicViewProps) {
+export function PublicView({ invoice, verified, onVerified, children }: PublicViewProps) {
   const [showPayment, setShowPayment] = useState(false);
   
   if (!verified) {
