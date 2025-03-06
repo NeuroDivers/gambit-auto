@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
@@ -28,7 +27,6 @@ export default function CreateEstimate() {
   const form = useForm<EstimateFormValues>({
     defaultValues: {
       client_id: '',
-      vehicle_id: '',
       service_items: [],
       services: [],
       total: 0,
@@ -253,7 +251,9 @@ export default function CreateEstimate() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="relative">
-                <CustomerSearch form={form} />
+                <EstimateFormAdapter form={form}>
+                  <CustomerSearch form={form} />
+                </EstimateFormAdapter>
               </div>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -263,7 +263,9 @@ export default function CreateEstimate() {
                   </CardHeader>
                   <CardContent>
                     <div className="relative">
-                      <CustomerInfoFields form={form} isEditing={false} />
+                      <EstimateFormAdapter form={form}>
+                        <CustomerInfoFields form={form} isEditing={false} />
+                      </EstimateFormAdapter>
                     </div>
                   </CardContent>
                 </Card>
@@ -274,7 +276,9 @@ export default function CreateEstimate() {
                   </CardHeader>
                   <CardContent>
                     <div className="relative">
-                      <VehicleInfoFields form={form} />
+                      <EstimateFormAdapter form={form}>
+                        <VehicleInfoFields form={form} />
+                      </EstimateFormAdapter>
                     </div>
                   </CardContent>
                 </Card>

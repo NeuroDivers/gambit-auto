@@ -12,11 +12,13 @@ interface EstimateFormAdapterProps {
 /**
  * This component adapts an EstimateForm to be compatible with components
  * that expect a WorkOrderFormValues form.
- * Since EstimateFormValues now properly extends WorkOrderFormValues, 
- * we no longer need to synchronize fields manually.
+ * Since EstimateFormValues properly extends WorkOrderFormValues, 
+ * we can simply cast the form to the expected type.
  */
 export function EstimateFormAdapter({ form, children }: EstimateFormAdapterProps) {
-  // Use a type assertion to adapt the form
+  // We need to use a type assertion here because TypeScript doesn't recognize
+  // that EstimateFormValues is compatible with WorkOrderFormValues due to
+  // the extra fields
   const adaptedForm = form as unknown as UseFormReturn<WorkOrderFormValues>;
   
   return (

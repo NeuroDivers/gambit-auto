@@ -11,7 +11,6 @@ import { WorkOrderFormValues } from "@/components/work-orders/types";
 export interface EstimateFormValues extends WorkOrderFormValues {
   // Estimate-specific fields (not in WorkOrderFormValues)
   total: number;
-  vehicle_id: string;
   
   // For backward compatibility 
   services?: ServiceItemType[];
