@@ -1,6 +1,6 @@
 
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
-import { UseFormReturn } from "react-hook-form"
+import { UseFormReturn, useFieldArray } from "react-hook-form"
 import { WorkOrderFormValues } from "../types"
 import { Button } from "@/components/ui/button"
 import { PlusIcon, MinusIcon, ChevronDownIcon, ChevronUpIcon, UsersIcon } from "lucide-react"
@@ -17,7 +17,8 @@ interface ServiceSelectionFieldsProps {
 }
 
 export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
-  const { fields: serviceItems, append, remove } = form.useFieldArray({
+  const { fields: serviceItems, append, remove } = useFieldArray({
+    control: form.control,
     name: "service_items",
   })
 
