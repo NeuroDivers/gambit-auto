@@ -13,22 +13,12 @@ interface EstimateFormAdapterProps {
  * This component adapts an EstimateForm to be compatible with components
  * that expect a WorkOrderFormValues form.
  * 
- * The adapter creates a proxy around the original form to make it appear as 
- * a WorkOrderFormValues form to child components, while preserving all the
- * original form's functionality.
+ * Since the EstimateFormValues interface now includes all fields from
+ * WorkOrderFormValues, we can use a simple type assertion.
  */
 export function EstimateFormAdapter({ form, children }: EstimateFormAdapterProps) {
-  // Create a wrapped form object that modifies the watch method to avoid type errors
-  // while still delegating to the original form's methods
-  const adaptedForm = {
-    ...form,
-    // Override the watch method to handle property mapping between form types
-    watch: (function(this: UseFormReturn<EstimateFormValues>, ...args: any[]) {
-      // Pass through to the original watch method
-      const result = form.watch(...args);
-      return result;
-    }) as UseFormReturn<WorkOrderFormValues>['watch']
-  } as UseFormReturn<WorkOrderFormValues>;
+  // We can now safely cast the form since the interfaces are compatible
+  const adaptedForm = form as unknown as UseFormReturn<WorkOrderFormValues>;
   
   return <>{children}</>;
 }
