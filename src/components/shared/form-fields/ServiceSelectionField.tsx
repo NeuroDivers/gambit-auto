@@ -29,6 +29,7 @@ export function ServiceSelectionField({
   showCommission = false
 }: ServiceSelectionFieldProps) {
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+  const [openCollapsibles, setOpenCollapsibles] = useState<Record<number, boolean>>({});
   
   // Fetch service types for dropdown
   const { data: serviceTypes = [] } = useQuery({
@@ -133,6 +134,13 @@ export function ServiceSelectionField({
       updatedServices[parentIndex].sub_services!.splice(subIndex, 1);
       onChange(updatedServices);
     }
+  };
+
+  const toggleCollapsible = (index: number) => {
+    setOpenCollapsibles(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
   };
 
   return (
@@ -258,16 +266,22 @@ export function ServiceSelectionField({
 
               {/* Sub-services section */}
               <div className="mt-4 pt-2 border-t">
-                <CollapsibleTrigger className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 mb-2">
-                  {(props: { open: boolean }) => (
-                    <>
-                      {props.open ? <ChevronDown className="h-4 w-4 mr-1" /> : <ChevronRight className="h-4 w-4 mr-1" />}
-                      Customize with sub-services
-                    </>
-                  )}
-                </CollapsibleTrigger>
+                <div className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 mb-2">
+                  <button 
+                    type="button" 
+                    onClick={() => toggleCollapsible(index)}
+                    className="flex items-center focus:outline-none"
+                  >
+                    {openCollapsibles[index] ? (
+                      <ChevronDown className="h-4 w-4 mr-1" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 mr-1" />
+                    )}
+                    Customize with sub-services
+                  </button>
+                </div>
                 
-                <CollapsibleContent>
+                {openCollapsibles[index] && (
                   <div className="pl-4 border-l-2 border-gray-100 space-y-4 mt-2">
                     {/* Sub-services dropdown */}
                     <div className="flex flex-col sm:flex-row gap-3">
@@ -346,7 +360,7 @@ export function ServiceSelectionField({
                       </div>
                     )}
                   </div>
-                </CollapsibleContent>
+                )}
               </div>
             </Collapsible>
           ))}
