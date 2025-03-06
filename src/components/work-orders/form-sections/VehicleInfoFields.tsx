@@ -5,6 +5,10 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
+import { VinScanner } from "@/components/shared/VinScanner"
+import { useVinLookup } from "@/hooks/useVinLookup"
+import { useEffect } from "react"
+import { Loader2 } from "lucide-react"
 
 interface VehicleInfoFieldsProps {
   form: UseFormReturn<WorkOrderFormValues>
@@ -13,7 +17,24 @@ interface VehicleInfoFieldsProps {
 }
 
 export function VehicleInfoFields({ form, isEditing, customerId }: VehicleInfoFieldsProps) {
-  const { control } = form
+  const { control, watch } = form
+  
+  // Set up VIN lookup
+  const vin = watch('vehicle_serial')
+  const { data: vinData, isLoading: isLoadingVin } = useVinLookup(vin)
+  
+  // Auto-fill vehicle information when VIN data is available
+  useEffect(() => {
+    if (vinData && !vinData.error) {
+      if (vinData.make) form.setValue('vehicle_make', vinData.make)
+      if (vinData.model) form.setValue('vehicle_model', vinData.model)
+      if (vinData.year) form.setValue('vehicle_year', vinData.year)
+      if (vinData.color) form.setValue('vehicle_color', vinData.color)
+      if (vinData.bodyClass) form.setValue('vehicle_body_class', vinData.bodyClass)
+      if (vinData.doors) form.setValue('vehicle_doors', vinData.doors)
+      if (vinData.trim) form.setValue('vehicle_trim', vinData.trim)
+    }
+  }, [vinData, form])
   
   return (
     <Card>
@@ -29,7 +50,12 @@ export function VehicleInfoFields({ form, isEditing, customerId }: VehicleInfoFi
               <FormItem>
                 <FormLabel>Make</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Toyota" {...field} />
+                  <div className="relative">
+                    <Input placeholder="e.g. Toyota" {...field} disabled={isLoadingVin} />
+                    {isLoadingVin && (
+                      <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -42,7 +68,12 @@ export function VehicleInfoFields({ form, isEditing, customerId }: VehicleInfoFi
               <FormItem>
                 <FormLabel>Model</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Corolla" {...field} />
+                  <div className="relative">
+                    <Input placeholder="e.g. Corolla" {...field} disabled={isLoadingVin} />
+                    {isLoadingVin && (
+                      <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -57,16 +88,22 @@ export function VehicleInfoFields({ form, isEditing, customerId }: VehicleInfoFi
               <FormItem>
                 <FormLabel>Year</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
-                    placeholder="e.g. 2022" 
-                    {...field} 
-                    value={field.value || ''}
-                    onChange={(e) => {
-                      const value = e.target.value ? parseInt(e.target.value) : '';
-                      field.onChange(value);
-                    }}
-                  />
+                  <div className="relative">
+                    <Input 
+                      type="number" 
+                      placeholder="e.g. 2022" 
+                      {...field} 
+                      value={field.value || ''}
+                      onChange={(e) => {
+                        const value = e.target.value ? parseInt(e.target.value) : '';
+                        field.onChange(value);
+                      }}
+                      disabled={isLoadingVin}
+                    />
+                    {isLoadingVin && (
+                      <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -77,9 +114,15 @@ export function VehicleInfoFields({ form, isEditing, customerId }: VehicleInfoFi
             name="vehicle_serial"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>VIN</FormLabel>
+                <FormLabel>
+                  VIN
+                  <span className="text-xs text-muted-foreground ml-2">(Auto-fills vehicle info)</span>
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="Vehicle Identification Number" {...field} />
+                  <div className="flex gap-2">
+                    <Input {...field} />
+                    <VinScanner onScan={(vin) => field.onChange(vin)} />
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -96,7 +139,12 @@ export function VehicleInfoFields({ form, isEditing, customerId }: VehicleInfoFi
               <FormItem>
                 <FormLabel>Color</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Red" {...field} />
+                  <div className="relative">
+                    <Input placeholder="e.g. Red" {...field} disabled={isLoadingVin} />
+                    {isLoadingVin && (
+                      <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -125,7 +173,12 @@ export function VehicleInfoFields({ form, isEditing, customerId }: VehicleInfoFi
               <FormItem>
                 <FormLabel>Trim</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. XLE, Limited" {...field} />
+                  <div className="relative">
+                    <Input placeholder="e.g. XLE, Limited" {...field} disabled={isLoadingVin} />
+                    {isLoadingVin && (
+                      <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -138,7 +191,12 @@ export function VehicleInfoFields({ form, isEditing, customerId }: VehicleInfoFi
               <FormItem>
                 <FormLabel>Body Type</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Sedan, SUV" {...field} />
+                  <div className="relative">
+                    <Input placeholder="e.g. Sedan, SUV" {...field} disabled={isLoadingVin} />
+                    {isLoadingVin && (
+                      <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -153,16 +211,22 @@ export function VehicleInfoFields({ form, isEditing, customerId }: VehicleInfoFi
             <FormItem>
               <FormLabel>Number of Doors</FormLabel>
               <FormControl>
-                <Input 
-                  type="number" 
-                  placeholder="e.g. 4" 
-                  {...field} 
-                  value={field.value || ''}
-                  onChange={(e) => {
-                    const value = e.target.value ? parseInt(e.target.value) : null;
-                    field.onChange(value);
-                  }}
-                />
+                <div className="relative">
+                  <Input 
+                    type="number" 
+                    placeholder="e.g. 4" 
+                    {...field} 
+                    value={field.value || ''}
+                    onChange={(e) => {
+                      const value = e.target.value ? parseInt(e.target.value) : null;
+                      field.onChange(value);
+                    }}
+                    disabled={isLoadingVin}
+                  />
+                  {isLoadingVin && (
+                    <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
