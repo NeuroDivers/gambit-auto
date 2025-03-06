@@ -5,7 +5,7 @@ import { ServiceItemType } from "@/types/service-item"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { Plus, Trash, ChevronDown, ChevronRight } from "lucide-react"
+import { Trash, ChevronDown, ChevronRight } from "lucide-react"
 import { 
   Select,
   SelectContent,
@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
 interface ServiceSelectionFieldProps {
   services: ServiceItemType[];
@@ -28,7 +27,6 @@ export function ServiceSelectionField({
   allowPriceEdit = true,
   showCommission = false
 }: ServiceSelectionFieldProps) {
-  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [openCollapsibles, setOpenCollapsibles] = useState<Record<number, boolean>>({});
   
   // Fetch service types for dropdown
@@ -59,10 +57,10 @@ export function ServiceSelectionField({
     );
   };
 
-  const handleAddService = () => {
-    if (!selectedServiceId) return;
+  const handleServiceChange = (serviceId: string) => {
+    if (!serviceId) return;
     
-    const serviceToAdd = serviceTypes.find(s => s.id === selectedServiceId);
+    const serviceToAdd = serviceTypes.find(s => s.id === serviceId);
     if (!serviceToAdd) return;
     
     const newService: ServiceItemType = {
@@ -78,7 +76,6 @@ export function ServiceSelectionField({
     };
     
     onChange([...services, newService]);
-    setSelectedServiceId(null);
   };
 
   const handleRemoveService = (index: number) => {
@@ -145,39 +142,27 @@ export function ServiceSelectionField({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1">
-          <Select
-            value={selectedServiceId || ""}
-            onValueChange={setSelectedServiceId}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a service" />
-            </SelectTrigger>
-            <SelectContent className="z-[9999]">
-              {standaloneServices.map(service => (
-                <SelectItem key={service.id} value={service.id}>
-                  {service.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <Button 
-          type="button" 
-          onClick={handleAddService} 
-          disabled={!selectedServiceId}
-          className="whitespace-nowrap"
+      <div className="flex-1">
+        <Select
+          onValueChange={handleServiceChange}
         >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Service
-        </Button>
+          <SelectTrigger>
+            <SelectValue placeholder="Select a service" />
+          </SelectTrigger>
+          <SelectContent className="z-[9999]">
+            {standaloneServices.map(service => (
+              <SelectItem key={service.id} value={service.id}>
+                {service.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {services.length > 0 ? (
         <div className="space-y-4">
           {services.map((service, index) => (
-            <Collapsible key={index} className="border rounded-md p-4 space-y-3">
+            <div key={index} className="border rounded-md p-4 space-y-3">
               <div className="flex justify-between items-start">
                 <div className="font-medium">{service.service_name}</div>
                 <Button
@@ -362,12 +347,12 @@ export function ServiceSelectionField({
                   </div>
                 )}
               </div>
-            </Collapsible>
+            </div>
           ))}
         </div>
       ) : (
         <div className="text-center py-8 border rounded-md text-muted-foreground">
-          No services added. Select a service and click "Add Service" to get started.
+          No services added. Select a service from the dropdown to add it.
         </div>
       )}
     </div>
