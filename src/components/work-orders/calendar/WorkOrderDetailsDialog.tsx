@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { formatDate, formatCurrency } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Receipt } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { useWorkOrderInvoice } from "../hooks/useWorkOrderInvoice"
 import React, { useMemo } from "react"
 
 type WorkOrderDetailsDialogProps = {
@@ -26,7 +26,7 @@ export const WorkOrderDetailsDialog = React.memo(function WorkOrderDetailsDialog
   onOpenChange,
 }: WorkOrderDetailsDialogProps) {
   const queryClient = useQueryClient()
-  const navigate = useNavigate()
+  const { createInvoice, isCreatingInvoice } = useWorkOrderInvoice()
 
   // Fetch work order with services
   const { data: workOrderDetails, isLoading: loadingDetails } = useQuery({
@@ -115,37 +115,8 @@ export const WorkOrderDetailsDialog = React.memo(function WorkOrderDetailsDialog
   })
 
   // Function to handle creating an invoice
-  const handleCreateInvoice = async () => {
-    try {
-      // First update the work order status to "invoiced" 
-      const { error: statusError } = await supabase
-        .from('work_orders')
-        .update({ status: 'invoiced' })
-        .eq('id', workOrder.id)
-      
-      if (statusError) throw statusError
-
-      // Then create the invoice
-      const { data, error } = await supabase.rpc(
-        'create_invoice_from_work_order',
-        { work_order_id: workOrder.id }
-      )
-
-      if (error) throw error
-
-      toast.success("Invoice created successfully")
-      
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["workOrders"] })
-      
-      // Navigate to the newly created invoice
-      if (data) {
-        navigate(`/invoices/${data}/edit`)
-      }
-    } catch (error) {
-      console.error('Error creating invoice:', error)
-      toast.error("Failed to create invoice")
-    }
+  const handleCreateInvoice = () => {
+    createInvoice(workOrder.id)
   }
 
   const getStatusBadge = (status: string) => {
@@ -334,10 +305,11 @@ export const WorkOrderDetailsDialog = React.memo(function WorkOrderDetailsDialog
                 onClick={handleCreateInvoice}
                 disabled={!workOrderDetails || 
                           workOrderDetails.status === 'cancelled' || 
-                          workOrderDetails.status === 'invoiced'}
+                          workOrderDetails.status === 'invoiced' ||
+                          isCreatingInvoice}
               >
                 <Receipt className="mr-2 h-4 w-4" />
-                {isInvoiced ? "Already Invoiced" : "Create Invoice"}
+                {isInvoiced ? "Already Invoiced" : isCreatingInvoice ? "Creating Invoice..." : "Create Invoice"}
               </Button>
               {!isInvoiced && workOrderDetails?.status !== 'cancelled' && (
                 <p className="text-xs text-center mt-2 text-muted-foreground">

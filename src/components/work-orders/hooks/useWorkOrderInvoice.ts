@@ -1,29 +1,51 @@
 
-import { supabase } from "@/integrations/supabase/client"
-import { toast } from "sonner"
-import { useNavigate } from "react-router-dom"
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 export function useWorkOrderInvoice() {
-  const navigate = useNavigate()
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
-  const handleCreateInvoice = async (workOrderId: string) => {
-    try {
-      const { data, error } = await supabase.rpc(
-        'create_invoice_from_work_order',
-        { work_order_id: workOrderId }
-      )
+  const createInvoiceMutation = useMutation({
+    mutationFn: async (workOrderId: string) => {
+      // First update the work order status to "invoiced"
+      const { error: statusError } = await supabase
+        .from('work_orders')
+        .update({ status: 'invoiced' })
+        .eq('id', workOrderId);
+      
+      if (statusError) throw statusError;
 
-      if (error) throw error
+      // Then create the invoice
+      const { data, error } = await supabase
+        .from('invoices')
+        .insert({
+          work_order_id: workOrderId,
+          status: 'draft'
+        })
+        .select('id')
+        .single();
 
-      toast.success("Invoice created successfully")
-      navigate(`/admin/invoices/${data}/edit`)
-    } catch (error: any) {
-      console.error('Error creating invoice:', error)
-      toast.error("Failed to create invoice")
+      if (error) throw error;
+      return data.id;
+    },
+    onSuccess: (invoiceId) => {
+      toast.success("Invoice created successfully");
+      queryClient.invalidateQueries({ queryKey: ["workOrders"] });
+      
+      // Navigate to the newly created invoice
+      navigate(`/invoices/${invoiceId}/edit`);
+    },
+    onError: (error) => {
+      console.error('Error creating invoice:', error);
+      toast.error("Failed to create invoice");
     }
-  };
+  });
 
   return {
-    handleCreateInvoice,
+    createInvoice: (workOrderId: string) => createInvoiceMutation.mutate(workOrderId),
+    isCreatingInvoice: createInvoiceMutation.isPending
   };
 }

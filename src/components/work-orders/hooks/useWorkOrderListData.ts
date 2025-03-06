@@ -1,256 +1,133 @@
 
-import { useState, useEffect } from "react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
-import { WorkOrder } from "../types"
-import { toast } from "sonner"
-import { useNavigate } from "react-router-dom"
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { WorkOrder } from "../types";
+import { toast } from "sonner";
+import { useWorkOrderInvoice } from "./useWorkOrderInvoice";
 
 export function useWorkOrderListData() {
-  const queryClient = useQueryClient()
-  const navigate = useNavigate()
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [assignmentFilter, setAssignmentFilter] = useState<string>("all")
-  const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
-  const [assignBayWorkOrder, setAssignBayWorkOrder] = useState<WorkOrder | null>(null)
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [assignmentFilter, setAssignmentFilter] = useState("");
+  const [assignBayWorkOrder, setAssignBayWorkOrder] = useState<WorkOrder | null>(null);
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null);
+  const [page, setPage] = useState(1);
+  const queryClient = useQueryClient();
+  const { createInvoice } = useWorkOrderInvoice();
+  
+  const pageSize = 10;
+  const offset = (page - 1) * pageSize;
 
-  // Set up real-time subscription
-  useEffect(() => {
-    const channel = supabase
-      .channel('work-orders-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'work_orders'
-        },
-        (payload) => {
-          console.log('Work order change detected:', payload)
-          queryClient.invalidateQueries({ queryKey: ["workOrders"] })
-          
-          // Show toast notification based on the type of change
-          switch (payload.eventType) {
-            case "UPDATE":
-              toast.success('Work order updated')
-              break
-            case "INSERT":
-              toast.success('New work order created')
-              break
-            case "DELETE":
-              toast.info('Work order deleted')
-              break
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log("Subscription status:", status)
-      })
-
-    return () => {
-      console.log("Cleaning up subscription")
-      supabase.removeChannel(channel)
-    }
-  }, [queryClient])
-
-  const { data: workOrders, isLoading, error } = useQuery({
+  // Fetch work orders with pagination
+  const {
+    data: workOrdersData,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["workOrders", searchTerm, statusFilter, assignmentFilter, page],
     queryFn: async () => {
-      try {
-        console.log("Fetching work orders with filters:", { searchTerm, statusFilter, assignmentFilter });
-        
-        let query = supabase
-          .from("work_orders")
-          .select(`
-            *,
-            service_bays!fk_work_orders_assigned_bay (
-              id,
-              name
-            )
-          `, { count: 'exact' })
-          .order("created_at", { ascending: false })
-
-        // Handle search term - fixed search logic
-        if (searchTerm && searchTerm.trim() !== '') {
-          query = query.or(
-            `customer_first_name.ilike.%${searchTerm.trim()}%,` +
-            `customer_last_name.ilike.%${searchTerm.trim()}%,` +
-            `customer_email.ilike.%${searchTerm.trim()}%,` +
-            `customer_phone.ilike.%${searchTerm.trim()}%,` +
-            `vehicle_make.ilike.%${searchTerm.trim()}%,` +
-            `vehicle_model.ilike.%${searchTerm.trim()}%,` +
-            `vehicle_vin.ilike.%${searchTerm.trim()}%`
-          )
-        }
-
-        // Handle status filter - map approved/rejected to our standard statuses if needed
-        if (statusFilter !== "all") {
-          if (statusFilter === "in_progress") {
-            query = query.eq("status", "in_progress");
-          } else if (statusFilter === "pending") {
-            query = query.or("status.eq.pending,status.eq.approved");
-          } else if (statusFilter === "cancelled") {
-            query = query.or("status.eq.cancelled,status.eq.rejected");
-          } else {
-            query = query.eq("status", statusFilter);
-          }
-        }
-
-        // Handle assignment filter
-        if (assignmentFilter === "assigned-bay") {
-          query = query.not("assigned_bay_id", "is", null);
-        } else if (assignmentFilter === "unassigned-bay") {
-          query = query.is("assigned_bay_id", null);
-        }
-
-        const { data, error, count } = await query;
-
-        if (error) {
-          console.error('Work orders fetch error:', error);
-          throw new Error(`Failed to fetch work orders: ${error.message}`);
-        }
-
-        // Calculate total pages
-        if (count !== null) {
-          setTotalPages(Math.ceil(count / 10)); // Assuming 10 items per page
-        }
-
-        console.log("Fetched work orders:", data);
-        return data || [];
-      } catch (err) {
-        console.error('Work orders fetch error:', err);
-        throw err;
-      }
-    }
-  });
-
-  const { data: serviceBays } = useQuery({
-    queryKey: ["service-bays"],
-    queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from("service_bays")
-          .select("*")
-          .order('name')
-      
-        if (error) {
-          console.error('Service bays fetch error:', error)
-          throw new Error(`Failed to fetch service bays: ${error.message}`)
-        }
-
-        return data || []
-      } catch (err) {
-        console.error('Service bays fetch error:', err)
-        toast.error('Failed to load service bays')
-        throw err
-      }
-    }
-  })
-
-  const handleAssignBay = async (workOrderId: string, bayId: string | null) => {
-    try {
-      console.log('Assigning bay:', { workOrderId, bayId })
-      
-      // First get the current user
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        throw new Error('No authenticated user found')
-      }
-
-      // Update the work order
-      const { error: updateError } = await supabase
-        .from('work_orders')
-        .update({ 
-          assigned_bay_id: bayId === "unassigned" ? null : bayId,
-          updated_at: new Date().toISOString(),
-          assigned_profile_id: user.id // Add the current user as the one making the change
-        })
-        .eq("id", workOrderId)
-
-      if (updateError) {
-        console.error('Bay assignment error:', updateError)
-        throw updateError
-      }
-
-      // Fetch the updated work order to get the latest state
-      const { data: updatedWorkOrder, error: fetchError } = await supabase
-        .from('work_orders')
-        .select(`
+      let query = supabase
+        .from("work_orders")
+        .select(
+          `
           *,
           service_bays!fk_work_orders_assigned_bay (
             id,
             name
           )
-        `)
-        .eq('id', workOrderId)
-        .single()
+        `,
+          { count: "exact" }
+        )
+        .order("created_at", { ascending: false })
+        .range(offset, offset + pageSize - 1);
 
-      if (fetchError) {
-        console.error('Error fetching updated work order:', fetchError)
-        throw fetchError
+      // Apply filters
+      if (searchTerm) {
+        query = query.or(
+          `customer_first_name.ilike.%${searchTerm}%,customer_last_name.ilike.%${searchTerm}%,customer_email.ilike.%${searchTerm}%,vehicle_make.ilike.%${searchTerm}%,vehicle_model.ilike.%${searchTerm}%`
+        );
       }
 
-      console.log('Updated work order:', updatedWorkOrder)
-      
-      // Invalidate the queries to refetch the latest data
-      await queryClient.invalidateQueries({ queryKey: ["workOrders"] })
-      await queryClient.invalidateQueries({ queryKey: ["service-bays"] })
-      
-      toast.success('Bay assigned successfully')
-      
-      // Clear the assignment modal state
-      setAssignBayWorkOrder(null)
-    } catch (err) {
-      console.error('Bay assignment error:', err)
-      toast.error('Failed to assign bay')
-      throw err
-    }
-  }
-
-  const handleCreateInvoice = async (workOrderId: string) => {
-    try {
-      // Call the database function to create an invoice from work order
-      const { data, error } = await supabase.rpc(
-        'create_invoice_from_work_order',
-        { work_order_id: workOrderId }
-      )
-
-      if (error) {
-        console.error('Invoice creation error:', error)
-        toast.error('Failed to create invoice')
-        throw error
+      if (statusFilter) {
+        query = query.eq("status", statusFilter);
       }
 
-      // Update the work order status to reflect it's been invoiced
-      const { error: updateError } = await supabase
-        .from('work_orders')
-        .update({ 
-          status: 'completed', 
-          updated_at: new Date().toISOString()
+      if (assignmentFilter === "assigned") {
+        query = query.not("assigned_bay_id", "is", null);
+      } else if (assignmentFilter === "unassigned") {
+        query = query.is("assigned_bay_id", null);
+      }
+
+      const { data, error, count } = await query;
+
+      if (error) throw error;
+
+      return {
+        workOrders: data as WorkOrder[],
+        totalCount: count || 0,
+      };
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Fetch service bays
+  const { data: serviceBays } = useQuery({
+    queryKey: ["service-bays"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_bays")
+        .select("*")
+        .eq("status", "available")
+        .order("name");
+
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 1000 * 60 * 15, // 15 minutes
+  });
+
+  // Mutation to assign a bay
+  const assignBayMutation = useMutation({
+    mutationFn: async ({
+      workOrderId,
+      bayId,
+    }: {
+      workOrderId: string;
+      bayId: string | null;
+    }) => {
+      const { error } = await supabase
+        .from("work_orders")
+        .update({
+          assigned_bay_id: bayId,
         })
-        .eq("id", workOrderId)
+        .eq("id", workOrderId);
 
-      if (updateError) {
-        console.error('Work order status update error:', updateError)
-      }
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Bay assignment updated");
+      queryClient.invalidateQueries({ queryKey: ["workOrders"] });
+    },
+    onError: () => {
+      toast.error("Failed to update bay assignment");
+    },
+  });
 
-      toast.success('Invoice created successfully')
-      
-      // Invalidate queries to update the UI
-      queryClient.invalidateQueries({ queryKey: ["workOrders"] })
-      
-      // Navigate to the newly created invoice for editing
-      if (data) {
-        navigate(`/invoices/${data}/edit`)
-      }
-    } catch (err) {
-      console.error('Invoice creation error:', err)
-      toast.error('Failed to create invoice')
-    }
-  }
+  // Handler for bay assignment
+  const handleAssignBay = (workOrderId: string, bayId: string | null) => {
+    assignBayMutation.mutate({ workOrderId, bayId });
+    setAssignBayWorkOrder(null);
+  };
+
+  // Handler for creating an invoice
+  const handleCreateInvoice = (workOrderId: string) => {
+    createInvoice(workOrderId);
+  };
+
+  const totalPages = Math.ceil(
+    (workOrdersData?.totalCount || 0) / pageSize
+  );
 
   return {
     searchTerm,
@@ -259,11 +136,11 @@ export function useWorkOrderListData() {
     setStatusFilter,
     assignmentFilter,
     setAssignmentFilter,
-    selectedWorkOrder,
-    setSelectedWorkOrder,
     assignBayWorkOrder,
     setAssignBayWorkOrder,
-    workOrders,
+    selectedWorkOrder,
+    setSelectedWorkOrder,
+    workOrders: workOrdersData?.workOrders || [],
     isLoading,
     error,
     serviceBays,
@@ -271,6 +148,6 @@ export function useWorkOrderListData() {
     handleCreateInvoice,
     page,
     setPage,
-    totalPages
-  }
+    totalPages,
+  };
 }
