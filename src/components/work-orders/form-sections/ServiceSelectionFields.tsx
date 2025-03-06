@@ -1,4 +1,3 @@
-
 import React from "react"
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
@@ -179,76 +178,9 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
 
   useEffect(() => {
     if (Object.keys(subServicesByParent).length > 0) {
-      debug("Sub-services data loaded, checking for services to expand");
-      const formValues = form.getValues();
-      if (formValues.service_items) {
-        formValues.service_items.forEach((item, index) => {
-          if (item.service_id && hasSubServices(item.service_id)) {
-            debug(`Found service at index ${index} with sub-services, expanding`);
-            setExpandedServices(prev => ({
-              ...prev,
-              [index]: true
-            }));
-          }
-        });
-      }
+      debug("Sub-services data loaded");
     }
-  }, [subServicesByParent, form]);
-
-  useEffect(() => {
-    debug("Service items changed, checking for sub-services");
-    serviceItems.forEach((item, index) => {
-      if (item.service_id && hasSubServices(item.service_id)) {
-        debug(`Service at index ${index} has sub-services, expanding`);
-        setExpandedServices(prev => ({
-          ...prev,
-          [index]: true
-        }));
-      }
-    });
-  }, [serviceItems, subServicesByParent]);
-
-  useEffect(() => {
-    debug("Setting up form watch for service_id changes");
-    const subscription = form.watch((value, { name }) => {
-      if (name && name.includes('service_id') && !name.includes('sub_services')) {
-        debug(`Service ID changed: ${name}`);
-        const matches = name.match(/service_items\.(\d+)\.service_id/);
-        if (matches && matches[1]) {
-          const index = parseInt(matches[1]);
-          const serviceId = form.getValues(`service_items.${index}.service_id`);
-          debug(`Service ID at index ${index} changed to ${serviceId}`);
-          if (serviceId && hasSubServices(serviceId)) {
-            debug(`Service has sub-services, expanding section`);
-            setExpandedServices(prev => ({
-              ...prev,
-              [index]: true
-            }));
-          }
-        }
-      }
-    });
-    
-    return () => subscription.unsubscribe();
-  }, [form, hasSubServices]);
-
-  useEffect(() => {
-    const subscription = form.watch(() => {
-      const formValues = form.getValues();
-      if (formValues.service_items) {
-        formValues.service_items.forEach((item, index) => {
-          if (item.service_id && hasSubServices(item.service_id)) {
-            setExpandedServices(prev => ({
-              ...prev,
-              [index]: true
-            }));
-          }
-        });
-      }
-    });
-    
-    return () => subscription.unsubscribe();
-  }, [form, hasSubServices]);
+  }, [subServicesByParent]);
 
   return (
     <div className="space-y-6">
@@ -532,40 +464,37 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                     </Badge>
                   </Button>
                   
-                  {expandedServices[index] && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => addSubService(index)}
-                      className="flex items-center gap-2 text-xs hover:text-primary hover:border-primary transition-colors"
-                    >
-                      <PlusIcon className="h-3 w-3" />
-                      Add Sub-Service
-                    </Button>
-                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addSubService(index)}
+                    className="flex items-center gap-2 text-xs hover:text-primary hover:border-primary transition-colors"
+                  >
+                    <PlusIcon className="h-3 w-3" />
+                    Add Sub-Service
+                  </Button>
                 </div>
 
-                {expandedServices[index] && (
-                  <div className="relative pl-5 ml-2 border-l-2 border-primary/30 space-y-4">                  
-                    {!field.service_id && (
-                      <div className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
-                        Please select a service type first to see available sub-services
+                <div className="relative pl-5 ml-2 border-l-2 border-primary/30 space-y-4">                  
+                  {!field.service_id && (
+                    <div className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
+                      Please select a service type first to see available sub-services
+                    </div>
+                  )}
+                  
+                  {field.service_id && !hasSubServices(field.service_id) && (
+                    <div className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
+                      <div className="flex items-start gap-2">
+                        <InfoIcon className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                        <span>This service doesn't have any sub-services available</span>
                       </div>
-                    )}
-                    
-                    {field.service_id && !hasSubServices(field.service_id) && (
-                      <div className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
-                        <div className="flex items-start gap-2">
-                          <InfoIcon className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                          <span>This service doesn't have any sub-services available</span>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {field.sub_services && field.sub_services.length > 0 ? (
-                      <div className="space-y-4">
-                        {field.sub_services.map((subService, subIndex) => (
+                    </div>
+                  )}
+                  
+                  {field.sub_services && field.sub_services.length > 0 ? (
+                    <div className="space-y-4">
+                      {field.sub_services.map((subService, subIndex) => (
                           <Card key={subIndex} className="bg-background border border-primary/20 shadow-sm">
                             <CardContent className="p-4 pt-4">
                               <div className="flex justify-between items-center mb-4">
@@ -745,7 +674,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                       )
                     )}
                   </div>
-                )}
+                </div>
               </div>
             )}
           </CardContent>
