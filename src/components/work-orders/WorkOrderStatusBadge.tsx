@@ -41,7 +41,7 @@ export function WorkOrderStatusBadge({ status, workOrderId, editable = false }: 
       setCurrentStatus(newStatus)
       toast({
         title: "Status Updated",
-        description: `Work order status changed to ${newStatus}`,
+        description: `Work order status changed to ${getStatusLabel(newStatus)}`,
       })
     } catch (error: any) {
       toast({
@@ -79,7 +79,7 @@ export function WorkOrderStatusBadge({ status, workOrderId, editable = false }: 
 
   return (
     <Badge variant={getBadgeVariant(currentStatus)}>
-      {currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1).replace('_', ' ')}
+      {getStatusLabel(currentStatus)}
     </Badge>
   )
 }
