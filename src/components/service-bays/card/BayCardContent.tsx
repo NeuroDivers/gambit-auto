@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Clipboard, Pencil, X, Check, User, CheckCircle, Clock, AlertTriangle, Cog } from "lucide-react"
+import { Clipboard, Pencil, X, Check, User } from "lucide-react"
 import { useState } from "react"
 import { useAssignableProfiles } from "../hooks/useAssignableProfiles"
 
@@ -51,33 +51,18 @@ export function BayCardContent({
   const getStatusBadge = () => {
     switch (status) {
       case 'available':
-        return (
-          <Badge variant="outline" className="bg-green-100/80 text-green-700 border-green-200 font-medium flex items-center gap-1.5 px-3 py-1.5">
-            <CheckCircle className="h-3.5 w-3.5" />
-            <span>Available</span>
-          </Badge>
-        )
+        return <Badge variant="success" className="font-medium">Available</Badge>
       case 'in_use':
-        return (
-          <Badge variant="outline" className="bg-purple-100/80 text-purple-700 border-purple-200 font-medium flex items-center gap-1.5 px-3 py-1.5">
-            <Clock className="h-3.5 w-3.5" />
-            <span>In Use</span>
-          </Badge>
-        )
+        return <Badge variant="secondary" className="font-medium">In Use</Badge>
       case 'maintenance':
-        return (
-          <Badge variant="outline" className="bg-amber-100/80 text-amber-700 border-amber-200 font-medium flex items-center gap-1.5 px-3 py-1.5">
-            <AlertTriangle className="h-3.5 w-3.5" />
-            <span>Maintenance</span>
-          </Badge>
-        )
+        return <Badge variant="pending" className="font-medium">Maintenance</Badge>
       default:
         return null
     }
   }
 
   return (
-    <CardContent className="p-6 pt-5 flex-grow flex flex-col">
+    <CardContent className="p-6 pt-4 flex-grow flex flex-col">
       {/* Preview mode */}
       {!isEditing ? (
         <div className="space-y-5 flex-grow flex flex-col">
@@ -88,8 +73,8 @@ export function BayCardContent({
             </div>
             {assignedProfileId && assignedProfile && (
               <div className="flex items-center gap-2 text-sm">
-                <Badge variant="outline" className="bg-blue-100/80 text-blue-700 border-blue-200 flex items-center gap-1.5 px-3 py-1.5">
-                  <User className="h-3.5 w-3.5" />
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 flex items-center gap-1.5">
+                  <User className="h-3 w-3" />
                   <span>{assignedProfile.first_name} {assignedProfile.last_name}</span>
                 </Badge>
               </div>
@@ -99,12 +84,12 @@ export function BayCardContent({
           {/* Notes preview */}
           <div className="text-sm text-muted-foreground flex-grow">
             {notes ? (
-              <div className="bg-background p-4 rounded-lg border border-border/40 shadow-sm">
-                <p className="line-clamp-3 leading-relaxed">{notes}</p>
+              <div className="bg-card p-3 rounded-lg border border-border/40 shadow-sm">
+                <p className="line-clamp-3">{notes}</p>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-24 bg-muted/20 rounded-lg border border-border/40 text-muted-foreground/70">
-                <Clipboard className="h-5 w-5 mb-2 opacity-50" />
+              <div className="flex items-center justify-center h-20 bg-muted/20 rounded-lg border border-border/40 text-muted-foreground/70">
+                <Clipboard className="h-4 w-4 mr-2" />
                 <p>No notes provided</p>
               </div>
             )}
@@ -112,14 +97,11 @@ export function BayCardContent({
           
           {/* Services summary */}
           {activeServices.length > 0 && (
-            <div className="mt-auto pt-2">
-              <h4 className="font-semibold text-sm mb-2 text-foreground/80 flex items-center gap-2">
-                <Cog className="h-4 w-4" />
-                Active Services
-              </h4>
+            <div className="mt-auto">
+              <h4 className="font-semibold text-sm mb-2">Active Services</h4>
               <div className="flex flex-wrap gap-2">
                 {activeServices.map(service => (
-                  <Badge key={service.service_id} variant="outline" className="bg-primary/10 text-primary border-primary/20 py-1.5">
+                  <Badge key={service.service_id} variant="outline" className="bg-primary/10 text-primary border-primary/20">
                     {service.name}
                   </Badge>
                 ))}
@@ -129,7 +111,7 @@ export function BayCardContent({
           
           {/* Edit button */}
           <Button 
-            className="w-full mt-4 gap-2 bg-primary/5 hover:bg-primary/10 text-primary border border-primary/20 shadow-sm"
+            className="w-full mt-4 gap-2"
             onClick={() => setIsEditing(true)}
           >
             <Pencil className="h-4 w-4" />
@@ -151,17 +133,17 @@ export function BayCardContent({
           </div>
           
           <div className="space-y-2">
-            <Label className="text-foreground font-medium">Notes</Label>
+            <Label>Notes</Label>
             <Textarea
               placeholder="Add notes about this bay..."
               value={notes || ''}
               onChange={(e) => onNotesChange(e.target.value)}
-              className="min-h-[100px] resize-none border-border/60 focus-visible:ring-primary/30"
+              className="min-h-[100px] resize-none"
             />
           </div>
           
-          <div className="border rounded-lg p-4 bg-background shadow-sm">
-            <Label className="mb-3 block text-foreground font-medium">Available Services</Label>
+          <div className="border rounded-lg p-4 bg-card shadow-sm">
+            <Label className="mb-3 block">Available Services</Label>
             <BayServiceToggles
               availableServices={availableServices}
               activeServices={services}
@@ -169,11 +151,11 @@ export function BayCardContent({
             />
           </div>
           
-          <div className="flex gap-2 pt-2">
+          <div className="flex gap-2">
             <Button 
               variant="outline"
               onClick={() => setIsEditing(false)}
-              className="w-full border-border/60"
+              className="w-full"
             >
               <X className="h-4 w-4 mr-2" />
               Cancel
