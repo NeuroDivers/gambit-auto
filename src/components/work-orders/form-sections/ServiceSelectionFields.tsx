@@ -1,11 +1,10 @@
-
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
 import { useFieldArray } from "react-hook-form"
 import { WorkOrderFormValues } from "../types"
 import { Button } from "@/components/ui/button"
 import { PlusIcon, MinusIcon, ChevronDownIcon, ChevronUpIcon, UsersIcon } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { StaffSelector } from "@/components/shared/form-fields/StaffSelector"
@@ -25,6 +24,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
   })
 
   const [expandedServices, setExpandedServices] = useState<Record<number, boolean>>({})
+  const [subServicesByParent, setSubServicesByParent] = useState<Record<string, any[]>>({})
 
   const toggleService = (index: number) => {
     setExpandedServices(prev => ({
@@ -48,6 +48,37 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
       return data || []
     }
   })
+
+  const { data: subServiceTypes } = useQuery({
+    queryKey: ["sub-service-types"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_types")
+        .select("*")
+        .eq("status", "active")
+        .eq("service_type", "sub_service")
+        .order("name")
+
+      if (error) throw error
+      
+      const subServiceMap: Record<string, any[]> = {};
+      data?.forEach(subService => {
+        if (subService.parent_service_id) {
+          if (!subServiceMap[subService.parent_service_id]) {
+            subServiceMap[subService.parent_service_id] = [];
+          }
+          subServiceMap[subService.parent_service_id].push(subService);
+        }
+      });
+      
+      setSubServicesByParent(subServiceMap);
+      return data || []
+    }
+  })
+
+  const hasSubServices = (serviceId: string): boolean => {
+    return Boolean(subServicesByParent[serviceId]?.length);
+  }
 
   const addService = () => {
     append({
@@ -92,27 +123,33 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
     }
   }
 
-  const handleServiceChange = (index: number, e: React.ChangeEvent<HTMLSelectElement>) => {
-    const serviceId = e.target.value
+  const handleServiceChange = (index: number, serviceId: string) => {
     const selectedService = serviceTypes?.find(s => s.id === serviceId)
     
     if (selectedService) {
       form.setValue(`service_items.${index}.service_name`, selectedService.name)
       form.setValue(`service_items.${index}.unit_price`, selectedService.base_price || 0)
       form.setValue(`service_items.${index}.service_id`, serviceId)
+      
+      if (hasSubServices(serviceId)) {
+        setExpandedServices(prev => ({
+          ...prev,
+          [index]: true
+        }))
+      }
     }
   }
 
-  const handleSubServiceChange = (parentIndex: number, subIndex: number, e: React.ChangeEvent<HTMLSelectElement>) => {
-    const serviceId = e.target.value
-    const selectedService = serviceTypes?.find(s => s.id === serviceId)
+  const handleSubServiceChange = (parentIndex: number, subIndex: number, subServiceId: string) => {
+    const selectedSubService = subServiceTypes?.find(s => s.id === subServiceId)
     
-    if (selectedService) {
+    if (selectedSubService) {
       const updatedServices = [...form.getValues().service_items]
       
       if (updatedServices[parentIndex].sub_services && updatedServices[parentIndex].sub_services[subIndex]) {
-        updatedServices[parentIndex].sub_services[subIndex].service_name = selectedService.name
-        updatedServices[parentIndex].sub_services[subIndex].unit_price = selectedService.base_price || 0
+        updatedServices[parentIndex].sub_services[subIndex].service_id = subServiceId
+        updatedServices[parentIndex].sub_services[subIndex].service_name = selectedSubService.name
+        updatedServices[parentIndex].sub_services[subIndex].unit_price = selectedSubService.base_price || 0
         
         form.setValue("service_items", updatedServices)
       }
@@ -128,55 +165,21 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
     }
   }
 
-  // Get active sub-services for a parent service
-  const getActiveSubServices = (parentServiceId: string) => {
-    if (!serviceTypes) return []
-    
-    // Query for sub-services that belong to this parent service
-    return serviceTypes.filter(s => 
-      s.parent_service_id === parentServiceId && 
-      s.status === 'active' &&
-      s.service_type === 'sub_service'
-    )
+  const getSubServicesForParent = (parentServiceId: string) => {
+    if (!parentServiceId) return [];
+    return subServicesByParent[parentServiceId] || [];
   }
 
-  // Fetch additional sub-services when needed
-  const { data: subServiceTypes } = useQuery({
-    queryKey: ["sub-service-types"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("service_types")
-        .select("*")
-        .eq("status", "active")
-        .eq("service_type", "sub_service")
-        .order("name")
-
-      if (error) throw error
-      return data || []
-    }
-  })
-
-  // Enhanced function to get sub-services that combines local data and fetched data
-  const getAllSubServices = (parentServiceId: string) => {
-    if (!serviceTypes && !subServiceTypes) return []
-    
-    const fromServiceTypes = serviceTypes?.filter(s => 
-      s.parent_service_id === parentServiceId && 
-      s.status === 'active' &&
-      s.service_type === 'sub_service'
-    ) || []
-    
-    const fromSubServiceTypes = subServiceTypes?.filter(s => 
-      s.parent_service_id === parentServiceId && 
-      s.status === 'active'
-    ) || []
-    
-    // Combine and deduplicate
-    const combined = [...fromServiceTypes, ...fromSubServiceTypes]
-    const uniqueServices = Array.from(new Map(combined.map(item => [item.id, item])).values())
-    
-    return uniqueServices
-  }
+  useEffect(() => {
+    serviceItems.forEach((item, index) => {
+      if (item.service_id && hasSubServices(item.service_id)) {
+        setExpandedServices(prev => ({
+          ...prev,
+          [index]: true
+        }));
+      }
+    });
+  }, [serviceItems, subServicesByParent]);
 
   return (
     <div className="space-y-4">
@@ -236,11 +239,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                       value={field.value}
                       onValueChange={(value) => {
                         field.onChange(value);
-                        const selectedService = serviceTypes?.find(s => s.id === value);
-                        if (selectedService) {
-                          form.setValue(`service_items.${index}.service_name`, selectedService.name);
-                          form.setValue(`service_items.${index}.unit_price`, selectedService.base_price || 0);
-                        }
+                        handleServiceChange(index, value);
                       }}
                     >
                       <SelectTrigger>
@@ -337,7 +336,6 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
             />
           </div>
           
-          {/* Only show commission fields if staff is assigned */}
           {form.watch(`service_items.${index}.assigned_profile_id`) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -445,11 +443,23 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
             {expandedServices[index] && (
               <div className="mt-4 pl-4 border-l-2 border-accent">
                 <div className="space-y-4">
-                  {/* If we have a parent service ID, show the sub-service selector */}
                   {field.service_id && (
-                    <div className="text-sm text-accent-foreground mb-4">
-                      Available sub-services for {field.service_name}
-                    </div>
+                    <>
+                      <div className="text-sm text-accent-foreground mb-4">
+                        Available sub-services for {field.service_name}
+                        {!hasSubServices(field.service_id) && (
+                          <span className="block mt-1 text-muted-foreground">
+                            No sub-services available for this service
+                          </span>
+                        )}
+                      </div>
+                      
+                      {hasSubServices(field.service_id) && (
+                        <div className="text-sm text-muted-foreground mb-3">
+                          This service has {getSubServicesForParent(field.service_id).length} available sub-services
+                        </div>
+                      )}
+                    </>
                   )}
                   
                   {field.sub_services && field.sub_services.length > 0 ? (
@@ -474,22 +484,13 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                             <label className="text-sm font-medium mb-1 block">Service Type</label>
                             <Select
                               value={(subService as ServiceItemType).service_id}
-                              onValueChange={(value) => {
-                                const selectedService = subServiceTypes?.find(s => s.id === value);
-                                if (selectedService) {
-                                  const updatedServices = [...form.getValues().service_items];
-                                  updatedServices[index].sub_services[subIndex].service_id = value;
-                                  updatedServices[index].sub_services[subIndex].service_name = selectedService.name;
-                                  updatedServices[index].sub_services[subIndex].unit_price = selectedService.base_price || 0;
-                                  form.setValue("service_items", updatedServices);
-                                }
-                              }}
+                              onValueChange={(value) => handleSubServiceChange(index, subIndex, value)}
                             >
                               <SelectTrigger className="w-full text-sm">
                                 <SelectValue placeholder="Select Sub-Service" />
                               </SelectTrigger>
                               <SelectContent>
-                                {getAllSubServices(field.service_id).map((service) => (
+                                {getSubServicesForParent(field.service_id).map((service) => (
                                   <SelectItem key={service.id} value={service.id}>
                                     {service.name}
                                   </SelectItem>
@@ -558,7 +559,6 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
                           </div>
                         </div>
                         
-                        {/* Only show commission fields if staff is assigned */}
                         {(subService as ServiceItemType).assigned_profile_id && (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
                             <div>
