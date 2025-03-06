@@ -17,33 +17,15 @@ export function EstimatesList() {
   useEffect(() => {
     const fetchEstimates = async () => {
       try {
-        // Specify which relationship to use with customers
+        // Fetch estimates without trying to join with customers
         const { data, error } = await supabase
           .from("estimates")
-          .select(`
-            *,
-            customers!estimates_customer_id_fkey(customer_first_name, customer_last_name, email)
-          `)
+          .select('*')
           .order("created_at", { ascending: false })
 
         if (error) throw error
         
-        // Map the data to the expected format
-        const mappedEstimates = data?.map(estimate => {
-          // Extract customer info from nested customer object if available
-          const customer = estimate.customers || {};
-          
-          return {
-            ...estimate,
-            customer: {
-              first_name: customer.customer_first_name || estimate.customer_first_name,
-              last_name: customer.customer_last_name || estimate.customer_last_name,
-              email: customer.email || estimate.customer_email
-            }
-          };
-        });
-        
-        setEstimates(mappedEstimates || [])
+        setEstimates(data || [])
       } catch (error) {
         console.error("Error fetching estimates:", error)
       } finally {
@@ -122,9 +104,7 @@ export function EstimatesList() {
                     {estimate.estimate_number || `EST-${estimate.id.substring(0, 8)}`}
                   </TableCell>
                   <TableCell>
-                    {estimate.customer 
-                      ? `${estimate.customer.first_name} ${estimate.customer.last_name}`
-                      : `${estimate.customer_first_name || ''} ${estimate.customer_last_name || ''}`}
+                    {`${estimate.customer_first_name || ''} ${estimate.customer_last_name || ''}`}
                   </TableCell>
                   <TableCell>
                     {new Date(estimate.created_at).toLocaleDateString()}
