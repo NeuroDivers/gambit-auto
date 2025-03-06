@@ -14,6 +14,8 @@ export function EstimateStatus({ status }) {
         return "rejected"
       case "expired":
         return "expired"
+      case "converted":
+        return "converted"
       default:
         return "draft"
     }

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,12 +19,21 @@ interface UserDropdownProps {
 }
 
 export function UserDropdown({ firstName, onLogout, isAdmin }: UserDropdownProps) {
+  const navigate = useNavigate();
   const initials = firstName ? firstName.charAt(0).toUpperCase() : '?';
+
+  const handleAvatarClick = () => {
+    navigate('/profile-settings');
+  };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+        <Button 
+          variant="ghost" 
+          className="relative h-8 w-8 rounded-full"
+          onClick={handleAvatarClick}
+        >
           <Avatar className="h-8 w-8">
             <AvatarFallback>
               {initials}
@@ -32,17 +41,12 @@ export function UserDropdown({ firstName, onLogout, isAdmin }: UserDropdownProps
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuContent className="w-56" align="end" forceMount onClick={(e) => e.stopPropagation()}>
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <NavLink to="/profile-settings" className="w-full">Profile Settings</NavLink>
+        <DropdownMenuItem onClick={() => navigate('/profile-settings')}>
+          Profile Settings
         </DropdownMenuItem>
-        {isAdmin && (
-          <DropdownMenuItem>
-            <NavLink to="/users" className="w-full">Manage Users</NavLink>
-          </DropdownMenuItem>
-        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onLogout}>
           Logout

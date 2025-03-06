@@ -5,4 +5,5 @@ import { WorkOrderFormValues } from "@/components/work-orders/types";
 export interface EstimateFormValues extends WorkOrderFormValues {
   total: number;
   services?: ServiceItemType[];
+  service_items: ServiceItemType[];
 }

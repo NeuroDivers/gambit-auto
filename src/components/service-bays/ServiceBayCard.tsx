@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card"
 import { BayCardHeader } from "./card/BayCardHeader"
 import { BayCardContent } from "./card/BayCardContent"
 import { useBayActions } from "./hooks/useBayActions"
+import { useState } from "react"
 
 type ServiceBayCardProps = {
   bay: {
@@ -26,13 +27,18 @@ type ServiceBayCardProps = {
 
 export function ServiceBayCard({ bay, services, availableServices }: ServiceBayCardProps) {
   const { updateBayStatus, updateBayNotes, toggleService } = useBayActions(bay.id)
+  const [isExpanded, setIsExpanded] = useState(false)
+  const activeServices = services.filter(s => s.is_active)
 
   return (
-    <Card className="overflow-hidden border border-border/50 hover:border-border/80 transition-all shadow-sm hover:shadow flex flex-col h-full rounded-xl">
+    <Card className="overflow-hidden flex flex-col h-full">
       <BayCardHeader 
         name={bay.name} 
         bayId={bay.id}
         status={bay.status}
+        isExpanded={isExpanded}
+        onToggleExpand={() => setIsExpanded(!isExpanded)}
+        hasServices={activeServices.length > 0}
       />
       <BayCardContent
         bayId={bay.id}
@@ -44,6 +50,7 @@ export function ServiceBayCard({ bay, services, availableServices }: ServiceBayC
         onStatusChange={updateBayStatus}
         onNotesChange={updateBayNotes}
         onToggleService={toggleService}
+        isExpanded={isExpanded}
       />
     </Card>
   )

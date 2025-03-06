@@ -12,3 +12,10 @@ export interface ServiceItemType {
   is_parent?: boolean;
   parent_id?: string;
 }
+
+export interface ServiceFormData {
+  service_type: string;
+  quantity?: number;
+  details?: Record<string, any>;
+  images?: string[];
+}

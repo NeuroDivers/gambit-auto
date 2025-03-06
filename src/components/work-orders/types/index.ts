@@ -1,16 +1,4 @@
 
-import { ServiceItemType } from "@/types/service-item";
-
-export type WorkOrderStatus = 
-  | "pending"
-  | "approved" 
-  | "rejected"
-  | "in_progress"
-  | "completed"
-  | "cancelled"
-  | "invoiced"
-  | "estimated";
-
 export interface WorkOrder {
   id: string;
   created_at: string;
@@ -20,7 +8,7 @@ export interface WorkOrder {
   customer_email: string;
   customer_phone: string;
   contact_preference: 'phone' | 'email';
-  vehicle_year: number;
+  vehicle_year: number; // Changed from string to number
   vehicle_make: string;
   vehicle_model: string;
   vehicle_trim?: string | null;
@@ -29,19 +17,6 @@ export interface WorkOrder {
   vehicle_body_class?: string | null;
   vehicle_doors?: number | null;
   vehicle_license_plate?: string | null;
-  assigned_bay?: {
-    id: string;
-    name: string;
-  } | null;
-  assigned_bay_id?: string | null;
-  timeframe?: string;
-  preferred_date?: string | null;
-  preferred_time?: string | null;
-  start_time?: string | null;
-  end_time?: string | null;
-  status: WorkOrderStatus;
-  service_type?: string | null;
-  additional_notes?: string | null;
   customer_address?: string | null;
   customer_street_address?: string | null;
   customer_unit_number?: string | null;
@@ -49,10 +24,26 @@ export interface WorkOrder {
   customer_state_province?: string | null;
   customer_postal_code?: string | null;
   customer_country?: string | null;
-  estimated_duration?: string | null;
+  timeframe: string | 'flexible' | 'asap' | 'within_week' | 'within_month';
+  preferred_date?: string | null;
+  preferred_time?: string | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  estimated_duration?: number | null;
+  status: 'pending' | 'approved' | 'rejected' | 'in_progress' | 'completed' | 'cancelled' | 'invoiced' | 'estimated';
+  service_type?: string | null;
+  additional_notes?: string | null;
+  assigned_bay?: string | null;
+  assigned_bay_id?: string | null;
   assigned_profile_id?: string | null;
   client_id?: string | null;
+  service_bays?: {
+    id: string;
+    name: string;
+  } | null;
 }
+
+export type WorkOrderStatus = WorkOrder['status'];
 
 export interface WorkOrderFormValues {
   customer_first_name: string;
@@ -82,14 +73,11 @@ export interface WorkOrderFormValues {
   end_time: Date | null;
   assigned_bay_id: string | null;
   service_items: ServiceItemType[];
-  save_vehicle?: boolean;
-  is_primary_vehicle?: boolean;
-  client_id?: string;
 }
 
 export interface WorkOrderFormProps {
-  workOrder?: WorkOrder;
-  onSuccess?: () => void;
-  defaultStartTime?: Date;
-  onSubmitting?: (isSubmitting: boolean) => void;
+  defaultValues?: Partial<WorkOrderFormValues>;
+  workOrderId?: string;
+  onSuccess?: (data: any) => void;
+  onCancel?: () => void;
 }
