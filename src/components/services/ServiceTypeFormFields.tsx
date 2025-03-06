@@ -85,7 +85,7 @@ export function ServiceTypeFormFields() {
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select service type" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[9999]">
                   <SelectItem value="standalone">Standalone</SelectItem>
                   <SelectItem value="sub_service">Sub Service</SelectItem>
                   <SelectItem value="bundle">Bundle</SelectItem>
@@ -112,7 +112,7 @@ export function ServiceTypeFormFields() {
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select parent service" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[9999]">
                     {parentServices.map(service => (
                       <SelectItem key={service.id} value={service.id}>
                         {service.name}
