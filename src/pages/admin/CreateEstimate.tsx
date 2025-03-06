@@ -23,6 +23,14 @@ export default function CreateEstimate() {
       email: '',
       phone_number: '',
       contact_preference: 'phone' as 'phone' | 'email',
+      // Address fields
+      street_address: '',
+      unit_number: '',
+      city: '',
+      state_province: '',
+      postal_code: '',
+      country: '',
+      // Vehicle fields
       vehicle_make: '',
       vehicle_model: '',
       vehicle_year: new Date().getFullYear(),
@@ -71,7 +79,14 @@ export default function CreateEstimate() {
               last_name: data.last_name,
               email: data.email,
               phone_number: data.phone_number,
-              contact_preference: data.contact_preference
+              contact_preference: data.contact_preference,
+              // Include address fields
+              street_address: data.street_address,
+              unit_number: data.unit_number,
+              city: data.city,
+              state_province: data.state_province,
+              postal_code: data.postal_code,
+              country: data.country
             })
             .select()
             .single()
@@ -121,6 +136,13 @@ export default function CreateEstimate() {
           customer_last_name: data.last_name,
           customer_email: data.email,
           customer_phone: data.phone_number,
+          // Include address fields
+          customer_street_address: data.street_address,
+          customer_unit_number: data.unit_number,
+          customer_city: data.city,
+          customer_state_province: data.state_province,
+          customer_postal_code: data.postal_code,
+          customer_country: data.country,
           vehicle_make: data.vehicle_make,
           vehicle_model: data.vehicle_model,
           vehicle_year: data.vehicle_year,
@@ -147,6 +169,9 @@ export default function CreateEstimate() {
               unit_price: service.unit_price,
               service_name: service.service_name,
               description: service.description || "",
+              assigned_profile_id: service.assigned_profile_id || null,
+              commission_type: service.commission_type || null,
+              commission_rate: service.commission_rate || null
             }))
           )
 

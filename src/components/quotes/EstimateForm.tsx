@@ -9,6 +9,8 @@ import { VehicleInfoFields } from "../work-orders/form-sections/VehicleInfoField
 import { Textarea } from "@/components/ui/textarea"
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { ServiceItemType } from "@/types/service-item"
+import { Switch } from "@/components/ui/switch"
+import { AddressFields } from "../shared/form-sections/AddressFields"
 
 type EstimateFormProps = {
   form: UseFormReturn<any>
@@ -49,6 +51,16 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
       <CustomerSearch form={form} />
       
       <div className="space-y-6">
+        {/* Address Fields - Adding this from the work order form */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Address Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AddressFields form={form} fieldPrefix="" />
+          </CardContent>
+        </Card>
+        
         <Card>
           <CardHeader>
             <CardTitle>Vehicle Information</CardTitle>
@@ -59,6 +71,21 @@ export function EstimateForm({ form, onSubmit, isSubmitting }: EstimateFormProps
               isEditing={false}
               customerId={selectedCustomerId}
             />
+            
+            {/* Save Vehicle Option - Adding this from the work order form */}
+            <div className="flex items-center space-x-2 mt-4 pt-4 border-t">
+              <Switch
+                id="save_vehicle"
+                checked={form.watch('save_vehicle') || false}
+                onCheckedChange={(checked) => form.setValue('save_vehicle', checked)}
+              />
+              <label
+                htmlFor="save_vehicle"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Save vehicle to customer profile
+              </label>
+            </div>
           </CardContent>
         </Card>
         
