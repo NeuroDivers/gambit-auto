@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,9 +33,7 @@ export function useWorkOrderForm(
       client_id: workOrder.client_id || undefined,
       start_time: workOrder.start_time ? new Date(workOrder.start_time) : null,
       end_time: workOrder.end_time ? new Date(workOrder.end_time) : null,
-      estimated_duration: typeof workOrder.estimated_duration === 'string' 
-        ? parseInt(workOrder.estimated_duration)
-        : workOrder.estimated_duration || null,
+      estimated_duration: workOrder.estimated_duration || null,
       assigned_bay_id: workOrder.assigned_bay_id || null,
       service_items: workOrder.service_items || []
     } : {
@@ -70,9 +67,7 @@ export function useWorkOrderForm(
       
       // Create or update vehicle if needed
       if (data.vehicle_make && data.vehicle_model) {
-        const existingVehicleId = workOrder?.vehicle_id;
-        
-        if (existingVehicleId) {
+        if (workOrder?.vehicle_id) {
           // Update existing vehicle
           const { error: vehicleError } = await supabase
             .from("vehicles")
@@ -83,10 +78,10 @@ export function useWorkOrderForm(
               vin: data.vehicle_serial,
               // Add other vehicle fields as needed
             })
-            .eq("id", existingVehicleId);
+            .eq("id", workOrder.vehicle_id);
             
           if (vehicleError) throw vehicleError;
-          vehicleId = existingVehicleId;
+          vehicleId = workOrder.vehicle_id;
         } else {
           // Create new vehicle
           const { data: vehicleData, error: vehicleError } = await supabase

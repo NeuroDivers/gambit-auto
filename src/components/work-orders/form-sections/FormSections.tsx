@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { MoveLeft, MoveRight } from "lucide-react";
 import { CustomerType } from "../types";
 import { Separator } from "@/components/ui/separator";
-import { convertServiceItemForWorkOrder, convertWorkOrderToSharedServiceItem } from "../utils/serviceItemConverters";
 
 export interface FormSectionsProps {
   onSubmit: () => void;
@@ -87,6 +86,7 @@ export function FormSections({
         </TabsList>
         
         <TabsContent value="customer" className="pt-4">
+          {/* Pass customerId instead of customer object */}
           <CustomerInfoFields
             customerId={customer?.id}
             onSelectCustomer={onCustomerChange}
@@ -101,7 +101,7 @@ export function FormSections({
         <TabsContent value="vehicle" className="pt-4">
           <VehicleInfoFields
             customerId={customer?.id}
-            vehicleInfo={vehicleInfo}
+            data={vehicleInfo}
             onChange={onVehicleInfoChange}
           />
           <div className="flex justify-between mt-6">
@@ -120,13 +120,13 @@ export function FormSections({
               <h3 className="text-lg font-semibold mb-4">Service Selection</h3>
               {/* Use the converter to fix type mismatch */}
               <ServiceSelectionField
-                services={services.map(svc => convertWorkOrderToSharedServiceItem({
+                services={services.map(svc => ({
                   ...svc,
                   commission_type: svc.commission_type === 'fixed' ? 'percentage' : svc.commission_type
                 }))}
                 onChange={(updatedServices) => {
                   // Convert back to the right format
-                  const convertedServices = updatedServices.map(svc => convertServiceItemForWorkOrder({
+                  const convertedServices = updatedServices.map(svc => ({
                     ...svc,
                     commission_type: svc.commission_type === 'flat' ? 'fixed' : svc.commission_type,
                     description: svc.description || ""
@@ -151,11 +151,11 @@ export function FormSections({
         <TabsContent value="scheduling" className="pt-4">
           <div className="grid gap-6 md:grid-cols-2">
             <SchedulingFields
-              scheduleInfo={scheduleInfo}
+              value={scheduleInfo}
               onChange={onScheduleInfoChange}
             />
             <BayAssignmentField
-              bayId={bayId}
+              value={bayId}
               onChange={onBayIdChange}
             />
           </div>
@@ -171,7 +171,7 @@ export function FormSections({
         
         <TabsContent value="notes" className="pt-4">
           <AdditionalNotesField
-            notes={notes}
+            value={notes}
             onChange={onNotesChange}
           />
           <div className="flex justify-between mt-6">

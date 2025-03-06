@@ -44,7 +44,7 @@ export function convertWorkOrderToSharedServiceItem(item: ServiceItemType): Shar
     quantity: item.quantity,
     unit_price: item.unit_price,
     commission_rate: item.commission_rate,
-    commission_type: item.commission_type === 'fixed' ? 'flat' : item.commission_type
+    commission_type: item.commission_type === 'fixed' ? 'percentage' : item.commission_type
   };
 
   if (item.description) {

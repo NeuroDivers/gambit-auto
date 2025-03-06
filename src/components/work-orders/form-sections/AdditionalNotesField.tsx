@@ -1,24 +1,18 @@
 
-import { useFormContext } from "react-hook-form";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UseFormReturn } from "react-hook-form"
+import { WorkOrderFormValues } from "../types"
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
+import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface AdditionalNotesFieldProps {
-  notes?: string;
-  onChange?: (notes: string) => void;
+  form: UseFormReturn<WorkOrderFormValues>
+  isEditing: boolean
 }
 
-export function AdditionalNotesField({ notes, onChange }: AdditionalNotesFieldProps) {
-  const form = useFormContext();
+export function AdditionalNotesField({ form, isEditing }: AdditionalNotesFieldProps) {
+  const { control } = form
   
-  if (!form) {
-    console.error("AdditionalNotesField must be used within a FormProvider");
-    return null;
-  }
-  
-  const { control } = form;
-
   return (
     <Card>
       <CardHeader>
@@ -33,9 +27,10 @@ export function AdditionalNotesField({ notes, onChange }: AdditionalNotesFieldPr
               <FormLabel>Notes</FormLabel>
               <FormControl>
                 <Textarea 
-                  placeholder="Enter any additional information or special instructions here..."
-                  className="min-h-[120px]"
-                  {...field}
+                  placeholder="Add any additional information or special instructions here..." 
+                  className="min-h-[100px]"
+                  {...field} 
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -44,5 +39,5 @@ export function AdditionalNotesField({ notes, onChange }: AdditionalNotesFieldPr
         />
       </CardContent>
     </Card>
-  );
+  )
 }
