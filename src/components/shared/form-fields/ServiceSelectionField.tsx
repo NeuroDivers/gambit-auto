@@ -88,7 +88,6 @@ export function ServiceSelectionField({
     const newServices = [...services, newService];
     onChange(newServices);
     
-    // If the service has sub-services, open the collapsible immediately
     if (hasSubServices(serviceToAdd.id)) {
       const index = newServices.length - 1;
       setOpenCollapsibles(prev => ({
@@ -173,30 +172,14 @@ export function ServiceSelectionField({
   };
 
   useEffect(() => {
-    services.forEach((service, index) => {
-      if (service.service_id && hasSubServices(service.service_id)) {
-        console.log("Opening collapsible for service with sub-services:", service.service_name);
-        setOpenCollapsibles(prev => ({
-          ...prev,
-          [index]: true
-        }));
-      }
-    });
-  }, [services, serviceTypes]);
-
-  useEffect(() => {
     if (serviceTypes.length > 0) {
-      services.forEach((service, index) => {
+      services.forEach((service) => {
         if (service.service_id && hasSubServices(service.service_id)) {
-          console.log("ServiceTypes loaded, opening collapsible for:", service.service_name);
-          setOpenCollapsibles(prev => ({
-            ...prev,
-            [index]: true
-          }));
+          console.log("Service with available sub-services:", service.service_name);
         }
       });
     }
-  }, [serviceTypes]);
+  }, [serviceTypes, services]);
 
   return (
     <div className="space-y-5">
@@ -348,7 +331,7 @@ export function ServiceSelectionField({
                         onClick={() => toggleCollapsible(index)}
                         variant="ghost"
                         size="sm"
-                        className="text-primary hover:text-primary hover:bg-primary/10 flex items-center gap-2"
+                        className="text-primary hover:text-primary hover:border-primary transition-colors border border-transparent"
                       >
                         {openCollapsibles[index] ? (
                           <ChevronDown className="h-4 w-4" />
@@ -362,215 +345,211 @@ export function ServiceSelectionField({
                         </Badge>
                       </Button>
                       
-                      {openCollapsibles[index] && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const subServices = getSubServices(service.service_id);
-                            if (subServices.length > 0) {
-                              handleAddSubService(index, subServices[0].id);
-                            }
-                          }}
-                          className="flex items-center gap-2 text-xs"
-                        >
-                          <PlusIcon className="h-3 w-3" />
-                          Add Sub-Service
-                        </Button>
-                      )}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const subServices = getSubServices(service.service_id);
+                          if (subServices.length > 0) {
+                            handleAddSubService(index, subServices[0].id);
+                          }
+                        }}
+                        className="flex items-center gap-2 text-xs"
+                      >
+                        <PlusIcon className="h-3 w-3" />
+                        Add Sub-Service
+                      </Button>
                     </div>
                     
-                    {openCollapsibles[index] && (
-                      <div className="relative pl-4 ml-1 border-l-2 border-primary/40 space-y-3">
-                        {!service.service_id && (
-                          <div className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
-                            No service selected
+                    <div className="relative pl-4 ml-1 border-l-2 border-primary/40 space-y-3">
+                      {!service.service_id && (
+                        <div className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
+                          No service selected
+                        </div>
+                      )}
+                      
+                      {service.service_id && !hasSubServices(service.service_id) && (
+                        <div className="rounded-md bg-muted/50 p-3 text-sm">
+                          <div className="flex items-start gap-2">
+                            <InfoIcon className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                            <span className="text-muted-foreground">This service doesn't have any sub-services available</span>
                           </div>
-                        )}
-                        
-                        {service.service_id && !hasSubServices(service.service_id) && (
-                          <div className="rounded-md bg-muted/50 p-3 text-sm">
-                            <div className="flex items-start gap-2">
-                              <InfoIcon className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                              <span className="text-muted-foreground">This service doesn't have any sub-services available</span>
-                            </div>
-                          </div>
-                        )}
+                        </div>
+                      )}
 
-                        {service.sub_services && service.sub_services.length > 0 ? (
-                          <div className="space-y-3">
-                            {service.sub_services.map((subService, subIndex) => (
-                              <Card key={subIndex} className="shadow-none bg-muted/30">
-                                <CardContent className="p-3 pt-3">
-                                  <div className="flex justify-between items-center mb-3">
-                                    <Badge variant="outline" className="bg-background">
-                                      Sub {subIndex + 1}
-                                    </Badge>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleRemoveSubService(index, subIndex)}
-                                      className="h-7 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      {service.sub_services && service.sub_services.length > 0 ? (
+                        <div className="space-y-3">
+                          {service.sub_services.map((subService, subIndex) => (
+                            <Card key={subIndex} className="shadow-none bg-muted/30">
+                              <CardContent className="p-3 pt-3">
+                                <div className="flex justify-between items-center mb-3">
+                                  <Badge variant="outline" className="bg-background">
+                                    Sub {subIndex + 1}
+                                  </Badge>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleRemoveSubService(index, subIndex)}
+                                    className="h-7 px-2 text-destructive hover:border-destructive hover:text-destructive transition-colors border border-transparent"
+                                  >
+                                    <Trash2Icon className="h-3 w-3 mr-1" />
+                                    <span className="text-xs">Remove</span>
+                                  </Button>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                  <div>
+                                    <label className="text-xs font-medium block mb-1.5">Service Type</label>
+                                    <Select
+                                      value={subService.service_id}
+                                      onValueChange={(value) => {
+                                        const selectedService = serviceTypes.find(s => s.id === value);
+                                        if (selectedService) {
+                                          handleSubServiceChange(index, subIndex, 'service_id', value);
+                                          handleSubServiceChange(index, subIndex, 'service_name', selectedService.name);
+                                          handleSubServiceChange(index, subIndex, 'unit_price', selectedService.base_price || 0);
+                                        }
+                                      }}
                                     >
-                                      <Trash2Icon className="h-3 w-3 mr-1" />
-                                      <span className="text-xs">Remove</span>
-                                    </Button>
+                                      <SelectTrigger className="text-sm h-8">
+                                        <SelectValue placeholder="Select Sub-Service" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {getSubServices(service.service_id).map((service) => (
+                                          <SelectItem key={service.id} value={service.id}>
+                                            {service.name}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
                                   </div>
                                   
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                  <div>
+                                    <label className="text-xs font-medium block mb-1.5">Service Name</label>
+                                    <Input 
+                                      className="text-sm h-8" 
+                                      placeholder="Sub-Service Name"
+                                      value={subService.service_name}
+                                      onChange={(e) => handleSubServiceChange(index, subIndex, 'service_name', e.target.value)}
+                                    />
+                                  </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-3 gap-3 mb-3">
+                                  <div>
+                                    <label className="text-xs font-medium block mb-1.5">Quantity</label>
+                                    <Input
+                                      className="text-sm h-8"
+                                      type="number"
+                                      min="1"
+                                      value={subService.quantity}
+                                      onChange={(e) => handleSubServiceChange(index, subIndex, 'quantity', parseInt(e.target.value) || 1)}
+                                    />
+                                  </div>
+                                  
+                                  <div>
+                                    <label className="text-xs font-medium block mb-1.5">Unit Price</label>
+                                    <div className="relative">
+                                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">$</span>
+                                      <Input
+                                        className="text-sm h-8 pl-5"
+                                        type="number"
+                                        step="0.01"
+                                        value={subService.unit_price || ''}
+                                        onChange={(e) => handleSubServiceChange(index, subIndex, 'unit_price', parseFloat(e.target.value) || 0)}
+                                        disabled={!allowPriceEdit}
+                                      />
+                                    </div>
+                                  </div>
+                                  
+                                  <div>
+                                    <label className="text-xs font-medium flex items-center gap-1 mb-1.5">
+                                      <UserIcon className="h-3 w-3" />
+                                      <span>Staff Assignment</span>
+                                    </label>
+                                    <StaffSelector
+                                      value={subService.assigned_profile_id || null}
+                                      onChange={(value) => handleSubServiceChange(index, subIndex, 'assigned_profile_id', value)}
+                                      placeholder="Assign staff"
+                                      className="h-8 text-sm"
+                                    />
+                                  </div>
+                                </div>
+                                
+                                {showCommission && subService.assigned_profile_id && (
+                                  <div className="bg-muted/50 rounded-md p-2 grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div>
-                                      <label className="text-xs font-medium block mb-1.5">Service Type</label>
+                                      <label className="text-xs font-medium block mb-1">Commission Type</label>
                                       <Select
-                                        value={subService.service_id}
-                                        onValueChange={(value) => {
-                                          const selectedService = serviceTypes.find(s => s.id === value);
-                                          if (selectedService) {
-                                            handleSubServiceChange(index, subIndex, 'service_id', value);
-                                            handleSubServiceChange(index, subIndex, 'service_name', selectedService.name);
-                                            handleSubServiceChange(index, subIndex, 'unit_price', selectedService.base_price || 0);
-                                          }
-                                        }}
+                                        value={subService.commission_type || 'percentage'}
+                                        onValueChange={(value) => handleSubServiceChange(index, subIndex, 'commission_type', value)}
                                       >
-                                        <SelectTrigger className="text-sm h-8">
-                                          <SelectValue placeholder="Select Sub-Service" />
+                                        <SelectTrigger className="text-xs h-7">
+                                          <SelectValue placeholder="Select Type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          {getSubServices(service.service_id).map((service) => (
-                                            <SelectItem key={service.id} value={service.id}>
-                                              {service.name}
-                                            </SelectItem>
-                                          ))}
+                                          <SelectItem value="percentage">Percentage</SelectItem>
+                                          <SelectItem value="fixed">Fixed Amount</SelectItem>
                                         </SelectContent>
                                       </Select>
                                     </div>
                                     
                                     <div>
-                                      <label className="text-xs font-medium block mb-1.5">Service Name</label>
-                                      <Input 
-                                        className="text-sm h-8" 
-                                        placeholder="Sub-Service Name"
-                                        value={subService.service_name}
-                                        onChange={(e) => handleSubServiceChange(index, subIndex, 'service_name', e.target.value)}
-                                      />
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="grid grid-cols-3 gap-3 mb-3">
-                                    <div>
-                                      <label className="text-xs font-medium block mb-1.5">Quantity</label>
-                                      <Input
-                                        className="text-sm h-8"
-                                        type="number"
-                                        min="1"
-                                        value={subService.quantity}
-                                        onChange={(e) => handleSubServiceChange(index, subIndex, 'quantity', parseInt(e.target.value) || 1)}
-                                      />
-                                    </div>
-                                    
-                                    <div>
-                                      <label className="text-xs font-medium block mb-1.5">Unit Price</label>
+                                      <label className="text-xs font-medium block mb-1">
+                                        {subService.commission_type === 'percentage' ? 'Commission %' : 'Commission Amount'}
+                                      </label>
                                       <div className="relative">
-                                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">$</span>
+                                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">
+                                          {subService.commission_type === 'percentage' ? '%' : '$'}
+                                        </span>
                                         <Input
-                                          className="text-sm h-8 pl-5"
+                                          className="h-7 text-xs pl-5"
                                           type="number"
-                                          step="0.01"
-                                          value={subService.unit_price || ''}
-                                          onChange={(e) => handleSubServiceChange(index, subIndex, 'unit_price', parseFloat(e.target.value) || 0)}
-                                          disabled={!allowPriceEdit}
+                                          min="0"
+                                          step={subService.commission_type === 'percentage' ? "1" : "0.01"}
+                                          max={subService.commission_type === 'percentage' ? 100 : undefined}
+                                          value={subService.commission_rate || 0}
+                                          onChange={(e) => handleSubServiceChange(index, subIndex, 'commission_rate', parseFloat(e.target.value) || 0)}
                                         />
                                       </div>
                                     </div>
-                                    
-                                    <div>
-                                      <label className="text-xs font-medium flex items-center gap-1 mb-1.5">
-                                        <UserIcon className="h-3 w-3" />
-                                        <span>Staff Assignment</span>
-                                      </label>
-                                      <StaffSelector
-                                        value={subService.assigned_profile_id || null}
-                                        onChange={(value) => handleSubServiceChange(index, subIndex, 'assigned_profile_id', value)}
-                                        placeholder="Assign staff"
-                                        className="h-8 text-sm"
-                                      />
-                                    </div>
                                   </div>
-                                  
-                                  {showCommission && subService.assigned_profile_id && (
-                                    <div className="bg-muted/50 rounded-md p-2 grid grid-cols-1 md:grid-cols-2 gap-3">
-                                      <div>
-                                        <label className="text-xs font-medium block mb-1">Commission Type</label>
-                                        <Select
-                                          value={subService.commission_type || 'percentage'}
-                                          onValueChange={(value) => handleSubServiceChange(index, subIndex, 'commission_type', value)}
-                                        >
-                                          <SelectTrigger className="text-xs h-7">
-                                            <SelectValue placeholder="Select Type" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="percentage">Percentage</SelectItem>
-                                            <SelectItem value="fixed">Fixed Amount</SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
-                                      
-                                      <div>
-                                        <label className="text-xs font-medium block mb-1">
-                                          {subService.commission_type === 'percentage' ? 'Commission %' : 'Commission Amount'}
-                                        </label>
-                                        <div className="relative">
-                                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">
-                                            {subService.commission_type === 'percentage' ? '%' : '$'}
-                                          </span>
-                                          <Input
-                                            className="h-7 text-xs pl-5"
-                                            type="number"
-                                            min="0"
-                                            step={subService.commission_type === 'percentage' ? "1" : "0.01"}
-                                            max={subService.commission_type === 'percentage' ? 100 : undefined}
-                                            value={subService.commission_rate || 0}
-                                            onChange={(e) => handleSubServiceChange(index, subIndex, 'commission_rate', parseFloat(e.target.value) || 0)}
-                                          />
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-                                </CardContent>
-                              </Card>
-                            ))}
-                          </div>
-                        ) : (
-                          service.service_id && hasSubServices(service.service_id) && (
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button 
-                                    type="button" 
-                                    variant="outline"
-                                    size="sm"
-                                    className="w-full flex items-center justify-center gap-2 h-16 border-dashed text-muted-foreground hover:text-primary"
-                                    onClick={() => {
-                                      const subServices = getSubServices(service.service_id);
-                                      if (subServices.length > 0) {
-                                        handleAddSubService(index, subServices[0].id);
-                                      }
-                                    }}
-                                  >
-                                    <PlusIcon className="h-4 w-4" />
-                                    <span>Add Sub-Service</span>
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Add additional options to this service</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          )
-                        )}
-                      </div>
-                    )}
+                                )}
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      ) : (
+                        service.service_id && hasSubServices(service.service_id) && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  type="button" 
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full flex items-center justify-center gap-2 h-16 border-dashed text-muted-foreground hover:text-primary hover:border-primary transition-colors"
+                                  onClick={() => {
+                                    const subServices = getSubServices(service.service_id);
+                                    if (subServices.length > 0) {
+                                      handleAddSubService(index, subServices[0].id);
+                                    }
+                                  }}
+                                >
+                                  <PlusIcon className="h-4 w-4" />
+                                  <span>Add Sub-Service</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Add additional options to this service</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )
+                      )}
+                    </div>
                   </div>
                 )}
               </CardContent>
