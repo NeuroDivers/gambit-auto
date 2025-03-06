@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
@@ -23,7 +22,6 @@ export default function CreateEstimate() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [subtotal, setSubtotal] = useState(0)
-  const [selectedServices, setSelectedServices] = useState<any[]>([])
   
   const form = useForm<EstimateFormValues>({
     defaultValues: {
@@ -44,7 +42,7 @@ export default function CreateEstimate() {
       country: '',
       vehicle_make: '',
       vehicle_model: '',
-      vehicle_year: new Date().getFullYear(), // Ensure this is a number by default
+      vehicle_year: new Date().getFullYear(),
       vehicle_serial: '',
       vehicle_color: '',
       vehicle_trim: '',
@@ -176,7 +174,7 @@ export default function CreateEstimate() {
           customer_country: data.country,
           vehicle_make: data.vehicle_make,
           vehicle_model: data.vehicle_model,
-          vehicle_year: data.vehicle_year, // This is now a number
+          vehicle_year: data.vehicle_year,
           vehicle_vin: data.vehicle_serial,
           vehicle_body_class: data.vehicle_body_class,
           vehicle_trim: data.vehicle_trim,
@@ -275,8 +273,8 @@ export default function CreateEstimate() {
                   <ServiceItemsField 
                     value={form.watch('services') || []} 
                     onChange={(services) => {
-                      form.setValue('services', services)
-                      form.setValue('service_items', services)
+                      form.setValue('services', services);
+                      form.setValue('service_items', services);
                     }}
                     allowPriceEdit={true}
                   />
