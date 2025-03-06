@@ -17,11 +17,12 @@ export function EstimatesList() {
   useEffect(() => {
     const fetchEstimates = async () => {
       try {
+        // Specify which relationship to use with customers
         const { data, error } = await supabase
           .from("estimates")
           .select(`
             *,
-            customers(customer_first_name, customer_last_name, email)
+            customers!estimates_customer_id_fkey(customer_first_name, customer_last_name, email)
           `)
           .order("created_at", { ascending: false })
 
