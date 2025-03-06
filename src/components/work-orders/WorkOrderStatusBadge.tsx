@@ -62,16 +62,34 @@ export function WorkOrderStatusBadge({ status, workOrderId, editable = false }: 
         disabled={isLoading}
       >
         <SelectTrigger className="w-[160px]">
-          <SelectValue placeholder="Status" />
+          <SelectValue placeholder="Status">
+            <Badge variant={getBadgeVariant(currentStatus)} className="mr-2">
+              {getStatusLabel(currentStatus)}
+            </Badge>
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="pending">Pending</SelectItem>
-          <SelectItem value="approved">Approved</SelectItem>
-          <SelectItem value="in_progress">In Progress</SelectItem>
-          <SelectItem value="completed">Completed</SelectItem>
-          <SelectItem value="cancelled">Cancelled</SelectItem>
-          <SelectItem value="invoiced">Invoiced</SelectItem>
-          <SelectItem value="estimated">Estimated</SelectItem>
+          <SelectItem value="pending">
+            <Badge variant="outline" className="mr-2">Pending</Badge>
+          </SelectItem>
+          <SelectItem value="approved">
+            <Badge variant="outline" className="mr-2">Approved</Badge>
+          </SelectItem>
+          <SelectItem value="in_progress">
+            <Badge variant="info" className="mr-2">In Progress</Badge>
+          </SelectItem>
+          <SelectItem value="completed">
+            <Badge variant="success" className="mr-2">Completed</Badge>
+          </SelectItem>
+          <SelectItem value="cancelled">
+            <Badge variant="destructive" className="mr-2">Cancelled</Badge>
+          </SelectItem>
+          <SelectItem value="invoiced">
+            <Badge variant="secondary" className="mr-2">Invoiced</Badge>
+          </SelectItem>
+          <SelectItem value="estimated">
+            <Badge variant="warning" className="mr-2">Estimated</Badge>
+          </SelectItem>
         </SelectContent>
       </Select>
     )
@@ -79,7 +97,7 @@ export function WorkOrderStatusBadge({ status, workOrderId, editable = false }: 
 
   return (
     <Badge variant={getBadgeVariant(currentStatus)}>
-      {currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1).replace('_', ' ')}
+      {getStatusLabel(currentStatus)}
     </Badge>
   )
 }
