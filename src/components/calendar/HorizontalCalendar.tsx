@@ -67,6 +67,27 @@ export function HorizontalCalendar({
     onDateSelect(day)
   }
 
+  // Check if a day has workOrders
+  const getDayStatus = (day: Date) => {
+    if (!workOrders?.length) return null;
+    
+    const dayStart = new Date(day);
+    dayStart.setHours(0, 0, 0, 0);
+    
+    const dayEnd = new Date(day);
+    dayEnd.setHours(23, 59, 59, 999);
+    
+    // Check if any work order falls on this day
+    const hasWorkOrders = workOrders.some(order => {
+      if (!order.start_time) return false;
+      
+      const orderDate = new Date(order.start_time);
+      return orderDate >= dayStart && orderDate <= dayEnd;
+    });
+    
+    return hasWorkOrders ? 'has-events' : null;
+  };
+
   return (
     <div className={cn("space-y-4", className)}>
       <div className="flex items-center justify-between">
@@ -108,31 +129,39 @@ export function HorizontalCalendar({
         className="flex overflow-x-auto pb-4 cursor-grab active:cursor-grabbing"
       >
         <div className="flex space-x-1 min-w-full">
-          {days.map((day, dayIdx) => (
-            <div
-              key={day.toString()}
-              className={cn(
-                "flex flex-col items-center justify-center min-w-[3rem] rounded-lg py-2 transition-colors",
-                isEqual(day, selectedDate) && "bg-primary text-primary-foreground",
-                !isEqual(day, selectedDate) && isToday(day) && "bg-muted",
-                !isEqual(day, selectedDate) && !isToday(day) && isSameMonth(day, firstDayCurrentMonth) && "bg-background hover:bg-muted",
-                !isEqual(day, selectedDate) && !isToday(day) && !isSameMonth(day, firstDayCurrentMonth) && "bg-muted/30 text-muted-foreground",
-                (dayIdx === 0 || getDay(day) === 0) && "rounded-l-lg",
-                (dayIdx === days.length - 1 || getDay(day) === 6) && "rounded-r-lg",
-                "cursor-pointer"
-              )}
-              onClick={() => handleDateChange(day)}
-              data-today={isToday(day) ? "true" : "false"}
-            >
-              <div className={cn(
-                "text-xs font-medium",
-                (getDay(day) === 0 || getDay(day) === 6) && !isEqual(day, selectedDate) && "text-rose-500"
-              )}>
-                {format(day, 'EEE')}
+          {days.map((day, dayIdx) => {
+            const dayStatus = getDayStatus(day);
+            
+            return (
+              <div
+                key={day.toString()}
+                className={cn(
+                  "flex flex-col items-center justify-center min-w-[3rem] rounded-lg py-2 transition-colors",
+                  isEqual(day, selectedDate) && "bg-primary text-primary-foreground",
+                  !isEqual(day, selectedDate) && isToday(day) && "bg-muted",
+                  !isEqual(day, selectedDate) && !isToday(day) && isSameMonth(day, firstDayCurrentMonth) && "bg-background hover:bg-muted",
+                  !isEqual(day, selectedDate) && !isToday(day) && !isSameMonth(day, firstDayCurrentMonth) && "bg-muted/30 text-muted-foreground",
+                  (dayIdx === 0 || getDay(day) === 0) && "rounded-l-lg",
+                  (dayIdx === days.length - 1 || getDay(day) === 6) && "rounded-r-lg",
+                  "cursor-pointer",
+                  dayStatus === 'has-events' && !isEqual(day, selectedDate) && "border-b-2 border-primary"
+                )}
+                onClick={() => handleDateChange(day)}
+                data-today={isToday(day) ? "true" : "false"}
+              >
+                <div className={cn(
+                  "text-xs font-medium",
+                  (getDay(day) === 0 || getDay(day) === 6) && !isEqual(day, selectedDate) && "text-rose-500"
+                )}>
+                  {format(day, 'EEE')}
+                </div>
+                <div className="text-lg font-semibold">{format(day, 'd')}</div>
+                {dayStatus === 'has-events' && !isEqual(day, selectedDate) && (
+                  <div className="w-1 h-1 rounded-full bg-primary mt-1"></div>
+                )}
               </div>
-              <div className="text-lg font-semibold">{format(day, 'd')}</div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     </div>

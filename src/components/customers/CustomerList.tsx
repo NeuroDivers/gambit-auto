@@ -76,7 +76,7 @@ export function CustomerList() {
             customer_state_province,
             profile_id,
             created_at,
-            customer_phone_number
+            phone_number
           `)
           .order('created_at', { ascending: false })
           .range(from, to)
@@ -109,7 +109,7 @@ export function CustomerList() {
               if (!customer.customer_first_name) customerWithProfile.customer_first_name = profileData.first_name || ''
               if (!customer.customer_last_name) customerWithProfile.customer_last_name = profileData.last_name || ''
               if (!customer.customer_email) customerWithProfile.customer_email = profileData.email || ''
-              if (!customer.customer_phone_number) customerWithProfile.customer_phone_number = profileData.phone_number
+              if (!customer.phone_number) customerWithProfile.phone_number = profileData.phone_number
             }
           }
           
@@ -157,7 +157,7 @@ export function CustomerList() {
     return (
       fullName.includes(searchLower) ||
       (customer.customer_email && customer.customer_email.toLowerCase().includes(searchLower)) ||
-      (customer.customer_phone_number && customer.customer_phone_number.includes(search))
+      (customer.phone_number && customer.phone_number.includes(search))
     )
   })
 
@@ -267,7 +267,7 @@ export function CustomerList() {
                       <td className="py-3">
                         <div>{customer.customer_email}</div>
                         <div className="text-sm text-muted-foreground">
-                          {customer.customer_phone_number || "No phone"}
+                          {customer.phone_number || "No phone"}
                         </div>
                       </td>
                       <td className="py-3">

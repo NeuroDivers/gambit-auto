@@ -1,7 +1,8 @@
+
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Plus, Database, Loader2 } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -13,7 +14,6 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { Loader2 } from "lucide-react"
 import { format } from "date-fns"
 import { PageTitle } from "@/components/shared/PageTitle"
 import { Input } from "@/components/ui/input"
@@ -22,14 +22,17 @@ import type { Invoice } from "@/components/invoices/types"
 import { InvoiceMobileList } from "@/components/invoices/InvoiceMobileList"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { getInvoiceStatusVariant } from "@/components/shared/BadgeVariants"
+import { useGenerateDummyInvoices } from "@/hooks/useGenerateDummyInvoices"
 
 export default function Invoices() {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [searchTerm, setSearchTerm] = useState("")
+  const [isGenerating, setIsGenerating] = useState(false)
   const navigate = useNavigate()
   const isMobile = useIsMobile()
+  const { generateDummyInvoices } = useGenerateDummyInvoices()
 
-  const { data: invoices, isLoading, error } = useQuery({
+  const { data: invoices, isLoading, error, refetch } = useQuery({
     queryKey: ['invoices'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -59,20 +62,15 @@ export default function Invoices() {
     navigate(`/invoices/${id}`)
   }
 
-  const getBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'paid':
-        return 'success'
-      case 'overdue':
-        return 'destructive'
-      case 'pending':
-        return 'pending'
-      case 'draft':
-        return 'draft'
-      default:
-        return 'secondary'
+  const handleGenerateDummyData = async () => {
+    setIsGenerating(true);
+    try {
+      await generateDummyInvoices(10);
+      refetch();
+    } finally {
+      setIsGenerating(false);
     }
-  }
+  };
 
   if (isLoading) {
     return (
@@ -92,15 +90,30 @@ export default function Invoices() {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <PageTitle 
           title="Invoices" 
           description="Manage customer invoices"
         />
-        <Button onClick={() => navigate("/invoices/create")}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Invoice
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleGenerateDummyData} variant="outline" disabled={isGenerating}>
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Database className="mr-2 h-4 w-4" />
+                Generate Test Data
+              </>
+            )}
+          </Button>
+          <Button onClick={() => navigate("/invoices/create")}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Invoice
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-4">

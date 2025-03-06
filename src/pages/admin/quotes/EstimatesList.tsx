@@ -21,12 +21,28 @@ export function EstimatesList() {
           .from("estimates")
           .select(`
             *,
-            customer:customers!quotes_client_id_fkey(first_name, last_name, email)
+            customers(customer_first_name, customer_last_name, email)
           `)
           .order("created_at", { ascending: false })
 
         if (error) throw error
-        setEstimates(data || [])
+        
+        // Map the data to the expected format
+        const mappedEstimates = data?.map(estimate => {
+          // Extract customer info from nested customer object if available
+          const customer = estimate.customers || {};
+          
+          return {
+            ...estimate,
+            customer: {
+              first_name: customer.customer_first_name || estimate.customer_first_name,
+              last_name: customer.customer_last_name || estimate.customer_last_name,
+              email: customer.email || estimate.customer_email
+            }
+          };
+        });
+        
+        setEstimates(mappedEstimates || [])
       } catch (error) {
         console.error("Error fetching estimates:", error)
       } finally {
@@ -99,7 +115,7 @@ export function EstimatesList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {estimates.map((estimate) => (
+              {estimates?.map((estimate) => (
                 <TableRow key={estimate.id}>
                   <TableCell className="font-medium">
                     {estimate.estimate_number || `EST-${estimate.id.substring(0, 8)}`}
@@ -107,7 +123,7 @@ export function EstimatesList() {
                   <TableCell>
                     {estimate.customer 
                       ? `${estimate.customer.first_name} ${estimate.customer.last_name}`
-                      : "Unknown Customer"}
+                      : `${estimate.customer_first_name || ''} ${estimate.customer_last_name || ''}`}
                   </TableCell>
                   <TableCell>
                     {new Date(estimate.created_at).toLocaleDateString()}

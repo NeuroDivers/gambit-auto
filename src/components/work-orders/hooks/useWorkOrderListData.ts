@@ -45,7 +45,7 @@ export function useWorkOrderListData() {
       // Apply filters
       if (searchTerm) {
         query = query.or(
-          `customer_first_name.ilike.%${searchTerm}%,customer_last_name.ilike.%${searchTerm}%,customer_email.ilike.%${searchTerm}%,vehicle_make.ilike.%${searchTerm}%,vehicle_model.ilike.%${searchTerm}%`
+          `customer_first_name.ilike.%${searchTerm}%,customer_last_name.ilike.%${searchTerm}%,customer_email.ilike.%${searchTerm}%,customer_vehicle_make.ilike.%${searchTerm}%,customer_vehicle_model.ilike.%${searchTerm}%,customer_vehicle_vin.ilike.%${searchTerm}%`
         );
       }
 
@@ -57,6 +57,9 @@ export function useWorkOrderListData() {
         query = query.not("assigned_bay_id", "is", null);
       } else if (assignmentFilter === "unassigned") {
         query = query.is("assigned_bay_id", null);
+      } else if (assignmentFilter && assignmentFilter !== "all") {
+        // If it's not "all", "assigned", or "unassigned", it's a specific bay id
+        query = query.eq("assigned_bay_id", assignmentFilter);
       }
 
       const { data, error, count } = await query;
