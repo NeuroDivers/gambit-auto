@@ -1,5 +1,4 @@
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ServiceTypeFormFields } from "./ServiceTypeFormFields"
@@ -38,24 +37,49 @@ export function ServiceTypeDialog({
     }
   })
   
+  useEffect(() => {
+    if (serviceType) {
+      methods.reset({
+        name: serviceType.name || "",
+        description: serviceType.description || "",
+        base_price: serviceType.base_price || 0,
+        duration: serviceType.duration || 60,
+        service_type: serviceType.service_type || "standalone",
+        parent_service_id: serviceType.parent_service_id || null,
+        visible_on_app: serviceType.visible_on_app !== false,
+        visible_on_website: serviceType.visible_on_website !== false,
+        status: serviceType.status || "active"
+      });
+    } else {
+      methods.reset({
+        name: "",
+        description: "",
+        base_price: 0,
+        duration: 60,
+        service_type: "standalone",
+        parent_service_id: null,
+        visible_on_app: true,
+        visible_on_website: true,
+        status: "active"
+      });
+    }
+  }, [serviceType, methods]);
+  
   const handleSubmit = async (values: any) => {
     setIsSubmitting(true)
     
     try {
-      // For sub_service, ensure parent_service_id is set
       if (values.service_type === 'sub_service' && !values.parent_service_id) {
         toast.error("Please select a parent service")
         setIsSubmitting(false)
         return
       }
       
-      // Clear parent_service_id if not a sub_service
       if (values.service_type !== 'sub_service') {
         values.parent_service_id = null
       }
       
       if (serviceType?.id) {
-        // Update existing service
         const { error } = await supabase
           .from("service_types")
           .update({
@@ -76,7 +100,6 @@ export function ServiceTypeDialog({
         
         toast.success("Service type updated")
       } else {
-        // Create new service
         const { error } = await supabase
           .from("service_types")
           .insert({
@@ -95,13 +118,10 @@ export function ServiceTypeDialog({
         toast.success("Service type created")
       }
       
-      // Invalidate the service-types query to refetch the updated data
       queryClient.invalidateQueries({ queryKey: ["service-types"] })
       
-      // Call onSuccess handler
       if (onSuccess) onSuccess()
       
-      // Close the dialog
       onOpenChange(false)
     } catch (error: any) {
       console.error("Error saving service type:", error)
