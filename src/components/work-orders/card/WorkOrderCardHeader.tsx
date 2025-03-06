@@ -1,6 +1,6 @@
 
 import { Badge } from "@/components/ui/badge"
-import { WorkOrder } from "../types"  // Update this to use our local type
+import { WorkOrder } from "../types"
 import { Wrench, CalendarDays } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 

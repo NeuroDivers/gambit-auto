@@ -16,9 +16,7 @@ interface EstimateFormAdapterProps {
  * we can simply cast the form to the expected type.
  */
 export function EstimateFormAdapter({ form, children }: EstimateFormAdapterProps) {
-  // We need to use a type assertion here because TypeScript doesn't recognize
-  // that EstimateFormValues is compatible with WorkOrderFormValues due to
-  // the extra fields
+  // Cast to the expected type for components that use WorkOrderFormValues
   const adaptedForm = form as unknown as UseFormReturn<WorkOrderFormValues>;
   
   return (

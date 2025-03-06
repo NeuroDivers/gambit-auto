@@ -232,7 +232,7 @@ async function createWorkOrder(values: WorkOrderFormValues) {
           make: values.vehicle_make,
           model: values.vehicle_model,
           year: values.vehicle_year,
-          vin: values.vehicle_serial || null,
+          vin: values.vehicle_vin || null,
           color: values.vehicle_color || null,
           body_class: values.vehicle_body_class || null,
           doors: values.vehicle_doors || null,

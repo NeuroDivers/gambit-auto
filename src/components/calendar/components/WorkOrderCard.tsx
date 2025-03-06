@@ -31,7 +31,7 @@ export function WorkOrderCard({ workOrder, date, span, onClick }: WorkOrderCardP
           <TooltipTrigger asChild>
             <div className="bg-primary p-2 rounded-lg border border-white/20 w-full shadow-sm overflow-hidden">
               <div className="text-xs text-primary-foreground font-medium truncate">
-                {workOrder.first_name} {workOrder.last_name}
+                {workOrder.customer_first_name} {workOrder.customer_last_name}
               </div>
               <div className="flex items-center justify-between mt-1">
                 <div className="text-xs text-primary-foreground/90 flex items-center gap-1">
@@ -49,7 +49,7 @@ export function WorkOrderCard({ workOrder, date, span, onClick }: WorkOrderCardP
           </TooltipTrigger>
           <TooltipContent>
             <div className="space-y-1">
-              <p className="font-medium">{workOrder.first_name} {workOrder.last_name}</p>
+              <p className="font-medium">{workOrder.customer_first_name} {workOrder.customer_last_name}</p>
               <p className="text-sm text-gray-400">
                 {workOrder.vehicle_year} {workOrder.vehicle_make} {workOrder.vehicle_model}
               </p>

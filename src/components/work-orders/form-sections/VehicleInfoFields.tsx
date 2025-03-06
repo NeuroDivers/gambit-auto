@@ -13,7 +13,7 @@ interface VehicleInfoFieldsProps {
 }
 
 export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
-  const vin = form.watch('vehicle_serial')
+  const vin = form.watch('vehicle_vin')
   const { data: vinData, isLoading: isLoadingVin } = useVinLookup(vin)
 
   // Auto-fill vehicle information when VIN data is available
@@ -35,7 +35,7 @@ export function VehicleInfoFields({ form }: VehicleInfoFieldsProps) {
       
       <FormField
         control={form.control}
-        name="vehicle_serial"
+        name="vehicle_vin"
         render={({ field }) => (
           <FormItem>
             <FormLabel>

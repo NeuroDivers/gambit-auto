@@ -43,10 +43,10 @@ export function WorkOrderMobileList({
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-medium">
-                  {order.first_name} {order.last_name}
+                  {order.customer_first_name} {order.customer_last_name}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {order.email}
+                  {order.customer_email}
                 </div>
               </div>
               <WorkOrderStatusSelect workOrder={order} />

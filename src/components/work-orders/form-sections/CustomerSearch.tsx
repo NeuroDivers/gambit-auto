@@ -57,16 +57,16 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     // Find the selected customer to set customer info
     const selectedCustomer = clients?.find(client => client.id === customerId)
     if (selectedCustomer) {
-      form.setValue("first_name", selectedCustomer.first_name)
-      form.setValue("last_name", selectedCustomer.last_name)
-      form.setValue("email", selectedCustomer.email)
-      form.setValue("phone_number", selectedCustomer.phone_number)
-      form.setValue("street_address", selectedCustomer.street_address || "")
-      form.setValue("unit_number", selectedCustomer.unit_number || "")
-      form.setValue("city", selectedCustomer.city || "")
-      form.setValue("state_province", selectedCustomer.state_province || "")
-      form.setValue("postal_code", selectedCustomer.postal_code || "")
-      form.setValue("country", selectedCustomer.country || "")
+      form.setValue("customer_first_name", selectedCustomer.first_name)
+      form.setValue("customer_last_name", selectedCustomer.last_name)
+      form.setValue("customer_email", selectedCustomer.email)
+      form.setValue("customer_phone", selectedCustomer.phone_number)
+      form.setValue("customer_street_address", selectedCustomer.street_address || "")
+      form.setValue("customer_unit_number", selectedCustomer.unit_number || "")
+      form.setValue("customer_city", selectedCustomer.city || "")
+      form.setValue("customer_state_province", selectedCustomer.state_province || "")
+      form.setValue("customer_postal_code", selectedCustomer.postal_code || "")
+      form.setValue("customer_country", selectedCustomer.country || "")
       setCreateNewCustomer(false)
       
       // Set vehicle info if vehicles exist
@@ -79,7 +79,7 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
           form.setValue("vehicle_make", primaryVehicle.make)
           form.setValue("vehicle_model", primaryVehicle.model)
           form.setValue("vehicle_year", primaryVehicle.year)
-          form.setValue("vehicle_serial", primaryVehicle.vin || "")
+          form.setValue("vehicle_vin", primaryVehicle.vin || "")
           
           // Set additional vehicle fields if they exist
           if (primaryVehicle.trim) form.setValue("vehicle_trim", primaryVehicle.trim)
