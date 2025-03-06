@@ -11,15 +11,17 @@ interface WorkOrderCardProps {
   date: Date
   span: number
   onClick: () => void
+  className?: string // Add className prop
 }
 
-export function WorkOrderCard({ workOrder, date, span, onClick }: WorkOrderCardProps) {
+export function WorkOrderCard({ workOrder, date, span, onClick, className }: WorkOrderCardProps) {
   return (
     <div 
       className={cn(
         "p-2 relative flex items-center border-b border-r border-gray-200",
         "hover:brightness-95 transition-all cursor-pointer",
-        isToday(date) ? "bg-primary/10" : "bg-white"
+        isToday(date) ? "bg-primary/10" : "bg-white",
+        className
       )}
       onClick={onClick}
       style={{

@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useForm, UseFormReturn } from "react-hook-form"
@@ -6,6 +7,21 @@ import { WorkOrderFormValues } from "@/components/work-orders/types"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { PageTitle } from "@/components/shared/PageTitle"
+import { Form } from "@/components/ui/form"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { toast } from "sonner"
+import { useNavigate, useParams } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
+import { ArrowLeft, Search, Plus } from "lucide-react"
+import { EstimateFormAdapter } from "@/components/estimates/EstimateFormAdapter"
+import { ClientInfoFields } from "@/components/work-orders/form-sections/ClientInfoFields"
+import { VehicleInfoFields } from "@/components/work-orders/form-sections/VehicleInfoFields"
+import { ServiceSelectionFields } from "@/components/work-orders/form-sections/ServiceSelectionFields"
+import { SchedulingFields } from "@/components/work-orders/form-sections/SchedulingFields"
+import { NotesFields } from "@/components/work-orders/form-sections/NotesFields"
 
 const estimateSchema = z.object({
   customer_first_name: z.string().min(1, "First name is required"),

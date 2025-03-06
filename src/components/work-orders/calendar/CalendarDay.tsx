@@ -1,80 +1,45 @@
 
-import { FC } from "react"
-import { WorkOrder } from "../types"
-import { WorkOrderCard } from "./WorkOrderCard"
-import { Badge } from "@/components/ui/badge"
+import { WorkOrder } from "@/components/work-orders/types"
+import { WorkOrderCard } from "../../calendar/components/WorkOrderCard"
+import { format } from "date-fns"
 import { cn } from "@/lib/utils"
-import { isToday, format } from "date-fns"
 
-type CalendarDayProps = {
+export interface CalendarDayProps {
   date: Date
   workOrders: WorkOrder[]
-  onWorkOrderClick: (workOrder: WorkOrder) => void
-  isCurrentMonth?: boolean
+  isCurrentMonth: boolean
 }
 
-export const CalendarDay: FC<CalendarDayProps> = ({
-  date,
-  workOrders,
-  onWorkOrderClick,
-  isCurrentMonth = true,
-}) => {
-  const dayNumber = date.getDate()
-  const isCurrentDate = isToday(date)
-  const formattedDate = format(date, 'yyyy-MM-dd')
-  
-  // Get work orders for this day
-  const dayWorkOrders = workOrders.filter(workOrder => {
-    if (!workOrder.start_time) return false
-    const workOrderDate = new Date(workOrder.start_time)
-    return workOrderDate.toDateString() === date.toDateString()
+export function CalendarDay({ date, workOrders, isCurrentMonth }: CalendarDayProps) {
+  // Sort work orders by start_time
+  const sortedWorkOrders = [...workOrders].sort((a, b) => {
+    return new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
   })
 
   return (
-    <div
-      className={cn(
-        "min-h-[100px] p-2 border border-border/40",
-        "transition-colors duration-200",
-        isCurrentMonth ? "bg-white" : "bg-gray-50/50",
-        isCurrentDate && "bg-primary/5 ring-1 ring-primary/30",
-        dayWorkOrders.length > 0 && "bg-secondary/5"
-      )}
-      data-date={formattedDate}
-    >
-      <div className="flex justify-between items-start">
-        <span
-          className={cn(
-            "inline-flex h-6 w-6 items-center justify-center rounded-full text-sm",
-            isCurrentDate && "bg-primary text-primary-foreground font-medium"
-          )}
-        >
-          {dayNumber}
-        </span>
-        
-        {dayWorkOrders.length > 0 && (
-          <Badge variant="outline" className="text-[10px] bg-secondary/10">
-            {dayWorkOrders.length}
-          </Badge>
-        )}
-      </div>
-
-      <div className="mt-2 space-y-1">
-        {dayWorkOrders.slice(0, 2).map((workOrder) => (
-          <WorkOrderCard 
-            key={workOrder.id} 
+    <div className={cn(
+      "min-h-[120px] border-l border-b border-gray-200",
+      !isCurrentMonth && "bg-gray-50/80"
+    )}>
+      <header className="p-2 border-b border-gray-200 bg-white">
+        <p className={cn(
+          "text-sm font-medium",
+          !isCurrentMonth && "text-gray-400"
+        )}>
+          {format(date, "d")}
+        </p>
+      </header>
+      <div className="space-y-1 p-1">
+        {sortedWorkOrders.map(workOrder => (
+          <WorkOrderCard
+            key={workOrder.id}
             workOrder={workOrder}
-            className="text-xs"
             date={date}
             span={1}
-            onClick={() => onWorkOrderClick(workOrder)}
+            onClick={() => {}}
+            className="border-none shadow-sm my-1"
           />
         ))}
-        
-        {dayWorkOrders.length > 2 && (
-          <div className="text-xs text-muted-foreground mt-1 text-center">
-            +{dayWorkOrders.length - 2} more
-          </div>
-        )}
       </div>
     </div>
   )
