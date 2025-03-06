@@ -43,5 +43,11 @@ export interface WorkOrderFormProps {
   onSubmitting?: (isSubmitting: boolean) => void
 }
 
-// Export the WorkOrder type
-export type WorkOrder = BaseWorkOrder;
+// Extending the BaseWorkOrder type to include the additional fields
+export interface WorkOrder extends BaseWorkOrder {
+  vehicle_color?: string
+  vehicle_body_class?: string
+  vehicle_doors?: number | null
+  vehicle_trim?: string
+  vehicle_license_plate?: string
+}
