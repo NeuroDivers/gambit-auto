@@ -1,18 +1,29 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
 import { HorizontalCalendar } from "@/components/calendar/HorizontalCalendar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { CalendarDays } from "lucide-react"
+import { CalendarDays, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { WorkOrder } from "@/components/work-orders/types"
 import { CreateWorkOrderDialog } from "@/components/work-orders/CreateWorkOrderDialog"
+import { useServiceBays } from "@/components/service-bays/hooks/useServiceBays"
 
 export default function Bookings() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
+  
+  // Force a refetch of service bays when this component mounts
+  const { refetch: refetchServiceBays } = useServiceBays()
+  
+  useEffect(() => {
+    // This will ensure service bays are loaded when the bookings page is visited
+    refetchServiceBays().catch(error => {
+      console.error("Error refetching service bays:", error);
+    });
+  }, [refetchServiceBays]);
   
   const { data: workOrders = [], isLoading } = useQuery({
     queryKey: ["clientWorkOrders"],
@@ -69,7 +80,7 @@ export default function Bookings() {
       
       {isLoading ? (
         <div className="flex items-center justify-center p-8">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+          <Loader2 className="h-8 w-8 animate-spin border-4 border-primary border-t-transparent rounded-full" />
         </div>
       ) : (
         <HorizontalCalendar

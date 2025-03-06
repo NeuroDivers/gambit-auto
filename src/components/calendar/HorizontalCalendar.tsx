@@ -1,3 +1,4 @@
+
 import { useRef, useState, useCallback, useEffect } from "react"
 import { format, addDays, startOfDay, isWithinInterval, parseISO, subDays } from "date-fns"
 import { cn } from "@/lib/utils"
@@ -11,7 +12,7 @@ import { useBlockedDates } from "@/components/work-orders/calendar/hooks/useBloc
 import { CalendarHeader } from "./components/CalendarHeader"
 import { CalendarContent } from "./components/CalendarContent"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Loader2 } from "lucide-react"
 import { MonthPicker } from "@/components/work-orders/calendar/MonthPicker"
 
 type HorizontalCalendarProps = {
@@ -28,12 +29,19 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
   const [isLoading, setIsLoading] = useState(false)
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
   const [showMonthPicker, setShowMonthPicker] = useState(false)
-  const { serviceBays } = useServiceBays()
+  const { serviceBays, isLoading: isLoadingBays, refetch: refetchBays } = useServiceBays()
   const { blockedDates } = useBlockedDates()
   const DAYS_TO_LOAD = 14
   const PAST_DAYS = 30  // Show 30 days in the past
   const CELL_WIDTH = 60
   const BAY_COLUMN_WIDTH = 80
+
+  // Force a refetch of service bays when the component mounts
+  useEffect(() => {
+    refetchBays().catch(error => {
+      console.error("Error refetching service bays:", error);
+    });
+  }, [refetchBays]);
 
   const isDateBlocked = useCallback((date: Date) => {
     return blockedDates?.some(blocked => 
@@ -171,6 +179,15 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
 
   const totalWidth = BAY_COLUMN_WIDTH + (days.length * CELL_WIDTH)
 
+  if (isLoadingBays) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 space-y-4 border rounded-lg bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Loading service bays...</p>
+      </div>
+    );
+  }
+
   return (
     <div className={cn("p-4 bg-white rounded-lg shadow-sm border border-gray-200", className)}>
       <div className="mb-4 space-y-3">
@@ -237,46 +254,53 @@ export function HorizontalCalendar({ onDateSelect, className, workOrders = [] }:
         </div>
       </div>
 
-      <div 
-        className="relative overflow-hidden w-full border rounded-md"
-        style={{ maxWidth: '100%' }}
-      >
-        <div
-          ref={scrollRef}
-          onScroll={handleScroll}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={stopDragging}
-          onMouseLeave={stopDragging}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={stopDragging}
-          className="overflow-x-auto relative [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-gray-100 w-full"
-          style={{ 
-            maxWidth: '100%',
-            WebkitOverflowScrolling: 'touch',
-            cursor: 'grab'
-          }}
+      {serviceBays && serviceBays.length > 0 ? (
+        <div 
+          className="relative overflow-hidden w-full border rounded-md"
+          style={{ maxWidth: '100%' }}
         >
-          <div 
-            className="relative"
-            style={{
-              width: `${totalWidth}px`,
-              minWidth: 'max-content'
+          <div
+            ref={scrollRef}
+            onScroll={handleScroll}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={stopDragging}
+            onMouseLeave={stopDragging}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={stopDragging}
+            className="overflow-x-auto relative [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-gray-100 w-full"
+            style={{ 
+              maxWidth: '100%',
+              WebkitOverflowScrolling: 'touch',
+              cursor: 'grab'
             }}
           >
-            <CalendarHeader days={days} isDateBlocked={isDateBlocked} />
-            <CalendarContent
-              days={days}
-              serviceBays={serviceBays}
-              workOrders={workOrders}
-              isDateBlocked={isDateBlocked}
-              onDateSelect={onDateSelect}
-              onWorkOrderSelect={setSelectedWorkOrder}
-            />
+            <div 
+              className="relative"
+              style={{
+                width: `${totalWidth}px`,
+                minWidth: 'max-content'
+              }}
+            >
+              <CalendarHeader days={days} isDateBlocked={isDateBlocked} />
+              <CalendarContent
+                days={days}
+                serviceBays={serviceBays}
+                workOrders={workOrders}
+                isDateBlocked={isDateBlocked}
+                onDateSelect={onDateSelect}
+                onWorkOrderSelect={setSelectedWorkOrder}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center p-8 space-y-4 border rounded-md bg-muted/10">
+          <p className="text-sm text-muted-foreground">No service bays available</p>
+          <p className="text-xs text-muted-foreground">Create service bays to use the calendar view</p>
+        </div>
+      )}
 
       {selectedWorkOrder && (
         <WorkOrderDetailsDialog

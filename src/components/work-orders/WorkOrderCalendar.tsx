@@ -15,6 +15,7 @@ import { HorizontalWorkOrderQueue } from "./calendar/HorizontalWorkOrderQueue"
 import { WorkOrder } from "./types"
 import { WorkOrderDetailsDialog } from "./calendar/WorkOrderDetailsDialog"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useServiceBays } from "@/components/service-bays/hooks/useServiceBays"
 
 interface WorkOrderCalendarProps {
   clientView?: boolean;
@@ -26,6 +27,16 @@ export const WorkOrderCalendar = ({ clientView = false }: WorkOrderCalendarProps
   const isMobile = useIsMobile()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
+  
+  // Force a refetch of service bays when the calendar loads
+  const { refetch: refetchServiceBays } = useServiceBays()
+  
+  useEffect(() => {
+    // Ensure service bays are loaded when the calendar mounts
+    refetchServiceBays().catch(error => {
+      console.error("Error fetching service bays:", error);
+    });
+  }, [refetchServiceBays]);
 
   const { data: workOrders = [] } = useQuery({
     queryKey: ["workOrders"],

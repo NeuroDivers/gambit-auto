@@ -21,7 +21,7 @@ export function useServiceBays() {
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
-  const { data: serviceBays, isLoading, refetch } = useQuery({
+  const { data: serviceBays, isLoading, error, refetch } = useQuery({
     queryKey: ["serviceBays"],
     queryFn: async () => {
       console.log("Fetching service bays...")
@@ -54,7 +54,25 @@ export function useServiceBays() {
         })) || []
       })) || []
     },
+    staleTime: 5 * 60 * 1000, // Keep data fresh for 5 minutes
+    retry: 3, // Retry failed queries 3 times
+    initialData: () => {
+      // Use any existing service bays data from the cache
+      return queryClient.getQueryData(["serviceBays"]) as ServiceBay[] | undefined;
+    }
   })
+
+  useEffect(() => {
+    // Handle error with toast
+    if (error) {
+      console.error("Service bay fetch error:", error)
+      toast({
+        title: "Error loading service bays",
+        description: "Please refresh the page to try again.",
+        variant: "destructive"
+      })
+    }
+  }, [error, toast])
 
   useEffect(() => {
     const channel = supabase
@@ -83,7 +101,12 @@ export function useServiceBays() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [refetch, toast])
+  }, [refetch, toast, queryClient])
 
-  return { serviceBays, isLoading }
+  return { 
+    serviceBays: serviceBays || [], 
+    isLoading,
+    error,
+    refetch
+  }
 }
