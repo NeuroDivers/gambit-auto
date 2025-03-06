@@ -4,231 +4,275 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { ServiceItemType } from "@/types/service-item";
-import { useForm } from "react-hook-form";
-import { WorkOrderFormValues, WorkOrder } from "../types";
+import { convertServiceItemForWorkOrder } from "../utils/serviceItemConverters";
 
-export function useWorkOrderForm(
-  workOrder?: WorkOrder,
-  onSuccess?: () => void,
-  defaultStartTime?: Date
-) {
+export function useWorkOrderForm(workOrderId?: string) {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  // Initialize form with default values or workOrder data
-  const form = useForm<WorkOrderFormValues>({
-    defaultValues: workOrder ? {
-      // Populate form fields from workOrder
-      first_name: workOrder.first_name || "",
-      last_name: workOrder.last_name || "",
-      email: workOrder.email || "",
-      phone_number: workOrder.phone_number || "",
-      contact_preference: workOrder.contact_preference as "phone" | "email" || "phone",
-      vehicle_make: workOrder.vehicle_make || "",
-      vehicle_model: workOrder.vehicle_model || "",
-      vehicle_year: workOrder.vehicle_year || new Date().getFullYear(),
-      vehicle_serial: workOrder.vehicle_serial || "",
-      additional_notes: workOrder.additional_notes || "",
-      client_id: workOrder.client_id || undefined,
-      start_time: workOrder.start_time ? new Date(workOrder.start_time) : null,
-      end_time: workOrder.end_time ? new Date(workOrder.end_time) : null,
-      estimated_duration: workOrder.estimated_duration || null,
-      assigned_bay_id: workOrder.assigned_bay_id || null,
-      service_items: workOrder.service_items || []
-    } : {
-      // Default values for a new work order
-      first_name: "",
-      last_name: "",
-      email: "",
-      phone_number: "",
-      contact_preference: "phone",
-      vehicle_make: "",
-      vehicle_model: "",
-      vehicle_year: new Date().getFullYear(),
-      vehicle_serial: "",
-      additional_notes: "",
-      client_id: undefined,
-      start_time: defaultStartTime || null,
-      end_time: null,
-      estimated_duration: null,
-      assigned_bay_id: null,
-      service_items: []
-    }
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [customer, setCustomer] = useState(null);
+  const [vehicleInfo, setVehicleInfo] = useState({
+    id: null,
+    year: "",
+    make: "",
+    model: "",
+    vin: "",
+    license_plate: "",
+    color: "",
   });
-
-  const onSubmit = async (data: WorkOrderFormValues) => {
+  const [scheduleInfo, setScheduleInfo] = useState({
+    date: new Date(),
+    start_time: "09:00",
+    end_time: "10:00",
+  });
+  const [bayId, setBayId] = useState(null);
+  const [notes, setNotes] = useState("");
+  const [services, setServices] = useState<ServiceItemType[]>([]);
+  
+  useEffect(() => {
+    if (workOrderId) {
+      fetchWorkOrderData();
+    }
+  }, [workOrderId]);
+  
+  const fetchWorkOrderData = async () => {
+    setIsLoading(true);
     try {
-      // Process form submission
-      console.log("Submitting work order:", data);
+      const { data, error } = await supabase
+        .from("work_orders")
+        .select(`
+          *,
+          customer:customer_id(*),
+          vehicle:vehicle_id(*),
+          service_items:work_order_services(*),
+          service_bay:bay_id(*)
+        `)
+        .eq("id", workOrderId)
+        .single();
+        
+      if (error) throw error;
       
-      // Handle work order creation/update logic here
-      let vehicleId = null;
+      setCustomer(data.customer);
+      setVehicleInfo({
+        id: data.vehicle.id,
+        year: data.vehicle.year,
+        make: data.vehicle.make,
+        model: data.vehicle.model,
+        vin: data.vehicle.vin,
+        license_plate: data.vehicle.license_plate,
+        color: data.vehicle.color,
+      });
       
-      // Create or update vehicle if needed
-      if (data.vehicle_make && data.vehicle_model) {
-        if (workOrder?.vehicle_id) {
-          // Update existing vehicle
-          const { error: vehicleError } = await supabase
-            .from("vehicles")
-            .update({
-              make: data.vehicle_make,
-              model: data.vehicle_model,
-              year: data.vehicle_year,
-              vin: data.vehicle_serial,
-              // Add other vehicle fields as needed
-            })
-            .eq("id", workOrder.vehicle_id);
-            
-          if (vehicleError) throw vehicleError;
-          vehicleId = workOrder.vehicle_id;
-        } else {
-          // Create new vehicle
-          const { data: vehicleData, error: vehicleError } = await supabase
-            .from("vehicles")
-            .insert({
-              customer_id: data.client_id,
-              make: data.vehicle_make,
-              model: data.vehicle_model,
-              year: data.vehicle_year,
-              vin: data.vehicle_serial,
-              // Add other vehicle fields as needed
-            })
-            .select()
-            .single();
-            
-          if (vehicleError) throw vehicleError;
-          vehicleId = vehicleData.id;
-        }
+      const workOrderDate = new Date(data.scheduled_date);
+      const startTime = data.start_time.substring(0, 5);
+      const endTime = data.end_time.substring(0, 5);
+      
+      setScheduleInfo({
+        date: workOrderDate,
+        start_time: startTime,
+        end_time: endTime,
+      });
+      
+      setBayId(data.bay_id);
+      setNotes(data.notes || "");
+      
+      const formattedServices = data.service_items.map(item => ({
+        service_id: item.service_id,
+        service_name: item.service_name,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        commission_rate: item.commission_rate,
+        commission_type: item.commission_type,
+        description: item.description || "",
+        assigned_profile_id: item.assigned_profile_id,
+      }));
+      
+      setServices(formattedServices);
+    } catch (error) {
+      console.error("Error fetching work order:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load work order data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleSubmit = async () => {
+    if (!customer) {
+      toast({
+        title: "Validation Error",
+        description: "Customer information is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!vehicleInfo.make || !vehicleInfo.model) {
+      toast({
+        title: "Validation Error",
+        description: "Vehicle information is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (services.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "At least one service is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      let vehicleId = vehicleInfo.id;
+      
+      if (!vehicleId) {
+        const { data: vehicleData, error: vehicleError } = await supabase
+          .from("vehicles")
+          .insert({
+            customer_id: customer.id,
+            year: vehicleInfo.year,
+            make: vehicleInfo.make,
+            model: vehicleInfo.model,
+            vin: vehicleInfo.vin,
+            license_plate: vehicleInfo.license_plate,
+            color: vehicleInfo.color,
+          })
+          .select()
+          .single();
+          
+        if (vehicleError) throw vehicleError;
+        vehicleId = vehicleData.id;
       }
       
-      // Format dates for database
-      const startTime = data.start_time ? new Date(data.start_time).toISOString() : null;
-      const endTime = data.end_time ? new Date(data.end_time).toISOString() : null;
+      const formattedDate = scheduleInfo.date.toISOString().split('T')[0];
       
-      // Create or update work order
-      if (workOrder?.id) {
-        // Update existing work order
-        const { error } = await supabase
+      let workOrderData;
+      if (workOrderId) {
+        const { data, error } = await supabase
           .from("work_orders")
           .update({
-            client_id: data.client_id,
+            customer_id: customer.id,
             vehicle_id: vehicleId,
-            first_name: data.first_name,
-            last_name: data.last_name,
-            email: data.email,
-            phone_number: data.phone_number,
-            contact_preference: data.contact_preference,
-            vehicle_make: data.vehicle_make,
-            vehicle_model: data.vehicle_model,
-            vehicle_year: data.vehicle_year,
-            vehicle_serial: data.vehicle_serial,
-            additional_notes: data.additional_notes,
-            start_time: startTime,
-            end_time: endTime,
-            estimated_duration: data.estimated_duration,
-            assigned_bay_id: data.assigned_bay_id,
+            scheduled_date: formattedDate,
+            start_time: scheduleInfo.start_time,
+            end_time: scheduleInfo.end_time,
+            bay_id: bayId,
+            notes: notes,
             updated_at: new Date().toISOString(),
           })
-          .eq("id", workOrder.id);
+          .eq("id", workOrderId)
+          .select()
+          .single();
           
         if (error) throw error;
+        workOrderData = data;
         
-        // Update service items
-        if (data.service_items && data.service_items.length > 0) {
-          // Delete existing service items
-          const { error: deleteError } = await supabase
-            .from("work_order_services")
-            .delete()
-            .eq("work_order_id", workOrder.id);
-            
-          if (deleteError) throw deleteError;
+        const { error: deleteError } = await supabase
+          .from("work_order_services")
+          .delete()
+          .eq("work_order_id", workOrderId);
           
-          // Insert new service items
-          const { error: servicesError } = await supabase
-            .from("work_order_services")
-            .insert(
-              data.service_items.map(item => ({
-                work_order_id: workOrder.id,
-                service_id: item.service_id,
-                service_name: item.service_name,
-                quantity: item.quantity,
-                unit_price: item.unit_price,
-                commission_rate: item.commission_rate,
-                commission_type: item.commission_type,
-                description: item.description,
-                assigned_profile_id: item.assigned_profile_id,
-              }))
-            );
-            
-          if (servicesError) throw servicesError;
-        }
+        if (deleteError) throw deleteError;
       } else {
-        // Create new work order
-        const { data: newWorkOrder, error } = await supabase
+        const { data, error } = await supabase
           .from("work_orders")
           .insert({
-            client_id: data.client_id,
+            customer_id: customer.id,
             vehicle_id: vehicleId,
-            first_name: data.first_name,
-            last_name: data.last_name,
-            email: data.email,
-            phone_number: data.phone_number,
-            contact_preference: data.contact_preference,
-            vehicle_make: data.vehicle_make,
-            vehicle_model: data.vehicle_model,
-            vehicle_year: data.vehicle_year,
-            vehicle_serial: data.vehicle_serial,
-            additional_notes: data.additional_notes,
-            start_time: startTime,
-            end_time: endTime,
-            estimated_duration: data.estimated_duration,
-            assigned_bay_id: data.assigned_bay_id,
+            scheduled_date: formattedDate,
+            start_time: scheduleInfo.start_time,
+            end_time: scheduleInfo.end_time,
+            bay_id: bayId,
+            notes: notes,
             status: "scheduled",
-            created_at: new Date().toISOString(),
           })
           .select()
           .single();
           
         if (error) throw error;
-        
-        // Insert service items
-        if (data.service_items && data.service_items.length > 0 && newWorkOrder) {
-          const { error: servicesError } = await supabase
-            .from("work_order_services")
-            .insert(
-              data.service_items.map(item => ({
-                work_order_id: newWorkOrder.id,
-                service_id: item.service_id,
-                service_name: item.service_name,
-                quantity: item.quantity,
-                unit_price: item.unit_price,
-                commission_rate: item.commission_rate,
-                commission_type: item.commission_type,
-                description: item.description,
-                assigned_profile_id: item.assigned_profile_id,
-              }))
-            );
-            
-          if (servicesError) throw servicesError;
-        }
+        workOrderData = data;
       }
       
-      // Invalidate queries to refresh data
+      const serviceItems = services.map(service => ({
+        work_order_id: workOrderData.id,
+        service_id: service.service_id,
+        service_name: service.service_name,
+        quantity: service.quantity,
+        unit_price: service.unit_price,
+        commission_rate: service.commission_rate,
+        commission_type: service.commission_type,
+        description: service.description,
+        assigned_profile_id: service.assigned_profile_id,
+      }));
+      
+      const { error: servicesError } = await supabase
+        .from("work_order_services")
+        .insert(serviceItems);
+        
+      if (servicesError) throw servicesError;
+      
+      toast({
+        title: "Success",
+        description: workOrderId 
+          ? "Work order updated successfully" 
+          : "Work order created successfully",
+      });
+      
       queryClient.invalidateQueries({ queryKey: ["workOrders"] });
       
-      if (onSuccess) {
-        onSuccess();
-      }
+      navigate("/admin/work-orders");
     } catch (error) {
-      console.error("Error saving work order:", error);
+      console.error("Error submitting work order:", error);
       toast({
         title: "Error",
         description: "Failed to save work order",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
+  
+  return {
+    isLoading,
+    isSubmitting,
+    customer,
+    setCustomer,
+    vehicleInfo,
+    setVehicleInfo,
+    scheduleInfo,
+    setScheduleInfo,
+    bayId,
+    setBayId,
+    notes,
+    setNotes,
+    services,
+    setServices,
+    handleSubmit,
+  };
+}
 
-  return { form, onSubmit };
+export function convertServiceItemForWorkOrder(item: any): ServiceItemType {
+  return {
+    service_id: item.service_id,
+    service_name: item.service_name,
+    quantity: item.quantity,
+    unit_price: item.unit_price,
+    commission_rate: item.commission_rate,
+    commission_type: item.commission_type === 'flat' ? 'fixed' : item.commission_type,
+    description: item.description || "",
+    assigned_profile_id: item.assigned_profile_id
+  };
 }
