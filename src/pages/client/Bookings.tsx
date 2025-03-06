@@ -1,15 +1,81 @@
 
-import { WorkOrderCalendar } from "@/components/work-orders/calendar/WorkOrderCalendar"
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
+import { useState } from "react"
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs"
+import { HorizontalCalendar } from "@/components/calendar/HorizontalCalendar"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CalendarDays } from "lucide-react"
+import { toast } from "sonner"
+import { WorkOrder } from "@/components/work-orders/types"
 
 export default function Bookings() {
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  
+  const { data: workOrders = [], isLoading } = useQuery({
+    queryKey: ["clientWorkOrders"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        toast.error("You need to be logged in to view your bookings")
+        return []
+      }
+      
+      const { data, error } = await supabase
+        .from("work_orders")
+        .select("*")
+        .eq("customer_id", user.id)
+        .not("start_time", "is", null)
+        .order("start_time", { ascending: true })
+      
+      if (error) {
+        console.error("Error fetching client work orders:", error)
+        toast.error("Failed to load your bookings")
+        throw error
+      }
+      
+      return data as WorkOrder[]
+    }
+  })
+
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date)
+    console.log("Selected date:", date)
+  }
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex flex-col gap-4">
         <PageBreadcrumbs />
         <h1 className="text-2xl md:text-3xl font-bold">My Bookings</h1>
       </div>
-      <WorkOrderCalendar clientView={true} />
+      
+      <Card className="bg-gradient-to-r from-primary/10 to-white">
+        <CardHeader className="pb-1">
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <CalendarDays className="h-5 w-5 text-primary" />
+            Scheduled Services
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground mb-4">
+            View your upcoming scheduled services below.
+          </p>
+        </CardContent>
+      </Card>
+      
+      {isLoading ? (
+        <div className="flex items-center justify-center p-8">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        </div>
+      ) : (
+        <HorizontalCalendar
+          onDateSelect={handleDateSelect}
+          workOrders={workOrders}
+          className="bg-card"
+        />
+      )}
     </div>
   )
 }

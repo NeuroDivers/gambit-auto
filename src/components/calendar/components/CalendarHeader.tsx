@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils"
 import { isToday } from "date-fns"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Badge } from "@/components/ui/badge"
+import { Lock } from "lucide-react"
 
 type CalendarHeaderProps = {
   days: Date[]
@@ -58,7 +59,8 @@ export function CalendarHeader({ days, isDateBlocked, getBlockedDateReason, onDa
                   <div className="relative">
                     {headerContent}
                     <Badge variant="destructive" className="absolute top-1 right-1 text-[9px] h-4 px-1">
-                      Blocked
+                      <Lock className="h-3 w-3 mr-0.5" />
+                      <span className="sr-only sm:not-sr-only sm:inline">Blocked</span>
                     </Badge>
                   </div>
                 </TooltipTrigger>
