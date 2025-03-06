@@ -7,6 +7,7 @@ import { BayAssignmentField } from "./BayAssignmentField"
 import { NotesFields } from "./NotesFields"
 import { Separator } from "@/components/ui/separator"
 import { Card, CardContent } from "@/components/ui/card"
+import { VehicleInfoFields } from "./VehicleInfoFields"
 
 interface FormSectionsProps {
   form: UseFormReturn<WorkOrderFormValues>
@@ -24,6 +25,14 @@ export function FormSections({
   return (
     <div className="space-y-6">
       <CustomerInfoFields form={form} isEditing={isEditing} />
+      
+      <Separator />
+      
+      <Card>
+        <CardContent className="p-6">
+          <VehicleInfoFields form={form} />
+        </CardContent>
+      </Card>
       
       <Separator />
       
