@@ -1,4 +1,3 @@
-
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
 import { useFieldArray } from "react-hook-form"
@@ -75,6 +74,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
       });
       
       setSubServicesByParent(subServiceMap);
+      console.log("Sub-services loaded:", subServiceMap);
       return data || []
     }
   })
@@ -136,6 +136,7 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
       
       // Immediately expand services with sub-services
       if (hasSubServices(serviceId)) {
+        console.log(`Expanding service at index ${index} because it has sub-services`);
         setExpandedServices(prev => ({
           ...prev,
           [index]: true
@@ -174,13 +175,14 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
     return subServicesByParent[parentServiceId] || [];
   }
 
-  // When sub-services data loads, check for services that should have their sub-services section expanded
   useEffect(() => {
     if (Object.keys(subServicesByParent).length > 0) {
+      console.log("Sub-services data loaded, checking for services to expand");
       const formValues = form.getValues();
       if (formValues.service_items) {
         formValues.service_items.forEach((item, index) => {
           if (item.service_id && hasSubServices(item.service_id)) {
+            console.log(`Found service at index ${index} with sub-services, expanding`);
             setExpandedServices(prev => ({
               ...prev,
               [index]: true
@@ -191,10 +193,11 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
     }
   }, [subServicesByParent, form]);
 
-  // When service items change (added/removed), check if any have sub-services
   useEffect(() => {
+    console.log("Service items changed, checking for sub-services");
     serviceItems.forEach((item, index) => {
       if (item.service_id && hasSubServices(item.service_id)) {
+        console.log(`Service at index ${index} has sub-services, expanding`);
         setExpandedServices(prev => ({
           ...prev,
           [index]: true
@@ -203,21 +206,42 @@ export function ServiceSelectionFields({ form }: ServiceSelectionFieldsProps) {
     });
   }, [serviceItems, subServicesByParent]);
 
-  // Watch for form value changes to catch when a service_id changes
   useEffect(() => {
+    console.log("Setting up form watch for service_id changes");
     const subscription = form.watch((value, { name }) => {
       if (name && name.includes('service_id') && !name.includes('sub_services')) {
+        console.log(`Service ID changed: ${name}`);
         const matches = name.match(/service_items\.(\d+)\.service_id/);
         if (matches && matches[1]) {
           const index = parseInt(matches[1]);
           const serviceId = form.getValues(`service_items.${index}.service_id`);
+          console.log(`Service ID at index ${index} changed to ${serviceId}`);
           if (serviceId && hasSubServices(serviceId)) {
+            console.log(`Service has sub-services, expanding section`);
             setExpandedServices(prev => ({
               ...prev,
               [index]: true
             }));
           }
         }
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form, hasSubServices]);
+
+  useEffect(() => {
+    const subscription = form.watch(() => {
+      const formValues = form.getValues();
+      if (formValues.service_items) {
+        formValues.service_items.forEach((item, index) => {
+          if (item.service_id && hasSubServices(item.service_id)) {
+            setExpandedServices(prev => ({
+              ...prev,
+              [index]: true
+            }));
+          }
+        });
       }
     });
     

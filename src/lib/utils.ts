@@ -86,3 +86,14 @@ export const applyCustomThemeColors = (): void => {
     }
   }
 }
+
+// Simple debug utility to help with troubleshooting
+export const debug = (message: string, data?: any): void => {
+  if (process.env.NODE_ENV !== 'production') {
+    if (data) {
+      console.log(`[DEBUG] ${message}:`, data);
+    } else {
+      console.log(`[DEBUG] ${message}`);
+    }
+  }
+}

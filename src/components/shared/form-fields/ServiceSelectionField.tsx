@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ServiceItemType } from "@/types/service-item"
@@ -173,10 +172,10 @@ export function ServiceSelectionField({
     return getSubServices(serviceId).length > 0;
   };
 
-  // Check for existing services with sub-services and open their collapsibles
   useEffect(() => {
     services.forEach((service, index) => {
       if (service.service_id && hasSubServices(service.service_id)) {
+        console.log("Opening collapsible for service with sub-services:", service.service_name);
         setOpenCollapsibles(prev => ({
           ...prev,
           [index]: true
@@ -184,6 +183,20 @@ export function ServiceSelectionField({
       }
     });
   }, [services, serviceTypes]);
+
+  useEffect(() => {
+    if (serviceTypes.length > 0) {
+      services.forEach((service, index) => {
+        if (service.service_id && hasSubServices(service.service_id)) {
+          console.log("ServiceTypes loaded, opening collapsible for:", service.service_name);
+          setOpenCollapsibles(prev => ({
+            ...prev,
+            [index]: true
+          }));
+        }
+      });
+    }
+  }, [serviceTypes]);
 
   return (
     <div className="space-y-5">
