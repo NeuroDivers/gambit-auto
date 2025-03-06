@@ -1,278 +1,131 @@
-import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { ServiceItemType } from "@/types/service-item";
-import { convertServiceItemForWorkOrder } from "../utils/serviceItemConverters";
 
-export function useWorkOrderForm(workOrderId?: string) {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const [customer, setCustomer] = useState(null);
-  const [vehicleInfo, setVehicleInfo] = useState({
-    id: null,
-    year: "",
-    make: "",
-    model: "",
-    vin: "",
-    license_plate: "",
-    color: "",
-  });
-  const [scheduleInfo, setScheduleInfo] = useState({
-    date: new Date(),
-    start_time: "09:00",
-    end_time: "10:00",
-  });
-  const [bayId, setBayId] = useState(null);
-  const [notes, setNotes] = useState("");
-  const [services, setServices] = useState<ServiceItemType[]>([]);
-  
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
+import { WorkOrder, WorkOrderFormValues } from "../types"
+import { useWorkOrderSubmission } from "./useWorkOrderSubmission"
+import { useEffect } from "react"
+import { supabase } from "@/integrations/supabase/client"
+
+const formSchema = z.object({
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+  phone_number: z.string().min(1, "Phone number is required"),
+  contact_preference: z.enum(["phone", "email"]),
+  vehicle_make: z.string().min(1, "Vehicle make is required"),
+  vehicle_model: z.string().min(1, "Vehicle model is required"),
+  vehicle_year: z.number().min(1900).max(new Date().getFullYear() + 1),
+  vehicle_serial: z.string().optional(), // Changed from required to optional
+  additional_notes: z.string().optional(),
+  address: z.string().optional(),
+  street_address: z.string().optional(),
+  unit_number: z.string().optional(),
+  city: z.string().optional(),
+  state_province: z.string().optional(),
+  postal_code: z.string().optional(),
+  country: z.string().optional(),
+  start_time: z.date().nullable(),
+  estimated_duration: z.number().nullable(),
+  end_time: z.date().nullable(),
+  assigned_bay_id: z.string().nullable(),
+  service_items: z.array(z.object({
+    service_id: z.string(),
+    service_name: z.string(),
+    quantity: z.number().min(1),
+    unit_price: z.number().min(0),
+    commission_rate: z.number(),
+    commission_type: z.enum(['percentage', 'flat']).nullable(),
+    description: z.string().optional()
+  }))
+})
+
+export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, defaultStartTime?: Date) {
+  const { submitWorkOrder } = useWorkOrderSubmission()
+
+  const form = useForm<WorkOrderFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      first_name: workOrder?.first_name || "",
+      last_name: workOrder?.last_name || "",
+      email: workOrder?.email || "",
+      phone_number: workOrder?.phone_number || "",
+      contact_preference: workOrder?.contact_preference || "phone",
+      vehicle_make: workOrder?.vehicle_make || "",
+      vehicle_model: workOrder?.vehicle_model || "",
+      vehicle_year: workOrder?.vehicle_year || new Date().getFullYear(),
+      vehicle_serial: workOrder?.vehicle_serial || "",
+      additional_notes: workOrder?.additional_notes || "",
+      address: workOrder?.address || "",
+      street_address: workOrder?.street_address || "",
+      unit_number: workOrder?.unit_number || "",
+      city: workOrder?.city || "",
+      state_province: workOrder?.state_province || "",
+      postal_code: workOrder?.postal_code || "",
+      country: workOrder?.country || "",
+      start_time: workOrder?.start_time ? new Date(workOrder.start_time) : defaultStartTime || null,
+      estimated_duration: workOrder?.estimated_duration ? parseInt(workOrder.estimated_duration.toString()) : null,
+      end_time: workOrder?.end_time ? new Date(workOrder.end_time) : null,
+      assigned_bay_id: workOrder?.assigned_bay_id || null,
+      service_items: []
+    }
+  })
+
   useEffect(() => {
-    if (workOrderId) {
-      fetchWorkOrderData();
-    }
-  }, [workOrderId]);
-  
-  const fetchWorkOrderData = async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("work_orders")
-        .select(`
-          *,
-          customer:customer_id(*),
-          vehicle:vehicle_id(*),
-          service_items:work_order_services(*),
-          service_bay:bay_id(*)
-        `)
-        .eq("id", workOrderId)
-        .single();
-        
-      if (error) throw error;
-      
-      setCustomer(data.customer);
-      setVehicleInfo({
-        id: data.vehicle.id,
-        year: data.vehicle.year,
-        make: data.vehicle.make,
-        model: data.vehicle.model,
-        vin: data.vehicle.vin,
-        license_plate: data.vehicle.license_plate,
-        color: data.vehicle.color,
-      });
-      
-      const workOrderDate = new Date(data.scheduled_date);
-      const startTime = data.start_time.substring(0, 5);
-      const endTime = data.end_time.substring(0, 5);
-      
-      setScheduleInfo({
-        date: workOrderDate,
-        start_time: startTime,
-        end_time: endTime,
-      });
-      
-      setBayId(data.bay_id);
-      setNotes(data.notes || "");
-      
-      const formattedServices = data.service_items.map(item => ({
-        service_id: item.service_id,
-        service_name: item.service_name,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        commission_rate: item.commission_rate,
-        commission_type: item.commission_type,
-        description: item.description || "",
-        assigned_profile_id: item.assigned_profile_id,
-      }));
-      
-      setServices(formattedServices);
-    } catch (error) {
-      console.error("Error fetching work order:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load work order data",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const handleSubmit = async () => {
-    if (!customer) {
-      toast({
-        title: "Validation Error",
-        description: "Customer information is required",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (!vehicleInfo.make || !vehicleInfo.model) {
-      toast({
-        title: "Validation Error",
-        description: "Vehicle information is required",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (services.length === 0) {
-      toast({
-        title: "Validation Error",
-        description: "At least one service is required",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      let vehicleId = vehicleInfo.id;
-      
-      if (!vehicleId) {
-        const { data: vehicleData, error: vehicleError } = await supabase
-          .from("vehicles")
-          .insert({
-            customer_id: customer.id,
-            year: vehicleInfo.year,
-            make: vehicleInfo.make,
-            model: vehicleInfo.model,
-            vin: vehicleInfo.vin,
-            license_plate: vehicleInfo.license_plate,
-            color: vehicleInfo.color,
-          })
-          .select()
-          .single();
-          
-        if (vehicleError) throw vehicleError;
-        vehicleId = vehicleData.id;
-      }
-      
-      const formattedDate = scheduleInfo.date.toISOString().split('T')[0];
-      
-      let workOrderData;
-      if (workOrderId) {
-        const { data, error } = await supabase
-          .from("work_orders")
-          .update({
-            customer_id: customer.id,
-            vehicle_id: vehicleId,
-            scheduled_date: formattedDate,
-            start_time: scheduleInfo.start_time,
-            end_time: scheduleInfo.end_time,
-            bay_id: bayId,
-            notes: notes,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", workOrderId)
-          .select()
-          .single();
-          
-        if (error) throw error;
-        workOrderData = data;
-        
-        const { error: deleteError } = await supabase
-          .from("work_order_services")
-          .delete()
-          .eq("work_order_id", workOrderId);
-          
-        if (deleteError) throw deleteError;
-      } else {
-        const { data, error } = await supabase
-          .from("work_orders")
-          .insert({
-            customer_id: customer.id,
-            vehicle_id: vehicleId,
-            scheduled_date: formattedDate,
-            start_time: scheduleInfo.start_time,
-            end_time: scheduleInfo.end_time,
-            bay_id: bayId,
-            notes: notes,
-            status: "scheduled",
-          })
-          .select()
-          .single();
-          
-        if (error) throw error;
-        workOrderData = data;
-      }
-      
-      const serviceItems = services.map(service => ({
-        work_order_id: workOrderData.id,
-        service_id: service.service_id,
-        service_name: service.service_name,
-        quantity: service.quantity,
-        unit_price: service.unit_price,
-        commission_rate: service.commission_rate,
-        commission_type: service.commission_type,
-        description: service.description,
-        assigned_profile_id: service.assigned_profile_id,
-      }));
-      
-      const { error: servicesError } = await supabase
-        .from("work_order_services")
-        .insert(serviceItems);
-        
-      if (servicesError) throw servicesError;
-      
-      toast({
-        title: "Success",
-        description: workOrderId 
-          ? "Work order updated successfully" 
-          : "Work order created successfully",
-      });
-      
-      queryClient.invalidateQueries({ queryKey: ["workOrders"] });
-      
-      navigate("/admin/work-orders");
-    } catch (error) {
-      console.error("Error submitting work order:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save work order",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  return {
-    isLoading,
-    isSubmitting,
-    customer,
-    setCustomer,
-    vehicleInfo,
-    setVehicleInfo,
-    scheduleInfo,
-    setScheduleInfo,
-    bayId,
-    setBayId,
-    notes,
-    setNotes,
-    services,
-    setServices,
-    handleSubmit,
-  };
-}
+    async function fetchWorkOrderServices() {
+      if (!workOrder?.id) return
 
-export function convertServiceItemForWorkOrder(item: any): ServiceItemType {
+      try {
+        const { data: servicesData, error: servicesError } = await supabase
+          .from('work_order_services')
+          .select(`
+            service_id,
+            quantity,
+            unit_price,
+            commission_rate,
+            commission_type,
+            service_types:service_types!work_order_services_service_id_fkey (
+              name,
+              description
+            )
+          `)
+          .eq('work_order_id', workOrder.id)
+
+        if (servicesError) throw servicesError
+
+        if (servicesData && Array.isArray(servicesData)) {
+          const formattedServices = servicesData.map(service => {
+            const serviceType = service.service_types as unknown as { name: string; description?: string } | null;
+            return {
+              service_id: service.service_id,
+              service_name: serviceType?.name || '',
+              quantity: service.quantity,
+              unit_price: service.unit_price,
+              commission_rate: service.commission_rate ?? 0,
+              commission_type: service.commission_type as 'percentage' | 'flat' | null,
+              description: serviceType?.description || ''
+            };
+          });
+
+          form.setValue('service_items', formattedServices)
+        }
+      } catch (error) {
+        console.error('Error fetching work order services:', error)
+      }
+    }
+
+    fetchWorkOrderServices()
+  }, [workOrder?.id, form])
+
+  const onSubmit = async (values: WorkOrderFormValues) => {
+    const success = await submitWorkOrder(values, workOrder?.id)
+    if (success) {
+      onSuccess?.()
+    }
+  }
+
   return {
-    service_id: item.service_id,
-    service_name: item.service_name,
-    quantity: item.quantity,
-    unit_price: item.unit_price,
-    commission_rate: item.commission_rate,
-    commission_type: item.commission_type === 'flat' ? 'fixed' : item.commission_type,
-    description: item.description || "",
-    assigned_profile_id: item.assigned_profile_id
-  };
+    form,
+    onSubmit
+  }
 }
