@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
@@ -175,7 +176,7 @@ export default function CreateEstimate() {
           customer_id: data.client_id,
           status: "draft",
           total: data.total || 0,
-          notes: data.additional_notes || "",
+          additional_notes: data.additional_notes || "",
           customer_first_name: data.first_name,
           customer_last_name: data.last_name,
           customer_email: data.email,
@@ -251,9 +252,9 @@ export default function CreateEstimate() {
         <div className="max-w-7xl mx-auto py-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <EstimateFormAdapter form={form}>
+              <div className="relative">
                 <CustomerSearch form={form} />
-              </EstimateFormAdapter>
+              </div>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
@@ -261,9 +262,9 @@ export default function CreateEstimate() {
                     <CardTitle>Customer Information</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <EstimateFormAdapter form={form}>
+                    <div className="relative">
                       <CustomerInfoFields form={form} isEditing={false} />
-                    </EstimateFormAdapter>
+                    </div>
                   </CardContent>
                 </Card>
                 
@@ -272,9 +273,9 @@ export default function CreateEstimate() {
                     <CardTitle>Vehicle Information</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <EstimateFormAdapter form={form}>
+                    <div className="relative">
                       <VehicleInfoFields form={form} />
-                    </EstimateFormAdapter>
+                    </div>
                   </CardContent>
                 </Card>
               </div>

@@ -844,6 +844,7 @@ export type Database = {
       }
       estimates: {
         Row: {
+          additional_notes: string | null
           created_at: string
           customer_address: string | null
           customer_city: string | null
@@ -859,7 +860,6 @@ export type Database = {
           customer_unit_number: string | null
           estimate_number: string
           id: string
-          notes: string | null
           status: string
           subtotal: number
           tax_amount: number
@@ -875,6 +875,7 @@ export type Database = {
           vehicle_year: number | null
         }
         Insert: {
+          additional_notes?: string | null
           created_at?: string
           customer_address?: string | null
           customer_city?: string | null
@@ -890,7 +891,6 @@ export type Database = {
           customer_unit_number?: string | null
           estimate_number: string
           id?: string
-          notes?: string | null
           status?: string
           subtotal?: number
           tax_amount?: number
@@ -906,6 +906,7 @@ export type Database = {
           vehicle_year?: number | null
         }
         Update: {
+          additional_notes?: string | null
           created_at?: string
           customer_address?: string | null
           customer_city?: string | null
@@ -921,7 +922,6 @@ export type Database = {
           customer_unit_number?: string | null
           estimate_number?: string
           id?: string
-          notes?: string | null
           status?: string
           subtotal?: number
           tax_amount?: number
