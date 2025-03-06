@@ -9,6 +9,7 @@ import { ArrowLeft } from "lucide-react"
 import { PageTitle } from "@/components/shared/PageTitle"
 import { toast } from "sonner"
 import { Card, CardContent } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function EditWorkOrder() {
   const { id } = useParams()
@@ -74,30 +75,36 @@ export default function EditWorkOrder() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <PageTitle 
-          title="Edit Work Order" 
-          description="Update the work order details using the form below."
-        />
+    <div className="flex flex-col h-full">
+      <div className="p-6 pb-0">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <PageTitle 
+            title="Edit Work Order" 
+            description="Update the work order details using the form below."
+          />
+        </div>
       </div>
       
-      <CardContent className="p-0">
-        <WorkOrderForm
-          workOrder={workOrder}
-          onSuccess={() => {
-            toast.success("Work order updated successfully")
-            navigate('/work-orders')
-          }}
-        />
-      </CardContent>
+      <ScrollArea className="flex-1 p-6 pt-4">
+        <Card className="border-0 shadow-none">
+          <CardContent className="p-0">
+            <WorkOrderForm
+              workOrder={workOrder}
+              onSuccess={() => {
+                toast.success("Work order updated successfully")
+                navigate('/work-orders')
+              }}
+            />
+          </CardContent>
+        </Card>
+      </ScrollArea>
     </div>
   )
 }
