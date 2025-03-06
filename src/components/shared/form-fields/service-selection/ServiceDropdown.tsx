@@ -1,5 +1,5 @@
 
-import { ServiceDropdownProps } from "./types";
+import { ServiceDropdownProps, ServiceType } from "./types";
 import {
   Select,
   SelectContent,
@@ -16,10 +16,6 @@ export function ServiceDropdown({
   handleServiceSelect,
   serviceId
 }: ServiceDropdownProps) {
-  if (!selectedServiceName || !servicesByType || !setOpen || !handleServiceSelect) {
-    return null;
-  }
-
   return (
     <Select
       value={serviceId}
@@ -35,7 +31,7 @@ export function ServiceDropdown({
       <SelectContent>
         {Object.entries(servicesByType).map(([category, services]) => (
           <div key={category}>
-            {services && Array.isArray(services) && services.map((service) => (
+            {services.map((service) => (
               <SelectItem key={service.id} value={service.id}>
                 {service.name}
               </SelectItem>
