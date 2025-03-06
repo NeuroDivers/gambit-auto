@@ -17,6 +17,11 @@ const formSchema = z.object({
   vehicle_model: z.string().min(1, "Vehicle model is required"),
   vehicle_year: z.number().min(1900).max(new Date().getFullYear() + 1),
   vehicle_serial: z.string().optional(), // Changed from required to optional
+  vehicle_color: z.string().optional(),
+  vehicle_body_class: z.string().optional(),
+  vehicle_doors: z.number().nullable().optional(),
+  vehicle_trim: z.string().optional(),
+  vehicle_license_plate: z.string().optional(),
   additional_notes: z.string().optional(),
   address: z.string().optional(),
   street_address: z.string().optional(),
@@ -37,7 +42,9 @@ const formSchema = z.object({
     commission_rate: z.number(),
     commission_type: z.enum(['percentage', 'flat']).nullable(),
     description: z.string().optional()
-  }))
+  })),
+  save_vehicle: z.boolean().optional(),
+  is_primary_vehicle: z.boolean().optional()
 })
 
 export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, defaultStartTime?: Date) {
@@ -55,6 +62,11 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
       vehicle_model: workOrder?.vehicle_model || "",
       vehicle_year: workOrder?.vehicle_year || new Date().getFullYear(),
       vehicle_serial: workOrder?.vehicle_serial || "",
+      vehicle_color: "",
+      vehicle_body_class: "",
+      vehicle_doors: null,
+      vehicle_trim: "",
+      vehicle_license_plate: "",
       additional_notes: workOrder?.additional_notes || "",
       address: workOrder?.address || "",
       street_address: workOrder?.street_address || "",
@@ -67,7 +79,9 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
       estimated_duration: workOrder?.estimated_duration ? parseInt(workOrder.estimated_duration.toString()) : null,
       end_time: workOrder?.end_time ? new Date(workOrder.end_time) : null,
       assigned_bay_id: workOrder?.assigned_bay_id || null,
-      service_items: []
+      service_items: [],
+      save_vehicle: false,
+      is_primary_vehicle: false
     }
   })
 

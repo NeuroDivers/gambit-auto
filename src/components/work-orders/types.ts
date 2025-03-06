@@ -12,9 +12,11 @@ export interface WorkOrderFormValues {
   vehicle_model: string
   vehicle_year: number
   vehicle_serial: string
+  vehicle_color?: string
   vehicle_body_class?: string
   vehicle_doors?: number | null
   vehicle_trim?: string
+  vehicle_license_plate?: string
   additional_notes?: string
   media_url?: string | null
   address?: string

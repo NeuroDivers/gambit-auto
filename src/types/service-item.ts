@@ -25,6 +25,11 @@ export interface VehicleInfo {
   model: string;
   year: number;
   vin: string;
+  color?: string;
+  trim?: string;
+  doors?: number;
+  body_class?: string;
+  license_plate?: string;
   saveToAccount?: boolean;
 }
 
