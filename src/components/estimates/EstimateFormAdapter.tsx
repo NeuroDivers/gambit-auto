@@ -14,7 +14,8 @@ interface EstimateFormAdapterProps {
  * that expect a WorkOrderFormValues form.
  * 
  * Since the EstimateFormValues interface now includes all fields from
- * WorkOrderFormValues, we can use a simple type assertion.
+ * WorkOrderFormValues with the same field names, we can use a simple
+ * type assertion.
  */
 export function EstimateFormAdapter({ form, children }: EstimateFormAdapterProps) {
   // We can now safely cast the form since the interfaces are compatible

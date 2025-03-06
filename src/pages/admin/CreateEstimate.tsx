@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
@@ -75,8 +76,10 @@ export default function CreateEstimate() {
   }, [form.watch]);
 
   useEffect(() => {
+    const serviceItems = form.getValues('service_items') || [];
     const services = form.getValues('services') || [];
     
+    // Calculate total based on services for consistency with existing code
     const total = services.reduce((sum, service) => {
       const serviceTotal = (service.quantity || 1) * (service.unit_price || 0);
       
@@ -90,7 +93,7 @@ export default function CreateEstimate() {
     
     setSubtotal(total);
     form.setValue('total', total);
-  }, [form.watch('services')]);
+  }, [form.watch('service_items'), form.watch('services')]);
 
   const onSubmit = async (data: EstimateFormValues) => {
     setIsSubmitting(true)

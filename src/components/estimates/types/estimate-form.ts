@@ -1,4 +1,3 @@
-
 import { ServiceItemType } from "@/types/service-item";
 
 /**
@@ -8,12 +7,12 @@ import { ServiceItemType } from "@/types/service-item";
  */
 export interface EstimateFormValues {
   // Customer information
-  client_id: string;
   first_name: string;
   last_name: string;
   email: string;
   phone_number: string;
   contact_preference: "phone" | "email";
+  client_id: string;
   
   // Address information
   street_address: string;
@@ -46,13 +45,15 @@ export interface EstimateFormValues {
   
   // Additional fields
   additional_notes?: string;
-  is_primary_vehicle: boolean;
-  save_vehicle: boolean;
+  is_primary_vehicle?: boolean;
+  save_vehicle?: boolean;
   media_url?: string | null;
   
-  // Estimate-specific fields
-  services: any[];
-  total: number;
+  // Estimate-specific fields (not in WorkOrderFormValues)
   notes: string;
+  total: number;
   vehicle_id: string;
+  // We'll rename services to match the WorkOrderFormValues pattern
+  // but still keep the field for backward compatibility
+  services?: any[];
 }
