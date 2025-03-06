@@ -43,3 +43,13 @@ export interface WorkOrderFormProps {
 
 // Export the WorkOrder type
 export type WorkOrder = BaseWorkOrder;
+
+// Customer type definition for FormSections
+export interface CustomerType {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email?: string;
+  phone_number?: string;
+  // Add other customer fields as needed
+}

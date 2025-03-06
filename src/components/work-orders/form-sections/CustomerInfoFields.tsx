@@ -1,19 +1,24 @@
 
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { UseFormReturn, useFormContext } from "react-hook-form"
-import { WorkOrderFormValues } from "../types"
-import { AddressFields } from "@/components/shared/form-sections/AddressFields"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useFormContext } from "react-hook-form";
+import { CustomerType } from "../types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface CustomerInfoFieldsProps {
-  form: UseFormReturn<WorkOrderFormValues>
-  isEditing: boolean
-  customerId?: string | null
+  customerId?: string | null;
+  onSelectCustomer?: (customer: CustomerType | null) => void;
 }
 
-export function CustomerInfoFields({ form, isEditing, customerId }: CustomerInfoFieldsProps) {
-  const { control } = form
+export function CustomerInfoFields({ customerId, onSelectCustomer }: CustomerInfoFieldsProps) {
+  const form = useFormContext();
+  
+  if (!form) {
+    console.error("CustomerInfoFields must be used within a FormProvider");
+    return null;
+  }
+  
+  const { control } = form;
   
   return (
     <Card>
@@ -78,11 +83,8 @@ export function CustomerInfoFields({ form, isEditing, customerId }: CustomerInfo
               )}
             />
           </div>
-          
-          {/* Address Fields Section - Pass the full form object */}
-          <AddressFields form={form} fieldPrefix="" />
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

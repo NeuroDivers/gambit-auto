@@ -19,8 +19,12 @@ export function ServiceBaysList() {
 
   if (isLoading) {
     return (
-      <div className="animate-pulse flex items-center justify-center h-40 text-primary/60 text-lg">
-        Loading service bays...
+      <div className="flex items-center justify-center h-40">
+        <div className="space-y-3 w-full max-w-md">
+          <div className="h-6 bg-muted/60 rounded animate-pulse w-3/4 mx-auto"></div>
+          <div className="h-32 bg-muted/60 rounded-xl animate-pulse"></div>
+          <div className="h-32 bg-muted/60 rounded-xl animate-pulse"></div>
+        </div>
       </div>
     )
   }
@@ -35,13 +39,8 @@ export function ServiceBaysList() {
     }
   }
 
-  const item = {
-    hidden: { y: 20, opacity: 0 },
-    show: { y: 0, opacity: 1 }
-  }
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <BayHeader onAddBay={() => setIsDialogOpen(true)} />
       
       {mounted && (
@@ -52,13 +51,12 @@ export function ServiceBaysList() {
           animate="show"
         >
           {serviceBays?.map((bay) => (
-            <motion.div key={bay.id} variants={item}>
-              <ServiceBayCard
-                bay={bay}
-                services={bay.bay_services || []}
-                availableServices={availableServices || []}
-              />
-            </motion.div>
+            <ServiceBayCard
+              key={bay.id}
+              bay={bay}
+              services={bay.bay_services || []}
+              availableServices={availableServices || []}
+            />
           ))}
         </motion.div>
       )}
