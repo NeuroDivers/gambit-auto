@@ -5,7 +5,7 @@ export interface ServiceItemType {
   quantity: number;
   unit_price: number;
   commission_rate: number;
-  commission_type: 'percentage' | 'flat' | null;
+  commission_type: 'percentage' | 'fixed' | null;
   description?: string;
   is_parent?: boolean;
   sub_services?: ServiceItemType[];
@@ -18,6 +18,12 @@ export interface ServiceDropdownProps {
   service: ServiceItemType;
   onEdit: (service: ServiceItemType) => void;
   onRemove: (serviceId: string) => void;
+  selectedServiceName?: string;
+  servicesByType?: Record<string, any[]>;
+  open?: boolean;
+  setOpen?: (open: boolean) => void;
+  handleServiceSelect?: (serviceId: string) => void;
+  serviceId?: string;
 }
 
 export interface ServiceItemProps {
@@ -26,6 +32,8 @@ export interface ServiceItemProps {
   onRemove: (serviceId: string) => void;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+  availableServices?: any[];
+  onChange?: (service: ServiceItemType) => void;
 }
 
 export interface ServiceItemFormProps {
@@ -34,6 +42,10 @@ export interface ServiceItemFormProps {
   onCancel: () => void;
   showCommission?: boolean;
   showAssignedStaff?: boolean;
+  services?: ServicesByType;
+  onRemove?: () => void;
+  onChange?: (service: ServiceItemType) => void;
+  disabled?: boolean;
 }
 
 export interface ServiceQuantityPriceProps {
@@ -44,6 +56,10 @@ export interface ServiceQuantityPriceProps {
 export interface ServiceDescriptionProps {
   description: string;
   onChange: (value: string) => void;
+  selectedServiceId?: string;
+  servicesByType?: ServicesByType;
+  expanded?: boolean;
+  onExpandToggle?: () => void;
 }
 
 export interface ServiceSelectionFieldProps {
@@ -52,4 +68,8 @@ export interface ServiceSelectionFieldProps {
   showCommission?: boolean;
   showAssignedStaff?: boolean;
   disabled?: boolean;
+  allowPriceEdit?: boolean;
+  onServicesChange?: (services: ServiceItemType[]) => void;
 }
+
+export type ServicesByType = Record<string, any[]>;
