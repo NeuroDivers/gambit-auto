@@ -23,7 +23,7 @@ export function FormSections({
 }: FormSectionsProps) {
   return (
     <div className="space-y-6">
-      <CustomerInfoFields form={form} isEditing={isEditing} customerId={customerId} />
+      <CustomerInfoFields form={form} isEditing={isEditing} />
       
       <Separator />
       
