@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useForm, UseFormReturn } from "react-hook-form"
@@ -22,6 +21,7 @@ import { VehicleInfoFields } from "@/components/work-orders/form-sections/Vehicl
 import { ServiceSelectionFields } from "@/components/work-orders/form-sections/ServiceSelectionFields"
 import { SchedulingFields } from "@/components/work-orders/form-sections/SchedulingFields"
 import { NotesFields } from "@/components/work-orders/form-sections/NotesFields"
+import { CustomerSearch } from "@/components/estimates/form-sections/CustomerSearch"
 
 const estimateSchema = z.object({
   customer_first_name: z.string().min(1, "First name is required"),
@@ -380,6 +380,10 @@ export default function CreateEstimate() {
 
       <div className="flex-1 px-6 py-6 overflow-auto">
         <div className="max-w-7xl mx-auto space-y-6">
+          {!requestId && (
+            <CustomerSearch form={form} />
+          )}
+          
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <Card>
@@ -397,6 +401,7 @@ export default function CreateEstimate() {
                       <TabsTrigger value="scheduling">Scheduling</TabsTrigger>
                       <TabsTrigger value="notes">Notes</TabsTrigger>
                     </TabsList>
+                    
                     <TabsContent value="customer" className="mt-0">
                       <EstimateFormAdapter form={form}>
                         <ClientInfoFields form={form as unknown as UseFormReturn<WorkOrderFormValues>} />
