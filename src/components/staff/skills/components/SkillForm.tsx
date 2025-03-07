@@ -1,29 +1,31 @@
 
+import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { ServiceType } from "../types";
 
 interface SkillFormProps {
-  selectedServiceId: string;
-  setSelectedServiceId: (id: string) => void;
-  proficiency: string;
-  setProficiency: (value: string) => void;
-  handleAddSkill: () => void;
-  isAddingSkill: boolean;
-  availableServices: ServiceType[];
-  isLoadingServices: boolean;
+  serviceTypes?: ServiceType[];
+  onSubmit: (serviceTypeId: string, level: string) => void;
+  onCancel: () => void;
 }
 
 export function SkillForm({
-  selectedServiceId,
-  setSelectedServiceId,
-  proficiency,
-  setProficiency,
-  handleAddSkill,
-  isAddingSkill,
-  availableServices,
-  isLoadingServices
+  serviceTypes = [],
+  onSubmit,
+  onCancel
 }: SkillFormProps) {
+  const [selectedServiceId, setSelectedServiceId] = useState("");
+  const [proficiency, setProficiency] = useState("intermediate");
+
+  const handleAddSkill = () => {
+    if (selectedServiceId) {
+      onSubmit(selectedServiceId, proficiency);
+      setSelectedServiceId("");
+      setProficiency("intermediate");
+    }
+  };
+
   return (
     <div className="bg-muted/50 p-4 rounded-lg">
       <h3 className="text-lg font-medium mb-4">Add New Skill</h3>
@@ -33,13 +35,12 @@ export function SkillForm({
           <Select 
             value={selectedServiceId} 
             onValueChange={setSelectedServiceId}
-            disabled={isLoadingServices || isAddingSkill}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select a service" />
             </SelectTrigger>
             <SelectContent>
-              {availableServices.map(service => (
+              {serviceTypes.map(service => (
                 <SelectItem key={service.id} value={service.id}>
                   {service.name}
                 </SelectItem>
@@ -53,7 +54,6 @@ export function SkillForm({
           <Select 
             value={proficiency} 
             onValueChange={setProficiency}
-            disabled={isAddingSkill}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select level" />
@@ -67,16 +67,25 @@ export function SkillForm({
           </Select>
         </div>
         
-        <div className="flex items-end">
+        <div className="flex items-end gap-2">
           <Button 
             onClick={handleAddSkill} 
-            disabled={!selectedServiceId || isAddingSkill}
+            disabled={!selectedServiceId}
             className="w-full md:w-auto"
           >
-            {isAddingSkill ? 'Adding...' : 'Add Skill'}
+            Add Skill
+          </Button>
+          <Button 
+            onClick={onCancel}
+            variant="outline"
+            className="w-full md:w-auto"
+          >
+            Cancel
           </Button>
         </div>
       </div>
     </div>
   );
 }
+
+export default SkillForm;

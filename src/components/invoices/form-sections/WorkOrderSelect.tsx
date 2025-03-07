@@ -2,29 +2,41 @@
 import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { UseFormReturn } from "react-hook-form";
+import { InvoiceFormValues } from "../types";
 
 export interface WorkOrderSelectProps {
-  value: string;
-  onChange: (workOrderId: string) => Promise<void>;
-  workOrders: any[];
+  value?: string;
+  onChange?: (workOrderId: string) => Promise<void>;
+  workOrders?: any[];
   disabled?: boolean;
+  form?: UseFormReturn<InvoiceFormValues>;
 }
 
 export const WorkOrderSelect: React.FC<WorkOrderSelectProps> = ({ 
   value, 
   onChange, 
-  workOrders, 
-  disabled = false 
+  workOrders = [], 
+  disabled = false,
+  form
 }) => {
+  const workOrderId = form ? form.watch('work_order_id') || '' : value || '';
+
   const handleChange = async (id: string) => {
-    await onChange(id);
+    if (form) {
+      form.setValue('work_order_id', id);
+    }
+    
+    if (onChange) {
+      await onChange(id);
+    }
   };
 
   return (
     <div className="space-y-2">
       <Label htmlFor="workOrder">Work Order</Label>
       <Select
-        value={value}
+        value={workOrderId}
         onValueChange={handleChange}
         disabled={disabled}
       >

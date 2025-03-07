@@ -26,6 +26,26 @@ export interface VehicleInfoFieldsProps {
   setMileage?: (value: number) => void;
   readOnly?: boolean;
   customerId?: string | null;
+  
+  // Additional props for compatibility with older components
+  vehicleMake?: string;
+  setVehicleMake?: (value: string) => void;
+  vehicleModel?: string;
+  setVehicleModel?: (value: string) => void;
+  vehicleYear?: number | string;
+  setVehicleYear?: (value: string | number) => void;
+  vehicleVin?: string;
+  setVehicleVin?: (value: string) => void;
+  vehicleColor?: string;
+  setVehicleColor?: (value: string) => void;
+  vehicleTrim?: string;
+  setVehicleTrim?: (value: string) => void;
+  vehicleBodyClass?: string;
+  setVehicleBodyClass?: (value: string) => void;
+  vehicleDoors?: number;
+  setVehicleDoors?: (value: number) => void;
+  vehicleLicensePlate?: string;
+  setVehicleLicensePlate?: (value: string) => void;
 }
 
 export const VehicleInfoFields: React.FC<VehicleInfoFieldsProps> = ({
@@ -51,23 +71,85 @@ export const VehicleInfoFields: React.FC<VehicleInfoFieldsProps> = ({
   setMileage,
   readOnly = false,
   customerId,
+  vehicleMake,
+  setVehicleMake,
+  vehicleModel,
+  setVehicleModel,
+  vehicleYear,
+  setVehicleYear,
+  vehicleVin,
+  setVehicleVin,
+  vehicleColor,
+  setVehicleColor,
+  vehicleTrim,
+  setVehicleTrim,
+  vehicleBodyClass,
+  setVehicleBodyClass,
+  vehicleDoors,
+  setVehicleDoors,
+  vehicleLicensePlate,
+  setVehicleLicensePlate
 }) => {
+  // Handle both naming conventions (make/vehicleMake)
+  const actualMake = vehicleMake !== undefined ? vehicleMake : make;
+  const actualModel = vehicleModel !== undefined ? vehicleModel : model;
+  const actualYear = vehicleYear !== undefined ? vehicleYear : year;
+  const actualVin = vehicleVin !== undefined ? vehicleVin : vin;
+  const actualColor = vehicleColor !== undefined ? vehicleColor : color;
+  const actualTrim = vehicleTrim !== undefined ? vehicleTrim : trim;
+  const actualBodyClass = vehicleBodyClass !== undefined ? vehicleBodyClass : bodyClass;
+  const actualDoors = vehicleDoors !== undefined ? vehicleDoors : doors;
+  const actualLicensePlate = vehicleLicensePlate !== undefined ? vehicleLicensePlate : licensePlate;
+
+  const handleMakeChange = (value: string) => {
+    if (setVehicleMake) setVehicleMake(value);
+    else if (setMake) setMake(value);
+  };
+
+  const handleModelChange = (value: string) => {
+    if (setVehicleModel) setVehicleModel(value);
+    else if (setModel) setModel(value);
+  };
+
   const handleYearChange = (value: string) => {
     const numValue = parseInt(value);
     if (!isNaN(numValue)) {
-      setYear(numValue);
-    } else {
-      setYear("");
+      if (setVehicleYear) setVehicleYear(numValue);
+      else if (setYear) setYear(numValue);
     }
   };
 
+  const handleVinChange = (value: string) => {
+    if (setVehicleVin) setVehicleVin(value);
+    else if (setVin) setVin(value);
+  };
+
+  const handleColorChange = (value: string) => {
+    if (setVehicleColor) setVehicleColor(value);
+    else if (setColor) setColor(value);
+  };
+
+  const handleTrimChange = (value: string) => {
+    if (setVehicleTrim) setVehicleTrim(value);
+    else if (setTrim) setTrim(value);
+  };
+
+  const handleBodyClassChange = (value: string) => {
+    if (setVehicleBodyClass) setVehicleBodyClass(value);
+    else if (setBodyClass) setBodyClass(value);
+  };
+
   const handleDoorsChange = (value: string) => {
-    if (setDoors) {
-      const numValue = parseInt(value);
-      if (!isNaN(numValue)) {
-        setDoors(numValue);
-      }
+    const numValue = parseInt(value);
+    if (!isNaN(numValue)) {
+      if (setVehicleDoors) setVehicleDoors(numValue);
+      else if (setDoors) setDoors(numValue);
     }
+  };
+
+  const handleLicensePlateChange = (value: string) => {
+    if (setVehicleLicensePlate) setVehicleLicensePlate(value);
+    else if (setLicensePlate) setLicensePlate(value);
   };
 
   const handleMileageChange = (value: string) => {
@@ -86,8 +168,8 @@ export const VehicleInfoFields: React.FC<VehicleInfoFieldsProps> = ({
           <Label htmlFor="make">Make</Label>
           <Input
             id="make"
-            value={make}
-            onChange={(e) => setMake(e.target.value)}
+            value={actualMake || ""}
+            onChange={(e) => handleMakeChange(e.target.value)}
             placeholder="Vehicle make"
             readOnly={readOnly}
           />
@@ -96,8 +178,8 @@ export const VehicleInfoFields: React.FC<VehicleInfoFieldsProps> = ({
           <Label htmlFor="model">Model</Label>
           <Input
             id="model"
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
+            value={actualModel || ""}
+            onChange={(e) => handleModelChange(e.target.value)}
             placeholder="Vehicle model"
             readOnly={readOnly}
           />
@@ -106,7 +188,7 @@ export const VehicleInfoFields: React.FC<VehicleInfoFieldsProps> = ({
           <Label htmlFor="year">Year</Label>
           <Input
             id="year"
-            value={year}
+            value={actualYear || ""}
             onChange={(e) => handleYearChange(e.target.value)}
             placeholder="Vehicle year"
             type="number"
@@ -119,46 +201,46 @@ export const VehicleInfoFields: React.FC<VehicleInfoFieldsProps> = ({
         <Label htmlFor="vin">VIN</Label>
         <Input
           id="vin"
-          value={vin}
-          onChange={(e) => setVin(e.target.value)}
+          value={actualVin || ""}
+          onChange={(e) => handleVinChange(e.target.value)}
           placeholder="Vehicle identification number"
           readOnly={readOnly}
         />
       </div>
 
-      {(setColor || setTrim || setLicensePlate) && (
+      {(setColor || setVehicleColor || setTrim || setVehicleTrim || setLicensePlate || setVehicleLicensePlate) && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {setColor && (
+          {(setColor || setVehicleColor) && (
             <div className="space-y-2">
               <Label htmlFor="color">Color</Label>
               <Input
                 id="color"
-                value={color || ""}
-                onChange={(e) => setColor(e.target.value)}
+                value={actualColor || ""}
+                onChange={(e) => handleColorChange(e.target.value)}
                 placeholder="Vehicle color"
                 readOnly={readOnly}
               />
             </div>
           )}
-          {setTrim && (
+          {(setTrim || setVehicleTrim) && (
             <div className="space-y-2">
               <Label htmlFor="trim">Trim</Label>
               <Input
                 id="trim"
-                value={trim || ""}
-                onChange={(e) => setTrim(e.target.value)}
+                value={actualTrim || ""}
+                onChange={(e) => handleTrimChange(e.target.value)}
                 placeholder="Vehicle trim"
                 readOnly={readOnly}
               />
             </div>
           )}
-          {setLicensePlate && (
+          {(setLicensePlate || setVehicleLicensePlate) && (
             <div className="space-y-2">
               <Label htmlFor="licensePlate">License Plate</Label>
               <Input
                 id="licensePlate"
-                value={licensePlate || ""}
-                onChange={(e) => setLicensePlate(e.target.value)}
+                value={actualLicensePlate || ""}
+                onChange={(e) => handleLicensePlateChange(e.target.value)}
                 placeholder="License plate"
                 readOnly={readOnly}
               />
@@ -167,26 +249,26 @@ export const VehicleInfoFields: React.FC<VehicleInfoFieldsProps> = ({
         </div>
       )}
 
-      {(setBodyClass || setDoors || setMileage) && (
+      {(setBodyClass || setVehicleBodyClass || setDoors || setVehicleDoors || setMileage) && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {setBodyClass && (
+          {(setBodyClass || setVehicleBodyClass) && (
             <div className="space-y-2">
               <Label htmlFor="bodyClass">Body Type</Label>
               <Input
                 id="bodyClass"
-                value={bodyClass || ""}
-                onChange={(e) => setBodyClass(e.target.value)}
+                value={actualBodyClass || ""}
+                onChange={(e) => handleBodyClassChange(e.target.value)}
                 placeholder="Body type"
                 readOnly={readOnly}
               />
             </div>
           )}
-          {setDoors && (
+          {(setDoors || setVehicleDoors) && (
             <div className="space-y-2">
               <Label htmlFor="doors">Doors</Label>
               <Input
                 id="doors"
-                value={doors || ""}
+                value={actualDoors || ""}
                 onChange={(e) => handleDoorsChange(e.target.value)}
                 placeholder="Number of doors"
                 type="number"

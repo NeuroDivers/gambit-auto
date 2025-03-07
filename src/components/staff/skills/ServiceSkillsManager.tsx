@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useStaffSkills } from "./hooks/useStaffSkills";
-import { SkillForm } from "./components/SkillForm";
+import SkillForm from "./components/SkillForm";
 import { SkillsList } from "./components/SkillsList";
 import { Plus } from "lucide-react";
 
@@ -81,3 +81,5 @@ export function ServiceSkillsManager({ profileId, isCurrentUser = false }: Servi
     </Card>
   );
 }
+
+export default ServiceSkillsManager;
