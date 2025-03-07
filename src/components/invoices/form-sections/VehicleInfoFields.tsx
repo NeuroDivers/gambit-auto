@@ -1,14 +1,14 @@
 
-import React from "react";
-import { Input } from "@/components/ui/input";
+import React from 'react';
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 export interface VehicleInfoFieldsProps {
   make: string;
   setMake: (value: string) => void;
   model: string;
   setModel: (value: string) => void;
-  year: number | string;
+  year: number | null;
   setYear: (value: string | number) => void;
   vin: string;
   setVin: (value: string) => void;
@@ -18,17 +18,26 @@ export interface VehicleInfoFieldsProps {
   setTrim?: (value: string) => void;
   bodyClass?: string;
   setBodyClass?: (value: string) => void;
-  doors?: number;
-  setDoors?: (value: number) => void;
+  doors?: string;
+  setDoors?: (value: string) => void;
   licensePlate?: string;
   setLicensePlate?: (value: string) => void;
-  mileage?: number;
-  setMileage?: (value: number) => void;
-  readOnly?: boolean;
-  customerId?: string | null;
+  
+  // Alternative prop names for compatibility
+  vehicleMake?: string;
+  setVehicleMake?: (value: string) => void;
+  vehicleModel?: string;
+  setVehicleModel?: (value: string) => void;
+  vehicleYear?: number | null;
+  setVehicleYear?: (value: string | number) => void;
+  vehicleVin?: string;
+  setVehicleVin?: (value: string) => void;
+  vehicleColor?: string;
+  setVehicleColor?: (value: string) => void;
 }
 
-const VehicleInfoFields: React.FC<VehicleInfoFieldsProps> = ({
+export function VehicleInfoFields({
+  // Primary props
   make,
   setMake,
   model,
@@ -37,177 +46,166 @@ const VehicleInfoFields: React.FC<VehicleInfoFieldsProps> = ({
   setYear,
   vin,
   setVin,
-  color,
+  color = '',
   setColor,
-  trim,
+  trim = '',
   setTrim,
-  bodyClass,
+  bodyClass = '',
   setBodyClass,
-  doors,
+  doors = '',
   setDoors,
-  licensePlate,
+  licensePlate = '',
   setLicensePlate,
-  mileage,
-  setMileage,
-  readOnly = false,
-  customerId,
-}) => {
+  
+  // Alternative naming props
+  vehicleMake,
+  setVehicleMake,
+  vehicleModel,
+  setVehicleModel,
+  vehicleYear,
+  setVehicleYear,
+  vehicleVin,
+  setVehicleVin,
+  vehicleColor,
+  setVehicleColor,
+}: VehicleInfoFieldsProps) {
+  // Use alternative props if primary props are not provided
+  const actualMake = make || vehicleMake || '';
+  const actualModel = model || vehicleModel || '';
+  const actualYear = year || vehicleYear || null;
+  const actualVin = vin || vehicleVin || '';
+  const actualColor = color || vehicleColor || '';
+  
+  const handleMakeChange = (value: string) => {
+    if (setMake) setMake(value);
+    if (setVehicleMake) setVehicleMake(value);
+  };
+  
+  const handleModelChange = (value: string) => {
+    if (setModel) setModel(value);
+    if (setVehicleModel) setVehicleModel(value);
+  };
+  
   const handleYearChange = (value: string) => {
-    const numValue = parseInt(value);
-    if (!isNaN(numValue)) {
-      setYear(numValue);
-    } else {
-      setYear("");
-    }
+    if (setYear) setYear(value);
+    if (setVehicleYear) setVehicleYear(value);
   };
-
-  const handleDoorsChange = (value: string) => {
-    if (setDoors) {
-      const numValue = parseInt(value);
-      if (!isNaN(numValue)) {
-        setDoors(numValue);
-      }
-    }
+  
+  const handleVinChange = (value: string) => {
+    if (setVin) setVin(value);
+    if (setVehicleVin) setVehicleVin(value);
   };
-
-  const handleMileageChange = (value: string) => {
-    if (setMileage) {
-      const numValue = parseInt(value);
-      if (!isNaN(numValue)) {
-        setMileage(numValue);
-      }
-    }
+  
+  const handleColorChange = (value: string) => {
+    if (setColor) setColor(value);
+    if (setVehicleColor) setVehicleColor(value);
   };
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="vehicleMake">Make</Label>
           <Input
             id="vehicleMake"
-            placeholder="Make"
-            value={make}
-            onChange={(e) => setMake(e.target.value)}
-            readOnly={readOnly}
+            value={actualMake}
+            onChange={(e) => handleMakeChange(e.target.value)}
+            placeholder="Enter vehicle make"
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="vehicleModel">Model</Label>
           <Input
             id="vehicleModel"
-            placeholder="Model"
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            readOnly={readOnly}
+            value={actualModel}
+            onChange={(e) => handleModelChange(e.target.value)}
+            placeholder="Enter vehicle model"
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="vehicleYear">Year</Label>
           <Input
             id="vehicleYear"
-            placeholder="Year"
-            value={year}
+            type="number"
+            value={actualYear || ''}
             onChange={(e) => handleYearChange(e.target.value)}
-            readOnly={readOnly}
+            placeholder="Enter vehicle year"
           />
         </div>
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="vehicleVin">VIN</Label>
         <Input
           id="vehicleVin"
-          placeholder="Vehicle Identification Number"
-          value={vin}
-          onChange={(e) => setVin(e.target.value)}
-          readOnly={readOnly}
+          value={actualVin}
+          onChange={(e) => handleVinChange(e.target.value)}
+          placeholder="Enter vehicle VIN"
         />
       </div>
 
-      {setColor && (
-        <div>
+      {(setColor || setVehicleColor) && (
+        <div className="space-y-2">
           <Label htmlFor="vehicleColor">Color</Label>
           <Input
             id="vehicleColor"
-            placeholder="Color"
-            value={color || ""}
-            onChange={(e) => setColor(e.target.value)}
-            readOnly={readOnly}
+            value={actualColor}
+            onChange={(e) => handleColorChange(e.target.value)}
+            placeholder="Enter vehicle color"
           />
         </div>
       )}
 
-      {setMileage && (
-        <div>
-          <Label htmlFor="vehicleMileage">Mileage</Label>
+      {setTrim && (
+        <div className="space-y-2">
+          <Label htmlFor="vehicleTrim">Trim</Label>
           <Input
-            id="vehicleMileage"
-            placeholder="Mileage"
-            value={mileage || ""}
-            onChange={(e) => handleMileageChange(e.target.value)}
-            readOnly={readOnly}
+            id="vehicleTrim"
+            value={trim}
+            onChange={(e) => setTrim(e.target.value)}
+            placeholder="Enter vehicle trim"
           />
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {setBodyClass && (
-          <div>
-            <Label htmlFor="vehicleBodyClass">Body Class</Label>
-            <Input
-              id="vehicleBodyClass"
-              placeholder="Body Class"
-              value={bodyClass || ""}
-              onChange={(e) => setBodyClass(e.target.value)}
-              readOnly={readOnly}
-            />
-          </div>
-        )}
+      {setBodyClass && (
+        <div className="space-y-2">
+          <Label htmlFor="vehicleBodyClass">Body Class</Label>
+          <Input
+            id="vehicleBodyClass"
+            value={bodyClass}
+            onChange={(e) => setBodyClass(e.target.value)}
+            placeholder="Enter vehicle body class"
+          />
+        </div>
+      )}
 
-        {setTrim && (
-          <div>
-            <Label htmlFor="vehicleTrim">Trim</Label>
-            <Input
-              id="vehicleTrim"
-              placeholder="Trim"
-              value={trim || ""}
-              onChange={(e) => setTrim(e.target.value)}
-              readOnly={readOnly}
-            />
-          </div>
-        )}
-
-        {setDoors && (
-          <div>
-            <Label htmlFor="vehicleDoors">Doors</Label>
-            <Input
-              id="vehicleDoors"
-              placeholder="Number of Doors"
-              value={doors || ""}
-              onChange={(e) => handleDoorsChange(e.target.value)}
-              readOnly={readOnly}
-              type="number"
-              min="0"
-            />
-          </div>
-        )}
-      </div>
+      {setDoors && (
+        <div className="space-y-2">
+          <Label htmlFor="vehicleDoors">Doors</Label>
+          <Input
+            id="vehicleDoors"
+            value={doors}
+            onChange={(e) => setDoors(e.target.value)}
+            placeholder="Enter number of doors"
+          />
+        </div>
+      )}
 
       {setLicensePlate && (
-        <div>
-          <Label htmlFor="vehicleLicensePlate">License Plate</Label>
+        <div className="space-y-2">
+          <Label htmlFor="licensePlate">License Plate</Label>
           <Input
-            id="vehicleLicensePlate"
-            placeholder="License Plate"
-            value={licensePlate || ""}
+            id="licensePlate"
+            value={licensePlate}
             onChange={(e) => setLicensePlate(e.target.value)}
-            readOnly={readOnly}
+            placeholder="Enter license plate"
           />
         </div>
       )}
     </div>
   );
-};
+}
 
+// Also provide a default export for backwards compatibility
 export default VehicleInfoFields;

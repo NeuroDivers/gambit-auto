@@ -2,30 +2,40 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { StaffSkill } from "../types";
+import { Trash } from "lucide-react";
 
-interface SkillCardProps {
+export interface SkillCardProps {
   skill: StaffSkill;
   onRemove: (skillId: string) => void;
   isRemoving: boolean;
+  onUpdate?: (skillId: string, level: string) => void;
 }
 
-export function SkillCard({ skill, onRemove, isRemoving }: SkillCardProps) {
+export function SkillCard({ skill, onRemove, isRemoving, onUpdate }: SkillCardProps) {
   return (
-    <Card key={skill.id}>
-      <CardContent className="flex justify-between items-center p-4">
-        <div>
-          <h4 className="font-medium">{skill.service_types.name}</h4>
-          <p className="text-sm text-muted-foreground capitalize">{skill.proficiency}</p>
+    <Card className="overflow-hidden">
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start">
+          <div className="space-y-1">
+            <h3 className="font-medium">{skill.service_name}</h3>
+            <p className="text-sm text-muted-foreground">
+              Expertise: {skill.expertise_level || 'Beginner'}
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onRemove(skill.id)}
+            disabled={isRemoving}
+            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+            aria-label="Remove skill"
+          >
+            <Trash className="h-4 w-4" />
+          </Button>
         </div>
-        <Button 
-          variant="destructive" 
-          size="sm"
-          onClick={() => onRemove(skill.id)}
-          disabled={isRemoving}
-        >
-          Remove
-        </Button>
       </CardContent>
     </Card>
   );
 }
+
+export default SkillCard;

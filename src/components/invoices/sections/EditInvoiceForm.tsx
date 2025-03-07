@@ -186,7 +186,12 @@ export function EditInvoiceForm({ form, onSubmit, isPending, invoiceId }: EditIn
                 model={form.watch('customer_vehicle_model')}
                 setModel={(value) => form.setValue('customer_vehicle_model', value)}
                 year={form.watch('customer_vehicle_year')}
-                setYear={(value) => Number(value) ? form.setValue('customer_vehicle_year', Number(value)) : null}
+                setYear={(value) => {
+                  const yearValue = Number(value);
+                  if (!isNaN(yearValue)) {
+                    form.setValue('customer_vehicle_year', yearValue);
+                  }
+                }}
                 vin={form.watch('customer_vehicle_vin')}
                 setVin={(value) => form.setValue('customer_vehicle_vin', value)}
                 color={form.watch('customer_vehicle_color')}
