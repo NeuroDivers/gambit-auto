@@ -2,85 +2,91 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { StaffSkill, ServiceType } from "../types";
 import { toast } from "sonner";
+import { StaffSkill, ServiceType } from "../types";
 
-export function useStaffSkills(profileId: string) {
-  const [isAddingSkill, setIsAddingSkill] = useState(false);
+export const useStaffSkills = (profileId: string) => {
   const queryClient = useQueryClient();
+  const [isLoading, setIsLoading] = useState(false);
 
   // Fetch staff skills
-  const { data: skills = [], isLoading: isLoadingSkills } = useQuery({
+  const { data: skills = [], error } = useQuery({
     queryKey: ["staff-skills", profileId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("staff_service_skills")
         .select(`
-          *,
-          service_types (id, name, description)
+          id,
+          service_type_id,
+          expertise_level,
+          profile_id,
+          service_types(id, name, description)
         `)
-        .eq("profileId", profileId);
+        .eq("profile_id", profileId);
 
-      if (error) throw error;
-      
-      // Transform the data to match the StaffSkill interface
-      return data.map((skill: any) => ({
-        id: skill.id,
-        serviceTypeId: skill.serviceTypeId,
-        expertiseLevel: skill.expertiseLevel,
-        profileId: skill.profileId,
-        serviceName: skill.service_types.name,
-        serviceDescription: skill.service_types.description,
-        service_id: skill.serviceTypeId,
-        proficiency: skill.expertiseLevel,
+      if (error) {
+        console.error("Error fetching skills:", error);
+        throw error;
+      }
+
+      // Transform the data to match the StaffSkill type
+      return data.map((item) => ({
+        id: item.id,
+        serviceTypeId: item.service_type_id,
+        expertiseLevel: item.expertise_level,
+        profileId: item.profile_id,
+        serviceName: item.service_types?.name || "",
+        serviceDescription: item.service_types?.description || "",
+        // Add these fields to satisfy the type
+        service_id: item.service_type_id,
+        proficiency: item.expertise_level,
         service_types: {
-          id: skill.service_types.id,
-          name: skill.service_types.name,
-          description: skill.service_types.description
+          id: item.service_types?.id || "",
+          name: item.service_types?.name || "",
+          description: item.service_types?.description || ""
         }
       })) as StaffSkill[];
     },
-    enabled: !!profileId,
   });
 
-  // Fetch service types
-  const { data: serviceTypes = [], isLoading: isLoadingServiceTypes } = useQuery({
+  // Fetch available service types
+  const { data: availableServiceTypes = [] } = useQuery({
     queryKey: ["service-types"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_types")
-        .select("id, name, description")
-        .order("name");
+        .select("id, name, description");
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching service types:", error);
+        throw error;
+      }
+
       return data as ServiceType[];
     },
   });
 
-  // Add skill mutation
-  const addSkillMutation = useMutation({
-    mutationFn: async ({
-      serviceTypeId,
-      expertiseLevel,
-    }: {
-      serviceTypeId: string;
-      expertiseLevel: string;
-    }) => {
+  // Add a new skill
+  const addSkill = useMutation({
+    mutationFn: async ({ service_type_id, expertise_level }: { service_type_id: string; expertise_level: string }) => {
       const { data, error } = await supabase
         .from("staff_service_skills")
         .insert({
-          profileId,
-          serviceTypeId,
-          expertiseLevel,
+          profile_id: profileId,
+          service_type_id,
+          expertise_level,
         })
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error adding skill:", error);
+        throw error;
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff-skills", profileId] });
-      setIsAddingSkill(false);
       toast.success("Skill added successfully");
     },
     onError: (error) => {
@@ -89,22 +95,20 @@ export function useStaffSkills(profileId: string) {
     },
   });
 
-  // Update skill mutation
-  const updateSkillMutation = useMutation({
-    mutationFn: async ({
-      skillId,
-      expertiseLevel,
-    }: {
-      skillId: string;
-      expertiseLevel: string;
-    }) => {
+  // Update skill
+  const updateSkill = useMutation({
+    mutationFn: async ({ skillId, expertise_level }: { skillId: string; expertise_level: string }) => {
       const { data, error } = await supabase
         .from("staff_service_skills")
-        .update({ expertiseLevel })
+        .update({ expertise_level })
         .eq("id", skillId)
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating skill:", error);
+        throw error;
+      }
+
       return data;
     },
     onSuccess: () => {
@@ -117,15 +121,18 @@ export function useStaffSkills(profileId: string) {
     },
   });
 
-  // Delete skill mutation
-  const deleteSkillMutation = useMutation({
+  // Remove skill
+  const removeSkill = useMutation({
     mutationFn: async (skillId: string) => {
       const { error } = await supabase
         .from("staff_service_skills")
         .delete()
         .eq("id", skillId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error removing skill:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff-skills", profileId] });
@@ -137,26 +144,13 @@ export function useStaffSkills(profileId: string) {
     },
   });
 
-  const handleAddSkill = (serviceTypeId: string, expertiseLevel: string) => {
-    addSkillMutation.mutate({ serviceTypeId, expertiseLevel });
-  };
-
-  const handleUpdateSkill = (skillId: string, expertiseLevel: string) => {
-    updateSkillMutation.mutate({ skillId, expertiseLevel });
-  };
-
-  const handleDeleteSkill = (skillId: string) => {
-    deleteSkillMutation.mutate(skillId);
-  };
-
   return {
     skills,
-    serviceTypes,
-    isLoading: isLoadingSkills || isLoadingServiceTypes,
-    isAddingSkill,
-    setIsAddingSkill,
-    handleAddSkill,
-    handleUpdateSkill,
-    handleDeleteSkill,
+    availableServiceTypes,
+    isLoading,
+    error,
+    addSkill,
+    updateSkill,
+    removeSkill,
   };
-}
+};

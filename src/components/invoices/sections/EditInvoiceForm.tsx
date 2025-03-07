@@ -7,8 +7,8 @@ import { InvoiceFormValues, InvoiceItem } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { InvoiceItemsFields } from "../form-sections/InvoiceItemsFields";
 import { InvoiceNotesField } from "../form-sections/InvoiceNotesField";
-import { CustomerInfoFields } from "@/components/invoices/form-sections/CustomerInfoFields";
-import { VehicleInfoFields } from "../form-sections/VehicleInfoFields";
+import CustomerInfoFields from "@/components/invoices/form-sections/CustomerInfoFields";
+import VehicleInfoFields from "../form-sections/VehicleInfoFields";
 import { InvoiceStatusField } from "../form-sections/InvoiceStatusField";
 import { InvoiceServiceItems } from "../form-sections/InvoiceServiceItems";
 import { WorkOrderSelect } from "../form-sections/WorkOrderSelect";
@@ -186,12 +186,7 @@ export function EditInvoiceForm({ form, onSubmit, isPending, invoiceId }: EditIn
                 model={form.watch('customer_vehicle_model')}
                 setModel={(value) => form.setValue('customer_vehicle_model', value)}
                 year={form.watch('customer_vehicle_year')}
-                setYear={(value) => {
-                  const yearValue = Number(value);
-                  if (!isNaN(yearValue)) {
-                    form.setValue('customer_vehicle_year', yearValue);
-                  }
-                }}
+                setYear={(value) => form.setValue('customer_vehicle_year', value)}
                 vin={form.watch('customer_vehicle_vin')}
                 setVin={(value) => form.setValue('customer_vehicle_vin', value)}
                 color={form.watch('customer_vehicle_color')}

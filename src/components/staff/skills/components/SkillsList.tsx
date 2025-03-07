@@ -5,18 +5,11 @@ import { SkillCard } from "./SkillCard";
 interface SkillsListProps {
   skills: StaffSkill[];
   isLoading: boolean;
-  onRemove: (skillId: string) => void;
+  onRemoveSkill: (skillId: string) => void;
   isRemoving: boolean;
-  onUpdate?: (skillId: string, level: string) => void;
 }
 
-export function SkillsList({ 
-  skills, 
-  isLoading, 
-  onRemove, 
-  isRemoving,
-  onUpdate 
-}: SkillsListProps) {
+export function SkillsList({ skills, isLoading, onRemoveSkill, isRemoving }: SkillsListProps) {
   if (isLoading) {
     return <p>Loading skills...</p>;
   }
@@ -31,13 +24,10 @@ export function SkillsList({
         <SkillCard 
           key={skill.id} 
           skill={skill} 
-          onRemove={onRemove} 
+          onRemove={onRemoveSkill} 
           isRemoving={isRemoving}
-          onUpdate={onUpdate}
         />
       ))}
     </div>
   );
 }
-
-export default SkillsList;

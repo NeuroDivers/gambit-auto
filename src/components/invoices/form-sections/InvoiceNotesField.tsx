@@ -23,6 +23,3 @@ export function InvoiceNotesField({ value, onChange, disabled = false }: Invoice
     </div>
   );
 }
-
-// Also provide a default export for backwards compatibility
-export default InvoiceNotesField;

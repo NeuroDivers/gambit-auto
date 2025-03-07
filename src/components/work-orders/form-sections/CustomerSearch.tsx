@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CustomerInfoFields } from '@/components/invoices/form-sections/CustomerInfoFields';
+import CustomerInfoFields from '@/components/invoices/form-sections/CustomerInfoFields';
 
 export function CustomerSearch({ form }: { form: any }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -107,13 +107,13 @@ export function CustomerSearch({ form }: { form: any }) {
           <div>
             <h3 className="text-lg font-medium mb-4">Create New Customer</h3>
             <CustomerInfoFields
-              customerFirstName={form.watch('customer_first_name') || ''}
+              customerFirstName={form.watch('customer_first_name')}
               setCustomerFirstName={(value) => form.setValue('customer_first_name', value)}
-              customerLastName={form.watch('customer_last_name') || ''}
+              customerLastName={form.watch('customer_last_name')}
               setCustomerLastName={(value) => form.setValue('customer_last_name', value)}
-              customerEmail={form.watch('customer_email') || ''}
+              customerEmail={form.watch('customer_email')}
               setCustomerEmail={(value) => form.setValue('customer_email', value)}
-              customerPhone={form.watch('customer_phone') || ''}
+              customerPhone={form.watch('customer_phone')}
               setCustomerPhone={(value) => form.setValue('customer_phone', value)}
             />
             
