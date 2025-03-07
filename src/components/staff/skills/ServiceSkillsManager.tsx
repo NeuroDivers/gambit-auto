@@ -161,7 +161,7 @@ export function ServiceSkillsManager() {
                   size="icon"
                   className="h-5 w-5 rounded-full ml-1 hover:bg-destructive/10"
                   onClick={() => handleRemoveSkill(skill.id)}
-                  disabled={removeSkillMutation.isLoading || removeSkillMutation.isPending}
+                  disabled={removeSkillMutation.isLoading}
                 >
                   <X size={12} />
                 </Button>

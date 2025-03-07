@@ -1,93 +1,84 @@
 
-import { Button } from "@/components/ui/button";
-import { ImagePlus, X } from "lucide-react";
-import { useState } from "react";
-
-export interface ServiceImageUploadProps {
-  images: string[];
-  onImageUpload: (url: string) => void;
-  onRemove: (imageUrl: string) => void;
-}
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { X, Upload } from 'lucide-react';
+import { ServiceImageUploadProps } from './types';
 
 export function ServiceImageUpload({ images, onImageUpload, onRemove }: ServiceImageUploadProps) {
-  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    setIsUploading(true);
-    
-    try {
-      // Mock upload or use actual upload functionality
-      // This is a placeholder - replace with actual image upload logic
-      const mockImageUrl = URL.createObjectURL(files[0]);
-      onImageUpload(mockImageUrl);
-    } catch (error) {
-      console.error("Error uploading image:", error);
-    } finally {
-      setIsUploading(false);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      try {
+        // Convert to base64 for preview
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64String = reader.result as string;
+          onImageUpload(base64String);
+        };
+        reader.readAsDataURL(file);
+      } catch (error) {
+        console.error('Error uploading image:', error);
+      }
     }
-    
-    // Reset the input
-    e.target.value = '';
+
+    // Clear the input so the same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h4 className="text-sm font-medium">Service Images</h4>
-        <div>
-          <input
+      <div>
+        <Label className="text-base font-medium mb-2 block">Upload Images</Label>
+        <div className="flex items-center">
+          <Input
+            ref={fileInputRef}
             type="file"
-            id="image-upload"
-            className="hidden"
             accept="image/*"
             onChange={handleFileChange}
-            disabled={isUploading}
+            className="hidden"
+            multiple
           />
-          <label htmlFor="image-upload">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="cursor-pointer"
-              disabled={isUploading}
-              asChild
-            >
-              <span>
-                <ImagePlus className="mr-2 h-4 w-4" />
-                Add Image
-              </span>
-            </Button>
-          </label>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full"
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            Select Images
+          </Button>
         </div>
       </div>
 
-      {images.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          {images.map((image, index) => (
+      {images && images.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+          {images.map((img, index) => (
             <div key={index} className="relative group">
               <img
-                src={image}
-                alt={`Service image ${index + 1}`}
-                className="w-full h-32 object-cover rounded-md"
+                src={img}
+                alt={`Uploaded image ${index + 1}`}
+                className="rounded-md w-full h-24 object-cover"
               />
               <Button
                 type="button"
                 variant="destructive"
                 size="icon"
-                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => onRemove(image)}
+                className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => onRemove(img)}
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3" />
               </Button>
             </div>
           ))}
-        </div>
-      ) : (
-        <div className="text-center py-8 border border-dashed rounded-md">
-          <p className="text-muted-foreground">No images added yet</p>
         </div>
       )}
     </div>

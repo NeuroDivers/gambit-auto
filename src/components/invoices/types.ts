@@ -106,4 +106,8 @@ export interface UseReactToPrintResult {
   printRef: React.MutableRefObject<any>;
 }
 
-export type UseReactToPrintFn = (content: () => React.ReactInstance | null) => UseReactToPrintResult;
+export interface UseReactToPrintFn {
+  handlePrint: () => void;
+  printRef: React.MutableRefObject<any>;
+}
+

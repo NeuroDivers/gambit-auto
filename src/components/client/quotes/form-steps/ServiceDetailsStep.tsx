@@ -1,161 +1,122 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useFormContext } from 'react-hook-form';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AutoDetailingField } from './service-details/AutoDetailingField';
-import { PPFPackageField } from './service-details/PPFPackageField';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { WindowTintField } from './service-details/WindowTintField';
+import { PPFPackageField } from './service-details/PPFPackageField';
+import { AutoDetailingField } from './service-details/AutoDetailingField';
 import { ServiceImageUpload } from './service-details/ServiceImageUpload';
-import { ServiceItemType } from '@/types/service-item';
 
-interface ServiceDetailsStepProps {
-  form: any;
-  services: ServiceItemType[];
-  serviceId: string;
-  onImageUpload: (file: File) => Promise<string>;
-  onImageRemove: (url: string) => void;
-}
-
-export function ServiceDetailsStep({
-  form,
-  services,
-  serviceId,
-  onImageUpload,
-  onImageRemove
-}: ServiceDetailsStepProps) {
-  // Find the current service being configured
-  const currentService = services.find(s => s.service_id === serviceId);
+export function ServiceDetailsStep() {
+  const form = useFormContext();
+  const selectedService = form.watch('serviceType');
+  const [images, setImages] = useState<string[]>([]);
+  const [serviceDetails, setServiceDetails] = useState<Record<string, any>>({});
   
-  if (!currentService) {
-    return <div>Service not found</div>;
-  }
-
-  const serviceType = getServiceType(currentService.service_name);
+  // Update form values when our local state changes
+  useEffect(() => {
+    form.setValue('details', serviceDetails, { shouldValidate: true });
+  }, [serviceDetails, form]);
   
-  // Get the current service details from the form
-  const serviceDetails = form.watch('service_details') || {};
-  const currentServiceDetails = serviceDetails[serviceId] || {};
+  // Update form values when images change
+  useEffect(() => {
+    form.setValue('images', images, { shouldValidate: true });
+  }, [images, form]);
   
-  // Get the image list for this service
-  const imageList = form.watch('images') || [];
-  
-  // Handler for updating service-specific details
-  const updateServiceDetails = (details: Record<string, any>) => {
-    const updatedDetails = {
-      ...serviceDetails,
-      [serviceId]: {
-        ...currentServiceDetails,
-        ...details
-      }
-    };
+  // Load initial values if they exist
+  useEffect(() => {
+    const existingDetails = form.getValues('details');
+    if (existingDetails) {
+      setServiceDetails(existingDetails);
+    }
     
-    form.setValue('service_details', updatedDetails);
+    const existingImages = form.getValues('images');
+    if (existingImages && existingImages.length > 0) {
+      setImages(existingImages);
+    }
+  }, [form]);
+  
+  const handleDetailsChange = (details: Record<string, any>) => {
+    setServiceDetails(prev => ({
+      ...prev,
+      ...details
+    }));
   };
-
-  // Handler for image upload completion
-  const handleImageUploaded = (imageUrl: string) => {
-    const currentImages = form.watch('images') || [];
-    form.setValue('images', [...currentImages, imageUrl]);
+  
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    form.setValue('description', e.target.value, { shouldValidate: true });
   };
-
-  // Handler to remove an image
+  
+  const handleImageUpload = (imageUrl: string) => {
+    setImages(prev => [...prev, imageUrl]);
+  };
+  
   const handleImageRemove = (imageUrl: string) => {
-    const currentImages = form.watch('images') || [];
-    form.setValue('images', currentImages.filter(url => url !== imageUrl));
-    onImageRemove(imageUrl);
+    setImages(prev => prev.filter(img => img !== imageUrl));
   };
-
-  // Convert File to URL for the image uploader
-  const handleUpload = async (file: File) => {
-    try {
-      const imageUrl = await onImageUpload(file);
-      handleImageUploaded(imageUrl);
-      return imageUrl;
-    } catch (error) {
-      console.error("Image upload failed:", error);
-      return "";
+  
+  // Determine which service-specific form to show
+  const renderServiceSpecificFields = () => {
+    if (!selectedService) return null;
+    
+    switch (selectedService.toLowerCase()) {
+      case 'window tinting':
+        return (
+          <WindowTintField 
+            value={serviceDetails}
+            onChange={handleDetailsChange}
+          />
+        );
+      case 'paint protection film':
+      case 'ppf':
+        return (
+          <PPFPackageField 
+            value={serviceDetails}
+            onChange={handleDetailsChange}
+          />
+        );
+      case 'auto detailing':
+      case 'detailing':
+        return (
+          <AutoDetailingField 
+            value={serviceDetails}
+            onChange={handleDetailsChange}
+          />
+        );
+      default:
+        return null;
     }
   };
-
+  
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold mb-2">
-          Service Details: {currentService.service_name}
-        </h2>
-        <p className="text-muted-foreground">
-          Please provide additional details about this service
-        </p>
-      </div>
-      
       <Card>
         <CardContent className="pt-6">
-          <Tabs defaultValue="details" className="w-full">
-            <TabsList className="mb-4">
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="photos">Photos</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="details" className="space-y-4">
-              {serviceType === 'detailing' && (
-                <AutoDetailingField 
-                  value={currentServiceDetails}
-                  onChange={updateServiceDetails}
-                />
-              )}
-              
-              {serviceType === 'ppf' && (
-                <PPFPackageField
-                  value={currentServiceDetails}
-                  onChange={updateServiceDetails}
-                />
-              )}
-              
-              {serviceType === 'tint' && (
-                <WindowTintField
-                  value={currentServiceDetails}
-                  onChange={updateServiceDetails}
-                />
-              )}
-              
-              {serviceType === 'other' && (
-                <div className="py-4">
-                  <p className="text-muted-foreground">
-                    No additional details are required for this service.
-                  </p>
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="photos">
-              <ServiceImageUpload
-                images={imageList}
-                onUpload={handleUpload}
-                onRemove={handleImageRemove}
+          <div className="space-y-4">
+            <div>
+              <Label className="text-base font-medium mb-2 block">
+                Describe what you need
+              </Label>
+              <Textarea
+                placeholder="Please provide any specific details about your request..."
+                className="min-h-[120px]"
+                value={form.watch('description') || ''}
+                onChange={handleDescriptionChange}
               />
-            </TabsContent>
-          </Tabs>
+            </div>
+            
+            {renderServiceSpecificFields()}
+            
+            <ServiceImageUpload 
+              images={images}
+              onImageUpload={handleImageUpload}
+              onRemove={handleImageRemove}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>
   );
-}
-
-// Helper function to determine service type from service name
-function getServiceType(serviceName: string): 'detailing' | 'ppf' | 'tint' | 'other' {
-  const name = serviceName.toLowerCase();
-  
-  if (name.includes('detail') || name.includes('wash') || name.includes('polish')) {
-    return 'detailing';
-  }
-  
-  if (name.includes('ppf') || name.includes('protection film')) {
-    return 'ppf';
-  }
-  
-  if (name.includes('tint') || name.includes('window')) {
-    return 'tint';
-  }
-  
-  return 'other';
 }

@@ -46,7 +46,7 @@ export function useRemoveSkillMutation(props?: UseRemoveSkillMutationProps) {
 
   return { 
     removeSkill: removeSkillMutation.mutate, 
-    isLoading,
+    isLoading: isLoading || removeSkillMutation.isPending,
     isPending: removeSkillMutation.isPending
   };
 }

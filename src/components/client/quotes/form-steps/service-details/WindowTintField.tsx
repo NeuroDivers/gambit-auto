@@ -1,40 +1,44 @@
 
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
-import type { ServiceDetailFieldProps } from "./types"
+import React from 'react';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { ServiceDetailFieldProps } from './types';
 
-export function WindowTintField({ form, serviceId }: ServiceDetailFieldProps) {
+export function WindowTintField({ value, onChange }: ServiceDetailFieldProps) {
+  const handleTintOptionChange = (selectedOption: string) => {
+    onChange({
+      ...value,
+      tintOption: selectedOption
+    });
+  };
+
   return (
-    <FormField
-      control={form.control}
-      name={`service_details.${serviceId}.tint_type`}
-      render={({ field }) => (
-        <FormItem className="space-y-3">
-          <FormLabel>Tint Type</FormLabel>
-          <FormControl>
-            <RadioGroup
-              onValueChange={field.onChange}
-              defaultValue={field.value}
-              className="flex flex-col space-y-1"
-            >
-              <div className="flex items-center space-x-3 space-y-0">
-                <RadioGroupItem value="two_front" id={`${serviceId}-two_front`} />
-                <Label htmlFor={`${serviceId}-two_front`}>2 Front Windows</Label>
-              </div>
-              <div className="flex items-center space-x-3 space-y-0">
-                <RadioGroupItem value="front_and_rear" id={`${serviceId}-front_and_rear`} />
-                <Label htmlFor={`${serviceId}-front_and_rear`}>Front and Rear Windows</Label>
-              </div>
-              <div className="flex items-center space-x-3 space-y-0">
-                <RadioGroupItem value="complete" id={`${serviceId}-complete`} />
-                <Label htmlFor={`${serviceId}-complete`}>Complete</Label>
-              </div>
-            </RadioGroup>
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  )
+    <div className="space-y-4">
+      <div>
+        <Label className="text-base font-medium mb-2 block">Window Tint Options</Label>
+        <RadioGroup
+          value={value?.tintOption || 'full'}
+          onValueChange={handleTintOptionChange}
+          className="flex flex-col space-y-2"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="full" id="full-tint" />
+            <Label htmlFor="full-tint" className="font-normal">Full Window Tint (All Windows)</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="front-only" id="front-only" />
+            <Label htmlFor="front-only" className="font-normal">Front Windows Only</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="back-only" id="back-only" />
+            <Label htmlFor="back-only" className="font-normal">Back Windows Only</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="custom" id="custom-tint" />
+            <Label htmlFor="custom-tint" className="font-normal">Custom (Specify in description)</Label>
+          </div>
+        </RadioGroup>
+      </div>
+    </div>
+  );
 }
