@@ -46,8 +46,10 @@ export function WorkOrderCalendar() {
           customer_vehicle_model,
           customer_vehicle_year,
           assigned_profile_id,
+          assigned_bay_id,
           created_at,
-          contact_preference
+          contact_preference,
+          estimated_duration
         `)
         .gte("start_time", `${formattedDate}T00:00:00`)
         .lte("start_time", `${formattedDate}T23:59:59`)
@@ -68,64 +70,140 @@ export function WorkOrderCalendar() {
         .filter(order => order.assigned_profile_id)
         .map(order => order.assigned_profile_id);
 
+      // Fetch service bays information
+      const bayIds = data
+        .filter(order => order.assigned_bay_id)
+        .map(order => order.assigned_bay_id);
+
+      // Fetch work order services
+      const workOrderIds = data.map(order => order.id);
+      
+      // Fetch profiles
+      let profilesData = [];
       if (profileIds.length > 0) {
-        const { data: profilesData, error: profilesError } = await supabase
+        const { data: profiles, error: profilesError } = await supabase
           .from("profiles")
           .select("id, first_name, last_name")
           .in("id", profileIds);
 
         if (profilesError) {
           console.error("Error fetching profiles:", profilesError);
-          // Continue without profiles rather than failing completely
+        } else {
+          profilesData = profiles || [];
         }
-
-        // Map profiles to work orders
-        const workOrdersWithProfiles = data.map(order => {
-          if (!order.assigned_profile_id) {
-            return {
-              ...order,
-              created_at: order.created_at || new Date().toISOString(),
-              contact_preference: order.contact_preference || 'email',
-              profiles: {
-                id: null,
-                first_name: null,
-                last_name: null
-              }
-            };
-          }
-
-          const profile = profilesData?.find(p => p.id === order.assigned_profile_id);
-          return {
-            ...order,
-            created_at: order.created_at || new Date().toISOString(),
-            contact_preference: order.contact_preference || 'email',
-            profiles: profile ? {
-              id: profile.id,
-              first_name: profile.first_name,
-              last_name: profile.last_name
-            } : {
-              id: null,
-              first_name: null,
-              last_name: null
-            }
-          };
-        });
-
-        return workOrdersWithProfiles as WorkOrder[];
       }
 
-      // If no profiles needed, just transform the data
-      return data.map(order => ({
-        ...order,
-        created_at: order.created_at || new Date().toISOString(),
-        contact_preference: order.contact_preference || 'email',
-        profiles: {
-          id: null,
-          first_name: null,
-          last_name: null
+      // Fetch service bays
+      let baysData = [];
+      if (bayIds.length > 0) {
+        const { data: bays, error: baysError } = await supabase
+          .from("service_bays")
+          .select("id, name")
+          .in("id", bayIds);
+
+        if (baysError) {
+          console.error("Error fetching service bays:", baysError);
+        } else {
+          baysData = bays || [];
         }
-      })) as WorkOrder[];
+      }
+
+      // Fetch work order services
+      let servicesData = [];
+      if (workOrderIds.length > 0) {
+        const { data: services, error: servicesError } = await supabase
+          .from("work_order_services")
+          .select(`
+            id,
+            work_order_id,
+            quantity,
+            service_id,
+            unit_price,
+            service_types!work_order_services_service_id_fkey (
+              id,
+              name,
+              description
+            )
+          `)
+          .in("work_order_id", workOrderIds);
+
+        if (servicesError) {
+          console.error("Error fetching work order services:", servicesError);
+        } else {
+          servicesData = services || [];
+        }
+      }
+
+      // Map all data together
+      const workOrdersWithDetails = data.map(order => {
+        // Find profile
+        const profile = profilesData.find(p => p.id === order.assigned_profile_id);
+        
+        // Find bay
+        const bay = baysData.find(b => b.id === order.assigned_bay_id);
+        
+        // Find services
+        const services = servicesData
+          .filter(s => s.work_order_id === order.id)
+          .map(s => ({
+            id: s.id,
+            quantity: s.quantity,
+            unit_price: s.unit_price,
+            service: s.service_types || null
+          }));
+
+        return {
+          ...order,
+          created_at: order.created_at || new Date().toISOString(),
+          contact_preference: order.contact_preference || 'email',
+          profiles: profile ? {
+            id: profile.id,
+            first_name: profile.first_name,
+            last_name: profile.last_name
+          } : {
+            id: null,
+            first_name: null,
+            last_name: null
+          },
+          service_bay: bay ? {
+            id: bay.id,
+            name: bay.name
+          } : null,
+          services: services
+        };
+      });
+
+      return workOrdersWithDetails as WorkOrder[];
     },
+  });
+
+  // Query to fetch all work orders for the current month for calendar indicators
+  const { data: monthWorkOrders } = useQuery({
+    queryKey: ["monthWorkOrders", format(currentDate, "yyyy-MM")],
+    queryFn: async () => {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      
+      const formattedFirstDay = format(firstDay, "yyyy-MM-dd");
+      const formattedLastDay = format(lastDay, "yyyy-MM-dd");
+      
+      console.log(`Fetching month work orders from ${formattedFirstDay} to ${formattedLastDay}`);
+      
+      const { data, error } = await supabase
+        .from("work_orders")
+        .select("id, start_time")
+        .gte("start_time", `${formattedFirstDay}T00:00:00`)
+        .lte("start_time", `${formattedLastDay}T23:59:59`);
+        
+      if (error) {
+        console.error("Error fetching month work orders:", error);
+        return [];
+      }
+      
+      return data || [];
+    }
   });
 
   const handleDateChange = (date: Date | undefined) => {
@@ -158,6 +236,7 @@ export function WorkOrderCalendar() {
         <HorizontalCalendar
           selectedDate={currentDate}
           onDateSelect={handleDateChange}
+          workOrders={monthWorkOrders || []}
         />
       ) : (
         <div className="flex flex-col md:flex-row gap-4">
@@ -173,6 +252,18 @@ export function WorkOrderCalendar() {
                 mode="single"
                 selected={currentDate}
                 onSelect={handleDateChange}
+                modifiers={{
+                  hasOrders: (date) => {
+                    if (!monthWorkOrders) return false;
+                    return monthWorkOrders.some(order => {
+                      const orderDate = new Date(order.start_time);
+                      return isSameDay(date, orderDate);
+                    });
+                  }
+                }}
+                modifiersClassNames={{
+                  hasOrders: "border-2 border-primary/70 bg-primary/10"
+                }}
               />
             </CardContent>
           </Card>

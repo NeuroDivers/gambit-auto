@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
-import { add, eachDayOfInterval, endOfMonth, endOfWeek, format, getDay, isEqual, isSameMonth, isToday, parse, startOfMonth, startOfToday, startOfWeek } from 'date-fns'
+import { add, eachDayOfInterval, endOfMonth, endOfWeek, format, getDay, isEqual, isSameDay, isSameMonth, isToday, parse, startOfMonth, startOfToday, startOfWeek } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { useDragScroll } from './hooks/useDragScroll'
 import { WorkOrder } from '@/components/work-orders/types'
@@ -13,7 +13,7 @@ export interface HorizontalCalendarProps {
   onDateSelect: (date: Date) => void;
   range?: 'week' | 'month';
   className?: string;
-  workOrders?: WorkOrder[];
+  workOrders?: WorkOrder[] | { id: string; start_time: string }[];
 }
 
 export function HorizontalCalendar({ 

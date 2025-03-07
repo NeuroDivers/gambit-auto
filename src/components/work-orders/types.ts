@@ -1,110 +1,93 @@
 
-// Update the 'profiles' and add 'work_order_services' to WorkOrder interface
-import { CustomerVehicleInfo, CustomerVehicleRecordInfo } from "@/types/shared-types";
+export type WorkOrderStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
 
-export interface WorkOrder extends CustomerVehicleRecordInfo {
+export type WorkOrder = {
   id: string;
+  customer_first_name: string;
+  customer_last_name: string;
+  customer_email: string;
+  customer_phone: string;
+  customer_address?: string;
+  customer_vehicle_make: string;
+  customer_vehicle_model: string;
+  customer_vehicle_year: string | number;
+  customer_vehicle_vin?: string;
+  customer_vehicle_license_plate?: string;
+  customer_vehicle_color?: string;
+  customer_vehicle_body_class?: string;
+  customer_vehicle_doors?: string | number;
+  customer_vehicle_trim?: string;
+  contact_preference: 'email' | 'phone' | 'text' | 'any';
+  start_time: string | null;
+  end_time: string | null;
+  status: WorkOrderStatus;
   created_at: string;
-  updated_at?: string | null;
-  contact_preference: 'phone' | 'email';
-  service_bays?: {
-    id: string;
-    name: string;
-  } | null;
-  timeframe: string | 'flexible' | 'asap' | 'within_week' | 'within_month';
-  preferred_date?: string | null;
-  preferred_time?: string | null;
-  start_time?: string | null;
-  end_time?: string | null;
-  status: 'pending' | 'approved' | 'rejected' | 'in_progress' | 'completed' | 'cancelled' | 'invoiced' | 'estimated';
-  service_type?: string | null;
-  additional_notes?: string | null;
-  assigned_bay?: string | null;
-  assigned_bay_id?: string | null;
-  assigned_profile_id?: string | null;
-  client_id?: string | null;
-  estimated_duration?: string | number | null;
-  is_archived?: boolean;
-  media_url?: string | null;
-  profiles?: {
-    id?: string;
+  additional_notes?: string;
+  estimated_duration?: number;
+  assigned_bay_id?: string;
+  assigned_profile_id?: string;
+  profiles: {
+    id: string | null;
     first_name: string | null;
     last_name: string | null;
   };
-  // Adding work_order_services relationship
-  work_order_services?: Array<{
+  service_bay?: {
     id: string;
-    service_id: string;
+    name: string;
+  } | null;
+  services?: Array<{
+    id: string;
     quantity: number;
     unit_price: number;
-    commission_rate: number;
-    commission_type: 'percentage' | 'flat' | 'flat_rate'; // Updated to include 'flat_rate'
-    assigned_profile_id?: string | null;
-    service_types?: {
+    service: {
       id: string;
       name: string;
-      description: string;
-      base_price: number;
-    };
-    profiles?: {
-      id: string;
-      first_name: string | null;
-      last_name: string | null;
-    };
+      description?: string;
+    } | null;
   }>;
-  // Vehicle fields
-  vehicle_make?: string;
-  vehicle_model?: string;
-  vehicle_year?: number;
-  vehicle_vin?: string;
-  vehicle_color?: string;
-  vehicle_trim?: string;
-  vehicle_body_class?: string;
-  vehicle_doors?: number;
-  customer_vehicle_color?: string;
-}
+};
 
-export type WorkOrderStatus = WorkOrder['status'];
-
-export interface WorkOrderFormValues extends CustomerVehicleInfo {
-  contact_preference: 'phone' | 'email';
-  additional_notes?: string;
-  start_time: Date | null;
-  estimated_duration: number | null;
-  end_time: Date | null;
-  assigned_bay_id: string | null;
-  service_items: Array<ServiceItemType>;
-  save_vehicle?: boolean;
-  is_primary_vehicle?: boolean;
-  client_id?: string;
-  vehicle_make?: string;
-  vehicle_model?: string;
-  vehicle_year?: number;
-  vehicle_vin?: string;
-  vehicle_color?: string;
-  vehicle_trim?: string;
-  vehicle_body_class?: string;
-  vehicle_doors?: number;
-  vehicle_license_plate?: string;
-}
-
-export interface ServiceItemType {
+export type ServiceItemType = {
   service_id: string;
-  service_name: string;
+  service_name?: string;
   quantity: number;
   unit_price: number;
-  commission_rate: number;
-  commission_type: 'percentage' | 'flat' | 'flat_rate' | null;  // Including 'flat_rate' for compatibility
-  assigned_profile_id?: string | null;
-  description?: string;
+  commission_rate?: number;
+  commission_type?: string;
+  assigned_profile_id?: string;
+  is_main_service?: boolean; 
   sub_services?: ServiceItemType[];
-  parent_id?: string;
-  package_id?: string | null;
-}
+};
 
-export interface WorkOrderFormProps {
-  workOrder?: WorkOrder;
-  onSuccess?: () => void;
-  defaultStartTime?: Date;
-  onSubmitting?: (isSubmitting: boolean) => void;
-}
+export type WorkOrderFormValues = {
+  customer_first_name: string;
+  customer_last_name: string;
+  customer_email: string;
+  customer_phone: string;
+  contact_preference: 'email' | 'phone' | 'text' | 'any';
+  customer_vehicle_make: string;
+  customer_vehicle_model: string;
+  customer_vehicle_year: string;
+  customer_vehicle_vin?: string;
+  customer_vehicle_license_plate?: string;
+  customer_vehicle_color?: string;
+  customer_vehicle_body_class?: string;
+  customer_vehicle_doors?: string;
+  customer_vehicle_trim?: string;
+  customer_address?: string;
+  customer_street_address?: string;
+  customer_unit_number?: string;
+  customer_city?: string;
+  customer_state_province?: string;
+  customer_postal_code?: string;
+  customer_country?: string;
+  start_time: Date | null;
+  end_time: Date | null;
+  estimated_duration?: number;
+  assigned_bay_id?: string;
+  additional_notes?: string;
+  client_id?: string;
+  service_items?: ServiceItemType[];
+  save_vehicle?: boolean;
+  is_primary_vehicle?: boolean;
+};
