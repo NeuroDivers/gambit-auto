@@ -154,19 +154,47 @@ export function ProfileForm({ role }: ProfileFormProps) {
 
       // If user is a customer, update address in customers table
       if (isCustomer) {
-        const { error: customerError } = await supabase
+        // Check if customer record exists first
+        const { data: customerData } = await supabase
           .from('customers')
-          .update({
-            customer_unit_number: values.unit_number,
-            customer_street_address: values.street_address,
-            customer_city: values.city,
-            customer_state_province: values.state_province,
-            customer_postal_code: values.postal_code,
-            customer_country: values.country,
-          })
+          .select('id')
           .eq('profile_id', user.id)
+          .single()
+        
+        if (customerData) {
+          // Update existing customer record
+          const { error: customerError } = await supabase
+            .from('customers')
+            .update({
+              customer_unit_number: values.unit_number,
+              customer_street_address: values.street_address,
+              customer_city: values.city,
+              customer_state_province: values.state_province,
+              customer_postal_code: values.postal_code,
+              customer_country: values.country,
+            })
+            .eq('profile_id', user.id)
 
-        if (customerError) throw customerError
+          if (customerError) throw customerError
+        } else {
+          // Create new customer record if it doesn't exist
+          const { error: newCustomerError } = await supabase
+            .from('customers')
+            .insert({
+              profile_id: user.id,
+              customer_first_name: values.first_name,
+              customer_last_name: values.last_name,
+              customer_email: user.email,
+              customer_unit_number: values.unit_number,
+              customer_street_address: values.street_address,
+              customer_city: values.city,
+              customer_state_province: values.state_province,
+              customer_postal_code: values.postal_code,
+              customer_country: values.country,
+            })
+
+          if (newCustomerError) throw newCustomerError
+        }
       } else {
         // For staff and other roles, update address in profile
         const { error: profileAddressError } = await supabase

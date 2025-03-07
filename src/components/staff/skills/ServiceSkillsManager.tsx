@@ -34,7 +34,7 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
   const { removeSkill, isLoading: isRemoving } = useRemoveSkillMutation();
 
   // Fetch available services
-  const { data: services, isLoading: isLoadingServices } = useQuery({
+  const { data: services = [], isLoading: isLoadingServices } = useQuery({
     queryKey: ['service-types'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -48,7 +48,7 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
   });
 
   // Fetch user's current skills
-  const { data: userSkills, isLoading: isLoadingSkills, refetch: refetchSkills } = useQuery({
+  const { data: userSkills = [], isLoading: isLoadingSkills, refetch: refetchSkills } = useQuery({
     queryKey: ['profile-skills', profileId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -89,7 +89,7 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
     }
 
     // Check if the skill already exists
-    const existingSkill = userSkills?.find(skill => skill.service_id === selectedServiceId);
+    const existingSkill = userSkills.find(skill => skill.service_id === selectedServiceId);
     if (existingSkill) {
       toast.error('You already have this skill added');
       return;
@@ -128,8 +128,8 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
   };
 
   // Filter out services that the user already has
-  const availableServices = services?.filter(service => 
-    !userSkills?.some(skill => skill.service_id === service.id)
+  const availableServices = services.filter(service => 
+    !userSkills.some(skill => skill.service_id === service.id)
   );
 
   return (
@@ -148,7 +148,7 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
                 <SelectValue placeholder="Select a service" />
               </SelectTrigger>
               <SelectContent>
-                {availableServices?.map(service => (
+                {availableServices.map(service => (
                   <SelectItem key={service.id} value={service.id}>
                     {service.name}
                   </SelectItem>
@@ -192,11 +192,11 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
         <h3 className="text-lg font-medium mb-4">Your Skills</h3>
         {isLoadingSkills ? (
           <p>Loading skills...</p>
-        ) : userSkills?.length === 0 ? (
+        ) : userSkills.length === 0 ? (
           <p className="text-muted-foreground">You haven't added any skills yet.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {userSkills?.map(skill => (
+            {userSkills.map(skill => (
               <Card key={skill.id}>
                 <CardContent className="flex justify-between items-center p-4">
                   <div>
