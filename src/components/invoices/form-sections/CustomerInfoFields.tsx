@@ -1,39 +1,8 @@
 
 import React from 'react';
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FormItem, FormLabel, FormControl } from "@/components/ui/form";
-
-export interface CustomerInfoFieldsProps {
-  customerFirstName: string;
-  setCustomerFirstName: (value: string) => void;
-  customerLastName: string;
-  setCustomerLastName: (value: string) => void;
-  customerEmail: string;
-  setCustomerEmail: (value: string) => void;
-  customerPhone?: string;
-  setCustomerPhone?: (value: string) => void;
-  customerAddress?: string;
-  setCustomerAddress?: (value: string) => void;
-  customers?: any[];
-  isLoadingCustomers?: boolean;
-  onCustomerSelect?: (customerId: string) => void;
-  customerStreetAddress?: string;
-  setCustomerStreetAddress?: (value: string) => void;
-  customerUnitNumber?: string;
-  setCustomerUnitNumber?: (value: string) => void;
-  customerCity?: string;
-  setCustomerCity?: (value: string) => void;
-  customerStateProvince?: string;
-  setCustomerStateProvince?: (value: string) => void;
-  customerPostalCode?: string;
-  setCustomerPostalCode?: (value: string) => void;
-  customerCountry?: string;
-  setCustomerCountry?: (value: string) => void;
-  clientIdField?: string;
-  setClientId?: (value: string) => void;
-  disabled?: boolean;
-}
+import { Input } from "@/components/ui/input";
+import { CustomerInfoFieldsProps } from './CustomerInfoFieldsProps';
 
 export function CustomerInfoFields({
   customerFirstName,
@@ -42,169 +11,150 @@ export function CustomerInfoFields({
   setCustomerLastName,
   customerEmail,
   setCustomerEmail,
-  customerPhone,
+  customerPhone = '',
   setCustomerPhone,
-  customerAddress,
+  customerAddress = '',
   setCustomerAddress,
-  customerStreetAddress,
+  customerStreetAddress = '',
   setCustomerStreetAddress,
-  customerUnitNumber,
+  customerUnitNumber = '',
   setCustomerUnitNumber,
-  customerCity,
+  customerCity = '',
   setCustomerCity,
-  customerStateProvince,
+  customerStateProvince = '',
   setCustomerStateProvince,
-  customerPostalCode,
+  customerPostalCode = '',
   setCustomerPostalCode,
-  customerCountry,
+  customerCountry = '',
   setCustomerCountry,
-  disabled = false
+  customers = [],
+  isLoadingCustomers = false,
+  onCustomerSelect,
+  clientIdField,
+  setClientId,
 }: CustomerInfoFieldsProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="customerFirstName">First Name</Label>
           <Input
             id="customerFirstName"
-            placeholder="First Name"
             value={customerFirstName}
             onChange={(e) => setCustomerFirstName(e.target.value)}
-            disabled={disabled}
+            placeholder="Enter first name"
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="customerLastName">Last Name</Label>
           <Input
             id="customerLastName"
-            placeholder="Last Name"
             value={customerLastName}
             onChange={(e) => setCustomerLastName(e.target.value)}
-            disabled={disabled}
+            placeholder="Enter last name"
           />
         </div>
       </div>
-      
-      <div>
+
+      <div className="space-y-2">
         <Label htmlFor="customerEmail">Email</Label>
         <Input
           id="customerEmail"
           type="email"
-          placeholder="Email Address"
           value={customerEmail}
           onChange={(e) => setCustomerEmail(e.target.value)}
-          disabled={disabled}
+          placeholder="Enter email address"
         />
       </div>
-      
-      {setCustomerPhone && (
-        <div>
-          <Label htmlFor="customerPhone">Phone</Label>
-          <Input
-            id="customerPhone"
-            placeholder="Phone Number"
-            value={customerPhone || ''}
-            onChange={(e) => setCustomerPhone(e.target.value)}
-            disabled={disabled}
-          />
-        </div>
-      )}
-      
-      {/* Optional simple address field */}
+
+      <div className="space-y-2">
+        <Label htmlFor="customerPhone">Phone Number</Label>
+        <Input
+          id="customerPhone"
+          value={customerPhone}
+          onChange={(e) => setCustomerPhone(e.target.value)}
+          placeholder="Enter phone number"
+        />
+      </div>
+
       {setCustomerAddress && (
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="customerAddress">Address</Label>
           <Input
             id="customerAddress"
-            placeholder="Address"
-            value={customerAddress || ''}
+            value={customerAddress}
             onChange={(e) => setCustomerAddress(e.target.value)}
-            disabled={disabled}
+            placeholder="Enter address"
           />
         </div>
       )}
-      
-      {/* Detailed address fields */}
+
       {setCustomerStreetAddress && (
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="customerStreetAddress">Street Address</Label>
+        <div className="space-y-2">
+          <Label htmlFor="customerStreetAddress">Street Address</Label>
+          <Input
+            id="customerStreetAddress"
+            value={customerStreetAddress}
+            onChange={(e) => setCustomerStreetAddress(e.target.value)}
+            placeholder="Enter street address"
+          />
+        </div>
+      )}
+
+      {setCustomerUnitNumber && (
+        <div className="space-y-2">
+          <Label htmlFor="customerUnitNumber">Unit/Apt Number</Label>
+          <Input
+            id="customerUnitNumber"
+            value={customerUnitNumber}
+            onChange={(e) => setCustomerUnitNumber(e.target.value)}
+            placeholder="Enter unit/apt number"
+          />
+        </div>
+      )}
+
+      {setCustomerCity && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="customerCity">City</Label>
             <Input
-              id="customerStreetAddress"
-              placeholder="Street Address"
-              value={customerStreetAddress || ''}
-              onChange={(e) => setCustomerStreetAddress(e.target.value)}
-              disabled={disabled}
+              id="customerCity"
+              value={customerCity}
+              onChange={(e) => setCustomerCity(e.target.value)}
+              placeholder="Enter city"
             />
           </div>
-          
-          {setCustomerUnitNumber && (
-            <div>
-              <Label htmlFor="customerUnitNumber">Unit/Apt Number</Label>
-              <Input
-                id="customerUnitNumber"
-                placeholder="Unit/Apt Number"
-                value={customerUnitNumber || ''}
-                onChange={(e) => setCustomerUnitNumber(e.target.value)}
-                disabled={disabled}
-              />
-            </div>
-          )}
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {setCustomerCity && (
-              <div>
-                <Label htmlFor="customerCity">City</Label>
-                <Input
-                  id="customerCity"
-                  placeholder="City"
-                  value={customerCity || ''}
-                  onChange={(e) => setCustomerCity(e.target.value)}
-                  disabled={disabled}
-                />
-              </div>
-            )}
-            
-            {setCustomerStateProvince && (
-              <div>
-                <Label htmlFor="customerStateProvince">State/Province</Label>
-                <Input
-                  id="customerStateProvince"
-                  placeholder="State/Province"
-                  value={customerStateProvince || ''}
-                  onChange={(e) => setCustomerStateProvince(e.target.value)}
-                  disabled={disabled}
-                />
-              </div>
-            )}
+          <div className="space-y-2">
+            <Label htmlFor="customerStateProvince">State/Province</Label>
+            <Input
+              id="customerStateProvince"
+              value={customerStateProvince}
+              onChange={(e) => setCustomerStateProvince(e.target.value)}
+              placeholder="Enter state/province"
+            />
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {setCustomerPostalCode && (
-              <div>
-                <Label htmlFor="customerPostalCode">Postal/Zip Code</Label>
-                <Input
-                  id="customerPostalCode"
-                  placeholder="Postal/Zip Code"
-                  value={customerPostalCode || ''}
-                  onChange={(e) => setCustomerPostalCode(e.target.value)}
-                  disabled={disabled}
-                />
-              </div>
-            )}
-            
-            {setCustomerCountry && (
-              <div>
-                <Label htmlFor="customerCountry">Country</Label>
-                <Input
-                  id="customerCountry"
-                  placeholder="Country"
-                  value={customerCountry || ''}
-                  onChange={(e) => setCustomerCountry(e.target.value)}
-                  disabled={disabled}
-                />
-              </div>
-            )}
+        </div>
+      )}
+
+      {setCustomerPostalCode && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="customerPostalCode">Postal/Zip Code</Label>
+            <Input
+              id="customerPostalCode"
+              value={customerPostalCode}
+              onChange={(e) => setCustomerPostalCode(e.target.value)}
+              placeholder="Enter postal/zip code"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="customerCountry">Country</Label>
+            <Input
+              id="customerCountry"
+              value={customerCountry}
+              onChange={(e) => setCustomerCountry(e.target.value)}
+              placeholder="Enter country"
+            />
           </div>
         </div>
       )}
@@ -212,5 +162,5 @@ export function CustomerInfoFields({
   );
 }
 
-// Add a default export of the component for components that expect it
+// Also provide a default export for backwards compatibility
 export default CustomerInfoFields;
