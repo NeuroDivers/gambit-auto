@@ -30,7 +30,7 @@ export const router = createBrowserRouter([
     path: "/p/:invoiceId",
     element: <PublicInvoiceView />
   },
-  protectedRoutes, // Add the protected routes object
+  protectedRoutes, // This contains the Dashboard route
   {
     path: "*",
     element: <NotFound />

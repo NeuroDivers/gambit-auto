@@ -13,28 +13,50 @@ export default function Dashboard() {
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return null
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          console.error("No user found in auth.getUser")
+          return null
+        }
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single()
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single()
 
-      if (error) {
-        console.error("Error fetching profile:", error)
-        throw error
+        if (error) {
+          console.error("Error fetching profile:", error)
+          throw error
+        }
+        
+        console.log("Profile data fetched:", data)
+        return data
+      } catch (e) {
+        console.error("Error in profile query:", e)
+        throw e
       }
-      return data
     },
-    enabled: !!currentUserRole
+    enabled: !!currentUserRole,
+    retry: 3,
+    retryDelay: 1000
   })
 
   console.log("Dashboard rendering. Role:", currentUserRole, "Profile:", profile)
 
   if (roleLoading || profileLoading) {
     return <LoadingScreen />
+  }
+
+  if (!currentUserRole) {
+    console.error("No user role found")
+    return <div className="p-6">Error: Unable to determine user role. Please try logging out and back in.</div>
+  }
+
+  if (!profile) {
+    console.error("No profile found")
+    return <div className="p-6">Error: Unable to load user profile. Please try refreshing the page.</div>
   }
 
   // Determine which dashboard to show based on role's default_dashboard
