@@ -26,29 +26,9 @@ export interface VehicleInfoFieldsProps {
   setMileage?: (value: number) => void;
   readOnly?: boolean;
   customerId?: string | null;
-  
-  // Additional props for compatibility with older components
-  vehicleMake?: string;
-  setVehicleMake?: (value: string) => void;
-  vehicleModel?: string;
-  setVehicleModel?: (value: string) => void;
-  vehicleYear?: number | string;
-  setVehicleYear?: (value: string | number) => void;
-  vehicleVin?: string;
-  setVehicleVin?: (value: string) => void;
-  vehicleColor?: string;
-  setVehicleColor?: (value: string) => void;
-  vehicleTrim?: string;
-  setVehicleTrim?: (value: string) => void;
-  vehicleBodyClass?: string;
-  setVehicleBodyClass?: (value: string) => void;
-  vehicleDoors?: number;
-  setVehicleDoors?: (value: number) => void;
-  vehicleLicensePlate?: string;
-  setVehicleLicensePlate?: (value: string) => void;
 }
 
-export const VehicleInfoFields: React.FC<VehicleInfoFieldsProps> = ({
+const VehicleInfoFields: React.FC<VehicleInfoFieldsProps> = ({
   make,
   setMake,
   model,
@@ -71,85 +51,23 @@ export const VehicleInfoFields: React.FC<VehicleInfoFieldsProps> = ({
   setMileage,
   readOnly = false,
   customerId,
-  vehicleMake,
-  setVehicleMake,
-  vehicleModel,
-  setVehicleModel,
-  vehicleYear,
-  setVehicleYear,
-  vehicleVin,
-  setVehicleVin,
-  vehicleColor,
-  setVehicleColor,
-  vehicleTrim,
-  setVehicleTrim,
-  vehicleBodyClass,
-  setVehicleBodyClass,
-  vehicleDoors,
-  setVehicleDoors,
-  vehicleLicensePlate,
-  setVehicleLicensePlate
 }) => {
-  // Handle both naming conventions (make/vehicleMake)
-  const actualMake = vehicleMake !== undefined ? vehicleMake : make;
-  const actualModel = vehicleModel !== undefined ? vehicleModel : model;
-  const actualYear = vehicleYear !== undefined ? vehicleYear : year;
-  const actualVin = vehicleVin !== undefined ? vehicleVin : vin;
-  const actualColor = vehicleColor !== undefined ? vehicleColor : color;
-  const actualTrim = vehicleTrim !== undefined ? vehicleTrim : trim;
-  const actualBodyClass = vehicleBodyClass !== undefined ? vehicleBodyClass : bodyClass;
-  const actualDoors = vehicleDoors !== undefined ? vehicleDoors : doors;
-  const actualLicensePlate = vehicleLicensePlate !== undefined ? vehicleLicensePlate : licensePlate;
-
-  const handleMakeChange = (value: string) => {
-    if (setVehicleMake) setVehicleMake(value);
-    else if (setMake) setMake(value);
-  };
-
-  const handleModelChange = (value: string) => {
-    if (setVehicleModel) setVehicleModel(value);
-    else if (setModel) setModel(value);
-  };
-
   const handleYearChange = (value: string) => {
     const numValue = parseInt(value);
     if (!isNaN(numValue)) {
-      if (setVehicleYear) setVehicleYear(numValue);
-      else if (setYear) setYear(numValue);
+      setYear(numValue);
+    } else {
+      setYear("");
     }
-  };
-
-  const handleVinChange = (value: string) => {
-    if (setVehicleVin) setVehicleVin(value);
-    else if (setVin) setVin(value);
-  };
-
-  const handleColorChange = (value: string) => {
-    if (setVehicleColor) setVehicleColor(value);
-    else if (setColor) setColor(value);
-  };
-
-  const handleTrimChange = (value: string) => {
-    if (setVehicleTrim) setVehicleTrim(value);
-    else if (setTrim) setTrim(value);
-  };
-
-  const handleBodyClassChange = (value: string) => {
-    if (setVehicleBodyClass) setVehicleBodyClass(value);
-    else if (setBodyClass) setBodyClass(value);
   };
 
   const handleDoorsChange = (value: string) => {
-    const numValue = parseInt(value);
-    if (!isNaN(numValue)) {
-      if (setVehicleDoors) setVehicleDoors(numValue);
-      else if (setDoors) setDoors(numValue);
+    if (setDoors) {
+      const numValue = parseInt(value);
+      if (!isNaN(numValue)) {
+        setDoors(numValue);
+      }
     }
-  };
-
-  const handleLicensePlateChange = (value: string) => {
-    if (setVehicleLicensePlate) setVehicleLicensePlate(value);
-    else if (setLicensePlate) setLicensePlate(value);
   };
 
   const handleMileageChange = (value: string) => {
@@ -164,131 +82,128 @@ export const VehicleInfoFields: React.FC<VehicleInfoFieldsProps> = ({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="make">Make</Label>
+        <div>
+          <Label htmlFor="vehicleMake">Make</Label>
           <Input
-            id="make"
-            value={actualMake || ""}
-            onChange={(e) => handleMakeChange(e.target.value)}
-            placeholder="Vehicle make"
+            id="vehicleMake"
+            placeholder="Make"
+            value={make}
+            onChange={(e) => setMake(e.target.value)}
             readOnly={readOnly}
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="model">Model</Label>
+        <div>
+          <Label htmlFor="vehicleModel">Model</Label>
           <Input
-            id="model"
-            value={actualModel || ""}
-            onChange={(e) => handleModelChange(e.target.value)}
-            placeholder="Vehicle model"
+            id="vehicleModel"
+            placeholder="Model"
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
             readOnly={readOnly}
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="year">Year</Label>
+        <div>
+          <Label htmlFor="vehicleYear">Year</Label>
           <Input
-            id="year"
-            value={actualYear || ""}
+            id="vehicleYear"
+            placeholder="Year"
+            value={year}
             onChange={(e) => handleYearChange(e.target.value)}
-            placeholder="Vehicle year"
-            type="number"
             readOnly={readOnly}
           />
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="vin">VIN</Label>
+      <div>
+        <Label htmlFor="vehicleVin">VIN</Label>
         <Input
-          id="vin"
-          value={actualVin || ""}
-          onChange={(e) => handleVinChange(e.target.value)}
-          placeholder="Vehicle identification number"
+          id="vehicleVin"
+          placeholder="Vehicle Identification Number"
+          value={vin}
+          onChange={(e) => setVin(e.target.value)}
           readOnly={readOnly}
         />
       </div>
 
-      {(setColor || setVehicleColor || setTrim || setVehicleTrim || setLicensePlate || setVehicleLicensePlate) && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {(setColor || setVehicleColor) && (
-            <div className="space-y-2">
-              <Label htmlFor="color">Color</Label>
-              <Input
-                id="color"
-                value={actualColor || ""}
-                onChange={(e) => handleColorChange(e.target.value)}
-                placeholder="Vehicle color"
-                readOnly={readOnly}
-              />
-            </div>
-          )}
-          {(setTrim || setVehicleTrim) && (
-            <div className="space-y-2">
-              <Label htmlFor="trim">Trim</Label>
-              <Input
-                id="trim"
-                value={actualTrim || ""}
-                onChange={(e) => handleTrimChange(e.target.value)}
-                placeholder="Vehicle trim"
-                readOnly={readOnly}
-              />
-            </div>
-          )}
-          {(setLicensePlate || setVehicleLicensePlate) && (
-            <div className="space-y-2">
-              <Label htmlFor="licensePlate">License Plate</Label>
-              <Input
-                id="licensePlate"
-                value={actualLicensePlate || ""}
-                onChange={(e) => handleLicensePlateChange(e.target.value)}
-                placeholder="License plate"
-                readOnly={readOnly}
-              />
-            </div>
-          )}
+      {setColor && (
+        <div>
+          <Label htmlFor="vehicleColor">Color</Label>
+          <Input
+            id="vehicleColor"
+            placeholder="Color"
+            value={color || ""}
+            onChange={(e) => setColor(e.target.value)}
+            readOnly={readOnly}
+          />
         </div>
       )}
 
-      {(setBodyClass || setVehicleBodyClass || setDoors || setVehicleDoors || setMileage) && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {(setBodyClass || setVehicleBodyClass) && (
-            <div className="space-y-2">
-              <Label htmlFor="bodyClass">Body Type</Label>
-              <Input
-                id="bodyClass"
-                value={actualBodyClass || ""}
-                onChange={(e) => handleBodyClassChange(e.target.value)}
-                placeholder="Body type"
-                readOnly={readOnly}
-              />
-            </div>
-          )}
-          {(setDoors || setVehicleDoors) && (
-            <div className="space-y-2">
-              <Label htmlFor="doors">Doors</Label>
-              <Input
-                id="doors"
-                value={actualDoors || ""}
-                onChange={(e) => handleDoorsChange(e.target.value)}
-                placeholder="Number of doors"
-                type="number"
-                readOnly={readOnly}
-              />
-            </div>
-          )}
-          {setMileage && (
-            <div className="space-y-2">
-              <Label htmlFor="mileage">Mileage</Label>
-              <Input
-                id="mileage"
-                value={mileage || ""}
-                onChange={(e) => handleMileageChange(e.target.value)}
-                placeholder="Vehicle mileage"
-                type="number"
-                readOnly={readOnly}
-              />
-            </div>
-          )}
+      {setMileage && (
+        <div>
+          <Label htmlFor="vehicleMileage">Mileage</Label>
+          <Input
+            id="vehicleMileage"
+            placeholder="Mileage"
+            value={mileage || ""}
+            onChange={(e) => handleMileageChange(e.target.value)}
+            readOnly={readOnly}
+          />
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {setBodyClass && (
+          <div>
+            <Label htmlFor="vehicleBodyClass">Body Class</Label>
+            <Input
+              id="vehicleBodyClass"
+              placeholder="Body Class"
+              value={bodyClass || ""}
+              onChange={(e) => setBodyClass(e.target.value)}
+              readOnly={readOnly}
+            />
+          </div>
+        )}
+
+        {setTrim && (
+          <div>
+            <Label htmlFor="vehicleTrim">Trim</Label>
+            <Input
+              id="vehicleTrim"
+              placeholder="Trim"
+              value={trim || ""}
+              onChange={(e) => setTrim(e.target.value)}
+              readOnly={readOnly}
+            />
+          </div>
+        )}
+
+        {setDoors && (
+          <div>
+            <Label htmlFor="vehicleDoors">Doors</Label>
+            <Input
+              id="vehicleDoors"
+              placeholder="Number of Doors"
+              value={doors || ""}
+              onChange={(e) => handleDoorsChange(e.target.value)}
+              readOnly={readOnly}
+              type="number"
+              min="0"
+            />
+          </div>
+        )}
+      </div>
+
+      {setLicensePlate && (
+        <div>
+          <Label htmlFor="vehicleLicensePlate">License Plate</Label>
+          <Input
+            id="vehicleLicensePlate"
+            placeholder="License Plate"
+            value={licensePlate || ""}
+            onChange={(e) => setLicensePlate(e.target.value)}
+            readOnly={readOnly}
+          />
         </div>
       )}
     </div>

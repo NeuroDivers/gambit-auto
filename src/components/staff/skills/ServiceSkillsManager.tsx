@@ -1,85 +1,127 @@
 
-import React, { useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useStaffSkills } from "./hooks/useStaffSkills";
-import SkillForm from "./components/SkillForm";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SkillsList } from "./components/SkillsList";
-import { Plus } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
-interface ServiceSkillsManagerProps {
-  profileId: string;
-  isCurrentUser?: boolean;
-}
-
-export function ServiceSkillsManager({ profileId, isCurrentUser = false }: ServiceSkillsManagerProps) {
-  const { 
-    skills, 
-    serviceTypes, 
-    isLoading, 
-    isAddingSkill,
-    setIsAddingSkill,
-    handleAddSkill,
-    handleUpdateSkill,
-    handleDeleteSkill
-  } = useStaffSkills(profileId);
+export function ServiceSkillsManager({ profileId }: { profileId: string }) {
+  const { skills, availableServiceTypes, isLoading, error, addSkill, updateSkill, removeSkill } = useStaffSkills(profileId);
+  const [isAddingSkill, setIsAddingSkill] = useState(false);
+  const [selectedServiceId, setSelectedServiceId] = useState<string>("");
+  const [proficiency, setProficiency] = useState<string>("beginner");
+  
+  const handleAddSkill = async () => {
+    if (!selectedServiceId) return;
+    
+    try {
+      await addSkill.mutateAsync({
+        service_type_id: selectedServiceId,
+        expertise_level: proficiency
+      });
+      setIsAddingSkill(false);
+      setSelectedServiceId("");
+      setProficiency("beginner");
+    } catch (error) {
+      console.error("Error adding skill:", error);
+    }
+  };
 
   if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Service Skills</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-40 flex items-center justify-center">
-            <p>Loading skills...</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <LoadingSpinner />;
   }
 
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Service Skills</CardTitle>
-        {isCurrentUser && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setIsAddingSkill(true)}
-            className="h-8"
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Add Skill
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent>
-        {isAddingSkill && (
-          <div className="mb-6">
-            <SkillForm
-              serviceTypes={serviceTypes}
-              onSubmit={(serviceTypeId, level) => handleAddSkill(serviceTypeId, level)}
-              onCancel={() => setIsAddingSkill(false)}
-            />
-          </div>
-        )}
+  if (error) {
+    return <div className="text-red-500">Failed to load skills: {error.message}</div>;
+  }
 
-        {skills.length === 0 ? (
-          <div className="h-24 flex items-center justify-center text-muted-foreground">
-            No skills added yet
+  // Filter available services to exclude ones the user already has
+  const unusedServices = availableServiceTypes.filter(
+    (service) => !skills.some((skill) => skill.serviceTypeId === service.id)
+  );
+
+  return (
+    <div className="space-y-6">
+      {skills.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground mb-4">No skills have been added yet.</p>
+          <Button onClick={() => setIsAddingSkill(true)}>Add First Skill</Button>
+        </div>
+      ) : (
+        <SkillsList
+          skills={skills}
+          onUpdate={(skillId, level) => updateSkill.mutate({ skillId, expertise_level: level })}
+          onDelete={(skillId) => removeSkill.mutate(skillId)}
+        />
+      )}
+
+      {isAddingSkill ? (
+        <div className="border p-4 rounded-md space-y-4">
+          <h3 className="font-medium">Add New Skill</h3>
+          
+          <div className="space-y-2">
+            <Label htmlFor="service-select">Service</Label>
+            <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
+              <SelectTrigger id="service-select">
+                <SelectValue placeholder="Select a service" />
+              </SelectTrigger>
+              <SelectContent>
+                {unusedServices.map((service) => (
+                  <SelectItem key={service.id} value={service.id}>
+                    {service.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        ) : (
-          <SkillsList 
-            skills={skills} 
-            onUpdate={(skillId, level) => handleUpdateSkill(skillId, level)} 
-            onDelete={(skillId) => handleDeleteSkill(skillId)}
-          />
-        )}
-      </CardContent>
-    </Card>
+          
+          <div className="space-y-2">
+            <Label htmlFor="proficiency-select">Proficiency Level</Label>
+            <Select value={proficiency} onValueChange={setProficiency}>
+              <SelectTrigger id="proficiency-select">
+                <SelectValue placeholder="Select proficiency level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="beginner">Beginner</SelectItem>
+                <SelectItem value="intermediate">Intermediate</SelectItem>
+                <SelectItem value="advanced">Advanced</SelectItem>
+                <SelectItem value="expert">Expert</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex justify-end space-x-2 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAddingSkill(false);
+                setSelectedServiceId("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddSkill}
+              disabled={!selectedServiceId || addSkill.isPending}
+            >
+              {addSkill.isPending ? "Adding..." : "Add Skill"}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        skills.length > 0 && (
+          <div className="flex justify-end">
+            <Button 
+              onClick={() => setIsAddingSkill(true)}
+              disabled={unusedServices.length === 0}
+            >
+              Add Skill
+            </Button>
+          </div>
+        )
+      )}
+    </div>
   );
 }
-
-export default ServiceSkillsManager;

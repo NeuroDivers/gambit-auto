@@ -29,14 +29,14 @@ export function useStaffSkills(profileId: string) {
         serviceTypeId: skill.serviceTypeId,
         expertiseLevel: skill.expertiseLevel,
         profileId: skill.profileId,
-        serviceName: skill.service_types?.name || "",
-        serviceDescription: skill.service_types?.description || "",
+        serviceName: skill.service_types.name,
+        serviceDescription: skill.service_types.description,
         service_id: skill.serviceTypeId,
         proficiency: skill.expertiseLevel,
         service_types: {
-          id: skill.service_types?.id || "",
-          name: skill.service_types?.name || "",
-          description: skill.service_types?.description || "",
+          id: skill.service_types.id,
+          name: skill.service_types.name,
+          description: skill.service_types.description
         }
       })) as StaffSkill[];
     },

@@ -1,7 +1,8 @@
 
-import React from "react";
+import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormItem, FormLabel, FormControl } from "@/components/ui/form";
 
 export interface CustomerInfoFieldsProps {
   customerFirstName: string;
@@ -14,6 +15,9 @@ export interface CustomerInfoFieldsProps {
   setCustomerPhone?: (value: string) => void;
   customerAddress?: string;
   setCustomerAddress?: (value: string) => void;
+  customers?: any[];
+  isLoadingCustomers?: boolean;
+  onCustomerSelect?: (customerId: string) => void;
   customerStreetAddress?: string;
   setCustomerStreetAddress?: (value: string) => void;
   customerUnitNumber?: string;
@@ -26,12 +30,12 @@ export interface CustomerInfoFieldsProps {
   setCustomerPostalCode?: (value: string) => void;
   customerCountry?: string;
   setCustomerCountry?: (value: string) => void;
-  onCustomerSelect?: (customerId: string) => void;
   clientIdField?: string;
   setClientId?: (value: string) => void;
+  disabled?: boolean;
 }
 
-export const CustomerInfoFields: React.FC<CustomerInfoFieldsProps> = ({
+export function CustomerInfoFields({
   customerFirstName,
   setCustomerFirstName,
   customerLastName,
@@ -54,146 +58,159 @@ export const CustomerInfoFields: React.FC<CustomerInfoFieldsProps> = ({
   setCustomerPostalCode,
   customerCountry,
   setCustomerCountry,
-  onCustomerSelect,
-}) => {
+  disabled = false
+}: CustomerInfoFieldsProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="firstName">First Name</Label>
+        <div>
+          <Label htmlFor="customerFirstName">First Name</Label>
           <Input
-            id="firstName"
+            id="customerFirstName"
+            placeholder="First Name"
             value={customerFirstName}
             onChange={(e) => setCustomerFirstName(e.target.value)}
-            placeholder="First name"
-            required
+            disabled={disabled}
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="lastName">Last Name</Label>
+        <div>
+          <Label htmlFor="customerLastName">Last Name</Label>
           <Input
-            id="lastName"
+            id="customerLastName"
+            placeholder="Last Name"
             value={customerLastName}
             onChange={(e) => setCustomerLastName(e.target.value)}
-            placeholder="Last name"
-            required
+            disabled={disabled}
           />
         </div>
       </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="email">Email Address</Label>
+      
+      <div>
+        <Label htmlFor="customerEmail">Email</Label>
         <Input
-          id="email"
+          id="customerEmail"
           type="email"
+          placeholder="Email Address"
           value={customerEmail}
           onChange={(e) => setCustomerEmail(e.target.value)}
-          placeholder="Email address"
-          required
+          disabled={disabled}
         />
       </div>
-
+      
       {setCustomerPhone && (
-        <div className="space-y-2">
-          <Label htmlFor="phone">Phone Number</Label>
+        <div>
+          <Label htmlFor="customerPhone">Phone</Label>
           <Input
-            id="phone"
-            value={customerPhone || ""}
+            id="customerPhone"
+            placeholder="Phone Number"
+            value={customerPhone || ''}
             onChange={(e) => setCustomerPhone(e.target.value)}
-            placeholder="Phone number"
+            disabled={disabled}
           />
         </div>
       )}
-
+      
+      {/* Optional simple address field */}
       {setCustomerAddress && (
-        <div className="space-y-2">
-          <Label htmlFor="address">Address</Label>
+        <div>
+          <Label htmlFor="customerAddress">Address</Label>
           <Input
-            id="address"
-            value={customerAddress || ""}
+            id="customerAddress"
+            placeholder="Address"
+            value={customerAddress || ''}
             onChange={(e) => setCustomerAddress(e.target.value)}
-            placeholder="Complete address"
+            disabled={disabled}
           />
         </div>
       )}
-
+      
       {/* Detailed address fields */}
       {setCustomerStreetAddress && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="md:col-span-2 space-y-2">
-            <Label htmlFor="streetAddress">Street Address</Label>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="customerStreetAddress">Street Address</Label>
             <Input
-              id="streetAddress"
-              value={customerStreetAddress || ""}
+              id="customerStreetAddress"
+              placeholder="Street Address"
+              value={customerStreetAddress || ''}
               onChange={(e) => setCustomerStreetAddress(e.target.value)}
-              placeholder="Street address"
+              disabled={disabled}
             />
           </div>
+          
           {setCustomerUnitNumber && (
-            <div className="space-y-2">
-              <Label htmlFor="unitNumber">Unit/Apt #</Label>
+            <div>
+              <Label htmlFor="customerUnitNumber">Unit/Apt Number</Label>
               <Input
-                id="unitNumber"
-                value={customerUnitNumber || ""}
+                id="customerUnitNumber"
+                placeholder="Unit/Apt Number"
+                value={customerUnitNumber || ''}
                 onChange={(e) => setCustomerUnitNumber(e.target.value)}
-                placeholder="Unit/Apt #"
+                disabled={disabled}
               />
             </div>
           )}
-        </div>
-      )}
-
-      {(setCustomerCity || setCustomerStateProvince || setCustomerPostalCode) && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {setCustomerCity && (
-            <div className="space-y-2">
-              <Label htmlFor="city">City</Label>
-              <Input
-                id="city"
-                value={customerCity || ""}
-                onChange={(e) => setCustomerCity(e.target.value)}
-                placeholder="City"
-              />
-            </div>
-          )}
-          {setCustomerStateProvince && (
-            <div className="space-y-2">
-              <Label htmlFor="stateProvince">State/Province</Label>
-              <Input
-                id="stateProvince"
-                value={customerStateProvince || ""}
-                onChange={(e) => setCustomerStateProvince(e.target.value)}
-                placeholder="State/Province"
-              />
-            </div>
-          )}
-          {setCustomerPostalCode && (
-            <div className="space-y-2">
-              <Label htmlFor="postalCode">Postal Code</Label>
-              <Input
-                id="postalCode"
-                value={customerPostalCode || ""}
-                onChange={(e) => setCustomerPostalCode(e.target.value)}
-                placeholder="Postal code"
-              />
-            </div>
-          )}
-        </div>
-      )}
-
-      {setCustomerCountry && (
-        <div className="space-y-2">
-          <Label htmlFor="country">Country</Label>
-          <Input
-            id="country"
-            value={customerCountry || ""}
-            onChange={(e) => setCustomerCountry(e.target.value)}
-            placeholder="Country"
-          />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {setCustomerCity && (
+              <div>
+                <Label htmlFor="customerCity">City</Label>
+                <Input
+                  id="customerCity"
+                  placeholder="City"
+                  value={customerCity || ''}
+                  onChange={(e) => setCustomerCity(e.target.value)}
+                  disabled={disabled}
+                />
+              </div>
+            )}
+            
+            {setCustomerStateProvince && (
+              <div>
+                <Label htmlFor="customerStateProvince">State/Province</Label>
+                <Input
+                  id="customerStateProvince"
+                  placeholder="State/Province"
+                  value={customerStateProvince || ''}
+                  onChange={(e) => setCustomerStateProvince(e.target.value)}
+                  disabled={disabled}
+                />
+              </div>
+            )}
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {setCustomerPostalCode && (
+              <div>
+                <Label htmlFor="customerPostalCode">Postal/Zip Code</Label>
+                <Input
+                  id="customerPostalCode"
+                  placeholder="Postal/Zip Code"
+                  value={customerPostalCode || ''}
+                  onChange={(e) => setCustomerPostalCode(e.target.value)}
+                  disabled={disabled}
+                />
+              </div>
+            )}
+            
+            {setCustomerCountry && (
+              <div>
+                <Label htmlFor="customerCountry">Country</Label>
+                <Input
+                  id="customerCountry"
+                  placeholder="Country"
+                  value={customerCountry || ''}
+                  onChange={(e) => setCustomerCountry(e.target.value)}
+                  disabled={disabled}
+                />
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
   );
-};
+}
 
+// Add a default export of the component for components that expect it
 export default CustomerInfoFields;

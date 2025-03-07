@@ -6,12 +6,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 
-export interface StaffSkillsProps {
+interface StaffSkillsProps {
   profileId: string;
-  isCurrentUser?: boolean;
+  isCurrentUser: boolean;
 }
 
-export function StaffSkills({ profileId, isCurrentUser = false }: StaffSkillsProps) {
+export function StaffSkills({ profileId, isCurrentUser }: StaffSkillsProps) {
   const { isAdmin } = useAdminStatus();
   const { user } = useAuth();
   
@@ -34,10 +34,11 @@ export function StaffSkills({ profileId, isCurrentUser = false }: StaffSkillsPro
         <CardTitle>Service Skills</CardTitle>
       </CardHeader>
       <CardContent>
-        <ServiceSkillsManager profileId={profileId} isCurrentUser={isCurrentUser} />
+        <ServiceSkillsManager profileId={profileId} />
       </CardContent>
     </Card>
   );
 }
 
+// Add a default export for the component
 export default StaffSkills;
