@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -71,12 +70,12 @@ export function CustomerList() {
             id, 
             customer_first_name, 
             customer_last_name, 
-            email, 
+            customer_email, 
+            customer_phone_number,
             customer_city, 
             customer_state_province,
             profile_id,
-            created_at,
-            phone_number
+            created_at
           `)
           .order('created_at', { ascending: false })
           .range(from, to)
@@ -94,9 +93,6 @@ export function CustomerList() {
         const customersWithProfiles = await Promise.all(customersData.map(async (customer) => {
           const customerWithProfile: Partial<Customer> = { ...customer };
           
-          // Map database fields to expected property names in Customer type
-          customerWithProfile.customer_email = customer.email || '';
-          
           if (customer.profile_id) {
             const { data: profileData } = await supabase
               .from('profiles')
@@ -111,8 +107,8 @@ export function CustomerList() {
               // Use profile data if customer fields are empty
               if (!customer.customer_first_name) customerWithProfile.customer_first_name = profileData.first_name || ''
               if (!customer.customer_last_name) customerWithProfile.customer_last_name = profileData.last_name || ''
-              if (!customer.email) customerWithProfile.customer_email = profileData.email || ''
-              if (!customer.phone_number) customerWithProfile.phone_number = profileData.phone_number
+              if (!customer.customer_email) customerWithProfile.customer_email = profileData.email || ''
+              if (!customer.customer_phone_number) customerWithProfile.phone_number = profileData.phone_number
             }
           }
           

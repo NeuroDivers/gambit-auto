@@ -603,60 +603,66 @@ export type Database = {
       customers: {
         Row: {
           access_token: string | null
-          city: string | null
-          country: string | null
           created_at: string
+          customer_address: string | null
+          customer_city: string | null
+          customer_country: string | null
+          customer_email: string
           customer_first_name: string
           customer_last_name: string
-          email: string
+          customer_phone: string | null
+          customer_postal_code: string | null
+          customer_state_province: string | null
+          customer_street_address: string | null
           id: string
           is_archived: boolean | null
           notes: string | null
           phone_number: string | null
-          postal_code: string | null
           profile_id: string | null
-          state_province: string | null
-          street_address: string | null
           unit_number: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
           access_token?: string | null
-          city?: string | null
-          country?: string | null
           created_at?: string
+          customer_address?: string | null
+          customer_city?: string | null
+          customer_country?: string | null
+          customer_email: string
           customer_first_name: string
           customer_last_name: string
-          email: string
+          customer_phone?: string | null
+          customer_postal_code?: string | null
+          customer_state_province?: string | null
+          customer_street_address?: string | null
           id?: string
           is_archived?: boolean | null
           notes?: string | null
           phone_number?: string | null
-          postal_code?: string | null
           profile_id?: string | null
-          state_province?: string | null
-          street_address?: string | null
           unit_number?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           access_token?: string | null
-          city?: string | null
-          country?: string | null
           created_at?: string
+          customer_address?: string | null
+          customer_city?: string | null
+          customer_country?: string | null
+          customer_email?: string
           customer_first_name?: string
           customer_last_name?: string
-          email?: string
+          customer_phone?: string | null
+          customer_postal_code?: string | null
+          customer_state_province?: string | null
+          customer_street_address?: string | null
           id?: string
           is_archived?: boolean | null
           notes?: string | null
           phone_number?: string | null
-          postal_code?: string | null
           profile_id?: string | null
-          state_province?: string | null
-          street_address?: string | null
           unit_number?: string | null
           updated_at?: string
           user_id?: string | null
@@ -959,7 +965,7 @@ export type Database = {
             columns: ["customer_email"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["email"]
+            referencedColumns: ["customer_email"]
           },
           {
             foreignKeyName: "quotes_client_id_fkey"
@@ -2549,7 +2555,7 @@ export type Database = {
             columns: ["customer_email"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["email"]
+            referencedColumns: ["customer_email"]
           },
           {
             foreignKeyName: "work_orders_client_id_fkey"
