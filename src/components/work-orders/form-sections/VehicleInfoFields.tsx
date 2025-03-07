@@ -10,7 +10,7 @@ import { WorkOrderFormValues } from "../types"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
-import { Vehicle } from "@/components/clients/vehicles/types"
+import { Vehicle } from "@/components/customers/vehicles/types"
 import { Switch } from "@/components/ui/switch"
 
 export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormValues> }) {
@@ -77,15 +77,15 @@ export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormV
     const selectedVehicle = customerVehicles.find(v => v.id === vehicleId);
     if (selectedVehicle) {
       // Populate form fields with vehicle data
-      setValue("customer_vehicle_make", selectedVehicle.customer_vehicle_make);
-      setValue("customer_vehicle_model", selectedVehicle.customer_vehicle_model);
-      setValue("customer_vehicle_year", selectedVehicle.customer_vehicle_year.toString());
-      setValue("customer_vehicle_vin", selectedVehicle.customer_vehicle_vin || "");
-      setValue("customer_vehicle_color", selectedVehicle.customer_vehicle_color || "");
-      setValue("customer_vehicle_trim", selectedVehicle.customer_vehicle_trim || "");
-      setValue("customer_vehicle_body_class", selectedVehicle.customer_vehicle_body_class || "");
-      setValue("customer_vehicle_doors", selectedVehicle.customer_vehicle_doors?.toString() || "");
-      setValue("customer_vehicle_license_plate", selectedVehicle.customer_vehicle_license_plate || "");
+      setValue("customer_vehicle_make", selectedVehicle.customer_vehicle_make || selectedVehicle.make || "");
+      setValue("customer_vehicle_model", selectedVehicle.customer_vehicle_model || selectedVehicle.model || "");
+      setValue("customer_vehicle_year", selectedVehicle.customer_vehicle_year?.toString() || selectedVehicle.year?.toString() || "");
+      setValue("customer_vehicle_vin", selectedVehicle.customer_vehicle_vin || selectedVehicle.vin || "");
+      setValue("customer_vehicle_color", selectedVehicle.customer_vehicle_color || selectedVehicle.color || "");
+      setValue("customer_vehicle_trim", selectedVehicle.customer_vehicle_trim || selectedVehicle.trim || "");
+      setValue("customer_vehicle_body_class", selectedVehicle.customer_vehicle_body_class || selectedVehicle.body_class || "");
+      setValue("customer_vehicle_doors", selectedVehicle.customer_vehicle_doors?.toString() || selectedVehicle.doors?.toString() || "");
+      setValue("customer_vehicle_license_plate", selectedVehicle.customer_vehicle_license_plate || selectedVehicle.license_plate || "");
     }
   };
 
@@ -118,7 +118,7 @@ export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormV
               <SelectItem value="none">None (enter manually)</SelectItem>
               {customerVehicles.map((vehicle) => (
                 <SelectItem key={vehicle.id} value={vehicle.id}>
-                  {vehicle.customer_vehicle_year} {vehicle.customer_vehicle_make} {vehicle.customer_vehicle_model} {vehicle.is_primary ? "(Primary)" : ""}
+                  {vehicle.customer_vehicle_year || vehicle.year} {vehicle.customer_vehicle_make || vehicle.make} {vehicle.customer_vehicle_model || vehicle.model} {vehicle.is_primary ? "(Primary)" : ""}
                 </SelectItem>
               ))}
             </SelectContent>

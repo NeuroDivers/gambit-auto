@@ -56,6 +56,29 @@ export type WorkOrder = {
       base_price?: number;
     };
   }>;
+  services?: Array<{
+    id: string;
+    quantity: number;
+    unit_price: number;
+    service_id: string;
+    service?: {
+      id: string;
+      name: string;
+      description?: string;
+    };
+    commission_rate?: number;
+    commission_type?: string;
+  }>;
+  // Add compatibility fields
+  vehicle_year?: number | string;
+  vehicle_make?: string;
+  vehicle_model?: string;
+  vehicle_vin?: string;
+  vehicle_color?: string;
+  vehicle_body_class?: string;
+  vehicle_doors?: number | string;
+  vehicle_trim?: string;
+  vehicle_license_plate?: string;
 };
 
 export type ServiceItemType = {
@@ -70,6 +93,7 @@ export type ServiceItemType = {
   sub_services?: ServiceItemType[];
   description?: string;
   package_id?: string;
+  parent_id?: string;
 };
 
 export type WorkOrderFormValues = {
@@ -103,6 +127,22 @@ export type WorkOrderFormValues = {
   service_items?: ServiceItemType[];
   save_vehicle?: boolean;
   is_primary_vehicle?: boolean;
+  
+  // Adding compatibility fields to match hooks/useWorkOrderSubmission.ts
+  vehicle_make?: string;
+  vehicle_model?: string;
+  vehicle_year?: string | number;
+  vehicle_vin?: string;
+  vehicle_color?: string;
+  vehicle_trim?: string;
+  vehicle_body_class?: string;
+  vehicle_doors?: string | number;
+  vehicle_license_plate?: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
 };
 
 export interface WorkOrderFormProps {

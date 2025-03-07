@@ -97,19 +97,19 @@ export function WorkOrderCard({ workOrder }: WorkOrderCardProps) {
               <span className="font-medium">Services:</span>
             </div>
             
-            {workOrder.services && workOrder.services.length > 0 ? (
+            {workOrder.work_order_services && workOrder.work_order_services.length > 0 ? (
               <div className="flex flex-wrap gap-1 mt-1">
-                {workOrder.services.map((service, idx) => (
+                {workOrder.work_order_services.map((service, idx) => (
                   <TooltipProvider key={idx}>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Badge variant="outline" className="text-xs">
-                          {service.service?.name || "Unnamed Service"}
+                          {service.service_types?.name || "Unnamed Service"}
                           {service.quantity > 1 && ` (x${service.quantity})`}
                         </Badge>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>{service.service?.description || "No description"}</p>
+                        <p>{service.service_types?.description || "No description"}</p>
                         {service.unit_price && (
                           <p className="font-medium mt-1">
                             ${service.unit_price.toFixed(2)} 

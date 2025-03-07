@@ -14,20 +14,20 @@ export function useWorkOrderSubmission() {
     try {
       // Prepare work order data
       const workOrderData = {
-        customer_first_name: formValues.customer_first_name,
-        customer_last_name: formValues.customer_last_name,
-        customer_email: formValues.customer_email,
-        customer_phone: formValues.customer_phone,
+        customer_first_name: formValues.customer_first_name || formValues.first_name,
+        customer_last_name: formValues.customer_last_name || formValues.last_name,
+        customer_email: formValues.customer_email || formValues.email,
+        customer_phone: formValues.customer_phone || formValues.phone,
         contact_preference: formValues.contact_preference,
-        customer_vehicle_make: formValues.customer_vehicle_make,
-        customer_vehicle_model: formValues.customer_vehicle_model,
-        customer_vehicle_year: formValues.customer_vehicle_year,
-        customer_vehicle_vin: formValues.customer_vehicle_vin,
-        customer_vehicle_color: formValues.customer_vehicle_color,
-        customer_vehicle_body_class: formValues.customer_vehicle_body_class,
-        customer_vehicle_doors: formValues.customer_vehicle_doors,
-        customer_vehicle_trim: formValues.customer_vehicle_trim,
-        customer_vehicle_license_plate: formValues.customer_vehicle_license_plate,
+        customer_vehicle_make: formValues.customer_vehicle_make || formValues.vehicle_make,
+        customer_vehicle_model: formValues.customer_vehicle_model || formValues.vehicle_model,
+        customer_vehicle_year: formValues.customer_vehicle_year || formValues.vehicle_year,
+        customer_vehicle_vin: formValues.customer_vehicle_vin || formValues.vehicle_vin,
+        customer_vehicle_color: formValues.customer_vehicle_color || formValues.vehicle_color,
+        customer_vehicle_body_class: formValues.customer_vehicle_body_class || formValues.vehicle_body_class,
+        customer_vehicle_doors: formValues.customer_vehicle_doors || formValues.vehicle_doors,
+        customer_vehicle_trim: formValues.customer_vehicle_trim || formValues.vehicle_trim,
+        customer_vehicle_license_plate: formValues.customer_vehicle_license_plate || formValues.vehicle_license_plate,
         additional_notes: formValues.additional_notes,
         start_time: formValues.start_time ? formValues.start_time.toISOString() : null,
         end_time: formValues.end_time ? formValues.end_time.toISOString() : null,
@@ -37,8 +37,8 @@ export function useWorkOrderSubmission() {
       };
 
       // Address fields if provided
-      if (formValues.customer_address) {
-        workOrderData["customer_address"] = formValues.customer_address;
+      if (formValues.customer_address || formValues.address) {
+        workOrderData["customer_address"] = formValues.customer_address || formValues.address;
       } else if (
         formValues.customer_street_address ||
         formValues.customer_city ||
@@ -127,6 +127,7 @@ export function useWorkOrderSubmission() {
             commission_rate: service.commission_rate,
             commission_type: service.commission_type,
             assigned_profile_id: service.assigned_profile_id,
+            package_id: service.package_id
           });
           
           // Then add all sub-services with reference to their parent
@@ -142,6 +143,7 @@ export function useWorkOrderSubmission() {
                 assigned_profile_id: subService.assigned_profile_id,
                 main_service_id: service.service_id,
                 sub_service_id: subService.service_id,
+                package_id: subService.package_id
               });
             });
           }

@@ -91,7 +91,7 @@ export interface Invoice {
   customer_vehicle_license_plate?: string;
   stripe_customer_id?: string;
   invoice_items?: InvoiceItem[];
-  vehicle_color?: string; // Adding this to support PublicView
+  vehicle_color?: string;
 }
 
 export interface CustomerInfo {
