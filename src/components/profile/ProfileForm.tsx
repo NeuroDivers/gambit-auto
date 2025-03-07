@@ -22,6 +22,7 @@ export function ProfileForm({ role }: ProfileFormProps) {
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [isCustomer, setIsCustomer] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -113,14 +114,6 @@ export function ProfileForm({ role }: ProfileFormProps) {
             formData.state_province = staffData.state_province || ""
             formData.postal_code = staffData.postal_code || ""
             formData.country = staffData.country || ""
-          } else {
-            // Fallback to profile data (though we expect this would be empty for address fields)
-            formData.unit_number = profile.unit_number || ""
-            formData.street_address = profile.street_address || ""
-            formData.city = profile.city || ""
-            formData.state_province = profile.state_province || ""
-            formData.postal_code = profile.postal_code || ""
-            formData.country = profile.country || ""
           }
         }
 
@@ -133,6 +126,7 @@ export function ProfileForm({ role }: ProfileFormProps) {
 
   async function onSubmit(values: ProfileFormValues) {
     try {
+      setIsSubmitting(true)
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("No user found")
 
@@ -144,7 +138,7 @@ export function ProfileForm({ role }: ProfileFormProps) {
         bio: values.bio,
       }
 
-      // Update profile with basic info (not address for customers)
+      // Update profile with basic info (not address)
       const { error: profileError } = await supabase
         .from('profiles')
         .update(profileUpdate)
@@ -221,9 +215,11 @@ export function ProfileForm({ role }: ProfileFormProps) {
       }
 
       toast.success("Profile updated successfully")
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating profile:', error)
-      toast.error("There was an error updating your profile")
+      toast.error(`Error updating profile: ${error.message}`)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -254,6 +250,7 @@ export function ProfileForm({ role }: ProfileFormProps) {
         form={form} 
         onSubmit={onSubmit}
         role={role}
+        isSubmitting={isSubmitting}
       />
 
       <Separator />

@@ -17,9 +17,10 @@ interface PersonalInfoFormProps {
   form: UseFormReturn<ProfileFormValues>
   onSubmit: (values: ProfileFormValues) => Promise<void>
   role?: string | null
+  isSubmitting?: boolean
 }
 
-export function PersonalInfoForm({ form, onSubmit, role }: PersonalInfoFormProps) {
+export function PersonalInfoForm({ form, onSubmit, role, isSubmitting = false }: PersonalInfoFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -185,7 +186,9 @@ export function PersonalInfoForm({ form, onSubmit, role }: PersonalInfoFormProps
           )}
         />
 
-        <Button type="submit">Update profile</Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Updating..." : "Update profile"}
+        </Button>
       </form>
     </Form>
   )
