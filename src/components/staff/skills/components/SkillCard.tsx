@@ -17,9 +17,9 @@ export function SkillCard({ skill, onRemove, isRemoving, onUpdate }: SkillCardPr
       <CardContent className="p-4">
         <div className="flex justify-between items-start">
           <div className="space-y-1">
-            <h3 className="font-medium">{skill.service_name}</h3>
+            <h3 className="font-medium">{skill.serviceName}</h3>
             <p className="text-sm text-muted-foreground">
-              Expertise: {skill.expertise_level || 'Beginner'}
+              Expertise: {skill.expertiseLevel || 'Beginner'}
             </p>
           </div>
           <Button
