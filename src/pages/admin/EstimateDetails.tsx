@@ -25,11 +25,12 @@ export default function EstimateDetails() {
     
     const fetchEstimate = async () => {
       try {
+        console.log('Fetching estimate with ID:', id)
         const { data, error } = await supabase
           .from("estimates")
           .select(`
             *,
-            customer:customers!quotes_client_id_fkey(*),
+            customer:customers(*),
             vehicle:vehicles(*),
             items:estimate_items(*)
           `)
@@ -37,6 +38,7 @@ export default function EstimateDetails() {
           .single()
 
         if (error) throw error
+        console.log('Fetched estimate data:', data)
         setEstimate(data)
       } catch (error) {
         console.error("Error fetching estimate:", error)
