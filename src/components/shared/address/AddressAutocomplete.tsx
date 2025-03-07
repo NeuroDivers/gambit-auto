@@ -44,6 +44,7 @@ export function AddressAutocomplete({ form, fieldPrefix = "" }: AddressAutocompl
           background-color: hsl(var(--background)) !important;
           border: 1px solid hsl(var(--border)) !important;
           border-radius: 0.5rem !important;
+          box-shadow: none !important; /* Removed drop shadow */
         }
         
         .mapboxgl-ctrl-geocoder--input {
@@ -56,6 +57,7 @@ export function AddressAutocomplete({ form, fieldPrefix = "" }: AddressAutocompl
         .mapboxgl-ctrl-geocoder--input:focus {
           outline: 2px solid hsl(var(--ring)) !important;
           outline-offset: -1px !important;
+          box-shadow: none !important; /* Removed drop shadow on focus */
         }
 
         .mapboxgl-ctrl-geocoder--icon {
@@ -158,7 +160,7 @@ export function AddressAutocomplete({ form, fieldPrefix = "" }: AddressAutocompl
   }, [form, fieldPrefix])
 
   return (
-    <div>
+    <div className="w-full">
       <div ref={geocoderContainerRef} className="mb-2" />
       <div className="text-sm text-muted-foreground">
         Optional: Use the search box above to update the address fields, or edit them directly below
