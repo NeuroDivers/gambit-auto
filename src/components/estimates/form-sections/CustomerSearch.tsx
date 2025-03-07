@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
@@ -36,7 +37,10 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     if (!selectedCustomer) return;
     
     // Set customer profile ID for the estimate
-    form.setValue('client_id', selectedCustomer.profile_id);
+    // Using setValue with appropriate form field name
+    if (form.getValues().hasOwnProperty('client_id')) {
+      form.setValue('client_id' as any, selectedCustomer.profile_id);
+    }
     
     // Fetch customer vehicles if available
     if (selectedCustomer.profile_id) {
@@ -48,10 +52,14 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
       
       if (vehicles && vehicles.length > 0) {
         const latestVehicle = vehicles[0];
-        form.setValue('customer_vehicle_make', latestVehicle.make || '');
-        form.setValue('customer_vehicle_model', latestVehicle.model || '');
-        form.setValue('customer_vehicle_year', latestVehicle.year || '');
-        form.setValue('customer_vehicle_vin', latestVehicle.vin || '');
+        
+        // Set vehicle information using appropriate form field names
+        if (form.getValues().hasOwnProperty('customer_vehicle_make')) {
+          form.setValue('customer_vehicle_make' as any, latestVehicle.make || '');
+          form.setValue('customer_vehicle_model' as any, latestVehicle.model || '');
+          form.setValue('customer_vehicle_year' as any, latestVehicle.year || '');
+          form.setValue('customer_vehicle_vin' as any, latestVehicle.vin || '');
+        }
       }
     }
   };
@@ -67,7 +75,7 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     <div className="space-y-6">
       <FormField
         control={form.control}
-        name="client_id"
+        name={'customer_first_name' as any}
         render={() => (
           <FormItem>
             <FormLabel>Customer Information</FormLabel>
@@ -85,6 +93,11 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
               customers={customers}
               isLoadingCustomers={isLoadingCustomers}
               onCustomerSelect={handleCustomerSelect}
+              setClientId={(value) => {
+                if (form.getValues().hasOwnProperty('client_id')) {
+                  form.setValue('client_id' as any, value);
+                }
+              }}
             />
           </FormItem>
         )}

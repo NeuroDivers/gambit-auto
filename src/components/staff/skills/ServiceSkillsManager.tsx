@@ -1,5 +1,4 @@
 
-import { useAuth } from '@/hooks/useAuth';
 import { useServiceTypes } from './hooks/useServiceTypes';
 import { useStaffSkills } from './hooks/useStaffSkills';
 import { useRemoveSkillMutation } from '../hooks/useRemoveSkillMutation';
@@ -11,32 +10,31 @@ export interface ServiceSkillsManagerProps {
 }
 
 export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
-  const { user } = useAuth();
   const { removeSkill, isLoading: isRemoving } = useRemoveSkillMutation();
   const { services, isLoadingServices } = useServiceTypes();
   const {
-    userSkills,
+    skills,
     isLoadingSkills,
-    refetchSkills,
-    isAddingSkill,
     selectedServiceId,
     setSelectedServiceId,
     proficiency,
     setProficiency,
-    handleAddSkill
+    handleAddSkill,
+    isAddingSkill,
+    addSkill
   } = useStaffSkills(profileId);
 
   const handleRemoveSkill = (skillId: string) => {
     removeSkill(skillId, {
       onSuccess: () => {
-        refetchSkills();
+        // Will be refetched automatically due to queryClient.invalidateQueries in the mutation
       }
     });
   };
 
   // Filter out services that the user already has
   const availableServices = services.filter(service => 
-    !userSkills.some(skill => skill.service_id === service.id)
+    !skills.some(skill => skill.service_id === service.id)
   );
 
   return (
@@ -55,7 +53,7 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
       <div>
         <h3 className="text-lg font-medium mb-4">Your Skills</h3>
         <SkillsList
-          skills={userSkills}
+          skills={skills}
           isLoading={isLoadingSkills}
           onRemoveSkill={handleRemoveSkill}
           isRemoving={isRemoving}

@@ -1,7 +1,8 @@
+
 import { FC } from "react";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { CustomerInfoFieldsProps } from "./CustomerInfoFields";
+import { CustomerInfoFieldsProps } from "./CustomerInfoFieldsProps";
 
 export const CustomerInfoFields: FC<CustomerInfoFieldsProps> = ({
   customerFirstName,
@@ -147,4 +148,5 @@ export const CustomerInfoFields: FC<CustomerInfoFieldsProps> = ({
   );
 };
 
+// Add default export
 export default CustomerInfoFields;

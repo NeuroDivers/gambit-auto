@@ -3,9 +3,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { StaffSkill, ServiceType } from "../types";
 import { toast } from "sonner";
+import { useState } from "react";
 
 export function useStaffSkills(profileId: string) {
   const queryClient = useQueryClient();
+  const [selectedServiceId, setSelectedServiceId] = useState<string>("");
+  const [proficiency, setProficiency] = useState<string>("beginner");
 
   const { data: skills = [], isLoading: isLoadingSkills } = useQuery({
     queryKey: ['staff-skills', profileId],
@@ -26,26 +29,18 @@ export function useStaffSkills(profileId: string) {
         .eq('is_active', true);
       
       if (error) throw error;
-      return data as StaffSkill[] || [];
-    }
-  });
-
-  const { mutate: removeSkill, isPending: isRemoving } = useMutation({
-    mutationFn: async (skillId: string) => {
-      const { error } = await supabase
-        .from('staff_service_skills')
-        .delete()
-        .eq('id', skillId);
-        
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['staff-skills', profileId] });
-      toast.success("Skill removed successfully");
-    },
-    onError: (error) => {
-      console.error("Error removing skill:", error);
-      toast.error("Failed to remove skill");
+      
+      // Transform the data to match the StaffSkill interface
+      return (data || []).map(item => ({
+        id: item.id,
+        service_id: item.service_id,
+        proficiency: item.proficiency,
+        service_types: {
+          id: item.service_types.id,
+          name: item.service_types.name,
+          description: item.service_types.description
+        }
+      })) as StaffSkill[];
     }
   });
 
@@ -87,6 +82,9 @@ export function useStaffSkills(profileId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff-skills', profileId] });
       toast.success("Skill added successfully");
+      // Reset form fields after successful addition
+      setSelectedServiceId("");
+      setProficiency("beginner");
     },
     onError: (error: any) => {
       console.error("Error adding skill:", error);
@@ -94,12 +92,27 @@ export function useStaffSkills(profileId: string) {
     }
   });
   
+  const handleAddSkill = () => {
+    if (!selectedServiceId) {
+      toast.error("Please select a service");
+      return;
+    }
+    
+    addSkill({ 
+      serviceId: selectedServiceId, 
+      proficiency 
+    });
+  };
+
   return {
     skills,
     isLoadingSkills,
-    removeSkill,
-    isRemoving,
     addSkill,
-    isAddingSkill
+    isAddingSkill,
+    selectedServiceId,
+    setSelectedServiceId,
+    proficiency,
+    setProficiency,
+    handleAddSkill
   };
 }

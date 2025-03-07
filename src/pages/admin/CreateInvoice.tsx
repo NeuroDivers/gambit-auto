@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useForm } from "react-hook-form"
@@ -9,12 +8,13 @@ import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
 import { InvoiceFormValues, InvoiceItem } from "@/components/invoices/types"
 import { Customer } from "@/components/customers/types"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 import { CustomerInfoFields } from "@/components/invoices/form-sections/CustomerInfoFields"
 import { VehicleInfoFields } from "@/components/invoices/form-sections/VehicleInfoFields"
 import { InvoiceStatusField } from "@/components/invoices/form-sections/InvoiceStatusField"
 import { InvoiceNotesField } from "@/components/invoices/form-sections/InvoiceNotesField"
-import { InvoiceItemsFields } from "@/components/invoices/form-sections/InvoiceItemsFields"
+import { InvoiceServiceItems } from "@/components/invoices/sections/InvoiceServiceItems"
 import { FormField, FormItem, FormLabel, FormControl, Form } from "@/components/ui/form"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
@@ -40,7 +40,6 @@ export default function CreateInvoice() {
   const [vehicleDoors, setVehicleDoors] = useState(0)
   const [vehicleTrim, setVehicleTrim] = useState("")
   
-  // Vehicle states with proper types
   const [vehicleMake, setVehicleMake] = useState("")
   const [vehicleModel, setVehicleModel] = useState("")
   const [vehicleYear, setVehicleYear] = useState(new Date().getFullYear())
@@ -178,7 +177,6 @@ export default function CreateInvoice() {
         }
 
         if (vehicles && vehicles.length > 0) {
-          // Use primary vehicle or fallback to first vehicle
           const primaryVehicle = vehicles.find(v => v.is_primary) || vehicles[0];
           
           setVehicleMake(primaryVehicle.make || '')
@@ -210,7 +208,6 @@ export default function CreateInvoice() {
   const onCustomerSelect = async (customerId: string) => {
     setSelectedCustomerId(customerId)
     
-    // Fetch customer vehicles when a customer is selected
     try {
       const { data: vehicles, error } = await supabase
         .from('vehicles')
@@ -224,10 +221,8 @@ export default function CreateInvoice() {
       }
 
       if (vehicles && vehicles.length > 0) {
-        // Use primary vehicle or fallback to first vehicle
         const primaryVehicle = vehicles.find(v => v.is_primary) || vehicles[0];
         
-        // Set vehicle info
         setVehicleMake(primaryVehicle.make || '')
         setVehicleModel(primaryVehicle.model || '')
         setVehicleYear(primaryVehicle.year || new Date().getFullYear())
@@ -238,7 +233,6 @@ export default function CreateInvoice() {
         
         toast.success(`Vehicle loaded: ${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model}`)
       } else {
-        // Reset vehicle fields if no vehicles found
         setVehicleMake('')
         setVehicleModel('')
         setVehicleYear(new Date().getFullYear())
@@ -273,6 +267,9 @@ export default function CreateInvoice() {
           <div className="flex-1 p-4 grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-min">
             <div className="space-y-6">
               <Card>
+                <CardHeader>
+                  <CardTitle>Invoice Details</CardTitle>
+                </CardHeader>
                 <CardContent className="pt-6 space-y-4">
                   <InvoiceStatusField form={form} defaultValue={form.watch('status')} />
                   
@@ -318,6 +315,9 @@ export default function CreateInvoice() {
               </Card>
 
               <Card>
+                <CardHeader>
+                  <CardTitle>Customer Information</CardTitle>
+                </CardHeader>
                 <CardContent className="pt-6">
                   <CustomerInfoFields 
                     customerFirstName={form.watch('customer_first_name')}
@@ -348,6 +348,9 @@ export default function CreateInvoice() {
               </Card>
 
               <Card>
+                <CardHeader>
+                  <CardTitle>Vehicle Information</CardTitle>
+                </CardHeader>
                 <CardContent className="pt-6">
                   <VehicleInfoFields
                     vehicleMake={vehicleMake}
@@ -388,9 +391,11 @@ export default function CreateInvoice() {
 
             <div className="space-y-6">
               <Card>
+                <CardHeader>
+                  <CardTitle>Service Items</CardTitle>
+                </CardHeader>
                 <CardContent className="pt-6">
-                  <h3 className="text-lg font-semibold mb-4">Service Items</h3>
-                  <InvoiceItemsFields
+                  <InvoiceServiceItems
                     items={form.watch('invoice_items')}
                     setItems={handleItemsChange}
                     allowPriceEdit={true}
@@ -399,6 +404,9 @@ export default function CreateInvoice() {
               </Card>
 
               <Card>
+                <CardHeader>
+                  <CardTitle>Tax Summary</CardTitle>
+                </CardHeader>
                 <CardContent className="pt-6">
                   <InvoiceTaxSummary 
                     items={form.watch('invoice_items')} 
@@ -408,6 +416,9 @@ export default function CreateInvoice() {
               </Card>
 
               <Card>
+                <CardHeader>
+                  <CardTitle>Notes</CardTitle>
+                </CardHeader>
                 <CardContent className="pt-6">
                   <InvoiceNotesField form={form} />
                 </CardContent>

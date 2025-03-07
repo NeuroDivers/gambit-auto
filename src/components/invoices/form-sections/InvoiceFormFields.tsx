@@ -1,10 +1,13 @@
 import CustomerInfoFields from "./CustomerInfoFields";
-
-import { VehicleInfoFields } from "./VehicleInfoFields"
-import { WorkOrderSelect } from "./WorkOrderSelect"
-import { InvoiceItemsFields } from "./InvoiceItemsFields"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { InvoiceItemsFields } from "./InvoiceItemsFields";
+import { VehicleInfoFields } from "./VehicleInfoFields";
+import { InvoiceNotesField } from "./InvoiceNotesField";
+import { WorkOrderSelect } from "./WorkOrderSelect";
+import { InvoiceStatusField } from "./InvoiceStatusField";
+import { FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UseFormReturn } from "react-hook-form";
+import { InvoiceFormValues } from "../types";
 
 type InvoiceFormFieldsProps = {
   customerFirstName: string
