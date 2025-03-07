@@ -1,15 +1,15 @@
 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useQuery } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Check, ChevronsUpDown, Search, Star } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
+import { toast } from "sonner"
 
 type CustomerInfoFieldsProps = {
   customerFirstName: string
@@ -20,8 +20,8 @@ type CustomerInfoFieldsProps = {
   setCustomerEmail: (value: string) => void
   customerPhone: string
   setCustomerPhone: (value: string) => void
-  customerAddress: string
-  setCustomerAddress: (value: string) => void
+  customerAddress?: string
+  setCustomerAddress?: (value: string) => void
   customerStreetAddress?: string
   setCustomerStreetAddress?: (value: string) => void
   customerUnitNumber?: string
@@ -34,9 +34,9 @@ type CustomerInfoFieldsProps = {
   setCustomerPostalCode?: (value: string) => void
   customerCountry?: string
   setCustomerCountry?: (value: string) => void
-  customers?: any[]
-  isLoadingCustomers?: boolean
   onCustomerSelect?: (customerId: string) => void
+  clientIdField?: string
+  setClientId?: (value: string) => void
 }
 
 export function CustomerInfoFields({
@@ -62,18 +62,18 @@ export function CustomerInfoFields({
   setCustomerPostalCode,
   customerCountry,
   setCustomerCountry,
-  customers = [],
-  isLoadingCustomers = false,
-  onCustomerSelect
+  onCustomerSelect,
+  clientIdField,
+  setClientId
 }: CustomerInfoFieldsProps) {
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
 
   const { data: customersList, isLoading } = useQuery({
-    queryKey: ["customers_for_invoice"],
+    queryKey: ["customers_for_document"],
     queryFn: async () => {
-      console.log("Fetching customers for invoice creation")
+      console.log("Fetching customers for document creation")
       const { data, error } = await supabase
         .from("customers")
         .select("*")
@@ -100,15 +100,17 @@ export function CustomerInfoFields({
       setCustomerPhone(selectedCustomer.customer_phone || "")
       
       // Set full address for backward compatibility
-      const fullAddress = [
-        selectedCustomer.customer_street_address,
-        selectedCustomer.customer_unit_number ? `Unit ${selectedCustomer.customer_unit_number}` : "",
-        selectedCustomer.customer_city,
-        selectedCustomer.customer_state_province,
-        selectedCustomer.customer_postal_code,
-        selectedCustomer.customer_country
-      ].filter(Boolean).join(", ")
-      setCustomerAddress(fullAddress)
+      if (setCustomerAddress) {
+        const fullAddress = [
+          selectedCustomer.customer_street_address,
+          selectedCustomer.customer_unit_number ? `Unit ${selectedCustomer.customer_unit_number}` : "",
+          selectedCustomer.customer_city,
+          selectedCustomer.customer_state_province,
+          selectedCustomer.customer_postal_code,
+          selectedCustomer.customer_country
+        ].filter(Boolean).join(", ")
+        setCustomerAddress(fullAddress)
+      }
       
       // Set individual address fields if they exist
       if (setCustomerStreetAddress) setCustomerStreetAddress(selectedCustomer.customer_street_address || "")
@@ -118,7 +120,12 @@ export function CustomerInfoFields({
       if (setCustomerPostalCode) setCustomerPostalCode(selectedCustomer.customer_postal_code || "")
       if (setCustomerCountry) setCustomerCountry(selectedCustomer.customer_country || "")
       
-      // Fetch customer vehicles
+      // Set client_id if needed for forms that use it
+      if (setClientId) {
+        setClientId(customerId)
+      }
+      
+      // Fetch customer vehicles when a customer is selected
       try {
         const { data: vehicles, error } = await supabase
           .from('vehicles')
@@ -135,6 +142,9 @@ export function CustomerInfoFields({
           
           // Dispatch event to inform parent components
           if (onCustomerSelect) onCustomerSelect(customerId)
+          
+          // Show success message for vehicle loading
+          toast.success(`Vehicle loaded: ${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model}`)
         }
       } catch (error) {
         console.error('Error in vehicle fetch process:', error)
@@ -331,7 +341,7 @@ export function CustomerInfoFields({
         </Card>
       )}
 
-      {setCustomerStreetAddress === undefined && (
+      {setCustomerStreetAddress === undefined && setCustomerAddress && (
         <div>
           <Label htmlFor="customerAddress">Address</Label>
           <Input
