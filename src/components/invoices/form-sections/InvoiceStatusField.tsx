@@ -9,7 +9,7 @@ export interface InvoiceStatusFieldProps {
   disabled?: boolean;
 }
 
-const InvoiceStatusField: React.FC<InvoiceStatusFieldProps> = ({ value, onChange, disabled = false }) => {
+export const InvoiceStatusField: React.FC<InvoiceStatusFieldProps> = ({ value, onChange, disabled = false }) => {
   return (
     <div className="space-y-2">
       <Label htmlFor="invoiceStatus">Status</Label>

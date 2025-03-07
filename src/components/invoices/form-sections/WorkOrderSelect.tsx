@@ -10,7 +10,7 @@ export interface WorkOrderSelectProps {
   disabled?: boolean;
 }
 
-const WorkOrderSelect: React.FC<WorkOrderSelectProps> = ({ 
+export const WorkOrderSelect: React.FC<WorkOrderSelectProps> = ({ 
   value, 
   onChange, 
   workOrders, 

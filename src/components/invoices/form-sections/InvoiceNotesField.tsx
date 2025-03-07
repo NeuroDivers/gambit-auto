@@ -9,7 +9,7 @@ export interface InvoiceNotesFieldProps {
   disabled?: boolean;
 }
 
-const InvoiceNotesField: React.FC<InvoiceNotesFieldProps> = ({ 
+export const InvoiceNotesField: React.FC<InvoiceNotesFieldProps> = ({ 
   value, 
   onChange, 
   disabled = false 
