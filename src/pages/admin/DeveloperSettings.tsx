@@ -8,7 +8,7 @@ import { CacheClearManager } from "@/components/developer/CacheClearManager";
 export default function DeveloperSettings() {
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <PageTitle>Developer Settings</PageTitle>
+      <PageTitle title="Developer Settings">Developer Settings</PageTitle>
       
       <Tabs defaultValue="theme" className="w-full">
         <TabsList className="mb-4 w-full sm:w-auto">
