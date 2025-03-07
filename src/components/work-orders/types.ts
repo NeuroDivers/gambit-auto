@@ -36,15 +36,25 @@ export type WorkOrder = {
     id: string;
     name: string;
   } | null;
-  services?: Array<{
+  work_order_services?: Array<{
     id: string;
     quantity: number;
     unit_price: number;
-    service: {
+    service_id: string;
+    commission_rate?: number;
+    commission_type?: string;
+    assigned_profile_id?: string;
+    profiles?: {
+      id: string;
+      first_name: string;
+      last_name: string;
+    };
+    service_types?: {
       id: string;
       name: string;
       description?: string;
-    } | null;
+      base_price?: number;
+    };
   }>;
 };
 

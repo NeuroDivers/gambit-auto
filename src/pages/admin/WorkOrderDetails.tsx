@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -320,7 +321,7 @@ export default function WorkOrderDetails() {
             <div>
               <h3 className="font-medium">Assigned Bay</h3>
               <p className="text-sm text-muted-foreground">
-                {workOrder.service_bays?.name || "Unassigned"}
+                {workOrder.service_bay?.name || "Unassigned"}
               </p>
             </div>
             <div>
