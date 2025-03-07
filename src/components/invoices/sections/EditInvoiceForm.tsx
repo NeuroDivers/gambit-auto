@@ -1,93 +1,152 @@
 
-import { Button } from "@/components/ui/button"
-import { Form } from "@/components/ui/form"
-import { UseFormReturn } from "react-hook-form"
-import { InvoiceFormValues } from "../types"
-import { InvoiceStatusField } from "../form-sections/InvoiceStatusField"
-import { InvoiceNotesField } from "../form-sections/InvoiceNotesField"
-import CustomerInfoFields from "../form-sections/CustomerInfoFields"
-import { VehicleInfoFields } from "../form-sections/VehicleInfoFields"
-import { InvoiceServiceItems } from "./InvoiceServiceItems"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form"
-import { CalendarIcon } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { useState } from "react"
+import { useState, useEffect } from 'react';
+import { UseFormReturn } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { InvoiceFormValues, InvoiceItem } from "../types";
+import { supabase } from "@/integrations/supabase/client";
+import { InvoiceItemsFields } from "../form-sections/InvoiceItemsFields";
+import { InvoiceNotesField } from "../form-sections/InvoiceNotesField";
+import CustomerInfoFields from "@/components/invoices/form-sections/CustomerInfoFields";
+import { VehicleInfoFields } from "../form-sections/VehicleInfoFields";
+import { InvoiceStatusField } from "../form-sections/InvoiceStatusField";
+import { InvoiceServiceItems } from "../form-sections/InvoiceServiceItems";
+import { WorkOrderSelect } from "../form-sections/WorkOrderSelect";
+import { InvoiceTaxSummary } from "../form-sections/InvoiceTaxSummary";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-type EditInvoiceFormProps = {
-  form: UseFormReturn<InvoiceFormValues>
-  onSubmit: (values: InvoiceFormValues) => void
-  isPending: boolean
-  invoiceId: string | undefined
-  customers?: any[]
-  isLoadingCustomers?: boolean
-  onCustomerSelect?: (customerId: string) => void
+interface EditInvoiceFormProps {
+  form: UseFormReturn<InvoiceFormValues>;
+  onSubmit: (values: InvoiceFormValues) => Promise<void>;
+  isPending: boolean;
+  invoiceId: string;
 }
 
-export function EditInvoiceForm({ 
-  form, 
-  onSubmit, 
-  isPending, 
-  invoiceId,
-  customers = [],
-  isLoadingCustomers = false,
-  onCustomerSelect
-}: EditInvoiceFormProps) {
-  const [vehicleBodyClass, setVehicleBodyClass] = useState("")
-  const [vehicleDoors, setVehicleDoors] = useState(0)
-  const [vehicleTrim, setVehicleTrim] = useState("")
-  
+export function EditInvoiceForm({ form, onSubmit, isPending, invoiceId }: EditInvoiceFormProps) {
+  const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
+  const [subtotal, setSubtotal] = useState(0);
+  const [taxAmount, setTaxAmount] = useState(0);
+  const [gstAmount, setGstAmount] = useState(0);
+  const [qstAmount, setQstAmount] = useState(0);
+  const [total, setTotal] = useState(0);
+
+  // Get the business profile for tax rates
+  const { data: businessProfile } = useQuery({
+    queryKey: ['business-profile'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('business_profile')
+        .select('*')
+        .single();
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const { data: existingItems } = useQuery({
+    queryKey: ['invoice-items', invoiceId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('invoice_items')
+        .select('*')
+        .eq('invoice_id', invoiceId);
+      
+      if (error) throw error;
+      return data as InvoiceItem[];
+    },
+    enabled: !!invoiceId
+  });
+
+  useEffect(() => {
+    if (existingItems && existingItems.length > 0) {
+      setInvoiceItems(existingItems);
+    }
+  }, [existingItems]);
+
+  // Calculate totals whenever invoice items change
+  useEffect(() => {
+    const calculateTotals = () => {
+      const itemSubtotal = invoiceItems.reduce((sum, item) => 
+        sum + (item.unit_price * item.quantity), 0);
+      
+      let gst = 0;
+      let qst = 0;
+      
+      if (businessProfile) {
+        const gstRate = businessProfile.gst_rate || 0;
+        const qstRate = businessProfile.qst_rate || 0;
+        
+        gst = itemSubtotal * (gstRate / 100);
+        qst = (itemSubtotal + gst) * (qstRate / 100);
+      }
+      
+      const tax = gst + qst;
+      const grandTotal = itemSubtotal + tax;
+      
+      setSubtotal(itemSubtotal);
+      setGstAmount(gst);
+      setQstAmount(qst);
+      setTaxAmount(tax);
+      setTotal(grandTotal);
+      
+      // Update form values
+      form.setValue('subtotal', itemSubtotal);
+      form.setValue('gst_amount', gst);
+      form.setValue('qst_amount', qst);
+      form.setValue('tax_amount', tax);
+      form.setValue('total', grandTotal);
+    };
+    
+    calculateTotals();
+  }, [invoiceItems, businessProfile, form]);
+
+  const handleFormSubmit = async (data: InvoiceFormValues) => {
+    try {
+      // Include the invoice items
+      data.invoice_items = invoiceItems;
+      
+      // Include calculated totals
+      data.subtotal = subtotal;
+      data.tax_amount = taxAmount;
+      data.gst_amount = gstAmount;
+      data.qst_amount = qstAmount;
+      data.total = total;
+      
+      await onSubmit(data);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast.error('Failed to save invoice');
+    }
+  };
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="flex-1 overflow-y-auto space-y-6 px-4 pb-4">
+    <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Invoice Status</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <InvoiceStatusField form={form} defaultValue={form.watch('status')} />
-              
-              <FormField
-                control={form.control}
-                name="due_date"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Due Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "pl-3 text-left font-normal w-[240px]",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(new Date(field.value), "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value ? new Date(field.value) : undefined}
-                          onSelect={(date) => field.onChange(date ? date.toISOString() : null)}
-                          disabled={(date) => date < new Date()}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </FormItem>
-                )}
+            <CardContent>
+              <InvoiceStatusField
+                value={form.watch('status')}
+                onChange={(value) => form.setValue('status', value)}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Work Order</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <WorkOrderSelect
+                value={form.watch('work_order_id')}
+                onChange={(workOrderId) => {
+                  form.setValue('work_order_id', workOrderId);
+                }}
               />
             </CardContent>
           </Card>
@@ -97,7 +156,7 @@ export function EditInvoiceForm({
               <CardTitle>Customer Information</CardTitle>
             </CardHeader>
             <CardContent>
-              <CustomerInfoFields 
+              <CustomerInfoFields
                 customerFirstName={form.watch('customer_first_name')}
                 setCustomerFirstName={(value) => form.setValue('customer_first_name', value)}
                 customerLastName={form.watch('customer_last_name')}
@@ -108,9 +167,6 @@ export function EditInvoiceForm({
                 setCustomerPhone={(value) => form.setValue('customer_phone', value)}
                 customerAddress={form.watch('customer_address')}
                 setCustomerAddress={(value) => form.setValue('customer_address', value)}
-                customers={customers}
-                isLoadingCustomers={isLoadingCustomers}
-                onCustomerSelect={onCustomerSelect}
               />
             </CardContent>
           </Card>
@@ -121,61 +177,80 @@ export function EditInvoiceForm({
             </CardHeader>
             <CardContent>
               <VehicleInfoFields
-                vehicleMake={form.watch('customer_vehicle_make')}
-                setVehicleMake={(value) => form.setValue('customer_vehicle_make', value)}
-                vehicleModel={form.watch('customer_vehicle_model')}
-                setVehicleModel={(value) => form.setValue('customer_vehicle_model', value)}
-                vehicleYear={form.watch('customer_vehicle_year')}
-                setVehicleYear={(value) => form.setValue('customer_vehicle_year', value)}
-                vehicleVin={form.watch('customer_vehicle_vin')}
-                setVehicleVin={(value) => form.setValue('customer_vehicle_vin', value)}
-                vehicleBodyClass={form.watch('customer_vehicle_body_class') || vehicleBodyClass}
-                setVehicleBodyClass={(value) => {
-                  form.setValue('customer_vehicle_body_class', value);
-                  setVehicleBodyClass(value);
-                }}
-                vehicleDoors={form.watch('customer_vehicle_doors') || vehicleDoors}
-                setVehicleDoors={(value) => {
-                  form.setValue('customer_vehicle_doors', value);
-                  setVehicleDoors(value);
-                }}
-                vehicleTrim={form.watch('customer_vehicle_trim') || vehicleTrim}
-                setVehicleTrim={(value) => {
-                  form.setValue('customer_vehicle_trim', value);
-                  setVehicleTrim(value);
-                }}
+                make={form.watch('customer_vehicle_make')}
+                setMake={(value) => form.setValue('customer_vehicle_make', value)}
+                model={form.watch('customer_vehicle_model')}
+                setModel={(value) => form.setValue('customer_vehicle_model', value)}
+                year={form.watch('customer_vehicle_year')}
+                setYear={(value) => form.setValue('customer_vehicle_year', value)}
+                vin={form.watch('customer_vehicle_vin')}
+                setVin={(value) => form.setValue('customer_vehicle_vin', value)}
+                color={form.watch('customer_vehicle_color')}
+                setColor={(value) => form.setValue('customer_vehicle_color', value)}
+                trim={form.watch('customer_vehicle_trim')}
+                setTrim={(value) => form.setValue('customer_vehicle_trim', value)}
+                bodyClass={form.watch('customer_vehicle_body_class')}
+                setBodyClass={(value) => form.setValue('customer_vehicle_body_class', value)}
+                doors={form.watch('customer_vehicle_doors')}
+                setDoors={(value) => form.setValue('customer_vehicle_doors', value)}
+                licensePlate={form.watch('customer_vehicle_license_plate')}
+                setLicensePlate={(value) => form.setValue('customer_vehicle_license_plate', value)}
               />
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
-              <CardTitle>Services</CardTitle>
+              <CardTitle>Invoice Items</CardTitle>
             </CardHeader>
             <CardContent>
-              <InvoiceServiceItems form={form} />
+              <InvoiceServiceItems
+                invoiceId={invoiceId}
+                items={invoiceItems}
+                setItems={setInvoiceItems}
+                allowPriceEdit={true}
+              />
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Notes</CardTitle>
+              <CardTitle>Additional Notes</CardTitle>
             </CardHeader>
             <CardContent>
-              <InvoiceNotesField form={form} />
+              <InvoiceNotesField
+                value={form.watch('notes')}
+                onChange={(value) => form.setValue('notes', value)}
+              />
             </CardContent>
           </Card>
         </div>
 
-        <div className="flex justify-end gap-4 py-4 px-4 border-t bg-background">
-          <Button variant="outline" type="button" onClick={() => form.reset()}>
-            Reset
-          </Button>
-          <Button type="submit" disabled={isPending}>
-            {isPending ? 'Saving...' : 'Save Changes'}
-          </Button>
+        <div className="space-y-6">
+          <Card className="sticky top-6">
+            <CardHeader>
+              <CardTitle>Invoice Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <InvoiceTaxSummary
+                subtotal={subtotal}
+                taxAmount={taxAmount}
+                gstAmount={gstAmount}
+                qstAmount={qstAmount}
+                total={total}
+              />
+
+              <Button
+                type="submit"
+                className="w-full mt-6"
+                disabled={isPending}
+              >
+                {isPending ? 'Saving...' : 'Update Invoice'}
+              </Button>
+            </CardContent>
+          </Card>
         </div>
-      </form>
-    </Form>
+      </div>
+    </form>
   );
 }

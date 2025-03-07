@@ -1,84 +1,111 @@
 
-import { useState, useEffect } from "react";
-import { FormField, FormItem, FormLabel } from "@/components/ui/form";
-import { UseFormReturn } from "react-hook-form";
-import { EstimateFormValues } from "../types";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-import CustomerInfoFields from "@/components/invoices/form-sections/CustomerInfoFields";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import CustomerInfoFields from '@/components/invoices/form-sections/CustomerInfoFields';
 
-interface CustomerSearchProps {
-  form: UseFormReturn<EstimateFormValues>;
-}
-
-export function CustomerSearch({ form }: CustomerSearchProps) {
+export function CustomerSearch({ form }: { form: any }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
 
-  // Fetch customers
-  const { data: customers = [], isLoading: isLoadingCustomers } = useQuery({
-    queryKey: ['customers'],
+  // Customer search query
+  const { data: customers = [], isLoading } = useQuery({
+    queryKey: ['customers', searchTerm],
     queryFn: async () => {
+      if (!searchTerm) return [];
+      
       const { data, error } = await supabase
         .from('customers')
         .select('*')
-        .order('customer_last_name', { ascending: true });
-
+        .or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
+        .limit(10);
+      
       if (error) throw error;
-      return data || [];
-    }
+      return data;
+    },
+    enabled: searchTerm.length > 1,
   });
 
-  // Handle customer selection
-  const handleCustomerSelect = async (customerId: string) => {
-    setSelectedCustomerId(customerId);
+  // Function to handle customer selection
+  const handleSelectCustomer = (customer: any) => {
+    form.setValue('customer_first_name', customer.first_name);
+    form.setValue('customer_last_name', customer.last_name);
+    form.setValue('customer_email', customer.email);
+    form.setValue('customer_phone', customer.phone_number);
     
-    // Find the selected customer
-    const selectedCustomer = customers.find(c => c.id === customerId);
-    if (!selectedCustomer) return;
-    
-    // Set customer profile ID for the estimate
-    // Using setValue with appropriate form field name
-    if (form.getValues().hasOwnProperty('client_id')) {
-      form.setValue('client_id' as any, selectedCustomer.profile_id);
+    // Set client_id if the form has a field for it
+    try {
+      form.setValue('client_id', customer.id);
+    } catch (e) {
+      // Field might not exist in the form, ignore error
     }
     
-    // Fetch customer vehicles if available
-    if (selectedCustomer.profile_id) {
-      const { data: vehicles } = await supabase
-        .from('customer_vehicles')
-        .select('*')
-        .eq('profile_id', selectedCustomer.profile_id)
-        .order('created_at', { ascending: false });
-      
-      if (vehicles && vehicles.length > 0) {
-        const latestVehicle = vehicles[0];
-        
-        // Set vehicle information using appropriate form field names
-        if (form.getValues().hasOwnProperty('customer_vehicle_make')) {
-          form.setValue('customer_vehicle_make' as any, latestVehicle.make || '');
-          form.setValue('customer_vehicle_model' as any, latestVehicle.model || '');
-          form.setValue('customer_vehicle_year' as any, latestVehicle.year || '');
-          form.setValue('customer_vehicle_vin' as any, latestVehicle.vin || '');
-        }
+    // Set vehicle information if available
+    if (customer.vehicles && customer.vehicles[0]) {
+      try {
+        form.setValue('customer_vehicle_make', customer.vehicles[0].make);
+        form.setValue('customer_vehicle_model', customer.vehicles[0].model);
+        form.setValue('customer_vehicle_year', customer.vehicles[0].year);
+        form.setValue('customer_vehicle_vin', customer.vehicles[0].vin);
+      } catch (e) {
+        // Fields might not exist in the form, ignore error
       }
     }
+    
+    setSelectedCustomerId(customer.id);
+    setIsOpen(false);
   };
 
-  // Reset form when unmounting
-  useEffect(() => {
-    return () => {
-      form.reset();
-    };
-  }, [form]);
-
   return (
-    <div className="space-y-6">
-      <FormField
-        control={form.control}
-        name={'customer_first_name' as any}
-        render={() => (
-          <FormItem>
-            <FormLabel>Customer Information</FormLabel>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" type="button" className="mb-4">
+          Search for Customer
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>Search Customers</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <Input
+            placeholder="Search by name or email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          
+          {isLoading ? (
+            <p>Loading...</p>
+          ) : (
+            <>
+              {customers.length > 0 ? (
+                <div className="space-y-4">
+                  {customers.map((customer: any) => (
+                    <div key={customer.id} className="border p-4 rounded-md hover:bg-gray-50 cursor-pointer" onClick={() => handleSelectCustomer(customer)}>
+                      <p className="font-medium">{customer.first_name} {customer.last_name}</p>
+                      <p className="text-sm text-gray-500">{customer.email}</p>
+                      {customer.phone_number && <p className="text-sm text-gray-500">{customer.phone_number}</p>}
+                    </div>
+                  ))}
+                </div>
+              ) : searchTerm.length > 1 ? (
+                <p>No customers found. Create a new customer with the form below.</p>
+              ) : (
+                <p>Type at least 2 characters to search.</p>
+              )}
+            </>
+          )}
+          
+          <Separator />
+          
+          <div>
+            <h3 className="text-lg font-medium mb-4">Create New Customer</h3>
             <CustomerInfoFields
               customerFirstName={form.watch('customer_first_name')}
               setCustomerFirstName={(value) => form.setValue('customer_first_name', value)}
@@ -88,20 +115,17 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
               setCustomerEmail={(value) => form.setValue('customer_email', value)}
               customerPhone={form.watch('customer_phone')}
               setCustomerPhone={(value) => form.setValue('customer_phone', value)}
-              customerAddress={form.watch('customer_address')}
-              setCustomerAddress={(value) => form.setValue('customer_address', value)}
-              customers={customers}
-              isLoadingCustomers={isLoadingCustomers}
-              onCustomerSelect={handleCustomerSelect}
-              setClientId={(value) => {
-                if (form.getValues().hasOwnProperty('client_id')) {
-                  form.setValue('client_id' as any, value);
-                }
-              }}
             />
-          </FormItem>
-        )}
-      />
-    </div>
+            
+            <Button
+              className="mt-4"
+              onClick={() => setIsOpen(false)}
+            >
+              Use This Customer
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
