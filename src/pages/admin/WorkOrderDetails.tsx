@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { WorkOrderStatusBadge } from "@/components/work-orders/WorkOrderStatusBadge";
 import { format } from "date-fns";
-import { ArrowLeft, FileEdit, Wrench, Receipt } from "lucide-react";
+import { ArrowLeft, FileEdit, Wrench, Receipt, User } from "lucide-react";
 import { WorkOrder } from "@/components/work-orders/types";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs";
@@ -47,6 +47,11 @@ export default function WorkOrderDetails() {
               name,
               description,
               base_price
+            ),
+            profiles!work_order_services_assigned_profile_id_fkey (
+              id,
+              first_name,
+              last_name
             )
           )
         `)
@@ -316,6 +321,18 @@ export default function WorkOrderDetails() {
                     <div>
                       <h3 className="font-medium">{service.service_types?.name || 'Unknown Service'}</h3>
                       <p className="text-sm text-muted-foreground">{service.service_types?.description || ''}</p>
+                      
+                      {service.profiles ? (
+                        <div className="flex items-center mt-2 text-sm text-muted-foreground">
+                          <User className="h-3.5 w-3.5 mr-1.5" />
+                          <span>Assigned to: {service.profiles.first_name} {service.profiles.last_name}</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center mt-2 text-sm text-muted-foreground">
+                          <User className="h-3.5 w-3.5 mr-1.5" />
+                          <span>Not assigned</span>
+                        </div>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="font-medium">${service.unit_price.toFixed(2)} × {service.quantity}</p>

@@ -44,7 +44,12 @@ export interface WorkOrder extends CustomerVehicleRecordInfo {
       name: string;
       description: string;
       base_price: number;
-    }
+    };
+    profiles?: {
+      id: string;
+      first_name: string | null;
+      last_name: string | null;
+    };
   }>;
   // Vehicle fields
   vehicle_make?: string;
