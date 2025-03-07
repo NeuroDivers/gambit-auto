@@ -23,20 +23,25 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
       const { data, error } = await supabase
         .from("customers")
         .select("*")
-        .order("first_name", { ascending: true });
+        .order("customer_first_name", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching customers:", error);
+        throw error;
+      }
       console.log("Fetched customers:", data);
       return data || [];
     },
   });
 
-  const filteredCustomers = customers?.filter(
-    (customer) =>
-      customer.first_name?.toLowerCase().includes(search.toLowerCase()) ||
-      customer.last_name?.toLowerCase().includes(search.toLowerCase()) ||
-      customer.email?.toLowerCase().includes(search.toLowerCase())
-  ) || [];
+  const filteredCustomers = customers
+    ? customers.filter(
+        (customer) =>
+          customer.customer_first_name?.toLowerCase().includes(search.toLowerCase()) ||
+          customer.customer_last_name?.toLowerCase().includes(search.toLowerCase()) ||
+          customer.email?.toLowerCase().includes(search.toLowerCase())
+      )
+    : [];
 
   const handleSelect = async (selectedValue: string) => {
     setValue(selectedValue);
@@ -49,8 +54,8 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
     if (selectedCustomer) {
       try {
         // Set customer information
-        form.setValue("customer_first_name", selectedCustomer.first_name || "");
-        form.setValue("customer_last_name", selectedCustomer.last_name || "");
+        form.setValue("customer_first_name", selectedCustomer.customer_first_name || "");
+        form.setValue("customer_last_name", selectedCustomer.customer_last_name || "");
         form.setValue("customer_email", selectedCustomer.email || "");
         form.setValue("customer_phone", selectedCustomer.phone_number || "");
         form.setValue("customer_street_address", selectedCustomer.street_address || "");
@@ -123,7 +128,7 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
           items={
             filteredCustomers.map((customer) => ({
               value: customer.id,
-              label: `${customer.first_name} ${customer.last_name} (${customer.email})`,
+              label: `${customer.customer_first_name} ${customer.customer_last_name} (${customer.email || "No email"})`,
             })) || []
           }
           value={value}
