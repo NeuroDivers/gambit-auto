@@ -3,7 +3,6 @@ import { StaffLayoutWrapper } from "@/components/staff/StaffLayoutWrapper"
 import { ClientLayoutWrapper } from "@/components/client/ClientLayoutWrapper"
 import Dashboard from "@/pages/dashboard/Dashboard"
 import { RouteObject } from "react-router-dom"
-import { serviceRoutes } from "./service-routes"
 import { userRoutes } from "./user-routes"
 import { customerRoutes } from "./customer-routes"
 import { settingsRoutes } from "./settings-routes"
@@ -19,7 +18,6 @@ import { Suspense, useEffect, useState } from "react"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
 import { applyThemeClass } from "@/lib/utils"
 import { toast } from "sonner"
-import { supabase } from "@/integrations/supabase/client"
 
 const RoleBasedLayout = () => {
   const { currentUserRole, isLoading: roleLoading, error: roleError } = usePermissions();
@@ -194,7 +192,14 @@ export const protectedRoutes: RouteObject = {
       path: "invoices",
       element: <div className="p-6">Invoices functionality is currently disabled for troubleshooting.</div>
     },
-    ...serviceRoutes,
+    {
+      path: "service-types",
+      element: <div className="p-6">Service Types functionality is currently disabled for troubleshooting.</div>
+    },
+    {
+      path: "service-bays",
+      element: <div className="p-6">Service Bays functionality is currently disabled for troubleshooting.</div>
+    },
     ...userRoutes,
     ...customerRoutes,
     ...settingsRoutes,
