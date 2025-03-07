@@ -1,7 +1,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
+import { toast } from "sonner";
 
 interface RolePermission {
   id: string;
@@ -177,6 +178,56 @@ export const usePermissions = () => {
     enabled: !!currentUserRole,
     staleTime: 300000, // Cache for 5 minutes
   });
+
+  // Effect to handle missing role by logging out the user
+  useEffect(() => {
+    if (!isRoleLoading && roleError) {
+      console.log('Role error detected, will sign out user to prevent redirect loop');
+      // Only show toast on client side
+      if (typeof window !== 'undefined') {
+        toast.error('Account access issue', {
+          description: 'Your account is missing proper role assignment. Please contact support.',
+        });
+        
+        // Give user time to see the message before logout
+        const timer = setTimeout(() => {
+          handleSignOut();
+        }, 3000);
+        
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isRoleLoading, roleError]);
+  
+  // Also handle the case where loading is complete but no role was found
+  useEffect(() => {
+    if (!isRoleLoading && !roleError && !currentUserRole) {
+      console.log('No role found after loading, will sign out user to prevent redirect loop');
+      // Only show toast on client side
+      if (typeof window !== 'undefined') {
+        toast.error('Access denied', {
+          description: 'Your account has no assigned role. Please contact support.',
+        });
+        
+        // Give user time to see the message before logout
+        const timer = setTimeout(() => {
+          handleSignOut();
+        }, 3000);
+        
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isRoleLoading, roleError, currentUserRole]);
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      // Redirect to auth page
+      window.location.href = '/auth';
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   const checkPermission = useCallback(async (
     resource: string,

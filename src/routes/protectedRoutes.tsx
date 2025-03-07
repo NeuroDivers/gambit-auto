@@ -22,6 +22,8 @@ import ServiceSkills from "@/pages/staff/ServiceSkills"
 import { Suspense, useEffect } from "react"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
 import { applyThemeClass } from "@/lib/utils"
+import { toast } from "sonner"
+import { supabase } from "@/integrations/supabase/client"
 
 const RoleBasedLayout = () => {
   const { currentUserRole, isLoading, error } = usePermissions();
@@ -34,6 +36,35 @@ const RoleBasedLayout = () => {
       applyThemeClass(savedTheme, null)
     }
   }, [])
+  
+  // Handle case where user is loading for too long (potential redirect loop)
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    if (isLoading) {
+      timeoutId = setTimeout(() => {
+        console.log('Loading timeout reached, may be in redirect loop');
+        // If still loading after 10 seconds, consider it a problem
+        toast.error('System access issue', {
+          description: 'Unable to determine your access level. Logging out for security.',
+        });
+        
+        setTimeout(async () => {
+          try {
+            await supabase.auth.signOut();
+            window.location.href = '/auth';
+          } catch (err) {
+            console.error('Error during forced signout:', err);
+            window.location.href = '/auth';
+          }
+        }, 2000);
+      }, 10000); // 10 seconds timeout
+    }
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isLoading]);
   
   if (isLoading) {
     return <LoadingScreen />;

@@ -1,18 +1,42 @@
 
 -- This is a replacement for the existing link_user_to_client function
 -- We're modifying it to link to customers table instead of the non-existent clients table
+-- AND to create a new customer record if one doesn't exist
 
 CREATE OR REPLACE FUNCTION public.link_user_to_client()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $function$
+DECLARE
+  customer_exists BOOLEAN;
 BEGIN
-  -- Try to find and link existing customer by email
-  UPDATE customers 
-  SET user_id = NEW.id
-  WHERE customer_email = NEW.email
-  AND user_id IS NULL;
+  -- Check if customer with this email already exists
+  SELECT EXISTS (
+    SELECT 1 FROM customers 
+    WHERE customer_email = NEW.email
+  ) INTO customer_exists;
+  
+  IF customer_exists THEN
+    -- If customer exists, link them to the user
+    UPDATE customers 
+    SET user_id = NEW.id
+    WHERE customer_email = NEW.email
+    AND user_id IS NULL;
+  ELSE
+    -- If customer doesn't exist, create a new customer record
+    INSERT INTO customers (
+      customer_email,
+      customer_first_name,
+      customer_last_name,
+      user_id
+    ) VALUES (
+      NEW.email,
+      COALESCE(NEW.first_name, ''),
+      COALESCE(NEW.last_name, ''),
+      NEW.id
+    );
+  END IF;
   
   RETURN NEW;
 END;
