@@ -8,9 +8,6 @@ import { toast } from 'sonner';
 export function useStaffSkills(profileId: string) {
   const [skills, setSkills] = useState<StaffSkill[]>([]);
   const [availableServiceTypes, setAvailableServiceTypes] = useState<any[]>([]);
-  const [selectedServiceId, setSelectedServiceId] = useState<string>('');
-  const [proficiency, setProficiency] = useState<string>('beginner');
-  const [isAddingSkill, setIsAddingSkill] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch staff skills
@@ -67,7 +64,7 @@ export function useStaffSkills(profileId: string) {
       setSkills(processedSkills);
     }
 
-    if (serviceTypesData) {
+    if (serviceTypesData && skillsData) {
       // Filter out service types that are already assigned as skills
       const existingServiceTypeIds = skillsData?.map(skill => skill.service_type_id) || [];
       const availableTypes = serviceTypesData.filter(
@@ -95,13 +92,9 @@ export function useStaffSkills(profileId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff-skills', profileId] });
       toast.success('Skill added successfully');
-      setSelectedServiceId('');
-      setProficiency('beginner');
-      setIsAddingSkill(false);
     },
     onError: (error: any) => {
       toast.error(`Error adding skill: ${error.message}`);
-      setIsAddingSkill(false);
     },
   });
 
@@ -126,39 +119,6 @@ export function useStaffSkills(profileId: string) {
     },
   });
 
-  // Remove skill mutation
-  const removeSkillMutation = useMutation({
-    mutationFn: async (skillId: string) => {
-      const { error } = await supabase
-        .from('staff_skills')
-        .delete()
-        .eq('id', skillId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['staff-skills', profileId] });
-      toast.success('Skill removed successfully');
-    },
-    onError: (error: any) => {
-      toast.error(`Error removing skill: ${error.message}`);
-    },
-  });
-
-  // Handle adding a skill
-  const handleAddSkill = () => {
-    if (!selectedServiceId) {
-      toast.error('Please select a service');
-      return;
-    }
-
-    setIsAddingSkill(true);
-    addSkillMutation.mutate({
-      service_type_id: selectedServiceId,
-      expertise_level: proficiency,
-    });
-  };
-
   return {
     skills,
     availableServiceTypes,
@@ -166,13 +126,5 @@ export function useStaffSkills(profileId: string) {
     error: skillsError,
     addSkill: addSkillMutation.mutate,
     updateSkill: updateSkillMutation.mutate,
-    removeSkill: removeSkillMutation.mutate,
-    // Added these properties needed by ServiceSkillsManager
-    selectedServiceId,
-    setSelectedServiceId,
-    proficiency,
-    setProficiency,
-    handleAddSkill,
-    isAddingSkill
   };
 }

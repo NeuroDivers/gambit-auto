@@ -1,178 +1,224 @@
 
-import React from "react";
-import { Input } from "@/components/ui/input";
-import { FormLabel } from "@/components/ui/form";
+import React from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { useFormContext } from 'react-hook-form';
 
 export interface CustomerInfoFieldsProps {
-  customerFirstName: string;
-  setCustomerFirstName: (value: string) => void;
-  customerLastName: string;
-  setCustomerLastName: (value: string) => void;
-  customerEmail: string;
-  setCustomerEmail: (value: string) => void;
-  customerPhone?: string;
-  setCustomerPhone: (value: string) => void;
-  customerAddress?: string;
-  setCustomerAddress?: (value: string) => void;
-  customers?: any[];
-  isLoadingCustomers?: boolean;
-  onCustomerSelect?: (customerId: string) => void;
-  customerStreetAddress?: string;
-  setCustomerStreetAddress?: (value: string) => void;
-  customerUnitNumber?: string;
-  setCustomerUnitNumber?: (value: string) => void;
-  customerCity?: string;
-  setCustomerCity?: (value: string) => void;
-  customerStateProvince?: string;
-  setCustomerStateProvince?: (value: string) => void;
-  customerPostalCode?: string;
-  setCustomerPostalCode?: (value: string) => void;
-  customerCountry?: string;
-  setCustomerCountry?: (value: string) => void;
-  clientIdField?: string;
-  setClientId?: (value: string) => void;
+  // Form context version
+  name?: string;
+  control?: any;
+  // Direct controlled version
+  firstName?: string;
+  setFirstName?: (value: string) => void;
+  lastName?: string;
+  setLastName?: (value: string) => void;
+  email?: string;
+  setEmail?: (value: string) => void;
+  phone?: string;
+  setPhone?: (value: string) => void;
+  address?: string;
+  setAddress?: (value: string) => void;
+  // Optional props
+  readOnly?: boolean;
+  disabled?: boolean;
 }
 
-function CustomerInfoFields({
-  customerFirstName,
-  setCustomerFirstName,
-  customerLastName,
-  setCustomerLastName,
-  customerEmail,
-  setCustomerEmail,
-  customerPhone = "",
-  setCustomerPhone,
-  customerAddress,
-  setCustomerAddress,
-  customerStreetAddress,
-  setCustomerStreetAddress,
-  customerUnitNumber,
-  setCustomerUnitNumber,
-  customerCity,
-  setCustomerCity,
-  customerStateProvince,
-  setCustomerStateProvince,
-  customerPostalCode,
-  setCustomerPostalCode,
-  customerCountry,
-  setCustomerCountry,
-}: CustomerInfoFieldsProps) {
+const CustomerInfoFields = ({
+  name = '',
+  control,
+  firstName,
+  setFirstName,
+  lastName,
+  setLastName,
+  email,
+  setEmail,
+  phone,
+  setPhone,
+  address,
+  setAddress,
+  readOnly = false,
+  disabled = false
+}: CustomerInfoFieldsProps) => {
+  const formContext = useFormContext();
+  const useFormApi = !!name && (control || formContext);
+
+  if (useFormApi) {
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={control || formContext?.control}
+            name={`${name}.firstName`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First Name</FormLabel>
+                <FormControl>
+                  <Input 
+                    {...field} 
+                    placeholder="First Name" 
+                    readOnly={readOnly}
+                    disabled={disabled}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={control || formContext?.control}
+            name={`${name}.lastName`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last Name</FormLabel>
+                <FormControl>
+                  <Input 
+                    {...field} 
+                    placeholder="Last Name" 
+                    readOnly={readOnly}
+                    disabled={disabled}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={control || formContext?.control}
+            name={`${name}.email`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input 
+                    {...field} 
+                    type="email" 
+                    placeholder="Email" 
+                    readOnly={readOnly}
+                    disabled={disabled}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={control || formContext?.control}
+            name={`${name}.phone`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone</FormLabel>
+                <FormControl>
+                  <Input 
+                    {...field} 
+                    placeholder="Phone" 
+                    readOnly={readOnly}
+                    disabled={disabled}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={control || formContext?.control}
+          name={`${name}.address`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Address</FormLabel>
+              <FormControl>
+                <Input 
+                  {...field} 
+                  placeholder="Address" 
+                  readOnly={readOnly}
+                  disabled={disabled}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+    );
+  }
+
+  // Direct controlled version
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <FormLabel>First Name</FormLabel>
+          <Label htmlFor="first-name">First Name</Label>
           <Input
-            value={customerFirstName}
-            onChange={(e) => setCustomerFirstName(e.target.value)}
-            placeholder="First name"
+            id="first-name"
+            value={firstName || ''}
+            onChange={(e) => setFirstName?.(e.target.value)}
+            placeholder="First Name"
+            readOnly={readOnly}
+            disabled={disabled}
           />
         </div>
+        
         <div className="space-y-2">
-          <FormLabel>Last Name</FormLabel>
+          <Label htmlFor="last-name">Last Name</Label>
           <Input
-            value={customerLastName}
-            onChange={(e) => setCustomerLastName(e.target.value)}
-            placeholder="Last name"
+            id="last-name"
+            value={lastName || ''}
+            onChange={(e) => setLastName?.(e.target.value)}
+            placeholder="Last Name"
+            readOnly={readOnly}
+            disabled={disabled}
           />
         </div>
       </div>
-      
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            value={email || ''}
+            onChange={(e) => setEmail?.(e.target.value)}
+            placeholder="Email"
+            readOnly={readOnly}
+            disabled={disabled}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="phone">Phone</Label>
+          <Input
+            id="phone"
+            value={phone || ''}
+            onChange={(e) => setPhone?.(e.target.value)}
+            placeholder="Phone"
+            readOnly={readOnly}
+            disabled={disabled}
+          />
+        </div>
+      </div>
+
       <div className="space-y-2">
-        <FormLabel>Email</FormLabel>
+        <Label htmlFor="address">Address</Label>
         <Input
-          type="email"
-          value={customerEmail}
-          onChange={(e) => setCustomerEmail(e.target.value)}
-          placeholder="Email address"
+          id="address"
+          value={address || ''}
+          onChange={(e) => setAddress?.(e.target.value)}
+          placeholder="Address"
+          readOnly={readOnly}
+          disabled={disabled}
         />
       </div>
-      
-      <div className="space-y-2">
-        <FormLabel>Phone</FormLabel>
-        <Input
-          value={customerPhone}
-          onChange={(e) => setCustomerPhone(e.target.value)}
-          placeholder="Phone number"
-        />
-      </div>
-      
-      {setCustomerAddress && (
-        <div className="space-y-2">
-          <FormLabel>Address</FormLabel>
-          <Input
-            value={customerAddress || ""}
-            onChange={(e) => setCustomerAddress(e.target.value)}
-            placeholder="Address"
-          />
-        </div>
-      )}
-      
-      {/* Street Address and Unit Number */}
-      {setCustomerStreetAddress && setCustomerUnitNumber && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="md:col-span-2 space-y-2">
-            <FormLabel>Street Address</FormLabel>
-            <Input
-              value={customerStreetAddress || ""}
-              onChange={(e) => setCustomerStreetAddress(e.target.value)}
-              placeholder="Street address"
-            />
-          </div>
-          <div className="space-y-2">
-            <FormLabel>Unit/Apt #</FormLabel>
-            <Input
-              value={customerUnitNumber || ""}
-              onChange={(e) => setCustomerUnitNumber(e.target.value)}
-              placeholder="Unit/Apt #"
-            />
-          </div>
-        </div>
-      )}
-      
-      {/* City, State, Postal Code */}
-      {setCustomerCity && setCustomerStateProvince && setCustomerPostalCode && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <FormLabel>City</FormLabel>
-            <Input
-              value={customerCity || ""}
-              onChange={(e) => setCustomerCity(e.target.value)}
-              placeholder="City"
-            />
-          </div>
-          <div className="space-y-2">
-            <FormLabel>State/Province</FormLabel>
-            <Input
-              value={customerStateProvince || ""}
-              onChange={(e) => setCustomerStateProvince(e.target.value)}
-              placeholder="State/Province"
-            />
-          </div>
-          <div className="space-y-2">
-            <FormLabel>Postal Code</FormLabel>
-            <Input
-              value={customerPostalCode || ""}
-              onChange={(e) => setCustomerPostalCode(e.target.value)}
-              placeholder="Postal code"
-            />
-          </div>
-        </div>
-      )}
-      
-      {/* Country */}
-      {setCustomerCountry && (
-        <div className="space-y-2">
-          <FormLabel>Country</FormLabel>
-          <Input
-            value={customerCountry || ""}
-            onChange={(e) => setCustomerCountry(e.target.value)}
-            placeholder="Country"
-          />
-        </div>
-      )}
     </div>
   );
-}
+};
 
 export default CustomerInfoFields;
