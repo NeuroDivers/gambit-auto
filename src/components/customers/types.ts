@@ -4,14 +4,14 @@ export type Customer = {
   customer_first_name: string
   customer_last_name: string
   customer_email: string
-  phone_number?: string | null
+  customer_phone?: string | null
   customer_unit_number?: string | null
   customer_street_address?: string | null
   customer_city?: string | null
   customer_state_province?: string | null
   customer_postal_code?: string | null
   customer_country?: string | null
-  address?: string | null
+  customer_address?: string | null
   created_at: string
   updated_at: string
   user_id?: string | null
@@ -58,7 +58,7 @@ export type CustomerFormValues = {
   customer_first_name: string
   customer_last_name: string
   customer_email: string
-  customer_phone_number?: string
+  customer_phone?: string
   address?: string
   customer_street_address?: string
   customer_unit_number?: string

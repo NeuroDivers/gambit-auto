@@ -43,10 +43,10 @@ export function CustomerHeader({ customer }: CustomerHeaderProps) {
             <Mail className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm">{customer.customer_email}</span>
           </div>
-          {customer.customer_phone_number && (
+          {customer.customer_phone && (
             <div className="flex items-center gap-2">
               <Phone className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">{customer.customer_phone_number}</span>
+              <span className="text-sm">{customer.customer_phone}</span>
             </div>
           )}
           {(customer.customer_city || customer.customer_state_province) && (

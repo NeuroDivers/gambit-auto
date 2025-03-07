@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -71,7 +72,7 @@ export function CustomerList() {
             customer_first_name, 
             customer_last_name, 
             customer_email, 
-            customer_phone_number,
+            customer_phone,
             customer_city, 
             customer_state_province,
             profile_id,
@@ -108,7 +109,7 @@ export function CustomerList() {
               if (!customer.customer_first_name) customerWithProfile.customer_first_name = profileData.first_name || ''
               if (!customer.customer_last_name) customerWithProfile.customer_last_name = profileData.last_name || ''
               if (!customer.customer_email) customerWithProfile.customer_email = profileData.email || ''
-              if (!customer.customer_phone_number) customerWithProfile.phone_number = profileData.phone_number
+              if (!customer.customer_phone) customerWithProfile.customer_phone = profileData.phone_number
             }
           }
           
@@ -156,7 +157,7 @@ export function CustomerList() {
     return (
       fullName.includes(searchLower) ||
       (customer.customer_email && customer.customer_email.toLowerCase().includes(searchLower)) ||
-      (customer.phone_number && customer.phone_number.includes(search))
+      (customer.customer_phone && customer.customer_phone.includes(search))
     )
   }) || []
 

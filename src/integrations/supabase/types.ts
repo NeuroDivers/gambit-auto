@@ -614,12 +614,11 @@ export type Database = {
           customer_postal_code: string | null
           customer_state_province: string | null
           customer_street_address: string | null
+          customer_unit_number: string | null
           id: string
           is_archived: boolean | null
           notes: string | null
-          phone_number: string | null
           profile_id: string | null
-          unit_number: string | null
           updated_at: string
           user_id: string | null
         }
@@ -636,12 +635,11 @@ export type Database = {
           customer_postal_code?: string | null
           customer_state_province?: string | null
           customer_street_address?: string | null
+          customer_unit_number?: string | null
           id?: string
           is_archived?: boolean | null
           notes?: string | null
-          phone_number?: string | null
           profile_id?: string | null
-          unit_number?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -658,12 +656,11 @@ export type Database = {
           customer_postal_code?: string | null
           customer_state_province?: string | null
           customer_street_address?: string | null
+          customer_unit_number?: string | null
           id?: string
           is_archived?: boolean | null
           notes?: string | null
-          phone_number?: string | null
           profile_id?: string | null
-          unit_number?: string | null
           updated_at?: string
           user_id?: string | null
         }

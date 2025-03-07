@@ -45,7 +45,7 @@ export default function CreateInvoice() {
       customer_first_name: preselectedCustomer?.customer_first_name || '',
       customer_last_name: preselectedCustomer?.customer_last_name || '',
       customer_email: preselectedCustomer?.customer_email || '',
-      customer_phone: preselectedCustomer?.customer_phone_number || '',
+      customer_phone: preselectedCustomer?.customer_phone || "",
       customer_address: preselectedCustomer?.address || '',
       customer_street_address: preselectedCustomer?.customer_street_address || '',
       customer_unit_number: preselectedCustomer?.customer_unit_number || '',

@@ -39,7 +39,7 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
         (customer) =>
           customer.customer_first_name?.toLowerCase().includes(search.toLowerCase()) ||
           customer.customer_last_name?.toLowerCase().includes(search.toLowerCase()) ||
-          customer.email?.toLowerCase().includes(search.toLowerCase())
+          customer.customer_email?.toLowerCase().includes(search.toLowerCase())
       )
     : [];
 
@@ -56,14 +56,14 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
         // Set customer information
         form.setValue("customer_first_name", selectedCustomer.customer_first_name || "");
         form.setValue("customer_last_name", selectedCustomer.customer_last_name || "");
-        form.setValue("customer_email", selectedCustomer.email || "");
-        form.setValue("customer_phone", selectedCustomer.phone_number || "");
-        form.setValue("customer_street_address", selectedCustomer.street_address || "");
-        form.setValue("customer_unit_number", selectedCustomer.unit_number || "");
-        form.setValue("customer_city", selectedCustomer.city || "");
-        form.setValue("customer_state_province", selectedCustomer.state_province || "");
-        form.setValue("customer_postal_code", selectedCustomer.postal_code || "");
-        form.setValue("customer_country", selectedCustomer.country || "");
+        form.setValue("customer_email", selectedCustomer.customer_email || "");
+        form.setValue("customer_phone", selectedCustomer.customer_phone || "");
+        form.setValue("customer_street_address", selectedCustomer.customer_street_address || "");
+        form.setValue("customer_unit_number", selectedCustomer.customer_unit_number || "");
+        form.setValue("customer_city", selectedCustomer.customer_city || "");
+        form.setValue("customer_state_province", selectedCustomer.customer_state_province || "");
+        form.setValue("customer_postal_code", selectedCustomer.customer_postal_code || "");
+        form.setValue("customer_country", selectedCustomer.customer_country || "");
         
         // Fetch customer vehicles
         const { data: vehicles, error } = await supabase
@@ -128,7 +128,7 @@ export function CustomerSearch({ form }: CustomerSearchProps) {
           items={
             filteredCustomers.map((customer) => ({
               value: customer.id,
-              label: `${customer.customer_first_name} ${customer.customer_last_name} (${customer.email || "No email"})`,
+              label: `${customer.customer_first_name} ${customer.customer_last_name} (${customer.customer_email || "No email"})`,
             })) || []
           }
           value={value}
