@@ -1,75 +1,44 @@
+import { MapPin } from "lucide-react";
+import { WorkOrder } from "../types";
 
-import { Clock, Calendar, MapPin, Car } from "lucide-react"
-import { formatDate } from "@/lib/utils"
-import { WorkOrder } from "../types"
+interface WorkOrderCardDetailsProps {
+  workOrder: WorkOrder;
+}
 
-export function WorkOrderCardDetails({ request }: { request: WorkOrder }) {
+export function WorkOrderCardDetails({ workOrder }: WorkOrderCardDetailsProps) {
   return (
-    <div className="space-y-3">
-      <div className="flex items-start gap-2">
-        <Car className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-        <div>
-          <p className="text-sm font-medium">
-            {request.vehicle_year} {request.vehicle_make} {request.vehicle_model}
-          </p>
-          {request.vehicle_vin && (
-            <p className="text-xs text-muted-foreground">
-              VIN: {request.vehicle_vin}
-            </p>
-          )}
-        </div>
+    <div className="grid gap-2">
+      {/* Customer & Vehicle Info */}
+      <div className="grid gap-1">
+        <h4 className="font-semibold">Customer</h4>
+        <p className="text-sm">{workOrder.customer_first_name} {workOrder.customer_last_name}</p>
+        <p className="text-sm text-muted-foreground">{workOrder.customer_email}</p>
+        {workOrder.customer_phone && <p className="text-sm text-muted-foreground">{workOrder.customer_phone}</p>}
       </div>
       
-      <div className="flex items-start gap-2">
-        <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-        <div>
-          <p className="text-sm font-medium">
-            {request.customer_first_name} {request.customer_last_name}
-          </p>
-          {request.customer_email && (
-            <p className="text-xs text-muted-foreground">
-              {request.customer_email}
-            </p>
-          )}
-          {request.customer_phone && (
-            <p className="text-xs text-muted-foreground">
-              {request.customer_phone}
-            </p>
-          )}
-          {request.customer_address && (
-            <p className="text-xs text-muted-foreground">
-              {request.customer_address}
-            </p>
-          )}
-        </div>
+      <div className="grid gap-1">
+        <h4 className="font-semibold">Vehicle</h4>
+        <p className="text-sm">
+          {workOrder.customer_vehicle_year} {workOrder.customer_vehicle_make} {workOrder.customer_vehicle_model}
+        </p>
+        {workOrder.customer_vehicle_vin && <p className="text-sm text-muted-foreground">VIN: {workOrder.customer_vehicle_vin}</p>}
       </div>
       
-      {request.start_time && (
-        <div className="flex items-start gap-2">
-          <Calendar className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="text-sm font-medium">
-              Scheduled for: {formatDate(request.start_time)}
-            </p>
-            {request.estimated_duration && (
-              <p className="text-xs text-muted-foreground">
-                Estimated duration: {request.estimated_duration}
-              </p>
-            )}
-          </div>
+      {/* Location */}
+      {workOrder.service_bay && (
+        <div className="flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-muted-foreground" />
+          <span>Bay: {workOrder.service_bay.name}</span>
         </div>
       )}
       
-      {request.service_bays?.name && (
-        <div className="flex items-start gap-2">
-          <Clock className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="text-sm font-medium">
-              Assigned to bay: {request.service_bays.name}
-            </p>
-          </div>
+      {/* Additional Notes */}
+      {workOrder.additional_notes && (
+        <div className="grid gap-1">
+          <h4 className="font-semibold">Notes</h4>
+          <p className="text-sm text-muted-foreground">{workOrder.additional_notes}</p>
         </div>
       )}
     </div>
-  )
+  );
 }

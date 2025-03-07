@@ -6,6 +6,11 @@ import { PackageSelect } from "./PackageSelect";
 import { Button } from "@/components/ui/button";
 import { ServiceType } from "@/integrations/supabase/types/service-types";
 
+const dummyPackages = [
+  { id: "1", name: "Basic Package" },
+  { id: "2", name: "Premium Package" }
+];
+
 export interface ServiceListProps {
   serviceItems: ServiceItemType[];
   onChange: (serviceItems: ServiceItemType[]) => void;
@@ -36,7 +41,12 @@ export function ServiceList({ serviceItems, onChange, hasPackages = false }: Ser
           onChange={(updatedService) => onChange(serviceItems.map((s, i) => i === index ? updatedService : s))}
         />
       ))}
-      {hasPackages && <PackageSelect />}
+      {hasPackages && <PackageSelect 
+        packages={dummyPackages}
+        value={null}
+        packageName=""
+        onValueChange={() => {}}
+      />}
     </div>
   );
 }

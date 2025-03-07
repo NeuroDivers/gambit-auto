@@ -1,4 +1,3 @@
-
 import { WorkOrder } from "./types";
 import {
   Drawer,
@@ -13,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { WorkOrderStatusBadge } from "./WorkOrderStatusBadge";
 import { format } from "date-fns";
+import { MapPin } from "lucide-react";
 
 interface WorkOrderDrawerProps {
   workOrder: WorkOrder | null;
@@ -75,8 +75,13 @@ export function WorkOrderDrawer({
             <div>
               <h3 className="font-medium mb-2">Schedule</h3>
               <p className="text-sm">{formatDate(workOrder.start_time)}</p>
-              {workOrder.assigned_bay_id && workOrder.service_bays && (
-                <p className="text-sm text-muted-foreground">Bay: {workOrder.service_bays.name}</p>
+              {workOrder.service_bay && (
+                <div className="flex items-center text-sm">
+                  <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span>
+                    {workOrder.service_bay ? `Bay: ${workOrder.service_bay.name}` : "No bay assigned"}
+                  </span>
+                </div>
               )}
             </div>
             

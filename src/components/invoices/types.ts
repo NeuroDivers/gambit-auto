@@ -1,5 +1,3 @@
-
-// Add this to the existing file or create it if it doesn't exist
 export interface InvoiceFormValues {
   status?: string;
   notes?: string;
@@ -103,7 +101,8 @@ export interface CustomerInfo {
 }
 
 export interface UseReactToPrintFn {
-  (content: () => React.ReactInstance | null): { handlePrint: () => void; printRef: React.MutableRefObject<any> };
-  printRef?: React.MutableRefObject<any>;
-  handlePrint?: () => void;
+  (content: () => React.ReactInstance | null): { 
+    handlePrint: () => void; 
+    printRef: React.MutableRefObject<any> 
+  };
 }

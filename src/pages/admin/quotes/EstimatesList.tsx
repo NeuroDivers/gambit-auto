@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react"
 import {
   ColumnDef,
@@ -301,7 +300,6 @@ export default function EstimatesList() {
     }
   }
 
-  // Add stats for estimates
   const { data: stats } = useQuery({
     queryKey: ["estimateStats"],
     queryFn: async () => {
@@ -427,8 +425,6 @@ export default function EstimatesList() {
                     data-state={row.getIsSelected() && "selected"}
                     className="cursor-pointer"
                     onClick={() => {
-                      // This allows clicking anywhere on the row to navigate to the estimate
-                      // but excludes clicking on checkboxes and action buttons
                       const target = event?.target as HTMLElement;
                       if (
                         !target.closest('input[type="checkbox"]') &&

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { WorkOrderStatusBadge } from "@/components/work-orders/WorkOrderStatusBadge";
 import { WorkOrderDrawer } from "@/components/work-orders/WorkOrderDrawer";
+import { MapPin } from "lucide-react";
 
 interface WorkOrdersSectionProps {
   workOrders: WorkOrder[];
@@ -114,8 +114,12 @@ export function WorkOrdersSection({
                 </TableCell>
                 <TableCell>
                   <div className="text-sm">{formatDate(workOrder.start_time)}</div>
-                  {workOrder.service_bays && (
-                    <div className="text-xs text-muted-foreground">Bay: {workOrder.service_bays.name}</div>
+                  {/* Location */}
+                  {workOrder.service_bay && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">Bay: {workOrder.service_bay.name}</span>
+                    </div>
                   )}
                 </TableCell>
                 <TableCell>
