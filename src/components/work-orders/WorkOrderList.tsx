@@ -30,6 +30,8 @@ export function WorkOrderList() {
     setStatusFilter,
     assignmentFilter,
     setAssignmentFilter,
+    sortOrder,
+    setSortOrder,
     assignBayWorkOrder,
     setAssignBayWorkOrder,
     workOrders,
@@ -78,6 +80,8 @@ export function WorkOrderList() {
           onStatusFilterChange={setStatusFilter}
           assignmentFilter={assignmentFilter}
           onAssignmentFilterChange={setAssignmentFilter}
+          sortOrder={sortOrder}
+          onSortOrderChange={setSortOrder}
         />
       </TooltipProvider>
 

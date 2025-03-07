@@ -9,7 +9,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select"
-import { Search, X } from "lucide-react"
+import { Search, X, Info } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -22,6 +22,8 @@ type WorkOrderFiltersProps = {
   onStatusFilterChange: (value: string) => void
   assignmentFilter: string
   onAssignmentFilterChange: (value: string) => void
+  sortOrder: string
+  onSortOrderChange: (value: string) => void
 }
 
 export const WorkOrderFilters = memo(({
@@ -31,6 +33,8 @@ export const WorkOrderFilters = memo(({
   onStatusFilterChange,
   assignmentFilter,
   onAssignmentFilterChange,
+  sortOrder,
+  onSortOrderChange
 }: WorkOrderFiltersProps) => {
   // Fetch service bays for filtering
   const { data: serviceBays } = useQuery({
@@ -54,27 +58,26 @@ export const WorkOrderFilters = memo(({
   return (
     <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 items-end">
       <div className="w-full sm:w-1/3">
-        <Label htmlFor="search" className="mb-2 block">
+        <Label htmlFor="search" className="mb-2 flex items-center gap-2">
           Search
-        </Label>
-        <div className="relative">
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="relative w-full">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="search"
-                  placeholder="Search work orders..."
-                  className="pl-8"
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                />
-              </div>
+              <Info className="h-4 w-4 text-muted-foreground cursor-help" />
             </TooltipTrigger>
-            <TooltipContent>
-              <p>Search by: Customer Name, Email, Phone, Vehicle Make/Model/VIN</p>
+            <TooltipContent className="max-w-80">
+              <p>Search by: Customer Name, Email, Phone, Vehicle Make/Model/Year/VIN, License Plate</p>
             </TooltipContent>
           </Tooltip>
+        </Label>
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="search"
+            placeholder="Search work orders..."
+            className="pl-8"
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
           
           {searchTerm && (
             <Button
@@ -90,7 +93,24 @@ export const WorkOrderFilters = memo(({
         </div>
       </div>
 
-      <div className="w-full sm:w-1/4">
+      <div className="w-full sm:w-1/5">
+        <Label htmlFor="sort" className="mb-2 block">
+          Sort By
+        </Label>
+        <Select value={sortOrder} onValueChange={onSortOrderChange}>
+          <SelectTrigger id="sort">
+            <SelectValue placeholder="Sort order" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Newest First</SelectItem>
+            <SelectItem value="oldest">Oldest First</SelectItem>
+            <SelectItem value="start_asc">Start Time (Asc)</SelectItem>
+            <SelectItem value="start_desc">Start Time (Desc)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="w-full sm:w-1/5">
         <Label htmlFor="status" className="mb-2 block">
           Status
         </Label>
@@ -109,7 +129,7 @@ export const WorkOrderFilters = memo(({
         </Select>
       </div>
 
-      <div className="w-full sm:w-1/4">
+      <div className="w-full sm:w-1/5">
         <Label htmlFor="assignment" className="mb-2 block">
           Service Bay
         </Label>

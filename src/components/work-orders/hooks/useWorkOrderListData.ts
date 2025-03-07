@@ -11,6 +11,7 @@ export function useWorkOrderListData() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [assignmentFilter, setAssignmentFilter] = useState("");
+  const [sortOrder, setSortOrder] = useState("newest");
   const [assignBayWorkOrder, setAssignBayWorkOrder] = useState<WorkOrder | null>(null);
   const [page, setPage] = useState(1);
   const queryClient = useQueryClient();
@@ -34,27 +35,55 @@ export function useWorkOrderListData() {
         )
       `,
         { count: "exact" }
-      )
-      .order("created_at", { ascending: false })
-      .range(offset, offset + pageSize - 1);
+      );
 
+    // Apply search filter if provided
     if (debouncedSearchTerm) {
       query = query.or(
-        `customer_first_name.ilike.%${debouncedSearchTerm}%,customer_last_name.ilike.%${debouncedSearchTerm}%,customer_email.ilike.%${debouncedSearchTerm}%,customer_vehicle_make.ilike.%${debouncedSearchTerm}%,customer_vehicle_model.ilike.%${debouncedSearchTerm}%,customer_vehicle_vin.ilike.%${debouncedSearchTerm}%`
+        `customer_first_name.ilike.%${debouncedSearchTerm}%,` +
+        `customer_last_name.ilike.%${debouncedSearchTerm}%,` +
+        `customer_email.ilike.%${debouncedSearchTerm}%,` +
+        `customer_phone.ilike.%${debouncedSearchTerm}%,` +
+        `customer_vehicle_make.ilike.%${debouncedSearchTerm}%,` +
+        `customer_vehicle_model.ilike.%${debouncedSearchTerm}%,` +
+        `customer_vehicle_year::text.ilike.%${debouncedSearchTerm}%,` +
+        `customer_vehicle_vin.ilike.%${debouncedSearchTerm}%,` +
+        `customer_vehicle_license_plate.ilike.%${debouncedSearchTerm}%`
       );
     }
 
+    // Apply status filter if selected
     if (statusFilter && statusFilter !== "all") {
       query = query.eq("status", statusFilter);
     }
 
-    if (assignmentFilter === "assigned") {
-      query = query.not("assigned_bay_id", "is", null);
-    } else if (assignmentFilter === "unassigned") {
+    // Apply service bay filter if selected
+    if (assignmentFilter === "unassigned") {
       query = query.is("assigned_bay_id", null);
     } else if (assignmentFilter && assignmentFilter !== "all") {
       query = query.eq("assigned_bay_id", assignmentFilter);
     }
+
+    // Apply sorting
+    switch (sortOrder) {
+      case "newest":
+        query = query.order("created_at", { ascending: false });
+        break;
+      case "oldest":
+        query = query.order("created_at", { ascending: true });
+        break;
+      case "start_asc":
+        query = query.order("start_time", { ascending: true, nullsLast: true });
+        break;
+      case "start_desc":
+        query = query.order("start_time", { ascending: false, nullsFirst: true });
+        break;
+      default:
+        query = query.order("created_at", { ascending: false });
+    }
+
+    // Apply pagination
+    query = query.range(offset, offset + pageSize - 1);
 
     const { data, error, count } = await query;
 
@@ -64,22 +93,22 @@ export function useWorkOrderListData() {
       workOrders: data as WorkOrder[],
       totalCount: count || 0,
     };
-  }, [debouncedSearchTerm, statusFilter, assignmentFilter, offset, pageSize]);
+  }, [debouncedSearchTerm, statusFilter, assignmentFilter, sortOrder, offset, pageSize]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearchTerm, statusFilter, assignmentFilter, sortOrder]);
 
   const {
     data: workOrdersData,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["workOrders", debouncedSearchTerm, statusFilter, assignmentFilter, page],
+    queryKey: ["workOrders", debouncedSearchTerm, statusFilter, assignmentFilter, sortOrder, page],
     queryFn: fetchWorkOrders,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
-
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearchTerm, statusFilter, assignmentFilter]);
 
   // Memoized service bays query
   const fetchServiceBays = useCallback(async () => {
@@ -145,6 +174,8 @@ export function useWorkOrderListData() {
     setStatusFilter,
     assignmentFilter,
     setAssignmentFilter,
+    sortOrder,
+    setSortOrder,
     assignBayWorkOrder,
     setAssignBayWorkOrder,
     workOrders: workOrdersData?.workOrders || [],
