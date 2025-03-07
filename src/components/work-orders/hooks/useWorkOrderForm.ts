@@ -1,3 +1,4 @@
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -11,14 +12,14 @@ const formSchema = z.object({
   customer_last_name: z.string().min(1, "Last name is required"),
   customer_email: z.string().email("Invalid email address"),
   customer_phone: z.string().min(1, "Phone number is required"),
-  contact_preference: z.enum(["phone", "email"]),
+  contact_preference: z.enum(["phone", "email", "text", "any"]),
   customer_vehicle_make: z.string().min(1, "Vehicle make is required"),
   customer_vehicle_model: z.string().min(1, "Vehicle model is required"),
-  customer_vehicle_year: z.number().min(1900).max(new Date().getFullYear() + 1),
+  customer_vehicle_year: z.string().min(4, "Valid year is required"),
   customer_vehicle_vin: z.string().optional(),
   customer_vehicle_color: z.string().optional(),
   customer_vehicle_body_class: z.string().optional(),
-  customer_vehicle_doors: z.number().nullable().optional(),
+  customer_vehicle_doors: z.string().optional(),
   customer_vehicle_trim: z.string().optional(),
   customer_vehicle_license_plate: z.string().optional(),
   additional_notes: z.string().optional(),
@@ -35,39 +36,28 @@ const formSchema = z.object({
   assigned_bay_id: z.string().nullable(),
   service_items: z.array(z.object({
     service_id: z.string(),
-    service_name: z.string(),
+    service_name: z.string().optional(),
     quantity: z.number().min(1),
     unit_price: z.number().min(0),
-    commission_rate: z.number(),
-    commission_type: z.enum(['percentage', 'flat', 'flat_rate']).nullable(),
+    commission_rate: z.number().optional(),
+    commission_type: z.enum(['percentage', 'flat', 'flat_rate']).nullable().optional(),
     assigned_profile_id: z.string().nullable().optional(),
     description: z.string().optional(),
-    package_id: z.string().nullable().optional(),
+    is_main_service: z.boolean().optional(),
     sub_services: z.array(z.object({
       service_id: z.string(),
-      service_name: z.string(),
+      service_name: z.string().optional(),
       quantity: z.number().min(1),
       unit_price: z.number().min(0),
       commission_rate: z.number().optional(),
       commission_type: z.enum(['percentage', 'flat', 'flat_rate']).nullable().optional(),
       assigned_profile_id: z.string().nullable().optional(),
       description: z.string().optional(),
-      parent_id: z.string().optional(),
-      package_id: z.string().nullable().optional()
     })).optional()
-  })),
+  })).optional(),
   save_vehicle: z.boolean().optional(),
   is_primary_vehicle: z.boolean().optional(),
   client_id: z.string().optional(),
-  vehicle_make: z.string().optional(),
-  vehicle_model: z.string().optional(),
-  vehicle_year: z.number().optional(),
-  vehicle_vin: z.string().optional(),
-  vehicle_color: z.string().optional(),
-  vehicle_body_class: z.string().optional(),
-  vehicle_doors: z.number().nullable().optional(),
-  vehicle_trim: z.string().optional(),
-  vehicle_license_plate: z.string().optional()
 })
 
 export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, defaultStartTime?: Date) {
@@ -80,24 +70,18 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
       customer_last_name: workOrder?.customer_last_name || "",
       customer_email: workOrder?.customer_email || "",
       customer_phone: workOrder?.customer_phone || "",
-      contact_preference: workOrder?.contact_preference as "phone" | "email" || "phone",
+      contact_preference: workOrder?.contact_preference || "phone",
       customer_vehicle_make: workOrder?.customer_vehicle_make || "",
       customer_vehicle_model: workOrder?.customer_vehicle_model || "",
-      customer_vehicle_year: workOrder?.customer_vehicle_year || new Date().getFullYear(),
+      customer_vehicle_year: workOrder?.customer_vehicle_year?.toString() || new Date().getFullYear().toString(),
       customer_vehicle_vin: workOrder?.customer_vehicle_vin || "",
       customer_vehicle_color: workOrder?.customer_vehicle_color || "",
       customer_vehicle_body_class: workOrder?.customer_vehicle_body_class || "",
-      customer_vehicle_doors: workOrder?.customer_vehicle_doors || null,
+      customer_vehicle_doors: workOrder?.customer_vehicle_doors?.toString() || "",
       customer_vehicle_trim: workOrder?.customer_vehicle_trim || "",
       customer_vehicle_license_plate: workOrder?.customer_vehicle_license_plate || "",
       additional_notes: workOrder?.additional_notes || "",
       customer_address: workOrder?.customer_address || "",
-      customer_street_address: workOrder?.customer_street_address || "",
-      customer_unit_number: workOrder?.customer_unit_number || "",
-      customer_city: workOrder?.customer_city || "",
-      customer_state_province: workOrder?.customer_state_province || "",
-      customer_postal_code: workOrder?.customer_postal_code || "",
-      customer_country: workOrder?.customer_country || "",
       start_time: workOrder?.start_time ? new Date(workOrder.start_time) : defaultStartTime || null,
       estimated_duration: workOrder?.estimated_duration ? parseInt(workOrder.estimated_duration.toString()) : null,
       end_time: workOrder?.end_time ? new Date(workOrder.end_time) : null,
@@ -105,15 +89,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
       service_items: [],
       save_vehicle: false,
       is_primary_vehicle: false,
-      vehicle_make: workOrder?.vehicle_make || "",
-      vehicle_model: workOrder?.vehicle_model || "",
-      vehicle_year: workOrder?.vehicle_year || new Date().getFullYear(),
-      vehicle_vin: workOrder?.vehicle_vin || "",
-      vehicle_color: workOrder?.vehicle_color || "",
-      vehicle_body_class: workOrder?.vehicle_body_class || "",
-      vehicle_doors: workOrder?.vehicle_doors || null,
-      vehicle_trim: workOrder?.vehicle_trim || "",
-      vehicle_license_plate: workOrder?.customer_vehicle_license_plate || ""
+      client_id: workOrder?.client_id || undefined,
     }
   })
 
@@ -133,7 +109,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
             assigned_profile_id,
             main_service_id,
             sub_service_id,
-            service_types:service_types!work_order_services_service_id_fkey (
+            service_types!work_order_services_service_id_fkey (
               name,
               description
             )
@@ -159,7 +135,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
                 commission_type: service.commission_type as 'percentage' | 'flat_rate' | null,
                 assigned_profile_id: service.assigned_profile_id,
                 description: serviceType?.description || '',
-                is_parent: true,
+                is_main_service: true,
                 sub_services: []
               };
             } else {
@@ -176,7 +152,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
                 commission_type: service.commission_type as 'percentage' | 'flat_rate' | null,
                 assigned_profile_id: service.assigned_profile_id,
                 description: serviceType?.description || '',
-                parent_id: service.main_service_id
+                main_service_id: service.main_service_id
               });
             }
           });
@@ -198,6 +174,7 @@ export function useWorkOrderForm(workOrder?: WorkOrder, onSuccess?: () => void, 
   }, [workOrder?.id, form])
 
   const onSubmit = async (values: WorkOrderFormValues) => {
+    console.log("Submitting values:", values);
     const success = await submitWorkOrder(values, workOrder?.id)
     if (success) {
       onSuccess?.()

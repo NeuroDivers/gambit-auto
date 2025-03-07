@@ -91,3 +91,10 @@ export type WorkOrderFormValues = {
   save_vehicle?: boolean;
   is_primary_vehicle?: boolean;
 };
+
+export interface WorkOrderFormProps {
+  workOrder?: WorkOrder;
+  onSuccess?: () => void;
+  defaultStartTime?: Date;
+  onSubmitting?: (isSubmitting: boolean) => void;
+}

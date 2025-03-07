@@ -11,13 +11,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { Vehicle } from "@/components/clients/vehicles/types"
+import { Switch } from "@/components/ui/switch"
 
 export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormValues> }) {
   const { watch, setValue } = form
-  const vin = watch("vehicle_vin")
   const customerId = watch("client_id") // Get the customer ID to fetch their vehicles
   const [customerVehicles, setCustomerVehicles] = useState<Vehicle[]>([])
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(false)
+
+  // Get VIN value for lookup
+  const vin = watch("customer_vehicle_vin")
 
   // Fetch customer vehicles when the customer ID changes
   useEffect(() => {
@@ -33,7 +36,7 @@ export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormV
         const { data: vehicles, error } = await supabase
           .from('vehicles')
           .select('*')
-          .or(`client_id.eq.${customerId},customer_id.eq.${customerId}`)
+          .or(`customer_id.eq.${customerId}`)
           .order('is_primary', { ascending: false });
 
         if (error) throw error;
@@ -58,15 +61,15 @@ export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormV
   const handleVehicleSelect = (vehicleId: string) => {
     if (vehicleId === 'none') {
       // Clear vehicle fields if "None" is selected
-      setValue("vehicle_make", "");
-      setValue("vehicle_model", "");
-      setValue("vehicle_year", undefined as any);
-      setValue("vehicle_vin", "");
-      setValue("vehicle_color", "");
-      setValue("vehicle_trim", "");
-      setValue("vehicle_body_class", "");
-      setValue("vehicle_doors", undefined as any);
-      setValue("vehicle_license_plate", "");
+      setValue("customer_vehicle_make", "");
+      setValue("customer_vehicle_model", "");
+      setValue("customer_vehicle_year", "");
+      setValue("customer_vehicle_vin", "");
+      setValue("customer_vehicle_color", "");
+      setValue("customer_vehicle_trim", "");
+      setValue("customer_vehicle_body_class", "");
+      setValue("customer_vehicle_doors", "");
+      setValue("customer_vehicle_license_plate", "");
       return;
     }
 
@@ -74,15 +77,15 @@ export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormV
     const selectedVehicle = customerVehicles.find(v => v.id === vehicleId);
     if (selectedVehicle) {
       // Populate form fields with vehicle data
-      setValue("vehicle_make", selectedVehicle.make);
-      setValue("vehicle_model", selectedVehicle.model);
-      setValue("vehicle_year", selectedVehicle.year);
-      setValue("vehicle_vin", selectedVehicle.vin || "");
-      setValue("vehicle_color", selectedVehicle.color || "");
-      setValue("vehicle_trim", selectedVehicle.trim || "");
-      setValue("vehicle_body_class", selectedVehicle.body_class || "");
-      setValue("vehicle_doors", selectedVehicle.doors || undefined as any);
-      setValue("vehicle_license_plate", selectedVehicle.license_plate || "");
+      setValue("customer_vehicle_make", selectedVehicle.make);
+      setValue("customer_vehicle_model", selectedVehicle.model);
+      setValue("customer_vehicle_year", selectedVehicle.year.toString());
+      setValue("customer_vehicle_vin", selectedVehicle.vin || "");
+      setValue("customer_vehicle_color", selectedVehicle.color || "");
+      setValue("customer_vehicle_trim", selectedVehicle.trim || "");
+      setValue("customer_vehicle_body_class", selectedVehicle.body_class || "");
+      setValue("customer_vehicle_doors", selectedVehicle.doors?.toString() || "");
+      setValue("customer_vehicle_license_plate", selectedVehicle.license_plate || "");
     }
   };
 
@@ -90,13 +93,13 @@ export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormV
 
   useEffect(() => {
     if (vinData && !vinData.error) {
-      if (vinData.make) setValue("vehicle_make", vinData.make)
-      if (vinData.model) setValue("vehicle_model", vinData.model)
-      if (vinData.year) setValue("vehicle_year", vinData.year)
-      if (vinData.color) setValue("vehicle_color", vinData.color)
-      if (vinData.trim) setValue("vehicle_trim", vinData.trim)
-      if (vinData.bodyClass) setValue("vehicle_body_class", vinData.bodyClass)
-      if (vinData.doors) setValue("vehicle_doors", vinData.doors)
+      if (vinData.make) setValue("customer_vehicle_make", vinData.make)
+      if (vinData.model) setValue("customer_vehicle_model", vinData.model)
+      if (vinData.year) setValue("customer_vehicle_year", vinData.year)
+      if (vinData.color) setValue("customer_vehicle_color", vinData.color)
+      if (vinData.trim) setValue("customer_vehicle_trim", vinData.trim)
+      if (vinData.bodyClass) setValue("customer_vehicle_body_class", vinData.bodyClass)
+      if (vinData.doors) setValue("customer_vehicle_doors", vinData.doors)
     }
   }, [vinData, setValue])
 
@@ -126,11 +129,55 @@ export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormV
         </FormItem>
       )}
 
+      {customerId && (
+        <div className="flex items-center space-x-2 pb-2">
+          <FormField
+            control={form.control}
+            name="save_vehicle"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>Save vehicle to customer profile</FormLabel>
+                </div>
+              </FormItem>
+            )}
+          />
+        </div>
+      )}
+
+      {form.watch("save_vehicle") && customerId && (
+        <div className="flex items-center space-x-2 pb-2">
+          <FormField
+            control={form.control}
+            name="is_primary_vehicle"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>Set as primary vehicle</FormLabel>
+                </div>
+              </FormItem>
+            )}
+          />
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {/* Make */}
         <FormField
           control={form.control}
-          name="vehicle_make"
+          name="customer_vehicle_make"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Make</FormLabel>
@@ -150,7 +197,7 @@ export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormV
         {/* Model */}
         <FormField
           control={form.control}
-          name="vehicle_model"
+          name="customer_vehicle_model"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Model</FormLabel>
@@ -170,7 +217,7 @@ export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormV
         {/* Year */}
         <FormField
           control={form.control}
-          name="vehicle_year"
+          name="customer_vehicle_year"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Year</FormLabel>
@@ -182,7 +229,7 @@ export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormV
                     {...field}
                     onChange={(e) => {
                       const val = e.target.value;
-                      field.onChange(val ? parseInt(val) : undefined);
+                      field.onChange(val);
                     }}
                     disabled={isLoadingVin}
                   />
@@ -199,7 +246,7 @@ export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormV
         {/* VIN */}
         <FormField
           control={form.control}
-          name="vehicle_vin"
+          name="customer_vehicle_vin"
           render={({ field }) => (
             <FormItem>
               <FormLabel>
@@ -220,7 +267,7 @@ export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormV
         {/* Color */}
         <FormField
           control={form.control}
-          name="vehicle_color"
+          name="customer_vehicle_color"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Color</FormLabel>
@@ -235,7 +282,7 @@ export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormV
         {/* License Plate */}
         <FormField
           control={form.control}
-          name="vehicle_license_plate"
+          name="customer_vehicle_license_plate"
           render={({ field }) => (
             <FormItem>
               <FormLabel>License Plate</FormLabel>
@@ -250,7 +297,7 @@ export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormV
         {/* Trim */}
         <FormField
           control={form.control}
-          name="vehicle_trim"
+          name="customer_vehicle_trim"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Trim</FormLabel>
@@ -265,7 +312,7 @@ export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormV
         {/* Body Class */}
         <FormField
           control={form.control}
-          name="vehicle_body_class"
+          name="customer_vehicle_body_class"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Body Style</FormLabel>
@@ -280,7 +327,7 @@ export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormV
         {/* Doors */}
         <FormField
           control={form.control}
-          name="vehicle_doors"
+          name="customer_vehicle_doors"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Doors</FormLabel>
@@ -291,7 +338,7 @@ export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormV
                   {...field}
                   onChange={(e) => {
                     const val = e.target.value;
-                    field.onChange(val ? parseInt(val) : undefined);
+                    field.onChange(val);
                   }}
                 />
               </FormControl>

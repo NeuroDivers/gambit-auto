@@ -178,8 +178,10 @@ export function useWorkOrderSubmission() {
           };
 
           await supabase.from("vehicles").insert(vehicleData);
+          toast.success("Vehicle saved to customer profile");
         } catch (error) {
           console.error("Error saving vehicle:", error);
+          toast.error("Failed to save vehicle to customer profile");
           // Don't fail the work order creation if vehicle save fails
         }
       }
