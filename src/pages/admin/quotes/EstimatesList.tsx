@@ -169,7 +169,6 @@ export default function EstimatesList() {
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
-                  // Logic for converting to invoice would go here
                   toast.info("Convert to invoice feature coming soon")
                 }}
                 className="cursor-pointer"
@@ -178,7 +177,6 @@ export default function EstimatesList() {
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
-                  // Logic for downloading/exporting estimate would go here
                   toast.info("Download feature coming soon")
                 }}
                 className="cursor-pointer"

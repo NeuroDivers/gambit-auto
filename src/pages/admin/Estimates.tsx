@@ -5,7 +5,7 @@ import { EstimateRequestsList } from "./quotes/EstimateRequestsList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageTitle } from "@/components/shared/PageTitle";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, AlertTriangle, FileText, Send, CheckCircle, Archive } from "lucide-react";
+import { PlusCircle, AlertTriangle, FileText, Send, CheckCircle } from "lucide-react";
 import { useEstimateRequestsData } from "@/hooks/useEstimateRequestsData";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -177,13 +177,15 @@ export default function Estimates() {
         </CardContent>
       </Card>}
 
-      <TabsContent value="estimates" className="mt-0 p-0">
-        <EstimatesList />
-      </TabsContent>
-      
-      <TabsContent value="requests" className="mt-0 p-0">
-        <EstimateRequestsList />
-      </TabsContent>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsContent value="estimates" className="mt-0 p-0">
+          <EstimatesList />
+        </TabsContent>
+        
+        <TabsContent value="requests" className="mt-0 p-0">
+          <EstimateRequestsList />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
