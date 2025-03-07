@@ -1,54 +1,84 @@
 
-import React from 'react';
-import { useProfileData } from './hooks/useProfileData';
-import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { PersonalInfoForm } from '@/components/profile/sections/PersonalInfoForm';
 import { PasswordChangeForm } from '@/components/profile/sections/PasswordChangeForm';
-import { DefaultCommissionForm } from '@/components/profile/sections/DefaultCommissionForm';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StaffSkills from './StaffSkills';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useForm } from 'react-hook-form';
+import { profileFormSchema } from '@/components/profile/schemas/profileFormSchema';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { StaffCommissionRates } from './StaffCommissionRates';
 
-interface StaffDetailsProps {
-  profileId?: string;
+export interface StaffDetailsProps {
+  profileId: string;
 }
 
 export function StaffDetails({ profileId }: StaffDetailsProps) {
-  const { profile, isLoading } = useProfileData(profileId);
+  const [activeTab, setActiveTab] = useState('skills');
+  
+  const { data, isLoading } = useQuery({
+    queryKey: ['staff-details', profileId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', profileId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profileId
+  });
+  
+  const personalInfoForm = useForm({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      first_name: data?.first_name || '',
+      last_name: data?.last_name || '',
+      phone_number: data?.phone_number || '',
+      bio: data?.bio || '',
+      // Add other fields here as needed
+    }
+  });
 
   if (isLoading) {
-    return <div>Loading profile...</div>;
-  }
-
-  if (!profile) {
-    return <div>No profile found</div>;
+    return <Skeleton className="w-full h-96" />;
   }
 
   return (
-    <Card className="w-full">
-      <Tabs defaultValue="personal-info" className="p-6">
-        <TabsList className="mb-4">
-          <TabsTrigger value="personal-info">Personal Info</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="skills">Skills</TabsTrigger>
-          <TabsTrigger value="commission">Commission</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="personal-info">
-          <PersonalInfoForm profileId={profileId} />
-        </TabsContent>
-        
-        <TabsContent value="security">
-          <PasswordChangeForm />
-        </TabsContent>
-        
-        <TabsContent value="skills">
-          <StaffSkills />
-        </TabsContent>
-        
-        <TabsContent value="commission">
-          <DefaultCommissionForm profileId={profileId} />
-        </TabsContent>
-      </Tabs>
-    </Card>
+    <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <TabsList className="mb-4">
+        <TabsTrigger value="skills">Skills</TabsTrigger>
+        <TabsTrigger value="commission">Commission</TabsTrigger>
+        <TabsTrigger value="personal">Personal Info</TabsTrigger>
+      </TabsList>
+      
+      <TabsContent value="skills">
+        {profileId && <StaffSkills profileId={profileId} />}
+      </TabsContent>
+      
+      <TabsContent value="commission">
+        {profileId && <StaffCommissionRates profileId={profileId} />}
+      </TabsContent>
+      
+      <TabsContent value="personal">
+        <div className="space-y-8">
+          {/* Form components would be implemented here */}
+          {profileId && data && (
+            <PersonalInfoForm 
+              form={personalInfoForm}
+              onSubmit={async (values) => {
+                console.log('Submitting values:', values);
+              }}
+              isUpdating={false}
+            />
+          )}
+        </div>
+      </TabsContent>
+    </Tabs>
   );
 }

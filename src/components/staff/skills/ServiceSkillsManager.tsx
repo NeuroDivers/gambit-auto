@@ -66,7 +66,18 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
         .eq('profile_id', profileId);
 
       if (error) throw error;
-      return data as StaffSkill[] || [];
+      
+      // Transform the data to match our StaffSkill interface
+      return (data || []).map(item => ({
+        id: item.id,
+        service_id: item.service_id,
+        proficiency: item.proficiency,
+        service_types: {
+          id: item.service_types.id,
+          name: item.service_types.name,
+          description: item.service_types.description,
+        }
+      })) as StaffSkill[];
     },
     enabled: !!profileId
   });

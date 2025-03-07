@@ -81,7 +81,7 @@ export default function UserDetails() {
               </CardDescription>
             </CardHeader>
             <CardContent className="px-0">
-              <ProfileForm role={currentUserRole?.name} />
+              {user.id && <ProfileForm role={currentUserRole?.name} />}
             </CardContent>
           </TabsContent>
           
@@ -93,7 +93,7 @@ export default function UserDetails() {
               </CardDescription>
             </CardHeader>
             <CardContent className="px-0">
-              <ProfileForm />
+              {user.id && <ProfileForm />}
             </CardContent>
           </TabsContent>
           
@@ -120,7 +120,7 @@ export default function UserDetails() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="px-0">
-                <ProfileForm />
+                {user.id && <ProfileForm />}
               </CardContent>
             </TabsContent>
           )}
