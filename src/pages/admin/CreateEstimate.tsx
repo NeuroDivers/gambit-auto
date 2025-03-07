@@ -21,7 +21,6 @@ import { VehicleInfoFields } from "@/components/work-orders/form-sections/Vehicl
 import { ServiceSelectionFields } from "@/components/work-orders/form-sections/ServiceSelectionFields"
 import { SchedulingFields } from "@/components/work-orders/form-sections/SchedulingFields"
 import { NotesFields } from "@/components/work-orders/form-sections/NotesFields"
-import { CustomerSearch } from "@/components/estimates/form-sections/CustomerSearch"
 
 const estimateSchema = z.object({
   customer_first_name: z.string().min(1, "First name is required"),
@@ -404,7 +403,10 @@ export default function CreateEstimate() {
                     
                     <TabsContent value="customer" className="mt-0">
                       <EstimateFormAdapter form={form}>
-                        <ClientInfoFields form={form as unknown as UseFormReturn<WorkOrderFormValues>} />
+                        <ClientInfoFields 
+                          form={form as unknown as UseFormReturn<WorkOrderFormValues>} 
+                          onCustomerSelect={onCustomerSelect}
+                        />
                       </EstimateFormAdapter>
                     </TabsContent>
                     <TabsContent value="vehicle" className="mt-0">
