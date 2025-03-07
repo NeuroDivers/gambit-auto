@@ -1,11 +1,22 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { RefreshCw, Trash2, Database } from "lucide-react";
 
 export function CacheClearManager() {
+  // Auto-clear cache on component mount
+  useEffect(() => {
+    console.log("CacheClearManager: Auto-clearing cache");
+    try {
+      localStorage.removeItem("__developer_settings_tabs__");
+      sessionStorage.removeItem("__developer_settings_tabs__");
+    } catch (error) {
+      console.error("Error during auto-cache clear:", error);
+    }
+  }, []);
+
   const clearLocalStorage = () => {
     try {
       localStorage.clear();
