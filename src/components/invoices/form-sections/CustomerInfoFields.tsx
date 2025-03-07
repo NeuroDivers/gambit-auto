@@ -1,7 +1,5 @@
-
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Check, ChevronsUpDown, Search, Star } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -154,61 +152,7 @@ export function CustomerInfoFields({
   const filteredCustomers = customersList?.filter(customer => !searchQuery || `${customer.customer_first_name} ${customer.customer_last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) || customer.customer_email?.toLowerCase().includes(searchQuery.toLowerCase()) || customer.customer_phone?.toLowerCase().includes(searchQuery.toLowerCase())) || [];
   
   return <div className="space-y-4">
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogTrigger asChild>
-          <Button type="button" variant="outline" className="mb-2 w-full sm:w-auto">
-            <Search className="h-4 w-4 mr-2" />
-            Select Existing Customer
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Select Customer</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Search className="w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search customers..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            
-            {isLoading ? (
-              <div className="text-center py-4">Loading customers...</div>
-            ) : (
-              <div className="grid gap-2">
-                {filteredCustomers && filteredCustomers.length > 0 ? (
-                  filteredCustomers.map((customer) => (
-                    <div
-                      key={customer.id}
-                      className="flex justify-between items-center p-3 border rounded-md hover:bg-muted cursor-pointer"
-                      onClick={() => handleCustomerSelect(customer.id)}
-                    >
-                      <div>
-                        <p className="font-medium">
-                          {customer.customer_first_name} {customer.customer_last_name}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {customer.customer_email}
-                        </p>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {customer.customer_phone}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-4 text-muted-foreground">
-                    No customers found
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
