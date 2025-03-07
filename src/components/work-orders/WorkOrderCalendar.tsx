@@ -26,12 +26,14 @@ export function WorkOrderCalendar() {
   const { data: workOrders, isLoading } = useQuery({
     queryKey: ["workOrders", format(currentDate, "yyyy-MM-dd")],
     queryFn: async () => {
+      // Format date as YYYY-MM-DD for database query
       const formattedDate = format(currentDate, "yyyy-MM-dd");
+      console.log("Fetching work orders for date:", formattedDate);
 
+      // First fetch the work orders for the selected date
       const { data, error } = await supabase
         .from("work_orders")
-        .select(
-          `
+        .select(`
           id, 
           customer_first_name,
           customer_last_name,
@@ -45,43 +47,84 @@ export function WorkOrderCalendar() {
           customer_vehicle_year,
           assigned_profile_id,
           created_at,
-          contact_preference,
-          timeframe,
-          profiles (
-            id,
-            first_name,
-            last_name
-          )
-        `
-        )
+          contact_preference
+        `)
         .gte("start_time", `${formattedDate}T00:00:00`)
         .lte("start_time", `${formattedDate}T23:59:59`)
         .order("start_time", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching work orders:", error);
+        throw error;
+      }
       
-      // Transform to ensure workOrder has all required fields and correct profiles structure
-      const transformedData = data.map(order => {
-        // Get the first profile from the array if it exists
-        const profileData = order.profiles && order.profiles.length > 0 
-          ? order.profiles[0] 
-          : { id: null, first_name: null, last_name: null };
-          
-        return {
-          ...order,
-          created_at: order.created_at || new Date().toISOString(),
-          contact_preference: order.contact_preference || 'email',
-          timeframe: order.timeframe || 'flexible',
-          // Convert the array of profiles to the single object structure expected by WorkOrder type
-          profiles: {
-            id: profileData.id,
-            first_name: profileData.first_name,
-            last_name: profileData.last_name
+      console.log("Work orders fetched:", data);
+      
+      // If no data, return empty array
+      if (!data || data.length === 0) return [];
+
+      // Now fetch the profiles for the work orders that have assigned_profile_id
+      const profileIds = data
+        .filter(order => order.assigned_profile_id)
+        .map(order => order.assigned_profile_id);
+
+      if (profileIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("id, first_name, last_name")
+          .in("id", profileIds);
+
+        if (profilesError) {
+          console.error("Error fetching profiles:", profilesError);
+          // Continue without profiles rather than failing completely
+        }
+
+        // Map profiles to work orders
+        const workOrdersWithProfiles = data.map(order => {
+          if (!order.assigned_profile_id) {
+            return {
+              ...order,
+              created_at: order.created_at || new Date().toISOString(),
+              contact_preference: order.contact_preference || 'email',
+              profiles: {
+                id: null,
+                first_name: null,
+                last_name: null
+              }
+            };
           }
-        };
-      }) as WorkOrder[];
-      
-      return transformedData;
+
+          const profile = profilesData?.find(p => p.id === order.assigned_profile_id);
+          return {
+            ...order,
+            created_at: order.created_at || new Date().toISOString(),
+            contact_preference: order.contact_preference || 'email',
+            profiles: profile ? {
+              id: profile.id,
+              first_name: profile.first_name,
+              last_name: profile.last_name
+            } : {
+              id: null,
+              first_name: null,
+              last_name: null
+            }
+          };
+        });
+
+        return workOrdersWithProfiles as WorkOrder[];
+      }
+
+      // If no profiles needed, just transform the data
+      return data.map(order => ({
+        ...order,
+        created_at: order.created_at || new Date().toISOString(),
+        contact_preference: order.contact_preference || 'email',
+        profiles: {
+          id: null,
+          first_name: null,
+          last_name: null
+        }
+      })) as WorkOrder[];
     },
   });
 
