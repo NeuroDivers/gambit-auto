@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react"
 import {
   ColumnDef,
@@ -18,7 +19,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { MoreHorizontal, Pencil, Trash2, ArchiveIcon, Archive, FilePlus2, Filter, Download } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +32,7 @@ import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
 
 interface Estimate {
   id: string
@@ -40,6 +42,7 @@ interface Estimate {
   total: number
   notes: string
   client_name: string | null
+  is_archived: boolean
 }
 
 export default function EstimatesList() {
@@ -109,7 +112,12 @@ export default function EstimatesList() {
       accessorKey: "client_name",
       header: "Client",
       cell: ({ row }) => (
-        <span>{row.original.client_name || 'N/A'}</span>
+        <div>
+          <div className="font-medium">{row.original.client_name || 'N/A'}</div>
+          <div className="text-sm text-muted-foreground">
+            Est #{row.original.id.substring(0, 8)}
+          </div>
+        </div>
       ),
     },
     {
@@ -118,7 +126,10 @@ export default function EstimatesList() {
       cell: ({ row }) => (
         <Badge
           variant="secondary"
-          className={row.original.status === "draft" ? "bg-muted" : ""}
+          className={row.original.status === "draft" ? "bg-muted" : 
+                   row.original.status === "sent" ? "bg-blue-100 text-blue-700" :
+                   row.original.status === "approved" ? "bg-green-100 text-green-700" :
+                   row.original.status === "declined" ? "bg-red-100 text-red-700" : ""}
         >
           {row.getValue("status")}
         </Badge>
@@ -156,6 +167,24 @@ export default function EstimatesList() {
                 className="cursor-pointer"
               >
                 <Pencil className="mr-2 h-4 w-4" /> Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  // Logic for converting to invoice would go here
+                  toast.info("Convert to invoice feature coming soon")
+                }}
+                className="cursor-pointer"
+              >
+                <FilePlus2 className="mr-2 h-4 w-4" /> Convert to Invoice
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  // Logic for downloading/exporting estimate would go here
+                  toast.info("Download feature coming soon")
+                }}
+                className="cursor-pointer"
+              >
+                <Download className="mr-2 h-4 w-4" /> Download
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -266,8 +295,54 @@ export default function EstimatesList() {
     }
   }
 
+  // Add stats for estimates
+  const { data: stats } = useQuery({
+    queryKey: ["estimateStats"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("estimates")
+        .select("status, is_archived")
+        
+      if (error) throw error;
+      
+      const draft = data.filter(e => e.status === "draft" && !e.is_archived).length;
+      const sent = data.filter(e => e.status === "sent" && !e.is_archived).length;
+      const approved = data.filter(e => e.status === "approved" && !e.is_archived).length;
+      const archived = data.filter(e => e.is_archived).length;
+      
+      return { draft, sent, approved, archived, total: data.length };
+    }
+  });
+
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardContent className="p-4 flex flex-col items-center justify-center">
+            <div className="text-2xl font-bold">{stats?.total || 0}</div>
+            <p className="text-sm text-muted-foreground">Total Estimates</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex flex-col items-center justify-center">
+            <div className="text-2xl font-bold">{stats?.draft || 0}</div>
+            <p className="text-sm text-muted-foreground">Draft Estimates</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex flex-col items-center justify-center">
+            <div className="text-2xl font-bold">{stats?.sent || 0}</div>
+            <p className="text-sm text-muted-foreground">Sent Estimates</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex flex-col items-center justify-center">
+            <div className="text-2xl font-bold">{stats?.approved || 0}</div>
+            <p className="text-sm text-muted-foreground">Approved Estimates</p>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">Estimates</h1>
         <Button onClick={() => navigate("/admin/create-estimate")}>
@@ -287,7 +362,9 @@ export default function EstimatesList() {
           <Button
             variant="secondary"
             onClick={() => setIsArchived(!isArchived)}
+            className="flex items-center"
           >
+            <Filter className="mr-2 h-4 w-4" />
             {isArchived ? "View Active Estimates" : "View Archived Estimates"}
           </Button>
           {isArchived ? (
@@ -304,6 +381,7 @@ export default function EstimatesList() {
               onClick={handleArchiveSelected}
               disabled={selectedEstimateIds.length === 0}
             >
+              <Archive className="mr-2 h-4 w-4" />
               Archive Selected
             </Button>
           )}
@@ -341,6 +419,18 @@ export default function EstimatesList() {
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      // This allows clicking anywhere on the row to navigate to the estimate
+                      // but excludes clicking on checkboxes and action buttons
+                      const target = event?.target as HTMLElement;
+                      if (
+                        !target.closest('input[type="checkbox"]') &&
+                        !target.closest('button')
+                      ) {
+                        navigate(`/admin/edit-estimate/${row.original.id}`);
+                      }
+                    }}
                   >
                     {row.getVisibleCells().map((cell) => {
                       return (
@@ -361,7 +451,7 @@ export default function EstimatesList() {
                     colSpan={columns.length}
                     className="h-24 text-center"
                   >
-                    No results.
+                    No estimates found.
                   </TableCell>
                 </TableRow>
               )}
