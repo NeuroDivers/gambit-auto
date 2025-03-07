@@ -98,15 +98,7 @@ export function ProfileForm({ role }: ProfileFormProps) {
             formData.country = customer.customer_country || ""
           }
         } else {
-          // For staff and other roles, load address from profile or staff table
-          formData.unit_number = profile.unit_number || ""
-          formData.street_address = profile.street_address || ""
-          formData.city = profile.city || ""
-          formData.state_province = profile.state_province || ""
-          formData.postal_code = profile.postal_code || ""
-          formData.country = profile.country || ""
-
-          // Check if user is staff and get additional address info if needed
+          // For staff and other roles, load address from staff table first
           const { data: staffData } = await supabase
             .from('staff')
             .select('*')
@@ -114,13 +106,21 @@ export function ProfileForm({ role }: ProfileFormProps) {
             .single()
 
           if (staffData) {
-            // Override with staff address data if it exists
-            formData.unit_number = staffData.unit_number || formData.unit_number
-            formData.street_address = staffData.street_address || formData.street_address
-            formData.city = staffData.city || formData.city
-            formData.state_province = staffData.state_province || formData.state_province
-            formData.postal_code = staffData.postal_code || formData.postal_code
-            formData.country = staffData.country || formData.country
+            // Use staff address data if it exists
+            formData.unit_number = staffData.unit_number || ""
+            formData.street_address = staffData.street_address || ""
+            formData.city = staffData.city || ""
+            formData.state_province = staffData.state_province || ""
+            formData.postal_code = staffData.postal_code || ""
+            formData.country = staffData.country || ""
+          } else {
+            // Fallback to profile data (though we expect this would be empty for address fields)
+            formData.unit_number = profile.unit_number || ""
+            formData.street_address = profile.street_address || ""
+            formData.city = profile.city || ""
+            formData.state_province = profile.state_province || ""
+            formData.postal_code = profile.postal_code || ""
+            formData.country = profile.country || ""
           }
         }
 
@@ -196,22 +196,7 @@ export function ProfileForm({ role }: ProfileFormProps) {
           if (newCustomerError) throw newCustomerError
         }
       } else {
-        // For staff and other roles, update address in profile
-        const { error: profileAddressError } = await supabase
-          .from('profiles')
-          .update({
-            unit_number: values.unit_number,
-            street_address: values.street_address,
-            city: values.city,
-            state_province: values.state_province,
-            postal_code: values.postal_code,
-            country: values.country,
-          })
-          .eq('id', user.id)
-
-        if (profileAddressError) throw profileAddressError
-
-        // If staff record exists, update address there too
+        // For staff and other roles, update address in staff table if it exists
         const { data: staffData } = await supabase
           .from('staff')
           .select('id')
