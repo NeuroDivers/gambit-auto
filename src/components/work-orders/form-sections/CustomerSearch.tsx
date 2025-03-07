@@ -1,8 +1,7 @@
-
 import { UseFormReturn } from "react-hook-form";
 import { WorkOrderFormValues } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CustomerInfoFields } from "@/components/invoices/form-sections/CustomerInfoFields";
+import CustomerInfoFields from "@/components/invoices/form-sections/CustomerInfoFields";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 

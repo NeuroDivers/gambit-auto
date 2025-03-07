@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { CustomerInfoFieldsProps } from './CustomerInfoFieldsProps';
-import { CustomerInfoFields } from './CustomerInfoFields';
+import CustomerInfoFields from "./CustomerInfoFields";
 
 export { CustomerInfoFields };
 
