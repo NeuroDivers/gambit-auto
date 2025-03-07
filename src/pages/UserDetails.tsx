@@ -5,9 +5,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PersonalInfoForm } from '@/components/profile/sections/PersonalInfoForm';
-import { PasswordChangeForm } from '@/components/profile/sections/PasswordChangeForm';
-import { DefaultCommissionForm } from '@/components/profile/sections/DefaultCommissionForm';
 import StaffSkills from '@/components/staff/StaffSkills';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { useNavigate } from 'react-router-dom';
@@ -109,7 +106,7 @@ export default function UserDetails() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="px-0">
-                <StaffSkills profileId={profile.id} />
+                {profile.id && <StaffSkills profileId={profile.id} />}
               </CardContent>
             </TabsContent>
           )}

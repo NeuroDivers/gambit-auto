@@ -3,7 +3,7 @@ import React from 'react';
 import { ServiceSkillsManager } from './skills/ServiceSkillsManager';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-interface StaffSkillsProps {
+export interface StaffSkillsProps {
   profileId: string;
 }
 

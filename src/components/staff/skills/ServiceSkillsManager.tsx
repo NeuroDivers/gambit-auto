@@ -9,8 +9,21 @@ import { useRemoveSkillMutation } from '../hooks/useRemoveSkillMutation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
-interface ServiceSkillsManagerProps {
+export interface ServiceSkillsManagerProps {
   profileId: string;
+}
+
+interface ServiceType {
+  id: string;
+  name: string;
+  description: string;
+}
+
+interface StaffSkill {
+  id: string;
+  service_id: string;
+  proficiency: string;
+  service_types: ServiceType;
 }
 
 export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
