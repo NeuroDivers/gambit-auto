@@ -1,9 +1,10 @@
+
 export type Customer = {
   id: string
   customer_first_name: string
   customer_last_name: string
   customer_email: string
-  customer_phone_number?: string | null
+  phone_number?: string | null
   customer_unit_number?: string | null
   customer_street_address?: string | null
   customer_city?: string | null

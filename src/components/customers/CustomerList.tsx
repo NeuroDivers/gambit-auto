@@ -71,7 +71,7 @@ export function CustomerList() {
             id, 
             customer_first_name, 
             customer_last_name, 
-            customer_email, 
+            email, 
             customer_city, 
             customer_state_province,
             profile_id,
@@ -94,6 +94,9 @@ export function CustomerList() {
         const customersWithProfiles = await Promise.all(customersData.map(async (customer) => {
           const customerWithProfile: Partial<Customer> = { ...customer };
           
+          // Map database fields to expected property names in Customer type
+          customerWithProfile.customer_email = customer.email || '';
+          
           if (customer.profile_id) {
             const { data: profileData } = await supabase
               .from('profiles')
@@ -108,7 +111,7 @@ export function CustomerList() {
               // Use profile data if customer fields are empty
               if (!customer.customer_first_name) customerWithProfile.customer_first_name = profileData.first_name || ''
               if (!customer.customer_last_name) customerWithProfile.customer_last_name = profileData.last_name || ''
-              if (!customer.customer_email) customerWithProfile.customer_email = profileData.email || ''
+              if (!customer.email) customerWithProfile.customer_email = profileData.email || ''
               if (!customer.phone_number) customerWithProfile.phone_number = profileData.phone_number
             }
           }
@@ -159,7 +162,7 @@ export function CustomerList() {
       (customer.customer_email && customer.customer_email.toLowerCase().includes(searchLower)) ||
       (customer.phone_number && customer.phone_number.includes(search))
     )
-  })
+  }) || []
 
   // Handle page changes
   const goToPage = (newPage: number) => {
@@ -234,7 +237,7 @@ export function CustomerList() {
       <CardContent>
         {isLoading ? (
           <div className="py-8 text-center">Loading customers...</div>
-        ) : filteredCustomers?.length === 0 ? (
+        ) : filteredCustomers.length === 0 ? (
           <div className="py-8 text-center">
             <p className="text-muted-foreground">No customers found.</p>
           </div>
@@ -252,7 +255,7 @@ export function CustomerList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredCustomers?.map((customer) => (
+                  {filteredCustomers.map((customer) => (
                     <tr key={customer.id} className="border-b hover:bg-muted/40">
                       <td className="py-3">
                         <div className="font-medium">
