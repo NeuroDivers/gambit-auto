@@ -94,6 +94,33 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground, var(--accent-foreground)))',
 					border: 'hsl(var(--sidebar-border, var(--border)))',
 					ring: 'hsl(var(--sidebar-ring, var(--ring)))'
+				},
+				// Add specific status badge colors that are available in the theme editor
+				status: {
+					pending: {
+						bg: 'hsl(var(--status-pending-bg))',
+						text: 'hsl(var(--status-pending-text))'
+					},
+					approved: {
+						bg: 'hsl(var(--status-approved-bg))',
+						text: 'hsl(var(--status-approved-text))'
+					},
+					rejected: {
+						bg: 'hsl(var(--status-rejected-bg))',
+						text: 'hsl(var(--status-rejected-text))'
+					},
+					cancelled: {
+						bg: 'hsl(var(--status-cancelled-bg))',
+						text: 'hsl(var(--status-cancelled-text))'
+					},
+					completed: {
+						bg: 'hsl(var(--status-completed-bg))',
+						text: 'hsl(var(--status-completed-text))'
+					},
+					'in-progress': {
+						bg: 'hsl(var(--status-in-progress-bg))',
+						text: 'hsl(var(--status-in-progress-text))'
+					}
 				}
 			},
 			borderRadius: {

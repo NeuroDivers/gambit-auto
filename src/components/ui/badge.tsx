@@ -40,10 +40,13 @@ const badgeVariants = cva(
           "border-transparent bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
         overdue:
           "border-transparent bg-red-100 text-red-800 hover:bg-red-200",
-        refunded:
-          "border-transparent bg-blue-100 text-blue-800 hover:bg-blue-200",
         void:
           "border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200",
+        // Add direct mappings to theme variables for work order statuses
+        pending:
+          "border-transparent bg-[hsl(var(--status-pending-bg))] text-[hsl(var(--status-pending-text))]",
+        approved:
+          "border-transparent bg-[hsl(var(--status-approved-bg))] text-[hsl(var(--status-approved-text))]",
       },
       size: {
         default: "px-2.5 py-0.5 text-xs",

@@ -5,9 +5,9 @@
 export const getWorkOrderStatusVariant = (status: string) => {
   switch (status) {
     case "pending":
-      return "outline"
+      return "pending"
     case "approved":
-      return "outline"
+      return "approved"
     case "rejected":
       return "rejected"
     case "in_progress":

@@ -69,42 +69,59 @@ export function WorkOrderStatusBadge({ status, workOrderId, editable = false }: 
 
   if (editable && workOrderId) {
     return (
-      <Select
-        value={currentStatus}
-        onValueChange={(value) => handleStatusChange(value as WorkOrderStatus)}
-        disabled={isLoading}
-      >
-        <SelectTrigger className="w-[160px]">
-          <SelectValue placeholder="Status">
-            <Badge variant={getBadgeVariant(currentStatus)} className="mr-2">
-              {getStatusLabel(currentStatus)}
-            </Badge>
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="pending">
-            <Badge variant="outline" className="mr-2">Pending</Badge>
-          </SelectItem>
-          <SelectItem value="approved">
-            <Badge variant="outline" className="mr-2">Approved</Badge>
-          </SelectItem>
-          <SelectItem value="in_progress">
-            <Badge variant="info" className="mr-2">In Progress</Badge>
-          </SelectItem>
-          <SelectItem value="completed">
-            <Badge variant="success" className="mr-2">Completed</Badge>
-          </SelectItem>
-          <SelectItem value="cancelled">
-            <Badge variant="destructive" className="mr-2">Cancelled</Badge>
-          </SelectItem>
-          <SelectItem value="invoiced">
-            <Badge variant="secondary" className="mr-2">Invoiced</Badge>
-          </SelectItem>
-          <SelectItem value="estimated">
-            <Badge variant="warning" className="mr-2">Estimated</Badge>
-          </SelectItem>
-        </SelectContent>
-      </Select>
+      <div className="status-selector">
+        <Select
+          value={currentStatus}
+          onValueChange={(value) => handleStatusChange(value as WorkOrderStatus)}
+          disabled={isLoading}
+        >
+          <SelectTrigger className="w-[160px] status-trigger" data-status={currentStatus}>
+            <SelectValue>
+              <Badge variant={getBadgeVariant(currentStatus)}>
+                {getStatusLabel(currentStatus)}
+              </Badge>
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="pending">
+              <Badge variant="pending">Pending</Badge>
+            </SelectItem>
+            <SelectItem value="approved">
+              <Badge variant="approved">Approved</Badge>
+            </SelectItem>
+            <SelectItem value="in_progress">
+              <Badge variant="info">In Progress</Badge>
+            </SelectItem>
+            <SelectItem value="completed">
+              <Badge variant="success">Completed</Badge>
+            </SelectItem>
+            <SelectItem value="cancelled">
+              <Badge variant="destructive">Cancelled</Badge>
+            </SelectItem>
+            <SelectItem value="invoiced">
+              <Badge variant="secondary">Invoiced</Badge>
+            </SelectItem>
+            <SelectItem value="estimated">
+              <Badge variant="warning">Estimated</Badge>
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <style jsx>{`
+          .status-trigger[data-status="${currentStatus}"] {
+            background: transparent;
+            border-color: transparent;
+            padding-left: 0;
+            padding-right: 8px;
+            box-shadow: none;
+          }
+          .status-trigger[data-status="${currentStatus}"]:hover {
+            background: transparent;
+          }
+          .status-selector :global(.select-content) {
+            min-width: 140px;
+          }
+        `}</style>
+      </div>
     )
   }
 
