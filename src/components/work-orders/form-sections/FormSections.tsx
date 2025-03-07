@@ -1,7 +1,6 @@
 
 import { UseFormReturn } from "react-hook-form"
 import { WorkOrderFormValues } from "../types"
-import { CustomerInfoFields } from "./CustomerInfoFields"
 import { ServiceItemsField } from "../form-fields/ServiceItemsField"
 import { BayAssignmentField } from "./BayAssignmentField"
 import { NotesFields } from "./NotesFields"
@@ -52,10 +51,6 @@ export function FormSections({
 
   return (
     <div className="space-y-6">
-      <CustomerInfoFields form={form} isEditing={isEditing} />
-      
-      <Separator />
-      
       <Card>
         <CardContent className="p-6">
           <VehicleInfoFields form={form} />
