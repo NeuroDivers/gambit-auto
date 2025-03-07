@@ -1,20 +1,17 @@
 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useVinLookup } from "@/hooks/useVinLookup"
-import { useEffect, useState } from "react"
-import { Loader2 } from "lucide-react"
-import { VinScanner } from "@/components/shared/VinScanner"
 
-type VehicleInfoFieldsProps = {
-  make: string;
-  setMake: (value: string) => void;
-  model: string;
-  setModel: (value: string) => void;
-  year: number;
-  setYear: (value: number) => void;
-  vin: string;
-  setVin: (value: string) => void;
+export interface VehicleInfoFieldsProps {
+  // Support both naming patterns
+  make?: string;
+  setMake?: (value: string) => void;
+  model?: string;
+  setModel?: (value: string) => void;
+  year?: number;
+  setYear?: (value: number) => void;
+  vin?: string;
+  setVin?: (value: string) => void;
   color?: string;
   setColor?: (value: string) => void;
   trim?: string;
@@ -25,6 +22,8 @@ type VehicleInfoFieldsProps = {
   setDoors?: (value: number) => void;
   licensePlate?: string;
   setLicensePlate?: (value: string) => void;
+  
+  // Support the other naming pattern
   vehicleMake?: string;
   setVehicleMake?: (value: string) => void;
   vehicleModel?: string;
@@ -33,256 +32,204 @@ type VehicleInfoFieldsProps = {
   setVehicleYear?: (value: number) => void;
   vehicleVin?: string;
   setVehicleVin?: (value: string) => void;
+  vehicleColor?: string;
+  setVehicleColor?: (value: string) => void;
+  vehicleTrim?: string;
+  setVehicleTrim?: (value: string) => void;
   vehicleBodyClass?: string;
   setVehicleBodyClass?: (value: string) => void;
   vehicleDoors?: number;
   setVehicleDoors?: (value: number) => void;
-  vehicleTrim?: string;
-  setVehicleTrim?: (value: string) => void;
-  customerId?: string | null;
+  vehicleLicensePlate?: string;
+  setVehicleLicensePlate?: (value: string) => void;
+  
+  customerId?: string;
 }
 
 export function VehicleInfoFields({
-  make,
-  setMake,
-  model,
-  setModel,
-  year,
-  setYear,
-  vin,
-  setVin,
-  color,
-  setColor,
-  trim,
-  setTrim,
-  bodyClass,
-  setBodyClass,
-  doors,
-  setDoors,
-  licensePlate,
-  setLicensePlate,
-  vehicleMake,
-  setVehicleMake,
-  vehicleModel,
-  setVehicleModel,
-  vehicleYear,
-  setVehicleYear,
-  vehicleVin,
-  setVehicleVin,
-  vehicleBodyClass,
-  setVehicleBodyClass,
-  vehicleDoors,
-  setVehicleDoors,
-  vehicleTrim,
-  setVehicleTrim,
+  // Use the first naming pattern by default, but fall back to the second if needed
+  make, setMake,
+  model, setModel,
+  year, setYear,
+  vin, setVin,
+  color, setColor,
+  trim, setTrim,
+  bodyClass, setBodyClass,
+  doors, setDoors,
+  licensePlate, setLicensePlate,
+  
+  // Second naming pattern
+  vehicleMake, setVehicleMake,
+  vehicleModel, setVehicleModel,
+  vehicleYear, setVehicleYear,
+  vehicleVin, setVehicleVin,
+  vehicleColor, setVehicleColor,
+  vehicleTrim, setVehicleTrim,
+  vehicleBodyClass, setVehicleBodyClass,
+  vehicleDoors, setVehicleDoors,
+  vehicleLicensePlate, setVehicleLicensePlate,
+  
   customerId
 }: VehicleInfoFieldsProps) {
-  // Allow using either 'make' style or 'vehicleMake' style props
-  const effectiveMake = vehicleMake ?? make;
-  const effectiveSetMake = setVehicleMake ?? setMake;
   
-  const effectiveModel = vehicleModel ?? model;
-  const effectiveSetModel = setVehicleModel ?? setModel;
+  // Determine which value to use (prefer the first naming convention if available)
+  const effectiveMake = make ?? vehicleMake ?? '';
+  const effectiveModel = model ?? vehicleModel ?? '';
+  const effectiveYear = year ?? vehicleYear ?? new Date().getFullYear();
+  const effectiveVin = vin ?? vehicleVin ?? '';
+  const effectiveColor = color ?? vehicleColor ?? '';
+  const effectiveTrim = trim ?? vehicleTrim ?? '';
+  const effectiveBodyClass = bodyClass ?? vehicleBodyClass ?? '';
+  const effectiveDoors = doors ?? vehicleDoors ?? 0;
+  const effectiveLicensePlate = licensePlate ?? vehicleLicensePlate ?? '';
   
-  const effectiveYear = vehicleYear ?? year;
-  const effectiveSetYear = setVehicleYear ?? setYear;
+  // Helper functions to handle both naming patterns
+  const handleMakeChange = (value: string) => {
+    if (setMake) setMake(value);
+    else if (setVehicleMake) setVehicleMake(value);
+  };
   
-  const effectiveVin = vehicleVin ?? vin;
-  const effectiveSetVin = setVehicleVin ?? setVin;
+  const handleModelChange = (value: string) => {
+    if (setModel) setModel(value);
+    else if (setVehicleModel) setVehicleModel(value);
+  };
   
-  const effectiveBodyClass = vehicleBodyClass ?? bodyClass;
-  const effectiveSetBodyClass = setVehicleBodyClass ?? setBodyClass;
+  const handleYearChange = (value: string) => {
+    const numValue = parseInt(value, 10) || new Date().getFullYear();
+    if (setYear) setYear(numValue);
+    else if (setVehicleYear) setVehicleYear(numValue);
+  };
   
-  const effectiveDoors = vehicleDoors ?? doors;
-  const effectiveSetDoors = setVehicleDoors ?? setDoors;
+  const handleVinChange = (value: string) => {
+    if (setVin) setVin(value);
+    else if (setVehicleVin) setVehicleVin(value);
+  };
   
-  const effectiveTrim = vehicleTrim ?? trim;
-  const effectiveSetTrim = setVehicleTrim ?? setTrim;
-
-  const { data: vinData, isLoading: isLoadingVin } = useVinLookup(effectiveVin);
-  const currentYear = new Date().getFullYear();
-  const [open, setOpen] = useState(false);
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (vinData && !vinData.error) {
-      if (vinData.make) effectiveSetMake(vinData.make);
-      if (vinData.model) effectiveSetModel(vinData.model);
-      if (vinData.year) effectiveSetYear(vinData.year);
-      if (vinData.bodyClass && effectiveSetBodyClass) effectiveSetBodyClass(vinData.bodyClass);
-      if (vinData.doors && effectiveSetDoors) effectiveSetDoors(vinData.doors);
-      if (vinData.trim && effectiveSetTrim) effectiveSetTrim(vinData.trim);
-    }
-  }, [vinData, effectiveSetMake, effectiveSetModel, effectiveSetYear, effectiveSetBodyClass, effectiveSetDoors, effectiveSetTrim]);
-
-  const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const yearValue = parseInt(e.target.value);
-    if (!isNaN(yearValue) && yearValue >= 1900 && yearValue <= currentYear + 1) {
-      effectiveSetYear(yearValue);
-    }
+  const handleColorChange = (value: string) => {
+    if (setColor) setColor(value);
+    else if (setVehicleColor) setVehicleColor(value);
+  };
+  
+  const handleTrimChange = (value: string) => {
+    if (setTrim) setTrim(value);
+    else if (setVehicleTrim) setVehicleTrim(value);
+  };
+  
+  const handleBodyClassChange = (value: string) => {
+    if (setBodyClass) setBodyClass(value);
+    else if (setVehicleBodyClass) setVehicleBodyClass(value);
+  };
+  
+  const handleDoorsChange = (value: string) => {
+    const numValue = parseInt(value, 10) || 0;
+    if (setDoors) setDoors(numValue);
+    else if (setVehicleDoors) setVehicleDoors(numValue);
+  };
+  
+  const handleLicensePlateChange = (value: string) => {
+    if (setLicensePlate) setLicensePlate(value);
+    else if (setVehicleLicensePlate) setVehicleLicensePlate(value);
   };
 
   return (
     <div className="space-y-4">
-      <div>
-        <Label htmlFor="vehicleVin">
-          VIN
-          <span className="text-xs text-muted-foreground ml-2">(Auto-fills vehicle info)</span>
-        </Label>
-        <div className="flex gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="vehicle-make">Make</Label>
           <Input
-            id="vehicleVin"
-            value={effectiveVin}
-            onChange={(e) => effectiveSetVin(e.target.value)}
-            placeholder="Enter VIN for auto-fill"
-            autoComplete="off"
-          />
-          <VinScanner onScan={(vin) => effectiveSetVin(vin)} />
-        </div>
-      </div>
-
-      <div>
-        <Label htmlFor="vehicleYear">Year</Label>
-        <div className="relative">
-          <Input
-            id="vehicleYear"
-            type="number"
-            min={1900}
-            max={currentYear + 1}
-            value={effectiveYear || ''}
-            onChange={handleYearChange}
-            placeholder="Enter vehicle year"
-            autoComplete="off"
-            disabled={isLoadingVin}
-          />
-          {isLoadingVin && (
-            <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
-          )}
-        </div>
-      </div>
-
-      <div>
-        <Label htmlFor="vehicleMake">Make</Label>
-        <div className="relative">
-          <Input
-            id="vehicleMake"
+            id="vehicle-make"
+            placeholder="e.g. Toyota"
             value={effectiveMake}
-            onChange={(e) => effectiveSetMake(e.target.value)}
-            placeholder="Enter vehicle make"
-            autoComplete="off"
-            disabled={isLoadingVin}
+            onChange={(e) => handleMakeChange(e.target.value)}
           />
-          {isLoadingVin && (
-            <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
-          )}
         </div>
-      </div>
-
-      <div>
-        <Label htmlFor="vehicleModel">Model</Label>
-        <div className="relative">
+        
+        <div className="space-y-2">
+          <Label htmlFor="vehicle-model">Model</Label>
           <Input
-            id="vehicleModel"
+            id="vehicle-model"
+            placeholder="e.g. Camry"
             value={effectiveModel}
-            onChange={(e) => effectiveSetModel(e.target.value)}
-            placeholder="Enter vehicle model"
-            autoComplete="off"
-            disabled={isLoadingVin}
+            onChange={(e) => handleModelChange(e.target.value)}
           />
-          {isLoadingVin && (
-            <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
-          )}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="vehicle-year">Year</Label>
+          <Input
+            id="vehicle-year"
+            type="number"
+            placeholder="e.g. 2023"
+            value={effectiveYear}
+            onChange={(e) => handleYearChange(e.target.value)}
+          />
         </div>
       </div>
-
-      {effectiveSetBodyClass && (
-        <div>
-          <Label htmlFor="vehicleBodyClass">Body Class</Label>
-          <div className="relative">
-            <Input
-              id="vehicleBodyClass"
-              value={effectiveBodyClass || ''}
-              onChange={(e) => effectiveSetBodyClass(e.target.value)}
-              placeholder="Enter body class"
-              autoComplete="off"
-              disabled={isLoadingVin}
-            />
-            {isLoadingVin && (
-              <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
-            )}
-          </div>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="vehicle-vin">VIN</Label>
+          <Input
+            id="vehicle-vin"
+            placeholder="Vehicle Identification Number"
+            value={effectiveVin}
+            onChange={(e) => handleVinChange(e.target.value)}
+          />
         </div>
-      )}
-
-      {effectiveSetDoors && (
-        <div>
-          <Label htmlFor="vehicleDoors">Number of Doors</Label>
-          <div className="relative">
-            <Input
-              id="vehicleDoors"
-              type="number"
-              min={1}
-              value={effectiveDoors || ''}
-              onChange={(e) => effectiveSetDoors(parseInt(e.target.value))}
-              placeholder="Enter number of doors"
-              autoComplete="off"
-              disabled={isLoadingVin}
-            />
-            {isLoadingVin && (
-              <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
-            )}
-          </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="vehicle-license-plate">License Plate</Label>
+          <Input
+            id="vehicle-license-plate"
+            placeholder="License Plate Number"
+            value={effectiveLicensePlate}
+            onChange={(e) => handleLicensePlateChange(e.target.value)}
+          />
         </div>
-      )}
-
-      {effectiveSetTrim && (
-        <div>
-          <Label htmlFor="vehicleTrim">Trim</Label>
-          <div className="relative">
-            <Input
-              id="vehicleTrim"
-              value={effectiveTrim || ''}
-              onChange={(e) => effectiveSetTrim(e.target.value)}
-              placeholder="Enter vehicle trim"
-              autoComplete="off"
-              disabled={isLoadingVin}
-            />
-            {isLoadingVin && (
-              <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
-            )}
-          </div>
+      </div>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="vehicle-color">Color</Label>
+          <Input
+            id="vehicle-color"
+            placeholder="e.g. Red"
+            value={effectiveColor}
+            onChange={(e) => handleColorChange(e.target.value)}
+          />
         </div>
-      )}
-
-      {setColor && (
-        <div>
-          <Label htmlFor="vehicleColor">Color</Label>
-          <div className="relative">
-            <Input
-              id="vehicleColor"
-              value={color || ''}
-              onChange={(e) => setColor(e.target.value)}
-              placeholder="Enter vehicle color"
-              autoComplete="off"
-            />
-          </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="vehicle-trim">Trim</Label>
+          <Input
+            id="vehicle-trim"
+            placeholder="e.g. LE"
+            value={effectiveTrim}
+            onChange={(e) => handleTrimChange(e.target.value)}
+          />
         </div>
-      )}
-
-      {setLicensePlate && (
-        <div>
-          <Label htmlFor="vehicleLicensePlate">License Plate</Label>
-          <div className="relative">
-            <Input
-              id="vehicleLicensePlate"
-              value={licensePlate || ''}
-              onChange={(e) => setLicensePlate(e.target.value)}
-              placeholder="Enter license plate"
-              autoComplete="off"
-            />
-          </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="vehicle-doors">Doors</Label>
+          <Input
+            id="vehicle-doors"
+            type="number"
+            placeholder="e.g. 4"
+            value={effectiveDoors || ''}
+            onChange={(e) => handleDoorsChange(e.target.value)}
+          />
         </div>
-      )}
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="vehicle-body-class">Body Class</Label>
+        <Input
+          id="vehicle-body-class"
+          placeholder="e.g. Sedan"
+          value={effectiveBodyClass}
+          onChange={(e) => handleBodyClassChange(e.target.value)}
+        />
+      </div>
     </div>
-  );
+  )
 }

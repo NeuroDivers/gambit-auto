@@ -7,20 +7,40 @@ import { InvoiceTaxSummary } from "../form-sections/InvoiceTaxSummary"
 import { ClipboardListIcon } from "lucide-react"
 
 type InvoiceServiceItemsProps = {
-  form: UseFormReturn<InvoiceFormValues>
+  form?: UseFormReturn<InvoiceFormValues>;
+  items?: InvoiceItem[];
+  setItems?: (items: InvoiceItem[] | any[]) => void;
+  allowPriceEdit?: boolean;
+  invoiceId?: string;
 }
 
-export function InvoiceServiceItems({ form }: InvoiceServiceItemsProps) {
+export function InvoiceServiceItems({ 
+  form, 
+  items: propItems, 
+  setItems: propSetItems, 
+  allowPriceEdit = true,
+  invoiceId 
+}: InvoiceServiceItemsProps) {
+  
+  // If form is provided, use it to manage state
+  const items = form ? form.watch('invoice_items') : propItems || [];
+  
   const handleTotalCalculated = (subtotal: number, gst: number, qst: number, total: number) => {
-    form.setValue('subtotal', subtotal)
-    form.setValue('gst_amount', gst)
-    form.setValue('qst_amount', qst)
-    form.setValue('total', total)
+    if (form) {
+      form.setValue('subtotal', subtotal)
+      form.setValue('gst_amount', gst)
+      form.setValue('qst_amount', qst)
+      form.setValue('total', total)
+    }
   }
 
-  const handleItemsChange = (items: InvoiceItem[] | any[]) => {
-    // Ensure we're setting the correct type (InvoiceItem[])
-    form.setValue('invoice_items', items as InvoiceItem[]);
+  const handleItemsChange = (updatedItems: InvoiceItem[] | any[]) => {
+    if (form) {
+      // Ensure we're setting the correct type (InvoiceItem[])
+      form.setValue('invoice_items', updatedItems as InvoiceItem[]);
+    } else if (propSetItems) {
+      propSetItems(updatedItems);
+    }
   };
 
   return (
@@ -34,15 +54,16 @@ export function InvoiceServiceItems({ form }: InvoiceServiceItemsProps) {
         </CardHeader>
         <CardContent className="p-5">
           <InvoiceItemsFields
-            items={form.watch('invoice_items')}
+            items={items}
             setItems={handleItemsChange}
-            allowPriceEdit={true}
+            allowPriceEdit={allowPriceEdit}
+            invoiceId={invoiceId}
           />
         </CardContent>
       </Card>
 
       <InvoiceTaxSummary 
-        items={form.watch('invoice_items')} 
+        items={items} 
         onTotalCalculated={handleTotalCalculated}
       />
     </div>

@@ -11,6 +11,7 @@ type InvoiceStatusFieldProps = {
 }
 
 export function InvoiceStatusField({ form, defaultValue, value, onChange }: InvoiceStatusFieldProps) {
+  // If form is provided, use React Hook Form pattern
   if (form) {
     return (
       <FormField
@@ -41,6 +42,7 @@ export function InvoiceStatusField({ form, defaultValue, value, onChange }: Invo
     );
   }
   
+  // Otherwise use controlled component pattern
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium">Status</label>

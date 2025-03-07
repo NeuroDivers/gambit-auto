@@ -8,13 +8,15 @@ interface InvoiceItemsFieldsProps {
   setItems: (items: InvoiceItem[] | ServiceItemType[]) => void;
   allowPriceEdit?: boolean;
   showCommission?: boolean;
+  invoiceId?: string;
 }
 
 export function InvoiceItemsFields({ 
   items, 
   setItems, 
   allowPriceEdit = true,
-  showCommission = false 
+  showCommission = false,
+  invoiceId
 }: InvoiceItemsFieldsProps) {
   // Map items to ServiceItemType[] for ServiceSelectionField
   const mappedItems = items.map(item => {
@@ -44,7 +46,8 @@ export function InvoiceItemsFields({
           description: item.description || "",
           commission_rate: item.commission_rate,
           commission_type: item.commission_type, // Now using same type throughout
-          package_id: item.package_id
+          package_id: item.package_id,
+          invoice_id: invoiceId
         };
         
         return invoiceItem;
