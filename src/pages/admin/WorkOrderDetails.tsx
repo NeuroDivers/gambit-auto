@@ -38,11 +38,14 @@ export default function WorkOrderDetails() {
             service_id,
             quantity,
             unit_price,
+            commission_rate,
+            commission_type,
+            assigned_profile_id,
             service_types!work_order_services_service_id_fkey (
               id,
               name,
               description,
-              price
+              base_price
             )
           )
         `)
