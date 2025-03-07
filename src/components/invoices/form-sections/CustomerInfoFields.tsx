@@ -1,17 +1,46 @@
 
-import React from 'react';
+import React from "react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { CustomerInfoFieldsProps } from './CustomerInfoFieldsProps';
+import { FormLabel } from "@/components/ui/form";
 
-const CustomerInfoFields: React.FC<CustomerInfoFieldsProps> = ({
+export interface CustomerInfoFieldsProps {
+  customerFirstName: string;
+  setCustomerFirstName: (value: string) => void;
+  customerLastName: string;
+  setCustomerLastName: (value: string) => void;
+  customerEmail: string;
+  setCustomerEmail: (value: string) => void;
+  customerPhone?: string;
+  setCustomerPhone: (value: string) => void;
+  customerAddress?: string;
+  setCustomerAddress?: (value: string) => void;
+  customers?: any[];
+  isLoadingCustomers?: boolean;
+  onCustomerSelect?: (customerId: string) => void;
+  customerStreetAddress?: string;
+  setCustomerStreetAddress?: (value: string) => void;
+  customerUnitNumber?: string;
+  setCustomerUnitNumber?: (value: string) => void;
+  customerCity?: string;
+  setCustomerCity?: (value: string) => void;
+  customerStateProvince?: string;
+  setCustomerStateProvince?: (value: string) => void;
+  customerPostalCode?: string;
+  setCustomerPostalCode?: (value: string) => void;
+  customerCountry?: string;
+  setCustomerCountry?: (value: string) => void;
+  clientIdField?: string;
+  setClientId?: (value: string) => void;
+}
+
+function CustomerInfoFields({
   customerFirstName,
   setCustomerFirstName,
   customerLastName,
   setCustomerLastName,
   customerEmail,
   setCustomerEmail,
-  customerPhone,
+  customerPhone = "",
   setCustomerPhone,
   customerAddress,
   setCustomerAddress,
@@ -27,142 +56,123 @@ const CustomerInfoFields: React.FC<CustomerInfoFieldsProps> = ({
   setCustomerPostalCode,
   customerCountry,
   setCustomerCountry,
-  customers,
-  isLoadingCustomers,
-  onCustomerSelect,
-  clientIdField,
-  setClientId
-}) => {
+}: CustomerInfoFieldsProps) {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="customer-first-name">First Name</Label>
+          <FormLabel>First Name</FormLabel>
           <Input
-            id="customer-first-name"
-            placeholder="Enter first name"
-            value={customerFirstName || ""}
+            value={customerFirstName}
             onChange={(e) => setCustomerFirstName(e.target.value)}
+            placeholder="First name"
           />
         </div>
-        
         <div className="space-y-2">
-          <Label htmlFor="customer-last-name">Last Name</Label>
+          <FormLabel>Last Name</FormLabel>
           <Input
-            id="customer-last-name"
-            placeholder="Enter last name"
-            value={customerLastName || ""}
+            value={customerLastName}
             onChange={(e) => setCustomerLastName(e.target.value)}
+            placeholder="Last name"
           />
         </div>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="customer-email">Email</Label>
-          <Input
-            id="customer-email"
-            type="email"
-            placeholder="Enter email address"
-            value={customerEmail || ""}
-            onChange={(e) => setCustomerEmail(e.target.value)}
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="customer-phone">Phone</Label>
-          <Input
-            id="customer-phone"
-            placeholder="Enter phone number"
-            value={customerPhone || ""}
-            onChange={(e) => setCustomerPhone ? setCustomerPhone(e.target.value) : undefined}
-          />
-        </div>
+      <div className="space-y-2">
+        <FormLabel>Email</FormLabel>
+        <Input
+          type="email"
+          value={customerEmail}
+          onChange={(e) => setCustomerEmail(e.target.value)}
+          placeholder="Email address"
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <FormLabel>Phone</FormLabel>
+        <Input
+          value={customerPhone}
+          onChange={(e) => setCustomerPhone(e.target.value)}
+          placeholder="Phone number"
+        />
       </div>
       
       {setCustomerAddress && (
         <div className="space-y-2">
-          <Label htmlFor="customer-address">Address</Label>
+          <FormLabel>Address</FormLabel>
           <Input
-            id="customer-address"
-            placeholder="Enter address"
             value={customerAddress || ""}
             onChange={(e) => setCustomerAddress(e.target.value)}
+            placeholder="Address"
           />
         </div>
       )}
       
-      {setCustomerStreetAddress && (
-        <div className="grid grid-cols-1 gap-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="customer-street-address">Street Address</Label>
-              <Input
-                id="customer-street-address"
-                placeholder="Street address"
-                value={customerStreetAddress || ""}
-                onChange={(e) => setCustomerStreetAddress(e.target.value)}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="customer-unit-number">Unit #</Label>
-              <Input
-                id="customer-unit-number"
-                placeholder="Unit #"
-                value={customerUnitNumber || ""}
-                onChange={(e) => setCustomerUnitNumber ? setCustomerUnitNumber(e.target.value) : undefined}
-              />
-            </div>
+      {/* Street Address and Unit Number */}
+      {setCustomerStreetAddress && setCustomerUnitNumber && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-2 space-y-2">
+            <FormLabel>Street Address</FormLabel>
+            <Input
+              value={customerStreetAddress || ""}
+              onChange={(e) => setCustomerStreetAddress(e.target.value)}
+              placeholder="Street address"
+            />
           </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="customer-city">City</Label>
-              <Input
-                id="customer-city"
-                placeholder="City"
-                value={customerCity || ""}
-                onChange={(e) => setCustomerCity ? setCustomerCity(e.target.value) : undefined}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="customer-state-province">State/Province</Label>
-              <Input
-                id="customer-state-province"
-                placeholder="State/Province"
-                value={customerStateProvince || ""}
-                onChange={(e) => setCustomerStateProvince ? setCustomerStateProvince(e.target.value) : undefined}
-              />
-            </div>
+          <div className="space-y-2">
+            <FormLabel>Unit/Apt #</FormLabel>
+            <Input
+              value={customerUnitNumber || ""}
+              onChange={(e) => setCustomerUnitNumber(e.target.value)}
+              placeholder="Unit/Apt #"
+            />
           </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="customer-postal-code">Postal Code</Label>
-              <Input
-                id="customer-postal-code"
-                placeholder="Postal Code"
-                value={customerPostalCode || ""}
-                onChange={(e) => setCustomerPostalCode ? setCustomerPostalCode(e.target.value) : undefined}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="customer-country">Country</Label>
-              <Input
-                id="customer-country"
-                placeholder="Country"
-                value={customerCountry || ""}
-                onChange={(e) => setCustomerCountry ? setCustomerCountry(e.target.value) : undefined}
-              />
-            </div>
+        </div>
+      )}
+      
+      {/* City, State, Postal Code */}
+      {setCustomerCity && setCustomerStateProvince && setCustomerPostalCode && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <FormLabel>City</FormLabel>
+            <Input
+              value={customerCity || ""}
+              onChange={(e) => setCustomerCity(e.target.value)}
+              placeholder="City"
+            />
           </div>
+          <div className="space-y-2">
+            <FormLabel>State/Province</FormLabel>
+            <Input
+              value={customerStateProvince || ""}
+              onChange={(e) => setCustomerStateProvince(e.target.value)}
+              placeholder="State/Province"
+            />
+          </div>
+          <div className="space-y-2">
+            <FormLabel>Postal Code</FormLabel>
+            <Input
+              value={customerPostalCode || ""}
+              onChange={(e) => setCustomerPostalCode(e.target.value)}
+              placeholder="Postal code"
+            />
+          </div>
+        </div>
+      )}
+      
+      {/* Country */}
+      {setCustomerCountry && (
+        <div className="space-y-2">
+          <FormLabel>Country</FormLabel>
+          <Input
+            value={customerCountry || ""}
+            onChange={(e) => setCustomerCountry(e.target.value)}
+            placeholder="Country"
+          />
         </div>
       )}
     </div>
   );
-};
+}
 
 export default CustomerInfoFields;

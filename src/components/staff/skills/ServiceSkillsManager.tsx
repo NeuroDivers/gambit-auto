@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import { useServiceTypes } from './hooks/useServiceTypes';
 import { useStaffSkills } from './hooks/useStaffSkills';
 import { useRemoveSkillMutation } from '../hooks/useRemoveSkillMutation';
@@ -14,14 +15,14 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
   const { services, isLoadingServices } = useServiceTypes();
   const {
     skills,
-    isLoadingSkills,
+    availableServiceTypes,
+    isLoading,
     selectedServiceId,
     setSelectedServiceId,
     proficiency,
     setProficiency,
     handleAddSkill,
-    isAddingSkill,
-    addSkill
+    isAddingSkill
   } = useStaffSkills(profileId);
 
   const handleRemoveSkill = (skillId: string) => {
@@ -46,7 +47,7 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
         setProficiency={setProficiency}
         handleAddSkill={handleAddSkill}
         isAddingSkill={isAddingSkill}
-        availableServices={availableServices}
+        availableServices={availableServiceTypes}
         isLoadingServices={isLoadingServices}
       />
 
@@ -54,7 +55,7 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
         <h3 className="text-lg font-medium mb-4">Your Skills</h3>
         <SkillsList
           skills={skills}
-          isLoading={isLoadingSkills}
+          isLoading={isLoading}
           onRemoveSkill={handleRemoveSkill}
           isRemoving={isRemoving}
         />

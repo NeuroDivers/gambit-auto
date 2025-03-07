@@ -8,6 +8,9 @@ import { toast } from 'sonner';
 export function useStaffSkills(profileId: string) {
   const [skills, setSkills] = useState<StaffSkill[]>([]);
   const [availableServiceTypes, setAvailableServiceTypes] = useState<any[]>([]);
+  const [selectedServiceId, setSelectedServiceId] = useState<string>('');
+  const [proficiency, setProficiency] = useState<string>('beginner');
+  const [isAddingSkill, setIsAddingSkill] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch staff skills
@@ -53,11 +56,13 @@ export function useStaffSkills(profileId: string) {
     if (skillsData) {
       const processedSkills: StaffSkill[] = skillsData.map((skill) => ({
         id: skill.id,
-        serviceTypeId: skill.service_type_id,
-        expertiseLevel: skill.expertise_level,
-        profileId: skill.profile_id,
-        serviceName: skill.service_types?.name || '',
-        serviceDescription: skill.service_types?.description || '',
+        service_id: skill.service_type_id,
+        proficiency: skill.expertise_level,
+        service_types: {
+          id: skill.service_types?.id || '',
+          name: skill.service_types?.name || '',
+          description: skill.service_types?.description || ''
+        }
       }));
       setSkills(processedSkills);
     }
@@ -90,9 +95,13 @@ export function useStaffSkills(profileId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff-skills', profileId] });
       toast.success('Skill added successfully');
+      setSelectedServiceId('');
+      setProficiency('beginner');
+      setIsAddingSkill(false);
     },
     onError: (error: any) => {
       toast.error(`Error adding skill: ${error.message}`);
+      setIsAddingSkill(false);
     },
   });
 
@@ -136,6 +145,20 @@ export function useStaffSkills(profileId: string) {
     },
   });
 
+  // Handle adding a skill
+  const handleAddSkill = () => {
+    if (!selectedServiceId) {
+      toast.error('Please select a service');
+      return;
+    }
+
+    setIsAddingSkill(true);
+    addSkillMutation.mutate({
+      service_type_id: selectedServiceId,
+      expertise_level: proficiency,
+    });
+  };
+
   return {
     skills,
     availableServiceTypes,
@@ -144,5 +167,12 @@ export function useStaffSkills(profileId: string) {
     addSkill: addSkillMutation.mutate,
     updateSkill: updateSkillMutation.mutate,
     removeSkill: removeSkillMutation.mutate,
+    // Added these properties needed by ServiceSkillsManager
+    selectedServiceId,
+    setSelectedServiceId,
+    proficiency,
+    setProficiency,
+    handleAddSkill,
+    isAddingSkill
   };
 }

@@ -1,250 +1,144 @@
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { useEffect } from "react"
-import { toast } from "@/components/ui/use-toast"
-import { supabase } from "@/integrations/supabase/client"
-import { Loader2 } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import { StaffDetails } from "./types/staff"
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { FormLabel } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { useMutation } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-const staffFormSchema = z.object({
-  position: z.string().optional(),
-  department: z.string().optional(),
-  employee_id: z.string().optional(),
-  status: z.string(),
-  is_full_time: z.boolean(),
-  emergency_contact_name: z.string().optional(),
-  emergency_contact_phone: z.string().optional(),
-  employment_date: z.string().optional(),
-})
-
-type StaffFormValues = z.infer<typeof staffFormSchema>
-
-interface StaffDetailsFormProps {
-  staffDetails: StaffDetails | null
-  staffId: string
-  onSuccess?: () => void
+export interface StaffDetailsFormProps {
+  profileId: string;
+  profileData: any;
+  onSaved: () => void;
+  role?: any;
 }
 
-export function StaffDetailsForm({ staffDetails, staffId, onSuccess }: StaffDetailsFormProps) {
-  const form = useForm<StaffFormValues>({
-    resolver: zodResolver(staffFormSchema),
+export function StaffDetailsForm({ profileId, profileData, onSaved, role }: StaffDetailsFormProps) {
+  const form = useForm({
     defaultValues: {
-      position: "",
-      department: "",
-      employee_id: "",
-      status: "active",
-      is_full_time: true,
-      emergency_contact_name: "",
-      emergency_contact_phone: "",
-      employment_date: "",
-    },
-  })
-  
-  useEffect(() => {
-    if (staffDetails) {
-      form.reset({
-        position: staffDetails.position || "",
-        department: staffDetails.department || "",
-        employee_id: staffDetails.employee_id || "",
-        status: staffDetails.status || "active",
-        is_full_time: staffDetails.is_full_time || true,
-        emergency_contact_name: staffDetails.emergency_contact_name || "",
-        emergency_contact_phone: staffDetails.emergency_contact_phone || "",
-        employment_date: staffDetails.employment_date ? new Date(staffDetails.employment_date).toISOString().split('T')[0] : "",
-      })
+      first_name: profileData?.first_name || '',
+      last_name: profileData?.last_name || '',
+      phone_number: profileData?.phone_number || '',
+      bio: profileData?.bio || '',
+      unit_number: profileData?.unit_number || '',
+      street_address: profileData?.street_address || '',
+      city: profileData?.city || '',
+      state_province: profileData?.state_province || '',
+      postal_code: profileData?.postal_code || '',
+      country: profileData?.country || '',
     }
-  }, [staffDetails, form])
+  });
 
-  const onSubmit = async (data: StaffFormValues) => {
-    try {
+  const updateProfileMutation = useMutation({
+    mutationFn: async (formData: any) => {
       const { error } = await supabase
-        .from("staff")
-        .update({
-          position: data.position,
-          department: data.department,
-          employee_id: data.employee_id,
-          status: data.status,
-          is_full_time: data.is_full_time,
-          emergency_contact_name: data.emergency_contact_name,
-          emergency_contact_phone: data.emergency_contact_phone,
-          employment_date: data.employment_date || null,
-        })
-        .eq("id", staffId)
+        .from('profiles')
+        .update(formData)
+        .eq('id', profileId);
 
-      if (error) throw error
-
-      toast({
-        title: "Staff details updated",
-        description: "The staff details have been updated successfully",
-      })
-      
-      if (onSuccess) {
-        onSuccess()
-      }
-    } catch (error: any) {
-      console.error("Error updating staff details:", error)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to update staff details",
-      })
+      if (error) throw error;
+      return true;
+    },
+    onSuccess: () => {
+      toast.success('Profile updated successfully');
+      onSaved();
+    },
+    onError: (error: any) => {
+      toast.error(`Error updating profile: ${error.message}`);
     }
-  }
+  });
+
+  const onSubmit = (formData: any) => {
+    updateProfileMutation.mutate(formData);
+  };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="position"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Position</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="e.g. Senior Technician" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="department"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Department</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="e.g. Service" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <FormLabel>First Name</FormLabel>
+          <Input {...form.register('first_name')} />
         </div>
+        
+        <div className="space-y-2">
+          <FormLabel>Last Name</FormLabel>
+          <Input {...form.register('last_name')} />
+        </div>
+      </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="employee_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Employee ID</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="e.g. EMP-12345" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="employment_date"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Employment Date</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+      <div className="space-y-2">
+        <FormLabel>Phone Number</FormLabel>
+        <Input {...form.register('phone_number')} />
+      </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Status</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="on_leave">On Leave</SelectItem>
-                    <SelectItem value="terminated">Terminated</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="is_full_time"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                <div className="space-y-0.5">
-                  <FormLabel>Full Time</FormLabel>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </div>
+      <div className="space-y-2">
+        <FormLabel>Bio</FormLabel>
+        <Textarea 
+          {...form.register('bio')} 
+          placeholder="Tell us about yourself"
+          className="min-h-[100px]"
+        />
+      </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="emergency_contact_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Emergency Contact Name</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="emergency_contact_phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Emergency Contact Phone</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Address Information</h3>
+        
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <FormLabel>Unit/Apt #</FormLabel>
+            <Input {...form.register('unit_number')} placeholder="Unit/Apt #" />
+          </div>
+          
+          <div className="space-y-2 md:col-span-1">
+            <FormLabel>Street Address</FormLabel>
+            <Input {...form.register('street_address')} placeholder="Street address" />
+          </div>
         </div>
+        
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <FormLabel>City</FormLabel>
+            <Input {...form.register('city')} placeholder="City" />
+          </div>
+          
+          <div className="space-y-2">
+            <FormLabel>State/Province</FormLabel>
+            <Input {...form.register('state_province')} placeholder="State/Province" />
+          </div>
+        </div>
+        
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <FormLabel>Postal Code</FormLabel>
+            <Input {...form.register('postal_code')} placeholder="Postal code" />
+          </div>
+          
+          <div className="space-y-2">
+            <FormLabel>Country</FormLabel>
+            <Input {...form.register('country')} placeholder="Country" />
+          </div>
+        </div>
+      </div>
 
-        <div className="flex justify-end">
-          <Button type="submit" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Details
-          </Button>
-        </div>
-      </form>
-    </Form>
-  )
+      <div className="flex justify-end gap-4">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onSaved}
+        >
+          Cancel
+        </Button>
+        <Button 
+          type="submit" 
+          disabled={updateProfileMutation.isPending}
+        >
+          {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </div>
+    </form>
+  );
 }
