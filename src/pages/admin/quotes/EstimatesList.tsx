@@ -21,6 +21,8 @@ interface Estimate {
   total: number;
   notes: string;
   client_name: string | null;
+  customer_first_name: string | null;
+  customer_last_name: string | null;
   is_archived: boolean;
 }
 
@@ -42,7 +44,7 @@ export default function EstimatesList() {
         ascending: false
       });
       if (searchQuery) {
-        query = query.ilike("client_name", `%${searchQuery}%`);
+        query = query.or(`customer_first_name.ilike.%${searchQuery}%,customer_last_name.ilike.%${searchQuery}%`);
       }
       const {
         data,
@@ -79,16 +81,22 @@ export default function EstimatesList() {
       return date.toLocaleDateString();
     }
   }, {
-    accessorKey: "client_name",
+    accessorKey: "customer_first_name",
     header: "Client",
     cell: ({
       row
-    }) => <div>
-          <div className="font-medium">{row.original.client_name || 'Unknown Client'}</div>
+    }) => {
+      const firstName = row.original.customer_first_name || '';
+      const lastName = row.original.customer_last_name || '';
+      const clientName = firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || 'Unknown Client';
+      
+      return <div>
+          <div className="font-medium">{clientName}</div>
           <div className="text-sm text-muted-foreground">
             Est #{row.original.id.substring(0, 8)}
           </div>
         </div>
+    }
   }, {
     accessorKey: "status",
     header: "Status",
@@ -223,7 +231,7 @@ export default function EstimatesList() {
     }
   };
 
-  return <div className="container mx-auto">
+  return <div className="mx-auto">
       <div className="flex items-center justify-between mb-4">
         <Input type="search" placeholder="Search by client name..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="max-w-md" />
         <div className="flex items-center gap-2">
