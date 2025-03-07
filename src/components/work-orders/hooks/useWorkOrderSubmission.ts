@@ -14,10 +14,6 @@ export function useWorkOrderSubmission() {
     try {
       // Prepare work order data
       const workOrderData = {
-        first_name: formValues.customer_first_name,
-        last_name: formValues.customer_last_name,
-        email: formValues.customer_email,
-        phone_number: formValues.customer_phone,
         customer_first_name: formValues.customer_first_name,
         customer_last_name: formValues.customer_last_name,
         customer_email: formValues.customer_email,
@@ -38,22 +34,11 @@ export function useWorkOrderSubmission() {
         estimated_duration: formValues.estimated_duration,
         assigned_bay_id: formValues.assigned_bay_id,
         status: workOrderId ? undefined : "pending", // Only set status for new work orders
-        
-        // Map to legacy vehicle fields for compatibility with other components
-        vehicle_make: formValues.customer_vehicle_make,
-        vehicle_model: formValues.customer_vehicle_model,
-        vehicle_year: formValues.customer_vehicle_year,
-        vehicle_vin: formValues.customer_vehicle_vin,
-        vehicle_color: formValues.customer_vehicle_color,
-        vehicle_body_class: formValues.customer_vehicle_body_class,
-        vehicle_doors: formValues.customer_vehicle_doors,
-        vehicle_trim: formValues.customer_vehicle_trim,
-        vehicle_license_plate: formValues.customer_vehicle_license_plate,
       };
 
       // Address fields if provided
       if (formValues.customer_address) {
-        workOrderData.address = formValues.customer_address;
+        workOrderData.customer_address = formValues.customer_address;
       } else if (
         formValues.customer_street_address ||
         formValues.customer_city ||
@@ -81,7 +66,7 @@ export function useWorkOrderSubmission() {
         
         if (formValues.customer_country) addressParts.push(formValues.customer_country);
         
-        workOrderData.address = addressParts.join(", ");
+        workOrderData.customer_address = addressParts.join(", ");
       }
 
       // Check for client ID

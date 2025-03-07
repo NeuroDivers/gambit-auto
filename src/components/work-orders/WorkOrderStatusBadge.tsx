@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getWorkOrderStatusVariant } from "@/components/shared/BadgeVariants"
+import { useQueryClient } from "@tanstack/react-query"
 
 type WorkOrderStatusBadgeProps = {
   status: WorkOrderStatus
@@ -25,28 +26,40 @@ export function WorkOrderStatusBadge({ status, workOrderId, editable = false }: 
   const [currentStatus, setCurrentStatus] = useState<WorkOrderStatus>(status)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
+  const queryClient = useQueryClient()
 
   const handleStatusChange = async (newStatus: WorkOrderStatus) => {
     if (!workOrderId) return
 
     setIsLoading(true)
     try {
+      console.log(`Updating work order ${workOrderId} status to ${newStatus}`)
+      
       const { error } = await supabase
         .from('work_orders')
         .update({ status: newStatus })
         .eq('id', workOrderId)
       
-      if (error) throw error
+      if (error) {
+        console.error("Error updating status:", error)
+        throw error
+      }
       
       setCurrentStatus(newStatus)
+      
+      // Invalidate queries to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['work-orders'] })
+      queryClient.invalidateQueries({ queryKey: ['workOrder', workOrderId] })
+      
       toast({
         title: "Status Updated",
-        description: `Work order status changed to ${newStatus}`,
+        description: `Work order status changed to ${getStatusLabel(newStatus)}`,
       })
     } catch (error: any) {
+      console.error("Status update error:", error)
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to update status",
         variant: "destructive",
       })
     } finally {

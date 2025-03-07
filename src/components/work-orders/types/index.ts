@@ -1,4 +1,3 @@
-
 export interface WorkOrder {
   id: string;
   created_at: string;
@@ -8,7 +7,7 @@ export interface WorkOrder {
   customer_email: string;
   customer_phone: string;
   contact_preference: 'phone' | 'email';
-  vehicle_year: number; // Changed from string to number
+  vehicle_year: number;
   vehicle_make: string;
   vehicle_model: string;
   vehicle_trim?: string | null;
@@ -80,4 +79,17 @@ export interface WorkOrderFormProps {
   workOrderId?: string;
   onSuccess?: (data: any) => void;
   onCancel?: () => void;
+}
+
+export interface ServiceItemType {
+  service_id: string;
+  quantity: number;
+  unit_price: number;
+  commission_rate?: number;
+  commission_type?: string;
+  assigned_profile_id?: string;
+  service_name?: string;
+  description?: string;
+  sub_services?: ServiceItemType[];
+  is_parent?: boolean;
 }
