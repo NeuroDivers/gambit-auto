@@ -13,13 +13,13 @@ import { Eye, FileEdit, Wrench, Receipt } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 import { WorkOrderStatusBadge } from "../WorkOrderStatusBadge"
 import { memo } from "react"
+import { Link } from "react-router-dom"
 
 interface WorkOrderTableProps {
   workOrders: WorkOrder[]
   onAssignBay: (workOrder: WorkOrder) => void
   onEdit: (workOrder: WorkOrder) => void
   onCreateInvoice: (workOrder: WorkOrder) => void
-  onViewDetails: (workOrder: WorkOrder) => void
 }
 
 // Using memo to prevent unnecessary re-renders
@@ -27,8 +27,7 @@ export const WorkOrderTable = memo(({
   workOrders, 
   onAssignBay, 
   onEdit, 
-  onCreateInvoice,
-  onViewDetails
+  onCreateInvoice
 }: WorkOrderTableProps) => {
   return (
     <div className="rounded-md border">
@@ -79,14 +78,15 @@ export const WorkOrderTable = memo(({
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onViewDetails(workOrder)}
-                      title="View Details"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
+                    <Link to={`/work-orders/${workOrder.id}`}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="View Details"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </Link>
                     <Button
                       variant="ghost"
                       size="icon"

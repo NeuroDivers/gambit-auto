@@ -12,7 +12,6 @@ export function useWorkOrderListData() {
   const [statusFilter, setStatusFilter] = useState("");
   const [assignmentFilter, setAssignmentFilter] = useState("");
   const [assignBayWorkOrder, setAssignBayWorkOrder] = useState<WorkOrder | null>(null);
-  const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null);
   const [page, setPage] = useState(1);
   const queryClient = useQueryClient();
   const { createInvoice } = useWorkOrderInvoice();
@@ -148,8 +147,6 @@ export function useWorkOrderListData() {
     setAssignmentFilter,
     assignBayWorkOrder,
     setAssignBayWorkOrder,
-    selectedWorkOrder,
-    setSelectedWorkOrder,
     workOrders: workOrdersData?.workOrders || [],
     isLoading,
     error,

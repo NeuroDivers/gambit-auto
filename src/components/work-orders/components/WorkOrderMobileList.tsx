@@ -5,21 +5,20 @@ import { format } from "date-fns"
 import { WorkOrderStatusBadge } from "../WorkOrderStatusBadge"
 import { WorkOrder } from "../types"
 import { Button } from "@/components/ui/button"
+import { Link } from "react-router-dom"
 
 interface WorkOrderMobileListProps {
   workOrders: WorkOrder[]
   onAssignBay: (workOrder: WorkOrder) => void
   onEdit: (workOrder: WorkOrder) => void
   onCreateInvoice: (workOrder: WorkOrder) => void
-  onViewDetails: (workOrder: WorkOrder) => void
 }
 
 export function WorkOrderMobileList({
   workOrders,
   onAssignBay,
   onEdit,
-  onCreateInvoice,
-  onViewDetails
+  onCreateInvoice
 }: WorkOrderMobileListProps) {
   if (!workOrders.length) {
     return (
@@ -73,15 +72,16 @@ export function WorkOrderMobileList({
             </div>
             
             <div className="flex justify-end mt-3">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-xs"
-                onClick={() => onViewDetails(workOrder)}
-              >
-                View Details
-                <ArrowRight className="ml-1 h-3 w-3" />
-              </Button>
+              <Link to={`/work-orders/${workOrder.id}`}>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-xs"
+                >
+                  View Details
+                  <ArrowRight className="ml-1 h-3 w-3" />
+                </Button>
+              </Link>
             </div>
           </div>
         </Card>
