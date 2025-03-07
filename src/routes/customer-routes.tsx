@@ -21,4 +21,12 @@ export const customerRoutes: RouteObject[] = [
       </PermissionGuard>
     ),
   },
+  {
+    path: "customers/:id/vehicles",
+    element: (
+      <PermissionGuard resource="vehicles" type="page_access">
+        <CustomerDetails />
+      </PermissionGuard>
+    ),
+  },
 ]

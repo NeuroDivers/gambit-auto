@@ -12,15 +12,16 @@ import { CustomerHistory } from "@/components/customers/details/CustomerHistory"
 import { CustomerInvoices } from "@/components/customers/details/CustomerInvoices"
 import { CustomerQuotes } from "@/components/customers/details/CustomerQuotes"
 import { Button } from "@/components/ui/button"
-import { Car } from "lucide-react"
+import { Car, Loader2 } from "lucide-react"
 
 export default function CustomerDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
 
-  const { data: customer, isLoading } = useQuery({
+  const { data: customer, isLoading, error } = useQuery({
     queryKey: ['customer', id],
     queryFn: async () => {
+      // Fetch the customer data with all the proper column names
       const { data: customerData, error: customerError } = await supabase
         .from('customers')
         .select(`
@@ -32,19 +33,27 @@ export default function CustomerDetails() {
           customer_state_province,
           customer_postal_code,
           customer_country,
+          customer_address,
           created_at,
           updated_at,
           user_id,
           access_token,
           customer_email,
-          customer_phone_number,
+          customer_phone,
           customer_first_name,
-          customer_last_name
+          customer_last_name,
+          notes
         `)
         .eq('id', id)
         .single()
       
-      if (customerError) throw customerError
+      if (customerError) {
+        console.error("Error fetching customer:", customerError)
+        throw customerError
+      }
+      
+      // Debug output
+      console.log("Fetched customer data:", customerData)
       
       let profileData = null;
       if (customerData.profile_id) {
@@ -56,23 +65,28 @@ export default function CustomerDetails() {
           
         if (!profileError && profile) {
           profileData = profile;
-          
-          if (!customerData.customer_first_name) customerData.customer_first_name = profile.first_name || '';
-          if (!customerData.customer_last_name) customerData.customer_last_name = profile.last_name || '';
-          if (!customerData.customer_email) customerData.customer_email = profile.email || '';
-          if (!customerData.customer_phone_number) customerData.customer_phone_number = profile.phone_number;
         }
       }
       
-      const { data: invoices } = await supabase
+      // Fetch invoices for this customer
+      const { data: invoices, error: invoicesError } = await supabase
         .from('invoices')
         .select('id, invoice_number, total, status, created_at, vehicle_id')
         .eq('customer_id', id);
       
-      const { data: quotes } = await supabase
+      if (invoicesError) {
+        console.error("Error fetching invoices:", invoicesError)
+      }
+      
+      // Fetch quotes (estimates) for this customer
+      const { data: quotes, error: quotesError } = await supabase
         .from('estimates')
         .select('id, estimate_number, total, status, created_at, vehicle_id')
         .eq('customer_id', id);
+      
+      if (quotesError) {
+        console.error("Error fetching quotes:", quotesError)
+      }
       
       const formattedQuotes = quotes?.map(quote => ({
         id: quote.id,
@@ -81,17 +95,18 @@ export default function CustomerDetails() {
         status: quote.status,
         created_at: quote.created_at,
         vehicle_id: quote.vehicle_id
-      }));
+      })) || [];
             
       const total_spent = invoices?.reduce((sum, invoice) => sum + (invoice.total || 0), 0) || 0;
       const total_invoices = invoices?.length || 0;
       const total_work_orders = 0;
 
+      // Create the final customer object
       const customerResult: Customer = {
         ...customerData,
         profile: profileData,
         invoices: invoices || [],
-        quotes: formattedQuotes || [],
+        quotes: formattedQuotes,
         total_spent,
         total_invoices,
         total_work_orders
@@ -109,14 +124,27 @@ export default function CustomerDetails() {
         .select('*')
         .eq('customer_id', id);
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching vehicles:", error)
+        throw error;
+      }
       return data as Vehicle[];
     },
     enabled: !!id
   });
 
-  if (isLoading) return <div>Loading...</div>
-  if (!customer) return <div>Customer not found</div>
+  if (isLoading) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  )
+  
+  if (error) {
+    console.error("Error in CustomerDetails:", error)
+    return <div className="p-6">Error loading customer: {error.message}</div>
+  }
+
+  if (!customer) return <div className="p-6">Customer not found</div>
 
   return (
     <div className="p-6 space-y-6">
