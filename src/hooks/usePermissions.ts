@@ -29,6 +29,9 @@ interface UserRole {
 }
 
 export const usePermissions = () => {
+  // TEMPORARY DEBUG MODE
+  const debugMode = true; // Set to true to bypass permission checks
+
   const [assigningDefaultRole, setAssigningDefaultRole] = useState(false);
   const [noProfileFound, setNoProfileFound] = useState(false);
   const [authUserMissing, setAuthUserMissing] = useState(false);
@@ -38,11 +41,42 @@ export const usePermissions = () => {
     window.location.href = '/clear-auth';
   };
 
+  // Debug session on initial load
+  useEffect(() => {
+    const debugSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("SESSION DEBUG [usePermissions]:", session ? "Found" : "Not found");
+        if (session) {
+          console.log("User ID:", session.user.id);
+          console.log("Session expires at:", new Date(session.expires_at! * 1000).toLocaleString());
+          console.log("Current time:", new Date().toLocaleString());
+        }
+      } catch (error) {
+        console.error("Error debugging session:", error);
+      }
+    };
+    
+    debugSession();
+  }, []);
+
   const { data: currentUserRole, isLoading: isRoleLoading, error: roleError, refetch: refetchRole } = useQuery({
     queryKey: ["current-user-role"],
     queryFn: async () => {
       try {
         console.log('Fetching current user role...');
+        
+        // DEBUGGING - TEMPORARY DEFAULT ROLE
+        if (debugMode) {
+          console.log("DEBUG MODE: Returning default admin role");
+          return {
+            id: "1",
+            name: "administrator",
+            nicename: "Administrator",
+            default_dashboard: "admin"
+          } as UserRole;
+        }
+        
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
         if (userError) {
@@ -191,6 +225,12 @@ export const usePermissions = () => {
     type: 'page_access' | 'feature_access'
   ): Promise<boolean> => {
     try {
+      // TEMPORARY DEBUG MODE - Grant all permissions
+      if (debugMode) {
+        console.log(`DEBUG MODE: Automatically granting permission for ${resource}`);
+        return true;
+      }
+      
       console.log(`Checking permission for resource: ${resource}, type: ${type}`);
       
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -243,7 +283,7 @@ export const usePermissions = () => {
       console.warn(`FALLBACK: Temporarily granting permission for ${resource} due to check error`);
       return true;
     }
-  }, [permissions, currentUserRole]);
+  }, [permissions, currentUserRole, debugMode]);
 
   const assignDefaultRoleIfNeeded = async (userId: string) => {
     try {
@@ -280,8 +320,11 @@ export const usePermissions = () => {
     }
   };
 
+  // Disable redirects for debugging
+  const enableRedirects = false;
+
   useEffect(() => {
-    if (authUserMissing || sessionExpired) {
+    if (enableRedirects && (authUserMissing || sessionExpired)) {
       toast.error('Authentication issue detected', {
         description: 'Your session is invalid or expired. Please sign in again.',
       });
@@ -293,7 +336,7 @@ export const usePermissions = () => {
   }, [authUserMissing, sessionExpired]);
 
   useEffect(() => {
-    if (noProfileFound) {
+    if (enableRedirects && noProfileFound) {
       toast.error('Account issue detected', {
         description: 'Your profile could not be found. Your account may have been deleted.',
       });

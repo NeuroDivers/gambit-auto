@@ -1,85 +1,165 @@
 
 import React from 'react';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { UseFormReturn } from "react-hook-form";
 
 export interface CustomerInfoFieldsProps {
-  customerFirstName: string;
-  setCustomerFirstName: (value: string) => void;
-  customerLastName: string;
-  setCustomerLastName: (value: string) => void;
-  customerEmail: string;
-  setCustomerEmail: (value: string) => void;
-  customerPhone: string;
-  setCustomerPhone: (value: string) => void;
+  form?: UseFormReturn<any>;
+  firstName: string;
+  setFirstName: (value: string) => void;
+  lastName: string;
+  setLastName: (value: string) => void;
+  email: string;
+  setEmail: (value: string) => void;
+  phone: string;
+  setPhone: (value: string) => void;
+  formPrefix?: string;
   readOnly?: boolean;
 }
 
-export function CustomerInfoFields({
-  customerFirstName,
-  setCustomerFirstName,
-  customerLastName,
-  setCustomerLastName,
-  customerEmail,
-  setCustomerEmail,
-  customerPhone,
-  setCustomerPhone,
+export const CustomerInfoFields: React.FC<CustomerInfoFieldsProps> = ({
+  form,
+  firstName,
+  setFirstName,
+  lastName,
+  setLastName,
+  email,
+  setEmail,
+  phone,
+  setPhone,
+  formPrefix = "",
   readOnly = false
-}: CustomerInfoFieldsProps) {
-  return (
-    <div className="space-y-4">
+}) => {
+  // If a form is provided, use FormField components
+  if (form) {
+    return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <FormLabel htmlFor="customer_first_name">First Name</FormLabel>
-          <Input
-            id="customer_first_name"
-            value={customerFirstName}
-            onChange={(e) => setCustomerFirstName(e.target.value)}
-            placeholder="First Name"
-            readOnly={readOnly}
-            className={readOnly ? "bg-muted" : ""}
-          />
-        </div>
-
-        <div>
-          <FormLabel htmlFor="customer_last_name">Last Name</FormLabel>
-          <Input
-            id="customer_last_name"
-            value={customerLastName}
-            onChange={(e) => setCustomerLastName(e.target.value)}
-            placeholder="Last Name"
-            readOnly={readOnly}
-            className={readOnly ? "bg-muted" : ""}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name={`${formPrefix}firstName`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>First Name</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="First Name"
+                  {...field}
+                  disabled={readOnly}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name={`${formPrefix}lastName`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Last Name</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Last Name"
+                  {...field}
+                  disabled={readOnly}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name={`${formPrefix}email`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input
+                  type="email"
+                  placeholder="Email"
+                  {...field}
+                  disabled={readOnly}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name={`${formPrefix}phone`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Phone</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Phone Number"
+                  {...field}
+                  disabled={readOnly}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
+    );
+  }
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <FormLabel htmlFor="customer_email">Email</FormLabel>
-          <Input
-            id="customer_email"
-            type="email"
-            value={customerEmail}
-            onChange={(e) => setCustomerEmail(e.target.value)}
-            placeholder="Email"
-            readOnly={readOnly}
-            className={readOnly ? "bg-muted" : ""}
-          />
-        </div>
-
-        <div>
-          <FormLabel htmlFor="customer_phone">Phone</FormLabel>
-          <Input
-            id="customer_phone"
-            value={customerPhone}
-            onChange={(e) => setCustomerPhone(e.target.value)}
-            placeholder="Phone"
-            readOnly={readOnly}
-            className={readOnly ? "bg-muted" : ""}
-          />
-        </div>
+  // If no form is provided, use controlled inputs
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <label className="text-sm font-medium" htmlFor="firstName">
+          First Name
+        </label>
+        <Input
+          id="firstName"
+          placeholder="First Name"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          readOnly={readOnly}
+        />
+      </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium" htmlFor="lastName">
+          Last Name
+        </label>
+        <Input
+          id="lastName"
+          placeholder="Last Name"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          readOnly={readOnly}
+        />
+      </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium" htmlFor="email">
+          Email
+        </label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          readOnly={readOnly}
+        />
+      </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium" htmlFor="phone">
+          Phone
+        </label>
+        <Input
+          id="phone"
+          placeholder="Phone Number"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          readOnly={readOnly}
+        />
       </div>
     </div>
   );
-}
+};

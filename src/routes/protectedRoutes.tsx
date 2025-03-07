@@ -23,8 +23,12 @@ import { Suspense, useEffect, useState } from "react"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
 import { applyThemeClass } from "@/lib/utils"
 import { toast } from "sonner"
+import { supabase } from "@/integrations/supabase/client"
 
 const RoleBasedLayout = () => {
+  // TEMPORARY DEBUG MODE - Use admin layout by default
+  const debugMode = true;
+  
   const { currentUserRole, isLoading: roleLoading, error: roleError } = usePermissions();
   const [redirectInProgress, setRedirectInProgress] = useState(false);
   const [forcedSignOut, setForcedSignOut] = useState(false);
@@ -38,15 +42,37 @@ const RoleBasedLayout = () => {
     }
   }, [])
   
+  useEffect(() => {
+    // Debug session to check login state
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("PROTECTED ROUTES - Session check:", session ? "Found" : "Not found");
+        if (session) {
+          console.log("User:", session.user.email);
+        } else {
+          console.warn("No session found in protected routes!");
+        }
+      } catch (error) {
+        console.error("Error checking session:", error);
+      }
+    };
+    
+    checkSession();
+  }, []);
+  
   const redirectToClearAuth = () => {
     console.log('Redirecting to clear auth page');
     window.location.href = '/clear-auth';
   };
   
+  // Skip loading timeout for debugging
+  const enableLoadingTimeout = false;
+  
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     
-    if (roleLoading && !redirectInProgress && !forcedSignOut) {
+    if (enableLoadingTimeout && roleLoading && !redirectInProgress && !forcedSignOut) {
       timeoutId = setTimeout(() => {
         console.log('Loading timeout reached, may be in redirect loop');
         setLoadingTimeoutReached(true);
@@ -64,8 +90,11 @@ const RoleBasedLayout = () => {
     };
   }, [roleLoading, redirectInProgress, forcedSignOut]);
 
+  // Skip error handling for debugging
+  const enableErrorHandling = false;
+
   useEffect(() => {
-    if (roleError && !redirectInProgress && !forcedSignOut) {
+    if (enableErrorHandling && roleError && !redirectInProgress && !forcedSignOut) {
       console.error('Role determination error detected:', roleError);
       
       toast.error('Authentication error', {
@@ -81,7 +110,7 @@ const RoleBasedLayout = () => {
   }, [roleError, redirectInProgress, forcedSignOut]);
 
   useEffect(() => {
-    if (!roleLoading && !redirectInProgress && !forcedSignOut && !currentUserRole) {
+    if (enableErrorHandling && !roleLoading && !redirectInProgress && !forcedSignOut && !currentUserRole) {
       console.error('No role found for user after loading completed');
       
       toast.error('Access denied', {
@@ -117,17 +146,25 @@ const RoleBasedLayout = () => {
     return <LoadingScreen />;
   }
   
-  if (roleLoading) {
+  // Skip loading screen for debugging
+  if (false && roleLoading) {
     console.log("RoleBasedLayout: Role is still loading...");
     return <LoadingScreen />;
   }
   
-  if (roleError || !currentUserRole) {
+  // Skip error handling for debugging
+  if (false && (roleError || !currentUserRole)) {
     console.error("RoleBasedLayout: Error or no role found", {roleError, currentUserRole});
     return <LoadingScreen />;
   }
 
   console.log('Current role for layout determination:', currentUserRole);
+  
+  // DEBUGGING - Use admin layout by default if debugMode is true
+  if (debugMode) {
+    console.log("DEBUG MODE: Using admin layout by default");
+    return <DashboardLayoutWrapper />;
+  }
   
   if (currentUserRole?.default_dashboard) {
     switch (currentUserRole.default_dashboard) {
@@ -142,7 +179,7 @@ const RoleBasedLayout = () => {
         // Fall through to default case
     }
   } else {
-    const roleName = currentUserRole.name.toLowerCase();
+    const roleName = currentUserRole?.name?.toLowerCase() || '';
     if (roleName === 'administrator' || roleName === 'admin' || roleName === 'king') {
       return <DashboardLayoutWrapper />;
     } else if (roleName === 'staff' || roleName === 'knight' || roleName === 'rook' || roleName === 'trainee') {

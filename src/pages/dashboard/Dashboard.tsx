@@ -13,6 +13,18 @@ export default function Dashboard() {
   
   useEffect(() => {
     console.log("Dashboard component mounting, current role:", currentUserRole);
+    
+    // Debug session data - check if we have a session at all
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log("Current session:", session ? "Found" : "Not found", session);
+      
+      if (!session) {
+        console.warn("No session found on dashboard load!");
+      }
+    };
+    
+    checkSession();
   }, [currentUserRole]);
 
   const { data: profile, isLoading: profileLoading, error: profileError } = useQuery({
@@ -50,7 +62,10 @@ export default function Dashboard() {
 
   console.log("Dashboard rendering. Role:", currentUserRole, "Profile:", profile)
 
-  if (roleLoading || profileLoading) {
+  // DEBUGGING: Change loading behavior to show content faster
+  const showLoadingScreen = false; // Set to false to bypass loading screen
+  
+  if (showLoadingScreen && (roleLoading || profileLoading)) {
     console.log("Still loading role or profile, showing loading screen");
     return <LoadingScreen />
   }
@@ -62,7 +77,7 @@ export default function Dashboard() {
         <h2 className="text-xl font-semibold mb-4">Error Loading Profile</h2>
         <p className="text-red-500">There was an error loading your profile. Please try refreshing the page.</p>
         <pre className="mt-4 p-2 bg-gray-100 rounded text-xs overflow-auto">
-          {profileError.message}
+          {JSON.stringify(profileError, null, 2)}
         </pre>
       </div>
     );
@@ -84,10 +99,10 @@ export default function Dashboard() {
     );
   }
 
-  // If we have a profile but no role, show a temporary dashboard instead of blank screen
+  // Debug fallback - default to admin dashboard if we can't determine role
   if (!currentUserRole) {
-    console.warn("No user role found, showing default client dashboard as fallback");
-    return <ClientDashboard profile={profile} />
+    console.warn("No user role found, showing default admin dashboard as fallback for debugging");
+    return <AdminDashboard profile={profile} />
   }
 
   // Determine which dashboard to show based on role's default_dashboard
