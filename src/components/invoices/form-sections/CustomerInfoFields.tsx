@@ -2,147 +2,134 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { FormField, FormItem, FormControl } from '@/components/ui/form';
 import { useFormContext } from 'react-hook-form';
 
 export interface CustomerInfoFieldsProps {
-  // Form context version
-  name?: string;
-  control?: any;
-  // Direct controlled version
-  firstName?: string;
-  setFirstName?: (value: string) => void;
-  lastName?: string;
-  setLastName?: (value: string) => void;
-  email?: string;
-  setEmail?: (value: string) => void;
-  phone?: string;
-  setPhone?: (value: string) => void;
-  address?: string;
-  setAddress?: (value: string) => void;
-  // Optional props
-  readOnly?: boolean;
+  // Form-based props
   disabled?: boolean;
+  
+  // Direct value props
+  customerFirstName?: string;
+  setCustomerFirstName?: (value: string) => void;
+  customerLastName?: string;
+  setCustomerLastName?: (value: string) => void;
+  customerEmail?: string;
+  setCustomerEmail?: (value: string) => void;
+  customerPhone?: string;
+  setCustomerPhone?: (value: string) => void;
+  customerAddress?: string;
+  setCustomerAddress?: (value: string) => void;
 }
 
-const CustomerInfoFields = ({
-  name = '',
-  control,
-  firstName,
-  setFirstName,
-  lastName,
-  setLastName,
-  email,
-  setEmail,
-  phone,
-  setPhone,
-  address,
-  setAddress,
-  readOnly = false,
-  disabled = false
-}: CustomerInfoFieldsProps) => {
+const CustomerInfoFields: React.FC<CustomerInfoFieldsProps> = ({
+  disabled = false,
+  customerFirstName,
+  setCustomerFirstName,
+  customerLastName,
+  setCustomerLastName,
+  customerEmail,
+  setCustomerEmail,
+  customerPhone,
+  setCustomerPhone,
+  customerAddress,
+  setCustomerAddress,
+}) => {
   const formContext = useFormContext();
-  const useFormApi = !!name && (control || formContext);
+  const isUsingForm = !!formContext;
 
-  if (useFormApi) {
+  if (isUsingForm) {
     return (
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
-            control={control || formContext?.control}
-            name={`${name}.firstName`}
+            control={formContext.control}
+            name="customer_first_name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>First Name</FormLabel>
+                <Label htmlFor="customer_first_name">First Name</Label>
                 <FormControl>
-                  <Input 
-                    {...field} 
-                    placeholder="First Name" 
-                    readOnly={readOnly}
+                  <Input
+                    id="customer_first_name"
+                    placeholder="First Name"
+                    {...field}
                     disabled={disabled}
                   />
                 </FormControl>
-                <FormMessage />
               </FormItem>
             )}
           />
-          
-          <FormField
-            control={control || formContext?.control}
-            name={`${name}.lastName`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last Name</FormLabel>
-                <FormControl>
-                  <Input 
-                    {...field} 
-                    placeholder="Last Name" 
-                    readOnly={readOnly}
-                    disabled={disabled}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
-            control={control || formContext?.control}
-            name={`${name}.email`}
+            control={formContext.control}
+            name="customer_last_name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <Label htmlFor="customer_last_name">Last Name</Label>
                 <FormControl>
-                  <Input 
-                    {...field} 
-                    type="email" 
-                    placeholder="Email" 
-                    readOnly={readOnly}
+                  <Input
+                    id="customer_last_name"
+                    placeholder="Last Name"
+                    {...field}
                     disabled={disabled}
                   />
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={control || formContext?.control}
-            name={`${name}.phone`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone</FormLabel>
-                <FormControl>
-                  <Input 
-                    {...field} 
-                    placeholder="Phone" 
-                    readOnly={readOnly}
-                    disabled={disabled}
-                  />
-                </FormControl>
-                <FormMessage />
               </FormItem>
             )}
           />
         </div>
 
         <FormField
-          control={control || formContext?.control}
-          name={`${name}.address`}
+          control={formContext.control}
+          name="customer_email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Address</FormLabel>
+              <Label htmlFor="customer_email">Email</Label>
               <FormControl>
-                <Input 
-                  {...field} 
-                  placeholder="Address" 
-                  readOnly={readOnly}
+                <Input
+                  id="customer_email"
+                  type="email"
+                  placeholder="Email"
+                  {...field}
                   disabled={disabled}
                 />
               </FormControl>
-              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={formContext.control}
+          name="customer_phone"
+          render={({ field }) => (
+            <FormItem>
+              <Label htmlFor="customer_phone">Phone</Label>
+              <FormControl>
+                <Input
+                  id="customer_phone"
+                  placeholder="Phone Number"
+                  {...field}
+                  disabled={disabled}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={formContext.control}
+          name="customer_address"
+          render={({ field }) => (
+            <FormItem>
+              <Label htmlFor="customer_address">Address</Label>
+              <FormControl>
+                <Input
+                  id="customer_address"
+                  placeholder="Address"
+                  {...field}
+                  disabled={disabled}
+                />
+              </FormControl>
             </FormItem>
           )}
         />
@@ -150,70 +137,63 @@ const CustomerInfoFields = ({
     );
   }
 
-  // Direct controlled version
+  // Direct props version
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="first-name">First Name</Label>
+        <div>
+          <Label htmlFor="customer_first_name">First Name</Label>
           <Input
-            id="first-name"
-            value={firstName || ''}
-            onChange={(e) => setFirstName?.(e.target.value)}
+            id="customer_first_name"
             placeholder="First Name"
-            readOnly={readOnly}
+            value={customerFirstName || ''}
+            onChange={(e) => setCustomerFirstName?.(e.target.value)}
             disabled={disabled}
           />
         </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="last-name">Last Name</Label>
+
+        <div>
+          <Label htmlFor="customer_last_name">Last Name</Label>
           <Input
-            id="last-name"
-            value={lastName || ''}
-            onChange={(e) => setLastName?.(e.target.value)}
+            id="customer_last_name"
             placeholder="Last Name"
-            readOnly={readOnly}
+            value={customerLastName || ''}
+            onChange={(e) => setCustomerLastName?.(e.target.value)}
             disabled={disabled}
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={email || ''}
-            onChange={(e) => setEmail?.(e.target.value)}
-            placeholder="Email"
-            readOnly={readOnly}
-            disabled={disabled}
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="phone">Phone</Label>
-          <Input
-            id="phone"
-            value={phone || ''}
-            onChange={(e) => setPhone?.(e.target.value)}
-            placeholder="Phone"
-            readOnly={readOnly}
-            disabled={disabled}
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="address">Address</Label>
+      <div>
+        <Label htmlFor="customer_email">Email</Label>
         <Input
-          id="address"
-          value={address || ''}
-          onChange={(e) => setAddress?.(e.target.value)}
+          id="customer_email"
+          type="email"
+          placeholder="Email"
+          value={customerEmail || ''}
+          onChange={(e) => setCustomerEmail?.(e.target.value)}
+          disabled={disabled}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="customer_phone">Phone</Label>
+        <Input
+          id="customer_phone"
+          placeholder="Phone Number"
+          value={customerPhone || ''}
+          onChange={(e) => setCustomerPhone?.(e.target.value)}
+          disabled={disabled}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="customer_address">Address</Label>
+        <Input
+          id="customer_address"
           placeholder="Address"
-          readOnly={readOnly}
+          value={customerAddress || ''}
+          onChange={(e) => setCustomerAddress?.(e.target.value)}
           disabled={disabled}
         />
       </div>

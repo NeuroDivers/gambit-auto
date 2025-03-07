@@ -39,4 +39,12 @@ export const estimateRoutes: RouteObject[] = [
       </PermissionGuard>
     ),
   },
+  {
+    path: "edit-estimate/:id",
+    element: (
+      <PermissionGuard resource="estimates" type="page_access">
+        <EstimateDetails />
+      </PermissionGuard>
+    ),
+  },
 ]

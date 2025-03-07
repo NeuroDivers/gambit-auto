@@ -101,14 +101,8 @@ export interface CustomerInfo {
   customer_address?: string;
 }
 
-// Update interface to match expected properties
-export interface UseReactToPrintResult {
+// Simple PrintRef type to replace UseReactToPrintFn
+export interface PrintRef {
   handlePrint: () => void;
-  printRef: React.MutableRefObject<any>;
-}
-
-// Update interface to match expected properties 
-export interface UseReactToPrintFn {
-  handlePrint: () => void;
-  printRef: React.MutableRefObject<any>;
+  printRef: React.RefObject<HTMLElement>;
 }

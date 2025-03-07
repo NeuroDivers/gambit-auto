@@ -2,253 +2,214 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { FormField, FormItem, FormControl } from '@/components/ui/form';
 import { useFormContext } from 'react-hook-form';
 
 export interface VehicleInfoFieldsProps {
-  // Form context version
-  name?: string;
-  control?: any;
-  // Direct controlled version
+  // Form-based props
+  disabled?: boolean;
+  
+  // Direct value props
   make?: string;
   setMake?: (value: string) => void;
   model?: string;
   setModel?: (value: string) => void;
-  year?: string | number;
-  setYear?: (value: string | number) => void;
+  year?: number | string;
+  setYear?: (value: number | string) => void;
   vin?: string;
   setVin?: (value: string) => void;
   color?: string;
   setColor?: (value: string) => void;
-  mileage?: string | number;
-  setMileage?: (value: string | number) => void;
-  trim?: string;
-  setTrim?: (value: string) => void;
-  bodyClass?: string;
-  setBodyClass?: (value: string) => void;
   licensePlate?: string;
   setLicensePlate?: (value: string) => void;
-  // Or alternatively, these naming patterns
+  
+  // Alternative naming props
   vehicleMake?: string;
   setVehicleMake?: (value: string) => void;
   vehicleModel?: string;
   setVehicleModel?: (value: string) => void;
-  vehicleYear?: string | number;
-  setVehicleYear?: (value: string | number) => void;
+  vehicleYear?: number | string;
+  setVehicleYear?: (value: number | string) => void;
   vehicleVin?: string;
   setVehicleVin?: (value: string) => void;
   vehicleColor?: string;
   setVehicleColor?: (value: string) => void;
-  vehicleMileage?: string | number;
-  setVehicleMileage?: (value: string | number) => void;
-  vehicleTrim?: string;
-  setVehicleTrim?: (value: string) => void;
-  vehicleBodyClass?: string;
-  setVehicleBodyClass?: (value: string) => void;
   vehicleLicensePlate?: string;
   setVehicleLicensePlate?: (value: string) => void;
-  // Optional props
-  readOnly?: boolean;
-  disabled?: boolean;
 }
 
-const VehicleInfoFields = ({
-  name = '',
-  control,
-  // Use either naming pattern, preferring the shorter one
-  make, setMake, vehicleMake, setVehicleMake,
-  model, setModel, vehicleModel, setVehicleModel,
-  year, setYear, vehicleYear, setVehicleYear,
-  vin, setVin, vehicleVin, setVehicleVin,
-  color, setColor, vehicleColor, setVehicleColor,
-  mileage, setMileage, vehicleMileage, setVehicleMileage,
-  trim, setTrim, vehicleTrim, setVehicleTrim,
-  bodyClass, setBodyClass, vehicleBodyClass, setVehicleBodyClass,
-  licensePlate, setLicensePlate, vehicleLicensePlate, setVehicleLicensePlate,
-  readOnly = false,
-  disabled = false
-}: VehicleInfoFieldsProps) => {
+const VehicleInfoFields: React.FC<VehicleInfoFieldsProps> = ({
+  disabled = false,
+  
+  // Use either naming convention based on what's provided
+  make, setMake,
+  model, setModel,
+  year, setYear,
+  vin, setVin,
+  color, setColor,
+  licensePlate, setLicensePlate,
+  
+  vehicleMake, setVehicleMake,
+  vehicleModel, setVehicleModel,
+  vehicleYear, setVehicleYear,
+  vehicleVin, setVehicleVin,
+  vehicleColor, setVehicleColor,
+  vehicleLicensePlate, setVehicleLicensePlate
+}) => {
   const formContext = useFormContext();
-  const useFormApi = !!name && (control || formContext);
+  const isUsingForm = !!formContext;
+  
+  // Use whichever prop is provided
+  const actualMake = make || vehicleMake || '';
+  const actualModel = model || vehicleModel || '';
+  const actualYear = year || vehicleYear || '';
+  const actualVin = vin || vehicleVin || '';
+  const actualColor = color || vehicleColor || '';
+  const actualLicensePlate = licensePlate || vehicleLicensePlate || '';
+  
+  const handleMakeChange = (value: string) => {
+    if (setMake) setMake(value);
+    if (setVehicleMake) setVehicleMake(value);
+  };
+  
+  const handleModelChange = (value: string) => {
+    if (setModel) setModel(value);
+    if (setVehicleModel) setVehicleModel(value);
+  };
+  
+  const handleYearChange = (value: string) => {
+    const numValue = parseInt(value) || 0;
+    if (setYear) setYear(numValue);
+    if (setVehicleYear) setVehicleYear(numValue);
+  };
+  
+  const handleVinChange = (value: string) => {
+    if (setVin) setVin(value);
+    if (setVehicleVin) setVehicleVin(value);
+  };
+  
+  const handleColorChange = (value: string) => {
+    if (setColor) setColor(value);
+    if (setVehicleColor) setVehicleColor(value);
+  };
+  
+  const handleLicensePlateChange = (value: string) => {
+    if (setLicensePlate) setLicensePlate(value);
+    if (setVehicleLicensePlate) setVehicleLicensePlate(value);
+  };
 
-  // Map values to consistent naming pattern
-  const actualMake = make ?? vehicleMake ?? '';
-  const actualSetMake = setMake ?? setVehicleMake;
-  const actualModel = model ?? vehicleModel ?? '';
-  const actualSetModel = setModel ?? setVehicleModel;
-  const actualYear = year ?? vehicleYear ?? '';
-  const actualSetYear = setYear ?? setVehicleYear;
-  const actualVin = vin ?? vehicleVin ?? '';
-  const actualSetVin = setVin ?? setVehicleVin;
-  const actualColor = color ?? vehicleColor ?? '';
-  const actualSetColor = setColor ?? setVehicleColor;
-  const actualMileage = mileage ?? vehicleMileage ?? '';
-  const actualSetMileage = setMileage ?? setVehicleMileage;
-  const actualTrim = trim ?? vehicleTrim ?? '';
-  const actualSetTrim = setTrim ?? setVehicleTrim;
-  const actualBodyClass = bodyClass ?? vehicleBodyClass ?? '';
-  const actualSetBodyClass = setBodyClass ?? setVehicleBodyClass;
-  const actualLicensePlate = licensePlate ?? vehicleLicensePlate ?? '';
-  const actualSetLicensePlate = setLicensePlate ?? setVehicleLicensePlate;
-
-  if (useFormApi) {
+  if (isUsingForm) {
     return (
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
-            control={control || formContext?.control}
-            name={`${name}.make`}
+            control={formContext.control}
+            name="customer_vehicle_make"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Make</FormLabel>
+                <Label htmlFor="customer_vehicle_make">Make</Label>
                 <FormControl>
-                  <Input 
-                    {...field} 
-                    placeholder="Make" 
-                    readOnly={readOnly}
+                  <Input
+                    id="customer_vehicle_make"
+                    placeholder="Vehicle Make"
+                    {...field}
                     disabled={disabled}
                   />
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={control || formContext?.control}
-            name={`${name}.model`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Model</FormLabel>
-                <FormControl>
-                  <Input 
-                    {...field} 
-                    placeholder="Model" 
-                    readOnly={readOnly}
-                    disabled={disabled}
-                  />
-                </FormControl>
-                <FormMessage />
               </FormItem>
             )}
           />
 
           <FormField
-            control={control || formContext?.control}
-            name={`${name}.year`}
+            control={formContext.control}
+            name="customer_vehicle_model"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Year</FormLabel>
+                <Label htmlFor="customer_vehicle_model">Model</Label>
                 <FormControl>
-                  <Input 
+                  <Input
+                    id="customer_vehicle_model"
+                    placeholder="Vehicle Model"
                     {...field}
-                    type="number"
-                    placeholder="Year" 
-                    readOnly={readOnly}
                     disabled={disabled}
                   />
                 </FormControl>
-                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={formContext.control}
+            name="customer_vehicle_year"
+            render={({ field }) => (
+              <FormItem>
+                <Label htmlFor="customer_vehicle_year">Year</Label>
+                <FormControl>
+                  <Input
+                    id="customer_vehicle_year"
+                    type="number"
+                    placeholder="Vehicle Year"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                    disabled={disabled}
+                  />
+                </FormControl>
               </FormItem>
             )}
           />
         </div>
+
+        <FormField
+          control={formContext.control}
+          name="customer_vehicle_vin"
+          render={({ field }) => (
+            <FormItem>
+              <Label htmlFor="customer_vehicle_vin">VIN</Label>
+              <FormControl>
+                <Input
+                  id="customer_vehicle_vin"
+                  placeholder="Vehicle VIN"
+                  {...field}
+                  disabled={disabled}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
-            control={control || formContext?.control}
-            name={`${name}.vin`}
+            control={formContext.control}
+            name="customer_vehicle_color"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>VIN</FormLabel>
+                <Label htmlFor="customer_vehicle_color">Color</Label>
                 <FormControl>
-                  <Input 
-                    {...field} 
-                    placeholder="VIN" 
-                    readOnly={readOnly}
-                    disabled={disabled}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={control || formContext?.control}
-            name={`${name}.color`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Color</FormLabel>
-                <FormControl>
-                  <Input 
-                    {...field} 
-                    placeholder="Color" 
-                    readOnly={readOnly}
-                    disabled={disabled}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <FormField
-            control={control || formContext?.control}
-            name={`${name}.mileage`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Mileage</FormLabel>
-                <FormControl>
-                  <Input 
+                  <Input
+                    id="customer_vehicle_color"
+                    placeholder="Vehicle Color"
                     {...field}
-                    type="number"
-                    placeholder="Mileage" 
-                    readOnly={readOnly}
                     disabled={disabled}
                   />
                 </FormControl>
-                <FormMessage />
               </FormItem>
             )}
           />
 
           <FormField
-            control={control || formContext?.control}
-            name={`${name}.trim`}
+            control={formContext.control}
+            name="customer_vehicle_license_plate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Trim</FormLabel>
+                <Label htmlFor="customer_vehicle_license_plate">License Plate</Label>
                 <FormControl>
-                  <Input 
-                    {...field} 
-                    placeholder="Trim" 
-                    readOnly={readOnly}
+                  <Input
+                    id="customer_vehicle_license_plate"
+                    placeholder="License Plate"
+                    {...field}
                     disabled={disabled}
                   />
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={control || formContext?.control}
-            name={`${name}.licensePlate`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>License Plate</FormLabel>
-                <FormControl>
-                  <Input 
-                    {...field} 
-                    placeholder="License Plate" 
-                    readOnly={readOnly}
-                    disabled={disabled}
-                  />
-                </FormControl>
-                <FormMessage />
               </FormItem>
             )}
           />
@@ -257,114 +218,75 @@ const VehicleInfoFields = ({
     );
   }
 
-  // Direct controlled version
+  // Direct props version
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="make">Make</Label>
+        <div>
+          <Label htmlFor="vehicle_make">Make</Label>
           <Input
-            id="make"
+            id="vehicle_make"
+            placeholder="Vehicle Make"
             value={actualMake}
-            onChange={(e) => actualSetMake?.(e.target.value)}
-            placeholder="Make"
-            readOnly={readOnly}
-            disabled={disabled}
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="model">Model</Label>
-          <Input
-            id="model"
-            value={actualModel}
-            onChange={(e) => actualSetModel?.(e.target.value)}
-            placeholder="Model"
-            readOnly={readOnly}
+            onChange={(e) => handleMakeChange(e.target.value)}
             disabled={disabled}
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="year">Year</Label>
+        <div>
+          <Label htmlFor="vehicle_model">Model</Label>
           <Input
-            id="year"
-            type="number"
-            value={actualYear}
-            onChange={(e) => {
-              const value = e.target.value;
-              actualSetYear?.(value === '' ? '' : Number(value));
-            }}
-            placeholder="Year"
-            readOnly={readOnly}
+            id="vehicle_model"
+            placeholder="Vehicle Model"
+            value={actualModel}
+            onChange={(e) => handleModelChange(e.target.value)}
             disabled={disabled}
           />
         </div>
+
+        <div>
+          <Label htmlFor="vehicle_year">Year</Label>
+          <Input
+            id="vehicle_year"
+            type="number"
+            placeholder="Vehicle Year"
+            value={actualYear}
+            onChange={(e) => handleYearChange(e.target.value)}
+            disabled={disabled}
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="vehicle_vin">VIN</Label>
+        <Input
+          id="vehicle_vin"
+          placeholder="Vehicle VIN"
+          value={actualVin}
+          onChange={(e) => handleVinChange(e.target.value)}
+          disabled={disabled}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="vin">VIN</Label>
+        <div>
+          <Label htmlFor="vehicle_color">Color</Label>
           <Input
-            id="vin"
-            value={actualVin}
-            onChange={(e) => actualSetVin?.(e.target.value)}
-            placeholder="VIN"
-            readOnly={readOnly}
-            disabled={disabled}
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="color">Color</Label>
-          <Input
-            id="color"
+            id="vehicle_color"
+            placeholder="Vehicle Color"
             value={actualColor}
-            onChange={(e) => actualSetColor?.(e.target.value)}
-            placeholder="Color"
-            readOnly={readOnly}
-            disabled={disabled}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="mileage">Mileage</Label>
-          <Input
-            id="mileage"
-            type="number"
-            value={actualMileage}
-            onChange={(e) => {
-              const value = e.target.value;
-              actualSetMileage?.(value === '' ? '' : Number(value));
-            }}
-            placeholder="Mileage"
-            readOnly={readOnly}
-            disabled={disabled}
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="trim">Trim</Label>
-          <Input
-            id="trim"
-            value={actualTrim}
-            onChange={(e) => actualSetTrim?.(e.target.value)}
-            placeholder="Trim"
-            readOnly={readOnly}
+            onChange={(e) => handleColorChange(e.target.value)}
             disabled={disabled}
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="licensePlate">License Plate</Label>
+        <div>
+          <Label htmlFor="vehicle_license_plate">License Plate</Label>
           <Input
-            id="licensePlate"
-            value={actualLicensePlate}
-            onChange={(e) => actualSetLicensePlate?.(e.target.value)}
+            id="vehicle_license_plate"
             placeholder="License Plate"
-            readOnly={readOnly}
+            value={actualLicensePlate}
+            onChange={(e) => handleLicensePlateChange(e.target.value)}
             disabled={disabled}
           />
         </div>
