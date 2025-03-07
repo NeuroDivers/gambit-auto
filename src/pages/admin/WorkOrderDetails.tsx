@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -70,7 +69,6 @@ export default function WorkOrderDetails() {
     }
   }, [data]);
 
-  // Set up real-time subscription for work order changes
   useEffect(() => {
     if (!id) return;
     
@@ -88,19 +86,23 @@ export default function WorkOrderDetails() {
         },
         (payload) => {
           console.log('Work order change detected:', payload);
-          if (payload.new) {
-            // Update the workOrder state with the new data
+          if (payload.new && typeof payload.new === 'object') {
             setWorkOrder(prevWorkOrder => {
               if (!prevWorkOrder) return payload.new as WorkOrder;
               return { ...prevWorkOrder, ...payload.new };
             });
             
-            // Also invalidate the query to ensure all data is fresh
             queryClient.invalidateQueries({ queryKey: ["workOrder", id] });
             
-            // Show toast notification for status changes
-            if (payload.old && payload.old.status !== payload.new.status) {
-              toast.success(`Status updated to ${payload.new.status}`);
+            if (
+              payload.old && 
+              typeof payload.old === 'object' && 
+              typeof payload.new === 'object' && 
+              'status' in payload.old && 
+              'status' in payload.new && 
+              payload.old.status !== payload.new.status
+            ) {
+              toast.success(`Status updated to ${String(payload.new.status)}`);
             }
           }
         }
@@ -145,7 +147,6 @@ export default function WorkOrderDetails() {
     createInvoice(workOrder.id);
   };
 
-  // Make sure work_order_services exists on the workOrder object
   const services = workOrder.work_order_services || [];
   
   const totalCost = services.reduce(
@@ -209,7 +210,6 @@ export default function WorkOrderDetails() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Customer Information */}
         <Card>
           <CardHeader>
             <CardTitle>Customer Information</CardTitle>
@@ -236,7 +236,6 @@ export default function WorkOrderDetails() {
           </CardContent>
         </Card>
         
-        {/* Vehicle Information */}
         <Card>
           <CardHeader>
             <CardTitle>Vehicle Information</CardTitle>
@@ -269,7 +268,6 @@ export default function WorkOrderDetails() {
           </CardContent>
         </Card>
         
-        {/* Service Information */}
         <Card>
           <CardHeader>
             <CardTitle>Service Information</CardTitle>
@@ -305,7 +303,6 @@ export default function WorkOrderDetails() {
         </Card>
       </div>
       
-      {/* Services */}
       <Card>
         <CardHeader>
           <CardTitle>Services</CardTitle>
@@ -339,7 +336,6 @@ export default function WorkOrderDetails() {
         </CardContent>
       </Card>
       
-      {/* Notes */}
       <Card>
         <CardHeader>
           <CardTitle>Notes</CardTitle>

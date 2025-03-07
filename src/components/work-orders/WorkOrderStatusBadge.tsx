@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge"
 import { WorkOrderStatus } from "./types"
 import { useState, useEffect } from "react"
@@ -28,14 +27,12 @@ export function WorkOrderStatusBadge({ status, workOrderId, editable = false }: 
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
-  // Update local state when props change
   useEffect(() => {
     if (status !== currentStatus) {
       setCurrentStatus(status);
     }
   }, [status]);
 
-  // Set up real-time subscription for this specific work order's status
   useEffect(() => {
     if (!workOrderId) return;
     
@@ -56,7 +53,6 @@ export function WorkOrderStatusBadge({ status, workOrderId, editable = false }: 
           if (payload.new && payload.new.status && payload.new.status !== currentStatus) {
             setCurrentStatus(payload.new.status as WorkOrderStatus);
             
-            // Show toast for status change if not initiated by this component
             if (!isLoading) {
               toast({
                 title: "Status Updated",
@@ -93,7 +89,6 @@ export function WorkOrderStatusBadge({ status, workOrderId, editable = false }: 
       
       setCurrentStatus(newStatus)
       
-      // Invalidate queries to refresh the data
       queryClient.invalidateQueries({ queryKey: ['work-orders'] })
       queryClient.invalidateQueries({ queryKey: ['workOrder', workOrderId] })
       
@@ -152,7 +147,7 @@ export function WorkOrderStatusBadge({ status, workOrderId, editable = false }: 
             </SelectItem>
           </SelectContent>
         </Select>
-        <style jsx="true">{`
+        <style>{`
           .status-trigger[data-status="${currentStatus}"] {
             background: transparent;
             border-color: transparent;

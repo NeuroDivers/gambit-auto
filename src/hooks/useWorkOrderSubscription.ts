@@ -27,7 +27,7 @@ export function useWorkOrderSubscription() {
           queryClient.invalidateQueries({ queryKey: ['work-orders'] });
           
           // If it's a specific work order, invalidate its individual query
-          if (payload.new && payload.new.id) {
+          if (payload.new && typeof payload.new === 'object' && 'id' in payload.new) {
             queryClient.invalidateQueries({ queryKey: ['workOrder', payload.new.id] });
           }
           
@@ -36,9 +36,14 @@ export function useWorkOrderSubscription() {
             payload.eventType === 'UPDATE' && 
             payload.old && 
             payload.new && 
-            payload.old.status !== payload.new.status
+            typeof payload.old === 'object' && 
+            typeof payload.new === 'object' && 
+            'status' in payload.old && 
+            'status' in payload.new && 
+            payload.old.status !== payload.new.status &&
+            'id' in payload.new
           ) {
-            const workOrderId = payload.new.id.substring(0, 8);
+            const workOrderId = String(payload.new.id).substring(0, 8);
             toast.success(
               `Work Order #${workOrderId} status updated to ${payload.new.status}`
             );
