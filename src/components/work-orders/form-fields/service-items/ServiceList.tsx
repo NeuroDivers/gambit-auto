@@ -1,10 +1,26 @@
-import { useEffect, useState } from "react";
+
+import { useState, useEffect } from "react";
 import { ServiceItem } from "./ServiceItem";
 import { useServiceTypes } from "@/components/service-bays/hooks/useServiceTypes";
-import { ServiceItemType } from "@/components/work-orders/types";
 import { PackageSelect } from "./PackageSelect";
 import { Button } from "@/components/ui/button";
 import { ServiceType } from "@/integrations/supabase/types/service-types";
+
+// Define the service item type that's compatible with both uses
+interface ServiceItemType {
+  service_id: string;
+  service_name: string;
+  quantity: number;
+  unit_price: number;
+  commission_rate?: number;
+  commission_type?: 'percentage' | 'flat' | 'flat_rate' | null;
+  assigned_profile_id?: string | null;
+  description?: string;
+  sub_services?: ServiceItemType[];
+  is_parent?: boolean;
+  parent_id?: string;
+  package_id?: string | null;
+}
 
 const dummyPackages = [
   { id: "1", name: "Basic Package" },

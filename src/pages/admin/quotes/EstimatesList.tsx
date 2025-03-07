@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { useQuery } from "@tanstack/react-query";
@@ -65,7 +64,14 @@ export default function EstimatesList() {
     id: "select",
     header: ({
       table
-    }) => <Checkbox checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")} onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)} aria-label="Select all" />,
+    }) => <Checkbox 
+            checked={
+              table.getIsAllPageRowsSelected() || 
+              (table.getIsSomePageRowsSelected() ? "indeterminate" : false)
+            } 
+            onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)} 
+            aria-label="Select all" 
+          />,
     cell: ({
       row
     }) => <Checkbox checked={row.getIsSelected()} onCheckedChange={value => row.toggleSelected(!!value)} aria-label="Select row" />,

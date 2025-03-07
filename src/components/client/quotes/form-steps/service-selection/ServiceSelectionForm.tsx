@@ -1,36 +1,24 @@
 
 import { ServiceItemType } from "@/types/service-item";
 import { Button } from "@/components/ui/button";
-import { useQuoteFormContext } from "../../providers/QuoteFormProvider";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ServiceSelectionField } from "@/components/shared/form-fields/ServiceSelectionField";
+import { useState } from "react";
 
-export function ServiceSelectionForm() {
-  const { formData, updateFormData } = useQuoteFormContext();
+interface ServiceSelectionFormProps {
+  services?: ServiceItemType[];
+  onChange?: (services: ServiceItemType[]) => void;
+}
+
+export function ServiceSelectionForm({ services = [], onChange }: ServiceSelectionFormProps) {
+  const [selectedServices, setSelectedServices] = useState<ServiceItemType[]>(services);
   
-  // Convert string[] to ServiceItemType[] if needed
-  const currentServices = Array.isArray(formData.service_items) 
-    ? formData.service_items.map(item => {
-        if (typeof item === 'string') {
-          // Convert string to a basic ServiceItemType
-          return {
-            service_id: item,
-            service_name: '', // This will be populated when we fetch from API
-            quantity: 1,
-            unit_price: 0,
-            commission_rate: 0,
-            commission_type: null
-          };
-        }
-        return item as ServiceItemType;
-      })
-    : [];
-
   const handleServicesChange = (updatedServices: ServiceItemType[]) => {
-    updateFormData({
-      service_items: updatedServices,
-    });
+    setSelectedServices(updatedServices);
+    if (onChange) {
+      onChange(updatedServices);
+    }
   };
 
   return (
@@ -47,7 +35,7 @@ export function ServiceSelectionForm() {
       <Card>
         <CardContent className="pt-6">
           <ServiceSelectionField 
-            services={currentServices}
+            services={selectedServices}
             onChange={handleServicesChange}
           />
         </CardContent>
@@ -59,10 +47,10 @@ export function ServiceSelectionForm() {
           variant="outline" 
           className="w-full sm:w-auto"
           onClick={() => {
-            console.log("Selected services:", formData.service_items);
+            console.log("Selected services:", selectedServices);
           }}
         >
-          Continue with {currentServices.length} service{currentServices.length !== 1 ? 's' : ''}
+          Continue with {selectedServices.length} service{selectedServices.length !== 1 ? 's' : ''}
         </Button>
       </div>
     </div>

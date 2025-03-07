@@ -5,18 +5,31 @@ import { VehicleInfoStep } from './form-steps/VehicleInfoStep'
 import { ServiceDetailsStep } from './form-steps/ServiceDetailsStep'
 import { SummaryStep } from './form-steps/SummaryStep'
 import { FormNavigation } from './form-steps/FormNavigation'
-import { useQuoteRequestForm, QuoteRequestFormContextType } from '@/hooks/quote-request/useQuoteRequestForm'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ServiceItemType } from '@/types/service-item'
 
 interface Props {
-  onSuccess?: () => void
+  onSuccess?: () => void;
+  quoteRequestForm: {
+    form: any;
+    step: number;
+    totalSteps: number;
+    services: ServiceItemType[];
+    isSubmitting: boolean;
+    uploading: boolean;
+    handleSubmit: () => void;
+    nextStep: () => void;
+    prevStep: () => void;
+    handleImageUpload: (file: File) => Promise<string>;
+    handleImageRemove: (url: string) => void;
+    onVehicleSave: () => void;
+    selectedServiceId: string;
+  }
 }
 
-export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
-  const quoteRequestForm = useQuoteRequestForm();
-  
+export function MultiStepQuoteRequestForm({ onSuccess, quoteRequestForm }: Props) {
   const {
     form,
     step,
@@ -63,7 +76,9 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
                     form={form} 
                     onVehicleSave={onVehicleSave} 
                   />
-                  <ServiceSelectionForm services={services} />
+                  <ServiceSelectionForm 
+                    services={services} 
+                  />
                 </motion.div>
               )}
 
