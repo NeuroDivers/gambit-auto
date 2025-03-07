@@ -84,7 +84,7 @@ export interface Invoice {
   customer_vehicle_model?: string;
   customer_vehicle_year?: number;
   customer_vehicle_vin?: string;
-  customer_vehicle_color?: string; // Added this property
+  customer_vehicle_color?: string;
   customer_vehicle_body_class?: string;
   customer_vehicle_doors?: number;
   customer_vehicle_trim?: string;
@@ -103,7 +103,7 @@ export interface CustomerInfo {
 }
 
 export interface UseReactToPrintFn {
-  (content: () => React.ReactInstance | null): void;
+  (content: () => React.ReactInstance | null): { handlePrint: () => void; printRef: React.MutableRefObject<any> };
   printRef?: React.MutableRefObject<any>;
   handlePrint?: () => void;
 }

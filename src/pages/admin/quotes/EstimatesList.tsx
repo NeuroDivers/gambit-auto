@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal, Pencil, Trash2, ArchiveIcon, Archive, FilePlus2, Filter, Download } from "lucide-react"
+import { MoreHorizontal, Pencil, Trash2, Archive, FilePlus2, Filter, Download } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -227,10 +227,16 @@ export default function EstimatesList() {
       if (typeof updaterOrValue === 'function') {
         setSelectedEstimateIds(prev => {
           const selectionState = updaterOrValue({});
-          return Object.keys(selectionState).filter(key => selectionState[key]);
+          return Object.entries(selectionState)
+            .filter(([_, isSelected]) => isSelected)
+            .map(([id]) => id);
         });
       } else {
-        setSelectedEstimateIds(Object.keys(updaterOrValue).filter(key => updaterOrValue[key]));
+        setSelectedEstimateIds(
+          Object.entries(updaterOrValue)
+            .filter(([_, isSelected]) => isSelected)
+            .map(([id]) => id)
+        );
       }
     },
     state: {

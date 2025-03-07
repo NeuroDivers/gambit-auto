@@ -9,8 +9,22 @@ export interface CustomerInfoFieldsProps {
   customerPhone?: string;
   setCustomerPhone: (value: string) => void;
   customerAddress?: string;
-  setCustomerAddress: (value: string) => void;
+  setCustomerAddress?: (value: string) => void;
   customers?: any[];
   isLoadingCustomers?: boolean;
   onCustomerSelect?: (customerId: string) => void;
+  customerStreetAddress?: string;
+  setCustomerStreetAddress?: (value: string) => void;
+  customerUnitNumber?: string;
+  setCustomerUnitNumber?: (value: string) => void;
+  customerCity?: string;
+  setCustomerCity?: (value: string) => void;
+  customerStateProvince?: string;
+  setCustomerStateProvince?: (value: string) => void;
+  customerPostalCode?: string;
+  setCustomerPostalCode?: (value: string) => void;
+  customerCountry?: string;
+  setCustomerCountry?: (value: string) => void;
+  clientIdField?: string;
+  setClientId?: (value: string) => void;
 }

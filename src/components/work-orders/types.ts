@@ -68,6 +68,8 @@ export type ServiceItemType = {
   assigned_profile_id?: string;
   is_main_service?: boolean; 
   sub_services?: ServiceItemType[];
+  description?: string;
+  package_id?: string;
 };
 
 export type WorkOrderFormValues = {
