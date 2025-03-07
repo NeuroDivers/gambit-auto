@@ -73,12 +73,17 @@ export function CustomerInfoFields({
   const { data: customersList, isLoading } = useQuery({
     queryKey: ["customers_for_invoice"],
     queryFn: async () => {
+      console.log("Fetching customers for invoice creation")
       const { data, error } = await supabase
         .from("customers")
         .select("*")
-        .order("last_name", { ascending: true })
+        .order("customer_last_name", { ascending: true })
       
-      if (error) throw error
+      if (error) {
+        console.error("Error fetching customers:", error)
+        throw error
+      }
+      console.log("Fetched customers:", data)
       return data || []
     }
   })
@@ -88,29 +93,30 @@ export function CustomerInfoFields({
     
     const selectedCustomer = customersList?.find(c => c.id === customerId)
     if (selectedCustomer) {
-      setCustomerFirstName(selectedCustomer.first_name || "")
-      setCustomerLastName(selectedCustomer.last_name || "")
-      setCustomerEmail(selectedCustomer.email || "")
-      setCustomerPhone(selectedCustomer.phone_number || "")
+      console.log("Selected customer:", selectedCustomer)
+      setCustomerFirstName(selectedCustomer.customer_first_name || "")
+      setCustomerLastName(selectedCustomer.customer_last_name || "")
+      setCustomerEmail(selectedCustomer.customer_email || "")
+      setCustomerPhone(selectedCustomer.customer_phone || "")
       
       // Set full address for backward compatibility
       const fullAddress = [
-        selectedCustomer.street_address,
-        selectedCustomer.unit_number ? `Unit ${selectedCustomer.unit_number}` : "",
-        selectedCustomer.city,
-        selectedCustomer.state_province,
-        selectedCustomer.postal_code,
-        selectedCustomer.country
+        selectedCustomer.customer_street_address,
+        selectedCustomer.customer_unit_number ? `Unit ${selectedCustomer.customer_unit_number}` : "",
+        selectedCustomer.customer_city,
+        selectedCustomer.customer_state_province,
+        selectedCustomer.customer_postal_code,
+        selectedCustomer.customer_country
       ].filter(Boolean).join(", ")
       setCustomerAddress(fullAddress)
       
       // Set individual address fields if they exist
-      if (setCustomerStreetAddress) setCustomerStreetAddress(selectedCustomer.street_address || "")
-      if (setCustomerUnitNumber) setCustomerUnitNumber(selectedCustomer.unit_number || "")
-      if (setCustomerCity) setCustomerCity(selectedCustomer.city || "")
-      if (setCustomerStateProvince) setCustomerStateProvince(selectedCustomer.state_province || "")
-      if (setCustomerPostalCode) setCustomerPostalCode(selectedCustomer.postal_code || "")
-      if (setCustomerCountry) setCustomerCountry(selectedCustomer.country || "")
+      if (setCustomerStreetAddress) setCustomerStreetAddress(selectedCustomer.customer_street_address || "")
+      if (setCustomerUnitNumber) setCustomerUnitNumber(selectedCustomer.customer_unit_number || "")
+      if (setCustomerCity) setCustomerCity(selectedCustomer.customer_city || "")
+      if (setCustomerStateProvince) setCustomerStateProvince(selectedCustomer.customer_state_province || "")
+      if (setCustomerPostalCode) setCustomerPostalCode(selectedCustomer.customer_postal_code || "")
+      if (setCustomerCountry) setCustomerCountry(selectedCustomer.customer_country || "")
       
       if (onCustomerSelect) onCustomerSelect(customerId)
     }
@@ -120,9 +126,9 @@ export function CustomerInfoFields({
 
   const filteredCustomers = customersList?.filter(customer => 
     !searchQuery || 
-    `${customer.first_name} ${customer.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.phone_number?.toLowerCase().includes(searchQuery.toLowerCase())
+    `${customer.customer_first_name} ${customer.customer_last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    customer.customer_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    customer.customer_phone?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || []
 
   return (
@@ -139,7 +145,7 @@ export function CustomerInfoFields({
             >
               {selectedCustomerId ? 
                 filteredCustomers.find(c => c.id === selectedCustomerId)
-                  ? `${filteredCustomers.find(c => c.id === selectedCustomerId)?.first_name} ${filteredCustomers.find(c => c.id === selectedCustomerId)?.last_name}`
+                  ? `${filteredCustomers.find(c => c.id === selectedCustomerId)?.customer_first_name} ${filteredCustomers.find(c => c.id === selectedCustomerId)?.customer_last_name}`
                   : "Select a customer" 
                 : "Select a customer"}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -177,8 +183,8 @@ export function CustomerInfoFields({
                       )}
                     />
                     <div className="flex flex-col">
-                      <span className="font-medium">{customer.first_name} {customer.last_name}</span>
-                      <span className="text-xs text-muted-foreground">{customer.email}</span>
+                      <span className="font-medium">{customer.customer_first_name} {customer.customer_last_name}</span>
+                      <span className="text-xs text-muted-foreground">{customer.customer_email}</span>
                     </div>
                   </div>
                 ))
