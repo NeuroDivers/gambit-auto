@@ -3,6 +3,8 @@ import { ReactNode, useEffect, useState } from "react"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Navigate } from "react-router-dom"
 import { LoadingScreen } from "../shared/LoadingScreen"
+import { toast } from "sonner"
+import { supabase } from "@/integrations/supabase/client"
 
 interface PermissionGuardProps {
   children: ReactNode
@@ -12,6 +14,7 @@ interface PermissionGuardProps {
 
 export function PermissionGuard({ children, resource, type }: PermissionGuardProps) {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null)
+  const [redirecting, setRedirecting] = useState(false)
   const { checkPermission, currentUserRole, isLoading } = usePermissions()
 
   useEffect(() => {
@@ -23,6 +26,25 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
       if (!currentUserRole) {
         console.log('No role found, denying access');
         setHasPermission(false);
+        
+        // If role is missing, something is wrong with the account setup
+        // Show toast and redirect to auth
+        if (!redirecting) {
+          setRedirecting(true);
+          toast.error('Access denied', {
+            description: 'Your account has insufficient permissions. Signing out.',
+          });
+          
+          setTimeout(async () => {
+            try {
+              await supabase.auth.signOut();
+              window.location.href = '/auth';
+            } catch (error) {
+              console.error('Error signing out:', error);
+              window.location.href = '/auth';
+            }
+          }, 2000);
+        }
         return;
       }
 
@@ -50,10 +72,10 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
     }
 
     checkAccess()
-  }, [currentUserRole, isLoading, resource, type, checkPermission])
+  }, [currentUserRole, isLoading, resource, type, checkPermission, redirecting])
 
   // Show loading screen while checking permissions
-  if (isLoading || hasPermission === null) {
+  if (isLoading || hasPermission === null || redirecting) {
     return <LoadingScreen />
   }
 

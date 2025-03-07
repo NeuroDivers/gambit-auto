@@ -19,7 +19,7 @@ import Chat from "@/pages/admin/Chat"
 import Notifications from "@/pages/admin/Notifications"
 import CommissionsPage from "@/components/commissions/CommissionsPage"
 import ServiceSkills from "@/pages/staff/ServiceSkills"
-import { Suspense, useEffect } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
 import { applyThemeClass } from "@/lib/utils"
 import { toast } from "sonner"
@@ -27,6 +27,7 @@ import { supabase } from "@/integrations/supabase/client"
 
 const RoleBasedLayout = () => {
   const { currentUserRole, isLoading, error } = usePermissions();
+  const [redirectInProgress, setRedirectInProgress] = useState(false);
   
   // Apply saved theme when dashboard is loaded
   useEffect(() => {
@@ -49,6 +50,8 @@ const RoleBasedLayout = () => {
           description: 'Unable to determine your access level. Logging out for security.',
         });
         
+        setRedirectInProgress(true);
+        
         setTimeout(async () => {
           try {
             await supabase.auth.signOut();
@@ -65,16 +68,45 @@ const RoleBasedLayout = () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, [isLoading]);
+
+  // Handle case where no role was found after loading
+  useEffect(() => {
+    // Only execute if not already loading and not during redirect
+    if (!isLoading && !redirectInProgress && (error || !currentUserRole)) {
+      console.error('Role determination error:', error || 'No role found for user');
+      console.log('Current user role state:', { currentUserRole, error });
+      
+      // Show toast message to user
+      toast.error('Access denied', {
+        description: 'Your account has no assigned role. Logging you out for security.',
+      });
+      
+      // Mark that redirect is in progress to prevent multiple signouts
+      setRedirectInProgress(true);
+      
+      // Give user time to see the message before logout
+      setTimeout(async () => {
+        try {
+          await supabase.auth.signOut();
+          window.location.href = '/auth';
+        } catch (err) {
+          console.error('Error during sign out:', err);
+          window.location.href = '/auth';
+        }
+      }, 2000);
+      
+      return;
+    }
+  }, [isLoading, error, currentUserRole, redirectInProgress]);
   
-  if (isLoading) {
+  if (isLoading || redirectInProgress) {
     return <LoadingScreen />;
   }
   
-  // If there's an error or no role found, show a more informative message in console
+  // If there's no valid role, we'll still show the loading screen until the redirect
+  // happens in the effect above
   if (error || !currentUserRole) {
-    console.error('Role determination error:', error || 'No role found for user');
-    console.log('Current user role state:', { currentUserRole, error });
-    return <Navigate to="/auth" replace />;
+    return <LoadingScreen />;
   }
 
   console.log('Current role for layout determination:', currentUserRole);

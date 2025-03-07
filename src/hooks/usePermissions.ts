@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface RolePermission {
@@ -29,8 +29,10 @@ interface UserRole {
 }
 
 export const usePermissions = () => {
+  const [assigningDefaultRole, setAssigningDefaultRole] = useState(false);
+
   // Get current user's role and cache it
-  const { data: currentUserRole, isLoading: isRoleLoading, error: roleError } = useQuery({
+  const { data: currentUserRole, isLoading: isRoleLoading, error: roleError, refetch: refetchRole } = useQuery({
     queryKey: ["current-user-role"],
     queryFn: async () => {
       try {
@@ -108,36 +110,40 @@ export const usePermissions = () => {
         
         // If we get here, it means the profile exists but has no role assigned
         console.log('Profile found but no role assigned, attempting to assign default role');
-        await assignDefaultRoleIfNeeded(user.id);
+        if (!assigningDefaultRole) {
+          setAssigningDefaultRole(true);
+          await assignDefaultRoleIfNeeded(user.id);
+          setAssigningDefaultRole(false);
         
-        // Retry the query after attempting to assign a default role
-        const { data: retryData, error: retryError } = await supabase
-          .from('profiles')
-          .select(`
-            role:role_id (
-              id,
-              name,
-              nicename,
-              default_dashboard
-            )
-          `)
-          .eq('id', user.id)
-          .single();
+          // Retry the query after attempting to assign a default role
+          const { data: retryData, error: retryError } = await supabase
+            .from('profiles')
+            .select(`
+              role:role_id (
+                id,
+                name,
+                nicename,
+                default_dashboard
+              )
+            `)
+            .eq('id', user.id)
+            .single();
+            
+          if (retryError) {
+            console.error('Error on retry after assigning role:', retryError);
+            return null;
+          }
           
-        if (retryError) {
-          console.error('Error on retry after assigning role:', retryError);
-          return null;
-        }
-        
-        if (retryData?.role) {
-          const roleData = Array.isArray(retryData.role) ? retryData.role[0] : retryData.role;
-          const userRole: UserRole = {
-            id: String(roleData.id),
-            name: String(roleData.name),
-            nicename: String(roleData.nicename),
-            default_dashboard: roleData.default_dashboard
-          };
-          return userRole;
+          if (retryData?.role) {
+            const roleData = Array.isArray(retryData.role) ? retryData.role[0] : retryData.role;
+            const userRole: UserRole = {
+              id: String(roleData.id),
+              name: String(roleData.name),
+              nicename: String(roleData.nicename),
+              default_dashboard: roleData.default_dashboard
+            };
+            return userRole;
+          }
         }
         
         return null;
@@ -178,46 +184,6 @@ export const usePermissions = () => {
     enabled: !!currentUserRole,
     staleTime: 300000, // Cache for 5 minutes
   });
-
-  // Effect to handle missing role by logging out the user
-  useEffect(() => {
-    if (!isRoleLoading && roleError) {
-      console.log('Role error detected, will sign out user to prevent redirect loop');
-      // Only show toast on client side
-      if (typeof window !== 'undefined') {
-        toast.error('Account access issue', {
-          description: 'Your account is missing proper role assignment. Please contact support.',
-        });
-        
-        // Give user time to see the message before logout
-        const timer = setTimeout(() => {
-          handleSignOut();
-        }, 3000);
-        
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [isRoleLoading, roleError]);
-  
-  // Also handle the case where loading is complete but no role was found
-  useEffect(() => {
-    if (!isRoleLoading && !roleError && !currentUserRole) {
-      console.log('No role found after loading, will sign out user to prevent redirect loop');
-      // Only show toast on client side
-      if (typeof window !== 'undefined') {
-        toast.error('Access denied', {
-          description: 'Your account has no assigned role. Please contact support.',
-        });
-        
-        // Give user time to see the message before logout
-        const timer = setTimeout(() => {
-          handleSignOut();
-        }, 3000);
-        
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [isRoleLoading, roleError, currentUserRole]);
 
   const handleSignOut = async () => {
     try {
@@ -304,11 +270,30 @@ export const usePermissions = () => {
     }
   };
 
+  // Check for role changes when the component mounts or role status changes
+  useEffect(() => {
+    if (!isRoleLoading && !assigningDefaultRole && !currentUserRole) {
+      const checkAndAssignRole = async () => {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await assignDefaultRoleIfNeeded(user.id);
+            refetchRole();
+          }
+        } catch (error) {
+          console.error('Error checking user role:', error);
+        }
+      };
+      
+      checkAndAssignRole();
+    }
+  }, [isRoleLoading, currentUserRole, assigningDefaultRole, refetchRole]);
+
   return {
     permissions,
     checkPermission,
     currentUserRole,
-    isLoading: isRoleLoading,
+    isLoading: isRoleLoading || assigningDefaultRole,
     error: roleError
   };
 };
