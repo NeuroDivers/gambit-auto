@@ -12,6 +12,7 @@ import { customerRoutes } from "./customer-routes"
 import { settingsRoutes } from "./settings-routes"
 import { vehicleRoutes } from "./vehicle-routes"
 import { bookingRoutes } from "./booking-routes"
+import { serviceRoutes } from "./service-routes"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Navigate } from "react-router-dom"
 import Chat from "@/pages/admin/Chat"
@@ -23,18 +24,6 @@ import { LoadingScreen } from "@/components/shared/LoadingScreen"
 import { applyThemeClass } from "@/lib/utils"
 import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
-
-// Service routes placeholder (since we removed the import)
-const serviceRoutes = [
-  {
-    path: "services",
-    element: <div>Services</div>
-  },
-  {
-    path: "services/:id",
-    element: <div>Service Details</div>
-  }
-];
 
 const RoleBasedLayout = () => {
   const { currentUserRole, isLoading: roleLoading, error: roleError } = usePermissions();
