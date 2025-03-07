@@ -7,6 +7,7 @@ import NotFound from "./pages/NotFound"
 import Unauthorized from "./pages/Unauthorized"
 import PublicInvoiceView from "./pages/PublicInvoiceView"
 import { protectedRoutes } from "./routes/protectedRoutes"
+import ClearAuth from "./pages/ClearAuth"
 
 // Create the router
 export const router = createBrowserRouter([
@@ -29,6 +30,10 @@ export const router = createBrowserRouter([
   {
     path: "/p/:invoiceId",
     element: <PublicInvoiceView />
+  },
+  {
+    path: "/clear-auth",
+    element: <ClearAuth />
   },
   protectedRoutes, // This contains the Dashboard route
   {

@@ -1,4 +1,3 @@
-
 import { DashboardLayoutWrapper } from "@/components/dashboard/DashboardLayoutWrapper"
 import { StaffLayoutWrapper } from "@/components/staff/StaffLayoutWrapper"
 import { ClientLayoutWrapper } from "@/components/client/ClientLayoutWrapper"
@@ -29,6 +28,7 @@ const RoleBasedLayout = () => {
   const { currentUserRole, isLoading: roleLoading, error: roleError } = usePermissions();
   const [redirectInProgress, setRedirectInProgress] = useState(false);
   const [forcedSignOut, setForcedSignOut] = useState(false);
+  const [loadingTimeoutReached, setLoadingTimeoutReached] = useState(false);
   
   // Apply saved theme when dashboard is loaded
   useEffect(() => {
@@ -39,25 +39,10 @@ const RoleBasedLayout = () => {
     }
   }, [])
   
-  // Force signout and clear localstorage function
-  const performForceSignOut = async () => {
-    try {
-      console.log('Performing forced sign out');
-      setForcedSignOut(true);
-      
-      await supabase.auth.signOut();
-      // Clear all Supabase related tokens
-      localStorage.removeItem('sb-yxssuhzzmxwtnaodgpoq-auth-token');
-      localStorage.removeItem('supabase.auth.token');
-      localStorage.removeItem('supabase-auth-token');
-      
-      // Force navigation to auth page with full page reload
-      window.location.href = '/auth';
-    } catch (err) {
-      console.error('Error during forced signout:', err);
-      // Even if there's an error, try to redirect
-      window.location.href = '/auth';
-    }
+  // Function to redirect to clear auth page
+  const redirectToClearAuth = () => {
+    console.log('Redirecting to clear auth page');
+    window.location.href = '/clear-auth';
   };
   
   // Handle case where user is loading for too long (potential redirect loop)
@@ -67,13 +52,14 @@ const RoleBasedLayout = () => {
     if (roleLoading && !redirectInProgress && !forcedSignOut) {
       timeoutId = setTimeout(() => {
         console.log('Loading timeout reached, may be in redirect loop');
+        setLoadingTimeoutReached(true);
         // If still loading after 5 seconds, consider it a problem
         toast.error('System access issue', {
           description: 'Unable to determine your access level. Logging out for security.',
         });
         
         setRedirectInProgress(true);
-        performForceSignOut();
+        redirectToClearAuth();
       }, 5000); // 5 seconds timeout
     }
     
@@ -95,7 +81,7 @@ const RoleBasedLayout = () => {
       
       // Give user time to see the message before logout
       setTimeout(() => {
-        performForceSignOut();
+        redirectToClearAuth();
       }, 2000);
     }
   }, [roleError, redirectInProgress, forcedSignOut]);
@@ -116,16 +102,34 @@ const RoleBasedLayout = () => {
       
       // Give user time to see the message before logout
       setTimeout(() => {
-        performForceSignOut();
+        redirectToClearAuth();
       }, 2000);
     }
   }, [roleLoading, currentUserRole, redirectInProgress, forcedSignOut]);
   
-  if (forcedSignOut) {
+  // Special case: If loading takes too long, offer a manual escape
+  if (loadingTimeoutReached) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-background">
+        <h1 className="text-2xl font-bold mb-4">Authentication Issue Detected</h1>
+        <p className="mb-6 text-center max-w-md">
+          We're having trouble determining your access level. This may be because your user account has been deleted.
+        </p>
+        <button 
+          onClick={redirectToClearAuth}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+        >
+          Clear Authentication & Sign Out
+        </button>
+      </div>
+    );
+  }
+  
+  if (forcedSignOut || redirectInProgress) {
     return <LoadingScreen />;
   }
   
-  if (roleLoading || redirectInProgress) {
+  if (roleLoading) {
     return <LoadingScreen />;
   }
   

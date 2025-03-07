@@ -32,28 +32,12 @@ export const usePermissions = () => {
   const [assigningDefaultRole, setAssigningDefaultRole] = useState(false);
   const [noProfileFound, setNoProfileFound] = useState(false);
   const [authUserMissing, setAuthUserMissing] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
-  // Helper function for signing out users
-  const forceSignOut = async (errorMessage: string) => {
-    try {
-      toast.error('Authentication error', {
-        description: errorMessage,
-      });
-      
-      console.log('Force signing out user due to:', errorMessage);
-      
-      await supabase.auth.signOut();
-      // Clear all Supabase related tokens
-      localStorage.removeItem('sb-yxssuhzzmxwtnaodgpoq-auth-token');
-      localStorage.removeItem('supabase.auth.token');
-      localStorage.removeItem('supabase-auth-token');
-      
-      // Force a page reload to clear any cached state
-      window.location.href = '/auth';
-    } catch (error) {
-      console.error('Error during forced sign out:', error);
-      window.location.href = '/auth';
-    }
+  // Helper function for signing out users and redirecting to clear auth
+  const redirectToClearAuth = () => {
+    // Redirect to clear auth page which will handle the cleanup and sign out
+    window.location.href = '/clear-auth';
   };
 
   // Get current user's role and cache it
@@ -80,7 +64,7 @@ export const usePermissions = () => {
         
         if (sessionError || !sessionData.session) {
           console.error('Session verification failed:', sessionError || 'No session');
-          setAuthUserMissing(true);
+          setSessionExpired(true);
           throw new Error('Your session has expired - please sign in again');
         }
 
@@ -279,23 +263,37 @@ export const usePermissions = () => {
     }
   };
 
-  // Check for auth user missing
+  // Check for auth user missing or session expired
   useEffect(() => {
-    if (authUserMissing) {
-      forceSignOut('Your session is invalid. Please sign in again.');
+    if (authUserMissing || sessionExpired) {
+      toast.error('Authentication issue detected', {
+        description: 'Your session is invalid or expired. Please sign in again.',
+      });
+      
+      // Use a timeout to allow the toast to be seen
+      setTimeout(() => {
+        redirectToClearAuth();
+      }, 2000);
     }
-  }, [authUserMissing]);
+  }, [authUserMissing, sessionExpired]);
 
   // Check for profile not found (deleted account)
   useEffect(() => {
     if (noProfileFound) {
-      forceSignOut('Your account may have been deleted. Please contact support.');
+      toast.error('Account issue detected', {
+        description: 'Your profile could not be found. Your account may have been deleted.',
+      });
+      
+      // Use a timeout to allow the toast to be seen
+      setTimeout(() => {
+        redirectToClearAuth();
+      }, 2000);
     }
   }, [noProfileFound]);
 
   // Check and assign default role if needed
   useEffect(() => {
-    if (!isRoleLoading && !assigningDefaultRole && !currentUserRole && !noProfileFound && !authUserMissing) {
+    if (!isRoleLoading && !assigningDefaultRole && !currentUserRole && !noProfileFound && !authUserMissing && !sessionExpired) {
       const checkAndAssignRole = async () => {
         try {
           const { data: { user } } = await supabase.auth.getUser();
@@ -310,13 +308,16 @@ export const usePermissions = () => {
       
       checkAndAssignRole();
     }
-  }, [isRoleLoading, currentUserRole, assigningDefaultRole, refetchRole, noProfileFound, authUserMissing]);
+  }, [isRoleLoading, currentUserRole, assigningDefaultRole, refetchRole, noProfileFound, authUserMissing, sessionExpired]);
 
   return {
     permissions,
     checkPermission,
     currentUserRole,
     isLoading: isRoleLoading || assigningDefaultRole,
-    error: roleError || (noProfileFound ? new Error('User profile not found') : null)
+    error: roleError || 
+           (noProfileFound ? new Error('User profile not found') : null) ||
+           (authUserMissing ? new Error('Authentication error') : null) ||
+           (sessionExpired ? new Error('Session expired') : null)
   };
 };

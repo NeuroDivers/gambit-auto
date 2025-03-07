@@ -26,13 +26,41 @@ export default function Auth() {
   const { isLoading, isError, error } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        // If user is authenticated, redirect to dashboard
-        console.log('User is already authenticated, redirecting to dashboard')
-        navigate('/dashboard', { replace: true })
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        
+        if (sessionError) {
+          throw sessionError
+        }
+        
+        if (session) {
+          // If user is authenticated, check if they have a valid profile
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', session.user.id)
+            .single()
+            
+          // If profile doesn't exist, the user has likely been deleted
+          if (profileError || !profileData) {
+            console.log('User authenticated but no profile found - likely deleted user')
+            // Redirect to clear auth page to reset authentication state
+            navigate('/clear-auth', { replace: true })
+            return null
+          }
+          
+          // If profile exists, proceed to dashboard
+          console.log('User is already authenticated and has valid profile, redirecting to dashboard')
+          navigate('/dashboard', { replace: true })
+        }
+        
+        return session
+      } catch (err) {
+        console.error('Error checking session:', err)
+        // On error, attempt to clear auth state and stay on auth page
+        await supabase.auth.signOut()
+        return null
       }
-      return session
     },
     retry: false
   })
