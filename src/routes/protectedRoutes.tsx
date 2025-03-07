@@ -1,9 +1,10 @@
+
 import { DashboardLayoutWrapper } from "@/components/dashboard/DashboardLayoutWrapper"
 import { StaffLayoutWrapper } from "@/components/staff/StaffLayoutWrapper"
 import { ClientLayoutWrapper } from "@/components/client/ClientLayoutWrapper"
 import Dashboard from "@/pages/dashboard/Dashboard"
 import { RouteObject } from "react-router-dom"
-import { workOrderRoutes } from "./work-order-routes"
+// Removed workOrderRoutes import for troubleshooting
 import { serviceRoutes } from "./service-routes"
 import { userRoutes } from "./user-routes"
 import { estimateRoutes } from "./estimate-routes"
@@ -202,7 +203,11 @@ export const protectedRoutes: RouteObject = {
       path: "commissions",
       element: <CommissionsPage />,
     },
-    ...workOrderRoutes,
+    // workOrderRoutes removed for troubleshooting
+    {
+      path: "work-orders",
+      element: <div className="p-6">Work Orders functionality is currently disabled for troubleshooting.</div>
+    },
     ...serviceRoutes,
     ...userRoutes,
     ...estimateRoutes,
