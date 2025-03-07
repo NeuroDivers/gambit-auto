@@ -31,13 +31,21 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
             description: 'Your account has been deleted or is invalid. Signing out.',
           });
           
+          // Force sign out with a short delay to allow the toast to be seen
           setTimeout(async () => {
             try {
               await supabase.auth.signOut();
+              // Clear all Supabase related tokens from localStorage
               localStorage.removeItem('sb-yxssuhzzmxwtnaodgpoq-auth-token');
+              localStorage.removeItem('supabase.auth.token');
+              // Remove any other auth related items
+              localStorage.removeItem('supabase-auth-token');
+              
+              // Force a page reload to clear the application state
               window.location.href = '/auth';
             } catch (signOutError) {
               console.error('Error signing out:', signOutError);
+              // If sign out fails, force redirect to auth page
               window.location.href = '/auth';
             }
           }, 2000);
@@ -61,7 +69,11 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
           setTimeout(async () => {
             try {
               await supabase.auth.signOut();
+              // Clear all auth tokens
               localStorage.removeItem('sb-yxssuhzzmxwtnaodgpoq-auth-token');
+              localStorage.removeItem('supabase.auth.token');
+              localStorage.removeItem('supabase-auth-token');
+              
               window.location.href = '/auth';
             } catch (signOutError) {
               console.error('Error signing out:', signOutError);

@@ -26,8 +26,9 @@ import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
 
 const RoleBasedLayout = () => {
-  const { currentUserRole, isLoading, error } = usePermissions();
+  const { currentUserRole, isLoading: roleLoading, error: roleError } = usePermissions();
   const [redirectInProgress, setRedirectInProgress] = useState(false);
+  const [forcedSignOut, setForcedSignOut] = useState(false);
   
   // Apply saved theme when dashboard is loaded
   useEffect(() => {
@@ -38,11 +39,32 @@ const RoleBasedLayout = () => {
     }
   }, [])
   
+  // Force signout and clear localstorage function
+  const performForceSignOut = async () => {
+    try {
+      console.log('Performing forced sign out');
+      setForcedSignOut(true);
+      
+      await supabase.auth.signOut();
+      // Clear all Supabase related tokens
+      localStorage.removeItem('sb-yxssuhzzmxwtnaodgpoq-auth-token');
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('supabase-auth-token');
+      
+      // Force navigation to auth page with full page reload
+      window.location.href = '/auth';
+    } catch (err) {
+      console.error('Error during forced signout:', err);
+      // Even if there's an error, try to redirect
+      window.location.href = '/auth';
+    }
+  };
+  
   // Handle case where user is loading for too long (potential redirect loop)
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     
-    if (isLoading && !redirectInProgress) {
+    if (roleLoading && !redirectInProgress && !forcedSignOut) {
       timeoutId = setTimeout(() => {
         console.log('Loading timeout reached, may be in redirect loop');
         // If still loading after 5 seconds, consider it a problem
@@ -51,31 +73,38 @@ const RoleBasedLayout = () => {
         });
         
         setRedirectInProgress(true);
-        
-        setTimeout(async () => {
-          try {
-            await supabase.auth.signOut();
-            localStorage.removeItem('sb-yxssuhzzmxwtnaodgpoq-auth-token');
-            window.location.href = '/auth';
-          } catch (err) {
-            console.error('Error during forced signout:', err);
-            window.location.href = '/auth';
-          }
-        }, 2000);
-      }, 5000); // 5 seconds timeout - reduced from 10 seconds
+        performForceSignOut();
+      }, 5000); // 5 seconds timeout
     }
     
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [isLoading, redirectInProgress]);
+  }, [roleLoading, redirectInProgress, forcedSignOut]);
+
+  // Handle case where role error was detected
+  useEffect(() => {
+    if (roleError && !redirectInProgress && !forcedSignOut) {
+      console.error('Role determination error detected:', roleError);
+      
+      toast.error('Authentication error', {
+        description: 'Your account has an authentication issue. Signing you out.',
+      });
+      
+      setRedirectInProgress(true);
+      
+      // Give user time to see the message before logout
+      setTimeout(() => {
+        performForceSignOut();
+      }, 2000);
+    }
+  }, [roleError, redirectInProgress, forcedSignOut]);
 
   // Handle case where no role was found after loading
   useEffect(() => {
     // Only execute if not already loading and not during redirect
-    if (!isLoading && !redirectInProgress && (error || !currentUserRole)) {
-      console.error('Role determination error:', error || 'No role found for user');
-      console.log('Current user role state:', { currentUserRole, error });
+    if (!roleLoading && !redirectInProgress && !forcedSignOut && !currentUserRole) {
+      console.error('No role found for user after loading completed');
       
       // Show toast message to user
       toast.error('Access denied', {
@@ -86,28 +115,23 @@ const RoleBasedLayout = () => {
       setRedirectInProgress(true);
       
       // Give user time to see the message before logout
-      setTimeout(async () => {
-        try {
-          await supabase.auth.signOut();
-          localStorage.removeItem('sb-yxssuhzzmxwtnaodgpoq-auth-token');
-          window.location.href = '/auth';
-        } catch (err) {
-          console.error('Error during sign out:', err);
-          window.location.href = '/auth';
-        }
+      setTimeout(() => {
+        performForceSignOut();
       }, 2000);
-      
-      return;
     }
-  }, [isLoading, error, currentUserRole, redirectInProgress]);
+  }, [roleLoading, currentUserRole, redirectInProgress, forcedSignOut]);
   
-  if (isLoading || redirectInProgress) {
+  if (forcedSignOut) {
     return <LoadingScreen />;
   }
   
-  // If there's no valid role, we'll still show the loading screen until the redirect
+  if (roleLoading || redirectInProgress) {
+    return <LoadingScreen />;
+  }
+  
+  // If there's an error or no valid role, we'll still show the loading screen until the redirect
   // happens in the effect above
-  if (error || !currentUserRole) {
+  if (roleError || !currentUserRole) {
     return <LoadingScreen />;
   }
 

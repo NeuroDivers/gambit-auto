@@ -31,6 +31,30 @@ interface UserRole {
 export const usePermissions = () => {
   const [assigningDefaultRole, setAssigningDefaultRole] = useState(false);
   const [noProfileFound, setNoProfileFound] = useState(false);
+  const [authUserMissing, setAuthUserMissing] = useState(false);
+
+  // Helper function for signing out users
+  const forceSignOut = async (errorMessage: string) => {
+    try {
+      toast.error('Authentication error', {
+        description: errorMessage,
+      });
+      
+      console.log('Force signing out user due to:', errorMessage);
+      
+      await supabase.auth.signOut();
+      // Clear all Supabase related tokens
+      localStorage.removeItem('sb-yxssuhzzmxwtnaodgpoq-auth-token');
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('supabase-auth-token');
+      
+      // Force a page reload to clear any cached state
+      window.location.href = '/auth';
+    } catch (error) {
+      console.error('Error during forced sign out:', error);
+      window.location.href = '/auth';
+    }
+  };
 
   // Get current user's role and cache it
   const { data: currentUserRole, isLoading: isRoleLoading, error: roleError, refetch: refetchRole } = useQuery({
@@ -38,14 +62,26 @@ export const usePermissions = () => {
     queryFn: async () => {
       try {
         const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
         if (userError) {
           console.error('Error fetching auth user:', userError);
-          throw userError;
+          setAuthUserMissing(true);
+          throw new Error('Authentication error - please sign in again');
         }
         
         if (!user) {
           console.log('No user found in usePermissions');
+          setAuthUserMissing(true);
           return null;
+        }
+
+        // Verify the user token is valid with the Supabase auth API
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !sessionData.session) {
+          console.error('Session verification failed:', sessionError || 'No session');
+          setAuthUserMissing(true);
+          throw new Error('Your session has expired - please sign in again');
         }
 
         const { data, error } = await supabase
@@ -129,7 +165,7 @@ export const usePermissions = () => {
         throw error;
       }
     },
-    staleTime: 300000, // Cache for 5 minutes
+    staleTime: 60000, // Reduced cache time to 1 minute so we recheck more frequently
     retry: 1,
     retryDelay: 1000
   });
@@ -160,20 +196,8 @@ export const usePermissions = () => {
       return data as RolePermission[];
     },
     enabled: !!currentUserRole,
-    staleTime: 300000, // Cache for 5 minutes
+    staleTime: 60000, // Reduced cache time to 1 minute
   });
-
-  const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      localStorage.removeItem('sb-yxssuhzzmxwtnaodgpoq-auth-token');
-      // Redirect to auth page
-      window.location.href = '/auth';
-    } catch (error) {
-      console.error('Error signing out:', error);
-      window.location.href = '/auth';
-    }
-  };
 
   const checkPermission = useCallback(async (
     resource: string,
@@ -255,24 +279,23 @@ export const usePermissions = () => {
     }
   };
 
-  // Check for role changes when the component mounts or role status changes
+  // Check for auth user missing
+  useEffect(() => {
+    if (authUserMissing) {
+      forceSignOut('Your session is invalid. Please sign in again.');
+    }
+  }, [authUserMissing]);
+
+  // Check for profile not found (deleted account)
   useEffect(() => {
     if (noProfileFound) {
-      // If profile is not found, we should sign out the user
-      console.error('No profile found for authenticated user - possible deleted profile');
-      toast.error('Authentication error', {
-        description: 'Your account may have been deleted. Signing out.',
-      });
-      
-      setTimeout(() => {
-        handleSignOut();
-      }, 2000);
+      forceSignOut('Your account may have been deleted. Please contact support.');
     }
   }, [noProfileFound]);
 
   // Check and assign default role if needed
   useEffect(() => {
-    if (!isRoleLoading && !assigningDefaultRole && !currentUserRole && !noProfileFound) {
+    if (!isRoleLoading && !assigningDefaultRole && !currentUserRole && !noProfileFound && !authUserMissing) {
       const checkAndAssignRole = async () => {
         try {
           const { data: { user } } = await supabase.auth.getUser();
@@ -287,7 +310,7 @@ export const usePermissions = () => {
       
       checkAndAssignRole();
     }
-  }, [isRoleLoading, currentUserRole, assigningDefaultRole, refetchRole, noProfileFound]);
+  }, [isRoleLoading, currentUserRole, assigningDefaultRole, refetchRole, noProfileFound, authUserMissing]);
 
   return {
     permissions,
