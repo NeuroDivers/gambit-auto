@@ -7,8 +7,8 @@ import { InvoiceFormValues, InvoiceItem } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { InvoiceItemsFields } from "../form-sections/InvoiceItemsFields";
 import { InvoiceNotesField } from "../form-sections/InvoiceNotesField";
-import CustomerInfoFields from "@/components/invoices/form-sections/CustomerInfoFields";
-import VehicleInfoFields from "../form-sections/VehicleInfoFields";
+import { CustomerInfoFields } from "@/components/invoices/form-sections/CustomerInfoFields";
+import { VehicleInfoFields } from "../form-sections/VehicleInfoFields";
 import { InvoiceStatusField } from "../form-sections/InvoiceStatusField";
 import { InvoiceServiceItems } from "../form-sections/InvoiceServiceItems";
 import { WorkOrderSelect } from "../form-sections/WorkOrderSelect";
@@ -185,8 +185,8 @@ export function EditInvoiceForm({ form, onSubmit, isPending, invoiceId }: EditIn
                 setMake={(value) => form.setValue('customer_vehicle_make', value)}
                 model={form.watch('customer_vehicle_model')}
                 setModel={(value) => form.setValue('customer_vehicle_model', value)}
-                year={form.watch('customer_vehicle_year')}
-                setYear={(value) => form.setValue('customer_vehicle_year', value)}
+                year={Number(form.watch('customer_vehicle_year'))}
+                setYear={(value) => form.setValue('customer_vehicle_year', Number(value))}
                 vin={form.watch('customer_vehicle_vin')}
                 setVin={(value) => form.setValue('customer_vehicle_vin', value)}
                 color={form.watch('customer_vehicle_color')}
@@ -195,8 +195,8 @@ export function EditInvoiceForm({ form, onSubmit, isPending, invoiceId }: EditIn
                 setTrim={(value) => form.setValue('customer_vehicle_trim', value)}
                 bodyClass={form.watch('customer_vehicle_body_class')}
                 setBodyClass={(value) => form.setValue('customer_vehicle_body_class', value)}
-                doors={form.watch('customer_vehicle_doors')}
-                setDoors={(value) => form.setValue('customer_vehicle_doors', value)}
+                doors={Number(form.watch('customer_vehicle_doors'))}
+                setDoors={(value) => form.setValue('customer_vehicle_doors', Number(value))}
                 licensePlate={form.watch('customer_vehicle_license_plate')}
                 setLicensePlate={(value) => form.setValue('customer_vehicle_license_plate', value)}
               />

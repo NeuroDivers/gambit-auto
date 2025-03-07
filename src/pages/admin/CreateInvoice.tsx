@@ -271,7 +271,10 @@ export default function CreateInvoice() {
                   <CardTitle>Invoice Details</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6 space-y-4">
-                  <InvoiceStatusField form={form} defaultValue={form.watch('status')} />
+                  <InvoiceStatusField 
+                    value={form.watch('status')}
+                    onChange={(value) => form.setValue('status', value)}
+                  />
                   
                   <FormField
                     control={form.control}
@@ -353,20 +356,20 @@ export default function CreateInvoice() {
                 </CardHeader>
                 <CardContent className="pt-6">
                   <VehicleInfoFields
-                    vehicleMake={vehicleMake}
-                    setVehicleMake={setVehicleMake}
-                    vehicleModel={vehicleModel}
-                    setVehicleModel={setVehicleModel}
-                    vehicleYear={vehicleYear}
-                    setVehicleYear={setVehicleYear}
-                    vehicleVin={vehicleVin}
-                    setVehicleVin={setVehicleVin}
-                    vehicleBodyClass={vehicleBodyClass}
-                    setVehicleBodyClass={setVehicleBodyClass}
-                    vehicleDoors={vehicleDoors}
-                    setVehicleDoors={setVehicleDoors}
-                    vehicleTrim={vehicleTrim}
-                    setVehicleTrim={setVehicleTrim}
+                    make={vehicleMake}
+                    setMake={setVehicleMake}
+                    model={vehicleModel}
+                    setModel={setVehicleModel}
+                    year={vehicleYear}
+                    setYear={(value) => setVehicleYear(typeof value === 'string' ? parseInt(value) : value)}
+                    vin={vehicleVin}
+                    setVin={setVehicleVin}
+                    bodyClass={vehicleBodyClass}
+                    setBodyClass={setVehicleBodyClass}
+                    doors={vehicleDoors}
+                    setDoors={(value) => setVehicleDoors(typeof value === 'string' ? parseInt(value) : value)}
+                    trim={vehicleTrim}
+                    setTrim={setVehicleTrim}
                     customerId={selectedCustomerId}
                   />
                   
@@ -420,7 +423,10 @@ export default function CreateInvoice() {
                   <CardTitle>Notes</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  <InvoiceNotesField form={form} />
+                  <InvoiceNotesField 
+                    value={form.watch('notes')}
+                    onChange={(value) => form.setValue('notes', value)}
+                  />
                 </CardContent>
               </Card>
             </div>
