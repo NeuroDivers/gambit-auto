@@ -1,4 +1,5 @@
 
+// Update the 'profiles' and add 'work_order_services' to WorkOrder interface
 import { CustomerVehicleInfo, CustomerVehicleRecordInfo } from "@/types/shared-types";
 
 export interface WorkOrder extends CustomerVehicleRecordInfo {
@@ -29,7 +30,7 @@ export interface WorkOrder extends CustomerVehicleRecordInfo {
     first_name: string | null;
     last_name: string | null;
   };
-  // Work order services relationship
+  // Adding work_order_services relationship
   work_order_services?: Array<{
     id: string;
     service_id: string;

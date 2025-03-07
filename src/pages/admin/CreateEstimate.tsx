@@ -57,7 +57,6 @@ const estimateSchema = z.object({
   end_time: z.date().nullable(),
   assigned_bay_id: z.string().nullable(),
   client_id: z.string().optional(),
-  start_time: z.date().nullable(),
   service_items: z.array(z.object({
     service_id: z.string(),
     service_name: z.string(),
@@ -136,7 +135,9 @@ export default function CreateEstimate() {
       customer_city: "",
       customer_state_province: "",
       customer_postal_code: "",
-      customer_country: ""
+      customer_country: "",
+      notes: '',
+      status: 'draft'
     }
   })
 
@@ -338,7 +339,7 @@ export default function CreateEstimate() {
   const handleCustomerSelect = async (customerId: string) => {
     if (!customerId) return;
 
-    form.setValue("client_id", customerId);
+    form.setValue("client_id" as any, selectedClient.id);
 
     supabase
       .from("customers")

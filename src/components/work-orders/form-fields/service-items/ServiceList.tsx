@@ -1,17 +1,16 @@
-
 import React from 'react';
 import { ServiceItem } from './ServiceItem';
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { ServiceItemType } from "@/types/service-item";
-import { ServiceType } from "@/components/shared/form-fields/service-selection/types";
+import { ServicesByType } from "@/components/shared/form-fields/service-selection/types";
 
 interface ServiceListProps {
   workOrderServices: ServiceItemType[];
   onAddService: (service: ServiceItemType) => void;
   onRemoveService: (index: number) => void;
   onUpdateService: (index: number, service: ServiceItemType) => void;
-  availableServices: ServiceType[];
+  availableServices: ServicesByType[];
 }
 
 export function ServiceList({

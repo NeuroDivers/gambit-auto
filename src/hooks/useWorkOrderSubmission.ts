@@ -1,4 +1,3 @@
-
 import { useMutation } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { WorkOrderFormValues } from "@/components/work-orders/types"
@@ -108,7 +107,7 @@ export function useWorkOrderSubmission() {
         scheduling: {
           start_time: startTime || '',
           end_time: endTime || '',
-          estimated_duration: values.estimated_duration || 60
+          estimated_duration: values.estimated_duration ? Number(values.estimated_duration) : null
         },
         details: {
           status: 'pending',

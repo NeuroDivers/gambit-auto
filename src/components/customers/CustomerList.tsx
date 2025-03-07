@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -29,7 +28,6 @@ export function CustomerList() {
   const [totalCustomers, setTotalCustomers] = useState(0)
   const PAGE_SIZE = 10
   
-  // Fetch total count for pagination
   useEffect(() => {
     const fetchTotalCount = async () => {
       try {
@@ -59,12 +57,10 @@ export function CustomerList() {
     queryKey: ['customers', page, PAGE_SIZE],
     queryFn: async () => {
       console.log(`Fetching customers for page ${page}`)
-      // Calculate offset
       const from = (page - 1) * PAGE_SIZE
       const to = from + PAGE_SIZE - 1
       
       try {
-        // Fetch customers with pagination
         const { data: customersData, error } = await supabase
           .from('customers')
           .select(`
@@ -90,7 +86,6 @@ export function CustomerList() {
           return []
         }
         
-        // For customers with profile_id, fetch profile data
         const customersWithProfiles = await Promise.all(customersData.map(async (customer) => {
           const customerWithProfile: Partial<Customer> = { ...customer };
           
@@ -102,10 +97,8 @@ export function CustomerList() {
               .maybeSingle()
             
             if (profileData) {
-              // Create a profile property
               customerWithProfile.profile = profileData
               
-              // Use profile data if customer fields are empty
               if (!customer.customer_first_name) customerWithProfile.customer_first_name = profileData.first_name || ''
               if (!customer.customer_last_name) customerWithProfile.customer_last_name = profileData.last_name || ''
               if (!customer.customer_email) customerWithProfile.customer_email = profileData.email || ''
@@ -113,7 +106,6 @@ export function CustomerList() {
             }
           }
           
-          // Fetch customer statistics
           let totalSpent = 0
           let totalInvoices = 0
           let lastInvoiceDate = null
@@ -161,7 +153,6 @@ export function CustomerList() {
     )
   }) || []
 
-  // Handle page changes
   const goToPage = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage)
@@ -169,34 +160,28 @@ export function CustomerList() {
     }
   }
 
-  // Generate page numbers to display
   const getPageNumbers = () => {
     const pageNumbers = []
     const maxPagesToShow = 5
     
     if (totalPages <= maxPagesToShow) {
-      // Show all pages if total pages are less than max
       for (let i = 1; i <= totalPages; i++) {
         pageNumbers.push(i)
       }
     } else {
-      // Always include first page, last page, and pages around current page
       if (page <= 3) {
-        // Near the start
         for (let i = 1; i <= 4; i++) {
           pageNumbers.push(i)
         }
         pageNumbers.push('ellipsis')
         pageNumbers.push(totalPages)
       } else if (page >= totalPages - 2) {
-        // Near the end
         pageNumbers.push(1)
         pageNumbers.push('ellipsis')
         for (let i = totalPages - 3; i <= totalPages; i++) {
           pageNumbers.push(i)
         }
       } else {
-        // Middle
         pageNumbers.push(1)
         pageNumbers.push('ellipsis')
         pageNumbers.push(page - 1)
@@ -267,7 +252,7 @@ export function CustomerList() {
                       <td className="py-3">
                         <div>{customer.customer_email}</div>
                         <div className="text-sm text-muted-foreground">
-                          {customer.phone_number || "No phone"}
+                          {customer.customer_phone}
                         </div>
                       </td>
                       <td className="py-3">
@@ -303,7 +288,6 @@ export function CustomerList() {
               </table>
             </div>
             
-            {/* Pagination */}
             <div className="mt-6 flex justify-between items-center">
               <div className="text-sm text-muted-foreground">
                 Showing {filteredCustomers.length} of {totalCustomers} customers

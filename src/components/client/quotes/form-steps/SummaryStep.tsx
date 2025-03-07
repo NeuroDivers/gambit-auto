@@ -1,212 +1,160 @@
+import { UseFormReturn } from 'react-hook-form';
+import { ServiceFormData, ServiceItemType } from '@/types/service-item';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { formatCurrency } from '@/lib/utils';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useQuoteFormContext } from "../providers/QuoteFormProvider"
-import { Separator } from "@/components/ui/separator"
-import { CheckCircle2, Car, FileText, DollarSign } from "lucide-react"
-import { useState, useEffect } from "react"
-import { supabase } from "@/integrations/supabase/client"
-import { ServiceItemType } from "@/types/service-item"
+interface SummaryStepProps {
+  form: UseFormReturn<ServiceFormData>;
+  services: ServiceItemType[];
+}
 
-export function SummaryStep() {
-  const { formData } = useQuoteFormContext()
-  const [services, setServices] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [totalEstimate, setTotalEstimate] = useState(0)
-
-  useEffect(() => {
-    const fetchServices = async () => {
-      setIsLoading(true)
-      
-      try {
-        // Convert service_items to an array of service_ids
-        const serviceIds = formData.service_items?.map(service => {
-          if (typeof service === 'string') {
-            return service;
-          }
-          return (service as ServiceItemType).service_id;
-        }).filter(Boolean) || []
-        
-        if (serviceIds.length === 0) {
-          setServices([])
-          setIsLoading(false)
-          return
-        }
-        
-        const { data, error } = await supabase
-          .from('service_types')
-          .select('id, name, base_price, description')
-          .in('id', serviceIds)
-        
-        if (error) {
-          console.error('Error fetching services:', error)
-          throw error
-        }
-        
-        // Map the services with quantity from formData
-        const servicesWithQuantity = data.map(service => {
-          const serviceItem = formData.service_items?.find(item => {
-            if (typeof item === 'string') {
-              return item === service.id;
-            }
-            return (item as ServiceItemType).service_id === service.id;
-          })
-          
-          const quantity = typeof serviceItem === 'string' 
-            ? 1 
-            : (serviceItem as ServiceItemType)?.quantity || 1
-            
-          const unitPrice = typeof serviceItem === 'string'
-            ? service.base_price
-            : (serviceItem as ServiceItemType)?.unit_price || service.base_price
-            
-          return {
-            ...service,
-            quantity,
-            unitPrice,
-            total: quantity * unitPrice
-          }
-        })
-        
-        setServices(servicesWithQuantity)
-        
-        // Calculate total estimate
-        const total = servicesWithQuantity.reduce((sum, service) => sum + service.total, 0)
-        setTotalEstimate(total)
-      } catch (error) {
-        console.error('Error in fetchServices:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    
-    fetchServices()
-  }, [formData.service_items])
+export function SummaryStep({ form, services }: SummaryStepProps) {
+  const { getValues } = form;
+  const formValues = getValues();
+  const vehicleInfo = formValues.vehicleInfo;
+  
+  // Calculate total price
+  const totalPrice = services.reduce((total, service) => {
+    return total + (service.unit_price * service.quantity);
+  }, 0);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold mb-2">Quote Request Summary</h2>
-        <p className="text-muted-foreground">
-          Review your quote request details before submitting
-        </p>
-      </div>
-      
-      <Separator />
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <Car className="h-5 w-5 text-primary" />
-              <span>Vehicle Information</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {formData.vehicleInfo ? (
-              <dl className="grid grid-cols-2 gap-y-3">
-                <dt className="font-medium text-muted-foreground">Make:</dt>
-                <dd>{formData.vehicleInfo.make}</dd>
-                
-                <dt className="font-medium text-muted-foreground">Model:</dt>
-                <dd>{formData.vehicleInfo.model}</dd>
-                
-                <dt className="font-medium text-muted-foreground">Year:</dt>
-                <dd>{formData.vehicleInfo.year}</dd>
-                
-                {formData.vehicleInfo.vin && (
-                  <>
-                    <dt className="font-medium text-muted-foreground">VIN:</dt>
-                    <dd className="break-all">{formData.vehicleInfo.vin}</dd>
-                  </>
-                )}
-                
-                {formData.vehicleInfo.color && (
-                  <>
-                    <dt className="font-medium text-muted-foreground">Color:</dt>
-                    <dd>{formData.vehicleInfo.color}</dd>
-                  </>
-                )}
-              </dl>
-            ) : (
-              <p className="text-muted-foreground">No vehicle information provided</p>
-            )}
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-primary" />
-              <span>Service Details</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Review Your Quote Request</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Vehicle Information */}
+          <div className="space-y-3">
+            <h3 className="font-medium text-sm">Vehicle Information</h3>
+            <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <h4 className="text-sm font-semibold mb-2">Service Type</h4>
-                <p>{formData.service_type || "Not specified"}</p>
+                <p className="text-muted-foreground">Make</p>
+                <p className="font-medium">{vehicleInfo?.make || 'Not specified'}</p>
               </div>
-              
-              {formData.description && (
+              <div>
+                <p className="text-muted-foreground">Model</p>
+                <p className="font-medium">{vehicleInfo?.model || 'Not specified'}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Year</p>
+                <p className="font-medium">{vehicleInfo?.year || 'Not specified'}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">VIN</p>
+                <p className="font-medium">{vehicleInfo?.vin || 'Not specified'}</p>
+              </div>
+              {vehicleInfo?.color && (
                 <div>
-                  <h4 className="text-sm font-semibold mb-2">Additional Information</h4>
-                  <p className="text-sm whitespace-pre-wrap">{formData.description}</p>
+                  <p className="text-muted-foreground">Color</p>
+                  <p className="font-medium">{vehicleInfo.color}</p>
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" />
-            <span>Requested Services</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p>Loading services...</p>
-          ) : services.length > 0 ? (
-            <div className="space-y-4">
-              <div className="divide-y">
-                {services.map(service => (
-                  <div key={service.id} className="py-3 grid grid-cols-12 gap-2">
-                    <div className="col-span-6 md:col-span-7">
-                      <p className="font-medium">{service.name}</p>
-                      {service.description && (
-                        <p className="text-sm text-muted-foreground mt-1">{service.description}</p>
-                      )}
+          </div>
+          
+          <Separator />
+          
+          {/* Services */}
+          <div className="space-y-3">
+            <h3 className="font-medium text-sm">Requested Services</h3>
+            {services.length > 0 ? (
+              <div className="space-y-3">
+                {services.map((service, index) => (
+                  <div key={index} className="border rounded-md p-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="bg-primary/10 text-primary">
+                            {index + 1}
+                          </Badge>
+                          <h4 className="font-medium">{service.service_name}</h4>
+                        </div>
+                        {service.description && (
+                          <p className="text-sm text-muted-foreground mt-1">{service.description}</p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">{formatCurrency(service.unit_price * service.quantity)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {service.quantity} × {formatCurrency(service.unit_price)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="col-span-2 md:col-span-1 text-right">
-                      <p>x{service.quantity}</p>
-                    </div>
-                    <div className="col-span-4 md:col-span-4 text-right">
-                      <p className="font-medium">${service.total.toFixed(2)}</p>
-                      <p className="text-xs text-muted-foreground">${service.unitPrice.toFixed(2)} each</p>
-                    </div>
+                    
+                    {/* Sub-services if any */}
+                    {service.sub_services && service.sub_services.length > 0 && (
+                      <div className="mt-3 pl-6 border-l space-y-2">
+                        {service.sub_services.map((subService, subIndex) => (
+                          <div key={subIndex} className="flex justify-between items-center text-sm">
+                            <div>
+                              <p>{subService.service_name}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-medium">{formatCurrency(subService.unit_price * subService.quantity)}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {subService.quantity} × {formatCurrency(subService.unit_price)}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
-              </div>
-              
-              <div className="pt-3 border-t flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-primary" />
-                  <span className="font-medium">Estimated Total</span>
+                
+                <div className="flex justify-between items-center pt-2 font-medium">
+                  <p>Estimated Total</p>
+                  <p>{formatCurrency(totalPrice)}</p>
                 </div>
-                <p className="text-lg font-bold">${totalEstimate.toFixed(2)}</p>
               </div>
-              
-              <p className="text-sm text-muted-foreground italic">
-                * This is an estimate only. Final pricing will be confirmed after review.
-              </p>
-            </div>
-          ) : (
-            <p className="text-muted-foreground">No services selected</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">No services selected</p>
+            )}
+          </div>
+          
+          <Separator />
+          
+          {/* Additional Notes */}
+          <div className="space-y-3">
+            <h3 className="font-medium text-sm">Additional Notes</h3>
+            <p className="text-sm">
+              {formValues.description || 'No additional notes provided.'}
+            </p>
+          </div>
+          
+          {/* Images if any */}
+          {formValues.images && formValues.images.length > 0 && (
+            <>
+              <Separator />
+              <div className="space-y-3">
+                <h3 className="font-medium text-sm">Uploaded Images</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {formValues.images.map((image, index) => (
+                    <div key={index} className="relative aspect-square rounded-md overflow-hidden border">
+                      <img 
+                        src={image} 
+                        alt={`Uploaded image ${index + 1}`} 
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
+      
+      <div className="bg-muted/50 rounded-lg p-4 text-sm">
+        <p className="text-muted-foreground">
+          By submitting this request, our team will review your information and provide you with a detailed quote. 
+          We may contact you for additional details if needed.
+        </p>
+      </div>
     </div>
-  )
+  );
 }

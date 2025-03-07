@@ -1,101 +1,192 @@
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { PlusIcon, Trash2Icon } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
-import { useQuery } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Badge } from "@/components/ui/badge"
-import { InfoIcon } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
-
-type StaffSkillsProps = {
-  profileId: string;
+interface Skill {
+  id: string;
+  name: string;
 }
 
-export function StaffSkills({ profileId }: StaffSkillsProps) {
-  const { data: skills, isLoading } = useQuery({
-    queryKey: ["staff-skills", profileId],
+export function StaffSkills({ profileId }: { profileId: string }) {
+  const [newSkill, setNewSkill] = useState("");
+  const queryClient = useQueryClient();
+
+  const { data: staffSkills, isLoading: isLoadingStaffSkills, refetch: refetchStaffSkills } = useQuery({
+    queryKey: ["staffSkills", profileId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("staff_service_skills")
-        .select(`
-          id,
-          service_id,
-          is_active,
-          service_types:service_id(id, name, description)
-        `)
-        .eq("profile_id", profileId)
-        .order("is_active", { ascending: false })
-      
-      if (error) {
-        console.error("Error fetching staff skills:", error)
-        throw error
-      }
-      
-      return data
-    },
-    enabled: !!profileId,
-  })
+        .from("staff_skills")
+        .select("skill_id")
+        .eq("profile_id", profileId);
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Skills & Services</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-8 w-full" />
-          </div>
-        </CardContent>
-      </Card>
-    )
+      if (error) {
+        console.error("Error fetching staff skills:", error);
+        throw error;
+      }
+
+      return data?.map(item => item.skill_id) || [];
+    },
+  });
+
+  const { data: serviceTypes = [], isLoading: isLoadingServiceTypes } = useQuery({
+    queryKey: ["serviceTypes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_types")
+        .select("id, name, description");
+
+      if (error) {
+        console.error("Error fetching service types:", error);
+        throw error;
+      }
+
+      return data || [];
+    },
+  });
+
+  const addSkillMutation = useMutation({
+    mutationFn: async (skillId: string) => {
+      const { error } = await supabase
+        .from("staff_skills")
+        .insert([{ profile_id: profileId, skill_id: skillId }]);
+
+      if (error) {
+        console.error("Error adding skill:", error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Skill added successfully!");
+      queryClient.invalidateQueries({ queryKey: ["staffSkills", profileId] });
+      setNewSkill("");
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to add skill: ${error.message}`);
+    },
+  });
+
+  const removeSkillMutation = useMutation({
+    mutationFn: async (skillId: string) => {
+      const { error } = await supabase
+        .from("staff_skills")
+        .delete()
+        .eq("profile_id", profileId)
+        .eq("skill_id", skillId);
+
+      if (error) {
+        console.error("Error removing skill:", error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Skill removed successfully!");
+      queryClient.invalidateQueries({ queryKey: ["staffSkills", profileId] });
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to remove skill: ${error.message}`);
+    },
+  });
+
+  const handleAddSkill = async () => {
+    if (!newSkill.trim()) return;
+    try {
+      await addSkillMutation.mutateAsync(newSkill);
+    } catch (error) {
+      console.error("Error adding skill:", error);
+    }
+  };
+
+  const handleRemoveSkill = async (skillId: string) => {
+    try {
+      await removeSkillMutation.mutateAsync(skillId);
+    } catch (error) {
+      console.error("Error removing skill:", error);
+    }
+  };
+
+  if (isLoadingStaffSkills || isLoadingServiceTypes) {
+    return <div>Loading...</div>;
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle>Skills & Services</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {skills && skills.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            {skills.map((skill) => (
-              <TooltipProvider key={skill.id}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge 
-                      variant={skill.is_active ? "outline" : "secondary"}
-                      className={`
-                        ${skill.is_active 
-                          ? "bg-primary/10 hover:bg-primary/20 text-primary border-primary/20" 
-                          : "opacity-60"}
-                        cursor-default px-3 py-1.5
-                      `}
-                    >
-                      {skill.service_types?.name || "Unknown Service"}
-                      {!skill.is_active && " (Inactive)"}
-                    </Badge>
-                  </TooltipTrigger>
-                  {skill.service_types?.description && (
-                    <TooltipContent className="max-w-xs">
-                      <div className="flex gap-2 items-start">
-                        <InfoIcon className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                        <p className="text-sm">{skill.service_types.description}</p>
-                      </div>
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-4 text-muted-foreground">
-            <p>No services assigned to this staff member yet.</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">Skills</h3>
+      <Table>
+        <TableCaption>A list of skills assigned to this staff member.</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[100px]">Skill</TableHead>
+            <TableHead>Description</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {staffSkills?.map((skillId) => {
+            const service = serviceTypes.find(s => s.id === skillId);
+            return (
+              <TableRow key={skillId}>
+                <TableCell className="font-medium">{serviceTypes.find(s => s.id === service.id)?.name}</TableCell>
+                <TableCell>{serviceTypes.find(s => s.id === service.id)?.description}</TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveSkill(skillId)}
+                  >
+                    <Trash2Icon className="h-4 w-4 mr-2" />
+                    Remove
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell colSpan={3}>
+              <div className="flex items-center space-x-2">
+                <Select onValueChange={setNewSkill}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select a skill" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {serviceTypes.map((service) => (
+                      <SelectItem key={service.id} value={service.id}>
+                        {service.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleAddSkill} disabled={addSkillMutation.isLoading}>
+                  <PlusIcon className="h-4 w-4 mr-2" />
+                  Add Skill
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        </TableFooter>
+      </Table>
+    </div>
+  );
 }

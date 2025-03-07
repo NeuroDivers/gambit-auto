@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -161,7 +160,7 @@ export function StaffCommissionRates({ profileId }: { profileId: string }) {
             <TableBody>
               {commissionRates?.map((commission) => (
                 <TableRow key={commission.id}>
-                  <TableCell>{commission.service_types?.name || "Unknown Service"}</TableCell>
+                  <TableCell>{serviceTypes.find(s => s.id === commission.service_id)?.name || "Unknown Service"}</TableCell>
                   <TableCell>{commission.rate}</TableCell>
                   <TableCell className="capitalize">{commission.type}</TableCell>
                   <TableCell className="text-right">

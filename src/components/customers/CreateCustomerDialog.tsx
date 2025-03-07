@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -184,7 +183,7 @@ export function CreateCustomerDialog({ open, onOpenChange }: CreateCustomerDialo
             
             <FormField
               control={form.control}
-              name="customer_phone_number"
+              name="customer_phone"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Phone Number</FormLabel>

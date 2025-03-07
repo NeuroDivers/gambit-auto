@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -159,7 +158,7 @@ export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps
               </div>
 
               <div className="pt-2 text-sm">
-                Estimated Commission: $
+                Estimated Commission: {item.commission_type === 'flat' ? '$' : '%'}
                 {calculateCommissionAmount(
                   item.commission_rate,
                   item.commission_type,

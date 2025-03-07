@@ -5,7 +5,7 @@ import { VehicleInfoStep } from './form-steps/VehicleInfoStep'
 import { ServiceDetailsStep } from './form-steps/ServiceDetailsStep'
 import { SummaryStep } from './form-steps/SummaryStep'
 import { FormNavigation } from './form-steps/FormNavigation'
-import { useQuoteRequestSubmission } from '@/hooks/quote-request/useQuoteRequestSubmission'
+import { useQuoteRequestForm, QuoteRequestFormContextType } from '@/hooks/quote-request/useQuoteRequestForm'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -15,6 +15,8 @@ interface Props {
 }
 
 export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
+  const quoteRequestForm = useQuoteRequestForm();
+  
   const {
     form,
     step,
@@ -29,9 +31,9 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
     handleImageRemove,
     onVehicleSave,
     selectedServiceId
-  } = useQuoteRequestSubmission()
+  } = quoteRequestForm;
 
-  const progress = (step / totalSteps) * 100
+  const progress = (step / totalSteps) * 100;
 
   return (
     <Card className="border-none shadow-none bg-transparent">
@@ -61,7 +63,7 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
                     form={form} 
                     onVehicleSave={onVehicleSave} 
                   />
-                  <ServiceSelectionForm services={services || []} />
+                  <ServiceSelectionForm services={services} />
                 </motion.div>
               )}
 
@@ -73,7 +75,7 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
                 >
                   <ServiceDetailsStep
                     form={form}
-                    services={services || []}
+                    services={services}
                     serviceId={selectedServiceId}
                     onImageUpload={handleImageUpload}
                     onImageRemove={handleImageRemove}
@@ -89,7 +91,7 @@ export function MultiStepQuoteRequestForm({ onSuccess }: Props) {
                 >
                   <SummaryStep 
                     form={form} 
-                    services={services || []} 
+                    services={services} 
                   />
                 </motion.div>
               )}

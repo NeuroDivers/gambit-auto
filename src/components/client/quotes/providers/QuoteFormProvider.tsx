@@ -1,67 +1,22 @@
 
-import { ReactNode, createContext, useContext, useState } from "react";
-import { ServiceFormData } from "@/types/service-item";
+import React, { createContext, ReactNode } from 'react';
+import { ServiceFormData } from '@/types/service-item';
 
-type QuoteFormContextType = {
-  formData: ServiceFormData;
-  updateFormData: (data: Partial<ServiceFormData>) => void;
-  currentStep: number;
-  setCurrentStep: (step: number) => void;
-  resetForm: () => void;
-};
+interface QuoteFormContextProps {
+  onSubmit: (data: ServiceFormData) => void;
+  children: ReactNode;
+}
 
-const defaultFormData: ServiceFormData = {
-  service_type: "",
-  service_items: [],
-  description: "",
-  service_details: {},
-  vehicleInfo: {
-    make: "",
-    model: "",
-    year: 0,
-    vin: "",
-    color: "",
-    saveToAccount: false,
-  },
-};
+export const QuoteFormContext = createContext<{
+  onSubmit: (data: ServiceFormData) => void;
+}>({
+  onSubmit: () => {},
+});
 
-const QuoteFormContext = createContext<QuoteFormContextType | undefined>(undefined);
-
-export function QuoteFormProvider({ children }: { children: ReactNode }) {
-  const [formData, setFormData] = useState<ServiceFormData>(defaultFormData);
-  const [currentStep, setCurrentStep] = useState(0);
-
-  const updateFormData = (data: Partial<ServiceFormData>) => {
-    setFormData((prev) => ({
-      ...prev,
-      ...data,
-    }));
-  };
-
-  const resetForm = () => {
-    setFormData(defaultFormData);
-    setCurrentStep(0);
-  };
-
+export function QuoteFormProvider({ children, onSubmit }: QuoteFormContextProps) {
   return (
-    <QuoteFormContext.Provider
-      value={{
-        formData,
-        updateFormData,
-        currentStep,
-        setCurrentStep,
-        resetForm,
-      }}
-    >
+    <QuoteFormContext.Provider value={{ onSubmit }}>
       {children}
     </QuoteFormContext.Provider>
   );
-}
-
-export function useQuoteFormContext() {
-  const context = useContext(QuoteFormContext);
-  if (context === undefined) {
-    throw new Error("useQuoteFormContext must be used within a QuoteFormProvider");
-  }
-  return context;
 }

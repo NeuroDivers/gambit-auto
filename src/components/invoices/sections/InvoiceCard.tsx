@@ -1,5 +1,3 @@
-
-// Update just the necessary parts
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,22 +17,13 @@ interface InvoiceCardProps {
 
 export function InvoiceCard({ invoice }: InvoiceCardProps) {
   const [showDetails, setShowDetails] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const printRef = useRef<HTMLDivElement>(null);
 
-  const handlePrint = useReactToPrint({
-    documentTitle: `Invoice-${invoice.invoice_number || "draft"}`,
-    onAfterPrint: () => toast({
-      title: "Success",
-      description: "Invoice printed successfully",
-    }),
-    onPrintError: () => toast({
-      title: "Error",
-      description: "Failed to print invoice",
-      variant: "destructive",
-    }),
-    pageStyle: "@page { size: auto; margin: 20mm; }",
-    content: () => printRef.current,
+  const { handlePrint, printRef: contentRef } = useReactToPrint({
+    documentTitle: `Invoice-${invoice?.invoice_number || 'unknown'}`,
+    contentRef,
   });
 
   return (
@@ -91,11 +80,15 @@ export function InvoiceCard({ invoice }: InvoiceCardProps) {
             <Button
               variant="outline"
               size="sm"
-              onClick={handlePrint}
-              className="flex gap-1 items-center"
+              className="text-xs h-8 px-2 md:text-sm"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handlePrint();
+              }}
             >
               <Download className="h-3.5 w-3.5" />
-              <span className="hidden md:inline">Print</span>
+              <span>Print</span>
             </Button>
             <Button
               size="sm"
@@ -111,8 +104,9 @@ export function InvoiceCard({ invoice }: InvoiceCardProps) {
 
       <InvoiceDialog
         invoiceId={invoice.id}
-        open={showDetails}
-        onOpenChange={setShowDetails}
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
       />
 
       <div className="hidden">
