@@ -73,10 +73,10 @@ export function useWorkOrderListData() {
         query = query.order("created_at", { ascending: true });
         break;
       case "start_asc":
-        query = query.order("start_time", { ascending: true, nullsLast: true });
+        query = query.order("start_time", { ascending: true });
         break;
       case "start_desc":
-        query = query.order("start_time", { ascending: false, nullsFirst: true });
+        query = query.order("start_time", { ascending: false });
         break;
       default:
         query = query.order("created_at", { ascending: false });

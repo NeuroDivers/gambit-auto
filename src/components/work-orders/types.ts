@@ -1,4 +1,3 @@
-
 // Update the 'profiles' and add 'work_order_services' to WorkOrder interface
 import { CustomerVehicleInfo, CustomerVehicleRecordInfo } from "@/types/shared-types";
 
@@ -93,7 +92,6 @@ export interface ServiceItemType {
   assigned_profile_id?: string | null;
   description?: string;
   sub_services?: ServiceItemType[];
-  is_parent?: boolean;
   parent_id?: string;
   package_id?: string | null;
 }
