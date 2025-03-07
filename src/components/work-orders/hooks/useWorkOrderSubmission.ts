@@ -127,7 +127,6 @@ export function useWorkOrderSubmission() {
             commission_rate: service.commission_rate,
             commission_type: service.commission_type,
             assigned_profile_id: service.assigned_profile_id,
-            // Removed the is_parent field as it doesn't exist in the schema
           });
           
           // Then add all sub-services with reference to their parent
