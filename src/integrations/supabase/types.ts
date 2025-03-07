@@ -944,6 +944,27 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "estimates_customers_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "client_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estimates_customers_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "estimates_customers_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "estimates_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
@@ -963,27 +984,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["customer_email"]
-          },
-          {
-            foreignKeyName: "quotes_client_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "client_statistics"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quotes_client_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customer_profiles"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "quotes_client_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
           },
         ]
       }

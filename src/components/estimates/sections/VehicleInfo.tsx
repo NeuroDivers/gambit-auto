@@ -23,6 +23,9 @@ export function VehicleInfo({ vehicle }) {
   const color = vehicle.color || vehicle.customer_vehicle_color
   const vin = vehicle.vin || vehicle.customer_vehicle_vin
   const licensePlate = vehicle.license_plate || vehicle.customer_vehicle_license_plate
+  const trim = vehicle.trim || vehicle.customer_vehicle_trim
+  const doors = vehicle.doors || vehicle.customer_vehicle_doors
+  const bodyClass = vehicle.body_class || vehicle.customer_vehicle_body_class
 
   return (
     <Card>
@@ -33,9 +36,24 @@ export function VehicleInfo({ vehicle }) {
         <p className="text-lg font-medium">
           {year} {make} {model}
         </p>
+        {trim && (
+          <p className="text-sm text-muted-foreground">
+            Trim: {trim}
+          </p>
+        )}
         {color && (
           <p className="text-sm text-muted-foreground">
             Color: {color}
+          </p>
+        )}
+        {bodyClass && (
+          <p className="text-sm text-muted-foreground">
+            Body Style: {bodyClass}
+          </p>
+        )}
+        {doors && (
+          <p className="text-sm text-muted-foreground">
+            Doors: {doors}
           </p>
         )}
         {vin && (
