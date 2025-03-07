@@ -1,3 +1,4 @@
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+
 type CustomerInfoFieldsProps = {
   customerFirstName: string;
   setCustomerFirstName: (value: string) => void;
@@ -36,6 +39,7 @@ type CustomerInfoFieldsProps = {
   clientIdField?: string;
   setClientId?: (value: string) => void;
 };
+
 export function CustomerInfoFields({
   customerFirstName,
   setCustomerFirstName,
@@ -66,6 +70,8 @@ export function CustomerInfoFields({
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  
   const {
     data: customersList,
     isLoading
@@ -87,6 +93,7 @@ export function CustomerInfoFields({
       return data || [];
     }
   });
+  
   const handleCustomerSelect = async (customerId: string) => {
     setSelectedCustomerId(customerId);
     const selectedCustomer = customersList?.find(c => c.id === customerId);
@@ -141,11 +148,67 @@ export function CustomerInfoFields({
         console.error('Error in vehicle fetch process:', error);
       }
     }
-    setOpen(false);
+    setDialogOpen(false);
   };
+  
   const filteredCustomers = customersList?.filter(customer => !searchQuery || `${customer.customer_first_name} ${customer.customer_last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) || customer.customer_email?.toLowerCase().includes(searchQuery.toLowerCase()) || customer.customer_phone?.toLowerCase().includes(searchQuery.toLowerCase())) || [];
+  
   return <div className="space-y-4">
-      
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogTrigger asChild>
+          <Button type="button" variant="outline" className="mb-2 w-full sm:w-auto">
+            <Search className="h-4 w-4 mr-2" />
+            Select Existing Customer
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Select Customer</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Search className="w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search customers..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            
+            {isLoading ? (
+              <div className="text-center py-4">Loading customers...</div>
+            ) : (
+              <div className="grid gap-2">
+                {filteredCustomers && filteredCustomers.length > 0 ? (
+                  filteredCustomers.map((customer) => (
+                    <div
+                      key={customer.id}
+                      className="flex justify-between items-center p-3 border rounded-md hover:bg-muted cursor-pointer"
+                      onClick={() => handleCustomerSelect(customer.id)}
+                    >
+                      <div>
+                        <p className="font-medium">
+                          {customer.customer_first_name} {customer.customer_last_name}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {customer.customer_email}
+                        </p>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {customer.customer_phone}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">
+                    No customers found
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -171,44 +234,74 @@ export function CustomerInfoFields({
         </div>
       </div>
 
-      {customerStreetAddress !== undefined && setCustomerStreetAddress && <Card>
-          <CardContent className="p-4">
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-1">
-                  <Label htmlFor="customerStreetAddress">Street Address</Label>
-                  <Input id="customerStreetAddress" value={customerStreetAddress} onChange={e => setCustomerStreetAddress(e.target.value)} placeholder="Enter street address..." />
-                </div>
-                <div className="col-span-1">
-                  <Label htmlFor="customerUnitNumber">Unit Number</Label>
-                  <Input id="customerUnitNumber" value={customerUnitNumber} onChange={e => setCustomerUnitNumber && setCustomerUnitNumber(e.target.value)} placeholder="Enter unit number..." />
-                </div>
+      <Card>
+        <CardContent className="p-4">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-1">
+                <Label htmlFor="customerStreetAddress">Street Address</Label>
+                <Input 
+                  id="customerStreetAddress" 
+                  value={customerStreetAddress || ""} 
+                  onChange={e => setCustomerStreetAddress && setCustomerStreetAddress(e.target.value)} 
+                  placeholder="Enter street address..." 
+                />
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-1">
-                  <Label htmlFor="customerCity">City</Label>
-                  <Input id="customerCity" value={customerCity} onChange={e => setCustomerCity && setCustomerCity(e.target.value)} placeholder="Enter city..." />
-                </div>
-                <div className="col-span-1">
-                  <Label htmlFor="customerStateProvince">State/Province</Label>
-                  <Input id="customerStateProvince" value={customerStateProvince} onChange={e => setCustomerStateProvince && setCustomerStateProvince(e.target.value)} placeholder="Enter state/province..." />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-1">
-                  <Label htmlFor="customerPostalCode">Postal Code</Label>
-                  <Input id="customerPostalCode" value={customerPostalCode} onChange={e => setCustomerPostalCode && setCustomerPostalCode(e.target.value)} placeholder="Enter postal code..." />
-                </div>
-                <div className="col-span-1">
-                  <Label htmlFor="customerCountry">Country</Label>
-                  <Input id="customerCountry" value={customerCountry} onChange={e => setCustomerCountry && setCustomerCountry(e.target.value)} placeholder="Enter country..." />
-                </div>
+              <div className="col-span-1">
+                <Label htmlFor="customerUnitNumber">Unit Number</Label>
+                <Input 
+                  id="customerUnitNumber" 
+                  value={customerUnitNumber || ""} 
+                  onChange={e => setCustomerUnitNumber && setCustomerUnitNumber(e.target.value)} 
+                  placeholder="Enter unit number..." 
+                />
               </div>
             </div>
-          </CardContent>
-        </Card>}
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-1">
+                <Label htmlFor="customerCity">City</Label>
+                <Input 
+                  id="customerCity" 
+                  value={customerCity || ""} 
+                  onChange={e => setCustomerCity && setCustomerCity(e.target.value)} 
+                  placeholder="Enter city..." 
+                />
+              </div>
+              <div className="col-span-1">
+                <Label htmlFor="customerStateProvince">State/Province</Label>
+                <Input 
+                  id="customerStateProvince" 
+                  value={customerStateProvince || ""} 
+                  onChange={e => setCustomerStateProvince && setCustomerStateProvince(e.target.value)} 
+                  placeholder="Enter state/province..." 
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-1">
+                <Label htmlFor="customerPostalCode">Postal Code</Label>
+                <Input 
+                  id="customerPostalCode" 
+                  value={customerPostalCode || ""} 
+                  onChange={e => setCustomerPostalCode && setCustomerPostalCode(e.target.value)} 
+                  placeholder="Enter postal code..." 
+                />
+              </div>
+              <div className="col-span-1">
+                <Label htmlFor="customerCountry">Country</Label>
+                <Input 
+                  id="customerCountry" 
+                  value={customerCountry || ""} 
+                  onChange={e => setCustomerCountry && setCustomerCountry(e.target.value)} 
+                  placeholder="Enter country..." 
+                />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {setCustomerStreetAddress === undefined && setCustomerAddress && <div>
           <Label htmlFor="customerAddress">Address</Label>

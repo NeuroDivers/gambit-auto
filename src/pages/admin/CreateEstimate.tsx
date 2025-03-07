@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useForm, UseFormReturn } from "react-hook-form"
@@ -49,6 +48,8 @@ const estimateSchema = z.object({
   estimated_duration: z.number().nullable(),
   end_time: z.date().nullable(),
   assigned_bay_id: z.string().nullable(),
+  client_id: z.string().optional(),
+  start_time: z.date().nullable(),
   service_items: z.array(z.object({
     service_id: z.string(),
     service_name: z.string(),
@@ -92,9 +93,7 @@ const estimateSchema = z.object({
       parent_id: z.string().optional()
     })).optional(),
     is_parent: z.boolean().optional()
-  })).optional(),
-  client_id: z.string().optional(),
-  start_time: z.date().nullable()
+  })).optional()
 })
 
 export default function CreateEstimate() {
@@ -122,7 +121,14 @@ export default function CreateEstimate() {
       assigned_bay_id: null,
       service_items: [],
       total: 0,
-      services: []
+      services: [],
+      client_id: "",
+      customer_street_address: "",
+      customer_unit_number: "", 
+      customer_city: "",
+      customer_state_province: "",
+      customer_postal_code: "",
+      customer_country: ""
     }
   })
 
@@ -321,11 +327,11 @@ export default function CreateEstimate() {
     }
   }
 
-  const handleCustomerSelect = (customerId: string) => {
-    if (!customerId) return
+  const handleCustomerSelect = async (customerId: string) => {
+    if (!customerId) return;
 
     // Set the client_id in the form
-    form.setValue("client_id", customerId)
+    form.setValue("client_id", customerId);
 
     // Fetch customer data and populate the form
     supabase
@@ -335,24 +341,24 @@ export default function CreateEstimate() {
       .single()
       .then(({ data, error }) => {
         if (error) {
-          console.error("Error fetching customer:", error)
-          return
+          console.error("Error fetching customer:", error);
+          return;
         }
         
         if (data) {
-          form.setValue("customer_first_name", data.customer_first_name)
-          form.setValue("customer_last_name", data.customer_last_name)
-          form.setValue("customer_email", data.customer_email)
-          form.setValue("customer_phone", data.customer_phone || "")
-          form.setValue("customer_street_address", data.customer_street_address || "")
-          form.setValue("customer_unit_number", data.customer_unit_number || "")
-          form.setValue("customer_city", data.customer_city || "")
-          form.setValue("customer_state_province", data.customer_state_province || "")
-          form.setValue("customer_postal_code", data.customer_postal_code || "")
-          form.setValue("customer_country", data.customer_country || "")
+          form.setValue("customer_first_name", data.customer_first_name);
+          form.setValue("customer_last_name", data.customer_last_name);
+          form.setValue("customer_email", data.customer_email);
+          form.setValue("customer_phone", data.customer_phone || "");
+          form.setValue("customer_street_address", data.customer_street_address || "");
+          form.setValue("customer_unit_number", data.customer_unit_number || "");
+          form.setValue("customer_city", data.customer_city || "");
+          form.setValue("customer_state_province", data.customer_state_province || "");
+          form.setValue("customer_postal_code", data.customer_postal_code || "");
+          form.setValue("customer_country", data.customer_country || "");
         }
-      })
-  }
+      });
+  };
 
   return (
     <div className="flex flex-col h-full">
