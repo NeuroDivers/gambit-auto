@@ -1,14 +1,10 @@
-
 import { DashboardLayoutWrapper } from "@/components/dashboard/DashboardLayoutWrapper"
 import { StaffLayoutWrapper } from "@/components/staff/StaffLayoutWrapper"
 import { ClientLayoutWrapper } from "@/components/client/ClientLayoutWrapper"
 import Dashboard from "@/pages/dashboard/Dashboard"
 import { RouteObject } from "react-router-dom"
-// Removed workOrderRoutes import for troubleshooting
 import { serviceRoutes } from "./service-routes"
 import { userRoutes } from "./user-routes"
-import { estimateRoutes } from "./estimate-routes"
-import { invoiceRoutes } from "./invoice-routes"
 import { customerRoutes } from "./customer-routes"
 import { settingsRoutes } from "./settings-routes"
 import { vehicleRoutes } from "./vehicle-routes"
@@ -31,7 +27,6 @@ const RoleBasedLayout = () => {
   const [forcedSignOut, setForcedSignOut] = useState(false);
   const [loadingTimeoutReached, setLoadingTimeoutReached] = useState(false);
   
-  // Apply saved theme when dashboard is loaded
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme')
     if (savedTheme) {
@@ -40,13 +35,11 @@ const RoleBasedLayout = () => {
     }
   }, [])
   
-  // Function to redirect to clear auth page
   const redirectToClearAuth = () => {
     console.log('Redirecting to clear auth page');
     window.location.href = '/clear-auth';
   };
   
-  // Handle case where user is loading for too long (potential redirect loop)
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     
@@ -54,22 +47,20 @@ const RoleBasedLayout = () => {
       timeoutId = setTimeout(() => {
         console.log('Loading timeout reached, may be in redirect loop');
         setLoadingTimeoutReached(true);
-        // If still loading after 5 seconds, consider it a problem
         toast.error('System access issue', {
           description: 'Unable to determine your access level. Logging out for security.',
         });
         
         setRedirectInProgress(true);
         redirectToClearAuth();
-      }, 5000); // 5 seconds timeout
+      }, 5000);
     }
     
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, [roleLoading, redirectInProgress, forcedSignOut]);
-
-  // Handle case where role error was detected
+  
   useEffect(() => {
     if (roleError && !redirectInProgress && !forcedSignOut) {
       console.error('Role determination error detected:', roleError);
@@ -80,35 +71,28 @@ const RoleBasedLayout = () => {
       
       setRedirectInProgress(true);
       
-      // Give user time to see the message before logout
       setTimeout(() => {
         redirectToClearAuth();
       }, 2000);
     }
   }, [roleError, redirectInProgress, forcedSignOut]);
-
-  // Handle case where no role was found after loading
+  
   useEffect(() => {
-    // Only execute if not already loading and not during redirect
     if (!roleLoading && !redirectInProgress && !forcedSignOut && !currentUserRole) {
       console.error('No role found for user after loading completed');
       
-      // Show toast message to user
       toast.error('Access denied', {
         description: 'Your account has no assigned role or has been deleted. Logging you out for security.',
       });
       
-      // Mark that redirect is in progress to prevent multiple signouts
       setRedirectInProgress(true);
       
-      // Give user time to see the message before logout
       setTimeout(() => {
         redirectToClearAuth();
       }, 2000);
     }
   }, [roleLoading, currentUserRole, redirectInProgress, forcedSignOut]);
   
-  // Special case: If loading takes too long, offer a manual escape
   if (loadingTimeoutReached) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-background">
@@ -134,15 +118,12 @@ const RoleBasedLayout = () => {
     return <LoadingScreen />;
   }
   
-  // If there's an error or no valid role, we'll still show the loading screen until the redirect
-  // happens in the effect above
   if (roleError || !currentUserRole) {
     return <LoadingScreen />;
   }
 
   console.log('Current role for layout determination:', currentUserRole);
   
-  // Determine which layout to show based on the default_dashboard property
   if (currentUserRole?.default_dashboard) {
     switch (currentUserRole.default_dashboard) {
       case 'admin':
@@ -156,7 +137,6 @@ const RoleBasedLayout = () => {
         // Fall through to default case
     }
   } else {
-    // If no default_dashboard is set, try to determine from role name
     const roleName = currentUserRole.name.toLowerCase();
     if (roleName === 'administrator' || roleName === 'admin' || roleName === 'king') {
       return <DashboardLayoutWrapper />;
@@ -165,7 +145,6 @@ const RoleBasedLayout = () => {
     }
   }
 
-  // Default to client layout if we couldn't determine anything else
   console.log('No specific layout determined, using client dashboard');
   return <ClientLayoutWrapper />;
 };
@@ -203,15 +182,20 @@ export const protectedRoutes: RouteObject = {
       path: "commissions",
       element: <CommissionsPage />,
     },
-    // workOrderRoutes removed for troubleshooting
     {
       path: "work-orders",
       element: <div className="p-6">Work Orders functionality is currently disabled for troubleshooting.</div>
     },
+    {
+      path: "estimates",
+      element: <div className="p-6">Estimates functionality is currently disabled for troubleshooting.</div>
+    },
+    {
+      path: "invoices",
+      element: <div className="p-6">Invoices functionality is currently disabled for troubleshooting.</div>
+    },
     ...serviceRoutes,
     ...userRoutes,
-    ...estimateRoutes,
-    ...invoiceRoutes,
     ...customerRoutes,
     ...settingsRoutes,
     ...vehicleRoutes,
