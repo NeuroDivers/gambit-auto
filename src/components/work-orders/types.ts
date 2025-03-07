@@ -38,7 +38,7 @@ export interface WorkOrder extends CustomerVehicleRecordInfo {
     quantity: number;
     unit_price: number;
     commission_rate: number;
-    commission_type: 'percentage' | 'flat';
+    commission_type: 'percentage' | 'flat' | 'flat_rate'; // Updated to include 'flat_rate'
     assigned_profile_id?: string | null;
     service_types?: {
       id: string;
@@ -89,7 +89,7 @@ export interface ServiceItemType {
   quantity: number;
   unit_price: number;
   commission_rate: number;
-  commission_type: 'percentage' | 'flat' | null;  // Standardized to remove 'flat_rate'
+  commission_type: 'percentage' | 'flat' | 'flat_rate' | null;  // Including 'flat_rate' for compatibility
   assigned_profile_id?: string | null;
   description?: string;
   sub_services?: ServiceItemType[];

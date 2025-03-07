@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Invoice } from '@/components/invoices/types';
 import { MutableRefObject } from 'react';
@@ -56,7 +57,7 @@ export function PublicView(props: PublicViewProps) {
             {invoice.customer_vehicle_year} {invoice.customer_vehicle_make} {invoice.customer_vehicle_model}
           </p>
           {invoice.customer_vehicle_vin && <p>VIN: {invoice.customer_vehicle_vin}</p>}
-          {invoice.vehicle_color && <p>Color: {invoice.vehicle_color}</p>}
+          {invoice.customer_vehicle_color && <p>Color: {invoice.customer_vehicle_color}</p>}
         </div>
       </div>
       

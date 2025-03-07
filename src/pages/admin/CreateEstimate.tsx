@@ -1,15 +1,38 @@
+
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { InvoiceFormValues } from "@/components/invoices/types";
 import { useInvoiceMutation } from "@/components/invoices/hooks/useInvoiceMutation";
-import { useCustomers } from "@/hooks/useCustomers";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function CreateEstimate() {
   const navigate = useNavigate();
-  const { customers, isLoading: isLoadingCustomers } = useCustomers();
+  const [customers, setCustomers] = useState([]);
+  const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  
+  // Fetch customers
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setIsLoadingCustomers(true);
+        const { data, error } = await supabase
+          .from('customers')
+          .select('*');
+        
+        if (error) throw error;
+        setCustomers(data || []);
+      } catch (err) {
+        console.error("Error fetching customers:", err);
+      } finally {
+        setIsLoadingCustomers(false);
+      }
+    };
+    
+    fetchCustomers();
+  }, []);
   
   const form = useForm<InvoiceFormValues>({
     defaultValues: {
@@ -21,11 +44,10 @@ export default function CreateEstimate() {
       invoice_items: [],
       status: "draft",
       total: 0,
-      services: [],
     },
   });
 
-  const { mutate: createInvoice, isLoading } = useInvoiceMutation();
+  const { mutate: createInvoice, isPending } = useInvoiceMutation();
 
   const onSubmit = async (values: InvoiceFormValues) => {
     await createInvoice(values);
@@ -78,8 +100,8 @@ export default function CreateEstimate() {
       </div>
 
       <div>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Creating..." : "Create Estimate"}
+        <Button type="submit" disabled={isPending}>
+          {isPending ? "Creating..." : "Create Estimate"}
         </Button>
       </div>
     </form>

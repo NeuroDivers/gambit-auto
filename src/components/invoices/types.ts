@@ -33,6 +33,7 @@ export interface InvoiceFormValues {
   customer_vehicle_body_class?: string;
   customer_vehicle_doors?: number;
   customer_vehicle_license_plate?: string;
+  services?: InvoiceItem[]; // Adding this field for compatibility
 }
 
 export interface InvoiceItem {
@@ -89,6 +90,7 @@ export interface Invoice {
   customer_vehicle_license_plate?: string;
   stripe_customer_id?: string;
   invoice_items?: InvoiceItem[];
+  vehicle_color?: string; // Adding this to support PublicView
 }
 
 export interface CustomerInfo {
@@ -97,4 +99,10 @@ export interface CustomerInfo {
   customer_email: string;
   customer_phone: string;
   customer_address?: string;
+}
+
+export interface UseReactToPrintFn {
+  (content: () => React.ReactInstance | null): void;
+  printRef?: React.MutableRefObject<any>;
+  handlePrint?: () => void;
 }

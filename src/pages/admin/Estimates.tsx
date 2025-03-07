@@ -1,5 +1,6 @@
+
 import { useEffect, useState } from "react";
-import { EstimatesList } from "./quotes/EstimatesList";
+import EstimatesList from "./quotes/EstimatesList";
 import { EstimateRequestsList } from "./quotes/EstimateRequestsList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageTitle } from "@/components/shared/PageTitle";
@@ -8,6 +9,7 @@ import { PlusCircle, AlertTriangle } from "lucide-react";
 import { useEstimateRequestsData } from "@/hooks/useEstimateRequestsData";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
+
 export default function Estimates() {
   const [activeTab, setActiveTab] = useState("estimates");
   const {
@@ -22,6 +24,7 @@ export default function Estimates() {
   useEffect(() => {
     document.title = "Estimates | Auto Detailing CRM";
   }, []);
+  
   const handleCreateTestData = async () => {
     try {
       setError(null);
@@ -36,9 +39,13 @@ export default function Estimates() {
       setError(err.message || "Failed to create test data");
     }
   };
+  
   return <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
-        <PageTitle title="Estimates" description="Manage your customer estimates and estimate requests" />
+        <PageTitle 
+          title="Estimates" 
+          description="Manage your customer estimates and estimate requests" 
+        />
         
         
       </div>

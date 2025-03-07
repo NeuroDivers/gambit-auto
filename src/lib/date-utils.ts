@@ -1,26 +1,71 @@
 
-// Basic date utility functions needed by components
-import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
+import { format, isToday, formatDistanceToNow } from "date-fns";
 
-export function formatDate(date: Date | string, formatStr: string = 'yyyy-MM-dd'): string {
-  return format(new Date(date), formatStr);
-}
+// Format a date for display
+export const formatDate = (date: Date | string | null | undefined, formatString = 'PPP'): string => {
+  if (!date) return 'N/A';
+  try {
+    return format(new Date(date), formatString);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Invalid date';
+  }
+};
 
-export function getDaysOfWeek(date: Date): Date[] {
-  const start = startOfWeek(date);
-  const end = endOfWeek(date);
-  return eachDayOfInterval({ start, end });
-}
+// Format a time for display (HH:MM AM/PM)
+export const formatTime = (date: Date | string | null | undefined): string => {
+  if (!date) return 'N/A';
+  try {
+    return format(new Date(date), 'h:mm a');
+  } catch (error) {
+    console.error('Error formatting time:', error);
+    return 'Invalid time';
+  }
+};
 
-export function getTimeDisplay(date: Date | string | null): string {
+// Format a date and time for display
+export const formatDateTime = (date: Date | string | null | undefined): string => {
+  if (!date) return 'N/A';
+  try {
+    return format(new Date(date), 'PPP p');
+  } catch (error) {
+    console.error('Error formatting date/time:', error);
+    return 'Invalid date/time';
+  }
+};
+
+// Format a date for relative display (e.g., "today", "2 days ago", etc.)
+export const formatRelativeDate = (date: Date | string | null | undefined): string => {
+  if (!date) return 'N/A';
+  try {
+    const dateObj = new Date(date);
+    if (isToday(dateObj)) {
+      return `Today at ${format(dateObj, 'h:mm a')}`;
+    }
+    return formatDistanceToNow(dateObj, { addSuffix: true });
+  } catch (error) {
+    console.error('Error formatting relative date:', error);
+    return 'Invalid date';
+  }
+};
+
+// Format time for display in calendar
+export const formatTimeDisplay = (date: Date | string | null | undefined): string => {
   if (!date) return '';
-  return format(new Date(date), 'h:mm a');
-}
+  try {
+    return format(new Date(date), 'h:mm a');
+  } catch (error) {
+    console.error('Error formatting time display:', error);
+    return '';
+  }
+};
 
-export function formatTimeRange(start: string | null, end: string | null): string {
-  if (!start) return '';
-  const startTime = format(new Date(start), 'h:mm a');
-  if (!end) return startTime;
-  const endTime = format(new Date(end), 'h:mm a');
-  return `${startTime} - ${endTime}`;
-}
+// Get date in ISO format (YYYY-MM-DD)
+export const getISODate = (date: Date | string): string => {
+  try {
+    return format(new Date(date), 'yyyy-MM-dd');
+  } catch (error) {
+    console.error('Error getting ISO date:', error);
+    return '';
+  }
+};

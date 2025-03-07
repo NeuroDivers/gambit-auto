@@ -21,7 +21,7 @@ interface CommissionsSectionProps {
     id: string
     service_name: string
     commission_rate: number | null
-    commission_type: 'percentage' | 'flat' | null
+    commission_type: 'percentage' | 'flat' | 'flat_rate' | null
     quantity: number
     unit_price: number
     assigned_profile_id: string | null
@@ -37,7 +37,7 @@ export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps
     itemId: string, 
     updates: {
       commission_rate?: number | null
-      commission_type?: 'percentage' | 'flat' | null
+      commission_type?: 'percentage' | 'flat' | 'flat_rate' | null
       assigned_profile_id?: string | null
     }
   ) => {
@@ -68,7 +68,7 @@ export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps
 
   const calculateCommissionAmount = (
     rate: number | null, 
-    type: 'percentage' | 'flat' | null,
+    type: 'percentage' | 'flat' | 'flat_rate' | null,
     quantity: number,
     unitPrice: number
   ) => {
@@ -142,7 +142,7 @@ export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps
                     value={item.commission_type || "unset"}
                     onValueChange={(value) => 
                       handleUpdateCommission(item.id, {
-                        commission_type: value === "unset" ? null : (value as 'percentage' | 'flat')
+                        commission_type: value === "unset" ? null : (value as 'percentage' | 'flat' | 'flat_rate')
                       })
                     }
                   >
@@ -159,7 +159,7 @@ export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps
               </div>
 
               <div className="pt-2 text-sm">
-                Estimated Commission: {item.commission_type === 'flat' ? '$' : '%'}
+                Estimated Commission: {item.commission_type === 'flat' || item.commission_type === 'flat_rate' ? '$' : '%'}
                 {calculateCommissionAmount(
                   item.commission_rate,
                   item.commission_type,

@@ -61,20 +61,25 @@ export function WorkOrderCalendar() {
       if (error) throw error;
       
       // Transform to ensure workOrder has all required fields and correct profiles structure
-      const transformedData = data.map(order => ({
-        ...order,
-        created_at: order.created_at || new Date().toISOString(),
-        contact_preference: order.contact_preference || 'email',
-        timeframe: order.timeframe || 'flexible',
-        // Convert the array of profiles to the single object structure expected by WorkOrder type
-        profiles: order.profiles && order.profiles.length > 0 
-          ? { 
-              id: order.profiles[0].id,
-              first_name: order.profiles[0].first_name,
-              last_name: order.profiles[0].last_name 
-            }
-          : { first_name: null, last_name: null }
-      })) as WorkOrder[];
+      const transformedData = data.map(order => {
+        // Get the first profile from the array if it exists
+        const profileData = order.profiles && order.profiles.length > 0 
+          ? order.profiles[0] 
+          : { id: null, first_name: null, last_name: null };
+          
+        return {
+          ...order,
+          created_at: order.created_at || new Date().toISOString(),
+          contact_preference: order.contact_preference || 'email',
+          timeframe: order.timeframe || 'flexible',
+          // Convert the array of profiles to the single object structure expected by WorkOrder type
+          profiles: {
+            id: profileData.id,
+            first_name: profileData.first_name,
+            last_name: profileData.last_name
+          }
+        };
+      }) as WorkOrder[];
       
       return transformedData;
     },
