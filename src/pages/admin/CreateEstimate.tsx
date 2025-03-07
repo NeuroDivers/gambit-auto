@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useForm, UseFormReturn } from "react-hook-form"
@@ -45,7 +46,6 @@ const estimateSchema = z.object({
   customer_state_province: z.string().optional(),
   customer_postal_code: z.string().optional(),
   customer_country: z.string().optional(),
-  start_time: z.date().nullable(),
   estimated_duration: z.number().nullable(),
   end_time: z.date().nullable(),
   assigned_bay_id: z.string().nullable(),
@@ -92,7 +92,9 @@ const estimateSchema = z.object({
       parent_id: z.string().optional()
     })).optional(),
     is_parent: z.boolean().optional()
-  })).optional()
+  })).optional(),
+  client_id: z.string().optional(),
+  start_time: z.date().nullable()
 })
 
 export default function CreateEstimate() {
@@ -319,6 +321,39 @@ export default function CreateEstimate() {
     }
   }
 
+  const handleCustomerSelect = (customerId: string) => {
+    if (!customerId) return
+
+    // Set the client_id in the form
+    form.setValue("client_id", customerId)
+
+    // Fetch customer data and populate the form
+    supabase
+      .from("customers")
+      .select("*")
+      .eq("id", customerId)
+      .single()
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("Error fetching customer:", error)
+          return
+        }
+        
+        if (data) {
+          form.setValue("customer_first_name", data.customer_first_name)
+          form.setValue("customer_last_name", data.customer_last_name)
+          form.setValue("customer_email", data.customer_email)
+          form.setValue("customer_phone", data.customer_phone || "")
+          form.setValue("customer_street_address", data.customer_street_address || "")
+          form.setValue("customer_unit_number", data.customer_unit_number || "")
+          form.setValue("customer_city", data.customer_city || "")
+          form.setValue("customer_state_province", data.customer_state_province || "")
+          form.setValue("customer_postal_code", data.customer_postal_code || "")
+          form.setValue("customer_country", data.customer_country || "")
+        }
+      })
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-6 py-3">
@@ -379,10 +414,6 @@ export default function CreateEstimate() {
 
       <div className="flex-1 px-6 py-6 overflow-auto">
         <div className="max-w-7xl mx-auto space-y-6">
-          {!requestId && (
-            <CustomerSearch form={form} />
-          )}
-          
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <Card>
@@ -405,7 +436,7 @@ export default function CreateEstimate() {
                       <EstimateFormAdapter form={form}>
                         <ClientInfoFields 
                           form={form as unknown as UseFormReturn<WorkOrderFormValues>} 
-                          onCustomerSelect={onCustomerSelect}
+                          onCustomerSelect={handleCustomerSelect}
                         />
                       </EstimateFormAdapter>
                     </TabsContent>
