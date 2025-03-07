@@ -7,3 +7,9 @@ export interface ServiceDetailFieldProps {
   value: any;
   onChange: (value: any) => void;
 }
+
+export interface ServiceImageUploadProps {
+  images: string[];
+  onImageUpload: (url: string) => void;
+  onRemove: (url: string) => void;
+}

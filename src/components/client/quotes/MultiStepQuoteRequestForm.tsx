@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -60,6 +61,21 @@ export function MultiStepQuoteRequestForm({ onSuccess, quoteRequestForm }: Multi
       saveToAccount: false,
     },
   });
+
+  // Helper function to get/set details for a specific service
+  const getServiceDetails = (serviceId: string) => {
+    const details = form.getValues("details") || {};
+    return details[serviceId] || {};
+  };
+
+  const updateServiceDetails = (serviceId: string, value: any) => {
+    const currentDetails = form.getValues("details") || {};
+    const updatedDetails = {
+      ...currentDetails,
+      [serviceId]: value
+    };
+    form.setValue("details", updatedDetails);
+  };
 
   const handleNext = () => {
     if (step < steps.length - 1) {
@@ -212,18 +228,24 @@ export function MultiStepQuoteRequestForm({ onSuccess, quoteRequestForm }: Multi
             <AutoDetailingField
               form={form}
               serviceId="autoDetailing"
+              value={getServiceDetails("autoDetailing")}
+              onChange={(value) => updateServiceDetails("autoDetailing", value)}
             />
           )}
           {form.getValues("serviceType") === "ppfPackage" && (
             <PPFPackageField
               form={form}
               serviceId="ppfPackage"
+              value={getServiceDetails("ppfPackage")}
+              onChange={(value) => updateServiceDetails("ppfPackage", value)}
             />
           )}
           {form.getValues("serviceType") === "windowTint" && (
             <WindowTintField
               form={form}
               serviceId="windowTint"
+              value={getServiceDetails("windowTint")}
+              onChange={(value) => updateServiceDetails("windowTint", value)}
             />
           )}
         </div>

@@ -101,13 +101,13 @@ export interface CustomerInfo {
   customer_address?: string;
 }
 
-// Update this interface to match the UseReactToPrintResult
+// Updated to match required properties
 export interface UseReactToPrintResult {
   handlePrint: () => void;
   printRef: React.MutableRefObject<any>;
 }
 
-// Make UseReactToPrintFn match UseReactToPrintResult
+// Updated to match required properties
 export interface UseReactToPrintFn {
   handlePrint: () => void;
   printRef: React.MutableRefObject<any>;

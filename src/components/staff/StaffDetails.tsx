@@ -1,74 +1,54 @@
 
-import { useState, useEffect } from "react"
-import { useParams } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { StaffProfile } from "./StaffProfile"
-import { StaffSkills } from "./StaffSkills"
-import { StaffCommissionRates } from "./StaffCommissionRates"
-import { StaffWorkOrderHistory } from "./StaffWorkOrderHistory"
+import React from 'react';
+import { useProfileData } from './hooks/useProfileData';
+import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PersonalInfoForm } from '@/components/profile/sections/PersonalInfoForm';
+import { PasswordChangeForm } from '@/components/profile/sections/PasswordChangeForm';
+import { DefaultCommissionForm } from '@/components/profile/sections/DefaultCommissionForm';
+import StaffSkills from './StaffSkills';
 
-export function StaffDetails() {
-  const { id } = useParams()
-  const [activeTab, setActiveTab] = useState("profile")
+interface StaffDetailsProps {
+  profileId?: string;
+}
 
-  // Fetch staff details
-  const { data: staffMember, isLoading } = useQuery({
-    queryKey: ["staff", id],
-    queryFn: async () => {
-      if (!id) return null
-      
-      const { data, error } = await supabase
-        .from("staff_view")
-        .select("*")
-        .eq("staff_id", id)
-        .maybeSingle()
-        
-      if (error) throw error
-      return data
-    },
-    enabled: !!id
-  })
+export function StaffDetails({ profileId }: StaffDetailsProps) {
+  const { profile, isLoading } = useProfileData(profileId);
 
   if (isLoading) {
-    return <div className="p-8 text-center">Loading staff details...</div>
+    return <div>Loading profile...</div>;
   }
 
-  if (!staffMember) {
-    return <div className="p-8 text-center">Staff member not found</div>
+  if (!profile) {
+    return <div>No profile found</div>;
   }
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-6">
-        {staffMember.first_name} {staffMember.last_name}
-      </h1>
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
+    <Card className="w-full">
+      <Tabs defaultValue="personal-info" className="p-6">
+        <TabsList className="mb-4">
+          <TabsTrigger value="personal-info">Personal Info</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="skills">Skills</TabsTrigger>
-          <TabsTrigger value="commissions">Commissions</TabsTrigger>
-          <TabsTrigger value="history">Work History</TabsTrigger>
+          <TabsTrigger value="commission">Commission</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="profile">
-          <StaffProfile staffMember={staffMember} />
+        <TabsContent value="personal-info">
+          <PersonalInfoForm profileId={profileId} />
+        </TabsContent>
+        
+        <TabsContent value="security">
+          <PasswordChangeForm />
         </TabsContent>
         
         <TabsContent value="skills">
-          <StaffSkills profileId={staffMember.profile_id} />
+          <StaffSkills />
         </TabsContent>
         
-        <TabsContent value="commissions">
-          <StaffCommissionRates profileId={staffMember.profile_id} />
-        </TabsContent>
-        
-        <TabsContent value="history">
-          <StaffWorkOrderHistory profileId={staffMember.profile_id} />
+        <TabsContent value="commission">
+          <DefaultCommissionForm profileId={profileId} />
         </TabsContent>
       </Tabs>
-    </div>
-  )
+    </Card>
+  );
 }

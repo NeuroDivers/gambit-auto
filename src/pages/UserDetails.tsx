@@ -1,444 +1,133 @@
 
-import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { PageTitle } from "@/components/shared/PageTitle";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { format } from "date-fns";
-import { ArrowLeft, Calendar, Check, ChevronLeft, Loader2, Mail, Phone, Shield, UserRound, Briefcase, Building, IdCard, Calendar as CalendarIcon, ClockIcon, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { ServiceSkillsManager } from "@/components/staff/skills/ServiceSkillsManager";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
-import { UserEditDialog } from "@/components/users/UserEditDialog";
-
-function LoadingState() {
-  return (
-    <div className="container py-6 space-y-6">
-      <div className="flex items-center gap-2">
-        <Skeleton className="h-10 w-10" />
-        <div className="space-y-2">
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-24" />
-        </div>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {[1, 2, 3, 4].map((i) => (
-          <Card key={i}>
-            <CardHeader>
-              <Skeleton className="h-5 w-32" />
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-}
+import React, { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { PersonalInfoForm } from '@/components/profile/sections/PersonalInfoForm';
+import { PasswordChangeForm } from '@/components/profile/sections/PasswordChangeForm';
+import { DefaultCommissionForm } from '@/components/profile/sections/DefaultCommissionForm';
+import { StaffSkills } from '@/components/staff/StaffSkills';
+import { LoadingScreen } from '@/components/shared/LoadingScreen';
+import { useNavigate } from 'react-router-dom';
+import { usePermissions } from '@/hooks/usePermissions';
 
 export default function UserDetails() {
-  const { id } = useParams();
   const navigate = useNavigate();
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const { user } = useAuth();
+  const { currentUserRole } = usePermissions();
+  const [activeTab, setActiveTab] = useState('personal-info');
 
-  const { data: user, isLoading: userLoading } = useQuery({
-    queryKey: ['user', id],
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ['user-profile', user?.id],
     queryFn: async () => {
+      if (!user) return null;
+      
       const { data, error } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          role:role_id (
-            id,
-            name,
-            nicename
-          )
-        `)
-        .eq('id', id)
+        .select('*')
+        .eq('id', user.id)
         .single();
       
       if (error) throw error;
-      return data;
-    }
-  });
-
-  const { data: staffData, isLoading: staffLoading } = useQuery({
-    queryKey: ['staff-details', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('staff')
-        .select('*')
-        .eq('profile_id', id)
-        .single();
-      
-      if (error) {
-        console.error("Error fetching staff data:", error);
-        return null; // Return null if no staff record exists
-      }
-      console.log("Fetched staff data:", data); // Add debug logging
       return data;
     },
-    enabled: !!id
+    enabled: !!user
   });
 
-  const { data: lastLogin } = useQuery({
-    queryKey: ['user-last-login', id],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session && session.user.id === id) {
-        return session.user.last_sign_in_at;
-      }
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('updated_at')
-        .eq('id', id)
-        .single();
-      
-      if (error) throw error;
-      return data.updated_at;
-    }
-  });
-
-  const { data: workOrders, isLoading: workOrdersLoading } = useQuery({
-    queryKey: ['user-work-orders', id],
-    queryFn: async () => {
-      const currentDate = new Date().toISOString();
-      
-      const { data: activeOrders, error: activeError } = await supabase
-        .from('work_orders')
-        .select('*')
-        .eq('assigned_profile_id', id)
-        .neq('status', 'completed')
-        .order('start_time', { ascending: true });
-      
-      if (activeError) throw activeError;
-
-      const { data: futureOrders, error: futureError } = await supabase
-        .from('work_orders')
-        .select('*')
-        .eq('assigned_profile_id', id)
-        .gt('start_time', currentDate)
-        .order('start_time', { ascending: true });
-      
-      if (futureError) throw futureError;
-
-      return {
-        active: activeOrders || [],
-        future: futureOrders || []
-      };
-    }
-  });
-
-  const { data: commissions, isLoading: commissionsLoading } = useQuery({
-    queryKey: ['user-commissions', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('commission_transactions')
-        .select('*')
-        .eq('profile_id', id)
-        .order('created_at', { ascending: false })
-        .limit(5);
-      
-      if (error) throw error;
-      return data;
-    }
-  });
-
-  if (userLoading || workOrdersLoading || commissionsLoading || staffLoading) {
-    return <LoadingState />;
+  if (isLoading) {
+    return <LoadingScreen />;
   }
 
+  if (!user || !profile) {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <h1 className="text-2xl font-bold mb-4">User Profile</h1>
+        <p>You need to be logged in to view this page.</p>
+      </div>
+    );
+  }
+
+  const showSkillsTab = currentUserRole?.default_dashboard === 'staff' || 
+                       currentUserRole?.default_dashboard === 'admin';
+  
+  const showCommissionTab = currentUserRole?.default_dashboard === 'staff' || 
+                           currentUserRole?.default_dashboard === 'admin';
+
   return (
-    <div className="container py-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/staff-management')}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <div className="space-y-2">
-            {user?.role && (
-              <Badge variant="secondary" className="inline-flex items-center gap-2 w-auto px-2">
-                <Shield className="h-3 w-3" />
-                {user.role.nicename || 'User'}
-              </Badge>
-            )}
-            <PageTitle
-              title={`${user?.first_name} ${user?.last_name}`}
-              description=""
-            />
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={() => setEditDialogOpen(true)}>
-            Edit User
-          </Button>
+    <div className="container mx-auto py-8 px-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Account Settings</h1>
+          <p className="text-muted-foreground">
+            Manage your account information and preferences
+          </p>
         </div>
       </div>
 
-      <Tabs defaultValue="info" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="info">User Information</TabsTrigger>
-          <TabsTrigger value="skills">Service Skills</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="info">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UserRound className="h-5 w-5" />
-                  User Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <dl className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <dt className="text-sm text-muted-foreground">
-                      <Mail className="h-4 w-4" />
-                    </dt>
-                    <dd>{user?.email}</dd>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <dt className="text-sm text-muted-foreground">
-                      <Phone className="h-4 w-4" />
-                    </dt>
-                    <dd>{user?.phone_number || 'Not provided'}</dd>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <dt className="text-sm text-muted-foreground">
-                      <Shield className="h-4 w-4" />
-                    </dt>
-                    <dd>{user?.role?.nicename || 'No role assigned'}</dd>
-                  </div>
-                </dl>
-              </CardContent>
-            </Card>
-
-            {staffData && (
-              <>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Briefcase className="h-5 w-5" />
-                      Staff Details
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <dl className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <dt className="text-sm text-muted-foreground">
-                          <IdCard className="h-4 w-4" />
-                        </dt>
-                        <dd>Employee ID: {staffData?.employee_id || 'Not assigned'}</dd>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <dt className="text-sm text-muted-foreground">
-                          <Briefcase className="h-4 w-4" />
-                        </dt>
-                        <dd>Position: {staffData?.position || 'Not specified'}</dd>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <dt className="text-sm text-muted-foreground">
-                          <Building className="h-4 w-4" />
-                        </dt>
-                        <dd>Department: {staffData?.department || 'Not specified'}</dd>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <dt className="text-sm text-muted-foreground">
-                          <CalendarIcon className="h-4 w-4" />
-                        </dt>
-                        <dd>Hired: {staffData?.employment_date ? format(new Date(staffData.employment_date), 'PPP') : 'Not specified'}</dd>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <dt className="text-sm text-muted-foreground">
-                          <ClockIcon className="h-4 w-4" />
-                        </dt>
-                        <dd>Status: {staffData?.status || 'Active'}</dd>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <dt className="text-sm text-muted-foreground">
-                          Employment:
-                        </dt>
-                        <dd>{staffData?.is_full_time ? 'Full-time' : 'Part-time'}</dd>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <dt className="text-sm text-muted-foreground">
-                          Emergency Contact:
-                        </dt>
-                        <dd>{staffData?.emergency_contact_name || 'Not provided'}</dd>
-                      </div>
-                      {staffData?.emergency_contact_phone && (
-                        <div className="flex items-center gap-2">
-                          <dt className="text-sm text-muted-foreground">
-                            Emergency Phone:
-                          </dt>
-                          <dd>{staffData.emergency_contact_phone}</dd>
-                        </div>
-                      )}
-                    </dl>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <MapPin className="h-5 w-5" />
-                      Staff Address
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <dl className="space-y-2">
-                      {staffData?.street_address && (
-                        <div>
-                          <dt className="text-sm text-muted-foreground">Street Address</dt>
-                          <dd>{staffData.street_address}</dd>
-                        </div>
-                      )}
-                      {staffData?.unit_number && (
-                        <div>
-                          <dt className="text-sm text-muted-foreground">Unit/Apt #</dt>
-                          <dd>{staffData.unit_number}</dd>
-                        </div>
-                      )}
-                      {staffData?.city && (
-                        <div>
-                          <dt className="text-sm text-muted-foreground">City</dt>
-                          <dd>{staffData.city}</dd>
-                        </div>
-                      )}
-                      {staffData?.state_province && (
-                        <div>
-                          <dt className="text-sm text-muted-foreground">State/Province</dt>
-                          <dd>{staffData.state_province}</dd>
-                        </div>
-                      )}
-                      {staffData?.postal_code && (
-                        <div>
-                          <dt className="text-sm text-muted-foreground">Postal/ZIP Code</dt>
-                          <dd>{staffData.postal_code}</dd>
-                        </div>
-                      )}
-                      {staffData?.country && (
-                        <div>
-                          <dt className="text-sm text-muted-foreground">Country</dt>
-                          <dd>{staffData.country}</dd>
-                        </div>
-                      )}
-                      {!staffData?.street_address && !staffData?.city && !staffData?.postal_code && (
-                        <p className="text-sm text-muted-foreground">No address information provided</p>
-                      )}
-                    </dl>
-                  </CardContent>
-                </Card>
-              </>
-            )}
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Active Work Orders</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {workOrders?.active && workOrders.active.length > 0 ? (
-                  <ul className="space-y-2">
-                    {workOrders.active.map((order) => (
-                      <li key={order.id} className="text-sm">
-                        <time className="text-muted-foreground">
-                          {format(new Date(order.start_time), 'MMM dd, yyyy')}
-                        </time>
-                        <div className="font-medium">{order.vehicle_make} {order.vehicle_model}</div>
-                        <div className="text-xs text-muted-foreground">Status: {order.status}</div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No active work orders</p>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Commissions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {commissions && commissions.length > 0 ? (
-                  <ul className="space-y-2">
-                    {commissions.map((commission) => (
-                      <li key={commission.id} className="text-sm">
-                        <time className="text-muted-foreground">
-                          {format(new Date(commission.created_at), 'MMM dd, yyyy')}
-                        </time>
-                        <div className="font-medium">${commission.amount}</div>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Check className="h-3 w-3" />
-                          {commission.status}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No recent commissions</p>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>User Activity</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Account Created</span>
-                    <span>{format(new Date(user?.created_at), 'PPp')}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Last Updated</span>
-                    <span>{format(new Date(user?.updated_at), 'PPp')}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Last Login</span>
-                    <span>{lastLogin ? format(new Date(lastLogin), 'PPp') : 'Never'}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="skills">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Briefcase className="h-5 w-5" />
-                Service Skills Management
-              </CardTitle>
+      <Card className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="p-6">
+          <TabsList className="mb-8">
+            <TabsTrigger value="personal-info">Personal Info</TabsTrigger>
+            <TabsTrigger value="security">Password</TabsTrigger>
+            {showSkillsTab && <TabsTrigger value="skills">Skills</TabsTrigger>}
+            {showCommissionTab && <TabsTrigger value="commission">Commission</TabsTrigger>}
+          </TabsList>
+          
+          <TabsContent value="personal-info">
+            <CardHeader className="px-0">
+              <CardTitle>Personal Information</CardTitle>
+              <CardDescription>
+                Update your personal details and contact information
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <ServiceSkillsManager profileId={id} />
+            <CardContent className="px-0">
+              <PersonalInfoForm />
             </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {user && (
-        <UserEditDialog 
-          user={user} 
-          open={editDialogOpen} 
-          onOpenChange={setEditDialogOpen} 
-          staffData={staffData}
-        />
-      )}
+          </TabsContent>
+          
+          <TabsContent value="security">
+            <CardHeader className="px-0">
+              <CardTitle>Password</CardTitle>
+              <CardDescription>
+                Change your password or update security settings
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-0">
+              <PasswordChangeForm />
+            </CardContent>
+          </TabsContent>
+          
+          {showSkillsTab && (
+            <TabsContent value="skills">
+              <CardHeader className="px-0">
+                <CardTitle>Service Skills</CardTitle>
+                <CardDescription>
+                  Manage the services you are skilled at providing
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="px-0">
+                <StaffSkills profileId={profile.id} />
+              </CardContent>
+            </TabsContent>
+          )}
+          
+          {showCommissionTab && (
+            <TabsContent value="commission">
+              <CardHeader className="px-0">
+                <CardTitle>Default Commission</CardTitle>
+                <CardDescription>
+                  Set your default commission settings for services
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="px-0">
+                <DefaultCommissionForm />
+              </CardContent>
+            </TabsContent>
+          )}
+        </Tabs>
+      </Card>
     </div>
   );
 }
