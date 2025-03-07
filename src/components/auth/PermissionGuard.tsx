@@ -15,12 +15,35 @@ interface PermissionGuardProps {
 export function PermissionGuard({ children, resource, type }: PermissionGuardProps) {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null)
   const [redirecting, setRedirecting] = useState(false)
-  const { checkPermission, currentUserRole, isLoading } = usePermissions()
+  const { checkPermission, currentUserRole, isLoading, error } = usePermissions()
 
   useEffect(() => {
     const checkAccess = async () => {
       // If still loading, don't check permissions yet
       if (isLoading) return;
+
+      // If user has role determination error, force sign out
+      if (error) {
+        console.error('Permission check error:', error);
+        if (!redirecting) {
+          setRedirecting(true);
+          toast.error('Authentication error', {
+            description: 'Your account has been deleted or is invalid. Signing out.',
+          });
+          
+          setTimeout(async () => {
+            try {
+              await supabase.auth.signOut();
+              localStorage.removeItem('sb-yxssuhzzmxwtnaodgpoq-auth-token');
+              window.location.href = '/auth';
+            } catch (signOutError) {
+              console.error('Error signing out:', signOutError);
+              window.location.href = '/auth';
+            }
+          }, 2000);
+        }
+        return;
+      }
 
       // If no role found, deny access
       if (!currentUserRole) {
@@ -38,9 +61,10 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
           setTimeout(async () => {
             try {
               await supabase.auth.signOut();
+              localStorage.removeItem('sb-yxssuhzzmxwtnaodgpoq-auth-token');
               window.location.href = '/auth';
-            } catch (error) {
-              console.error('Error signing out:', error);
+            } catch (signOutError) {
+              console.error('Error signing out:', signOutError);
               window.location.href = '/auth';
             }
           }, 2000);
@@ -72,7 +96,7 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
     }
 
     checkAccess()
-  }, [currentUserRole, isLoading, resource, type, checkPermission, redirecting])
+  }, [currentUserRole, isLoading, resource, type, checkPermission, redirecting, error])
 
   // Show loading screen while checking permissions
   if (isLoading || hasPermission === null || redirecting) {

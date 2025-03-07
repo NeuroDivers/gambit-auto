@@ -30,13 +30,19 @@ interface UserRole {
 
 export const usePermissions = () => {
   const [assigningDefaultRole, setAssigningDefaultRole] = useState(false);
+  const [noProfileFound, setNoProfileFound] = useState(false);
 
   // Get current user's role and cache it
   const { data: currentUserRole, isLoading: isRoleLoading, error: roleError, refetch: refetchRole } = useQuery({
     queryKey: ["current-user-role"],
     queryFn: async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError) {
+          console.error('Error fetching auth user:', userError);
+          throw userError;
+        }
+        
         if (!user) {
           console.log('No user found in usePermissions');
           return null;
@@ -58,11 +64,24 @@ export const usePermissions = () => {
         if (error) {
           console.error('Error fetching role:', error);
           
-          // Check if this is a "not found" error, which means the profile exists but role may be null
+          // Check if this is a "not found" error, which means the profile doesn't exist
           if (error.code === 'PGRST116') {
-            // If profile exists but role is null, we'll try to assign a default client role
+            setNoProfileFound(true);
+            console.log('Profile not found for authenticated user - possible deleted profile');
+            throw new Error('User profile not found - account may have been deleted');
+          }
+          
+          throw error;
+        }
+
+        if (!data?.role) {
+          // Profile exists but has no role assigned
+          console.log('Profile found but no role assigned, attempting to assign default role');
+          if (!assigningDefaultRole) {
+            setAssigningDefaultRole(true);
             await assignDefaultRoleIfNeeded(user.id);
-            
+            setAssigningDefaultRole(false);
+          
             // Retry the query after attempting to assign a default role
             const { data: retryData, error: retryError } = await supabase
               .from('profiles')
@@ -93,67 +112,26 @@ export const usePermissions = () => {
               return userRole;
             }
           }
-          
-          throw error;
+          return null;
         }
 
-        if (data?.role) {
-          const roleData = Array.isArray(data.role) ? data.role[0] : data.role;
-          const userRole: UserRole = {
-            id: String(roleData.id),
-            name: String(roleData.name),
-            nicename: String(roleData.nicename),
-            default_dashboard: roleData.default_dashboard
-          };
-          return userRole;
-        }
+        const roleData = Array.isArray(data.role) ? data.role[0] : data.role;
+        const userRole: UserRole = {
+          id: String(roleData.id),
+          name: String(roleData.name),
+          nicename: String(roleData.nicename),
+          default_dashboard: roleData.default_dashboard
+        };
+        return userRole;
         
-        // If we get here, it means the profile exists but has no role assigned
-        console.log('Profile found but no role assigned, attempting to assign default role');
-        if (!assigningDefaultRole) {
-          setAssigningDefaultRole(true);
-          await assignDefaultRoleIfNeeded(user.id);
-          setAssigningDefaultRole(false);
-        
-          // Retry the query after attempting to assign a default role
-          const { data: retryData, error: retryError } = await supabase
-            .from('profiles')
-            .select(`
-              role:role_id (
-                id,
-                name,
-                nicename,
-                default_dashboard
-              )
-            `)
-            .eq('id', user.id)
-            .single();
-            
-          if (retryError) {
-            console.error('Error on retry after assigning role:', retryError);
-            return null;
-          }
-          
-          if (retryData?.role) {
-            const roleData = Array.isArray(retryData.role) ? retryData.role[0] : retryData.role;
-            const userRole: UserRole = {
-              id: String(roleData.id),
-              name: String(roleData.name),
-              nicename: String(roleData.nicename),
-              default_dashboard: roleData.default_dashboard
-            };
-            return userRole;
-          }
-        }
-        
-        return null;
       } catch (error) {
         console.error('Fatal error in usePermissions:', error);
-        return null;
+        throw error;
       }
     },
     staleTime: 300000, // Cache for 5 minutes
-    retry: 1
+    retry: 1,
+    retryDelay: 1000
   });
 
   // Get all permissions and cache them
@@ -188,10 +166,12 @@ export const usePermissions = () => {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
+      localStorage.removeItem('sb-yxssuhzzmxwtnaodgpoq-auth-token');
       // Redirect to auth page
       window.location.href = '/auth';
     } catch (error) {
       console.error('Error signing out:', error);
+      window.location.href = '/auth';
     }
   };
 
@@ -201,7 +181,12 @@ export const usePermissions = () => {
   ): Promise<boolean> => {
     try {
       // First check if user is authenticated
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.error('Error getting auth user in checkPermission:', userError);
+        return false;
+      }
+
       if (!user) {
         console.log('No user found in checkPermission');
         return false;
@@ -272,7 +257,22 @@ export const usePermissions = () => {
 
   // Check for role changes when the component mounts or role status changes
   useEffect(() => {
-    if (!isRoleLoading && !assigningDefaultRole && !currentUserRole) {
+    if (noProfileFound) {
+      // If profile is not found, we should sign out the user
+      console.error('No profile found for authenticated user - possible deleted profile');
+      toast.error('Authentication error', {
+        description: 'Your account may have been deleted. Signing out.',
+      });
+      
+      setTimeout(() => {
+        handleSignOut();
+      }, 2000);
+    }
+  }, [noProfileFound]);
+
+  // Check and assign default role if needed
+  useEffect(() => {
+    if (!isRoleLoading && !assigningDefaultRole && !currentUserRole && !noProfileFound) {
       const checkAndAssignRole = async () => {
         try {
           const { data: { user } } = await supabase.auth.getUser();
@@ -287,13 +287,13 @@ export const usePermissions = () => {
       
       checkAndAssignRole();
     }
-  }, [isRoleLoading, currentUserRole, assigningDefaultRole, refetchRole]);
+  }, [isRoleLoading, currentUserRole, assigningDefaultRole, refetchRole, noProfileFound]);
 
   return {
     permissions,
     checkPermission,
     currentUserRole,
     isLoading: isRoleLoading || assigningDefaultRole,
-    error: roleError
+    error: roleError || (noProfileFound ? new Error('User profile not found') : null)
   };
 };

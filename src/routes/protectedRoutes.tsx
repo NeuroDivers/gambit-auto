@@ -42,10 +42,10 @@ const RoleBasedLayout = () => {
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     
-    if (isLoading) {
+    if (isLoading && !redirectInProgress) {
       timeoutId = setTimeout(() => {
         console.log('Loading timeout reached, may be in redirect loop');
-        // If still loading after 10 seconds, consider it a problem
+        // If still loading after 5 seconds, consider it a problem
         toast.error('System access issue', {
           description: 'Unable to determine your access level. Logging out for security.',
         });
@@ -55,19 +55,20 @@ const RoleBasedLayout = () => {
         setTimeout(async () => {
           try {
             await supabase.auth.signOut();
+            localStorage.removeItem('sb-yxssuhzzmxwtnaodgpoq-auth-token');
             window.location.href = '/auth';
           } catch (err) {
             console.error('Error during forced signout:', err);
             window.location.href = '/auth';
           }
         }, 2000);
-      }, 10000); // 10 seconds timeout
+      }, 5000); // 5 seconds timeout - reduced from 10 seconds
     }
     
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [isLoading]);
+  }, [isLoading, redirectInProgress]);
 
   // Handle case where no role was found after loading
   useEffect(() => {
@@ -78,7 +79,7 @@ const RoleBasedLayout = () => {
       
       // Show toast message to user
       toast.error('Access denied', {
-        description: 'Your account has no assigned role. Logging you out for security.',
+        description: 'Your account has no assigned role or has been deleted. Logging you out for security.',
       });
       
       // Mark that redirect is in progress to prevent multiple signouts
@@ -88,6 +89,7 @@ const RoleBasedLayout = () => {
       setTimeout(async () => {
         try {
           await supabase.auth.signOut();
+          localStorage.removeItem('sb-yxssuhzzmxwtnaodgpoq-auth-token');
           window.location.href = '/auth';
         } catch (err) {
           console.error('Error during sign out:', err);
