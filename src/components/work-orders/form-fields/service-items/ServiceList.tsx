@@ -1,68 +1,92 @@
 
-import { useState, useEffect } from "react";
+import { ServiceItemType } from "@/types/service-item";
 import { ServiceItem } from "./ServiceItem";
-import { useServiceTypes } from "@/components/service-bays/hooks/useServiceTypes";
-import { PackageSelect } from "./PackageSelect";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ServiceType } from "@/integrations/supabase/types/service-types";
+import { Plus } from "lucide-react";
+import { ServiceDropdown } from "@/components/shared/form-fields/service-selection/ServiceDropdown";
 
-// Define the service item type that's compatible with both uses
-interface ServiceItemType {
-  service_id: string;
-  service_name: string;
-  quantity: number;
-  unit_price: number;
-  commission_rate?: number;
-  commission_type?: 'percentage' | 'flat' | 'flat_rate' | null;
-  assigned_profile_id?: string | null;
-  description?: string;
-  sub_services?: ServiceItemType[];
-  is_parent?: boolean;
-  parent_id?: string;
-  package_id?: string | null;
+interface ServiceListProps {
+  services: ServiceItemType[];
+  onChange: (services: ServiceItemType[]) => void;
+  allowPriceEdit?: boolean;
+  showDelete?: boolean;
+  showCommission?: boolean;
+  showStaffAssignment?: boolean;
 }
 
-const dummyPackages = [
-  { id: "1", name: "Basic Package" },
-  { id: "2", name: "Premium Package" }
-];
-
-export interface ServiceListProps {
-  serviceItems: ServiceItemType[];
-  onChange: (serviceItems: ServiceItemType[]) => void;
-  hasPackages?: boolean;
-}
-
-export function ServiceList({ serviceItems, onChange, hasPackages = false }: ServiceListProps) {
-  const { data: servicesData, isLoading } = useServiceTypes();
-  const [services, setServices] = useState<ServiceType[]>([]);
-
-  useEffect(() => {
-    if (servicesData && Array.isArray(servicesData)) {
-      const filteredServices = servicesData.filter(
-        (service) => service.status === "active"
-      );
-      setServices(filteredServices as unknown as ServiceType[]);
-    }
-  }, [servicesData]);
-
+export function ServiceList({
+  services,
+  onChange,
+  allowPriceEdit = true,
+  showDelete = true,
+  showCommission = false,
+  showStaffAssignment = false
+}: ServiceListProps) {
+  const [isAdding, setIsAdding] = useState(false);
+  
+  // Handle adding a new service
+  const handleAddService = (serviceData: any) => {
+    const newService: ServiceItemType = {
+      service_id: serviceData.id,
+      service_name: serviceData.name,
+      quantity: 1,
+      unit_price: serviceData.base_price || 0,
+      commission_rate: 0,
+      commission_type: null,
+      description: serviceData.description || "",
+    };
+    
+    onChange([...services, newService]);
+    setIsAdding(false);
+  };
+  
+  // Handle updating a service
+  const handleUpdateService = (index: number, updatedService: ServiceItemType) => {
+    const updatedServices = [...services];
+    updatedServices[index] = updatedService;
+    onChange(updatedServices);
+  };
+  
+  // Handle removing a service
+  const handleRemoveService = (index: number) => {
+    const updatedServices = services.filter((_, i) => i !== index);
+    onChange(updatedServices);
+  };
+  
   return (
     <div className="space-y-4">
-      {serviceItems.map((service, index) => (
+      {services.map((service, index) => (
         <ServiceItem
           key={index}
           service={service}
-          availableServices={services}
-          onRemove={() => onChange(serviceItems.filter((_, i) => i !== index))}
-          onChange={(updatedService) => onChange(serviceItems.map((s, i) => i === index ? updatedService : s))}
+          onChange={(updated) => handleUpdateService(index, updated)}
+          onRemove={() => handleRemoveService(index)}
+          allowPriceEdit={allowPriceEdit}
+          showDelete={showDelete}
+          showCommission={showCommission}
+          showStaffAssignment={showStaffAssignment}
         />
       ))}
-      {hasPackages && <PackageSelect 
-        packages={dummyPackages}
-        value={null}
-        packageName=""
-        onValueChange={() => {}}
-      />}
+      
+      {isAdding ? (
+        <div className="border rounded-md p-4">
+          <ServiceDropdown
+            onSelect={handleAddService}
+            onClose={() => setIsAdding(false)}
+          />
+        </div>
+      ) : (
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={() => setIsAdding(true)}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add Service
+        </Button>
+      )}
     </div>
   );
 }

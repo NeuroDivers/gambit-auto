@@ -1,37 +1,27 @@
 
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { QuoteRequestForm } from "./QuoteRequestForm"
-import { FormProvider, useForm } from "react-hook-form"
-import { useState } from "react"
+import React from 'react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { MultiStepQuoteRequestForm } from './MultiStepQuoteRequestForm';
+import { UseFormReturn } from 'react-hook-form';
 
-interface Props {
+export interface Props {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  quoteRequestForm: any; // This should be properly typed based on your application
+  quoteRequestForm?: UseFormReturn<any>;
 }
 
-export function QuoteRequestSheet({ onSuccess, quoteRequestForm }: Props) {
-  const [open, setOpen] = useState(false)
-
-  const handleSuccess = () => {
-    setOpen(false)
-    onSuccess()
-  }
-
+export function QuoteRequestSheet({ open, onOpenChange, onSuccess, quoteRequestForm }: Props) {
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetContent className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Request Quote</SheetTitle>
-          <SheetDescription>
-            Fill out the form to get a quote for your service needs.
-          </SheetDescription>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl overflow-y-auto">
+        <SheetHeader className="mb-4">
+          <SheetTitle>Request a Service Quote</SheetTitle>
         </SheetHeader>
-        <div className="mt-6">
-          <FormProvider {...quoteRequestForm}>
-            <QuoteRequestForm onSuccess={handleSuccess} />
-          </FormProvider>
+        <div className="pb-10">
+          <MultiStepQuoteRequestForm onSuccess={onSuccess} />
         </div>
       </SheetContent>
     </Sheet>
-  )
+  );
 }

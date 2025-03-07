@@ -155,7 +155,7 @@ export function ServiceSkillsManager() {
                 variant="secondary"
                 className="pl-3 pr-2 py-1.5 text-sm flex items-center gap-1"
               >
-                {skill.service_types.name}
+                {skill.service_types?.name}
                 <Button
                   variant="ghost"
                   size="icon"
