@@ -30,7 +30,7 @@ export default function EstimateDetails() {
           .from("estimates")
           .select(`
             *,
-            customer:customers(*),
+            customer:customers!quotes_client_id_fkey(*),
             vehicle:vehicles(*),
             items:estimate_items(*)
           `)
