@@ -27,7 +27,8 @@ export default function WorkOrderDetails() {
     queryFn: async () => {
       if (!id) return null;
 
-      const { data, error } = await supabase
+      // First fetch the work order with its main profile
+      const { data: workOrderData, error: workOrderError } = await supabase
         .from("work_orders")
         .select(`
           *,
@@ -39,37 +40,67 @@ export default function WorkOrderDetails() {
             id,
             first_name,
             last_name
-          ),
-          work_order_services (
-            id,
-            service_id,
-            quantity,
-            unit_price,
-            commission_rate,
-            commission_type,
-            assigned_profile_id,
-            service_types!work_order_services_service_id_fkey (
-              id,
-              name,
-              description,
-              base_price
-            ),
-            profiles!work_order_services_assigned_profile_id_fkey (
-              id,
-              first_name,
-              last_name
-            )
           )
         `)
         .eq("id", id)
         .single();
 
-      if (error) {
-        console.error("Error fetching work order:", error);
-        throw error;
+      if (workOrderError) {
+        console.error("Error fetching work order:", workOrderError);
+        throw workOrderError;
       }
 
-      return data as WorkOrder;
+      // Then fetch the work_order_services separately with their assigned staff
+      const { data: servicesData, error: servicesError } = await supabase
+        .from("work_order_services")
+        .select(`
+          id,
+          service_id,
+          quantity,
+          unit_price,
+          commission_rate,
+          commission_type,
+          assigned_profile_id,
+          service_types (
+            id,
+            name,
+            description,
+            base_price
+          )
+        `)
+        .eq("work_order_id", id);
+
+      if (servicesError) {
+        console.error("Error fetching work order services:", servicesError);
+        throw servicesError;
+      }
+
+      // For each service with an assigned_profile_id, fetch the profile data
+      const servicesWithProfiles = await Promise.all(
+        servicesData.map(async (service) => {
+          if (service.assigned_profile_id) {
+            const { data: profileData, error: profileError } = await supabase
+              .from("profiles")
+              .select("id, first_name, last_name")
+              .eq("id", service.assigned_profile_id)
+              .single();
+
+            if (profileError) {
+              console.error("Error fetching profile for service:", profileError);
+              return service;
+            }
+
+            return { ...service, profiles: profileData };
+          }
+          return service;
+        })
+      );
+
+      // Combine the work order data with the services
+      return {
+        ...workOrderData,
+        work_order_services: servicesWithProfiles
+      } as WorkOrder;
     },
     enabled: !!id,
   });
