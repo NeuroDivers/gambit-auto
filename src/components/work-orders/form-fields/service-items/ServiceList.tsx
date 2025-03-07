@@ -1,52 +1,42 @@
-import React from 'react';
-import { ServiceItem } from './ServiceItem';
+import { useEffect, useState } from "react";
+import { ServiceItem } from "./ServiceItem";
+import { useServiceTypes } from "@/components/service-bays/hooks/useServiceTypes";
+import { ServiceItemType } from "@/components/work-orders/types";
+import { PackageSelect } from "./PackageSelect";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { ServiceItemType } from "@/types/service-item";
-import { ServicesByType } from "@/components/shared/form-fields/service-selection/types";
+import { ServiceType } from "@/integrations/supabase/types/service-types";
 
-interface ServiceListProps {
-  workOrderServices: ServiceItemType[];
-  onAddService: (service: ServiceItemType) => void;
-  onRemoveService: (index: number) => void;
-  onUpdateService: (index: number, service: ServiceItemType) => void;
-  availableServices: ServicesByType[];
+export interface ServiceListProps {
+  serviceItems: ServiceItemType[];
+  onChange: (serviceItems: ServiceItemType[]) => void;
+  hasPackages?: boolean;
 }
 
-export function ServiceList({
-  workOrderServices,
-  onAddService,
-  onRemoveService,
-  onUpdateService,
-  availableServices
-}: ServiceListProps) {
-  const handleAddService = () => {
-    const newService: ServiceItemType = {
-      service_id: "",
-      service_name: "",
-      quantity: 1,
-      unit_price: 0,
-      commission_rate: 0,
-      commission_type: null
-    };
-    onAddService(newService);
-  };
+export function ServiceList({ serviceItems, onChange, hasPackages = false }: ServiceListProps) {
+  const { data: servicesData, isLoading } = useServiceTypes();
+  const [services, setServices] = useState<ServiceType[]>([]);
+
+  useEffect(() => {
+    if (servicesData && Array.isArray(servicesData)) {
+      const filteredServices = servicesData.filter(
+        (service) => service.status === "active"
+      );
+      setServices(filteredServices as unknown as ServiceType[]);
+    }
+  }, [servicesData]);
 
   return (
     <div className="space-y-4">
-      {workOrderServices.map((service, index) => (
+      {serviceItems.map((service, index) => (
         <ServiceItem
           key={index}
           service={service}
-          availableServices={availableServices}
-          onRemove={() => onRemoveService(index)}
-          onChange={(updatedService) => onUpdateService(index, updatedService)}
+          availableServices={services}
+          onRemove={() => onChange(serviceItems.filter((_, i) => i !== index))}
+          onChange={(updatedService) => onChange(serviceItems.map((s, i) => i === index ? updatedService : s))}
         />
       ))}
-      <Button type="button" onClick={handleAddService} className="w-full">
-        <Plus className="h-4 w-4 mr-2" />
-        Add Service
-      </Button>
+      {hasPackages && <PackageSelect />}
     </div>
   );
 }

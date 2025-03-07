@@ -1,119 +1,91 @@
-import { useMutation } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
-import { WorkOrderFormValues } from "@/components/work-orders/types"
-import { format } from "date-fns"
-
-interface SubmitParams {
-  values: WorkOrderFormValues
-  onSuccess?: (data: any) => void
-  onClientNotFound?: () => void
-}
-
-interface MutationParams {
-  clientId?: string
-  customerInfo: {
-    customer_first_name: string
-    customer_last_name: string
-    customer_email: string
-    customer_phone: string
-    customer_address?: string
-  }
-  vehicleInfo: {
-    customer_vehicle_make: string
-    customer_vehicle_model: string
-    customer_vehicle_year: number
-    customer_vehicle_vin?: string
-    customer_vehicle_color?: string
-    customer_vehicle_body_class?: string
-    customer_vehicle_doors?: number
-    customer_vehicle_trim?: string
-    customer_vehicle_license_plate?: string
-  }
-  scheduling: {
-    start_time: string
-    end_time: string
-    estimated_duration: number
-  }
-  details: {
-    status: string
-    contact_preference: 'phone' | 'email'
-    assigned_bay_id?: string
-    service_items: Array<{
-      service_id: string
-      service_name: string
-      quantity: number
-      unit_price: number
-      description?: string
-      assigned_profile_id?: string
-      package_id?: string | null
-    }>
-    additional_notes?: string
-  }
-}
+import { supabase } from "@/integrations/supabase/client";
+import { ServiceItemType, WorkOrderFormValues } from "../components/work-orders/types";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function useWorkOrderSubmission() {
-  return useMutation({
-    mutationFn: async ({ values, onSuccess, onClientNotFound }: SubmitParams) => {
-      console.log("Form values for work order submission:", values)
-      
-      const { customer_first_name, customer_last_name, customer_email, customer_phone, contact_preference } = values
-      
+  const queryClient = useQueryClient();
+
+  const submitWorkOrder = async (
+    formValues: WorkOrderFormValues,
+    workOrderId?: string
+  ) => {
+    try {
+      // Prepare work order data
+      const workOrderData = {
+        customer_first_name: formValues.customer_first_name,
+        customer_last_name: formValues.customer_last_name,
+        customer_email: formValues.customer_email,
+        customer_phone: formValues.customer_phone,
+        contact_preference: formValues.contact_preference,
+        customer_vehicle_make: formValues.customer_vehicle_make,
+        customer_vehicle_model: formValues.customer_vehicle_model,
+        customer_vehicle_year: formValues.customer_vehicle_year,
+        customer_vehicle_vin: formValues.customer_vehicle_vin,
+        customer_vehicle_color: formValues.customer_vehicle_color,
+        customer_vehicle_body_class: formValues.customer_vehicle_body_class,
+        customer_vehicle_doors: formValues.customer_vehicle_doors,
+        customer_vehicle_trim: formValues.customer_vehicle_trim,
+        customer_vehicle_license_plate: formValues.customer_vehicle_license_plate,
+        additional_notes: formValues.additional_notes,
+        start_time: formValues.start_time ? formValues.start_time.toISOString() : null,
+        end_time: formValues.end_time ? formValues.end_time.toISOString() : null,
+        estimated_duration: formValues.estimated_duration !== null 
+          ? Number(formValues.estimated_duration) 
+          : null,
+        assigned_bay_id: formValues.assigned_bay_id,
+        status: workOrderId ? undefined : "pending", // Only set status for new work orders
+      };
+
       // First check if the client exists
-      let clientId = values.client_id
-      
-      if (!clientId && customer_email) {
+      let clientId = formValues.client_id;
+
+      if (!clientId && formValues.customer_email) {
         const { data: existingClient } = await supabase
           .from('clients')
           .select('id')
-          .eq('email', customer_email)
-          .maybeSingle()
+          .eq('email', formValues.customer_email)
+          .maybeSingle();
         
         if (existingClient) {
-          clientId = existingClient.id
-        } else if (onClientNotFound) {
-          // This callback can be used to prompt the user to create a client
-          onClientNotFound()
-          return null
+          clientId = existingClient.id;
+        } else {
+          toast.error("Client not found. Please create a client.");
+          return false;
         }
       }
-      
-      // Format dates
-      const startTime = values.start_time ? format(values.start_time, "yyyy-MM-dd'T'HH:mm:ss") : null
-      const endTime = values.end_time ? format(values.end_time, "yyyy-MM-dd'T'HH:mm:ss") : null
-      
-      const customerAddress = values.customer_address || '';
-      
+
       // Prepare mutation parameters
       const params: MutationParams = {
         clientId,
         customerInfo: {
-          customer_first_name,
-          customer_last_name,
-          customer_email,
-          customer_phone,
-          customer_address: customerAddress
+          customer_first_name: formValues.customer_first_name,
+          customer_last_name: formValues.customer_last_name,
+          customer_email: formValues.customer_email,
+          customer_phone: formValues.customer_phone,
+          customer_address: formValues.customer_address || ''
         },
         vehicleInfo: {
-          customer_vehicle_make: values.customer_vehicle_make || '',
-          customer_vehicle_model: values.customer_vehicle_model || '',
-          customer_vehicle_year: values.customer_vehicle_year || 0,
-          customer_vehicle_vin: values.customer_vehicle_vin,
-          customer_vehicle_color: values.customer_vehicle_color,
-          customer_vehicle_body_class: values.customer_vehicle_body_class,
-          customer_vehicle_doors: values.customer_vehicle_doors,
-          customer_vehicle_trim: values.customer_vehicle_trim,
-          customer_vehicle_license_plate: values.customer_vehicle_license_plate
+          customer_vehicle_make: formValues.customer_vehicle_make || '',
+          customer_vehicle_model: formValues.customer_vehicle_model || '',
+          customer_vehicle_year: formValues.customer_vehicle_year || 0,
+          customer_vehicle_vin: formValues.customer_vehicle_vin,
+          customer_vehicle_color: formValues.customer_vehicle_color,
+          customer_vehicle_body_class: formValues.customer_vehicle_body_class,
+          customer_vehicle_doors: formValues.customer_vehicle_doors,
+          customer_vehicle_trim: formValues.customer_vehicle_trim,
+          customer_vehicle_license_plate: formValues.customer_vehicle_license_plate
         },
         scheduling: {
-          start_time: startTime || '',
-          end_time: endTime || '',
-          estimated_duration: values.estimated_duration ? Number(values.estimated_duration) : null
+          start_time: workOrderData.start_time || '',
+          end_time: workOrderData.end_time || '',
+          estimated_duration: workOrderData.estimated_duration
         },
         details: {
-          status: 'pending',
-          contact_preference,
-          assigned_bay_id: values.assigned_bay_id || undefined,
-          service_items: values.service_items.map(item => ({
+          status: workOrderData.status,
+          contact_preference: formValues.contact_preference,
+          assigned_bay_id: workOrderData.assigned_bay_id,
+          service_items: formValues.service_items.map(item => ({
             service_id: item.service_id,
             service_name: item.service_name,
             quantity: item.quantity,
@@ -122,18 +94,18 @@ export function useWorkOrderSubmission() {
             assigned_profile_id: item.assigned_profile_id,
             package_id: item.package_id
           })),
-          additional_notes: values.additional_notes
+          additional_notes: formValues.additional_notes
         }
-      }
-      
-      console.log("Prepared params for work order insertion:", params)
-      
+      };
+
+      console.log("Prepared params for work order insertion:", params);
+
       // Create the work order
       const { data: workOrder, error } = await supabase
         .from('work_orders')
         .insert({
           client_id: params.clientId,
-          customer_id: values.client_id,
+          customer_id: formValues.client_id,
           customer_first_name: params.customerInfo.customer_first_name,
           customer_last_name: params.customerInfo.customer_last_name,
           customer_email: params.customerInfo.customer_email,
@@ -157,28 +129,28 @@ export function useWorkOrderSubmission() {
           additional_notes: params.details.additional_notes
         })
         .select()
-        .single()
-      
-      if (error) throw error
-      
-      console.log("Work order created:", workOrder)
-      
+        .single();
+
+      if (error) throw error;
+
+      console.log("Work order created:", workOrder);
+
       // If work order was created successfully, add service items
       if (workOrder && params.details.service_items.length > 0) {
         const serviceItems = params.details.service_items.map(item => ({
           work_order_id: workOrder.id,
           ...item
-        }))
-        
+        }));
+
         const { error: itemsError } = await supabase
           .from('work_order_items')
-          .insert(serviceItems)
-        
-        if (itemsError) throw itemsError
+          .insert(serviceItems);
+
+        if (itemsError) throw itemsError;
       }
-      
+
       // Create vehicle record for the client if requested
-      if (values.save_vehicle && params.clientId && 
+      if (formValues.save_vehicle && params.clientId && 
           params.vehicleInfo.customer_vehicle_make && 
           params.vehicleInfo.customer_vehicle_model) {
         
@@ -195,18 +167,27 @@ export function useWorkOrderSubmission() {
             doors: params.vehicleInfo.customer_vehicle_doors,
             trim: params.vehicleInfo.customer_vehicle_trim,
             license_plate: params.vehicleInfo.customer_vehicle_license_plate,
-            is_primary: values.is_primary_vehicle || false
-          })
-        
+            is_primary: formValues.is_primary_vehicle || false
+          });
+
         if (vehicleError) {
-          console.error('Error creating vehicle:', vehicleError)
+          console.error('Error creating vehicle:', vehicleError);
           // Continue execution despite vehicle creation error
         }
       }
-      
-      if (onSuccess) onSuccess(workOrder)
-      
-      return workOrder
+
+      if (workOrder) {
+        queryClient.invalidateQueries(['work-orders']);
+        toast.success("Work order saved successfully.");
+      }
+
+      return workOrder;
+    } catch (error: any) {
+      console.error("Work order submission error:", error);
+      toast.error(error.message || "Failed to save work order");
+      return false;
     }
-  })
+  };
+
+  return { submitWorkOrder };
 }

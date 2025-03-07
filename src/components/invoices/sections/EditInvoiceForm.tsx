@@ -17,6 +17,23 @@ import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { useState } from "react"
 
+// Define proper props for CustomerInfoFields
+interface CustomerInfoFieldsProps {
+  customerFirstName: string;
+  setCustomerFirstName: (value: string) => void;
+  customerLastName: string;
+  setCustomerLastName: (value: string) => void;
+  customerEmail: string;
+  setCustomerEmail: (value: string) => void;
+  customerPhone?: string;
+  setCustomerPhone: (value: string) => void;
+  customerAddress?: string;
+  setCustomerAddress: (value: string) => void;
+  customers?: any[];
+  isLoadingCustomers?: boolean;
+  onCustomerSelect?: (customerId: string) => void;
+}
+
 type EditInvoiceFormProps = {
   form: UseFormReturn<InvoiceFormValues>
   onSubmit: (values: InvoiceFormValues) => void

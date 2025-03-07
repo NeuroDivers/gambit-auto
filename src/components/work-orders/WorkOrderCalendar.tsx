@@ -17,6 +17,7 @@ import { CalendarIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HorizontalCalendar } from "@/components/calendar/HorizontalCalendar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { WorkOrder } from "./types";
 
 export function WorkOrderCalendar() {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -59,13 +60,21 @@ export function WorkOrderCalendar() {
 
       if (error) throw error;
       
-      // Transform to ensure workOrder has all required fields
+      // Transform to ensure workOrder has all required fields and correct profiles structure
       const transformedData = data.map(order => ({
         ...order,
         created_at: order.created_at || new Date().toISOString(),
         contact_preference: order.contact_preference || 'email',
-        timeframe: order.timeframe || 'flexible'
-      }));
+        timeframe: order.timeframe || 'flexible',
+        // Convert the array of profiles to the single object structure expected by WorkOrder type
+        profiles: order.profiles && order.profiles.length > 0 
+          ? { 
+              id: order.profiles[0].id,
+              first_name: order.profiles[0].first_name,
+              last_name: order.profiles[0].last_name 
+            }
+          : { first_name: null, last_name: null }
+      })) as WorkOrder[];
       
       return transformedData;
     },

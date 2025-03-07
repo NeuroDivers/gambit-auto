@@ -1,6 +1,5 @@
 import React from 'react';
 import { Invoice } from '@/components/invoices/types';
-import { UseReactToPrintFn } from '@/components/invoices/types';
 import { MutableRefObject } from 'react';
 
 export interface PublicViewProps {
@@ -9,7 +8,7 @@ export interface PublicViewProps {
   isVerified: boolean;
   setIsVerified: React.Dispatch<React.SetStateAction<boolean>>;
   isAdmin: boolean;
-  onPrint: UseReactToPrintFn;
+  onPrint: () => void;
   printRef: MutableRefObject<any>;
 }
 
@@ -57,7 +56,7 @@ export function PublicView(props: PublicViewProps) {
             {invoice.customer_vehicle_year} {invoice.customer_vehicle_make} {invoice.customer_vehicle_model}
           </p>
           {invoice.customer_vehicle_vin && <p>VIN: {invoice.customer_vehicle_vin}</p>}
-          {invoice.customer_vehicle_color && <p>Color: {invoice.customer_vehicle_color}</p>}
+          {invoice.vehicle_color && <p>Color: {invoice.vehicle_color}</p>}
         </div>
       </div>
       
@@ -92,8 +91,8 @@ export function PublicView(props: PublicViewProps) {
             <span>${invoice.subtotal?.toFixed(2) || '0.00'}</span>
           </div>
           <div className="flex justify-between py-2">
-            <span className="font-medium">Tax ({invoice.tax_rate || 0}%):</span>
-            <span>${invoice.tax_amount?.toFixed(2) || '0.00'}</span>
+            <span className="font-medium">Tax:</span>
+            <span>${((invoice.gst_amount || 0) + (invoice.qst_amount || 0)).toFixed(2)}</span>
           </div>
           <div className="flex justify-between py-2 text-lg font-bold">
             <span>Total:</span>

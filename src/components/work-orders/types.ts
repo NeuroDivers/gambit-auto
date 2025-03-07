@@ -27,6 +27,7 @@ export interface WorkOrder extends CustomerVehicleRecordInfo {
   is_archived?: boolean;
   media_url?: string | null;
   profiles?: {
+    id?: string;
     first_name: string | null;
     last_name: string | null;
   };
@@ -55,6 +56,7 @@ export interface WorkOrder extends CustomerVehicleRecordInfo {
   vehicle_trim?: string;
   vehicle_body_class?: string;
   vehicle_doors?: number;
+  customer_vehicle_color?: string;
 }
 
 export type WorkOrderStatus = WorkOrder['status'];

@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -43,7 +44,7 @@ export function CommissionsSection({ invoiceId, items }: CommissionsSectionProps
     try {
       setSaving(true);
       
-      // Normalize commission_type here
+      // Normalize commission_type here - convert 'flat_rate' to 'flat'
       if (updates.commission_type === 'flat_rate') {
         updates.commission_type = 'flat';
       }
