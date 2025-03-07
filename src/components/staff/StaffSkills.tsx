@@ -1,192 +1,301 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { PlusIcon, Trash2Icon } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 
-interface Skill {
-  id: string;
-  name: string;
+import { useState } from 'react';
+import { PageTitle } from '@/components/shared/PageTitle';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ServiceSkillsManager } from './skills/ServiceSkillsManager';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { X, Plus } from 'lucide-react';
+import { toast } from 'sonner';
+import { useRemoveSkillMutation } from '@/components/staff/hooks/useRemoveSkillMutation';
+
+function MySkills() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>My Service Skills</CardTitle>
+        <CardDescription>
+          Manage your service skills to let customers know what services you can provide
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ServiceSkillsManager />
+      </CardContent>
+    </Card>
+  );
 }
 
-export function StaffSkills({ profileId }: { profileId: string }) {
-  const [newSkill, setNewSkill] = useState("");
+function StaffSkillsDirectory() {
+  const [selectedStaff, setSelectedStaff] = useState<string | null>(null);
   const queryClient = useQueryClient();
-
-  const { data: staffSkills, isLoading: isLoadingStaffSkills, refetch: refetchStaffSkills } = useQuery({
-    queryKey: ["staffSkills", profileId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("staff_skills")
-        .select("skill_id")
-        .eq("profile_id", profileId);
-
-      if (error) {
-        console.error("Error fetching staff skills:", error);
-        throw error;
-      }
-
-      return data?.map(item => item.skill_id) || [];
-    },
+  const { removeSkill, isLoading: removeSkillLoading } = useRemoveSkillMutation({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff-skills'] });
+    }
   });
 
-  const { data: serviceTypes = [], isLoading: isLoadingServiceTypes } = useQuery({
-    queryKey: ["serviceTypes"],
+  const { data: staffMembers, isLoading: staffLoading } = useQuery({
+    queryKey: ['staff-members'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("service_types")
-        .select("id, name, description");
+        .from('profiles')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          email,
+          avatar_url,
+          role:role_id (
+            id,
+            name,
+            nicename
+          )
+        `)
+        .not('role_id', 'is', null)
+        .order('first_name');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
-      if (error) {
-        console.error("Error fetching service types:", error);
-        throw error;
-      }
+  const { data: staffSkills, isLoading: skillsLoading } = useQuery({
+    queryKey: ['staff-skills', selectedStaff],
+    queryFn: async () => {
+      if (!selectedStaff) return null;
+      
+      const { data, error } = await supabase
+        .from('staff_service_skills')
+        .select(`
+          id,
+          staff_id,
+          service_id,
+          proficiency_level,
+          service_types:service_id (
+            id,
+            name,
+            description
+          ),
+          profiles:staff_id (
+            id,
+            first_name,
+            last_name
+          )
+        `)
+        .eq('staff_id', selectedStaff);
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedStaff
+  });
 
+  const { data: availableServices, isLoading: servicesLoading } = useQuery({
+    queryKey: ['available-services'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('service_types')
+        .select('*')
+        .eq('status', 'active')
+        .order('name');
+      
+      if (error) throw error;
       return data || [];
     },
+    enabled: !!selectedStaff
   });
 
-  const addSkillMutation = useMutation({
-    mutationFn: async (skillId: string) => {
-      const { error } = await supabase
-        .from("staff_skills")
-        .insert([{ profile_id: profileId, skill_id: skillId }]);
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
-      if (error) {
-        console.error("Error adding skill:", error);
-        throw error;
+  const addSkillsMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedStaff || selectedSkills.length === 0) return;
+      
+      // Check which skills are not already added
+      const existingSkillIds = staffSkills?.map(skill => skill.service_id) || [];
+      const newSkillIds = selectedSkills.filter(id => !existingSkillIds.includes(id));
+      
+      if (newSkillIds.length === 0) {
+        toast.info("All selected skills are already added");
+        return;
       }
-    },
-    onSuccess: () => {
-      toast.success("Skill added successfully!");
-      queryClient.invalidateQueries({ queryKey: ["staffSkills", profileId] });
-      setNewSkill("");
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to add skill: ${error.message}`);
-    },
-  });
-
-  const removeSkillMutation = useMutation({
-    mutationFn: async (skillId: string) => {
+      
+      // Create entries for new skills
+      const skillsToAdd = newSkillIds.map(serviceId => ({
+        staff_id: selectedStaff,
+        service_id: serviceId,
+        proficiency_level: 'beginner'
+      }));
+      
       const { error } = await supabase
-        .from("staff_skills")
-        .delete()
-        .eq("profile_id", profileId)
-        .eq("skill_id", skillId);
-
-      if (error) {
-        console.error("Error removing skill:", error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      toast.success("Skill removed successfully!");
-      queryClient.invalidateQueries({ queryKey: ["staffSkills", profileId] });
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to remove skill: ${error.message}`);
-    },
+        .from('staff_service_skills')
+        .insert(skillsToAdd);
+      
+      if (error) throw error;
+      
+      toast.success(`${newSkillIds.length} skill${newSkillIds.length > 1 ? 's' : ''} added successfully`);
+      setSelectedSkills([]);
+      queryClient.invalidateQueries({ queryKey: ['staff-skills'] });
+    }
   });
 
-  const handleAddSkill = async () => {
-    if (!newSkill.trim()) return;
-    try {
-      await addSkillMutation.mutateAsync(newSkill);
-    } catch (error) {
-      console.error("Error adding skill:", error);
-    }
-  };
-
-  const handleRemoveSkill = async (skillId: string) => {
-    try {
-      await removeSkillMutation.mutateAsync(skillId);
-    } catch (error) {
-      console.error("Error removing skill:", error);
-    }
-  };
-
-  if (isLoadingStaffSkills || isLoadingServiceTypes) {
-    return <div>Loading...</div>;
-  }
+  // Filter out services that the staff member already has
+  const availableServicesToAdd = availableServices?.filter(service => 
+    !staffSkills?.some(skill => skill.service_id === service.id)
+  ) || [];
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Skills</h3>
-      <Table>
-        <TableCaption>A list of skills assigned to this staff member.</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[100px]">Skill</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {staffSkills?.map((skillId) => {
-            const service = serviceTypes.find(s => s.id === skillId);
-            return (
-              <TableRow key={skillId}>
-                <TableCell className="font-medium">{serviceTypes.find(s => s.id === service.id)?.name}</TableCell>
-                <TableCell>{serviceTypes.find(s => s.id === service.id)?.description}</TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemoveSkill(skillId)}
-                  >
-                    <Trash2Icon className="h-4 w-4 mr-2" />
-                    Remove
-                  </Button>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-        <TableFooter>
-          <TableRow>
-            <TableCell colSpan={3}>
-              <div className="flex items-center space-x-2">
-                <Select onValueChange={setNewSkill}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select a skill" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {serviceTypes.map((service) => (
-                      <SelectItem key={service.id} value={service.id}>
-                        {service.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button onClick={handleAddSkill} disabled={addSkillMutation.isLoading}>
-                  <PlusIcon className="h-4 w-4 mr-2" />
-                  Add Skill
-                </Button>
+    <Card>
+      <CardHeader>
+        <CardTitle>Staff Skills Directory</CardTitle>
+        <CardDescription>
+          View and manage skills for all staff members
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          {/* Staff selection */}
+          <div>
+            <h3 className="text-sm font-medium mb-3">Select Staff Member</h3>
+            {staffLoading ? (
+              <div className="flex flex-wrap gap-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-8 w-24" />
+                ))}
               </div>
-            </TableCell>
-          </TableRow>
-        </TableFooter>
-      </Table>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {staffMembers?.map(staff => (
+                  <Badge
+                    key={staff.id}
+                    variant={selectedStaff === staff.id ? "default" : "outline"}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setSelectedStaff(staff.id);
+                      setSelectedSkills([]);
+                    }}
+                  >
+                    {staff.first_name} {staff.last_name}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Skills display */}
+          {selectedStaff && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium mb-3">Current Skills</h3>
+                {skillsLoading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-3/4" />
+                  </div>
+                ) : staffSkills?.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">No skills added yet</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {staffSkills?.map(skill => (
+                      <Badge 
+                        key={skill.id} 
+                        variant="secondary"
+                        className="pl-3 pr-2 py-1.5 text-sm flex items-center gap-1"
+                      >
+                        {skill.service_types?.name}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5 rounded-full ml-1 hover:bg-destructive/10"
+                          onClick={() => removeSkill(skill.id)}
+                          disabled={removeSkillLoading}
+                        >
+                          <X size={12} />
+                        </Button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Add skills section */}
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-sm font-medium">Add New Skills</h3>
+                  <Button 
+                    size="sm"
+                    onClick={() => addSkillsMutation.mutate()}
+                    disabled={selectedSkills.length === 0 || addSkillsMutation.isPending}
+                  >
+                    <Plus size={14} className="mr-1" />
+                    Add Selected
+                  </Button>
+                </div>
+                
+                {servicesLoading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                ) : availableServicesToAdd.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">All available skills have been added</p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                    {availableServicesToAdd.map(service => (
+                      <div
+                        key={service.id}
+                        className={`
+                          border rounded-md p-2 cursor-pointer text-sm
+                          ${selectedSkills.includes(service.id) 
+                            ? 'bg-primary/10 border-primary/30' 
+                            : 'hover:bg-muted'
+                          }
+                        `}
+                        onClick={() => {
+                          setSelectedSkills(prev => 
+                            prev.includes(service.id)
+                              ? prev.filter(id => id !== service.id)
+                              : [...prev, service.id]
+                          );
+                        }}
+                      >
+                        {service.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function ServiceSkills() {
+  return (
+    <div className="container mx-auto py-6 space-y-6">
+      <PageTitle title="Service Skills" />
+      
+      <Tabs defaultValue="my-skills">
+        <TabsList>
+          <TabsTrigger value="my-skills">My Skills</TabsTrigger>
+          <TabsTrigger value="staff-skills">Staff Skills</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="my-skills" className="mt-6">
+          <MySkills />
+        </TabsContent>
+        
+        <TabsContent value="staff-skills" className="mt-6">
+          <StaffSkillsDirectory />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

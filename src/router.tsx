@@ -1,6 +1,5 @@
 
 import { createBrowserRouter } from "react-router-dom"
-import Dashboard from "@/pages/Dashboard"
 import Auth from "@/pages/Auth"
 import UserDetails from "./pages/UserDetails"
 import ResetPassword from "./pages/ResetPassword"
@@ -11,10 +10,6 @@ import { protectedRoutes } from "./routes/protectedRoutes"
 
 // Create the router
 export const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Dashboard />
-  },
   {
     path: "/auth",
     element: <Auth />
@@ -35,7 +30,7 @@ export const router = createBrowserRouter([
     path: "/p/:invoiceId",
     element: <PublicInvoiceView />
   },
-  protectedRoutes, // Changed from ...protectedRoutes to protectedRoutes
+  protectedRoutes, // Add the protected routes object
   {
     path: "*",
     element: <NotFound />

@@ -9,6 +9,19 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { useRemoveSkillMutation } from '@/components/staff/hooks/useRemoveSkillMutation'
 
+interface ServiceType {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+interface UserSkill {
+  id: string;
+  service_id: string;
+  proficiency_level: string;
+  service_types: ServiceType;
+}
+
 export function ServiceSkillsManager() {
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([])
   const [userId, setUserId] = useState<string | null>(null)
@@ -35,7 +48,7 @@ export function ServiceSkillsManager() {
         .order('name')
       
       if (error) throw error
-      return data || []
+      return data || [] as ServiceType[]
     },
     enabled: !!userId
   })
@@ -65,7 +78,7 @@ export function ServiceSkillsManager() {
         .eq('staff_id', userId)
       
       if (error) throw error
-      return data || []
+      return data || [] as UserSkill[]
     },
     enabled: !!userId
   })
@@ -104,7 +117,7 @@ export function ServiceSkillsManager() {
   })
 
   // Remove skill mutation using the custom hook
-  const removeSkillMutation = useRemoveSkillMutation({
+  const { removeSkill, isLoading: isRemovalLoading } = useRemoveSkillMutation({
     onSuccess: () => {
       refetchUserSkills()
     }
@@ -121,7 +134,7 @@ export function ServiceSkillsManager() {
 
   // Handle removing a skill
   const handleRemoveSkill = (skillId: string) => {
-    removeSkillMutation.removeSkill(skillId)
+    removeSkill(skillId)
   }
 
   // Get available services (excluding ones the user already has)
@@ -155,13 +168,13 @@ export function ServiceSkillsManager() {
                 variant="secondary"
                 className="pl-3 pr-2 py-1.5 text-sm flex items-center gap-1"
               >
-                {skill.service_types?.name}
+                {skill.service_types.name}
                 <Button
                   variant="ghost"
                   size="icon"
                   className="h-5 w-5 rounded-full ml-1 hover:bg-destructive/10"
                   onClick={() => handleRemoveSkill(skill.id)}
-                  disabled={removeSkillMutation.isLoading}
+                  disabled={isRemovalLoading}
                 >
                   <X size={12} />
                 </Button>

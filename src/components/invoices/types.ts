@@ -1,4 +1,3 @@
-
 export interface InvoiceFormValues {
   status?: string;
   notes?: string;
@@ -110,4 +109,3 @@ export interface UseReactToPrintFn {
   handlePrint: () => void;
   printRef: React.MutableRefObject<any>;
 }
-

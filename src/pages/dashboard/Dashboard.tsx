@@ -22,11 +22,16 @@ export default function Dashboard() {
         .eq("id", user.id)
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error("Error fetching profile:", error)
+        throw error
+      }
       return data
     },
     enabled: !!currentUserRole
   })
+
+  console.log("Dashboard rendering. Role:", currentUserRole, "Profile:", profile)
 
   if (roleLoading || profileLoading) {
     return <LoadingScreen />
