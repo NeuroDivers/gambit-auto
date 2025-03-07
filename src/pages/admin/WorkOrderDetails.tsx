@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,6 +13,7 @@ import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { PageBreadcrumbs } from "@/components/navigation/PageBreadcrumbs";
 import { useWorkOrderInvoice } from "@/components/work-orders/hooks/useWorkOrderInvoice";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 export default function WorkOrderDetails() {
   const { id } = useParams<{ id: string }>();
@@ -28,7 +28,6 @@ export default function WorkOrderDetails() {
       if (!id) return null;
 
       try {
-        // First fetch the work order with its main profile and service bay
         const { data: workOrderData, error: workOrderError } = await supabase
           .from("work_orders")
           .select(`
@@ -51,7 +50,6 @@ export default function WorkOrderDetails() {
           throw workOrderError;
         }
 
-        // Then fetch the work_order_services separately
         const { data: servicesData, error: servicesError } = await supabase
           .from("work_order_services")
           .select(`
@@ -76,7 +74,6 @@ export default function WorkOrderDetails() {
           throw servicesError;
         }
 
-        // For each service with an assigned_profile_id, fetch the profile data
         const servicesWithProfiles = await Promise.all(
           servicesData.map(async (service) => {
             if (service.assigned_profile_id) {
@@ -97,7 +94,6 @@ export default function WorkOrderDetails() {
           })
         );
 
-        // Combine the work order data with the services
         return {
           ...workOrderData,
           work_order_services: servicesWithProfiles
@@ -368,9 +364,11 @@ export default function WorkOrderDetails() {
                       <p className="text-sm text-muted-foreground">{service.service_types?.description || ''}</p>
                       
                       {service.profiles ? (
-                        <div className="flex items-center mt-2 text-sm text-muted-foreground">
-                          <User className="h-3.5 w-3.5 mr-1.5" />
-                          <span>Assigned to: {service.profiles.first_name} {service.profiles.last_name}</span>
+                        <div className="flex items-center mt-2">
+                          <User className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                          <Badge variant="outline" className="text-xs font-normal">
+                            {service.profiles.first_name} {service.profiles.last_name}
+                          </Badge>
                         </div>
                       ) : (
                         <div className="flex items-center mt-2 text-sm text-muted-foreground">
