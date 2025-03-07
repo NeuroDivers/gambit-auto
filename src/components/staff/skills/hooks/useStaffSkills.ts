@@ -36,6 +36,7 @@ export function useStaffSkills(profileId: string) {
         service_id: item.service_id,
         proficiency: item.proficiency,
         service_types: {
+          // Safely access properties with optional chaining
           id: item.service_types?.id || "",
           name: item.service_types?.name || "",
           description: item.service_types?.description || ""
