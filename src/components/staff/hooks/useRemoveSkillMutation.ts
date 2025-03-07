@@ -4,7 +4,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export function useRemoveSkillMutation() {
+interface UseRemoveSkillMutationProps {
+  onSuccess?: () => void;
+}
+
+export function useRemoveSkillMutation(props?: UseRemoveSkillMutationProps) {
   const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
 
@@ -23,10 +27,16 @@ export function useRemoveSkillMutation() {
       }
     },
     onSuccess: () => {
-      // Fix: Replace string[] with proper invalidation filters
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ["userSkills"] });
       queryClient.invalidateQueries({ queryKey: ["staff-skills"] });
       queryClient.invalidateQueries({ queryKey: ["profile-skills"] });
       toast.success("Skill removed successfully");
+      
+      // Call the onSuccess callback if provided
+      if (props?.onSuccess) {
+        props.onSuccess();
+      }
     },
     onError: (error) => {
       console.error("Error removing skill:", error);
@@ -36,6 +46,7 @@ export function useRemoveSkillMutation() {
 
   return { 
     removeSkill: removeSkillMutation.mutate, 
-    isLoading 
+    isLoading,
+    isPending: removeSkillMutation.isPending
   };
 }

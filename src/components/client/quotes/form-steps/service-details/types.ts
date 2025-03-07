@@ -1,14 +1,9 @@
 
-import { UseFormReturn } from "react-hook-form"
-import { ServiceFormData } from "@/types/service-item"
-
 export interface ServiceDetailFieldProps {
-  form: UseFormReturn<ServiceFormData>
-  serviceId: string
+  value: Record<string, any>;
+  onChange: (details: Record<string, any>) => void;
 }
 
-export interface ServiceImageUploadProps {
-  images: string[]
-  onImageUpload: (files: FileList) => Promise<string[]>
-  onImageRemove: (url: string) => void
-}
+export interface AutoDetailingFieldProps extends ServiceDetailFieldProps {}
+export interface PPFPackageFieldProps extends ServiceDetailFieldProps {}
+export interface WindowTintFieldProps extends ServiceDetailFieldProps {}

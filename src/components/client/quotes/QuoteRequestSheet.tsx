@@ -1,20 +1,36 @@
 
-import { Sheet, SheetContent } from "@/components/ui/sheet"
-import { MultiStepQuoteRequestForm } from "./MultiStepQuoteRequestForm"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { QuoteRequestForm } from "./QuoteRequestForm"
+import { FormProvider, useForm } from "react-hook-form"
+import { useState } from "react"
 
-interface QuoteRequestSheetProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+interface Props {
+  onSuccess: () => void;
+  quoteRequestForm: any; // This should be properly typed based on your application
 }
 
-export function QuoteRequestSheet({ open, onOpenChange }: QuoteRequestSheetProps) {
+export function QuoteRequestSheet({ onSuccess, quoteRequestForm }: Props) {
+  const [open, setOpen] = useState(false)
+
+  const handleSuccess = () => {
+    setOpen(false)
+    onSuccess()
+  }
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full p-0">
-        <ScrollArea className="h-full p-6">
-          <MultiStepQuoteRequestForm onSuccess={() => onOpenChange(false)} />
-        </ScrollArea>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetContent className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Request Quote</SheetTitle>
+          <SheetDescription>
+            Fill out the form to get a quote for your service needs.
+          </SheetDescription>
+        </SheetHeader>
+        <div className="mt-6">
+          <FormProvider {...quoteRequestForm}>
+            <QuoteRequestForm onSuccess={handleSuccess} />
+          </FormProvider>
+        </div>
       </SheetContent>
     </Sheet>
   )

@@ -1,3 +1,4 @@
+
 export interface InvoiceFormValues {
   status?: string;
   notes?: string;
@@ -100,9 +101,9 @@ export interface CustomerInfo {
   customer_address?: string;
 }
 
-export interface UseReactToPrintFn {
-  (content: () => React.ReactInstance | null): { 
-    handlePrint: () => void; 
-    printRef: React.MutableRefObject<any> 
-  };
+export interface UseReactToPrintResult {
+  handlePrint: () => void;
+  printRef: React.MutableRefObject<any>;
 }
+
+export type UseReactToPrintFn = (content: () => React.ReactInstance | null) => UseReactToPrintResult;

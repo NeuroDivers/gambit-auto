@@ -121,7 +121,7 @@ export function ServiceSkillsManager() {
 
   // Handle removing a skill
   const handleRemoveSkill = (skillId: string) => {
-    removeSkillMutation.mutate(skillId)
+    removeSkillMutation.removeSkill(skillId)
   }
 
   // Get available services (excluding ones the user already has)
@@ -161,7 +161,7 @@ export function ServiceSkillsManager() {
                   size="icon"
                   className="h-5 w-5 rounded-full ml-1 hover:bg-destructive/10"
                   onClick={() => handleRemoveSkill(skill.id)}
-                  disabled={removeSkillMutation.isPending}
+                  disabled={removeSkillMutation.isLoading || removeSkillMutation.isPending}
                 >
                   <X size={12} />
                 </Button>
