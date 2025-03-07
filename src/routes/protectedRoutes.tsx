@@ -1,3 +1,4 @@
+
 import { DashboardLayoutWrapper } from "@/components/dashboard/DashboardLayoutWrapper"
 import { StaffLayoutWrapper } from "@/components/staff/StaffLayoutWrapper"
 import { ClientLayoutWrapper } from "@/components/client/ClientLayoutWrapper"
@@ -22,7 +23,6 @@ import { Suspense, useEffect, useState } from "react"
 import { LoadingScreen } from "@/components/shared/LoadingScreen"
 import { applyThemeClass } from "@/lib/utils"
 import { toast } from "sonner"
-import { supabase } from "@/integrations/supabase/client"
 
 const RoleBasedLayout = () => {
   const { currentUserRole, isLoading: roleLoading, error: roleError } = usePermissions();
@@ -118,10 +118,12 @@ const RoleBasedLayout = () => {
   }
   
   if (roleLoading) {
+    console.log("RoleBasedLayout: Role is still loading...");
     return <LoadingScreen />;
   }
   
   if (roleError || !currentUserRole) {
+    console.error("RoleBasedLayout: Error or no role found", {roleError, currentUserRole});
     return <LoadingScreen />;
   }
 

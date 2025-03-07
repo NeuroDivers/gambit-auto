@@ -1,92 +1,131 @@
 
-import { useState } from "react";
-import { Label } from "@/components/ui/label";
+import React from 'react';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { UseFormReturn } from "react-hook-form";
 
 export interface CustomerInfoFieldsProps {
-  customerFirstName: string;
-  setCustomerFirstName: (value: string) => void;
-  customerLastName: string;
-  setCustomerLastName: (value: string) => void;
-  customerEmail: string;
-  setCustomerEmail: (value: string) => void;
-  customerPhone: string;
-  setCustomerPhone: (value: string) => void;
-  customerAddress: string;
-  setCustomerAddress: (value: string) => void;
+  form: UseFormReturn<any>;
   readOnly?: boolean;
 }
 
-export function CustomerInfoFields({
-  customerFirstName,
-  setCustomerFirstName,
-  customerLastName,
-  setCustomerLastName,
-  customerEmail,
-  setCustomerEmail,
-  customerPhone,
-  setCustomerPhone,
-  customerAddress,
-  setCustomerAddress,
-  readOnly = false
-}: CustomerInfoFieldsProps) {
+export function CustomerInfoFields({ form, readOnly = false }: CustomerInfoFieldsProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="customerFirstName">First Name</Label>
-          <Input
-            id="customerFirstName"
-            value={customerFirstName}
-            onChange={(e) => setCustomerFirstName(e.target.value)}
-            readOnly={readOnly}
-            disabled={readOnly}
-          />
-        </div>
-        <div>
-          <Label htmlFor="customerLastName">Last Name</Label>
-          <Input
-            id="customerLastName"
-            value={customerLastName}
-            onChange={(e) => setCustomerLastName(e.target.value)}
-            readOnly={readOnly}
-            disabled={readOnly}
-          />
-        </div>
-      </div>
-      <div>
-        <Label htmlFor="customerEmail">Email</Label>
-        <Input
-          id="customerEmail"
-          type="email"
-          value={customerEmail}
-          onChange={(e) => setCustomerEmail(e.target.value)}
-          readOnly={readOnly}
-          disabled={readOnly}
+        <FormField
+          control={form.control}
+          name="customerFirstName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>First Name</FormLabel>
+              <FormControl>
+                <Input {...field} readOnly={readOnly} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="customerLastName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Last Name</FormLabel>
+              <FormControl>
+                <Input {...field} readOnly={readOnly} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
       </div>
-      <div>
-        <Label htmlFor="customerPhone">Phone</Label>
-        <Input
-          id="customerPhone"
-          value={customerPhone}
-          onChange={(e) => setCustomerPhone(e.target.value)}
-          readOnly={readOnly}
-          disabled={readOnly}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="customerEmail"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input {...field} type="email" readOnly={readOnly} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="customerPhone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Phone</FormLabel>
+              <FormControl>
+                <Input {...field} readOnly={readOnly} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
       </div>
-      <div>
-        <Label htmlFor="customerAddress">Address</Label>
-        <Textarea
-          id="customerAddress"
-          value={customerAddress}
-          onChange={(e) => setCustomerAddress(e.target.value)}
-          rows={3}
-          readOnly={readOnly}
-          disabled={readOnly}
+      <div className="grid grid-cols-1 gap-4">
+        <FormField
+          control={form.control}
+          name="customerAddress"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Address</FormLabel>
+              <FormControl>
+                <Input {...field} readOnly={readOnly} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <FormField
+          control={form.control}
+          name="customerCity"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>City</FormLabel>
+              <FormControl>
+                <Input {...field} readOnly={readOnly} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="customerState"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>State/Province</FormLabel>
+              <FormControl>
+                <Input {...field} readOnly={readOnly} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="customerZip"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Zip/Postal Code</FormLabel>
+              <FormControl>
+                <Input {...field} readOnly={readOnly} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
       </div>
     </div>
   );
 }
+
+export default CustomerInfoFields;

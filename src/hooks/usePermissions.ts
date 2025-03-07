@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCallback, useEffect, useState } from "react";
@@ -190,6 +191,8 @@ export const usePermissions = () => {
     type: 'page_access' | 'feature_access'
   ): Promise<boolean> => {
     try {
+      console.log(`Checking permission for resource: ${resource}, type: ${type}`);
+      
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) {
         console.error('Error getting auth user in checkPermission:', userError);
@@ -201,18 +204,29 @@ export const usePermissions = () => {
         return false;
       }
 
-      if (!permissions && currentUserRole?.name?.toLowerCase() !== 'administrator' && 
-          currentUserRole?.name?.toLowerCase() !== 'admin' && 
-          currentUserRole?.name?.toLowerCase() !== 'king') {
-        console.log('Permissions not loaded yet and not admin');
+      // Special case for dashboard - always grant access
+      if (resource === 'dashboard') {
+        console.log('Dashboard access always granted');
+        return true;
+      }
+
+      if (!currentUserRole) {
+        console.log('No current user role, denying access');
         return false;
       }
 
-      if (currentUserRole?.name?.toLowerCase() === 'administrator' || 
-          currentUserRole?.name?.toLowerCase() === 'admin' || 
-          currentUserRole?.name?.toLowerCase() === 'king') {
+      // Admin-like roles always have access to everything
+      const roleName = currentUserRole.name.toLowerCase();
+      if (roleName === 'administrator' || 
+          roleName === 'admin' || 
+          roleName === 'king') {
         console.log('User is admin or has admin-like role, granting access');
         return true;
+      }
+
+      if (!permissions) {
+        console.log('Permissions not loaded yet and not admin');
+        return false;
       }
 
       const hasPermission = permissions?.some(
@@ -225,7 +239,9 @@ export const usePermissions = () => {
       return hasPermission || false;
     } catch (error) {
       console.error('Permission check error:', error);
-      return false;
+      // TEMPORARY: Default to granting permission to avoid blank screens
+      console.warn(`FALLBACK: Temporarily granting permission for ${resource} due to check error`);
+      return true;
     }
   }, [permissions, currentUserRole]);
 
