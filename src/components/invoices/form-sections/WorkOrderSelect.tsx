@@ -1,6 +1,7 @@
 
-import { Label } from "@/components/ui/label";
+import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 export interface WorkOrderSelectProps {
   value: string;
@@ -9,23 +10,38 @@ export interface WorkOrderSelectProps {
   disabled?: boolean;
 }
 
-export function WorkOrderSelect({ value, onChange, workOrders, disabled = false }: WorkOrderSelectProps) {
+const WorkOrderSelect: React.FC<WorkOrderSelectProps> = ({ 
+  value, 
+  onChange, 
+  workOrders, 
+  disabled = false 
+}) => {
+  const handleChange = async (id: string) => {
+    await onChange(id);
+  };
+
   return (
     <div className="space-y-2">
-      <Label htmlFor="work_order_id">Work Order</Label>
-      <Select value={value || ""} onValueChange={onChange} disabled={disabled}>
-        <SelectTrigger id="work_order_id" className="w-full">
+      <Label htmlFor="workOrder">Work Order</Label>
+      <Select
+        value={value}
+        onValueChange={handleChange}
+        disabled={disabled}
+      >
+        <SelectTrigger id="workOrder" className="w-full">
           <SelectValue placeholder="Select work order" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="">None</SelectItem>
           {workOrders.map((order) => (
             <SelectItem key={order.id} value={order.id}>
-              {`WO-${order.id.substring(0, 8)} - ${order.vehicle_make} ${order.vehicle_model}`}
+              #{order.workOrderNumber} - {order.customerFirstName} {order.customerLastName}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
     </div>
   );
-}
+};
+
+export default WorkOrderSelect;

@@ -1,31 +1,23 @@
 
+import React from "react";
 import { StaffSkill } from "../types";
 import { SkillCard } from "./SkillCard";
 
-interface SkillsListProps {
+export interface SkillsListProps {
   skills: StaffSkill[];
-  isLoading: boolean;
-  onRemoveSkill: (skillId: string) => void;
-  isRemoving: boolean;
+  onUpdate: (skillId: string, level: string) => void;
+  onDelete: (skillId: string) => void;
 }
 
-export function SkillsList({ skills, isLoading, onRemoveSkill, isRemoving }: SkillsListProps) {
-  if (isLoading) {
-    return <p>Loading skills...</p>;
-  }
-  
-  if (skills.length === 0) {
-    return <p className="text-muted-foreground">You haven't added any skills yet.</p>;
-  }
-  
+export function SkillsList({ skills, onUpdate, onDelete }: SkillsListProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {skills.map(skill => (
-        <SkillCard 
-          key={skill.id} 
-          skill={skill} 
-          onRemove={onRemoveSkill} 
-          isRemoving={isRemoving}
+    <div className="space-y-4">
+      {skills.map((skill) => (
+        <SkillCard
+          key={skill.id}
+          skill={skill}
+          onUpdate={onUpdate}
+          onDelete={onDelete}
         />
       ))}
     </div>

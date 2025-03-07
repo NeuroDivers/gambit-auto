@@ -1,6 +1,7 @@
 
-import { Label } from "@/components/ui/label";
+import React from "react";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 export interface InvoiceNotesFieldProps {
   value: string;
@@ -8,18 +9,24 @@ export interface InvoiceNotesFieldProps {
   disabled?: boolean;
 }
 
-export function InvoiceNotesField({ value, onChange, disabled = false }: InvoiceNotesFieldProps) {
+const InvoiceNotesField: React.FC<InvoiceNotesFieldProps> = ({ 
+  value, 
+  onChange, 
+  disabled = false 
+}) => {
   return (
     <div className="space-y-2">
       <Label htmlFor="notes">Notes</Label>
       <Textarea
         id="notes"
-        placeholder="Add invoice notes..."
-        className="min-h-[100px]"
+        placeholder="Add notes for this invoice"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        className="min-h-[100px]"
         disabled={disabled}
       />
     </div>
   );
-}
+};
+
+export default InvoiceNotesField;
