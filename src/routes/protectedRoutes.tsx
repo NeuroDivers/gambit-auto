@@ -1,10 +1,10 @@
+
 import { DashboardLayoutWrapper } from "@/components/dashboard/DashboardLayoutWrapper"
 import { StaffLayoutWrapper } from "@/components/staff/StaffLayoutWrapper"
 import { ClientLayoutWrapper } from "@/components/client/ClientLayoutWrapper"
 import Dashboard from "@/pages/dashboard/Dashboard"
 import { RouteObject } from "react-router-dom"
 import { workOrderRoutes } from "./work-order-routes"
-import { serviceRoutes } from "./service-routes"
 import { userRoutes } from "./user-routes"
 import { estimateRoutes } from "./estimate-routes"
 import { invoiceRoutes } from "./invoice-routes"
@@ -23,6 +23,18 @@ import { LoadingScreen } from "@/components/shared/LoadingScreen"
 import { applyThemeClass } from "@/lib/utils"
 import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
+
+// Service routes placeholder (since we removed the import)
+const serviceRoutes = [
+  {
+    path: "services",
+    element: <div>Services</div>
+  },
+  {
+    path: "services/:id",
+    element: <div>Service Details</div>
+  }
+];
 
 const RoleBasedLayout = () => {
   const { currentUserRole, isLoading: roleLoading, error: roleError } = usePermissions();
