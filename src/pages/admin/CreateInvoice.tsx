@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useForm } from "react-hook-form"
@@ -38,6 +39,12 @@ export default function CreateInvoice() {
   const [vehicleBodyClass, setVehicleBodyClass] = useState("")
   const [vehicleDoors, setVehicleDoors] = useState(0)
   const [vehicleTrim, setVehicleTrim] = useState("")
+  
+  // Vehicle states with proper types
+  const [vehicleMake, setVehicleMake] = useState("")
+  const [vehicleModel, setVehicleModel] = useState("")
+  const [vehicleYear, setVehicleYear] = useState(new Date().getFullYear())
+  const [vehicleVin, setVehicleVin] = useState("")
 
   const form = useForm<InvoiceFormValues>({
     defaultValues: {
@@ -46,17 +53,13 @@ export default function CreateInvoice() {
       customer_last_name: preselectedCustomer?.customer_last_name || '',
       customer_email: preselectedCustomer?.customer_email || '',
       customer_phone: preselectedCustomer?.customer_phone || "",
-      customer_address: preselectedCustomer?.address || '',
+      customer_address: preselectedCustomer?.customer_address || '',
       customer_street_address: preselectedCustomer?.customer_street_address || '',
       customer_unit_number: preselectedCustomer?.customer_unit_number || '',
       customer_city: preselectedCustomer?.customer_city || '',
       customer_state_province: preselectedCustomer?.customer_state_province || '',
       customer_postal_code: preselectedCustomer?.customer_postal_code || '',
       customer_country: preselectedCustomer?.customer_country || '',
-      vehicle_make: '',
-      vehicle_model: '',
-      vehicle_year: new Date().getFullYear(),
-      vehicle_vin: '',
       notes: '',
       invoice_items: [],
       due_date: null,
@@ -89,10 +92,10 @@ export default function CreateInvoice() {
           customer_state_province: values.customer_state_province,
           customer_postal_code: values.customer_postal_code,
           customer_country: values.customer_country,
-          vehicle_make: values.vehicle_make,
-          vehicle_model: values.vehicle_model,
-          vehicle_year: values.vehicle_year,
-          vehicle_vin: values.vehicle_vin,
+          vehicle_make: vehicleMake,
+          vehicle_model: vehicleModel,
+          vehicle_year: vehicleYear,
+          vehicle_vin: vehicleVin,
           vehicle_body_class: vehicleBodyClass,
           vehicle_doors: vehicleDoors,
           vehicle_trim: vehicleTrim,
@@ -107,15 +110,15 @@ export default function CreateInvoice() {
 
       if (error) throw error
 
-      if (saveVehicleToCustomer && selectedCustomerId && values.vehicle_make && values.vehicle_model && values.vehicle_year) {
+      if (saveVehicleToCustomer && selectedCustomerId && vehicleMake && vehicleModel && vehicleYear) {
         const { error: vehicleError } = await supabase
           .from('vehicles')
           .insert({
             customer_id: selectedCustomerId,
-            make: values.vehicle_make,
-            model: values.vehicle_model,
-            year: values.vehicle_year,
-            vin: values.vehicle_vin,
+            make: vehicleMake,
+            model: vehicleModel,
+            year: vehicleYear,
+            vin: vehicleVin,
             body_class: vehicleBodyClass,
             doors: vehicleDoors,
             trim: vehicleTrim,
@@ -162,33 +165,36 @@ export default function CreateInvoice() {
     if (preselectedCustomer?.id) {
       setSelectedCustomerId(preselectedCustomer.id)
       
-      const fetchDefaultVehicle = async () => {
+      const fetchCustomerVehicles = async () => {
         const { data: vehicles, error } = await supabase
           .from('vehicles')
           .select('*')
           .eq('customer_id', preselectedCustomer.id)
-          .eq('is_primary', true)
-          .maybeSingle()
+          .order('is_primary', { ascending: false })
 
         if (error) {
-          console.error('Error fetching vehicle:', error)
+          console.error('Error fetching vehicles:', error)
           return
         }
 
-        if (vehicles) {
-          form.setValue('vehicle_make', vehicles.make)
-          form.setValue('vehicle_model', vehicles.model)
-          form.setValue('vehicle_year', vehicles.year)
-          form.setValue('vehicle_vin', vehicles.vin || '')
-          setVehicleBodyClass(vehicles.body_class || '')
-          setVehicleDoors(vehicles.doors || 0)
-          setVehicleTrim(vehicles.trim || '')
+        if (vehicles && vehicles.length > 0) {
+          // Use primary vehicle or fallback to first vehicle
+          const primaryVehicle = vehicles.find(v => v.is_primary) || vehicles[0];
+          
+          setVehicleMake(primaryVehicle.make || '')
+          setVehicleModel(primaryVehicle.model || '')
+          setVehicleYear(primaryVehicle.year || new Date().getFullYear())
+          setVehicleVin(primaryVehicle.vin || '')
+          setVehicleBodyClass(primaryVehicle.body_class || '')
+          setVehicleDoors(primaryVehicle.doors || 0)
+          setVehicleTrim(primaryVehicle.trim || '')
+          console.log("Loaded vehicle:", primaryVehicle)
         }
       }
 
-      fetchDefaultVehicle()
+      fetchCustomerVehicles()
     }
-  }, [preselectedCustomer?.id, form])
+  }, [preselectedCustomer?.id])
 
   const handleTotalCalculated = (subtotal: number, gst: number, qst: number, total: number) => {
     form.setValue('subtotal', subtotal)
@@ -201,8 +207,49 @@ export default function CreateInvoice() {
     form.setValue('invoice_items', items as InvoiceItem[]);
   };
 
-  const onCustomerSelect = (customerId: string) => {
+  const onCustomerSelect = async (customerId: string) => {
     setSelectedCustomerId(customerId)
+    
+    // Fetch customer vehicles when a customer is selected
+    try {
+      const { data: vehicles, error } = await supabase
+        .from('vehicles')
+        .select('*')
+        .eq('customer_id', customerId)
+        .order('is_primary', { ascending: false })
+
+      if (error) {
+        console.error('Error fetching customer vehicles:', error)
+        return
+      }
+
+      if (vehicles && vehicles.length > 0) {
+        // Use primary vehicle or fallback to first vehicle
+        const primaryVehicle = vehicles.find(v => v.is_primary) || vehicles[0];
+        
+        // Set vehicle info
+        setVehicleMake(primaryVehicle.make || '')
+        setVehicleModel(primaryVehicle.model || '')
+        setVehicleYear(primaryVehicle.year || new Date().getFullYear())
+        setVehicleVin(primaryVehicle.vin || '')
+        setVehicleBodyClass(primaryVehicle.body_class || '')
+        setVehicleDoors(primaryVehicle.doors || 0)
+        setVehicleTrim(primaryVehicle.trim || '')
+        
+        toast.success(`Vehicle loaded: ${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model}`)
+      } else {
+        // Reset vehicle fields if no vehicles found
+        setVehicleMake('')
+        setVehicleModel('')
+        setVehicleYear(new Date().getFullYear())
+        setVehicleVin('')
+        setVehicleBodyClass('')
+        setVehicleDoors(0)
+        setVehicleTrim('')
+      }
+    } catch (error) {
+      console.error("Error loading customer vehicles:", error)
+    }
   }
 
   return (
@@ -303,14 +350,14 @@ export default function CreateInvoice() {
               <Card>
                 <CardContent className="pt-6">
                   <VehicleInfoFields
-                    vehicleMake={form.watch('vehicle_make')}
-                    setVehicleMake={(value) => form.setValue('vehicle_make', value)}
-                    vehicleModel={form.watch('vehicle_model')}
-                    setVehicleModel={(value) => form.setValue('vehicle_model', value)}
-                    vehicleYear={form.watch('vehicle_year')}
-                    setVehicleYear={(value) => form.setValue('vehicle_year', value)}
-                    vehicleVin={form.watch('vehicle_vin')}
-                    setVehicleVin={(value) => form.setValue('vehicle_vin', value)}
+                    vehicleMake={vehicleMake}
+                    setVehicleMake={setVehicleMake}
+                    vehicleModel={vehicleModel}
+                    setVehicleModel={setVehicleModel}
+                    vehicleYear={vehicleYear}
+                    setVehicleYear={setVehicleYear}
+                    vehicleVin={vehicleVin}
+                    setVehicleVin={setVehicleVin}
                     vehicleBodyClass={vehicleBodyClass}
                     setVehicleBodyClass={setVehicleBodyClass}
                     vehicleDoors={vehicleDoors}

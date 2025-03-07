@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
-import { Check, ChevronsUpDown, Search } from "lucide-react"
+import { Check, ChevronsUpDown, Search, Star } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
@@ -88,7 +88,7 @@ export function CustomerInfoFields({
     }
   })
 
-  const handleCustomerSelect = (customerId: string) => {
+  const handleCustomerSelect = async (customerId: string) => {
     setSelectedCustomerId(customerId)
     
     const selectedCustomer = customersList?.find(c => c.id === customerId)
@@ -118,7 +118,27 @@ export function CustomerInfoFields({
       if (setCustomerPostalCode) setCustomerPostalCode(selectedCustomer.customer_postal_code || "")
       if (setCustomerCountry) setCustomerCountry(selectedCustomer.customer_country || "")
       
-      if (onCustomerSelect) onCustomerSelect(customerId)
+      // Fetch customer vehicles
+      try {
+        const { data: vehicles, error } = await supabase
+          .from('vehicles')
+          .select('*')
+          .eq('customer_id', customerId)
+          .order('is_primary', { ascending: false })
+
+        if (error) {
+          console.error('Error fetching customer vehicles:', error)
+        } else if (vehicles && vehicles.length > 0) {
+          // Find primary vehicle or fallback to first vehicle
+          const primaryVehicle = vehicles.find(v => v.is_primary) || vehicles[0];
+          console.log("Selected vehicle for customer:", primaryVehicle)
+          
+          // Dispatch event to inform parent components
+          if (onCustomerSelect) onCustomerSelect(customerId)
+        }
+      } catch (error) {
+        console.error('Error in vehicle fetch process:', error)
+      }
     }
     
     setOpen(false)
