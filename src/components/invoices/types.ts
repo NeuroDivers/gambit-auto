@@ -1,4 +1,3 @@
-
 export interface InvoiceFormValues {
   status?: string;
   notes?: string;

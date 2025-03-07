@@ -8,11 +8,7 @@ export interface StaffSkill {
   serviceDescription: string;
   service_id: string;
   proficiency: string;
-  service_types: {
-    id: string;
-    name: string;
-    description: string;
-  };
+  service_types: ServiceType;
 }
 
 export interface ServiceType {
