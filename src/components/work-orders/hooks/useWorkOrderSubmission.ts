@@ -38,7 +38,7 @@ export function useWorkOrderSubmission() {
 
       // Address fields if provided
       if (formValues.customer_address) {
-        workOrderData.customer_address = formValues.customer_address;
+        workOrderData["customer_address"] = formValues.customer_address;
       } else if (
         formValues.customer_street_address ||
         formValues.customer_city ||
@@ -66,12 +66,12 @@ export function useWorkOrderSubmission() {
         
         if (formValues.customer_country) addressParts.push(formValues.customer_country);
         
-        workOrderData.customer_address = addressParts.join(", ");
+        workOrderData["customer_address"] = addressParts.join(", ");
       }
 
       // Check for client ID
       if (formValues.client_id) {
-        workOrderData.client_id = formValues.client_id;
+        workOrderData["client_id"] = formValues.client_id;
       }
 
       // Create or update work order

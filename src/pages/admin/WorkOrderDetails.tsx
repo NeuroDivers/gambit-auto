@@ -38,7 +38,7 @@ export default function WorkOrderDetails() {
             service_id,
             quantity,
             unit_price,
-            service_types (
+            service_types!work_order_services_service_id_fkey (
               id,
               name,
               description,
@@ -97,10 +97,13 @@ export default function WorkOrderDetails() {
     createInvoice(workOrder.id);
   };
 
-  const totalCost = workOrder.work_order_services?.reduce(
+  // Make sure work_order_services exists on the workOrder object
+  const services = workOrder.work_order_services || [];
+  
+  const totalCost = services.reduce(
     (sum, service) => sum + (service.quantity * service.unit_price), 
     0
-  ) || 0;
+  );
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -260,9 +263,9 @@ export default function WorkOrderDetails() {
           <CardTitle>Services</CardTitle>
         </CardHeader>
         <CardContent>
-          {workOrder.work_order_services && workOrder.work_order_services.length > 0 ? (
+          {services && services.length > 0 ? (
             <div className="space-y-4">
-              {workOrder.work_order_services.map((service, index) => (
+              {services.map((service, index) => (
                 <div key={service.id || index} className="border-b pb-4 last:border-b-0 last:pb-0">
                   <div className="flex justify-between items-start">
                     <div>
