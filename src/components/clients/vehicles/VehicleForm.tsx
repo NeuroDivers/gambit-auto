@@ -14,14 +14,17 @@ import { Loader2 } from "lucide-react"
 import { VinScanner } from "@/components/shared/VinScanner"
 
 const formSchema = z.object({
-  make: z.string().min(1, "Make is required"),
-  model: z.string().min(1, "Model is required"),
-  year: z.number().min(1900).max(new Date().getFullYear() + 1),
-  vin: z.string().optional(),
-  color: z.string().optional(),
-  license_plate: z.string().optional(),
+  customer_vehicle_make: z.string().min(1, "Make is required"),
+  customer_vehicle_model: z.string().min(1, "Model is required"),
+  customer_vehicle_year: z.number().min(1900).max(new Date().getFullYear() + 1),
+  customer_vehicle_vin: z.string().optional(),
+  customer_vehicle_color: z.string().optional(),
+  customer_vehicle_license_plate: z.string().optional(),
   notes: z.string().optional(),
-  is_primary: z.boolean().default(false)
+  is_primary: z.boolean().default(false),
+  customer_vehicle_body_class: z.string().optional(),
+  customer_vehicle_doors: z.number().optional(),
+  customer_vehicle_trim: z.string().optional()
 })
 
 interface VehicleFormProps {
@@ -34,35 +37,44 @@ export function VehicleForm({ vehicle, clientId, onSubmit }: VehicleFormProps) {
   const form = useForm<VehicleFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: vehicle ? {
-      make: vehicle.make,
-      model: vehicle.model,
-      year: vehicle.year,
-      vin: vehicle.vin || "",
-      color: vehicle.color || "",
-      license_plate: vehicle.license_plate || "",
+      customer_vehicle_make: vehicle.customer_vehicle_make,
+      customer_vehicle_model: vehicle.customer_vehicle_model,
+      customer_vehicle_year: vehicle.customer_vehicle_year,
+      customer_vehicle_vin: vehicle.customer_vehicle_vin || "",
+      customer_vehicle_color: vehicle.customer_vehicle_color || "",
+      customer_vehicle_license_plate: vehicle.customer_vehicle_license_plate || "",
       notes: vehicle.notes || "",
-      is_primary: vehicle.is_primary
+      is_primary: vehicle.is_primary,
+      customer_vehicle_body_class: vehicle.customer_vehicle_body_class || "",
+      customer_vehicle_doors: vehicle.customer_vehicle_doors || undefined,
+      customer_vehicle_trim: vehicle.customer_vehicle_trim || ""
     } : {
-      make: "",
-      model: "",
-      year: new Date().getFullYear(),
-      vin: "",
-      color: "",
-      license_plate: "",
+      customer_vehicle_make: "",
+      customer_vehicle_model: "",
+      customer_vehicle_year: new Date().getFullYear(),
+      customer_vehicle_vin: "",
+      customer_vehicle_color: "",
+      customer_vehicle_license_plate: "",
       notes: "",
-      is_primary: false
+      is_primary: false,
+      customer_vehicle_body_class: "",
+      customer_vehicle_doors: undefined,
+      customer_vehicle_trim: ""
     }
   })
 
-  const vin = form.watch('vin')
+  const vin = form.watch('customer_vehicle_vin')
   const { data: vinData, isLoading: isLoadingVin } = useVinLookup(vin)
 
   useEffect(() => {
     if (vinData && !vinData.error) {
-      if (vinData.make) form.setValue('make', vinData.make)
-      if (vinData.model) form.setValue('model', vinData.model)
-      if (vinData.year) form.setValue('year', vinData.year)
-      if (vinData.color) form.setValue('color', vinData.color)
+      if (vinData.make) form.setValue('customer_vehicle_make', vinData.make)
+      if (vinData.model) form.setValue('customer_vehicle_model', vinData.model)
+      if (vinData.year) form.setValue('customer_vehicle_year', vinData.year)
+      if (vinData.color) form.setValue('customer_vehicle_color', vinData.color)
+      if (vinData.bodyClass) form.setValue('customer_vehicle_body_class', vinData.bodyClass)
+      if (vinData.doors) form.setValue('customer_vehicle_doors', vinData.doors)
+      if (vinData.trim) form.setValue('customer_vehicle_trim', vinData.trim)
     }
   }, [vinData, form])
 
@@ -72,7 +84,7 @@ export function VehicleForm({ vehicle, clientId, onSubmit }: VehicleFormProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="make"
+            name="customer_vehicle_make"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Make</FormLabel>
@@ -91,7 +103,7 @@ export function VehicleForm({ vehicle, clientId, onSubmit }: VehicleFormProps) {
 
           <FormField
             control={form.control}
-            name="model"
+            name="customer_vehicle_model"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Model</FormLabel>
@@ -110,7 +122,7 @@ export function VehicleForm({ vehicle, clientId, onSubmit }: VehicleFormProps) {
 
           <FormField
             control={form.control}
-            name="year"
+            name="customer_vehicle_year"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Year</FormLabel>
@@ -134,7 +146,7 @@ export function VehicleForm({ vehicle, clientId, onSubmit }: VehicleFormProps) {
 
           <FormField
             control={form.control}
-            name="vin"
+            name="customer_vehicle_vin"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
@@ -154,7 +166,7 @@ export function VehicleForm({ vehicle, clientId, onSubmit }: VehicleFormProps) {
 
           <FormField
             control={form.control}
-            name="color"
+            name="customer_vehicle_color"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Color</FormLabel>
@@ -173,12 +185,59 @@ export function VehicleForm({ vehicle, clientId, onSubmit }: VehicleFormProps) {
 
           <FormField
             control={form.control}
-            name="license_plate"
+            name="customer_vehicle_license_plate"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>License Plate</FormLabel>
                 <FormControl>
                   <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="customer_vehicle_body_class"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Body Class</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="e.g. Sedan" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="customer_vehicle_doors"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Doors</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    {...field}
+                    onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                    value={field.value || ''}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="customer_vehicle_trim"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Trim</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="e.g. LE, XLE" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

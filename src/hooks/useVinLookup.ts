@@ -62,14 +62,14 @@ export function useVinLookup(vin: string | undefined | null) {
           // Here we need to make sure we have all the fields we need
           const bodyClass = existingData.body_class || '';
           const doors = existingData.doors || 0;
-          const trim = existingData.trim || '';
+          const trim = existingData.customer_vehicle_trim || '';
           const color = existingData.color || '';
           
           // Log complete data retrieval for debugging
           console.log('Extracted from cache:', {
-            make: existingData.make,
-            model: existingData.model,
-            year: existingData.year,
+            make: existingData.customer_vehicle_make,
+            model: existingData.customer_vehicle_model,
+            year: existingData.customer_vehicle_year,
             bodyClass,
             doors,
             trim,
@@ -77,9 +77,9 @@ export function useVinLookup(vin: string | undefined | null) {
           });
           
           return {
-            make: existingData.make || '',
-            model: existingData.model || '',
-            year: existingData.year || 0,
+            make: existingData.customer_vehicle_make || '',
+            model: existingData.customer_vehicle_model || '',
+            year: existingData.customer_vehicle_year || 0,
             bodyClass,
             doors,
             trim,
@@ -160,12 +160,12 @@ export function useVinLookup(vin: string | undefined | null) {
           .from('vin_lookups')
           .upsert({
             vin: validVin,
-            make,
-            model,
-            year,
+            customer_vehicle_make: make,
+            customer_vehicle_model: model,
+            customer_vehicle_year: year,
             body_class: bodyClass,
             doors,
-            trim,
+            customer_vehicle_trim: trim,
             color,
             success: true,
             raw_data: data,

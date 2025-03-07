@@ -165,16 +165,16 @@ export function useWorkOrderSubmission() {
         try {
           const vehicleData = {
             customer_id: formValues.client_id,
-            make: formValues.customer_vehicle_make,
-            model: formValues.customer_vehicle_model,
-            year: formValues.customer_vehicle_year,
-            vin: formValues.customer_vehicle_vin || null,
-            color: formValues.customer_vehicle_color || null,
-            license_plate: formValues.customer_vehicle_license_plate || null,
+            customer_vehicle_make: formValues.customer_vehicle_make,
+            customer_vehicle_model: formValues.customer_vehicle_model,
+            customer_vehicle_year: formValues.customer_vehicle_year,
+            customer_vehicle_vin: formValues.customer_vehicle_vin || null,
+            customer_vehicle_color: formValues.customer_vehicle_color || null,
+            customer_vehicle_license_plate: formValues.customer_vehicle_license_plate || null,
             is_primary: formValues.is_primary_vehicle || false,
-            body_class: formValues.customer_vehicle_body_class || null,
-            doors: formValues.customer_vehicle_doors || null,
-            trim: formValues.customer_vehicle_trim || null,
+            customer_vehicle_body_class: formValues.customer_vehicle_body_class || null,
+            customer_vehicle_doors: formValues.customer_vehicle_doors || null,
+            customer_vehicle_trim: formValues.customer_vehicle_trim || null,
           };
 
           await supabase.from("vehicles").insert(vehicleData);

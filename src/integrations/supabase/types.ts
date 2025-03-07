@@ -2074,55 +2074,55 @@ export type Database = {
       }
       vehicles: {
         Row: {
-          body_class: string | null
-          color: string | null
           created_at: string
           customer_id: string | null
-          doors: number | null
+          customer_vehicle_body_class: string | null
+          customer_vehicle_color: string | null
+          customer_vehicle_doors: number | null
+          customer_vehicle_license_plate: string | null
+          customer_vehicle_make: string
+          customer_vehicle_model: string
+          customer_vehicle_trim: string | null
+          customer_vehicle_vin: string | null
+          customer_vehicle_year: number
           id: string
           is_primary: boolean | null
-          license_plate: string | null
-          make: string
-          model: string
           notes: string | null
-          trim: string | null
           updated_at: string
-          vin: string | null
-          year: number
         }
         Insert: {
-          body_class?: string | null
-          color?: string | null
           created_at?: string
           customer_id?: string | null
-          doors?: number | null
+          customer_vehicle_body_class?: string | null
+          customer_vehicle_color?: string | null
+          customer_vehicle_doors?: number | null
+          customer_vehicle_license_plate?: string | null
+          customer_vehicle_make: string
+          customer_vehicle_model: string
+          customer_vehicle_trim?: string | null
+          customer_vehicle_vin?: string | null
+          customer_vehicle_year: number
           id?: string
           is_primary?: boolean | null
-          license_plate?: string | null
-          make: string
-          model: string
           notes?: string | null
-          trim?: string | null
           updated_at?: string
-          vin?: string | null
-          year: number
         }
         Update: {
-          body_class?: string | null
-          color?: string | null
           created_at?: string
           customer_id?: string | null
-          doors?: number | null
+          customer_vehicle_body_class?: string | null
+          customer_vehicle_color?: string | null
+          customer_vehicle_doors?: number | null
+          customer_vehicle_license_plate?: string | null
+          customer_vehicle_make?: string
+          customer_vehicle_model?: string
+          customer_vehicle_trim?: string | null
+          customer_vehicle_vin?: string | null
+          customer_vehicle_year?: number
           id?: string
           is_primary?: boolean | null
-          license_plate?: string | null
-          make?: string
-          model?: string
           notes?: string | null
-          trim?: string | null
           updated_at?: string
-          vin?: string | null
-          year?: number
         }
         Relationships: [
           {
@@ -2151,42 +2151,42 @@ export type Database = {
       vin_lookups: {
         Row: {
           created_at: string | null
+          customer_vehicle_make: string | null
+          customer_vehicle_model: string | null
+          customer_vehicle_trim: string | null
+          customer_vehicle_year: number | null
           error_message: string | null
           id: string
-          make: string | null
-          model: string | null
           raw_data: Json | null
           success: boolean | null
-          trim: string | null
           updated_at: string | null
           vin: string
-          year: number | null
         }
         Insert: {
           created_at?: string | null
+          customer_vehicle_make?: string | null
+          customer_vehicle_model?: string | null
+          customer_vehicle_trim?: string | null
+          customer_vehicle_year?: number | null
           error_message?: string | null
           id?: string
-          make?: string | null
-          model?: string | null
           raw_data?: Json | null
           success?: boolean | null
-          trim?: string | null
           updated_at?: string | null
           vin: string
-          year?: number | null
         }
         Update: {
           created_at?: string | null
+          customer_vehicle_make?: string | null
+          customer_vehicle_model?: string | null
+          customer_vehicle_trim?: string | null
+          customer_vehicle_year?: number | null
           error_message?: string | null
           id?: string
-          make?: string | null
-          model?: string | null
           raw_data?: Json | null
           success?: boolean | null
-          trim?: string | null
           updated_at?: string | null
           vin?: string
-          year?: number | null
         }
         Relationships: []
       }
