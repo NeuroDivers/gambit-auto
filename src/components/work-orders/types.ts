@@ -1,5 +1,4 @@
-
-export type WorkOrderStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
+export type WorkOrderStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'invoiced' | 'estimated';
 
 export type WorkOrder = {
   id: string;

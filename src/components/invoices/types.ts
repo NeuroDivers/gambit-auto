@@ -84,6 +84,7 @@ export interface Invoice {
   customer_vehicle_model?: string;
   customer_vehicle_year?: number;
   customer_vehicle_vin?: string;
+  customer_vehicle_color?: string; // Added this property
   customer_vehicle_body_class?: string;
   customer_vehicle_doors?: number;
   customer_vehicle_trim?: string;
