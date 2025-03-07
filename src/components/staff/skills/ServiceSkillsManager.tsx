@@ -73,9 +73,9 @@ export function ServiceSkillsManager({ profileId }: ServiceSkillsManagerProps) {
         service_id: item.service_id,
         proficiency: item.proficiency,
         service_types: {
-          id: item.service_types.id,
-          name: item.service_types.name,
-          description: item.service_types.description,
+          id: item.service_types?.id,
+          name: item.service_types?.name,
+          description: item.service_types?.description,
         }
       })) as StaffSkill[];
     },

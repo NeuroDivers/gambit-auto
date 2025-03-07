@@ -1,19 +1,10 @@
 
 import React from 'react';
-import { CustomerInfoFieldsProps } from './CustomerInfoFieldsProps';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
-import { FormItem, FormLabel, FormControl } from '@/components/ui/form';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { SearchX } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { SearchIcon } from 'lucide-react';
+import { CustomerInfoFieldsProps } from './CustomerInfoFields';
 
 export function CustomerInfoFields({
   customerFirstName,
@@ -38,240 +29,154 @@ export function CustomerInfoFields({
   setCustomerPostalCode,
   customerCountry,
   setCustomerCountry,
-  customers,
-  isLoadingCustomers,
+  customers = [],
+  isLoadingCustomers = false,
   onCustomerSelect,
   clientIdField,
-  setClientId
+  setClientId,
 }: CustomerInfoFieldsProps) {
-  // Fetch customers from the database if not provided
-  const { data: fetchedCustomers, isLoading: isLoadingFetchedCustomers } = useQuery({
-    queryKey: ['customers-search'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('customers')
-        .select('*')
-        .order('customer_first_name', { ascending: true });
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !customers && !isLoadingCustomers
-  });
-
-  const displayCustomers = customers || fetchedCustomers || [];
-  const isLoading = isLoadingCustomers || isLoadingFetchedCustomers;
-
-  const filteredCustomers = displayCustomers.filter(customer => {
-    const searchTerm = `${customerFirstName} ${customerLastName}`.toLowerCase();
-    const fullName = `${customer.customer_first_name} ${customer.customer_last_name}`.toLowerCase();
-    const emailSearch = customer.customer_email && customerEmail ? 
-      customer.customer_email.toLowerCase().includes(customerEmail.toLowerCase()) : false;
-      
-    return fullName.includes(searchTerm) || emailSearch;
-  });
-
-  const handleCustomerSelect = (customer: any) => {
-    setCustomerFirstName(customer.customer_first_name || '');
-    setCustomerLastName(customer.customer_last_name || '');
-    setCustomerEmail(customer.customer_email || '');
-    if (setCustomerPhone) setCustomerPhone(customer.customer_phone || '');
-    
-    // Handle address fields
-    if (setCustomerAddress && customer.customer_address) {
-      setCustomerAddress(customer.customer_address);
-    }
-    
-    if (setCustomerStreetAddress && customer.customer_street_address) {
-      setCustomerStreetAddress(customer.customer_street_address);
-    }
-    
-    if (setCustomerUnitNumber && customer.customer_unit_number) {
-      setCustomerUnitNumber(customer.customer_unit_number);
-    }
-    
-    if (setCustomerCity && customer.customer_city) {
-      setCustomerCity(customer.customer_city);
-    }
-    
-    if (setCustomerStateProvince && customer.customer_state_province) {
-      setCustomerStateProvince(customer.customer_state_province);
-    }
-    
-    if (setCustomerPostalCode && customer.customer_postal_code) {
-      setCustomerPostalCode(customer.customer_postal_code);
-    }
-    
-    if (setCustomerCountry && customer.customer_country) {
-      setCustomerCountry(customer.customer_country);
-    }
-    
-    if (setClientId && customer.id) {
-      setClientId(customer.id);
-    }
-    
-    if (onCustomerSelect) {
-      onCustomerSelect(customer.id);
-    }
-  };
-
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Customer Information</h3>
-      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Popover>
-            <Label>First Name</Label>
-            <div className="flex">
-              <Input
-                value={customerFirstName}
-                onChange={(e) => setCustomerFirstName(e.target.value)}
-                placeholder="First Name"
-                className="w-full"
-              />
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="icon" className="ml-2">
-                  <SearchX className="h-4 w-4" />
-                </Button>
-              </PopoverTrigger>
-            </div>
-            <PopoverContent align="end" className="w-80 p-0">
-              <Card>
-                <CardContent className="p-2">
-                  {isLoading ? (
-                    <div className="p-4 text-center">Loading customers...</div>
-                  ) : filteredCustomers.length === 0 ? (
-                    <div className="p-4 text-center">No matching customers found</div>
-                  ) : (
-                    <div className="max-h-60 overflow-auto">
-                      {filteredCustomers.map((customer) => (
-                        <div
-                          key={customer.id}
-                          className="p-2 hover:bg-accent rounded cursor-pointer"
-                          onClick={() => handleCustomerSelect(customer)}
-                        >
-                          <div className="font-medium">
-                            {customer.customer_first_name} {customer.customer_last_name}
-                          </div>
-                          <div className="text-sm text-muted-foreground">{customer.customer_email}</div>
-                          {customer.customer_phone && (
-                            <div className="text-sm text-muted-foreground">{customer.customer_phone}</div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </PopoverContent>
-          </Popover>
-        </div>
-        
-        <div>
-          <Label>Last Name</Label>
+          <Label htmlFor="customer_first_name">First Name</Label>
           <Input
+            id="customer_first_name"
+            value={customerFirstName}
+            onChange={(e) => setCustomerFirstName(e.target.value)}
+          />
+        </div>
+        <div>
+          <Label htmlFor="customer_last_name">Last Name</Label>
+          <Input
+            id="customer_last_name"
             value={customerLastName}
             onChange={(e) => setCustomerLastName(e.target.value)}
-            placeholder="Last Name"
           />
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label>Email</Label>
+          <Label htmlFor="customer_email">Email</Label>
           <Input
+            id="customer_email"
+            type="email"
             value={customerEmail}
             onChange={(e) => setCustomerEmail(e.target.value)}
-            placeholder="Email"
-            type="email"
           />
         </div>
-        
         <div>
-          <Label>Phone</Label>
+          <Label htmlFor="customer_phone">Phone</Label>
           <Input
+            id="customer_phone"
             value={customerPhone || ''}
             onChange={(e) => setCustomerPhone && setCustomerPhone(e.target.value)}
-            placeholder="Phone"
-            type="tel"
           />
         </div>
       </div>
-      
+
+      {/* Show combined address field if that's what we're using */}
+      {setCustomerAddress && (
+        <div>
+          <Label htmlFor="customer_address">Address</Label>
+          <Input
+            id="customer_address"
+            value={customerAddress || ''}
+            onChange={(e) => setCustomerAddress(e.target.value)}
+          />
+        </div>
+      )}
+
+      {/* Show detailed address fields if those are being used */}
       {setCustomerStreetAddress && (
         <div className="space-y-4">
-          <h4 className="text-md font-medium">Address</h4>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2">
-              <Label>Street Address</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="customer_street_address">Street Address</Label>
               <Input
+                id="customer_street_address"
                 value={customerStreetAddress || ''}
                 onChange={(e) => setCustomerStreetAddress(e.target.value)}
-                placeholder="Street Address"
               />
             </div>
-            
             <div>
-              <Label>Unit Number</Label>
+              <Label htmlFor="customer_unit_number">Unit Number</Label>
               <Input
+                id="customer_unit_number"
                 value={customerUnitNumber || ''}
                 onChange={(e) => setCustomerUnitNumber && setCustomerUnitNumber(e.target.value)}
-                placeholder="Unit #"
               />
             </div>
           </div>
-          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label>City</Label>
+              <Label htmlFor="customer_city">City</Label>
               <Input
+                id="customer_city"
                 value={customerCity || ''}
                 onChange={(e) => setCustomerCity && setCustomerCity(e.target.value)}
-                placeholder="City"
               />
             </div>
-            
             <div>
-              <Label>State/Province</Label>
+              <Label htmlFor="customer_state_province">State/Province</Label>
               <Input
+                id="customer_state_province"
                 value={customerStateProvince || ''}
                 onChange={(e) => setCustomerStateProvince && setCustomerStateProvince(e.target.value)}
-                placeholder="State/Province"
               />
             </div>
-            
             <div>
-              <Label>Postal Code</Label>
+              <Label htmlFor="customer_postal_code">Postal Code</Label>
               <Input
+                id="customer_postal_code"
                 value={customerPostalCode || ''}
                 onChange={(e) => setCustomerPostalCode && setCustomerPostalCode(e.target.value)}
-                placeholder="Postal Code"
               />
             </div>
           </div>
-          
           <div>
-            <Label>Country</Label>
+            <Label htmlFor="customer_country">Country</Label>
             <Input
+              id="customer_country"
               value={customerCountry || ''}
               onChange={(e) => setCustomerCountry && setCustomerCountry(e.target.value)}
-              placeholder="Country"
             />
           </div>
         </div>
       )}
-      
-      {setCustomerAddress && !setCustomerStreetAddress && (
-        <div>
-          <Label>Address</Label>
-          <Input
-            value={customerAddress || ''}
-            onChange={(e) => setCustomerAddress(e.target.value)}
-            placeholder="Address"
-          />
+
+      {/* Customer search functionality */}
+      {onCustomerSelect && customers && (
+        <div className="mt-4">
+          <h3 className="text-sm font-medium mb-2">Find existing customer</h3>
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <select
+                className="w-full rounded-md border border-input bg-background pl-8 pr-2 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                disabled={isLoadingCustomers}
+                onChange={(e) => {
+                  if (e.target.value && onCustomerSelect) {
+                    onCustomerSelect(e.target.value);
+                    if (setClientId && clientIdField) {
+                      setClientId(e.target.value);
+                    }
+                  }
+                }}
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  {isLoadingCustomers ? 'Loading customers...' : 'Select existing customer'}
+                </option>
+                {customers.map((customer) => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.customer_first_name} {customer.customer_last_name} - {customer.customer_email}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
       )}
     </div>
