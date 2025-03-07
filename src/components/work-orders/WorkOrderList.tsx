@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { WorkOrder } from "./types"
 import { memo } from "react"
+import { useWorkOrderSubscription } from "@/hooks/useWorkOrderSubscription"
 
 // Using memo to prevent unnecessary re-renders
 const MemoizedWorkOrderFilters = memo(WorkOrderFilters)
@@ -19,6 +20,9 @@ const MemoizedWorkOrderPagination = memo(WorkOrderPagination)
 export function WorkOrderList() {
   const navigate = useNavigate()
   const isMobile = useIsMobile()
+  // Use the subscription hook to listen for real-time updates
+  useWorkOrderSubscription()
+  
   const {
     searchTerm,
     setSearchTerm,

@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge"
 import { WorkOrderStatus } from "./types"
 import { useState, useEffect } from "react"
@@ -27,11 +28,51 @@ export function WorkOrderStatusBadge({ status, workOrderId, editable = false }: 
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
+  // Update local state when props change
   useEffect(() => {
     if (status !== currentStatus) {
       setCurrentStatus(status);
     }
   }, [status]);
+
+  // Set up real-time subscription for this specific work order's status
+  useEffect(() => {
+    if (!workOrderId) return;
+    
+    console.log(`Setting up status subscription for work order ${workOrderId}`);
+    
+    const channel = supabase
+      .channel(`work-order-status-${workOrderId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'work_orders',
+          filter: `id=eq.${workOrderId}`
+        },
+        (payload) => {
+          console.log('Work order status change detected:', payload);
+          if (payload.new && payload.new.status && payload.new.status !== currentStatus) {
+            setCurrentStatus(payload.new.status as WorkOrderStatus);
+            
+            // Show toast for status change if not initiated by this component
+            if (!isLoading) {
+              toast({
+                title: "Status Updated",
+                description: `Work order status changed to ${getStatusLabel(payload.new.status as WorkOrderStatus)}`,
+              });
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log(`Cleaning up status subscription for work order ${workOrderId}`);
+      supabase.removeChannel(channel);
+    };
+  }, [workOrderId, currentStatus, isLoading, toast]);
 
   const handleStatusChange = async (newStatus: WorkOrderStatus) => {
     if (!workOrderId) return
@@ -111,7 +152,7 @@ export function WorkOrderStatusBadge({ status, workOrderId, editable = false }: 
             </SelectItem>
           </SelectContent>
         </Select>
-        <style jsx>{`
+        <style jsx="true">{`
           .status-trigger[data-status="${currentStatus}"] {
             background: transparent;
             border-color: transparent;

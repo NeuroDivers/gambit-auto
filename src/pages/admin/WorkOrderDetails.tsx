@@ -70,9 +70,11 @@ export default function WorkOrderDetails() {
     }
   }, [data]);
 
-  // Set up real-time subscription for status changes
+  // Set up real-time subscription for work order changes
   useEffect(() => {
     if (!id) return;
+    
+    console.log("Setting up realtime subscription for work order:", id);
     
     const channel = supabase
       .channel('work-order-changes')
@@ -106,6 +108,7 @@ export default function WorkOrderDetails() {
       .subscribe();
 
     return () => {
+      console.log("Cleaning up realtime subscription");
       supabase.removeChannel(channel);
     };
   }, [id, queryClient]);
