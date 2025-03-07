@@ -17,10 +17,19 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
   const [redirecting, setRedirecting] = useState(false)
   const { checkPermission, currentUserRole, isLoading, error } = usePermissions()
 
+  // Add debug logging to help troubleshoot permission issues
+  console.log(`PermissionGuard checking for ${resource} with type ${type}`)
+  console.log(`PermissionGuard currentUserRole:`, currentUserRole)
+  console.log(`PermissionGuard isLoading:`, isLoading)
+  console.log(`PermissionGuard error:`, error)
+
   useEffect(() => {
     const checkAccess = async () => {
       // If still loading, don't check permissions yet
-      if (isLoading) return;
+      if (isLoading) {
+        console.log(`PermissionGuard: Still loading role data, waiting...`);
+        return;
+      }
 
       // If user has role determination error, force sign out
       if (error) {
@@ -59,7 +68,7 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
       }
 
       const roleName = currentUserRole.name.toLowerCase();
-      console.log('Checking permissions for role:', roleName);
+      console.log('Checking permissions for role:', roleName, 'resource:', resource);
 
       // If the resource is dashboard, grant access to all authenticated users
       if (resource === 'dashboard') {
@@ -69,31 +78,33 @@ export function PermissionGuard({ children, resource, type }: PermissionGuardPro
       }
 
       // If user is administrator or king, grant immediate access
-      if (roleName === 'administrator' || roleName === 'king') {
-        console.log('User is admin or king, granting access');
+      if (roleName === 'administrator' || roleName === 'king' || roleName === 'admin') {
+        console.log('User is admin/king, granting access to:', resource);
         setHasPermission(true);
         return;
       }
 
       // Check specific permission
-      const result = await checkPermission(resource, type)
-      console.log(`Permission check result for ${resource}: ${result}`)
-      setHasPermission(result)
+      const result = await checkPermission(resource, type);
+      console.log(`Permission check result for ${resource}: ${result}`);
+      setHasPermission(result);
     }
 
-    checkAccess()
-  }, [currentUserRole, isLoading, resource, type, checkPermission, redirecting, error])
+    checkAccess();
+  }, [currentUserRole, isLoading, resource, type, checkPermission, redirecting, error]);
 
   // Show loading screen while checking permissions
   if (isLoading || hasPermission === null || redirecting) {
-    return <LoadingScreen />
+    console.log(`PermissionGuard: Showing loading screen for ${resource}`);
+    return <LoadingScreen />;
   }
 
   // Redirect to unauthorized if no permission
   if (!hasPermission) {
-    console.log('No permission, redirecting to /unauthorized')
-    return <Navigate to="/unauthorized" replace />
+    console.log(`PermissionGuard: No permission for ${resource}, redirecting to /unauthorized`);
+    return <Navigate to="/unauthorized" replace />;
   }
 
-  return <>{children}</>
+  console.log(`PermissionGuard: Access granted for ${resource}`);
+  return <>{children}</>;
 }

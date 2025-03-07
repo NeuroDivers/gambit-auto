@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCallback, useEffect, useState } from "react";
@@ -34,17 +33,15 @@ export const usePermissions = () => {
   const [authUserMissing, setAuthUserMissing] = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
 
-  // Helper function for signing out users and redirecting to clear auth
   const redirectToClearAuth = () => {
-    // Redirect to clear auth page which will handle the cleanup and sign out
     window.location.href = '/clear-auth';
   };
 
-  // Get current user's role and cache it
   const { data: currentUserRole, isLoading: isRoleLoading, error: roleError, refetch: refetchRole } = useQuery({
     queryKey: ["current-user-role"],
     queryFn: async () => {
       try {
+        console.log('Fetching current user role...');
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
         if (userError) {
@@ -59,7 +56,8 @@ export const usePermissions = () => {
           return null;
         }
 
-        // Verify the user token is valid with the Supabase auth API
+        console.log('Found user:', user.id);
+
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError || !sessionData.session) {
@@ -67,6 +65,8 @@ export const usePermissions = () => {
           setSessionExpired(true);
           throw new Error('Your session has expired - please sign in again');
         }
+
+        console.log('Session verified, fetching profile...');
 
         const { data, error } = await supabase
           .from('profiles')
@@ -84,7 +84,6 @@ export const usePermissions = () => {
         if (error) {
           console.error('Error fetching role:', error);
           
-          // Check if this is a "not found" error, which means the profile doesn't exist
           if (error.code === 'PGRST116') {
             setNoProfileFound(true);
             console.log('Profile not found for authenticated user - possible deleted profile');
@@ -95,14 +94,12 @@ export const usePermissions = () => {
         }
 
         if (!data?.role) {
-          // Profile exists but has no role assigned
           console.log('Profile found but no role assigned, attempting to assign default role');
           if (!assigningDefaultRole) {
             setAssigningDefaultRole(true);
             await assignDefaultRoleIfNeeded(user.id);
             setAssigningDefaultRole(false);
           
-            // Retry the query after attempting to assign a default role
             const { data: retryData, error: retryError } = await supabase
               .from('profiles')
               .select(`
@@ -123,6 +120,7 @@ export const usePermissions = () => {
             
             if (retryData?.role) {
               const roleData = Array.isArray(retryData.role) ? retryData.role[0] : retryData.role;
+              console.log('Role assigned and fetched:', roleData);
               const userRole: UserRole = {
                 id: String(roleData.id),
                 name: String(roleData.name),
@@ -136,6 +134,7 @@ export const usePermissions = () => {
         }
 
         const roleData = Array.isArray(data.role) ? data.role[0] : data.role;
+        console.log('Found user role:', roleData);
         const userRole: UserRole = {
           id: String(roleData.id),
           name: String(roleData.name),
@@ -149,16 +148,17 @@ export const usePermissions = () => {
         throw error;
       }
     },
-    staleTime: 60000, // Reduced cache time to 1 minute so we recheck more frequently
+    staleTime: 60000,
     retry: 1,
     retryDelay: 1000
   });
 
-  // Get all permissions and cache them
   const { data: permissions } = useQuery({
     queryKey: ["permissions", currentUserRole?.id],
     queryFn: async () => {
       if (!currentUserRole) return null;
+
+      console.log('Fetching permissions for role:', currentUserRole.id);
 
       const { data, error } = await supabase
         .from("role_permissions")
@@ -177,10 +177,12 @@ export const usePermissions = () => {
         console.error('Error fetching permissions:', error);
         throw error;
       }
+
+      console.log('Fetched permissions:', data ? data.length : 0);
       return data as RolePermission[];
     },
     enabled: !!currentUserRole,
-    staleTime: 60000, // Reduced cache time to 1 minute
+    staleTime: 60000
   });
 
   const checkPermission = useCallback(async (
@@ -188,7 +190,6 @@ export const usePermissions = () => {
     type: 'page_access' | 'feature_access'
   ): Promise<boolean> => {
     try {
-      // First check if user is authenticated
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) {
         console.error('Error getting auth user in checkPermission:', userError);
@@ -200,24 +201,27 @@ export const usePermissions = () => {
         return false;
       }
 
-      // Check if permissions have been loaded
-      if (!permissions && currentUserRole?.name?.toLowerCase() !== 'administrator') {
-        console.log('Permissions not loaded yet');
+      if (!permissions && currentUserRole?.name?.toLowerCase() !== 'administrator' && 
+          currentUserRole?.name?.toLowerCase() !== 'admin' && 
+          currentUserRole?.name?.toLowerCase() !== 'king') {
+        console.log('Permissions not loaded yet and not admin');
         return false;
       }
 
-      // If user is administrator, grant access immediately
-      if (currentUserRole?.name?.toLowerCase() === 'administrator') {
+      if (currentUserRole?.name?.toLowerCase() === 'administrator' || 
+          currentUserRole?.name?.toLowerCase() === 'admin' || 
+          currentUserRole?.name?.toLowerCase() === 'king') {
+        console.log('User is admin or has admin-like role, granting access');
         return true;
       }
 
-      // Find the specific permission
       const hasPermission = permissions?.some(
         perm => perm.resource_name === resource && 
                 perm.permission_type === type && 
                 perm.is_active
       );
 
+      console.log(`Permission check for ${resource} (${type}): ${hasPermission}`);
       return hasPermission || false;
     } catch (error) {
       console.error('Permission check error:', error);
@@ -225,10 +229,8 @@ export const usePermissions = () => {
     }
   }, [permissions, currentUserRole]);
 
-  // Helper function to assign a default client role if needed
   const assignDefaultRoleIfNeeded = async (userId: string) => {
     try {
-      // First, check if the client role exists
       const { data: clientRole, error: roleError } = await supabase
         .from('roles')
         .select('id')
@@ -245,7 +247,6 @@ export const usePermissions = () => {
         return;
       }
       
-      // Update the profile with the client role
       console.log('Assigning default client role to user:', userId);
       const { error: updateError } = await supabase
         .from('profiles')
@@ -263,35 +264,30 @@ export const usePermissions = () => {
     }
   };
 
-  // Check for auth user missing or session expired
   useEffect(() => {
     if (authUserMissing || sessionExpired) {
       toast.error('Authentication issue detected', {
         description: 'Your session is invalid or expired. Please sign in again.',
       });
       
-      // Use a timeout to allow the toast to be seen
       setTimeout(() => {
         redirectToClearAuth();
       }, 2000);
     }
   }, [authUserMissing, sessionExpired]);
 
-  // Check for profile not found (deleted account)
   useEffect(() => {
     if (noProfileFound) {
       toast.error('Account issue detected', {
         description: 'Your profile could not be found. Your account may have been deleted.',
       });
       
-      // Use a timeout to allow the toast to be seen
       setTimeout(() => {
         redirectToClearAuth();
       }, 2000);
     }
   }, [noProfileFound]);
 
-  // Check and assign default role if needed
   useEffect(() => {
     if (!isRoleLoading && !assigningDefaultRole && !currentUserRole && !noProfileFound && !authUserMissing && !sessionExpired) {
       const checkAndAssignRole = async () => {
