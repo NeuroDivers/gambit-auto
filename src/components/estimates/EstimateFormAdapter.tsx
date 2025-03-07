@@ -5,7 +5,7 @@ import { EstimateFormValues } from "./types/estimate-form";
 import { WorkOrderFormValues } from "../work-orders/types";
 
 interface EstimateFormAdapterProps {
-  children: ReactNode;
+  children: ReactNode | ((form: UseFormReturn<WorkOrderFormValues>) => ReactNode);
   form: UseFormReturn<EstimateFormValues>;
 }
 
@@ -49,7 +49,7 @@ export function EstimateFormAdapter({ children, form }: EstimateFormAdapterProps
   // Pass the proxy form to the children
   return (
     <>
-      {children && typeof children === 'function'
+      {typeof children === 'function'
         ? children(proxyForm)
         : children}
     </>

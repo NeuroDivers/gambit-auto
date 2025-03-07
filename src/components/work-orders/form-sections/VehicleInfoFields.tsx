@@ -95,7 +95,7 @@ export function VehicleInfoFields({ form }: { form: UseFormReturn<WorkOrderFormV
       if (vinData.year) setValue("vehicle_year", vinData.year)
       if (vinData.color) setValue("vehicle_color", vinData.color)
       if (vinData.trim) setValue("vehicle_trim", vinData.trim)
-      if (vinData.body_class) setValue("vehicle_body_class", vinData.body_class)
+      if (vinData.bodyClass) setValue("vehicle_body_class", vinData.bodyClass)
       if (vinData.doors) setValue("vehicle_doors", vinData.doors)
     }
   }, [vinData, setValue])

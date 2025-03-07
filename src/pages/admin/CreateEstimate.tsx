@@ -7,20 +7,28 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { PageTitle } from "@/components/shared/PageTitle"
 import { Form } from "@/components/ui/form"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { toast } from "sonner"
 import { useNavigate, useParams } from "react-router-dom"
 import { useState, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { ArrowLeft, Search, Plus } from "lucide-react"
+import { ArrowLeft, ArrowRight, Search, Plus, Check } from "lucide-react"
 import { EstimateFormAdapter } from "@/components/estimates/EstimateFormAdapter"
 import { ClientInfoFields } from "@/components/work-orders/form-sections/ClientInfoFields"
 import { VehicleInfoFields } from "@/components/work-orders/form-sections/VehicleInfoFields"
 import { ServiceSelectionFields } from "@/components/work-orders/form-sections/ServiceSelectionFields"
 import { SchedulingFields } from "@/components/work-orders/form-sections/SchedulingFields"
 import { NotesFields } from "@/components/work-orders/form-sections/NotesFields"
+import { Separator } from "@/components/ui/separator"
+
+const STEPS = [
+  { id: "customer", label: "Customer Information" },
+  { id: "vehicle", label: "Vehicle Information" },
+  { id: "services", label: "Services" },
+  { id: "scheduling", label: "Scheduling" },
+  { id: "notes", label: "Notes & Review" },
+];
 
 const estimateSchema = z.object({
   customer_first_name: z.string().min(1, "First name is required"),
@@ -100,7 +108,7 @@ export default function CreateEstimate() {
   const navigate = useNavigate()
   const { requestId } = useParams<{ requestId: string }>()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [currentTab, setCurrentTab] = useState("customer")
+  const [currentStep, setCurrentStep] = useState(0)
 
   const form = useForm<EstimateFormValues>({
     resolver: zodResolver(estimateSchema),
@@ -330,10 +338,8 @@ export default function CreateEstimate() {
   const handleCustomerSelect = async (customerId: string) => {
     if (!customerId) return;
 
-    // Set the client_id in the form
     form.setValue("client_id", customerId);
 
-    // Fetch customer data and populate the form
     supabase
       .from("customers")
       .select("*")
@@ -346,18 +352,70 @@ export default function CreateEstimate() {
         }
         
         if (data) {
-          form.setValue("customer_first_name", data.customer_first_name);
-          form.setValue("customer_last_name", data.customer_last_name);
-          form.setValue("customer_email", data.customer_email);
-          form.setValue("customer_phone", data.customer_phone || "");
-          form.setValue("customer_street_address", data.customer_street_address || "");
-          form.setValue("customer_unit_number", data.customer_unit_number || "");
-          form.setValue("customer_city", data.customer_city || "");
-          form.setValue("customer_state_province", data.customer_state_province || "");
-          form.setValue("customer_postal_code", data.customer_postal_code || "");
-          form.setValue("customer_country", data.customer_country || "");
+          form.setValue("customer_first_name", data.first_name || "");
+          form.setValue("customer_last_name", data.last_name || "");
+          form.setValue("customer_email", data.email || "");
+          form.setValue("customer_phone", data.phone_number || "");
+          form.setValue("customer_street_address", data.street_address || "");
+          form.setValue("customer_unit_number", data.unit_number || "");
+          form.setValue("customer_city", data.city || "");
+          form.setValue("customer_state_province", data.state_province || "");
+          form.setValue("customer_postal_code", data.postal_code || "");
+          form.setValue("customer_country", data.country || "");
         }
       });
+  };
+
+  const nextStep = () => {
+    if (currentStep < STEPS.length - 1) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const renderStep = () => {
+    switch (STEPS[currentStep].id) {
+      case "customer":
+        return (
+          <EstimateFormAdapter form={form}>
+            <ClientInfoFields 
+              form={form as unknown as UseFormReturn<WorkOrderFormValues>} 
+              onCustomerSelect={handleCustomerSelect}
+            />
+          </EstimateFormAdapter>
+        );
+      case "vehicle":
+        return (
+          <EstimateFormAdapter form={form}>
+            <VehicleInfoFields form={form as unknown as UseFormReturn<WorkOrderFormValues>} />
+          </EstimateFormAdapter>
+        );
+      case "services":
+        return (
+          <EstimateFormAdapter form={form}>
+            <ServiceSelectionFields form={form as unknown as UseFormReturn<WorkOrderFormValues>} />
+          </EstimateFormAdapter>
+        );
+      case "scheduling":
+        return (
+          <EstimateFormAdapter form={form}>
+            <SchedulingFields form={form as unknown as UseFormReturn<WorkOrderFormValues>} />
+          </EstimateFormAdapter>
+        );
+      case "notes":
+        return (
+          <EstimateFormAdapter form={form}>
+            <NotesFields form={form as unknown as UseFormReturn<WorkOrderFormValues>} />
+          </EstimateFormAdapter>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -422,62 +480,73 @@ export default function CreateEstimate() {
         <div className="max-w-7xl mx-auto space-y-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="w-full flex items-center justify-between mb-8">
+                {STEPS.map((step, index) => (
+                  <div key={step.id} className="flex items-center">
+                    <div 
+                      className={`flex items-center justify-center w-10 h-10 rounded-full border-2 
+                      ${index === currentStep 
+                        ? "border-primary bg-primary text-primary-foreground" 
+                        : index < currentStep 
+                          ? "border-primary bg-primary/20 text-primary" 
+                          : "border-muted-foreground/30 text-muted-foreground"
+                      }`}
+                    >
+                      {index < currentStep ? (
+                        <Check className="h-5 w-5" />
+                      ) : (
+                        <span>{index + 1}</span>
+                      )}
+                    </div>
+                    
+                    {index < STEPS.length - 1 && (
+                      <div 
+                        className={`h-0.5 w-16 md:w-24 lg:w-36 mx-1 
+                        ${index < currentStep ? "bg-primary" : "bg-muted-foreground/30"}`}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="text-center mb-4">
+                <h2 className="text-xl font-semibold">{STEPS[currentStep].label}</h2>
+              </div>
+
               <Card>
                 <CardContent className="p-6">
-                  <Tabs
-                    defaultValue="customer"
-                    value={currentTab}
-                    onValueChange={setCurrentTab}
-                    className="w-full"
-                  >
-                    <TabsList className="grid grid-cols-5 mb-6">
-                      <TabsTrigger value="customer">Customer</TabsTrigger>
-                      <TabsTrigger value="vehicle">Vehicle</TabsTrigger>
-                      <TabsTrigger value="services">Services</TabsTrigger>
-                      <TabsTrigger value="scheduling">Scheduling</TabsTrigger>
-                      <TabsTrigger value="notes">Notes</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="customer" className="mt-0">
-                      <EstimateFormAdapter form={form}>
-                        <ClientInfoFields 
-                          form={form as unknown as UseFormReturn<WorkOrderFormValues>} 
-                          onCustomerSelect={handleCustomerSelect}
-                        />
-                      </EstimateFormAdapter>
-                    </TabsContent>
-                    <TabsContent value="vehicle" className="mt-0">
-                      <EstimateFormAdapter form={form}>
-                        <VehicleInfoFields form={form as unknown as UseFormReturn<WorkOrderFormValues>} />
-                      </EstimateFormAdapter>
-                    </TabsContent>
-                    <TabsContent value="services" className="mt-0">
-                      <EstimateFormAdapter form={form}>
-                        <ServiceSelectionFields form={form as unknown as UseFormReturn<WorkOrderFormValues>} />
-                      </EstimateFormAdapter>
-                    </TabsContent>
-                    <TabsContent value="scheduling" className="mt-0">
-                      <EstimateFormAdapter form={form}>
-                        <SchedulingFields form={form as unknown as UseFormReturn<WorkOrderFormValues>} />
-                      </EstimateFormAdapter>
-                    </TabsContent>
-                    <TabsContent value="notes" className="mt-0">
-                      <EstimateFormAdapter form={form}>
-                        <NotesFields form={form as unknown as UseFormReturn<WorkOrderFormValues>} />
-                      </EstimateFormAdapter>
-                    </TabsContent>
-                  </Tabs>
+                  {renderStep()}
                 </CardContent>
               </Card>
 
-              <div className="flex justify-end">
+              <div className="flex justify-between pt-4">
                 <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="min-w-[150px]"
+                  type="button"
+                  variant="outline"
+                  onClick={prevStep}
+                  disabled={currentStep === 0}
                 >
-                  {isSubmitting ? "Creating..." : "Create Estimate"}
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Previous
                 </Button>
+
+                {currentStep < STEPS.length - 1 ? (
+                  <Button
+                    type="button"
+                    onClick={nextStep}
+                  >
+                    Next
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="min-w-[150px]"
+                  >
+                    {isSubmitting ? "Creating..." : "Create Estimate"}
+                  </Button>
+                )}
               </div>
             </form>
           </Form>
